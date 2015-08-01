@@ -1,0 +1,15 @@
+*.iml
+*.ipr
+*.iws
+*.swp
+.DS_Store
+.checkstyle
+.classpath
+.ecbuild
+.gradle
+.idea/
+.java-version
+.project
+.settings
+build
+/out/
