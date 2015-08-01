@@ -15,17 +15,19 @@ The Baseline plugins are compatible with Gradle 2.2.1 and above.
 ## Quick start
 - Add the following configuration to the `build.gradle` configuration of a Gradle project:
 
-    buildscript {
-        dependencies {
-            classpath 'com.palantir:baseline-java:<version>'
-        }
+```
+buildscript {
+    dependencies {
+        classpath 'com.palantir:baseline-java:<version>'
     }
+}
 
-    // Apply other plugins selectively depending on required functionality.
-    apply plugin: 'baseline-checkstyle'
-    apply plugin: 'baseline-eclipse'
-    apply plugin: 'baseline-findbugs'
-    apply plugin: 'baseline-idea'
+// Apply other plugins selectively depending on required functionality.
+apply plugin: 'baseline-checkstyle'
+apply plugin: 'baseline-eclipse'
+apply plugin: 'baseline-findbugs'
+apply plugin: 'baseline-idea'
+```
 
 - Extract the `baseline-config-<version>.zip` file into the `.baseline` directory of the Gradle root project.
 - Any subsequent `./gradlew build` invokes Checkstyle and FindBugs as part of the build and test tasks
