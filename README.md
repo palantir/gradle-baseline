@@ -1,9 +1,11 @@
 # Baseline Java code quality plugins
 
-*Baseline Java* is a collection of Gradle plugins for configuring code quality tools
-([Checkstyle](http://checkstyle.sourceforge.net) for style and formatting checks,
-[FindBugs](http://findbugs.sourceforge.net/) for catching common bugs, and Eclipse/IntelliJ code style and formatting
-configurations) for Gradle builds and for Gradle-generated Eclipse and IntelliJ projects.
+[![Build Status](https://magnum.travis-ci.com/palantir/gradle-baseline.svg?token=7PgjAzx6cN9JEwNu1QCp&branch=develop)](https://magnum.travis-ci.com/palantir/gradle-baseline)
+
+Baseline Java is a collection of Gradle plugins for configuring code quality tools in builds and generated
+Eclipse/IntelliJ projects. It configures ([Checkstyle](http://checkstyle.sourceforge.net) for style and formatting
+checks, [FindBugs](http://findbugs.sourceforge.net/) for catching common bugs, and Eclipse/IntelliJ code style and
+formatting configurations.
 
 The Baseline plugins are compatible with Gradle 2.2.1 and above.
 
@@ -14,11 +16,11 @@ The Baseline plugins are compatible with Gradle 2.2.1 and above.
 
 ## Quick start
 - Extract the `baseline-config-<version>.zip` (available from the
-[Bintray](https://bintray.com/palantir/releases/gradle-jacoco-coverage)) repository) file into the `.baseline` directory
+[Bintray](https://bintray.com/palantir/releases/gradle-jacoco-coverage) repository) file into the `.baseline` directory
 of a Gradle root project.
 - Add the Baseline plugins to the `build.gradle` configuration of the Gradle project:
 
-```
+```Gradle
 buildscript {
     dependencies {
         classpath 'com.palantir:gradle-baseline-java:<version>'
@@ -76,19 +78,21 @@ used, with the following exception:
 
 All `baseline-xyz` plugins can be applied selectively to subprojects. For example:
 
-    buildscript {
-        dependencies {
-            classpath 'com.palantir:gradle-baseline-java:<version>'
-        }
+```Gradle
+buildscript {
+    dependencies {
+        classpath 'com.palantir:gradle-baseline-java:<version>'
     }
+}
 
+apply plugin: 'baseline-idea'
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'baseline-checkstyle'
     apply plugin: 'baseline-idea'
-
-    subprojects {
-        apply plugin: 'java'
-        apply plugin: 'baseline-checkstyle'
-        apply plugin: 'baseline-idea'
-    }
+}
+```
 
 Depending on the Gradle setup, you may need to edit `gradle/shared.gradle` (or similar) instead. Feel free to contact
 the Baseline mailing list for troubleshooting.
@@ -100,16 +104,18 @@ The `baseline` plugin applies `baseline-checkstyle`, `baseline-eclipse`, `baseli
 current project. In order to use only checkstyle and IntelliJ support from Baseline, apply the required plugins
 selectively, e.g.:
 
-    buildscript {
-        dependencies {
-            classpath 'com.palantir:gradle-baseline-java:<version>'
-        }
+```Gradle
+buildscript {
+    dependencies {
+        classpath 'com.palantir:gradle-baseline-java:<version>'
     }
+}
 
-    apply plugin: 'baseline-idea'
-    subprojects {
-        apply plugin: 'baseline' // Applies all baseline-xyz plugins
-    }
+apply plugin: 'baseline-idea'
+subprojects {
+    apply plugin: 'baseline' // Applies all baseline-xyz plugins
+}
+```
 
 
 
@@ -122,18 +128,24 @@ the code block in question according to the project's style guidelines before ad
 suppress a particular check, say `MagicNumberCheck`, from an entire class or method, annotate the class or method with
 the lowercase check name without the "Check" suffix:
 
-    @SuppressWarnings("checkstyle:magicnumber")
+```Java
+@SuppressWarnings("checkstyle:magicnumber")
+```
 
 To suppress a check from a single line, add the following to the previous line, or after the line.  For example, to
 ignore the `MagicNumberCheck`:
 
-    reverseEngineerQuestion(42); // CHECKSTYLE IGNORE MagicNumberCheck
+```Java
+reverseEngineerQuestion(42); // CHECKSTYLE IGNORE MagicNumberCheck
+```
 
 To disable Checkstyle for a set of lines, surround the lines with:
 
-    // CHECKSTYLE:OFF
-    bad code!
-    // CHECKSTYLE:ON
+```Java
+// CHECKSTYLE:OFF
+badCode()
+// CHECKSTYLE:ON
+```
 
 Finally, to disable certain checks for an entire file, apply [custom
 suppressions](http://checkstyle.sourceforge.net/config.html).
@@ -169,7 +181,9 @@ and Java language level settings are picked up from the Gradle `sourceCompatibil
 
 Checks can be suppressed by annotating the class/method/field in question with:
 
-    @SuppressFBWarning("BUG_PATTERN_NAME")
+```Java
+@SuppressFBWarning("BUG_PATTERN_NAME")
+```
 
 The BUG_PATTERN_NAME can be derived from the "Pattern" field in the Eclipse Bug Info View.
 
