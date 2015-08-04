@@ -26,7 +26,7 @@ import org.apache.commons.io.FileUtils
 class BaselineIdeaIntegrationTest extends IntegrationSpec {
     def standardBuildFile = '''
         apply plugin: 'java'
-        apply plugin: 'baseline-idea'
+        apply plugin: 'com.palantir.baseline-idea'
     '''.stripIndent()
 
     def setup() {
@@ -60,7 +60,7 @@ class BaselineIdeaIntegrationTest extends IntegrationSpec {
         def subproject = helper.create(["subproject"])["subproject"]
         subproject.buildGradle << '''
             apply plugin: 'java'
-            apply plugin: 'baseline-idea'
+            apply plugin: 'com.palantir.baseline-idea'
         '''.stripIndent()
 
         then:
@@ -76,12 +76,12 @@ class BaselineIdeaIntegrationTest extends IntegrationSpec {
         def subproject = helper.create(["subproject1", "subproject2"])
         subproject["subproject1"].buildGradle << '''
             apply plugin: 'java'
-            apply plugin: 'baseline-idea'
+            apply plugin: 'com.palantir.baseline-idea'
             sourceCompatibility = 1.7
         '''.stripIndent()
         subproject["subproject2"].buildGradle << '''
             apply plugin: 'java'
-            apply plugin: 'baseline-idea'
+            apply plugin: 'com.palantir.baseline-idea'
             sourceCompatibility = 1.8
         '''.stripIndent()
 

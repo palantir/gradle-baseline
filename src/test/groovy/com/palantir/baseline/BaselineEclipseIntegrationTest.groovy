@@ -22,7 +22,7 @@ import nebula.test.functional.ExecutionResult
 class BaselineEclipseIntegrationTest extends IntegrationSpec {
     def standardBuildFile = '''
         apply plugin: 'java'
-        apply plugin: 'baseline-eclipse'
+        apply plugin: 'com.palantir.baseline-eclipse'
     '''.stripIndent()
 
     def 'Eclipse task depends on eclipseTemplate'() {
@@ -37,7 +37,7 @@ class BaselineEclipseIntegrationTest extends IntegrationSpec {
     def 'Eclipse requires the java plugin to be applied'() {
         when:
         buildFile << '''
-            apply plugin: 'baseline-eclipse'
+            apply plugin: 'com.palantir.baseline-eclipse'
         '''.stripIndent()
 
         then:
