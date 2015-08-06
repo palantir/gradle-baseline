@@ -58,8 +58,9 @@ class BaselineCheckstyle extends AbstractBaselinePlugin {
         // Set custom source rules for checkstyleMain task.
         Checkstyle task = (Checkstyle) project.tasks.checkstyleMain
 
-        // Make checkstyle include files in src/main/resources in whitespace checks.
+        // Make checkstyle include files in src/main/resources and src/test/resources, e.g., for whitespace checks.
         task.source 'src/main/resources'
+        task.source 'src/test/resources'
 
         // These sources are only checked by gradle, NOT by Eclipse.
         def sources = ['checks', 'manifests', 'scripts', 'templates']
