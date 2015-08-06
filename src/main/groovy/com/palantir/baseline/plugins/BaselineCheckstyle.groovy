@@ -1,3 +1,19 @@
+/*
+ * Copyright 2015 Palantir Technologies, Inc.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
 package com.palantir.baseline.plugins
 
 import org.gradle.api.Project
@@ -42,8 +58,9 @@ class BaselineCheckstyle extends AbstractBaselinePlugin {
         // Set custom source rules for checkstyleMain task.
         Checkstyle task = (Checkstyle) project.tasks.checkstyleMain
 
-        // Make checkstyle include files in src/main/resources in whitespace checks.
+        // Make checkstyle include files in src/main/resources and src/test/resources, e.g., for whitespace checks.
         task.source 'src/main/resources'
+        task.source 'src/test/resources'
 
         // These sources are only checked by gradle, NOT by Eclipse.
         def sources = ['checks', 'manifests', 'scripts', 'templates']
