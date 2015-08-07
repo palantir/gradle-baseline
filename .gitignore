@@ -13,3 +13,4 @@
 .settings
 build
 /out/
+gradle.properties

@@ -10,6 +10,7 @@ buildscript {
 
 plugins {
     id 'com.jfrog.bintray' version '1.2'
+    id 'com.gradle.plugin-publish' version '0.9.1'
 }
 
 apply plugin: 'groovy'
@@ -77,3 +78,33 @@ bintrayUpload.onlyIf {
 bintrayUpload.dependsOn { generatePomFileForPluginPublicationPublication }
 bintrayUpload.dependsOn { sourceJar }
 bintrayUpload.dependsOn { build }
+
+pluginBundle {
+      website = 'https://github.com/palantir/gradle-baseline'
+      vcsUrl = 'https://github.com/palantir/gradle-baseline'
+      description = 'Baseline Java is a collection of Gradle plugins for configuring code quality tools in builds and generated Eclipse/IntelliJ projects.'
+      tags = ['java', 'checkstyle', 'code quality', 'findbugs', 'eclipse', 'idea']
+
+      plugins {
+            baselinePlugins {
+                  id = 'com.palantir.baseline'
+                  displayName = 'Palantir Baseline Plugins'
+            }
+            baselineCheckstylePlugin {
+                  id = 'com.palantir.baseline-checkstyle'
+                  displayName = 'Palantir Baseline Checkstyle Plugin'
+            }
+            baselineEclipsePlugin {
+                  id = 'com.palantir.baseline-eclipse'
+                  displayName = 'Palantir Baseline Eclipse Plugin'
+            }
+            baselineFindbugsPlugin {
+                  id = 'com.palantir.baseline-findbugs'
+                  displayName = 'Palantir Baseline FindBugs Plugin'
+            }
+            baselineIdeaPlugin {
+                  id = 'com.palantir.baseline-idea'
+                  displayName = 'Palantir Baseline IntelliJ Plugin'
+            }
+      }
+}
