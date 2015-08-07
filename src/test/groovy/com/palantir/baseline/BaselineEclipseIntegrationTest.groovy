@@ -18,6 +18,7 @@ package com.palantir.baseline
 
 import nebula.test.IntegrationSpec
 import nebula.test.functional.ExecutionResult
+import net.lingala.zip4j.core.ZipFile
 
 class BaselineEclipseIntegrationTest extends IntegrationSpec {
     def standardBuildFile = '''
@@ -25,24 +26,30 @@ class BaselineEclipseIntegrationTest extends IntegrationSpec {
         apply plugin: 'com.palantir.baseline-eclipse'
     '''.stripIndent()
 
+    def noJavaBuildFile = '''
+        apply plugin: 'com.palantir.baseline-eclipse'
+    '''.stripIndent()
+
+    def setup() {
+        ZipFile zipFile = new ZipFile(new File("src/test/resources/baseline-config-0.0.12-external.zip"));
+        zipFile.extractAll(new File(projectDir, ".baseline").absolutePath)
+    }
+
     def 'Eclipse task depends on eclipseTemplate'() {
         when:
         buildFile << standardBuildFile
 
         then:
         ExecutionResult result = runTasksSuccessfully('eclipse')
-        result.wasExecuted(':eclipseTemplate')
+        assert result.wasExecuted(':eclipseTemplate')
     }
 
-    def 'Eclipse requires the java plugin to be applied'() {
+    def 'Eclipse task works without Java plugin'() {
         when:
-        buildFile << '''
-            apply plugin: 'com.palantir.baseline-eclipse'
-        '''.stripIndent()
+        buildFile << noJavaBuildFile
 
         then:
-        ExecutionResult result = runTasksWithFailure('eclipse')
-        assert result.standardError.contains("Caused by: java.lang.NullPointerException: " +
-                "The baseline-eclipse plugin requires the java plugin to be applied.")
+        ExecutionResult result = runTasksSuccessfully('eclipse')
+        assert result.wasExecuted(':eclipseTemplate')
     }
 }

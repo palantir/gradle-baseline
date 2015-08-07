@@ -16,7 +16,6 @@
 
 package com.palantir.baseline.plugins
 
-import com.google.common.base.Preconditions
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.plugins.ide.eclipse.EclipsePlugin
@@ -27,16 +26,15 @@ import org.gradle.plugins.ide.eclipse.EclipsePlugin
 class BaselineEclipse extends AbstractBaselinePlugin {
 
     void apply(Project project) {
-        Preconditions.checkNotNull(project.plugins.findPlugin(JavaPlugin),
-                (Object) "The baseline-eclipse plugin requires the java plugin to be applied.")
         this.project = project
 
         project.plugins.apply EclipsePlugin
+
         project.afterEvaluate { Project p ->
             def eclipseTemplate = project.task(
-                    "eclipseTemplate",
-                    group: "Baseline",
-                    description: "Update Eclipse settings from stored templates."
+                "eclipseTemplate",
+                group: "Baseline",
+                description: "Update Eclipse settings from stored templates."
             ) << {
                 // Copy static files verbatim.
                 project.copy {
@@ -57,19 +55,24 @@ class BaselineEclipse extends AbstractBaselinePlugin {
                     }
                     includeEmptyDirs = false  // Skip directories that become empty due to the renaming above.
                     expand(configDir: configDir,
-                            javaSourceVersion: project.sourceCompatibility,
-                            javaTargetVersion: project.targetCompatibility)
+                        javaSourceVersion: project.sourceCompatibility,
+                        javaTargetVersion: project.targetCompatibility)
                 }
             }
 
             // Run eclipseTemplate when eclipse task is run
+            eclipseTemplate.onlyIf {
+                project.plugins.hasPlugin(JavaPlugin)
+            }
             project.tasks.eclipse.dependsOn(eclipseTemplate)
 
             // Override default Eclipse JRE.
-            project.tasks.eclipseClasspath.doFirst {
-                project.eclipse.classpath {
-                    containers.clear()
-                    containers.add("org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-${project.sourceCompatibility}")
+            if (project.plugins.hasPlugin(JavaPlugin)) {
+                project.tasks.eclipseClasspath.doFirst {
+                    project.eclipse.classpath {
+                        containers.clear()
+                        containers.add("org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-${project.sourceCompatibility}")
+                    }
                 }
             }
         }

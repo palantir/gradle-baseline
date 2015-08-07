@@ -155,7 +155,8 @@ suppressions](http://checkstyle.sourceforge.net/config.html).
 
 Run `./gradlew eclipse` to repopulate projects from the templates in `.baseline`.
 
-The `com.palantir.baseline-eclipse` plugin automatically applies the `eclipse` plugin.
+The `com.palantir.baseline-eclipse` plugin automatically applies the `eclipse` plugin, but not the `java` plugin. The
+`com.palantir.baseline-eclipse` plugin has no effects if the `java` plugin is not applied.
 
 If `sourceCompatibility` is set, it is used to configure the Eclipse project settings and the Eclipse JDK version. Note
 that `targetCompatibility` is also honored and defaults to `sourceCompatibility`.
