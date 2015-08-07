@@ -132,23 +132,8 @@ the lowercase check name without the "Check" suffix:
 @SuppressWarnings("checkstyle:magicnumber")
 ```
 
-To suppress a check from a single line, add the following to the previous line, or after the line.  For example, to
-ignore the `MagicNumberCheck`:
-
-```Java
-reverseEngineerQuestion(42); // CHECKSTYLE IGNORE MagicNumberCheck
-```
-
-To disable Checkstyle for a set of lines, surround the lines with:
-
-```Java
-// CHECKSTYLE:OFF
-badCode()
-// CHECKSTYLE:ON
-```
-
-Finally, to disable certain checks for an entire file, apply [custom
-suppressions](http://checkstyle.sourceforge.net/config.html).
+To disable certain checks for an entire file, apply [custom suppressions](http://checkstyle.sourceforge.net/config.html)
+in `.baseline/checkstyle/checkstyle-suppressions`.
 
 
 ### Eclipse Plugin (com.palantir.baseline-eclipse)
