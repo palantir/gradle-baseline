@@ -16,7 +16,7 @@ The Baseline plugins are compatible with Gradle 2.2.1 and above.
 
 ## Quick start
 - Extract the `baseline-config-<version>.zip` (available from the
-[Bintray](https://bintray.com/palantir/releases/gradle-jacoco-coverage) repository) file into the `.baseline` directory
+[Bintray](https://bintray.com/palantir/releases/gradle-baseline/view#files) repository) file into the `.baseline` directory
 of a Gradle root project.
 - Add the Baseline plugins to the `build.gradle` configuration of the Gradle project:
 
