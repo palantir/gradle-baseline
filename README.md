@@ -3,7 +3,7 @@
 [![Build Status](https://travis-ci.org/palantir/gradle-baseline.svg)](https://travis-ci.org/palantir/gradle-baseline)
 
 Baseline Java is a collection of Gradle plugins for configuring code quality tools in builds and generated
-Eclipse/IntelliJ projects. It configures ([Checkstyle](http://checkstyle.sourceforge.net) for style and formatting
+Eclipse/IntelliJ projects. It configures [Checkstyle](http://checkstyle.sourceforge.net) for style and formatting
 checks, [FindBugs](http://findbugs.sourceforge.net/) for catching common bugs, and Eclipse/IntelliJ code style and
 formatting configurations.
 
@@ -15,8 +15,8 @@ The Baseline plugins are compatible with Gradle 2.2.1 and above.
 
 
 ## Quick start
-- Extract the `baseline-config-<version>.zip` (available from the
-[Bintray](https://bintray.com/palantir/releases/gradle-baseline/) repository) file into the `.baseline` directory of a
+- Extract `baseline-config-<version>.zip` (available from the
+[Bintray](https://bintray.com/palantir/releases/gradle-baseline/) repository) into the `.baseline` directory of a
 Gradle root project.
 - Add the Baseline plugins to the `build.gradle` configuration of the Gradle project:
 
@@ -143,13 +143,13 @@ Run `./gradlew eclipse` to repopulate projects from the templates in `.baseline`
 The `com.palantir.baseline-eclipse` plugin automatically applies the `eclipse` plugin, but not the `java` plugin. The
 `com.palantir.baseline-eclipse` plugin has no effects if the `java` plugin is not applied.
 
-If `sourceCompatibility` is set, it is used to configure the Eclipse project settings and the Eclipse JDK version. Note
+If set, `sourceCompatibility` is used to configure the Eclipse project settings and the Eclipse JDK version. Note
 that `targetCompatibility` is also honored and defaults to `sourceCompatibility`.
 
 Generated Eclipse projects have default per-project code formatting rules as well as Checkstyle and FindBugs
 configuration.
 
-The Eclipse plugin is compatible the following versions: Checkstyle 6.5+, FindBugs 3.0.0+, JDK 1.7, 1.8
+The Eclipse plugin is compatible with the following versions: Checkstyle 6.5+, FindBugs 3.0.0+, JDK 1.7, 1.8
 
 
 ### IntelliJ Plugin (com.palantir.baseline-idea)
