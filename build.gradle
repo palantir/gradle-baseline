@@ -37,3 +37,14 @@ subprojects {
     version = flexVersion()
     description = 'A Gradle plugin for applying Baseline-recommended build and IDE settings'
 }
+
+def baselineDependency = dependencies.create("com.palantir:gradle-baseline-java-config:+@zip")
+def baselineConfig = configurations.detachedConfiguration(baselineDependency)
+task baselineUpdateConfig {
+    doLast {
+        copy {
+            from zipTree(baselineConfig.getSingleFile())
+            into '.baseline'
+        }
+    }
+}
