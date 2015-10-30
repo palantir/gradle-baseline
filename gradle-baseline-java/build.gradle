@@ -8,7 +8,7 @@ repositories {
 }
 
 dependencies {
-    compile gradleApi()
+    compile files(gradleApi().resolve().findAll { !it.name.startsWith('xerces') && !it.name.startsWith('xml-apis') })
     compile localGroovy()
     compile 'com.google.guava:guava:18.0'
 
@@ -18,6 +18,18 @@ dependencies {
     testCompile 'org.hamcrest:hamcrest-all:1.3'
     testCompile 'org.mockito:mockito-core:1.10.19'
 }
+
+// Create version file included in jar so that the plugin can fetch the correct version of the configuration zip.
+task createVersionFile {
+    def versionFile = file("src/main/resources/version.txt")
+    versionFile.parentFile.mkdirs()
+    versionFile.write(project.version.toString() + "\n", "UTF-8")
+}
+compileGroovy.dependsOn createVersionFile
+
+// Make sure the config artifact is available when the tests run.
+evaluationDependsOn(':gradle-baseline-java-config')
+test.dependsOn(project(":gradle-baseline-java-config").tasks.getByName("publishToMavenLocal"))
 
 apply plugin: "com.gradle.plugin-publish"
 
