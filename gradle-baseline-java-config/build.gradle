@@ -1,0 +1,35 @@
+description = 'Baseline configuration files for the Baseline Gradle plugin'
+
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
+
+task zipConfig(type: Zip) {
+    from('resources') {
+        into('.')
+    }
+}
+
+bintrayUpload.dependsOn { generatePomFileForConfigPublicationPublication }
+bintrayUpload.dependsOn { zipConfig }
+
+bintray {
+    user = System.getenv('BINTRAY_USER')
+    key = System.getenv('BINTRAY_KEY')
+    pkg {
+        repo = 'releases'
+        name = 'gradle-baseline'
+        userOrg = 'palantir'
+        licenses = ['Apache-2.0']
+        publications = ['ConfigPublication']
+    }
+}
+
+publishing {
+	publications {
+	    ConfigPublication(MavenPublication) {
+	        artifact(zipConfig) {
+	            extension 'zip'
+	        }
+	    }
+	}
+}
