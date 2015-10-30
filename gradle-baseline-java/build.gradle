@@ -1,0 +1,86 @@
+apply plugin: 'groovy'
+apply plugin: 'idea'
+apply plugin: 'maven'
+apply plugin: 'maven-publish'
+
+repositories {
+    jcenter()
+}
+
+dependencies {
+    compile gradleApi()
+    compile localGroovy()
+    compile 'com.google.guava:guava:18.0'
+
+    testCompile 'com.netflix.nebula:nebula-test:2.2.1'
+    testCompile 'junit:junit:4.11'
+    testCompile 'net.lingala.zip4j:zip4j:1.3.2'
+    testCompile 'org.hamcrest:hamcrest-all:1.3'
+    testCompile 'org.mockito:mockito-core:1.10.19'
+}
+
+apply plugin: "com.gradle.plugin-publish"
+
+task sourceJar(type: Jar) {
+    from sourceSets.main.allSource
+    classifier 'sources'
+}
+
+bintrayUpload.dependsOn { build }
+bintrayUpload.dependsOn { generatePomFileForPluginPublicationPublication }
+bintrayUpload.dependsOn { sourceJar }
+
+bintray {
+    user = System.getenv('BINTRAY_USER')
+    key = System.getenv('BINTRAY_KEY')
+    pkg {
+        repo = 'releases'
+        name = 'gradle-baseline'
+        userOrg = 'palantir'
+        licenses = ['Apache-2.0']
+        publications = ['PluginPublication']
+    }
+}
+
+publishing {
+    publications {
+        PluginPublication(MavenPublication) {
+            from components.java
+
+            artifact(sourceJar) {
+                classifier 'sources'
+            }
+        }
+    }
+}
+
+pluginBundle {
+    website = 'https://github.com/palantir/gradle-baseline'
+    vcsUrl = 'https://github.com/palantir/gradle-baseline'
+    description = 'Baseline Java is a collection of Gradle plugins for configuring code quality tools in builds and generated Eclipse/IntelliJ projects.'
+    tags = ['java', 'checkstyle', 'code quality', 'findbugs', 'eclipse', 'idea']
+
+    plugins {
+        baselinePlugins {
+            id = 'com.palantir.baseline'
+            displayName = 'Palantir Baseline Plugins'
+        }
+        baselineCheckstylePlugin {
+            id = 'com.palantir.baseline-checkstyle'
+            displayName = 'Palantir Baseline Checkstyle Plugin'
+        }
+        baselineEclipsePlugin {
+            id = 'com.palantir.baseline-eclipse'
+            displayName = 'Palantir Baseline Eclipse Plugin'
+        }
+        baselineFindbugsPlugin {
+            id = 'com.palantir.baseline-findbugs'
+             displayName = 'Palantir Baseline FindBugs Plugin'
+        }
+        baselineIdeaPlugin {
+            id = 'com.palantir.baseline-idea'
+            displayName = 'Palantir Baseline IntelliJ Plugin'
+        }
+    }
+}
+
