@@ -13,10 +13,7 @@ buildscript {
     }
 }
 
-apply plugin: 'groovy'
 apply plugin: 'idea'
-apply plugin: 'maven'
-apply plugin: 'maven-publish'
 
 repositories {
     jcenter()
