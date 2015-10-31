@@ -20,7 +20,6 @@ import com.google.common.base.Charsets
 import com.google.common.io.Files
 import nebula.test.IntegrationSpec
 import nebula.test.functional.ExecutionResult
-import net.lingala.zip4j.core.ZipFile
 import org.apache.commons.io.FileUtils
 
 class BaselineIdeaIntegrationTest extends IntegrationSpec {
@@ -30,8 +29,9 @@ class BaselineIdeaIntegrationTest extends IntegrationSpec {
     '''.stripIndent()
 
     def setup() {
-        ZipFile zipFile = new ZipFile(new File("src/test/resources/baseline-config-0.0.12-external.zip"));
-        zipFile.extractAll(new File(projectDir, ".baseline").absolutePath)
+        FileUtils.copyDirectory(
+            new File("../gradle-baseline-java-config/resources"),
+            new File(projectDir, ".baseline"))
     }
 
     def 'Can apply plugin'() {
