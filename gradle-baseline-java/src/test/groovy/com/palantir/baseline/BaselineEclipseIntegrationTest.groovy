@@ -18,7 +18,7 @@ package com.palantir.baseline
 
 import nebula.test.IntegrationSpec
 import nebula.test.functional.ExecutionResult
-import net.lingala.zip4j.core.ZipFile
+import org.apache.commons.io.FileUtils
 
 class BaselineEclipseIntegrationTest extends IntegrationSpec {
     def standardBuildFile = '''
@@ -31,8 +31,9 @@ class BaselineEclipseIntegrationTest extends IntegrationSpec {
     '''.stripIndent()
 
     def setup() {
-        ZipFile zipFile = new ZipFile(new File("src/test/resources/baseline-config-0.0.12-external.zip"));
-        zipFile.extractAll(new File(projectDir, ".baseline").absolutePath)
+        FileUtils.copyDirectory(
+            new File("../gradle-baseline-java-config/resources"),
+            new File(projectDir, ".baseline"))
     }
 
     def 'Eclipse task depends on eclipseTemplate'() {
