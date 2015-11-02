@@ -15,17 +15,25 @@ The Baseline plugins are compatible with Gradle 2.2.1 and above.
 
 
 ## Quick start
-- Extract `baseline-config-<version>.zip` (available from the
-[Bintray](https://bintray.com/palantir/releases/gradle-baseline/) repository) into the `.baseline` directory of a
-Gradle root project.
 - Add the Baseline plugins to the `build.gradle` configuration of the Gradle project:
 
 ```Gradle
 buildscript {
+    repositories {
+        jcenter()
+    }
+
     dependencies {
         classpath 'com.palantir:gradle-baseline-java:<version>'
     }
 }
+
+repositories {
+    jcenter()
+}
+
+// Apply for baselineUpdateConfig task
+apply plugin: 'com.palantir.baseline-config'
 
 // Apply plugins selectively depending on required functionality.
 apply plugin: 'com.palantir.baseline-checkstyle'
@@ -34,6 +42,8 @@ apply plugin: 'com.palantir.baseline-findbugs'
 apply plugin: 'com.palantir.baseline-idea'
 ```
 
+- Run ``./gradlew baselineUpdateConfig`` to download the config files
+and extract them to .baseline/
 - Any subsequent ``./gradlew build`` invokes Checkstyle and FindBugs as part of the build and test tasks (if the
 respective baseline-xyz plugins are applied).
 - The ``eclipse`` and ``idea`` Gradle tasks generate projects pre-configured with Baseline settings:

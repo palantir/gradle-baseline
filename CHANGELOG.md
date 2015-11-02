@@ -8,3 +8,6 @@
 
 ## 0.2.0
 - add Baseline config files (previously posted separately)
+
+## 0.2.1
+- add 'baselineUpdateConfig' task for plugin users
