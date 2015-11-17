@@ -11,3 +11,7 @@
 
 ## 0.2.1
 - add 'baselineUpdateConfig' task for plugin users
+
+## <next>
+- baseline-eclipse no longer overwrites jdt-core config, but merges the baseline default config;
+  org.eclipse.jdt.core.prefs moved to a different location in gradle-baseline-java-config
