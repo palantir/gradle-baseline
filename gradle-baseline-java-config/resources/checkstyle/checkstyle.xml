@@ -332,7 +332,9 @@
             <property name="allowThrowsTagsForSubclasses" value="true"/>
         </module>
         <module name="JavadocStyle"/> <!-- Java Style Guide: Javadoc -->
-        <module name="JavadocTagContinuationIndentation"/> <!-- Java Style Guide: At-clauses -->
+        <module name="JavadocTagContinuationIndentation"> <!-- Java Style Guide: At-clauses -->
+            <property name="offset" value="0"/>
+        </module>
         <module name="LocalFinalVariableName"/> <!-- Java Style Guide: Local variable names -->
         <module name="LocalVariableName"> <!-- Java Style Guide: Local variable names -->
             <property name="tokens" value="VARIABLE_DEF"/>
