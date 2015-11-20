@@ -16,6 +16,8 @@
 
 package com.palantir.baseline
 
+import com.google.common.base.Charsets
+import com.google.common.io.Files
 import nebula.test.IntegrationSpec
 import nebula.test.functional.ExecutionResult
 import org.apache.commons.io.FileUtils
@@ -52,5 +54,16 @@ class BaselineEclipseIntegrationTest extends IntegrationSpec {
         then:
         ExecutionResult result = runTasksSuccessfully('eclipse')
         assert result.wasExecuted(':eclipseTemplate')
+    }
+
+    def 'Eclipse task sets jdt core properties'() {
+        when:
+        buildFile << standardBuildFile
+
+        then:
+        runTasksSuccessfully('eclipse')
+        def jdtCorePrefs = Files.asCharSource(new File(projectDir,
+            ".settings/org.eclipse.jdt.core.prefs"), Charsets.UTF_8).read()
+        jdtCorePrefs.contains("org.eclipse.jdt.core.compiler.annotation.nullable=javax.annotation.CheckForNull")
     }
 }

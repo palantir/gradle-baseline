@@ -81,6 +81,10 @@ pluginBundle {
             id = 'com.palantir.baseline-checkstyle'
             displayName = 'Palantir Baseline Checkstyle Plugin'
         }
+        baselineConfigPlugin {
+            id = 'com.palantir.baseline-config'
+            displayName = 'Palantir Baseline Configuration Plugin'
+        }
         baselineEclipsePlugin {
             id = 'com.palantir.baseline-eclipse'
             displayName = 'Palantir Baseline Eclipse Plugin'
