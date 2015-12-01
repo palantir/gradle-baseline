@@ -195,4 +195,4 @@ enforces minimum code coverage thresholds.
 
 ### Copyright Checks
 
-By default baseline enforces Palantir copyright at the beginning of files. To change this, edit the configuration `.baseline/copyright/apache-2.0.txt`
+By default Baseline enforces Palantir copyright at the beginning of files. To change this, edit the template copyright in `.baseline/copyright/apache-2.0.txt` and the RegexpHeader checkstyle configuration in `.baseline/checkstyle/checkstyle.xml`
