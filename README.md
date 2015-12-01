@@ -191,3 +191,8 @@ documentation](http://findbugs.sourceforge.net/manual/filter.html) for details.
 
 Palantir also maintains the [GitHub: jacoco-coverage](https://github.com/palantir/gradle-jacoco-coverage) plugin which
 enforces minimum code coverage thresholds.
+
+
+### Copyright Checks
+
+By default baseline enforces Palantir copyright at the beginning of files. To change this, edit the configuration `.baseline/copyright/apache-2.0.txt`
