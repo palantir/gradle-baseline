@@ -193,10 +193,6 @@
             <property name="format" value="assertFalse\(.*[!=]="/>
             <property name="message" value="Use better assertion method(s): assertEquals(), assertNull(), assertSame(), etc."/>
         </module>
-        <module name="RegexpSinglelineJava"> <!-- Java Coding Guidelines: Avoid assertNotNull -->
-            <property name="format" value="assertNotNull\("/>
-            <property name="message" value="assertNotNull() almost always shows up in a lazily-written so-called test for coverage. Do something else to validate the expected output: assertEquals(), assertFalse(String.isEmpty()), etc."/>
-        </module>
         <module name="RegexpSinglelineJava"> <!-- Java Coding Guidelines: Use appropriate assertion methods -->
             <property name="format" value="assertTrue\(!"/>
             <property name="message" value="Use assertFalse()."/>
