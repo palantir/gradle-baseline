@@ -53,27 +53,29 @@ class BaselineEclipse extends AbstractBaselinePlugin {
 
         // Configure Eclipse JDT Core by merging in Baseline settings.
         project.plugins.withType(EclipsePlugin, { plugin ->
-            project.eclipse {
-                if (jdt != null) {
-                    // Read baseline configuration from config directory
-                    def baselineJdtCoreProps = new Properties()
-                    def baselineJdtCorePropsFile = project.file("${configDir}/eclipse/org.eclipse.jdt.core.prefs")
-                    if (baselineJdtCorePropsFile.canRead()) {
-                        def reader = baselineJdtCorePropsFile.newReader()
-                        baselineJdtCoreProps.load(reader)
-                        reader.close()
+            project.afterEvaluate {
+                project.eclipse {
+                    if (jdt != null) {
+                        // Read baseline configuration from config directory
+                        def baselineJdtCoreProps = new Properties()
+                        def baselineJdtCorePropsFile = project.file("${configDir}/eclipse/org.eclipse.jdt.core.prefs")
+                        if (baselineJdtCorePropsFile.canRead()) {
+                            def reader = baselineJdtCorePropsFile.newReader()
+                            baselineJdtCoreProps.load(reader)
+                            reader.close()
 
-                        def binding = [
-                            javaSourceVersion: project.sourceCompatibility,
-                            javaTargetVersion: project.targetCompatibility]
+                            def binding = [
+                                javaSourceVersion: project.sourceCompatibility,
+                                javaTargetVersion: project.targetCompatibility]
 
-                        // Merge baseline config into default config
-                        jdt.file.withProperties { Properties baseProperties ->
-                            mergeProperties(baselineJdtCoreProps, baseProperties, binding)
+                            // Merge baseline config into default config
+                            jdt.file.withProperties { Properties baseProperties ->
+                                mergeProperties(baselineJdtCoreProps, baseProperties, binding)
+                            }
+                        } else {
+                            project.logger.error("Cannot read Baseline Eclipse configuration, not configuring Eclipse: {}",
+                                baselineJdtCorePropsFile)
                         }
-                    } else {
-                        project.logger.error("Cannot read Baseline Eclipse configuration, not configuring Eclipse: {}",
-                            baselineJdtCorePropsFile)
                     }
                 }
             }
