@@ -66,4 +66,18 @@ class BaselineEclipseIntegrationTest extends IntegrationSpec {
             ".settings/org.eclipse.jdt.core.prefs"), Charsets.UTF_8).read()
         jdtCorePrefs.contains("org.eclipse.jdt.core.compiler.annotation.nullable=javax.annotation.CheckForNull")
     }
+
+    def 'Eclipse task sets correct Java version from sourceCompatibility property'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << "sourceCompatibility = '1.3'"  // use '1.3' since it cannot be the default
+
+        then:
+        runTasksSuccessfully('eclipse')
+        def jdtCorePrefs = Files.asCharSource(new File(projectDir,
+            ".settings/org.eclipse.jdt.core.prefs"), Charsets.UTF_8).read()
+        jdtCorePrefs.contains("org.eclipse.jdt.core.compiler.codegen.targetPlatform=1.3")
+        jdtCorePrefs.contains("org.eclipse.jdt.core.compiler.source=1.3")
+        jdtCorePrefs.contains("org.eclipse.jdt.core.compiler.compliance=1.3")
+    }
 }
