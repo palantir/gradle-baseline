@@ -32,6 +32,8 @@ repositories {
     jcenter()
 }
 
+apply plugin: 'java'
+
 // Apply for baselineUpdateConfig task
 apply plugin: 'com.palantir.baseline-config'
 
