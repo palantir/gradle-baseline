@@ -58,7 +58,7 @@ class BaselineEclipse extends AbstractBaselinePlugin {
                     if (jdt != null) {
                         // Read baseline configuration from config directory
                         def baselineJdtCoreProps = new Properties()
-                        def baselineJdtCorePropsFile = project.file("${configDir}/eclipse/org.eclipse.jdt.core.prefs")
+                        File baselineJdtCorePropsFile = resolveConfigPath("/eclipse/org.eclipse.jdt.core.prefs")
                         if (baselineJdtCorePropsFile.canRead()) {
                             def reader = baselineJdtCorePropsFile.newReader()
                             baselineJdtCoreProps.load(reader)
@@ -91,7 +91,7 @@ class BaselineEclipse extends AbstractBaselinePlugin {
             ) << {
                 // Copy static files verbatim.
                 project.copy {
-                    from project.file("${configDir}/eclipse/static")
+                    from resolveConfigPath("/eclipse/static")
                     into project.file(".")
                     eachFile { fileDetails ->
                         fileDetails.path = fileDetails.path.replaceAll('dotfile.', '.')
@@ -101,7 +101,7 @@ class BaselineEclipse extends AbstractBaselinePlugin {
 
                 // Copy dynamic templates and replace '${variableName}' markers in source files.
                 project.copy {
-                    from project.file("${configDir}/eclipse/dynamic")
+                    from resolveConfigPath("/eclipse/dynamic")
                     into project.file(".")
                     eachFile { fileDetails ->
                         fileDetails.path = fileDetails.path.replaceAll('dotfile.', '.')

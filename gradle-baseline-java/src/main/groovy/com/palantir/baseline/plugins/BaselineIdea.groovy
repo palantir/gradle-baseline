@@ -17,12 +17,13 @@
 package com.palantir.baseline.plugins
 
 import groovy.xml.XmlUtil
+
+import java.nio.file.Paths
+
 import org.gradle.api.Project
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.plugins.ide.idea.IdeaPlugin
 import org.gradle.plugins.ide.idea.model.IdeaModel
-
-import java.nio.file.Paths
 
 class BaselineIdea extends AbstractBaselinePlugin {
 
@@ -54,7 +55,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
      * Extracts IDEA formatting configurations from Baseline directory and adds it to the Idea project XML node.
      */
     private void addCodeStyle(node) {
-        def ideaStyleFile = project.file("${configDir}/idea/intellij-java-palantir-style.xml")
+        def ideaStyleFile = resolveConfigPath("/idea/intellij-java-palantir-style.xml")
         node.append(new XmlParser().parse(ideaStyleFile).component)
     }
 
@@ -63,8 +64,8 @@ class BaselineIdea extends AbstractBaselinePlugin {
      */
     private void addCopyright(node) {
         def copyrightManager = node.component.find { it.'@name' == 'CopyrightManager' }
-        def copyrightDir = Paths.get("${configDir}/copyright/")
-        def copyrightFiles = project.fileTree(copyrightDir.toFile()).include("*")
+        def copyrightDir = resolveConfigPath("/copyright/")
+        def copyrightFiles = project.fileTree(copyrightDir).include("*")
         copyrightFiles.each { File file ->
             def fileName = copyrightDir.relativize(file.toPath())
             def copyrightNode = copyrightManager.copyright.find {

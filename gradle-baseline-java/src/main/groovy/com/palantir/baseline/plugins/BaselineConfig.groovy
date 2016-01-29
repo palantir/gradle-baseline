@@ -46,11 +46,14 @@ class BaselineConfig extends AbstractBaselinePlugin {
         def baselineUpdateConfig = rootProject.task(
             "baselineUpdateConfig",
             group: "Baseline",
-            description: "Installs or updates Baseline configuration files in .baseline/")
+            description: "Installs or updates Baseline configuration files in .bline/")
         baselineUpdateConfig.doLast {
+			outputs.dir = getExtractDir()
+			
+			rootProject.delete getExtractDir()
             rootProject.copy {
                 from project.zipTree(rootProject.configurations.baseline.getSingleFile())
-                into getConfigDir()
+                into getExtractDir()
             }
         }
     }

@@ -20,4 +20,7 @@ class BaselineParameters {
 
     /** The directory relative to the project's rootDir in which Baseline configuration is stored. */
     static final DEFAULT_CONFIG_DIR = ".baseline"
+
+    /** The directory relative to the project's rootDir in which Baseline configuration may be cached. */
+    static final DEFAULT_EXTRACT_DIR = ".bline"
 }

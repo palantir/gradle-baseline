@@ -81,6 +81,6 @@ class BaselineFindBugs extends AbstractBaselinePlugin {
     }
 
     File getExcludeFilterFile() {
-        project.file(Paths.get(configDir, "findbugs", "excludeFilter.xml").toString())
+        resolveConfigPath("/findbugs/excludeFilter.xml")
     }
 }
