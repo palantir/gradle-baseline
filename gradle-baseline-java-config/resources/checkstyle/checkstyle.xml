@@ -152,12 +152,12 @@
         <module name="NoClone"/> <!-- Java Coding Guidelines: Never override Object#finalize or Object#clone -->
         <module name="NoFinalizer"/> <!-- Java Coding Guidelines: Never override Object#finalize -->
         <module name="NoLineWrap"/> <!-- Java Style Guide: No line-wrapping -->
-        <module name="NoWhitespaceBefore"> <!-- Java Style Guide: Horizontal whitespace -->
-            <property name="allowLineBreaks" value="true"/>
-        </module>
         <module name="NoWhitespaceAfter"> <!-- Java Style Guide: Horizontal whitespace -->
             <property name="allowLineBreaks" value="false"/>
             <property name="tokens" value="BNOT,DEC,DOT,INC,LNOT,UNARY_MINUS,UNARY_PLUS"/>
+        </module>
+        <module name="NoWhitespaceBefore"> <!-- Java Style Guide: Horizontal whitespace -->
+            <property name="allowLineBreaks" value="true"/>
         </module>
         <module name="OneStatementPerLine"/> <!-- Java Style Guide: One statement per line -->
         <module name="OneTopLevelClass"/> <!-- Java Style Guide: Exactly one top-level class declaration -->
