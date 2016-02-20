@@ -106,6 +106,7 @@
             <property name="classes" value="java.lang.Byte"/>
             <property name="classes" value="java.lang.Character"/>
             <property name="classes" value="java.lang.Double"/>
+            <property name="classes" value="java.lang.Float"/>
             <property name="classes" value="java.lang.Integer"/>
             <property name="classes" value="java.lang.Long"/>
         </module>
