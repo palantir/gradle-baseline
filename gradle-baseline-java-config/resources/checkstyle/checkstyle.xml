@@ -116,7 +116,9 @@
             <property name="format" value="\\u00(08|09|0(a|A)|0(c|C)|0(d|D)|22|27|5(C|c))|\\(0(10|11|12|14|15|42|47)|134)"/>
             <property name="message" value="Avoid using corresponding octal or Unicode escape."/>
         </module>
-        <module name="IllegalType"/> <!-- Java Coding Guide: Limit coupling on concrete classes -->
+        <module name="IllegalType"> <!-- Java Coding Guide: Limit coupling on concrete classes -->
+            <property name="illegalClassNames" value="java.util.HashSet, java.util.HashMap, java.util.LinkedHashMap, java.util.LinkedHashSet, java.util.TreeSet, java.util.TreeMap, com.google.common.collect.ArrayListMultimap, com.google.common.collect.ForwardingListMultimap, com.google.common.collect.ForwardingMultimap, com.google.common.collect.ForwardingSetMultimap, com.google.common.collect.ForwardingSortedSetMultimap, com.google.common.collect.HashMultimap, com.google.common.collect.LinkedHashMultimap, com.google.common.collect.LinkedListMultimap, com.google.common.collect.TreeMultimap"/>
+        </module>
         <module name="ImportOrder"> <!-- Java Style Guide: Ordering and spacing -->
             <property name="groups" value="/.*/"/>
             <property name="option" value="top"/>
