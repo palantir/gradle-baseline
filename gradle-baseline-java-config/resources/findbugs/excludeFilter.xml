@@ -18,4 +18,16 @@
             <Bug pattern="URF_UNREAD_PUBLIC_OR_PROTECTED_FIELD"/> <!-- @Rule ivars can be public and unused -->
         </Or>
     </Match>
+
+    <!-- Ignore the following bug patterns in Immutables generated code -->
+    <!-- (i.e., classes beginning with 'Immutable' and inner classes of same) -->
+    <Match>
+        <Class name="~.*Immutable.*(\$.*)?" />
+        <Or>
+            <Bug pattern="DLS_DEAD_LOCAL_STORE"/>
+            <Bug pattern="ES_COMPARING_PARAMETER_STRING_WITH_EQ"/>
+            <Bug pattern="NP_METHOD_PARAMETER_TIGHTENS_ANNOTATION"/>
+            <Bug pattern="RC_REF_COMPARISON"/>
+        </Or>
+    </Match>
 </FindBugsFilter>
