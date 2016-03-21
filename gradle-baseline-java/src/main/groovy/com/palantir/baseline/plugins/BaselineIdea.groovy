@@ -138,6 +138,9 @@ class BaselineIdea extends AbstractBaselinePlugin {
     private void addJUnitWorkingDirectory(node) {
         node.append(new XmlParser().parseText('''
             <component name="RunManager">
+                <configuration default="true" type="Application" factoryName="Application">
+                    <option name="WORKING_DIRECTORY" value="file://$MODULE_DIR$" />
+                </configuration>
                 <configuration default="true" type="JUnit" factoryName="JUnit">
                     <option name="WORKING_DIRECTORY" value="file://$MODULE_DIR$" />
                 </configuration>
