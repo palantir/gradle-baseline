@@ -41,6 +41,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
                     addCopyright(node)
                     addCheckstyle(node)
                     addGit(node)
+                    addJUnitWorkingDirectory(node)
                 }
             }
 
@@ -127,6 +128,19 @@ class BaselineIdea extends AbstractBaselinePlugin {
         node.append(new XmlParser().parseText('''
             <component name="VcsDirectoryMappings">
                 <mapping directory="$PROJECT_DIR$" vcs="Git" />
+            </component>
+            '''.stripIndent()))
+    }
+
+    /**
+     * Configure the default working directory of JUnit tests to be the module directory.
+     */
+    private void addJUnitWorkingDirectory(node) {
+        node.append(new XmlParser().parseText('''
+            <component name="RunManager">
+                <configuration default="true" type="JUnit" factoryName="JUnit">
+                    <option name="WORKING_DIRECTORY" value="file://$MODULE_DIR$" />
+                </configuration>
             </component>
             '''.stripIndent()))
     }
