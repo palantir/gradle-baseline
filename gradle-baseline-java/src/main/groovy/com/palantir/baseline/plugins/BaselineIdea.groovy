@@ -41,7 +41,11 @@ class BaselineIdea extends AbstractBaselinePlugin {
                     addCopyright(node)
                     addCheckstyle(node)
                     addGit(node)
-                    addJUnitWorkingDirectory(node)
+                }
+
+                ideaRootModel.workspace.iws.withXml { provider ->
+                    def node = provider.asNode()
+                    setRunManagerWorkingDirectory(node)
                 }
             }
 
@@ -133,19 +137,30 @@ class BaselineIdea extends AbstractBaselinePlugin {
     }
 
     /**
-     * Configure the default working directory of JUnit tests to be the module directory.
+     * Configure the default working directory of RunManager configurations to be the module directory.
      */
-    private void addJUnitWorkingDirectory(node) {
-        node.append(new XmlParser().parseText('''
-            <component name="RunManager">
-                <configuration default="true" type="Application" factoryName="Application">
-                    <option name="WORKING_DIRECTORY" value="file://$MODULE_DIR$" />
-                </configuration>
-                <configuration default="true" type="JUnit" factoryName="JUnit">
-                    <option name="WORKING_DIRECTORY" value="file://$MODULE_DIR$" />
-                </configuration>
-            </component>
-            '''.stripIndent()))
+    private void setRunManagerWorkingDirectory(node) {
+        def runManager = node.component.find { it.'@name' == 'RunManager' }
+
+        if (runManager) {
+            // if RunManager configuration exists, set all WORKING_DIRECTORY options to module
+            def items = runManager.configuration.option.findAll { it.'@name' == 'WORKING_DIRECTORY' }
+            items.each { item ->
+                item.'@value' = 'file://$MODULE_DIR$'
+            }
+        } else {
+            // if RunManager configuration does not exist, add it
+            node.append(new XmlParser().parseText('''
+                <component name="RunManager">
+                    <configuration default="true" type="Application" factoryName="Application">
+                        <option name="WORKING_DIRECTORY" value="file://$MODULE_DIR$" />
+                    </configuration>
+                    <configuration default="true" type="JUnit" factoryName="JUnit">
+                        <option name="WORKING_DIRECTORY" value="file://$MODULE_DIR$" />
+                    </configuration>
+                </component>
+                '''.stripIndent()))
+        }
     }
 
     /**
