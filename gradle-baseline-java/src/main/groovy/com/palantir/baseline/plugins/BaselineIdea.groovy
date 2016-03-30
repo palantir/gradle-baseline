@@ -41,6 +41,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
                     addCopyright(node)
                     addCheckstyle(node)
                     addGit(node)
+                    addInspectionProjectProfile(node)
                 }
 
                 ideaRootModel.workspace.iws.withXml { provider ->
@@ -134,6 +135,21 @@ class BaselineIdea extends AbstractBaselinePlugin {
                 <mapping directory="$PROJECT_DIR$" vcs="Git" />
             </component>
             '''.stripIndent()))
+    }
+
+    private void addInspectionProjectProfile(node) {
+        node.append(new XmlParser().parseText("""
+            <component name="InspectionProjectProfileManager">
+                <profile version="1.0">
+                    <inspection_tool class="MissingOverrideAnnotation" enabled="true" level="WARNING" enabled_by_default="true">
+                        <option name="ignoreObjectMethods" value="false" />
+                        <option name="ignoreAnonymousClassMethods" value="false" />
+                    </inspection_tool>
+                </profile>
+                <option name="PROJECT_PROFILE" value="Default" />
+                <option name="USE_PROJECT_PROFILE" value="true" />
+            </component>
+            """.stripIndent()))
     }
 
     /**
