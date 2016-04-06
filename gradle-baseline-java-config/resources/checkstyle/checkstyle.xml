@@ -38,6 +38,10 @@
         <property name="format" value="&gt;&gt;&gt;&gt;&gt;&gt;&gt;"/>
         <property name="message" value="Found (&gt;&gt;&gt;&gt;&gt;&gt;&gt;), so it looks like you had a merge conflict that compiles. Please fix it."/>
     </module>
+    <module name="RegexpSingleline">
+        <property name="format" value="\s+$"/>
+        <property name="message" value="Whitespace at end-of-line"/>
+    </module>
     <module name="SuppressionFilter"> <!-- baseline-gradle: README.md -->
         <property name="file" value="${samedir}/checkstyle-suppressions.xml"/>
     </module>
@@ -61,7 +65,9 @@
             <property name="allowByTailComment" value="true"/>
             <property name="allowNonPrintableEscapes" value="true"/>
         </module>
-        <module name="AvoidNestedBlocks"/> <!-- Java Coding Guidelines: Avoid nested blocks -->
+        <module name="AvoidNestedBlocks"> <!-- Java Coding Guidelines: Avoid nested blocks -->
+            <property name="allowInSwitchCase" value="true"/>
+        </module>
         <module name="AvoidStarImport"/> <!-- Java Style Guide: No wildcard imports -->
         <module name="AvoidStaticImport"> <!-- Java Style Guide: No static imports -->
             <property name="excludes" value="org.junit.Assert.*,org.junit.Assume.*,org.hamcrest.Matchers.*,org.mockito.Mockito.*,org.mockito.Matchers.*,org.assertj.core.api.Assertions.*,com.google.common.base.Preconditions.*,org.apache.commons.lang3.Validate.*,com.google.common.truth.Truth.*"/>
@@ -80,10 +86,11 @@
         </module>
         <module name="EmptyForInitializerPad"/> <!-- Java Style Guide: Horizontal whitespace -->
         <module name="EmptyLineSeparator"> <!-- Java Style Guide: Source file structure -->
-            <property name="tokens" value="IMPORT, CLASS_DEF, ENUM_DEF, INTERFACE_DEF, CTOR_DEF, METHOD_DEF, STATIC_INIT, INSTANCE_INIT, VARIABLE_DEF"/>
+            <property name="tokens" value="IMPORT, CLASS_DEF, ENUM_DEF, INTERFACE_DEF, CTOR_DEF, STATIC_INIT, INSTANCE_INIT, VARIABLE_DEF"/>
             <property name="allowNoEmptyLineBetweenFields" value="true"/>
         </module>
         <module name="EmptyStatement"/> <!-- Java Style Guide: One statement per line -->
+        <module name="EqualsHashCode"/>
         <module name="FallThrough"/> <!-- Java Style Guide: Fall-through: commented -->
         <module name="FinalClass"/> <!-- Java Coding Guidelines: Private constructors -->
         <module name="GenericWhitespace"> <!-- Java Style Guide: Horizontal whitespace -->
@@ -98,8 +105,11 @@
             <property name="setterCanReturnItsClass" value="true"/>
         </module>
         <module name="HideUtilityClassConstructor"/> <!-- Java Coding Guidelines: Private constructors -->
+        <module name="IllegalCatch">
+            <property name="illegalClassNames" value="java.lang.Error, java.lang.Throwable"/>
+        </module>
         <module name="IllegalImport"> <!-- Java Coding Guidelines: Import the canonical package -->
-            <property name="illegalPkgs" value="sun, org.elasticsearch.common.base, org.elasticsearch.common.joda, jersey.repackaged.com.google.common, com.google.api.client.repackaged"/>
+            <property name="illegalPkgs" value="sun, org.elasticsearch.common.base, org.elasticsearch.common.joda, jersey.repackaged.com.google.common, com.google.api.client.repackaged, org.apache.hadoop.thirdparty.guava"/>
             <message key="import.illegal" value="Must not import repackaged classes."/>
         </module>
         <module name="IllegalInstantiation"> <!-- Java Coding Guidelines: Never instantiate primitive types -->
@@ -130,6 +140,7 @@
             <property name="lineWrappingIndentation" value="8"/>
         </module>
         <module name="InnerAssignment"/> <!-- Java Coding Guidelines: Inner assignments: Not used -->
+        <module name="InterfaceIsType"/>
         <module name="LeftCurly"> <!-- Java Style Guide: Nonempty blocks: K & R style -->
             <property name="maxLineLength" value="120"/>
         </module>
@@ -269,6 +280,42 @@
             <property name="format" value="^import org\.apache\.commons\.math\."/>
             <property name="message" value="math is deprecated, use math3 instead"/>
         </module>
+        <module name="RegexpSinglelineJava">
+            <property name="format" value="\bPreconditions\.check.*\{\}"/>
+            <property name="message" value="Use printf-style formatting in Preconditions"/>
+            <property name="ignoreComments" value="true"/>
+        </module>
+        <module name="RegexpSinglelineJava">
+            <property name="format" value="\.(debug|info|warn|error)\(.*%[sd]"/>
+            <property name="message" value="SLF4J loggers support '{}' style formatting"/>
+            <property name="ignoreComments" value="true"/>
+        </module>
+        <module name="RegexpSinglelineJava">
+            <property name="format" value="\.printStackTrace\(\)"/>
+            <property name="message" value="printStackTrace is not generally allowed"/>
+            <property name="ignoreComments" value="true"/>
+        </module>
+        <module name="RegexpSinglelineJava">
+            <property name="format" value="\sLogger\.getLogger\("/>
+            <property name="message" value="Use SLF4J instead: LoggerFactory.getLogger(...)"/>
+            <property name="ignoreComments" value="true"/>
+        </module>
+        <module name="RegexpSinglelineJava">
+            <property name="format" value="\bCharset.forName\(|\bCharsets\."/>
+            <property name="message" value="Use JDK StandardCharsets instead of alternatives"/>
+        </module>
+        <module name="RegexpSinglelineJava">
+            <property name="format" value="\bCharset.defaultCharset\("/>
+            <property name="message" value="Use explicit charset (e.g. StandardCharsets.UTF-8) instead of default"/>
+        </module>
+        <module name="RegexpSinglelineJava">
+            <property name="format" value="\bIOUtils\.toString\("/>
+            <property name="message" value="Prefer Guava''s {CharStreams,Files,Resources}.toString to avoid charset/stream closing issues"/>
+        </module>
+        <module name="RegexpSinglelineJava">
+            <property name="format" value="static enum"/>
+            <property name="message" value="Redundant ''static'' modifier."/>
+        </module>
         <module name="RightCurly"/> <!-- Java Style Guide: Nonempty blocks: K & R style -->
         <module name="RightCurly"> <!-- Java Style Guide: Nonempty blocks: K & R style -->
             <property name="option" value="alone"/>
@@ -286,6 +333,7 @@
         <module name="SimplifyBooleanReturn"/> <!-- Java Coding Guidelines: Keep Boolean expressions simple -->
         <module name="StaticVariableName"/> <!-- Java Style Guide: Naming -->
         <module name="StringLiteralEquality"/> <!-- Java Coding Guidelines: String equality: use String#equals -->
+        <module name="SuperClone"/>
         <module name="SuppressWarnings">
             <property name="format" value="serial"/>
         </module>
