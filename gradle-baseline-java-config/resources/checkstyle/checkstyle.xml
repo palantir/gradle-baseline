@@ -105,12 +105,13 @@
             <property name="setterCanReturnItsClass" value="true"/>
         </module>
         <module name="HideUtilityClassConstructor"/> <!-- Java Coding Guidelines: Private constructors -->
-        <module name="IllegalCatch">
-            <property name="illegalClassNames" value="java.lang.Error, java.lang.Throwable"/>
-        </module>
         <module name="IllegalImport"> <!-- Java Coding Guidelines: Import the canonical package -->
             <property name="illegalPkgs" value="sun, org.elasticsearch.common.base, org.elasticsearch.common.joda, jersey.repackaged.com.google.common, com.google.api.client.repackaged, org.apache.hadoop.thirdparty.guava"/>
             <message key="import.illegal" value="Must not import repackaged classes."/>
+        </module>
+        <module name="IllegalImport">
+            <property name="illegalPkgs" value="org.apache.log4j, org.apache.logging.log4j, java.util.logging, ch.qos.logback"/>
+            <message key="import.illegal" value="Use SLF4J instead of a logging framework directly."/>
         </module>
         <module name="IllegalInstantiation"> <!-- Java Coding Guidelines: Never instantiate primitive types -->
             <property name="classes" value="java.lang.Boolean"/>
@@ -140,7 +141,6 @@
             <property name="lineWrappingIndentation" value="8"/>
         </module>
         <module name="InnerAssignment"/> <!-- Java Coding Guidelines: Inner assignments: Not used -->
-        <module name="InterfaceIsType"/>
         <module name="LeftCurly"> <!-- Java Style Guide: Nonempty blocks: K & R style -->
             <property name="maxLineLength" value="120"/>
         </module>
@@ -270,47 +270,42 @@
         </module>
         <module name="RegexpSinglelineJava">
             <property name="format" value="\? extends Object\W"/>
-            <property name="message" value="Use ? rather than ? extends Object"/>
+            <property name="message" value="Use ? rather than ? extends Object."/>
         </module>
         <module name="RegexpSinglelineJava"> <!-- Java Coding Guidelines: Libraries -->
             <property name="format" value="^import org\.apache\.commons\.lang\."/>
-            <property name="message" value="lang is deprecated, use lang3 instead"/>
+            <property name="message" value="lang is deprecated, use lang3 instead."/>
         </module>
         <module name="RegexpSinglelineJava"> <!-- Java Coding Guidelines: Libraries -->
             <property name="format" value="^import org\.apache\.commons\.math\."/>
-            <property name="message" value="math is deprecated, use math3 instead"/>
+            <property name="message" value="math is deprecated, use math3 instead."/>
         </module>
         <module name="RegexpSinglelineJava">
             <property name="format" value="\bPreconditions\.check.*\{\}"/>
-            <property name="message" value="Use printf-style formatting in Preconditions"/>
+            <property name="message" value="Use printf-style formatting in Preconditions, not '{}' style formatting."/>
             <property name="ignoreComments" value="true"/>
         </module>
         <module name="RegexpSinglelineJava">
             <property name="format" value="\.(debug|info|warn|error)\(.*%[sd]"/>
-            <property name="message" value="SLF4J loggers support '{}' style formatting"/>
+            <property name="message" value="SLF4J loggers support '{}' style formatting."/>
             <property name="ignoreComments" value="true"/>
         </module>
         <module name="RegexpSinglelineJava">
             <property name="format" value="\.printStackTrace\(\)"/>
-            <property name="message" value="printStackTrace is not generally allowed"/>
-            <property name="ignoreComments" value="true"/>
-        </module>
-        <module name="RegexpSinglelineJava">
-            <property name="format" value="\sLogger\.getLogger\("/>
-            <property name="message" value="Use SLF4J instead: LoggerFactory.getLogger(...)"/>
+            <property name="message" value="printStackTrace is not generally allowed."/>
             <property name="ignoreComments" value="true"/>
         </module>
         <module name="RegexpSinglelineJava">
             <property name="format" value="\bCharset.forName\(|\bCharsets\."/>
-            <property name="message" value="Use JDK StandardCharsets instead of alternatives"/>
+            <property name="message" value="Use JDK StandardCharsets instead of alternatives."/>
         </module>
         <module name="RegexpSinglelineJava">
             <property name="format" value="\bCharset.defaultCharset\("/>
-            <property name="message" value="Use explicit charset (e.g. StandardCharsets.UTF-8) instead of default"/>
+            <property name="message" value="Use explicit charset (e.g. StandardCharsets.UTF-8) instead of default."/>
         </module>
         <module name="RegexpSinglelineJava">
             <property name="format" value="\bIOUtils\.toString\("/>
-            <property name="message" value="Prefer Guava''s {CharStreams,Files,Resources}.toString to avoid charset/stream closing issues"/>
+            <property name="message" value="Prefer Guava''s {CharStreams,Files,Resources}.toString to avoid charset/stream closing issues."/>
         </module>
         <module name="RegexpSinglelineJava">
             <property name="format" value="static enum"/>
