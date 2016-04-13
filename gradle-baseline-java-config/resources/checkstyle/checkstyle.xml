@@ -46,6 +46,7 @@
         <property name="file" value="${samedir}/checkstyle-suppressions.xml"/>
     </module>
     <module name="SuppressWarningsFilter"/> <!-- baseline-gradle: README.md -->
+    <module name="SuppressionCommentFilter"/> <!-- baseline-gradle: README.md -->
     <module name="TreeWalker">
         <module name="AbbreviationAsWordInName"> <!-- Java Style Guide: Camel case : defined -->
             <property name="ignoreFinal" value="false"/>
@@ -92,6 +93,7 @@
         <module name="EmptyStatement"/> <!-- Java Style Guide: One statement per line -->
         <module name="EqualsHashCode"/>
         <module name="FallThrough"/> <!-- Java Style Guide: Fall-through: commented -->
+        <module name="FileContentsHolder"/> <!-- Required for SuppressionCommentFilter -->
         <module name="FinalClass"/> <!-- Java Coding Guidelines: Private constructors -->
         <module name="GenericWhitespace"> <!-- Java Style Guide: Horizontal whitespace -->
             <message key="ws.followed" value="GenericWhitespace ''{0}'' is followed by whitespace."/>
