@@ -145,6 +145,10 @@ the lowercase check name without the "Check" suffix:
 @SuppressWarnings("checkstyle:magicnumber")
 ```
 
+Checkstyle rules can also be suppressed using comments, which is useful for checks such as `IllegalImport` where
+annotations cannot be used to suppress the violation. To suppress checks for particular lines, add the comment
+`// CHECKSTYLE:OFF` before the first line to suppress and add the comment `// CHECKSTYLE:ON` after the last line.
+
 To disable certain checks for an entire file, apply [custom suppressions](http://checkstyle.sourceforge.net/config.html)
 in `.baseline/checkstyle/checkstyle-suppressions`.
 
