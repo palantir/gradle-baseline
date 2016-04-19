@@ -53,6 +53,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
             // Configure Idea module
             IdeaModel ideaModuleModel = project.extensions.findByType(IdeaModel)
             addJdkVersion(ideaModuleModel)
+            addCompileOnlyConfiguration(ideaModuleModel)
         }
     }
 
@@ -199,6 +200,13 @@ class BaselineIdea extends AbstractBaselinePlugin {
             }
         } else {
             project.logger.info("BaselineIdea: No Java version found in sourceCompatibility property.")
+        }
+    }
+
+    def addCompileOnlyConfiguration(IdeaModel ideaModel) {
+        def compileOnly = project.configurations.findByName("compileOnly")
+        if (compileOnly) {
+            ideaModel.module.scopes.get("PROVIDED").plus += [ compileOnly ]
         }
     }
 }
