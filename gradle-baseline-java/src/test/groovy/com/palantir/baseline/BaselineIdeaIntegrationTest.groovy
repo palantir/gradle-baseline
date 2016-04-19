@@ -130,4 +130,24 @@ class BaselineIdeaIntegrationTest extends IntegrationSpec {
                 "Git-support-is-not-added-if-git-directory-is-not-present.ipr"), Charsets.UTF_8).read()
         assert !rootIpr.contains('<mapping directory="$PROJECT_DIR$" vcs="Git"/>')
     }
+
+    def 'Adds compileOnly dependencies if the configuration exists'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << """
+            configurations {
+                compileOnly
+            }
+
+            dependencies {
+                compileOnly localGroovy()
+            }
+        """
+
+        then:
+        runTasksSuccessfully('idea')
+        def iml = Files.asCharSource(new File(projectDir,
+                  "Adds-compileOnly-dependencies-if-the-configuration-exists.iml"), Charsets.UTF_8).read()
+        assert iml.contains('<orderEntry type="module-library" scope="PROVIDED">')
+    }
 }
