@@ -16,11 +16,12 @@
 
 package com.palantir.baseline.plugins
 
-import com.palantir.baseline.BaselineParameters
+import java.nio.file.Paths
+
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
-import java.nio.file.Paths
+import com.palantir.baseline.BaselineParameters
 
 /**
  * The super class of all Baseline plugins.
@@ -35,4 +36,21 @@ abstract class AbstractBaselinePlugin implements Plugin<Project> {
     protected final String getConfigDir() {
         return Paths.get(project.rootDir.toString(), BaselineParameters.DEFAULT_CONFIG_DIR).toString()
     }
+
+    /**
+     * Returns the absolute path of the Baseline configuration extract, 
+     * i.e., the directory '.bline' in the root directory of this project.
+     */
+    protected final String getExtractDir() {
+        return Paths.get(project.rootDir.toString(), BaselineParameters.DEFAULT_EXTRACT_DIR).toString()
+    }
+
+	protected final File resolveConfigPath(String path) {
+		File file = project.file(getConfigDir() + '/' + path)
+		if (!file.exists()) {
+			file = project.file(getExtractDir() + '/' + path)
+		}
+		return file
+	}
+
 }

@@ -31,6 +31,7 @@ class BaselineCheckstyle extends AbstractBaselinePlugin {
     void apply(Project project) {
         this.project = project
 
+		project.rootProject.apply BaselineConfig
         project.plugins.apply CheckstylePlugin
 
         // Set default version (outside afterEvaluate so it can be overriden).
@@ -45,13 +46,16 @@ class BaselineCheckstyle extends AbstractBaselinePlugin {
     def configureCheckstyle() {
         project.logger.info("Baseline: Configuring Checkstyle tasks")
 
+        File checkstyleConfig = resolveConfigPath("/checkstyle/checkstyle.xml")
+        File checkstyleDirectory = resolveConfigPath("/checkstyle")
+
         def configProps = project.checkstyle.configProperties
         // Required to enable checkstyle suppressions
-        configProps['samedir'] = "${configDir}/checkstyle"
+        configProps['samedir'] = checkstyleDirectory.getPath()
 
         // Configure checkstyle
         project.checkstyle {
-            configFile = project.file("${configDir}/checkstyle/checkstyle.xml")
+            configFile = checkstyleConfig
             configProperties = configProps
         }
 
