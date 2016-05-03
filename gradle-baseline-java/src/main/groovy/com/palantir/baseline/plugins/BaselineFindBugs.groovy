@@ -16,12 +16,14 @@
 
 package com.palantir.baseline.plugins
 
+import com.google.common.base.Predicate
+import com.google.common.collect.Iterables
+import com.palantir.baseline.BaselineFindBugsExtension
 import org.gradle.api.Project
 import org.gradle.api.plugins.quality.FindBugs
 import org.gradle.api.plugins.quality.FindBugsPlugin
 import org.gradle.plugins.ide.eclipse.EclipsePlugin
 
-import java.nio.file.Path
 import java.nio.file.Paths
 
 /**
@@ -34,6 +36,7 @@ class BaselineFindBugs extends AbstractBaselinePlugin {
 
     void apply(Project project) {
         this.project = project
+        BaselineFindBugsExtension extension = project.extensions.create("baselineFindbugs", BaselineFindBugsExtension)
 
         project.plugins.apply FindBugsPlugin
 
@@ -50,14 +53,14 @@ class BaselineFindBugs extends AbstractBaselinePlugin {
         }
 
         // Configure not in afterEvaluate so that user can override.
-        configureFindBugs()
+        configureFindBugs(extension)
 
         project.afterEvaluate { Project p ->
             configureFindBugsForEclipse()
         }
     }
 
-    def configureFindBugs() {
+    def configureFindBugs(BaselineFindBugsExtension extension) {
         project.logger.info("Baseline: Configuring FindBugs tasks")
 
         // Configure findbugs
@@ -73,7 +76,13 @@ class BaselineFindBugs extends AbstractBaselinePlugin {
                         .replaceFirst(/\$\w+\.class$/, '')
                         .replaceFirst(/\.class$/, '')
                         + '.java').absolutePath
-                boolean keepFile = !javaFile.contains("/generated/") && !javaFile.contains("/partiallyGenerated/")
+
+                boolean keepFile = Iterables.all(extension.exclusions, new Predicate<String>() {
+                    @Override
+                    boolean apply(String input) {
+                        return !javaFile.contains(input)
+                    }
+                })
                 return keepFile
             }
 
