@@ -21,6 +21,7 @@ import org.gradle.api.plugins.quality.FindBugs
 import org.gradle.api.plugins.quality.FindBugsPlugin
 import org.gradle.plugins.ide.eclipse.EclipsePlugin
 
+import java.nio.file.Path
 import java.nio.file.Paths
 
 /**
@@ -65,6 +66,27 @@ class BaselineFindBugs extends AbstractBaselinePlugin {
             excludeFilter = excludeFilterFile
             effort = DEFAULT_EFFORT
         }
+
+        project.tasks.withType(FindBugs, { task ->
+            def filter = {
+                String javaFile = new File(it.path
+                        .replaceFirst(/\$\w+\.class$/, '')
+                        .replaceFirst(/\.class$/, '')
+                        + '.java').absolutePath
+                boolean keepFile = !javaFile.contains("/generated/") && !javaFile.contains("/partiallyGenerated/")
+                return keepFile
+            }
+
+            // FindBugs fails if run on an empty set of classes. Need to disable the task before it's run.
+            task.onlyIf {
+                def filteredClasses = task.classes.filter filter
+                return !filteredClasses.empty
+            }
+
+            task.doFirst {
+                task.classes = task.classes.filter filter
+            }
+        })
     }
 
     // Configure checkstyle settings for Eclipse
