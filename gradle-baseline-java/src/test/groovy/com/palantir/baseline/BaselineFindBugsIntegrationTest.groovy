@@ -66,6 +66,20 @@ class BaselineFindBugsIntegrationTest extends IntegrationSpec {
         runTasksWithFailure('findbugsMain')
     }
 
+    def 'can clear all exclusions'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << '''
+            baselineFindbugs {
+                exclusions = []
+            }
+        '''.stripIndent()
+        writeJavaFile("generated", "foo", "Bad", badClass)
+
+        then:
+        runTasksWithFailure('findbugsGenerated')
+    }
+
     def writeJavaFile(String sourceSet, String packageDotted, String className, String classLines){
         def path = 'src/' + sourceSet + '/java/' + packageDotted.replace('.', '/') + '/' + className + '.java'
         def javaFile = createFile(path, projectDir)
