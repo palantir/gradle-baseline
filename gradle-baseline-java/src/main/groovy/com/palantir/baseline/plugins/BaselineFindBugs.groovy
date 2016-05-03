@@ -71,18 +71,13 @@ class BaselineFindBugs extends AbstractBaselinePlugin {
         }
 
         project.tasks.withType(FindBugs, { task ->
-            def filter = {
-                String javaFile = new File(it.path
+            def filter = { File file ->
+                String javaFile = new File(file.path
                         .replaceFirst(/\$\w+\.class$/, '')
                         .replaceFirst(/\.class$/, '')
                         + '.java').absolutePath
 
-                boolean keepFile = Iterables.all(extension.exclusions, new Predicate<String>() {
-                    @Override
-                    boolean apply(String input) {
-                        return !javaFile.contains(input)
-                    }
-                })
+                boolean keepFile = !extension.exclusions.any { javaFile.contains(it) }
                 return keepFile
             }
 

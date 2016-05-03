@@ -33,14 +33,9 @@ class BaselineFindBugsIntegrationTest extends IntegrationSpec {
     def 'src/main files are not excluded by default'() {
         when:
         buildFile << standardBuildFile
-        writeJavaFile("main", "foo", "Bad", badClass)  // Fails findbugs
-        writeJavaFile("generated", "foo", "Bad", badClass)  // Succeeds because we exclude /generated/
-        writeJavaFile("partiallyGenerated", "foo", "Bad", badClass)  // Succeeds because we exclude /partiallyGenerated/
-        writeJavaFile("partiallyGenerated", "foo", "Good", goodClass)
+        writeJavaFile("main", "foo", "Bad", badClass)
 
         then:
-        runTasksSuccessfully('compileJava', 'compileGeneratedJava', 'compilePartiallyGeneratedJava')
-        runTasksSuccessfully('findbugsGenerated', 'findbugsPartiallyGenerated')
         runTasksWithFailure('findbugsMain')
     }
 
