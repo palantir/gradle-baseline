@@ -51,11 +51,11 @@ class BaselineFindBugsIntegrationTest extends IntegrationSpec {
     def 'can configure the set of excluded files'() {
         when:
         buildFile << standardBuildFile
-        buildFile << """
+        buildFile << '''
             baselineFindbugs {
-                exclude "/partiallyGenerated/"
+                exclude ~/\\/partiallyGenerated\\//
             }
-        """.stripIndent()
+        '''.stripIndent()
         writeJavaFile("main", "foo", "Bad", badClass)
         writeJavaFile("generated", "foo", "Bad", badClass)
         writeJavaFile("partiallyGenerated", "foo", "Bad", badClass)

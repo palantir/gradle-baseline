@@ -77,7 +77,7 @@ class BaselineFindBugs extends AbstractBaselinePlugin {
                         .replaceFirst(/\.class$/, '')
                         + '.java').absolutePath
 
-                boolean keepFile = !extension.exclusions.any { javaFile.contains(it) }
+                boolean keepFile = !extension.exclusions.any { javaFile =~ it }
                 return keepFile
             }
 

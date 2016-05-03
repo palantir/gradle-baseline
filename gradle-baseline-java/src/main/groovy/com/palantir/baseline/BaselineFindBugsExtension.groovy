@@ -1,9 +1,11 @@
 package com.palantir.baseline
 
-class BaselineFindBugsExtension {
-    def List<String> exclusions = ["/generated/"]
+import java.util.regex.Pattern
 
-    def exclude(String exclude) {
+class BaselineFindBugsExtension {
+    def List<Pattern> exclusions = [Pattern.compile("/generated/")]
+
+    def exclude(Pattern exclude) {
         exclusions.add(exclude)
     }
 }
