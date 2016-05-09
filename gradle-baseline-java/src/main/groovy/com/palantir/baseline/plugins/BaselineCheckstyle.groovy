@@ -26,7 +26,7 @@ import org.gradle.api.plugins.quality.CheckstylePlugin
  */
 class BaselineCheckstyle extends AbstractBaselinePlugin {
 
-    static String DEFAULT_CHECKSTYLE_VERSION = '6.11.2'
+    static String DEFAULT_CHECKSTYLE_VERSION = '6.18'
 
     void apply(Project project) {
         this.project = project
