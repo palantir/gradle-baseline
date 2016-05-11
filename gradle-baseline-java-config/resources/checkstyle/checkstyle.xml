@@ -112,6 +112,14 @@
             <message key="import.illegal" value="Must not import repackaged classes."/>
         </module>
         <module name="IllegalImport">
+            <property name="illegalPkgs" value="org.apache.commons.lang"/>
+            <message key="import.illegal" value="lang is deprecated, use lang3 instead."/>
+        </module>
+        <module name="IllegalImport">
+            <property name="illegalPkgs" value="org.apache.commons.math"/>
+            <message key="import.illegal" value="math is deprecated, use math3 instead."/>
+        </module>
+        <module name="IllegalImport">
             <property name="illegalPkgs" value="org.apache.log4j, org.apache.logging.log4j, java.util.logging, ch.qos.logback"/>
             <message key="import.illegal" value="Use SLF4J instead of a logging framework directly."/>
         </module>
@@ -261,14 +269,6 @@
         <module name="RegexpSinglelineJava">
             <property name="format" value="\? extends Object\W"/>
             <property name="message" value="Use ? rather than ? extends Object."/>
-        </module>
-        <module name="RegexpSinglelineJava"> <!-- Java Coding Guidelines: Libraries -->
-            <property name="format" value="^import org\.apache\.commons\.lang\."/>
-            <property name="message" value="lang is deprecated, use lang3 instead."/>
-        </module>
-        <module name="RegexpSinglelineJava"> <!-- Java Coding Guidelines: Libraries -->
-            <property name="format" value="^import org\.apache\.commons\.math\."/>
-            <property name="message" value="math is deprecated, use math3 instead."/>
         </module>
         <module name="RegexpSinglelineJava">
             <property name="format" value="\bPreconditions\.check.*\{\}"/>
