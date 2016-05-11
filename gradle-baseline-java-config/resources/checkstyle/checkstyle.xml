@@ -107,6 +107,10 @@
             <property name="setterCanReturnItsClass" value="true"/>
         </module>
         <module name="HideUtilityClassConstructor"/> <!-- Java Coding Guidelines: Private constructors -->
+        <module name="IllegalImport"> <!-- Java Coding Guidelines: Use JUnit 4-style test classes and assertions -->
+            <property name="illegalPkgs" value="junit.framework"/>
+            <message key="import.illegal" value="Use JUnit 4-style (org.junit.*) test classes and assertions instead of JUnit 3 (junit.framework.*)."/>
+        </module>
         <module name="IllegalImport"> <!-- Java Coding Guidelines: Import the canonical package -->
             <property name="illegalPkgs" value="sun, org.elasticsearch.common.base, org.elasticsearch.common.joda, jersey.repackaged.com.google.common, com.google.api.client.repackaged, org.apache.hadoop.thirdparty.guava"/>
             <message key="import.illegal" value="Must not import repackaged classes."/>
