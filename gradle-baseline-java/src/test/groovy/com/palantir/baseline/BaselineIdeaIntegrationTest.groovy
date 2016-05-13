@@ -150,4 +150,20 @@ class BaselineIdeaIntegrationTest extends IntegrationSpec {
                   "Adds-compileOnly-dependencies-if-the-configuration-exists.iml"), Charsets.UTF_8).read()
         assert iml.contains('<orderEntry type="module-library" scope="PROVIDED">')
     }
+
+    def 'Doesn\'t make compile dependencies provided unnecessarily'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << """
+            dependencies {
+                compile localGroovy()
+            }
+        """
+
+        then:
+        runTasksSuccessfully('idea')
+        def iml = Files.asCharSource(new File(projectDir,
+                "Doesn-t-make-compile-dependencies-provided-unnecessarily.iml"), Charsets.UTF_8).read()
+        assert iml.contains('<orderEntry type="module-library">')
+    }
 }
