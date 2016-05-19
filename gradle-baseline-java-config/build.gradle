@@ -16,6 +16,7 @@ bintrayUpload.dependsOn { zipConfig }
 bintray {
     user = System.getenv('BINTRAY_USER')
     key = System.getenv('BINTRAY_KEY')
+    publish = true
     pkg {
         repo = 'releases'
         name = 'gradle-baseline'
@@ -26,11 +27,11 @@ bintray {
 }
 
 publishing {
-	publications {
-	    ConfigPublication(MavenPublication) {
-	        artifact(zipConfig) {
-	            extension 'zip'
-	        }
-	    }
-	}
+    publications {
+        ConfigPublication(MavenPublication) {
+            artifact(zipConfig) {
+                extension 'zip'
+            }
+        }
+    }
 }
