@@ -46,6 +46,7 @@ bintrayUpload.dependsOn { sourceJar }
 bintray {
     user = System.getenv('BINTRAY_USER')
     key = System.getenv('BINTRAY_KEY')
+    publish = true
     pkg {
         repo = 'releases'
         name = 'gradle-baseline'

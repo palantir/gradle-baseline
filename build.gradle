@@ -7,7 +7,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.4'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
         classpath 'com.gradle.publish:plugin-publish-plugin:0.9.1'
         classpath 'com.palantir:gradle-flexversion:0.7.0'
     }
