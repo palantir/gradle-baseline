@@ -193,6 +193,19 @@ The BUG_PATTERN_NAME can be derived from the "Pattern" field in the Eclipse Bug 
 More complicated filters can be handled via the `.baseline/findbugs/excludeFilter.xml` file; see [FindBugs
 documentation](http://findbugs.sourceforge.net/manual/filter.html) for details.
 
+**Generated code.** By default, the `baseline-findbugs` plugin excludes all files whose path (relative to the Gradle
+project) contains `/generated/`, for example `src/generated/foo/Bar.java`. The behavior is configurable through the
+`baselineFindbugs` extensions:
+
+```Groovy
+baselineFindbugs {
+  // Add a custom path-name-based exclusion
+  exclude ~/\\/myOtherGeneratedFolder\\//
+
+  // Remove all path-name-based exclusions
+  exclusions = []
+```
+
 
 ### Jacoco Coverage Plugin (jacoco-coverage)
 

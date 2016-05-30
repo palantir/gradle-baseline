@@ -16,6 +16,9 @@
 
 package com.palantir.baseline.plugins
 
+import com.google.common.base.Predicate
+import com.google.common.collect.Iterables
+import com.palantir.baseline.BaselineFindBugsExtension
 import org.gradle.api.Project
 import org.gradle.api.plugins.quality.FindBugs
 import org.gradle.api.plugins.quality.FindBugsPlugin
@@ -33,6 +36,7 @@ class BaselineFindBugs extends AbstractBaselinePlugin {
 
     void apply(Project project) {
         this.project = project
+        BaselineFindBugsExtension extension = project.extensions.create("baselineFindbugs", BaselineFindBugsExtension)
 
         project.plugins.apply FindBugsPlugin
 
@@ -49,14 +53,14 @@ class BaselineFindBugs extends AbstractBaselinePlugin {
         }
 
         // Configure not in afterEvaluate so that user can override.
-        configureFindBugs()
+        configureFindBugs(extension)
 
         project.afterEvaluate { Project p ->
             configureFindBugsForEclipse()
         }
     }
 
-    def configureFindBugs() {
+    def configureFindBugs(BaselineFindBugsExtension extension) {
         project.logger.info("Baseline: Configuring FindBugs tasks")
 
         // Configure findbugs
@@ -65,6 +69,28 @@ class BaselineFindBugs extends AbstractBaselinePlugin {
             excludeFilter = excludeFilterFile
             effort = DEFAULT_EFFORT
         }
+
+        project.tasks.withType(FindBugs, { task ->
+            def filter = { File file ->
+                String javaFile = new File(file.path
+                        .replaceFirst(/\$\w+\.class$/, '')
+                        .replaceFirst(/\.class$/, '')
+                        + '.java').absolutePath
+
+                boolean keepFile = !extension.exclusions.any { javaFile =~ it }
+                return keepFile
+            }
+
+            // FindBugs fails if run on an empty set of classes. Need to disable the task before it's run.
+            task.onlyIf {
+                def filteredClasses = task.classes.filter filter
+                return !filteredClasses.empty
+            }
+
+            task.doFirst {
+                task.classes = task.classes.filter filter
+            }
+        })
     }
 
     // Configure checkstyle settings for Eclipse
