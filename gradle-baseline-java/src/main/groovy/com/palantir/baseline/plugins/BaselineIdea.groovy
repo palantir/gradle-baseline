@@ -42,6 +42,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
                     addCheckstyle(node)
                     addGit(node)
                     addInspectionProjectProfile(node)
+                    addJavaProjectCodeInsightSettings(node)
                 }
 
                 ideaRootModel.workspace.iws.withXml { provider ->
@@ -148,6 +149,17 @@ class BaselineIdea extends AbstractBaselinePlugin {
                 </profile>
                 <option name="PROJECT_PROFILE" value="Default" />
                 <option name="USE_PROJECT_PROFILE" value="true" />
+            </component>
+            """.stripIndent()))
+    }
+
+    private void addJavaProjectCodeInsightSettings(node) {
+        node.append(new XmlParser().parseText("""
+            <component name="JavaProjectCodeInsightSettings">
+                <excluded-names>
+                    <name>com.sun</name>
+                    <name>java.awt</name>
+                </excluded-names>
             </component>
             """.stripIndent()))
     }
