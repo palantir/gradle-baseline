@@ -120,9 +120,10 @@ class BaselineEclipse extends AbstractBaselinePlugin {
             // Override default Eclipse JRE.
             if (project.plugins.hasPlugin(JavaPlugin)) {
                 project.tasks.eclipseClasspath.doFirst {
+                    String eclipseClassPath = "org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-" + project.sourceCompatibility;
                     project.eclipse.classpath {
                         containers.clear()
-                        containers.add("org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-${project.sourceCompatibility}")
+                        containers.add(eclipseClassPath)
                     }
                 }
             }
