@@ -299,7 +299,7 @@
         </module>
         <module name="RegexpSinglelineJava">
             <property name="format" value="\bIOUtils\.toString\("/>
-            <property name="message" value="Prefer Guava''s {CharStreams,Files,Resources}.toString to avoid charset/stream closing issues."/>
+            <property name="message" value="Prefer Guava''s [CharStreams,Files,Resources].toString to avoid charset/stream closing issues."/>
         </module>
         <module name="RegexpSinglelineJava">
             <property name="format" value="static enum"/>
