@@ -30,6 +30,7 @@ class BaselineFindBugs extends AbstractBaselinePlugin {
 
     private static final String DEFAULT_FINDBUGS_VERSION = '3.0.1'
     private static final String DEFAULT_EFFORT = 'max'
+    private static final String ANTIPATTERNS_ARTIFACT = 'com.palantir.antipatterns:antipatterns:1.0-beta.4'
 
     void apply(Project project) {
         this.project = project
@@ -64,6 +65,10 @@ class BaselineFindBugs extends AbstractBaselinePlugin {
             toolVersion = DEFAULT_FINDBUGS_VERSION
             excludeFilter = excludeFilterFile
             effort = DEFAULT_EFFORT
+        }
+
+        project.dependencies {
+            findbugsPlugins ANTIPATTERNS_ARTIFACT
         }
     }
 
