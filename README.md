@@ -193,6 +193,14 @@ The BUG_PATTERN_NAME can be derived from the "Pattern" field in the Eclipse Bug 
 More complicated filters can be handled via the `.baseline/findbugs/excludeFilter.xml` file; see [FindBugs
 documentation](http://findbugs.sourceforge.net/manual/filter.html) for details.
 
+We apply the [antipatterns](https://github.com/palantir/antipatterns) Gradle plugin; if you wish to change
+the version of this plugin, please do so by adding
+
+    dependencies {
+        findbugsPlugins "com.palantir.antipatterns:$antipatternsVersion"
+    }
+
+to your project dependencies.
 
 ### Jacoco Coverage Plugin (jacoco-coverage)
 
