@@ -1,6 +1,10 @@
 <!-- See http://findbugs.sourceforge.net/manual/filter.html for syntax -->
 <FindBugsFilter>
 
+    <Match>
+        <Source name="~.*\.scala" />
+    </Match>
+
     <!-- @NonnullByDefault doesn't play nicely with overriding @Nullable parameters/outputs -->
     <Match>
         <Bug pattern="NP_PARAMETER_MUST_BE_NONNULL_BUT_MARKED_AS_NULLABLE" />
