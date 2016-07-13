@@ -43,7 +43,7 @@ class BaselineCheckstyle extends AbstractBaselinePlugin {
     }
 
     def configureCheckstyle() {
-        project.logger.info("Baseline: Configuring Checkstyle tasks")
+        project.logger.debug("Baseline: Configuring Checkstyle tasks")
 
         def configProps = project.checkstyle.configProperties
         // Required to enable checkstyle suppressions
@@ -78,10 +78,10 @@ class BaselineCheckstyle extends AbstractBaselinePlugin {
     def configureCheckstyleForEclipse() {
         def eclipse = project.plugins.findPlugin "eclipse"
         if (eclipse == null) {
-            project.logger.info "Baseline: Skipping configuring Eclipse for Checkstyle (eclipse not applied)"
+            project.logger.debug "Baseline: Skipping configuring Eclipse for Checkstyle (eclipse not applied)"
             return
         }
-        project.logger.info "Baseline: Configuring Eclipse Checkstyle"
+        project.logger.debug "Baseline: Configuring Eclipse Checkstyle"
         project.eclipse.project {
             natures "net.sf.eclipsecs.core.CheckstyleNature"
             buildCommand "net.sf.eclipsecs.core.CheckstyleBuilder"

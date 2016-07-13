@@ -98,11 +98,11 @@ class BaselineIdea extends AbstractBaselinePlugin {
     private void addCheckstyle(node) {
         def checkstyle = project.plugins.findPlugin(BaselineCheckstyle)
         if (checkstyle == null) {
-            project.logger.info "Baseline: Skipping IDEA checkstyle configuration since baseline-checkstyle not applied"
+            project.logger.debug "Baseline: Skipping IDEA checkstyle configuration since baseline-checkstyle not applied"
             return
         }
 
-        project.logger.info "Baseline: Configuring Checkstyle for Idea"
+        project.logger.debug "Baseline: Configuring Checkstyle for Idea"
         def checkstyleFile = "LOCAL_FILE:\$PRJ_DIR\$.baseline/checkstyle/checkstyle.xml"
         node.append(new XmlParser().parseText("""
             <component name="CheckStyle-IDEA">
@@ -126,7 +126,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
      */
     private void addGit(node) {
         if (!project.file(".git").isDirectory()) {
-            project.logger.info "Baseline: Skipping IDEA Git configuration since .git directory does not exist."
+            project.logger.debug "Baseline: Skipping IDEA Git configuration since .git directory does not exist."
             return
         }
 
@@ -187,7 +187,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
         if (compileJavaTask) {
             def javaVersion = compileJavaTask.sourceCompatibility
             def jdkVersion = 'JDK_' + javaVersion.replaceAll('\\.', '_')
-            project.logger.info("BaselineIdea: Configuring IDEA Module for Java version: " + javaVersion)
+            project.logger.debug("BaselineIdea: Configuring IDEA Module for Java version: " + javaVersion)
 
             if (ideaModel.project != null) {
                 ideaModel.project.languageLevel = javaVersion
@@ -198,7 +198,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
                 it.asNode().component.find { it.@name == 'NewModuleRootManager' }.@LANGUAGE_LEVEL = jdkVersion
             }
         } else {
-            project.logger.info("BaselineIdea: No Java version found in sourceCompatibility property.")
+            project.logger.debug("BaselineIdea: No Java version found in sourceCompatibility property.")
         }
     }
 }
