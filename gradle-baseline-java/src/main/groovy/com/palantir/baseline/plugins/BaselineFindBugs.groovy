@@ -58,7 +58,7 @@ class BaselineFindBugs extends AbstractBaselinePlugin {
     }
 
     def configureFindBugs() {
-        project.logger.info("Baseline: Configuring FindBugs tasks")
+        project.logger.debug("Baseline: Configuring FindBugs tasks")
 
         // Configure findbugs
         project.findbugs {
@@ -75,10 +75,10 @@ class BaselineFindBugs extends AbstractBaselinePlugin {
     // Configure checkstyle settings for Eclipse
     def configureFindBugsForEclipse() {
         if (!project.plugins.findPlugin(EclipsePlugin)) {
-            project.logger.info "Baseline: Skipping configuring Eclipse for FindBugs (eclipse not applied)"
+            project.logger.debug "Baseline: Skipping configuring Eclipse for FindBugs (eclipse not applied)"
             return
         }
-        project.logger.info "Baseline: Configuring Eclipse FindBugs"
+        project.logger.debug "Baseline: Configuring Eclipse FindBugs"
         project.eclipse.project {
             natures "edu.umd.cs.findbugs.plugin.eclipse.findbugsNature"
             buildCommand "edu.umd.cs.findbugs.plugin.eclipse.findbugsBuilder"
