@@ -1,0 +1,15 @@
+machine:
+  java:
+    version: oraclejdk7
+  environment:
+    TERM: dumb
+
+test:
+  override:
+    - ./gradlew build
+
+deployment:
+  release:
+    tag: /[0-9]+(\.[0-9]+)+(-rc[0-9]+)?(-alpha[0-9]+)?/
+    commands:
+      - ./gradlew --info bintrayUpload
