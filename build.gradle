@@ -9,8 +9,11 @@ buildscript {
     dependencies {
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
         classpath 'com.gradle.publish:plugin-publish-plugin:0.9.1'
-        classpath 'com.palantir:gradle-flexversion:0.7.0'
     }
+}
+
+plugins {
+    id 'com.palantir.git-version' version '0.2.0'
 }
 
 apply plugin: 'idea'
@@ -25,12 +28,7 @@ subprojects {
         project.version.isTag == true
     }
 
-    apply plugin: 'gradle-flexversion'
-    flexversion {
-        useTags = true
-    }
-
     group = 'com.palantir'
-    version = flexVersion()
+    version = gitVersion()
     description = 'A Gradle plugin for applying Baseline-recommended build and IDE settings'
 }

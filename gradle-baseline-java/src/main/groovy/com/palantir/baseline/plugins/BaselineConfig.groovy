@@ -16,9 +16,6 @@
 
 package com.palantir.baseline.plugins
 
-import com.google.common.base.Charsets
-import com.google.common.base.Preconditions
-import com.google.common.io.Resources
 import org.gradle.api.Project
 
 /**
@@ -26,12 +23,14 @@ import org.gradle.api.Project
  */
 class BaselineConfig extends AbstractBaselinePlugin {
 
-    private static final String VERSION_FILE = "version.txt";
+    private static final String VERSION_RESOURCE = "/version.txt";
 
     void apply(Project rootProject) {
         this.project = rootProject
-        Preconditions.checkArgument(rootProject == rootProject.rootProject,
-            BaselineConfig.canonicalName + " plugin can only be applied to the root project.")
+        if (rootProject != rootProject.rootProject) {
+            throw new IllegalArgumentException(
+                    BaselineConfig.canonicalName + " plugin can only be applied to the root project.")
+        }
 
         rootProject.configurations {
             baseline
@@ -56,6 +55,6 @@ class BaselineConfig extends AbstractBaselinePlugin {
     }
 
     private static String extractVersionString() {
-        return Resources.asCharSource(Resources.getResource(VERSION_FILE), Charsets.UTF_8).readFirstLine()
+        return this.getClass().getResource(VERSION_RESOURCE).text
     }
 }
