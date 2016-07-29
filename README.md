@@ -1,6 +1,6 @@
 # Baseline Java code quality plugins
 
-[![Build Status](https://travis-ci.org/palantir/gradle-baseline.svg)](https://travis-ci.org/palantir/gradle-baseline)
+[![CircleCI Build Status](https://circleci.com/gh/palantir/gradle-baseline/tree/develop.svg)](https://circleci.com/gh/palantir/gradle-baseline)
 [![Bintray Release](https://api.bintray.com/packages/palantir/releases/gradle-baseline/images/download.svg) ](https://bintray.com/palantir/releases/gradle-baseline/_latestVersion)
 
 Baseline Java is a collection of Gradle plugins for configuring code quality tools in builds and generated
