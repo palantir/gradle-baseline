@@ -89,11 +89,11 @@ class BaselineIdeaIntegrationTest extends IntegrationSpec {
         runTasksSuccessfully('idea')
         def rootIml = Files.asCharSource(new File(projectDir,
                 "Modules-for-subprojects-pick-up-the-correct-sourceCompatibility.iml"), Charsets.UTF_8).read()
-        assert rootIml.contains('<orderEntry type="jdk" jdkName="1.6" jdkType="JavaSDK"/>')
+        assert rootIml ==~ /(?s).*orderEntry[^\\n]*jdkName="1.6".*/
         def subproject1Iml = Files.asCharSource(new File(projectDir, "subproject1/subproject1.iml"), Charsets.UTF_8).read()
-        assert subproject1Iml.contains('<orderEntry type="jdk" jdkName="1.7" jdkType="JavaSDK"/>')
+        assert subproject1Iml ==~ /(?s).*orderEntry[^\\n]*jdkName="1.7".*/
         def subproject2Iml = Files.asCharSource(new File(projectDir, "subproject2/subproject2.iml"), Charsets.UTF_8).read()
-        assert subproject2Iml.contains('<orderEntry type="jdk" jdkName="1.8" jdkType="JavaSDK"/>')
+        assert subproject2Iml ==~ /(?s).*orderEntry[^\\n]*jdkName="1.8".*/
     }
 
     def 'Idea project has copyright configuration'() {
@@ -148,7 +148,7 @@ class BaselineIdeaIntegrationTest extends IntegrationSpec {
         runTasksSuccessfully('idea')
         def iml = Files.asCharSource(new File(projectDir,
                   "Adds-compileOnly-dependencies-if-the-configuration-exists.iml"), Charsets.UTF_8).read()
-        assert iml.contains('<orderEntry type="module-library" scope="PROVIDED">')
+        assert iml ==~ /(?s).*orderEntry[^\\n]*scope="PROVIDED".*/
     }
 
     def 'Doesn\'t make compile dependencies provided unnecessarily'() {
