@@ -54,7 +54,7 @@ class BaselineConfig extends AbstractBaselinePlugin {
         }
     }
 
-    private static String extractVersionString() {
+    private String extractVersionString() {
         return this.getClass().getResource(VERSION_RESOURCE).text
     }
 }
