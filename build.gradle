@@ -24,9 +24,6 @@ repositories {
 
 subprojects {
     apply plugin: 'com.jfrog.bintray'
-    bintrayUpload.onlyIf {
-        project.version.isTag == true
-    }
 
     group = 'com.palantir'
     version = gitVersion()
