@@ -16,6 +16,7 @@
 
     <module name="FileLength"> <!-- Java Style Guide: File length: 2000 lines -->
         <property name="fileExtensions" value="java"/>
+        <property name="max" value="200"/>
     </module>
     <module name="FileTabCharacter"/> <!-- Java Style Guide: Whitespace characters -->
     <module name="NewlineAtEndOfFile"> <!-- Java Style Guide: Line ending: LF -->
