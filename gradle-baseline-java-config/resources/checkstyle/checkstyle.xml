@@ -14,9 +14,6 @@
     <property name="charset" value="UTF-8"/>
     <property name="severity" value="error"/>
 
-    <module name="FileLength"> <!-- Java Style Guide: File length: 2000 lines -->
-        <property name="fileExtensions" value="java"/>
-    </module>
     <module name="FileTabCharacter"/> <!-- Java Style Guide: Whitespace characters -->
     <module name="NewlineAtEndOfFile"> <!-- Java Style Guide: Line ending: LF -->
         <property name="lineSeparator" value="lf"/>
