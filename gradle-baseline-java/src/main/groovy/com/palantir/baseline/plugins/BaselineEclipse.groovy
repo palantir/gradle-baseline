@@ -27,23 +27,42 @@ import org.gradle.plugins.ide.eclipse.EclipsePlugin
 class BaselineEclipse extends AbstractBaselinePlugin {
 
     /**
-     * Copies all name/value pairs from {@code from} to {@code into}, replacing variable names (e.g., $var or ${var})
-     * occurring in values via a {@link SimpleTemplateEngine} and the given binding.
+     * Copies all name/value pairs from {@code from} to {@code into}, replacing variable names (e.g., $var or ${var}) occurring in values using basic string replacement
      */
     static def mergeProperties(Properties from, Properties into, Map binding) {
         from.stringPropertyNames().each { property ->
-            def propertyValue = from.getProperty(property)
-            try {
-                // Not all properties are well-formed; attempt to parse and fall-back to original value.
-                // Sadly, this is outrageously slow.
-                def template = new SimpleTemplateEngine().createTemplate(from.getProperty(property))
-                propertyValue = template.make(binding).toString()
-            } catch (Exception e) {
-                propertyValue = from.getProperty(property)
-            }
-
+            def propertyValue = replace(from.getProperty(property), binding)
             into.setProperty(property, propertyValue)
         }
+    }
+
+    static String replace(String str, Map binding) {
+        StringBuilder sb = new StringBuilder()
+        int start = 0
+        while (start < str.length()) {
+            int begin = str.indexOf("\${", start)
+            if (begin < 0) {
+                sb.append(str.substring(start))
+                break
+            }
+
+            int end = str.indexOf('}', begin)
+            if (end < 0) {
+                sb.append(str.substring(start))
+                break
+            }
+
+            String replacement = binding.get(str.substring(begin + 2, end))
+            if (replacement != null) {
+                sb.append(str.substring(start, begin))
+                sb.append(replacement)
+                start = end + 1
+            } else {
+                sb.append(str.substring(start, begin + 2))
+                start += 2
+            }
+        }
+        return sb.toString()
     }
 
     void apply(Project project) {
