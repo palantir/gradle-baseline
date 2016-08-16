@@ -31,36 +31,37 @@ class BaselineEclipse extends AbstractBaselinePlugin {
      */
     static def mergeProperties(Properties from, Properties into, Map binding) {
         from.stringPropertyNames().each { property ->
-            def propertyValue = replace(from.getProperty(property), binding)
-            into.setProperty(property, propertyValue)
+            try {
+                def propertyValue = replace(from.getProperty(property), binding)
+                into.setProperty(property, propertyValue)
+            }
+            catch(Exception e) {
+                e.printStackTrace()
+            }
         }
     }
 
     static String replace(String str, Map binding) {
         StringBuilder sb = new StringBuilder()
         int start = 0
-        while (start < str.length()) {
-            int begin = str.indexOf("\${", start)
-            if (begin < 0) {
-                sb.append(str.substring(start))
-                break
-            }
 
-            int end = str.indexOf('}', begin)
-            if (end < 0) {
-                sb.append(str.substring(start))
-                break
-            }
+        int begin = str.indexOf("\${", start)
+        if (begin < 0) {
+            sb.append(str.substring(start))
+            return sb.toString()
+        }
 
-            String replacement = binding.get(str.substring(begin + 2, end))
-            if (replacement != null) {
-                sb.append(str.substring(start, begin))
-                sb.append(replacement)
-                start = end + 1
-            } else {
-                sb.append(str.substring(start, begin + 2))
-                start += 2
-            }
+        int end = str.indexOf('}', begin)
+        if (end < 0) {
+            throw new Exception("Missing '}' for property: " + str)
+        }
+
+        String replacement = binding.get(str.substring(begin + 2, end))
+        if (replacement != null) {
+            sb.append(str.substring(start, begin))
+            sb.append(replacement)
+        } else {
+            throw new Exception("Replacement missing from binding for property: " + str)
         }
         return sb.toString()
     }
