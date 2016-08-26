@@ -13,7 +13,7 @@ dependencies {
     compile localGroovy()
 
     testCompile 'com.google.guava:guava:18.0'
-    testCompile 'com.netflix.nebula:nebula-test:4.0.0'
+    testCompile 'com.netflix.nebula:nebula-test:4.2.2'
     testCompile 'junit:junit:4.11'
     testCompile 'net.lingala.zip4j:zip4j:1.3.2'
     testCompile 'org.apache.commons:commons-io:1.3.2'
