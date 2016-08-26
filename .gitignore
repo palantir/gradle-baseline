@@ -12,6 +12,7 @@
 .project
 .settings
 build
+baseline-docs/node_modules/
 /out/
 gradle.properties
 gradle-baseline-java/src/main/resources/version.txt

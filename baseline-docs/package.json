@@ -1,0 +1,14 @@
+{
+  "name": "coding-guides",
+  "version": "0.1.0",
+  "description": "Docs for best practices.",
+  "main": "index.js",
+  "scripts": {
+    "lint-remark": "remark -f **/readme.md *.md"
+  },
+  "homepage": "https://github.com/palantir-baseline/best-practices",
+  "dependencies": {
+    "remark": "4.2.0",
+    "remark-lint": "3.2.0"
+  }
+}
