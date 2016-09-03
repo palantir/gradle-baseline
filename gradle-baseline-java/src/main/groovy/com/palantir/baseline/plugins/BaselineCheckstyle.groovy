@@ -20,6 +20,7 @@ import org.gradle.api.Project
 import org.gradle.api.plugins.quality.Checkstyle
 import org.gradle.api.plugins.quality.CheckstyleExtension
 import org.gradle.api.plugins.quality.CheckstylePlugin
+import org.gradle.api.tasks.javadoc.Javadoc
 
 /**
  * Configures the Gradle 'checkstyle' task with Baseline settings.
@@ -33,12 +34,20 @@ class BaselineCheckstyle extends AbstractBaselinePlugin {
 
         project.plugins.apply CheckstylePlugin
 
-        // Set default version (outside afterEvaluate so it can be overriden).
+        // Set default version (outside afterEvaluate so it can be overridden).
         project.extensions.findByType(CheckstyleExtension).toolVersion = DEFAULT_CHECKSTYLE_VERSION
 
         project.afterEvaluate { Project p ->
             configureCheckstyle()
             configureCheckstyleForEclipse()
+        }
+
+        // We use the "JavadocMethod" module in our Checkstyle configuration, making
+        // Java 8+ new doclint compiler feature redundant.
+        if (project.sourceCompatibility.isJava8Compatible()) {
+            project.tasks.withType(Javadoc) {
+                options.addStringOption('Xdoclint:none', '-quiet')
+            }
         }
     }
 
