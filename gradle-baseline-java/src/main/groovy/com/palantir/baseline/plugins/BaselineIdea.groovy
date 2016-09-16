@@ -22,6 +22,7 @@ import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.plugins.ide.idea.IdeaPlugin
 import org.gradle.plugins.ide.idea.model.IdeaModel
 
+import java.nio.file.Files
 import java.nio.file.Paths
 
 class BaselineIdea extends AbstractBaselinePlugin {
@@ -70,7 +71,9 @@ class BaselineIdea extends AbstractBaselinePlugin {
     private void addCopyright(node) {
         def copyrightManager = node.component.find { it.'@name' == 'CopyrightManager' }
         def copyrightDir = Paths.get("${configDir}/copyright/")
+        assert Files.exists(copyrightDir), "${copyrightDir} must exist"
         def copyrightFiles = project.fileTree(copyrightDir.toFile()).include("*")
+        assert copyrightFiles.iterator().hasNext(), "${copyrightDir} must contain one or more copyright file"
         copyrightFiles.each { File file ->
             def fileName = copyrightDir.relativize(file.toPath())
             def copyrightNode = copyrightManager.copyright.find {
