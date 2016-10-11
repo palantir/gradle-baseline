@@ -40,13 +40,13 @@ class BaselineCheckstyle extends AbstractBaselinePlugin {
         project.afterEvaluate { Project p ->
             configureCheckstyle()
             configureCheckstyleForEclipse()
-        }
 
-        // We use the "JavadocMethod" module in our Checkstyle configuration, making
-        // Java 8+ new doclint compiler feature redundant.
-        if (project.sourceCompatibility.isJava8Compatible()) {
-            project.tasks.withType(Javadoc) {
-                options.addStringOption('Xdoclint:none', '-quiet')
+            // We use the "JavadocMethod" module in our Checkstyle configuration, making
+            // Java 8+ new doclint compiler feature redundant.
+            project.tasks.withType(Javadoc) { it ->
+                if (project.sourceCompatibility.isJava8Compatible()) {
+                    it.options.addStringOption('Xdoclint:none', '-quiet')
+                }
             }
         }
     }
@@ -78,7 +78,7 @@ class BaselineCheckstyle extends AbstractBaselinePlugin {
         // Make sure java files are still included. This should match list in etc/eclipse-template/.checkstyle.
         // Currently not enforced, but could be eventually.
         def includeExtensions =
-            ['java', 'cfg', 'coffee', 'erb', 'groovy', 'handlebars', 'json', 'less', 'pl', 'pp', 'sh', 'xml']
+                ['java', 'cfg', 'coffee', 'erb', 'groovy', 'handlebars', 'json', 'less', 'pl', 'pp', 'sh', 'xml']
         includeExtensions.each { extension ->
             task.include "**/*.$extension"
         }
