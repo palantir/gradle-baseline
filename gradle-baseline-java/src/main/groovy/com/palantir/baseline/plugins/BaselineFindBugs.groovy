@@ -32,6 +32,7 @@ class BaselineFindBugs extends AbstractBaselinePlugin {
     private static final String DEFAULT_EFFORT = 'max'
     private static final String ANTIPATTERNS_ARTIFACT = 'com.palantir.antipatterns:antipatterns:1.0-beta.4'
     private static final String SLF4J_FINDBUGS_PLUGIN = 'jp.skypencil.findbugs.slf4j:bug-pattern:1.2.4@jar'
+    private static final String[] OMITTED_VISITORS = ["StaticLoggerDetector"]
 
     void apply(Project project) {
         this.project = project
@@ -66,6 +67,7 @@ class BaselineFindBugs extends AbstractBaselinePlugin {
             toolVersion = DEFAULT_FINDBUGS_VERSION
             excludeFilter = excludeFilterFile
             effort = DEFAULT_EFFORT
+            omitVisitors = OMITTED_VISITORS
         }
 
         project.dependencies {
