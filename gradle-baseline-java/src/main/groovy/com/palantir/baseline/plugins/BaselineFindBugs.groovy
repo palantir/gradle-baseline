@@ -31,6 +31,7 @@ class BaselineFindBugs extends AbstractBaselinePlugin {
     private static final String DEFAULT_FINDBUGS_VERSION = '3.0.1'
     private static final String DEFAULT_EFFORT = 'max'
     private static final String ANTIPATTERNS_ARTIFACT = 'com.palantir.antipatterns:antipatterns:1.0-beta.4'
+    private static final String SLF4J_FINDBUGS_PLUGIN = 'jp.skypencil.findbugs.slf4j:bug-pattern:1.2.4@jar'
 
     void apply(Project project) {
         this.project = project
@@ -69,6 +70,7 @@ class BaselineFindBugs extends AbstractBaselinePlugin {
 
         project.dependencies {
             findbugsPlugins ANTIPATTERNS_ARTIFACT
+            findbugsPlugins SLF4J_FINDBUGS_PLUGIN
         }
     }
 
