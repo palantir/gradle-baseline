@@ -82,6 +82,10 @@ class BaselineCheckstyle extends AbstractBaselinePlugin {
         includeExtensions.each { extension ->
             task.include "**/*.$extension"
         }
+
+        // Work around https://github.com/gradle/gradle/issues/855
+        project.tasks.checkstyleMain.classpath += project.configurations.compileClasspath
+        project.tasks.checkstyleTest.classpath += project.configurations.testCompileClasspath
     }
 
     def configureCheckstyleForEclipse() {
