@@ -108,7 +108,7 @@ class BaselineEclipse extends AbstractBaselinePlugin {
                 "eclipseTemplate",
                 group: "Baseline",
                 description: "Update Eclipse settings from stored templates."
-            ) << {
+            ).doLast {
                 // Copy static files verbatim.
                 project.copy {
                     from project.file("${configDir}/eclipse/static")
