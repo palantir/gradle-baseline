@@ -104,9 +104,9 @@ class BaselineIdeaIntegrationTest extends IntegrationSpec {
         runTasksSuccessfully('idea')
         def rootIpr = Files.asCharSource(new File(projectDir,
                 "Idea-project-has-copyright-configuration.ipr"), Charsets.UTF_8).read()
-        assert rootIpr.contains('<option name="myName" value="000_palantir.txt"/>')
         assert rootIpr.contains('<option name="myName" value="001_apache-2.0.txt"/>')
-        assert rootIpr.contains('<component name="CopyrightManager" default="000_palantir.txt">')
+        assert rootIpr.contains('<option name="myName" value="999_palantir.txt"/>')
+        assert rootIpr.contains('<component name="CopyrightManager" default="999_palantir.txt">')
     }
 
     def 'Git support is added if .git directory is present'() {
