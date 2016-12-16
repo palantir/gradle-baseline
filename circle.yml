@@ -6,7 +6,7 @@ machine:
 
 test:
   override:
-    - ./gradlew build
+    - ./gradlew clean build
 
 deployment:
   release:
