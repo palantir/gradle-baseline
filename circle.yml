@@ -6,6 +6,7 @@ machine:
 
 test:
   override:
+    - cd baseline-docs && sh lint.sh
     - ./gradlew build
 
 deployment:
