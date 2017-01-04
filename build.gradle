@@ -13,7 +13,7 @@ buildscript {
 }
 
 plugins {
-    id 'com.palantir.git-version' version '0.2.0'
+    id 'com.palantir.git-version' version '0.5.3'
 }
 
 apply plugin: 'idea'
