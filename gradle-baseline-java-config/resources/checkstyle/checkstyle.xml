@@ -298,6 +298,10 @@
             <property name="format" value="static enum"/>
             <property name="message" value="Redundant ''static'' modifier."/>
         </module>
+        <module name="RegexpSinglelineJava">
+            <property name="format" value="(\/\/TODO)|(\/\/ TODO:)|(\/\/ TODO\(\))|(\/\/ TODO\(.*\):[^ ])|(\/\/ TODO\(.*\)[^:])"/>
+            <property name="message" value="TODO format: // TODO(flastname): explanation"/>
+        </module>
         <module name="RightCurly"/> <!-- Java Style Guide: Nonempty blocks: K & R style -->
         <module name="RightCurly"> <!-- Java Style Guide: Nonempty blocks: K & R style -->
             <property name="option" value="alone"/>
