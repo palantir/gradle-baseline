@@ -1,0 +1,14 @@
+{
+  "name": "Baseline",
+  "version": "0.1.0",
+  "description": "Palantir Baseline Documentation",
+  "main": "index.js",
+  "scripts": {
+    "lint-remark": "remark -f **/readme.md *.md"
+  },
+  "homepage": "https://github.com/palantir/gradle-baseline/docs",
+  "dependencies": {
+    "remark": "4.2.0",
+    "remark-lint": "3.2.0"
+  }
+}
