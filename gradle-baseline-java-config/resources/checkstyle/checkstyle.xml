@@ -307,6 +307,10 @@
             <property name="format" value="(\/\/TODO)|(\/\/ TODO:)|(\/\/ TODO\(\))|(\/\/ TODO\(.*\):[^ ])|(\/\/ TODO\(.*\)[^:])"/>
             <property name="message" value="TODO format: // TODO(flastname): explanation"/>
         </module>
+        <module name="RegexpSinglelineJava">
+            <property name="format" value="(void setUp\(\))|(void setup\(\))|(void setupStatic\(\))|(void setUpStatic\(\))|(void beforeTest\(\))|(void teardown\(\))|(void tearDown\(\))"/>
+            <property name="message" value="Test setup/teardown methods are called before(), beforeStatic(), after(), afterStatic(), but not setUp, teardown, etc."/>
+        </module>
         <module name="RightCurly"/> <!-- Java Style Guide: Nonempty blocks: K & R style -->
         <module name="RightCurly"> <!-- Java Style Guide: Nonempty blocks: K & R style -->
             <property name="option" value="alone"/>
