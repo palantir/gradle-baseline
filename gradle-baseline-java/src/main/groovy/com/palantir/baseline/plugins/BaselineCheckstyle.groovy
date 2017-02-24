@@ -27,7 +27,7 @@ import org.gradle.api.tasks.javadoc.Javadoc
  */
 class BaselineCheckstyle extends AbstractBaselinePlugin {
 
-    static String DEFAULT_CHECKSTYLE_VERSION = '6.18'
+    static String DEFAULT_CHECKSTYLE_VERSION = '7.5.1'
 
     void apply(Project project) {
         this.project = project
