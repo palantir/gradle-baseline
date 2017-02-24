@@ -101,7 +101,7 @@ class BaselineEclipse extends AbstractBaselinePlugin {
             }
         })
 
-        // Configure Findbugs/Checkstyle/JdtUI settings by copying in the default Baseline config file.
+        // Configure Checkstyle/JdtUI settings by copying in the default Baseline config file.
         // Warning: this may interfere with other Gradle plugins that may try to mutate these files.
         project.afterEvaluate { Project p ->
             def eclipseTemplate = project.task(

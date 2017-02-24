@@ -18,7 +18,7 @@ package com.palantir.baseline
 
 import com.palantir.baseline.plugins.BaselineCheckstyle
 import com.palantir.baseline.plugins.BaselineEclipse
-import com.palantir.baseline.plugins.BaselineFindBugs
+
 import com.palantir.baseline.plugins.Baseline
 
 import static org.junit.Assert.assertTrue
@@ -47,11 +47,6 @@ class BaselineTest {
     @Test
     public void baselineProjectPluginApplied() {
         assertTrue project.plugins.hasPlugin(Baseline.class)
-    }
-
-    @Test
-    public void baselineFindBugsProjectApplied() {
-        assertTrue project.plugins.hasPlugin(BaselineFindBugs.class)
     }
 
     @Test
