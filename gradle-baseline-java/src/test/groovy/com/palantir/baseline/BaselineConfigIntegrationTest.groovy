@@ -41,7 +41,7 @@ class BaselineConfigIntegrationTest extends AbstractPluginTest {
 
         then:
         with('baselineUpdateConfig').build()
-        directory('.baseline').list().toList() == ['checkstyle', 'copyright', 'eclipse', 'findbugs', 'idea']
+        directory('.baseline').list().toList() == ['checkstyle', 'copyright', 'eclipse', 'idea']
     }
 
     def 'Fails if no configuration dependency is specified'() {
