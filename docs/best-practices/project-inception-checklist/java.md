@@ -18,7 +18,7 @@ for your project.
 ## Test Coverage
 
 Java projects should enforce at least 70% test coverage through
-[Jacoco](https://github.com/palantir/gradle-jacoco-coverage).
+[Jacoco](https://docs.gradle.org/current/userguide/jacoco_plugin.html).
 
 See [Tests](../testing-software/readme.md) for an introduction to
 effectively testing applications.
