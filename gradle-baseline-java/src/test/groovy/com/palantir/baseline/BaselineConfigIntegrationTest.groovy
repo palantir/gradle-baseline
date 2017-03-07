@@ -19,13 +19,19 @@ package com.palantir.baseline
 import nebula.test.IntegrationSpec
 
 class BaselineConfigIntegrationTest extends IntegrationSpec {
-    def standardBuildFile = '''
+    def projectVersion = "git describe --tags".execute().text.trim()
+    def standardBuildFile = """
         apply plugin: 'com.palantir.baseline-config'
         repositories {
             mavenLocal()
         }
-
-    '''.stripIndent()
+        
+        dependencies {
+            // NOTE: This only works on Git-clean repositories since it relies on the locally published config artifact,
+            // see ./gradle-baseline-java-config/build.gradle
+            baseline "com.palantir.baseline:gradle-baseline-java-config:${projectVersion}@zip"
+        }
+    """.stripIndent()
 
     def setup() {
     }

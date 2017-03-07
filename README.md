@@ -33,6 +33,12 @@ repositories {
     jcenter()
 }
 
+dependencies {
+    // Adds a dependency on the Baseline configuration files. Typically use 
+    // the same version as the plugin itself.
+    baseline "com.palantir.baseline:gradle-baseline-java-config:<version>@zip"
+}
+
 apply plugin: 'java'
 
 // Apply for baselineUpdateConfig task
@@ -46,7 +52,7 @@ apply plugin: 'com.palantir.baseline-idea'
 ```
 
 - Run ``./gradlew baselineUpdateConfig`` to download the config files
-and extract them to .baseline/
+referenced in the `dependencies.baseline` configuration and extract them to .baseline/
 - Any subsequent ``./gradlew build`` invokes Checkstyle and FindBugs as part of the build and test tasks (if the
 respective baseline-xyz plugins are applied).
 - The ``eclipse`` and ``idea`` Gradle tasks generate projects pre-configured with Baseline settings:

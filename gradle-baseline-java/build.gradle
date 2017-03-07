@@ -21,18 +21,9 @@ dependencies {
     testCompile 'org.mockito:mockito-core:1.10.19'
 }
 
-// Create version file included in jar so that the plugin can fetch the correct version of the configuration zip.
-task createVersionFile {
-    def versionFile = file("src/main/resources/version.txt")
-    versionFile.parentFile.mkdirs()
-    versionFile.write(project.version, "UTF-8")
-}
-compileGroovy.dependsOn createVersionFile
-
 // Make sure the config artifact is available when the tests run.
 evaluationDependsOn(':gradle-baseline-java-config')
 test.dependsOn(project(":gradle-baseline-java-config").tasks.getByName("publishToMavenLocal"))
-
 apply plugin: "com.gradle.plugin-publish"
 
 task sourceJar(type: Jar) {
