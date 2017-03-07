@@ -25,7 +25,7 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.palantir:gradle-baseline-java:<version>'
+        classpath 'com.palantir.baseline:gradle-baseline-java:<version>'
     }
 }
 
@@ -95,7 +95,7 @@ All `com.palantir.baseline-xyz` plugins can be applied selectively to subproject
 ```Gradle
 buildscript {
     dependencies {
-        classpath 'com.palantir:gradle-baseline-java:<version>'
+        classpath 'com.palantir.baseline:gradle-baseline-java:<version>'
     }
 }
 
@@ -120,7 +120,7 @@ use only Checkstyle and IntelliJ support from Baseline, apply the required plugi
 ```Gradle
 buildscript {
     dependencies {
-        classpath 'com.palantir:gradle-baseline-java:<version>'
+        classpath 'com.palantir.baseline:gradle-baseline-java:<version>'
     }
 }
 

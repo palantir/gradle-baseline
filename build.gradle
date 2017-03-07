@@ -25,7 +25,7 @@ repositories {
 subprojects {
     apply plugin: 'com.jfrog.bintray'
 
-    group = 'com.palantir'
+    group = 'com.palantir.baseline'
     version = gitVersion()
     description = 'A Gradle plugin for applying Baseline-recommended build and IDE settings'
 }
