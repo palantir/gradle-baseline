@@ -182,6 +182,35 @@ The `com.palantir.baseline-idea` plugin automatically applies the `idea` plugin.
 Generated IntelliJ projects have default per-project code formatting rules as well as Checkstyle configuration. The JDK
 and Java language level settings are picked up from the Gradle `sourceCompatibility` property on a per-module basis.
 
+### Error-prone
+
+Baseline does not provide a dedicated FindBugs plugin or configuration, but it recommends to configure Google's
+[error-prone](https://github.com/google/error-prone) compiler to find and prevent common Java coding mistakes. To
+configure error-prone, add the following Gradle configuration:
+
+```groovy
+buildscript {
+    dependencies {
+        classpath 'net.ltgt.gradle:gradle-errorprone-plugin:0.0.9'
+    }
+}
+
+apply plugin: 'net.ltgt.errorprone'
+dependencies {
+    errorprone 'com.google.errorprone:error_prone_core:2.0.18'  // update version as desired
+}
+
+```
+
+Tip: Warnings on generated code can be suppressed as follows:
+
+```groovy
+compileJava {
+    options.compilerArgs += ['-XepDisableWarningsInGeneratedCode']
+}
+```
+
+
 
 ### Copyright Checks
 
