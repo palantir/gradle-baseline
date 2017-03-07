@@ -38,7 +38,7 @@ class BaselineConfig extends AbstractBaselinePlugin {
 
         def baselineVersion = extractVersionString()
         rootProject.dependencies {
-            baseline "com.palantir:gradle-baseline-java-config:${baselineVersion}@zip"
+            baseline "com.palantir.baseline:gradle-baseline-java-config:${baselineVersion}@zip"
         }
 
         // Create task for generating configuration.
