@@ -23,8 +23,6 @@ import org.gradle.api.Project
  */
 class BaselineConfig extends AbstractBaselinePlugin {
 
-    private static final String VERSION_RESOURCE = "/version.txt";
-
     void apply(Project rootProject) {
         this.project = rootProject
         if (rootProject != rootProject.rootProject) {
@@ -36,25 +34,22 @@ class BaselineConfig extends AbstractBaselinePlugin {
             baseline
         }
 
-        def baselineVersion = extractVersionString()
-        rootProject.dependencies {
-            baseline "com.palantir.baseline:gradle-baseline-java-config:${baselineVersion}@zip"
-        }
-
         // Create task for generating configuration.
         def baselineUpdateConfig = rootProject.task(
-            "baselineUpdateConfig",
-            group: "Baseline",
-            description: "Installs or updates Baseline configuration files in .baseline/")
+                "baselineUpdateConfig",
+                group: "Baseline",
+                description: "Installs or updates Baseline configuration files in .baseline/")
         baselineUpdateConfig.doLast {
+            def configFiles = rootProject.configurations.baseline
+            if (configFiles.files.size() != 1) {
+                throw new IllegalArgumentException("Expected to find exactly one config dependency in the " +
+                        "'baseline' configuration, found: " + configFiles.files)
+            }
+
             rootProject.copy {
-                from project.zipTree(rootProject.configurations.baseline.getSingleFile())
+                from project.zipTree(configFiles.singleFile)
                 into getConfigDir()
             }
         }
-    }
-
-    private String extractVersionString() {
-        return this.getClass().getResource(VERSION_RESOURCE).text
     }
 }
