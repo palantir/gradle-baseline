@@ -1502,7 +1502,7 @@ See *Effective Java, 2nd Edition, Items 68-69*
 Concurrency bugs are very difficult to reliably fix, as their
 manifestations are very transient. By writing very simple
 synchronization schemes, code inspection is much more effective to
-detect and fix these issues. (Tools like FindBugs will also perform
+detect and fix these issues. (Tools like Google's error-prone will also perform
 better at detecting issues.)
 
 Often times it is best to simply avoid explicit synchronization in the
