@@ -23,13 +23,8 @@ class BaselineConfigIntegrationTest extends IntegrationSpec {
     def standardBuildFile = """
         apply plugin: 'com.palantir.baseline-config'
         repositories {
+            jcenter()
             mavenLocal()
-        }
-        
-        dependencies {
-            // NOTE: This only works on Git-clean repositories since it relies on the locally published config artifact,
-            // see ./gradle-baseline-java-config/build.gradle
-            baseline "com.palantir.baseline:gradle-baseline-java-config:${projectVersion}@zip"
         }
     """.stripIndent()
 
@@ -39,9 +34,40 @@ class BaselineConfigIntegrationTest extends IntegrationSpec {
     def 'Installs config'() {
         when:
         buildFile << standardBuildFile
+        buildFile << """
+        dependencies {
+            // NOTE: This only works on Git-clean repositories since it relies on the locally published config artifact,
+            // see ./gradle-baseline-java-config/build.gradle
+            baseline "com.palantir.baseline:gradle-baseline-java-config:${projectVersion}@zip"
+        }
+        """.stripIndent()
 
         then:
         runTasksSuccessfully('baselineUpdateConfig')
         assert directory('.baseline').list().toList() == ['checkstyle', 'copyright', 'eclipse', 'findbugs', 'idea']
+    }
+
+    def 'Fails if no configuration dependency is specified'() {
+        when:
+        buildFile << standardBuildFile
+
+        then:
+        runTasksWithFailure('baselineUpdateConfig').standardError.contains(
+                "Expected to find exactly one config dependency in the 'baseline' configuration, found: []")
+    }
+
+    def 'Fails if too many configuration dependencies are specified'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << """
+        dependencies {
+            baseline "com.palantir.baseline:gradle-baseline-java-config:${projectVersion}@zip"
+            baseline "com.google.guava:guava:21.0"
+        }
+        """.stripIndent()
+
+        then:
+        runTasksWithFailure('baselineUpdateConfig').standardError.contains(
+                "Expected to find exactly one config dependency in the 'baseline' configuration, found: [/")
     }
 }

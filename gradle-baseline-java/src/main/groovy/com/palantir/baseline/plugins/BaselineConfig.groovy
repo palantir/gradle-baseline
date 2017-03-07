@@ -36,9 +36,9 @@ class BaselineConfig extends AbstractBaselinePlugin {
 
         // Create task for generating configuration.
         def baselineUpdateConfig = rootProject.task(
-            "baselineUpdateConfig",
-            group: "Baseline",
-            description: "Installs or updates Baseline configuration files in .baseline/")
+                "baselineUpdateConfig",
+                group: "Baseline",
+                description: "Installs or updates Baseline configuration files in .baseline/")
         baselineUpdateConfig.doLast {
             def configFiles = rootProject.configurations.baseline
             if (configFiles.files.size() != 1) {
