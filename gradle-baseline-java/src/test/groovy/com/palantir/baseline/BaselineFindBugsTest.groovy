@@ -17,28 +17,23 @@
 package com.palantir.baseline
 
 import com.palantir.baseline.plugins.BaselineFindBugs
-
 import org.gradle.api.Project
 import org.gradle.api.plugins.quality.FindBugsPlugin
 import org.gradle.testfixtures.ProjectBuilder
-import org.junit.Before
-import org.junit.Test
+import spock.lang.Specification
 
-import static org.junit.Assert.assertTrue
-
-class BaselineFindBugsTest {
+class BaselineFindBugsTest extends Specification {
     private Project project
 
-    @Before
-    void setup() {
+    def setup() {
         project = ProjectBuilder.builder().build()
         project.plugins.apply 'java'
         project.plugins.apply BaselineFindBugs
     }
 
-    @Test
-    void testPluginsAreApplied() {
-        assertTrue project.plugins.hasPlugin(BaselineFindBugs.class)
-        assertTrue project.plugins.hasPlugin(FindBugsPlugin.class)
+    def testPluginsAreApplied() {
+        expect:
+        project.plugins.hasPlugin(BaselineFindBugs.class)
+        project.plugins.hasPlugin(FindBugsPlugin.class)
     }
 }

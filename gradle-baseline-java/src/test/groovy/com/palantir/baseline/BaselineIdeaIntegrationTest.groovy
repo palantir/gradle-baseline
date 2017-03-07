@@ -18,14 +18,16 @@ package com.palantir.baseline
 
 import com.google.common.base.Charsets
 import com.google.common.io.Files
-import nebula.test.IntegrationSpec
-import nebula.test.functional.ExecutionResult
 import org.apache.commons.io.FileUtils
+import org.gradle.testkit.runner.BuildResult
+import org.gradle.testkit.runner.TaskOutcome
 
-class BaselineIdeaIntegrationTest extends IntegrationSpec {
+class BaselineIdeaIntegrationTest extends AbstractPluginTest {
     def standardBuildFile = '''
-        apply plugin: 'java'
-        apply plugin: 'com.palantir.baseline-idea'
+        plugins {
+            id 'java'
+            id 'com.palantir.baseline-idea'
+        }
     '''.stripIndent()
 
     def setup() {
@@ -39,7 +41,7 @@ class BaselineIdeaIntegrationTest extends IntegrationSpec {
         buildFile << standardBuildFile
 
         then:
-        runTasksSuccessfully('idea')
+        with('idea').build()
     }
 
     def 'Throws error when configuration files are not present'() {
@@ -48,8 +50,9 @@ class BaselineIdeaIntegrationTest extends IntegrationSpec {
         FileUtils.deleteDirectory(new File(projectDir, ".baseline"))
 
         then:
-        ExecutionResult result = runTasksWithFailure('idea')
-        assert result.standardError.contains("Caused by: java.io.FileNotFoundException:")
+        BuildResult result = with('idea').buildAndFail()
+        result.task(":ideaProject").outcome == TaskOutcome.FAILED
+        result.output.contains("java.io.FileNotFoundException:")
     }
 
     def 'Can apply plugin to subprojects when root project has no idea plugin applied'() {
@@ -57,14 +60,11 @@ class BaselineIdeaIntegrationTest extends IntegrationSpec {
         buildFile << '''
             apply plugin: 'java'
         '''.stripIndent()
-        def subproject = helper.create(["subproject"])["subproject"]
-        subproject.buildGradle << '''
-            apply plugin: 'java'
-            apply plugin: 'com.palantir.baseline-idea'
-        '''.stripIndent()
+        def subproject = multiProject.create(["subproject"])["subproject"]
+        subproject.buildGradle << standardBuildFile
 
         then:
-        runTasksSuccessfully('idea')
+        with('idea').build()
     }
 
     def 'Modules for subprojects pick up the correct sourceCompatibility'() {
@@ -73,7 +73,7 @@ class BaselineIdeaIntegrationTest extends IntegrationSpec {
         buildFile << '''
             sourceCompatibility = 1.6
         '''.stripIndent()
-        def subproject = helper.create(["subproject1", "subproject2"])
+        def subproject = multiProject.create(["subproject1", "subproject2"])
         subproject["subproject1"].buildGradle << '''
             apply plugin: 'java'
             apply plugin: 'com.palantir.baseline-idea'
@@ -86,14 +86,14 @@ class BaselineIdeaIntegrationTest extends IntegrationSpec {
         '''.stripIndent()
 
         then:
-        runTasksSuccessfully('idea')
+        with('idea').build()
         def rootIml = Files.asCharSource(new File(projectDir,
                 "Modules-for-subprojects-pick-up-the-correct-sourceCompatibility.iml"), Charsets.UTF_8).read()
-        assert rootIml ==~ /(?s).*orderEntry[^\\n]*jdkName="1.6".*/
+        rootIml ==~ /(?s).*orderEntry[^\\n]*jdkName="1.6".*/
         def subproject1Iml = Files.asCharSource(new File(projectDir, "subproject1/subproject1.iml"), Charsets.UTF_8).read()
-        assert subproject1Iml ==~ /(?s).*orderEntry[^\\n]*jdkName="1.7".*/
+        subproject1Iml ==~ /(?s).*orderEntry[^\\n]*jdkName="1.7".*/
         def subproject2Iml = Files.asCharSource(new File(projectDir, "subproject2/subproject2.iml"), Charsets.UTF_8).read()
-        assert subproject2Iml ==~ /(?s).*orderEntry[^\\n]*jdkName="1.8".*/
+        subproject2Iml ==~ /(?s).*orderEntry[^\\n]*jdkName="1.8".*/
     }
 
     def 'Idea project has copyright configuration'() {
@@ -101,12 +101,12 @@ class BaselineIdeaIntegrationTest extends IntegrationSpec {
         buildFile << standardBuildFile
 
         then:
-        runTasksSuccessfully('idea')
+        with('idea').build()
         def rootIpr = Files.asCharSource(new File(projectDir,
                 "Idea-project-has-copyright-configuration.ipr"), Charsets.UTF_8).read()
-        assert rootIpr.contains('<option name="myName" value="001_apache-2.0.txt"/>')
-        assert rootIpr.contains('<option name="myName" value="999_palantir.txt"/>')
-        assert rootIpr.contains('<component name="CopyrightManager" default="999_palantir.txt">')
+        rootIpr.contains('<option name="myName" value="001_apache-2.0.txt"/>')
+        rootIpr.contains('<option name="myName" value="999_palantir.txt"/>')
+        rootIpr.contains('<component name="CopyrightManager" default="999_palantir.txt">')
     }
 
     def 'Git support is added if .git directory is present'() {
@@ -115,10 +115,10 @@ class BaselineIdeaIntegrationTest extends IntegrationSpec {
         new File(projectDir, ".git").mkdir()
 
         then:
-        runTasksSuccessfully('idea')
+        with('idea').build()
         def rootIpr = Files.asCharSource(new File(projectDir,
                 "Git-support-is-added-if-git-directory-is-present.ipr"), Charsets.UTF_8).read()
-        assert rootIpr.contains('<mapping directory="$PROJECT_DIR$" vcs="Git"/>')
+        rootIpr.contains('<mapping directory="$PROJECT_DIR$" vcs="Git"/>')
     }
 
     def 'Git support is not added if .git directory is not present'() {
@@ -126,10 +126,10 @@ class BaselineIdeaIntegrationTest extends IntegrationSpec {
         buildFile << standardBuildFile
 
         then:
-        runTasksSuccessfully('idea')
+        with('idea').build()
         def rootIpr = Files.asCharSource(new File(projectDir,
                 "Git-support-is-not-added-if-git-directory-is-not-present.ipr"), Charsets.UTF_8).read()
-        assert !rootIpr.contains('<mapping directory="$PROJECT_DIR$" vcs="Git"/>')
+        !rootIpr.contains('<mapping directory="$PROJECT_DIR$" vcs="Git"/>')
     }
 
     def 'Adds compileOnly dependencies if the configuration exists'() {
@@ -146,10 +146,10 @@ class BaselineIdeaIntegrationTest extends IntegrationSpec {
         """
 
         then:
-        runTasksSuccessfully('idea')
+        with('idea').build()
         def iml = Files.asCharSource(new File(projectDir,
                   "Adds-compileOnly-dependencies-if-the-configuration-exists.iml"), Charsets.UTF_8).read()
-        assert iml ==~ /(?s).*orderEntry[^\\n]*scope="PROVIDED".*/
+        iml ==~ /(?s).*orderEntry[^\\n]*scope="PROVIDED".*/
     }
 
     def 'Doesn\'t make compile dependencies provided unnecessarily'() {
@@ -162,9 +162,9 @@ class BaselineIdeaIntegrationTest extends IntegrationSpec {
         """
 
         then:
-        runTasksSuccessfully('idea')
+        with('idea').build()
         def iml = Files.asCharSource(new File(projectDir,
                 "Doesn-t-make-compile-dependencies-provided-unnecessarily.iml"), Charsets.UTF_8).read()
-        assert iml.contains('<orderEntry type="module-library">')
+        iml ==~ /(?s).*orderEntry[^\\n]*type="module-library".*/
     }
 }
