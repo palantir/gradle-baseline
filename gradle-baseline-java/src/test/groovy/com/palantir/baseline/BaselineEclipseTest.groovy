@@ -17,6 +17,7 @@
 package com.palantir.baseline
 
 import com.palantir.baseline.plugins.BaselineEclipse
+import spock.lang.Specification
 
 import static org.junit.Assert.assertNotNull
 import static org.junit.Assert.assertNull
@@ -27,29 +28,28 @@ import org.gradle.testfixtures.ProjectBuilder
 import org.junit.Before
 import org.junit.Test
 
-class BaselineEclipseTest {
+class BaselineEclipseTest extends Specification {
     private Project project
 
-    @Before
-    public void setup() {
+    def setup() {
         project = ProjectBuilder.builder().build()
         project.plugins.apply 'java'
         project.plugins.apply BaselineEclipse
         project.evaluate()
     }
 
-    @Test
-    public void baselineEclipsePluginApplied() {
+    def baselineEclipsePluginApplied() {
+        expect:
         assertTrue project.plugins.hasPlugin(BaselineEclipse.class)
     }
 
-    @Test
-    public void baselineEclipseCreatesEclipseTemplateTask() {
-        assertNotNull project.tasks.eclipseTemplate
+    def baselineEclipseCreatesEclipseTemplateTask() {
+        expect:
+        project.tasks.eclipseTemplate
     }
 
-    @Test
-    public void eclipseTaskDependsOnEclipseTemplateTask() {
-        assertTrue project.tasks.eclipse.dependsOn.contains(project.tasks.eclipseTemplate)
+    def eclipseTaskDependsOnEclipseTemplateTask() {
+        expect:
+        project.tasks.eclipse.dependsOn.contains(project.tasks.eclipseTemplate)
     }
 }

@@ -3,22 +3,24 @@ apply plugin: 'groovy'
 apply plugin: 'idea'
 apply plugin: 'maven'
 apply plugin: 'maven-publish'
+apply plugin: 'java-gradle-plugin'
 
 repositories {
     jcenter()
 }
 
 dependencies {
-    compile files(gradleApi().resolve().findAll { !it.name.startsWith('xerces') && !it.name.startsWith('xml-apis') })
-    compile localGroovy()
+    compile gradleApi()
 
+    testCompile gradleTestKit()
+    testCompile "com.netflix.nebula:nebula-test:4.0.0" // for better temp directory junit rule only
     testCompile 'com.google.guava:guava:18.0'
-    testCompile 'com.netflix.nebula:nebula-test:5.0.0'
-    testCompile 'junit:junit:4.11'
     testCompile 'net.lingala.zip4j:zip4j:1.3.2'
     testCompile 'org.apache.commons:commons-io:1.3.2'
-    testCompile 'org.hamcrest:hamcrest-all:1.3'
-    testCompile 'org.mockito:mockito-core:1.10.19'
+}
+
+if (System.env.CIRCLE_TEST_REPORTS) {
+    test.reports.junitXml.destination = new File(System.env.CIRCLE_TEST_REPORTS, project.getName())
 }
 
 // Make sure the config artifact is available when the tests run.

@@ -16,20 +16,17 @@
 
 package com.palantir.baseline
 
-import nebula.test.IntegrationSpec
-
-class BaselineConfigIntegrationTest extends IntegrationSpec {
+class BaselineConfigIntegrationTest extends AbstractPluginTest {
     def projectVersion = "git describe --tags".execute().text.trim()
     def standardBuildFile = """
-        apply plugin: 'com.palantir.baseline-config'
+        plugins {
+            id 'com.palantir.baseline-config'
+        }
         repositories {
             jcenter()
             mavenLocal()
         }
     """.stripIndent()
-
-    def setup() {
-    }
 
     def 'Installs config'() {
         when:
@@ -43,8 +40,8 @@ class BaselineConfigIntegrationTest extends IntegrationSpec {
         """.stripIndent()
 
         then:
-        runTasksSuccessfully('baselineUpdateConfig')
-        assert directory('.baseline').list().toList() == ['checkstyle', 'copyright', 'eclipse', 'findbugs', 'idea']
+        with('baselineUpdateConfig').build()
+        directory('.baseline').list().toList() == ['checkstyle', 'copyright', 'eclipse', 'findbugs', 'idea']
     }
 
     def 'Fails if no configuration dependency is specified'() {
@@ -52,7 +49,7 @@ class BaselineConfigIntegrationTest extends IntegrationSpec {
         buildFile << standardBuildFile
 
         then:
-        runTasksWithFailure('baselineUpdateConfig').standardError.contains(
+        with('baselineUpdateConfig').buildAndFail().output.contains(
                 "Expected to find exactly one config dependency in the 'baseline' configuration, found: []")
     }
 
@@ -67,7 +64,7 @@ class BaselineConfigIntegrationTest extends IntegrationSpec {
         """.stripIndent()
 
         then:
-        runTasksWithFailure('baselineUpdateConfig').standardError.contains(
+        with('baselineUpdateConfig').buildAndFail().output.contains(
                 "Expected to find exactly one config dependency in the 'baseline' configuration, found: [/")
     }
 }

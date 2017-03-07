@@ -18,18 +18,21 @@ package com.palantir.baseline
 
 import com.google.common.base.Charsets
 import com.google.common.io.Files
-import nebula.test.IntegrationSpec
-import nebula.test.functional.ExecutionResult
 import org.apache.commons.io.FileUtils
+import org.gradle.testkit.runner.TaskOutcome
 
-class BaselineEclipseIntegrationTest extends IntegrationSpec {
+class BaselineEclipseIntegrationTest extends AbstractPluginTest {
     def standardBuildFile = '''
-        apply plugin: 'java'
-        apply plugin: 'com.palantir.baseline-eclipse'
+        plugins {
+            id 'java'
+            id 'com.palantir.baseline-eclipse'
+        }
     '''.stripIndent()
 
     def noJavaBuildFile = '''
-        apply plugin: 'com.palantir.baseline-eclipse'
+        plugins {
+            id 'com.palantir.baseline-eclipse'
+        }
     '''.stripIndent()
 
     def setup() {
@@ -43,8 +46,8 @@ class BaselineEclipseIntegrationTest extends IntegrationSpec {
         buildFile << standardBuildFile
 
         then:
-        ExecutionResult result = runTasksSuccessfully('eclipse')
-        assert result.wasExecuted(':eclipseTemplate')
+        def result = with('eclipse').build()
+        result.task(':eclipseTemplate').outcome == TaskOutcome.SUCCESS
     }
 
     def 'Eclipse task works without Java plugin'() {
@@ -52,8 +55,8 @@ class BaselineEclipseIntegrationTest extends IntegrationSpec {
         buildFile << noJavaBuildFile
 
         then:
-        ExecutionResult result = runTasksSuccessfully('eclipse')
-        assert result.wasExecuted(':eclipseTemplate')
+        def result = with('eclipse').build()
+        result.task(':eclipseTemplate').outcome == TaskOutcome.SKIPPED
     }
 
     def 'Eclipse task sets jdt core properties'() {
@@ -61,7 +64,7 @@ class BaselineEclipseIntegrationTest extends IntegrationSpec {
         buildFile << standardBuildFile
 
         then:
-        runTasksSuccessfully('eclipse')
+        with('eclipse').build()
         def jdtCorePrefs = Files.asCharSource(new File(projectDir,
             ".settings/org.eclipse.jdt.core.prefs"), Charsets.UTF_8).read()
         jdtCorePrefs.contains("org.eclipse.jdt.core.compiler.annotation.nullable=javax.annotation.CheckForNull")
@@ -73,7 +76,7 @@ class BaselineEclipseIntegrationTest extends IntegrationSpec {
         buildFile << "sourceCompatibility = '1.3'"  // use '1.3' since it cannot be the default
 
         then:
-        runTasksSuccessfully('eclipse')
+        with('eclipse').build()
         def jdtCorePrefs = Files.asCharSource(new File(projectDir,
             ".settings/org.eclipse.jdt.core.prefs"), Charsets.UTF_8).read()
         jdtCorePrefs.contains("org.eclipse.jdt.core.compiler.codegen.targetPlatform=1.3")
