@@ -248,6 +248,18 @@
             <property name="format" value="CoreMatchers\.notNull"/>
             <property name="message" value="Use better assertion method(s): Assert.assertEquals(), assertNull(), assertSame(), etc."/>
         </module>
+        <module name="RegexpSinglelineJava"> <!-- Java Coding Guidelines: Avoid Generics clutter where possible -->
+            <property name="format" value="ImmutableList\.Builder.*new ImmutableList\.Builder"/>
+            <property name="message" value="Use ImmutableList.builder() for variable assignment."/>
+        </module>
+        <module name="RegexpSinglelineJava"> <!-- Java Coding Guidelines: Avoid Generics clutter where possible -->
+            <property name="format" value="ImmutableMap\.Builder.*new ImmutableMap\.Builder"/>
+            <property name="message" value="Use ImmutableMap.builder() for variable assignment."/>
+        </module>
+        <module name="RegexpSinglelineJava"> <!-- Java Coding Guidelines: Avoid Generics clutter where possible -->
+            <property name="format" value="ImmutableSet\.Builder.*new ImmutableSet\.Builder"/>
+            <property name="message" value="Use ImmutableSet.builder() for variable assignment."/>
+        </module>
         <module name="RegexpSinglelineJava"> <!-- Java Coding Guidelines: Check parameters for validity -->
             <property name="format" value="Preconditions\.checkNotNull\((?!.*,)([^()]*(\(([^()]*|\(([^()]*|\([^()]*\))*\))*\)[^()]*)*)\)"/>
             <property name="message" value="Use Preconditions.checkNotNull(Object, String)."/>
