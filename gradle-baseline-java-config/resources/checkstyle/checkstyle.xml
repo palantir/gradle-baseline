@@ -27,6 +27,11 @@
         <property name="format" value="@VisibleForTesting\s+(protected|public)"/>
         <property name="message" value="@VisibleForTesting members should be package-private."/>
     </module>
+    <module name="RegexpMultiline"> <!-- Using Guava's Throwables.propagate() is preferred over wrapping with RuntimeException -->
+        <property name="fileExtensions" value="java"/>
+        <property name="format" value='throw new RuntimeException\(\s*[^"]'/>
+        <property name="message" value="Use Throwables.propagate() instead of wrapping with new RuntimeException()"/>
+    </module>
     <module name="RegexpSingleline"> <!-- No reference needed as this is evident. -->
         <property name="format" value="&lt;&lt;&lt;&lt;&lt;&lt;&lt;"/>
         <property name="message" value="Found (&lt;&lt;&lt;&lt;&lt;&lt;&lt;), so it looks like you had a merge conflict that compiles. Please fix it."/>
