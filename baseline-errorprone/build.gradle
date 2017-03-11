@@ -1,0 +1,11 @@
+apply from: "${rootDir}/gradle/publish-libs.gradle"
+apply from: "${rootDir}/gradle/java.gradle"
+
+dependencies {
+    compile 'com.google.errorprone:error_prone_core'
+
+    testCompile 'com.google.errorprone:error_prone_test_helpers'
+    testCompile 'org.slf4j:slf4j-api'
+
+    processor 'com.google.auto.service:auto-service'
+}

@@ -1,2 +1,3 @@
+include "baseline-errorprone"
 include "gradle-baseline-java"
 include "gradle-baseline-java-config"
