@@ -1,0 +1,30 @@
+apply plugin: 'maven'
+apply plugin: 'nebula.maven-base-publish'
+apply plugin: 'nebula.maven-resolved-dependencies'
+apply plugin: 'nebula.source-jar'
+apply plugin: 'com.jfrog.bintray'
+
+bintrayUpload.dependsOn { build }
+bintrayUpload.dependsOn { generatePomFileForPluginPublicationPublication }
+
+bintray {
+    user = System.getenv('BINTRAY_USERNAME')
+    key = System.getenv('BINTRAY_PASSWORD')
+    publish = true
+    pkg {
+        repo = 'releases'
+        name = 'gradle-baseline'
+        userOrg = 'palantir'
+        licenses = ['Apache-2.0']
+        publications = ['nebula']
+    }
+}
+
+publishing {
+    publications {
+        nebula(MavenPublication) {
+            from components.java
+        }
+    }
+}
+
