@@ -7,8 +7,10 @@ buildscript {
     }
 
     dependencies {
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
         classpath 'com.gradle.publish:plugin-publish-plugin:0.9.1'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
+        classpath 'com.netflix.nebula:nebula-dependency-recommender:4.0.2'
+        classpath 'com.netflix.nebula:nebula-publishing-plugin:4.9.1'
     }
 }
 
@@ -22,10 +24,18 @@ repositories {
     jcenter()
 }
 
-subprojects {
-    apply plugin: 'com.jfrog.bintray'
+allprojects {
+    apply plugin: 'nebula.dependency-recommender'
+    dependencyRecommendations {
+        strategy OverrideTransitives
+        propertiesFile file: project.rootProject.file('versions.props')
+    }
 
     group = 'com.palantir.baseline'
     version = gitVersion()
     description = 'A Gradle plugin for applying Baseline-recommended build and IDE settings'
+}
+
+subprojects {
+    apply plugin: 'com.jfrog.bintray'
 }
