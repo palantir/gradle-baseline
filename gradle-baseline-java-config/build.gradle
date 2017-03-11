@@ -3,6 +3,7 @@ description = 'Baseline configuration files for the Baseline Gradle plugin'
 apply plugin: 'eclipse'
 apply plugin: 'maven'
 apply plugin: 'maven-publish'
+apply plugin: 'com.jfrog.bintray'
 
 task zipConfig(type: Zip) {
     from('resources') {
