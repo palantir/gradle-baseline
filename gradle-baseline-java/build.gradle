@@ -2,7 +2,9 @@ apply plugin: 'eclipse'
 apply plugin: 'groovy'
 apply plugin: 'idea'
 apply plugin: 'maven'
-apply plugin: 'maven-publish'
+apply plugin: 'nebula.maven-base-publish'
+apply plugin: 'nebula.maven-resolved-dependencies'
+apply plugin: 'nebula.source-jar'
 apply plugin: 'java-gradle-plugin'
 
 repositories {
@@ -13,10 +15,10 @@ dependencies {
     compile gradleApi()
 
     testCompile gradleTestKit()
-    testCompile "com.netflix.nebula:nebula-test:4.0.0" // for better temp directory junit rule only
-    testCompile 'com.google.guava:guava:18.0'
-    testCompile 'net.lingala.zip4j:zip4j:1.3.2'
-    testCompile 'org.apache.commons:commons-io:1.3.2'
+    testCompile 'com.netflix.nebula:nebula-test' // for better temp directory junit rule only
+    testCompile 'com.google.guava:guava'
+    testCompile 'net.lingala.zip4j:zip4j'
+    testCompile 'org.apache.commons:commons-io'
 }
 
 if (System.env.CIRCLE_TEST_REPORTS) {
@@ -28,14 +30,8 @@ evaluationDependsOn(':gradle-baseline-java-config')
 test.dependsOn(project(":gradle-baseline-java-config").tasks.getByName("publishToMavenLocal"))
 apply plugin: "com.gradle.plugin-publish"
 
-task sourceJar(type: Jar) {
-    from sourceSets.main.allSource
-    classifier 'sources'
-}
-
 bintrayUpload.dependsOn { build }
 bintrayUpload.dependsOn { generatePomFileForPluginPublicationPublication }
-bintrayUpload.dependsOn { sourceJar }
 
 bintray {
     user = System.getenv('BINTRAY_USERNAME')
@@ -46,18 +42,14 @@ bintray {
         name = 'gradle-baseline'
         userOrg = 'palantir'
         licenses = ['Apache-2.0']
-        publications = ['PluginPublication']
+        publications = ['nebula']
     }
 }
 
 publishing {
     publications {
-        PluginPublication(MavenPublication) {
+        nebula(MavenPublication) {
             from components.java
-
-            artifact(sourceJar) {
-                classifier 'sources'
-            }
         }
     }
 }
