@@ -63,6 +63,17 @@ respective baseline-xyz plugins are applied).
 
 
 
+## Development environment
+Tests are run with `./gradlew publishToMavenLocal build`, the publishing step is required in order to make Baseline
+artifacts available to the tests. Note that some of the tests only work when run for the first time since they assume
+particular directory structures that are unavailable when re-running tests.
+
+IDE configurations can be generated with `./gradlew idea eclipse`.
+
+
+
+
+
 ## Plugin Architecture Overview
 
 The Baseline plugins `com.palantir.baseline-checkstyle`, `com.palantir.baseline-eclipse`,

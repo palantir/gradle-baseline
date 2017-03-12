@@ -29,5 +29,6 @@ class Baseline implements Plugin<Project> {
         project.plugins.apply BaselineConfig
         project.plugins.apply BaselineEclipse
         project.plugins.apply BaselineIdea
+        project.plugins.apply BaselineErrorProne
     }
 }
