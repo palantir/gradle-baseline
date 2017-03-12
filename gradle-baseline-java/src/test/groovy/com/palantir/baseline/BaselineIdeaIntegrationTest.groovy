@@ -32,8 +32,8 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
 
     def setup() {
         FileUtils.copyDirectory(
-            new File("../gradle-baseline-java-config/resources"),
-            new File(projectDir, ".baseline"))
+                new File("../gradle-baseline-java-config/resources"),
+                new File(projectDir, ".baseline"))
     }
 
     def 'Can apply plugin'() {
@@ -87,12 +87,13 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
 
         then:
         with('idea').build()
-        def rootIml = Files.asCharSource(new File(projectDir,
-                "Modules-for-subprojects-pick-up-the-correct-sourceCompatibility.iml"), Charsets.UTF_8).read()
+        def rootIml = Files.asCharSource(new File(projectDir, projectDir.name + ".iml"), Charsets.UTF_8).read()
         rootIml ==~ /(?s).*orderEntry[^\\n]*jdkName="1.6".*/
-        def subproject1Iml = Files.asCharSource(new File(projectDir, "subproject1/subproject1.iml"), Charsets.UTF_8).read()
+        def subproject1Iml = Files.asCharSource(new File(projectDir, "subproject1/subproject1.iml"),
+                Charsets.UTF_8).read()
         subproject1Iml ==~ /(?s).*orderEntry[^\\n]*jdkName="1.7".*/
-        def subproject2Iml = Files.asCharSource(new File(projectDir, "subproject2/subproject2.iml"), Charsets.UTF_8).read()
+        def subproject2Iml = Files.asCharSource(new File(projectDir, "subproject2/subproject2.iml"),
+                Charsets.UTF_8).read()
         subproject2Iml ==~ /(?s).*orderEntry[^\\n]*jdkName="1.8".*/
     }
 
@@ -102,8 +103,7 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
 
         then:
         with('idea').build()
-        def rootIpr = Files.asCharSource(new File(projectDir,
-                "Idea-project-has-copyright-configuration.ipr"), Charsets.UTF_8).read()
+        def rootIpr = Files.asCharSource(new File(projectDir, projectDir.name + ".ipr"), Charsets.UTF_8).read()
         rootIpr.contains('<option name="myName" value="001_apache-2.0.txt"/>')
         rootIpr.contains('<option name="myName" value="999_palantir.txt"/>')
         rootIpr.contains('<component name="CopyrightManager" default="999_palantir.txt">')
@@ -116,8 +116,7 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
 
         then:
         with('idea').build()
-        def rootIpr = Files.asCharSource(new File(projectDir,
-                "Git-support-is-added-if-git-directory-is-present.ipr"), Charsets.UTF_8).read()
+        def rootIpr = Files.asCharSource(new File(projectDir, projectDir.name + ".ipr"), Charsets.UTF_8).read()
         rootIpr.contains('<mapping directory="$PROJECT_DIR$" vcs="Git"/>')
     }
 
@@ -127,8 +126,7 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
 
         then:
         with('idea').build()
-        def rootIpr = Files.asCharSource(new File(projectDir,
-                "Git-support-is-not-added-if-git-directory-is-not-present.ipr"), Charsets.UTF_8).read()
+        def rootIpr = Files.asCharSource(new File(projectDir, projectDir.name + ".ipr"), Charsets.UTF_8).read()
         !rootIpr.contains('<mapping directory="$PROJECT_DIR$" vcs="Git"/>')
     }
 
@@ -147,8 +145,7 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
 
         then:
         with('idea').build()
-        def iml = Files.asCharSource(new File(projectDir,
-                  "Adds-compileOnly-dependencies-if-the-configuration-exists.iml"), Charsets.UTF_8).read()
+        def iml = Files.asCharSource(new File(projectDir, projectDir.name + ".iml"), Charsets.UTF_8).read()
         iml ==~ /(?s).*orderEntry[^\\n]*scope="PROVIDED".*/
     }
 
@@ -163,8 +160,7 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
 
         then:
         with('idea').build()
-        def iml = Files.asCharSource(new File(projectDir,
-                "Doesn-t-make-compile-dependencies-provided-unnecessarily.iml"), Charsets.UTF_8).read()
+        def iml = Files.asCharSource(new File(projectDir, projectDir.name + ".iml"), Charsets.UTF_8).read()
         iml ==~ /(?s).*orderEntry[^\\n]*type="module-library".*/
     }
 }
