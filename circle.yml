@@ -6,6 +6,7 @@ machine:
 
 test:
   override:
+    - ./gradlew publishToMavenLocal  # ensure artifacts are available to tests
     - ./gradlew clean build
     - pushd docs && sh lint.sh && popd
 

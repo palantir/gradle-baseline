@@ -9,6 +9,7 @@ repositories {
 
 dependencies {
     compile gradleApi()
+    compile 'net.ltgt.gradle:gradle-errorprone-plugin'
 
     testCompile gradleTestKit()
     testCompile 'com.netflix.nebula:nebula-test' // for better temp directory junit rule only
@@ -17,15 +18,15 @@ dependencies {
     testCompile 'org.apache.commons:commons-io'
 }
 
-if (System.env.CIRCLE_TEST_REPORTS) {
-    test.reports.junitXml.destination = new File(System.env.CIRCLE_TEST_REPORTS, project.getName())
+// Create version file included in jar so that the plugin can know about its own version
+task createVersionFile {
+    def versionFile = file("src/main/resources/baseline-version.txt")
+    versionFile.parentFile.mkdirs()
+    versionFile.write(project.version, "UTF-8")
 }
+compileGroovy.dependsOn createVersionFile
 
-// Make sure the config artifact is available when the tests run.
-evaluationDependsOn(':gradle-baseline-java-config')
-test.dependsOn(project(":gradle-baseline-java-config").tasks.getByName("publishToMavenLocal"))
 apply plugin: "com.gradle.plugin-publish"
-
 pluginBundle {
     website = 'https://github.com/palantir/gradle-baseline'
     vcsUrl = 'https://github.com/palantir/gradle-baseline'
