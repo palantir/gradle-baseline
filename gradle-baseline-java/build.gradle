@@ -20,7 +20,7 @@ dependencies {
 
 // Create version file included in jar so that the plugin can know about its own version
 task createVersionFile {
-    def versionFile = file("src/main/resources/version.txt")
+    def versionFile = file("src/main/resources/baseline-version.txt")
     versionFile.parentFile.mkdirs()
     versionFile.write(project.version, "UTF-8")
 }

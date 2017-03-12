@@ -15,4 +15,4 @@ build
 /out/
 gradle.properties
 docs/node_modules/
-gradle-baseline-java/src/main/resources/version.txt
+gradle-baseline-java/src/main/resources/baseline-version.txt

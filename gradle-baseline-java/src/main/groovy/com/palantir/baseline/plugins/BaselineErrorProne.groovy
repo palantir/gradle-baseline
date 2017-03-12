@@ -38,6 +38,6 @@ class BaselineErrorProne extends AbstractBaselinePlugin {
     }
 
     private String extractVersionString() {
-        return this.getClass().getResource("/version.txt").text
+        return this.getClass().getResource("/baseline-version.txt").text
     }
 }
