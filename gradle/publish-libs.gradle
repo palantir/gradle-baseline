@@ -5,7 +5,7 @@ apply plugin: 'nebula.source-jar'
 apply plugin: 'com.jfrog.bintray'
 
 bintrayUpload.dependsOn { build }
-bintrayUpload.dependsOn { generatePomFileForPluginPublicationPublication }
+bintrayUpload.dependsOn { generatePomFileForNebulaPublication }
 
 bintray {
     user = System.getenv('BINTRAY_USERNAME')
