@@ -63,7 +63,7 @@ across development teams. The style guide covers the following topics:
       - [Switch statements](#switch-statements)
         - [Indentation](#indentation)
         - [Fall-through: commented](#fall-through-commented)
-        - [The default case is present](#the-default-case-is-present)
+        - [The default case is last](#the-default-case-is-last)
       - [Annotations](#annotations)
       - [Comments](#comments)
         - [Block comment style](#block-comment-style)
@@ -721,11 +721,12 @@ switch (input) {
 }
 ```
 
-##### The default case is present
+##### The default case is last
 
-Each switch statement includes a default statement group, even if it
-contains no code. The default case is always the last case in a switch
-statement.
+The default case is always the last case in a switch statement.
+
+The default case is omitted for switch statements on an enumeration to enable error
+checking tools to alert for unhandled new enumeration values.
 
 #### Annotations
 
