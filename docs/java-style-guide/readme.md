@@ -817,12 +817,12 @@ for (Path component : path) {
 
 (not in [Google Java Style Guide](https://github.com/google/styleguide))
 
-"Todo" comments carry the name or the **author** of the comment, not the
-LDAP name of the person who is supposed to resolve it, and are formatted
+"TODO" comments carry the name or the **author** of the comment, not the
+name of the person who is supposed to resolve it, and are formatted
 as follows:
 
 ``` java
-    // TODO rfink: This is a todo comment.
+    // TODO(rfink): This is a todo comment.
     compute();
 ```
 
