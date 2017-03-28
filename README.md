@@ -33,6 +33,9 @@ repositories {
     jcenter()
 }
 
+// Apply for baselineUpdateConfig task
+apply plugin: 'com.palantir.baseline-config'
+
 dependencies {
     // Adds a dependency on the Baseline configuration files. Typically use 
     // the same version as the plugin itself.
@@ -40,9 +43,6 @@ dependencies {
 }
 
 apply plugin: 'java'
-
-// Apply for baselineUpdateConfig task
-apply plugin: 'com.palantir.baseline-config'
 
 // Apply plugins selectively depending on required functionality.
 apply plugin: 'com.palantir.baseline-checkstyle'
