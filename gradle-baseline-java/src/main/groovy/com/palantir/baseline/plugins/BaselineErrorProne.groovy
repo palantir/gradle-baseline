@@ -24,7 +24,7 @@ class BaselineErrorProne extends AbstractBaselinePlugin {
 
     void apply(Project project) {
         this.project = project
-        
+
         project.plugins.apply(ErrorPronePlugin)
         project.dependencies {
             // TODO(rfink): This is somewhat ugly. Is there a better to add the processor dependency on the library?
