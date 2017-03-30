@@ -24,16 +24,10 @@ class BaselineErrorProne extends AbstractBaselinePlugin {
 
     void apply(Project project) {
         this.project = project
-
-        if (!project.configurations.findByName("processor")) {
-            throw new GradleException("Expected to find 'processor' configuration for dependencies of the annotation" +
-                    "processor classpath. Consider adding the 'org.inferred.processors' Gradle plugin.")
-        }
-
-        project.plugins.apply(ErrorPronePlugin)
+        
         project.dependencies {
             // TODO(rfink): This is somewhat ugly. Is there a better to add the processor dependency on the library?
-            processor "com.palantir.baseline:baseline-error-prone:${extractVersionString()}"
+            errorprone "com.palantir.baseline:baseline-error-prone:${extractVersionString()}"
         }
     }
 
