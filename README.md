@@ -6,7 +6,8 @@
 Baseline Java is a collection of Gradle plugins for configuring code quality tools in builds and generated
 Eclipse/IntelliJ projects. It configures [Checkstyle](http://checkstyle.sourceforge.net) and
 [error-prone](https://errorprone.info) for style and formatting checks, and Eclipse/IntelliJ code style and formatting
-configurations.
+configurations consistent with the
+[Baseline Java Style Guide and Best Practices](https://github.com/palantir/gradle-baseline/tree/develop/docs)
 
 The Baseline plugins are compatible with Gradle 3.3.0 and above.
 
