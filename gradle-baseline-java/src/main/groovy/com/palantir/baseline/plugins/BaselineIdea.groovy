@@ -54,6 +54,8 @@ class BaselineIdea extends AbstractBaselinePlugin {
             // Configure Idea module
             IdeaModel ideaModuleModel = project.extensions.findByType(IdeaModel)
             addJdkVersion(ideaModuleModel)
+            markResourcesDirs(ideaModuleModel);
+            moveProjectReferencesToEnd(ideaModuleModel);
         }
     }
 
@@ -202,6 +204,47 @@ class BaselineIdea extends AbstractBaselinePlugin {
             }
         } else {
             project.logger.debug("BaselineIdea: No Java version found in sourceCompatibility property.")
+        }
+    }
+
+    /**
+     * By default the Idea plugin marks resources dirs as source dirs.
+     */
+    private void markResourcesDirs(IdeaModel ideaModel) {
+        ideaModel.module.iml.withXml {
+            def node = it.asNode()
+            def content = node.component.find { it.'@name' == 'NewModuleRootManager' }.content[0]
+            content.sourceFolder.each { sourceFolder ->
+                if(sourceFolder.@url?.endsWith('/resources')) {
+                    sourceFolder.attributes().with {
+                        boolean isTestSource = (remove('isTestSource') == 'true')
+                        put('type', isTestSource ? 'java-test-resource' : 'java-resource')
+                    }
+                }
+            }
+        }
+    }
+
+    /**
+     * By default, IntelliJ and Gradle have different classpath behaviour with subprojects.
+     *
+     * Suppose that project A depends on project B, and A depends on foo 2.0, and B depends on foo 1.0.
+     *
+     * In Gradle, the classpath for project A will contain foo 2.0 (assuming default resolution strategy),
+     * whilst the classpath for project B contains foo 1.0.
+     *
+     * In IntelliJ under probable settings, the classpath for project A contains project B's classpath,
+     * which is likely at the top of the classpath. This means that foo 1.0 appears in the classpath
+     * before foo 2.0, leading to issues.
+     *
+     * This moves all project references to the end of the dependencies list, which unifies behaviour
+     * between Gradle and IntelliJ.
+     */
+    private void moveProjectReferencesToEnd(IdeaModel ideaModel) {
+        ideaModel.module.iml.whenMerged { module ->
+            def projectRefs = module.dependencies.findAll { it instanceof org.gradle.plugins.ide.idea.model.ModuleDependency }
+            module.dependencies.removeAll(projectRefs)
+            module.dependencies.addAll(projectRefs)
         }
     }
 }
