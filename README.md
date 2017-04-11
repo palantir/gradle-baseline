@@ -22,7 +22,7 @@ The Baseline plugins are compatible with Gradle 3.3.0 and above.
 ```Gradle
 buildscript {
     repositories {
-        jcenter()
+        maven { url  "http://palantir.bintray.com/releases" }
     }
 
     dependencies {
@@ -31,7 +31,7 @@ buildscript {
 }
 
 repositories {
-    jcenter()
+    maven { url  "http://palantir.bintray.com/releases" }
 }
 
 // Apply for baselineUpdateConfig task
