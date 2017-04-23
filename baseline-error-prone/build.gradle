@@ -4,6 +4,7 @@ apply from: "${rootDir}/gradle/java.gradle"
 dependencies {
     compile 'com.google.errorprone:error_prone_core'
 
+    testCompile 'com.fasterxml.jackson.core:jackson-annotations'
     testCompile 'com.google.errorprone:error_prone_test_helpers'
     testCompile 'org.slf4j:slf4j-api'
 
