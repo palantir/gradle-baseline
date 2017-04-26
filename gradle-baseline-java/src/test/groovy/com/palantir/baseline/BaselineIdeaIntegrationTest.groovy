@@ -163,4 +163,55 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         def iml = Files.asCharSource(new File(projectDir, projectDir.name + ".iml"), Charsets.UTF_8).read()
         iml ==~ /(?s).*orderEntry[^\\n]*type="module-library".*/
     }
+
+    def 'Modifies launch configuration defaults'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << '''
+            dependencies {
+                compile localGroovy()
+            }
+            idea.workspace {
+                iws.withXml { provider ->
+                    def runManager = provider.node.component.find {it.@name == 'RunManager'}
+                    println runManager
+                    def appJunitDefaults = new NodeList(runManager.configuration
+                            .findAll { it.'@default' == 'true' && it.'@type' in ['Application', 'JUnit'] })
+                    assert appJunitDefaults.size() == 2
+                    def workingDirectories = new NodeList(appJunitDefaults.option
+                            .findAll { it.'@name' == 'WORKING_DIRECTORY' })
+                    assert workingDirectories.size() == 2
+                    workingDirectories.each { it.'@value' = 'file://abc' }
+                }
+            }
+        '''
+
+        then:
+        with('idea').build()
+        def iws = Files.asCharSource(new File(projectDir, projectDir.name + ".iws"), Charsets.UTF_8).read()
+        iws ==~ '(?s).*name="WORKING_DIRECTORY"[^\\n]*value="file://\\$MODULE_DIR\\$".*'
+        !(iws ==~ '(?s).*name="WORKING_DIRECTORY"[^\\n]*value="file://abc".*')
+    }
+
+    def 'Does not modify existing launch configurations'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << '''
+            dependencies {
+                compile localGroovy()
+            }
+            idea.workspace {
+                iws.withXml { provider ->
+                    def runManager = provider.node.component.find {it.@name == 'RunManager'}
+                    runManager.appendNode('configuration', [default: "false", name: "Test", type: "Application", factoryName: "Application"], [
+                            new Node(null, 'option', [name: 'WORKING_DIRECTORY', value: 'file://abc'])])
+                }
+            }
+        '''
+
+        then:
+        with('idea').build()
+        def iws = Files.asCharSource(new File(projectDir, projectDir.name + ".iws"), Charsets.UTF_8).read()
+        iws ==~ '(?s).*name="WORKING_DIRECTORY"[^\\n]*value="file://abc".*'
+    }
 }
