@@ -164,13 +164,14 @@ class BaselineIdea extends AbstractBaselinePlugin {
         def runManager = node.component.find { it.'@name' == 'RunManager' }
 
         if (runManager) {
-            // if RunManager configuration exists, set all WORKING_DIRECTORY options to module
-            def items = runManager.configuration.option.findAll { it.'@name' == 'WORKING_DIRECTORY' }
-            items.each { item ->
-                item.'@value' = 'file://$MODULE_DIR$'
-            }
+            // if RunManager configuration exists, set Application, JUnit WORKING_DIRECTORY default to $MODULE_DIR$
+            def appJunitDefaults = new NodeList(runManager.configuration
+                    .findAll { it.'@default' == 'true' && it.'@type' in ['Application', 'JUnit'] })
+            def workingDirectories = new NodeList(appJunitDefaults.option
+                    .findAll { it.'@name' == 'WORKING_DIRECTORY' })
+            workingDirectories.each { it.'@value' = 'file://$MODULE_DIR$' }
         } else {
-            // if RunManager configuration does not exist, add it
+            // if RunManager configuration does not exist, add Application, JUnit defaults
             node.append(new XmlParser().parseText('''
                 <component name="RunManager">
                     <configuration default="true" type="Application" factoryName="Application">
