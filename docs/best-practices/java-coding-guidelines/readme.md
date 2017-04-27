@@ -1690,6 +1690,45 @@ This approach (1) makes it easy to test `FooResource` and `BarResource` with moc
 (2) reduces the coupling between the `Server`, the `Config`, and the `Resource` classes.
 
 
+### Prefer acyclic dependency graphs
+
+```java
+// BAD. Don't do this.
+public Server(Config config) {
+    this.port = config.port();
+    register(new FooResource(this));
+}
+public FooResource(Server server) {
+    this.name = "FooResource on port " + server.port();
+    if (server.isAdminModeEnabled()) {
+        server.register(new FooAdminResource());
+    }
+}
+
+// Good.
+public Server(Config config) {
+    register(new FooResource("FooResource on port " + config.port));
+    if (config.isAdminModeEnabled()) {
+        register(new FooAdminResource());
+    }
+}
+public FooResource(String name) {
+    this.name = name;
+}
+```
+
+Acyclic dependency graphs are hard to understand, hard to setup for tests and mocks, and introduce subtle code ordering
+constraints. For example, switching the order of the constructor statements introduces a bug where the resource name is
+always "FooResource on port 0" since `Server#port` hasn't been initialized when the resource calls `Server#port()`:
+
+```java
+// BAD. Don't do this.
+public Server(Config config) {
+    register(new FooResource(this));  // reads this.port which is initialized to 0.
+    this.port = config.port();  // dead code.
+}
+```
+
 ### Avoid doing work in constructors
 
 If you want to do real work in a constructor, consider putting the work
