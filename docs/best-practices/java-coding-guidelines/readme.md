@@ -1618,32 +1618,77 @@ expected output: `assertEquals(foo(), foo)`, `assertFalse(bar())`, etc.
 
 ## Dependency Injection
 
-### Restrict constructor parameters
-
-**Constructor parameters should be interfaces, data objects, or primitive types**
+### Make constructor parameters specific, avoid God-objects
 
 This mandates that your dependencies are known to users of your objects,
 and makes it much easier to mock-test your code.
 
 ``` java
-public FeedsRowProcessor(PalantirContext context) {
-    /* something */
+// BAD. Don't do this.
+public Processor(Context context) {
+    this.service = context.construct("other", OtherService.class);
+    this.config = context.getConfig();
+}
+public process(String row) {
+    if (!config.isDryRun()) {
+      service.doProcess(row);
+    }
 }
 
-public FeedsRowProcessor(SystemPropertiesInterface sysprops, ObjectStore objectStore, UIBuilder builder) {
-    /* something */
+// Good.
+public Processor(OtherService service, boolean isDryRun) {
+    this.service = service;
+    this.isDryRun = isDryRun;
+}
+public process(String row) {
+    if (!isDryRun) {
+      service.doProcess(row);
+    }
 }
 ```
 
-When allocating an object using the first constructor, it is unclear
-what exactly a FeedsRowProcessor is capable of because `PalantirContext`
-is a god-object\*. The second constructor is more explicit, and as
-someone using a FeedsRowProcessor, I have both the name and method
-signature to remind me of what the class does.
+The "BAD" example has two main issues: First, it's hard to understand how to test the `Processor` since we'd have to
+introspect deep into the code in order to understand what functionality of the `Context` we need to mock. Secondly, it
+introduces broad coupling between `Processor`, `Context`, and all other classes using a `Context`. Refactoring becomes
+painful and it hard to understand how the `Context` is used throughout the application.
 
-\[\* A "god object" is an object that knows everything or can do
-everything. In the case of PalantirContext, it is the gateway from the
-frontend to all backend code.\]
+
+### Create service proxies from config in one place only
+
+Assume two service resources, `FooResource` and `BarResource` that each have a dependency on a service proxy
+`OtherService`. Prefer constructing the `OtherService` instance at the top-level (often called "Server") and passing it
+into the two resources, rather than passing the configuration into the resources and creating the services there.
+
+``` java
+// BAD. Don't do this.
+public Server(Config config) {
+    register(new FooResource(config));
+    register(new BarResource(config));
+}
+public FooResource(Config config) {
+    this.otherService = ClientFactory.fromConfig(config.get("OtherService"));
+}
+public BarResource(Config config) {
+    this.otherService = ClientFactory.fromConfig(config.get("OtherService"));
+}
+
+// Good.
+public Server(Config config) {
+    OtherService service = ClientFactory.fromConfig(config.get("OtherService"));
+    register(new FooResource(service));
+    register(new BarResource(service));
+}
+public FooResource(OtherService service) {
+    this.otherService = service;
+}
+public BarResource(OtherService service) {
+    this.otherService = service;
+}
+```
+
+This approach (1) makes it easy to test `FooResource` and `BarResource` with mocked `OtherService` implementations, and
+(2) reduces the coupling between the `Server`, the `Config`, and the `Resource` classes.
+
 
 ### Avoid doing work in constructors
 
