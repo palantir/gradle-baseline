@@ -48,6 +48,10 @@ public final class PreconditionsConstantMessageTests {
         test("Preconditions.checkArgument(param != \"string\", \"constant\" + param);");
         test("Preconditions.checkState(param != \"string\", \"constant\" + param);");
         test("Preconditions.checkNotNull(param, \"constant\" + param);");
+
+        test("Preconditions.checkArgument(param != \"string\", String.format(\"constant %s\", param));");
+        test("Preconditions.checkState(param != \"string\", String.format(\"constant %s\", param));");
+        test("Preconditions.checkNotNull(param, String.format(\"constant %s\", param));");
     }
 
     @Test
