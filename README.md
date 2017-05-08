@@ -218,7 +218,7 @@ The version of the error-prone library defaults to "latest" and can be adjusted 
 
 ```groovy
 dependencies {
-    errorprone 'com.google.errorprone:error_prone_core:2.0.18'  // update version as desired
+    errorprone 'com.google.errorprone:error_prone_core:2.0.19'  // update version as desired
 }
 ```
 
