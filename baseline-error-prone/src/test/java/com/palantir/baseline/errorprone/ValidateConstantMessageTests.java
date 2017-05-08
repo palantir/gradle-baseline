@@ -50,6 +50,8 @@ public final class ValidateConstantMessageTests {
 
     @Test
     public void positive() throws Exception {
+        test("Validate.isTrue(param != \"string\", String.format(\"constant %s\", param));");
+
         test("Validate.isTrue(param != \"string\", \"constant\" + param);");
         test("Validate.isTrue(param != \"string\", \"constant\" + param, 0.0);");
         test("Validate.isTrue(param != \"string\", \"constant\" + param, 123L);");
