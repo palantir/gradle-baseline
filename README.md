@@ -225,7 +225,7 @@ dependencies {
 Tip: Warnings on generated code can be suppressed as follows:
 
 ```groovy
-compileJava {
+tasks.withType(JavaCompile) {
     options.compilerArgs += ['-XepDisableWarningsInGeneratedCode']
 }
 ```
