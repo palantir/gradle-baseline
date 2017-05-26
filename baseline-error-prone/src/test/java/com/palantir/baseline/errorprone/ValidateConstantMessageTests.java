@@ -109,6 +109,7 @@ public final class ValidateConstantMessageTests {
                         "  void f(boolean bArg, int iArg, Object oArg, Integer[] arrayArg, "
                             + "Collection<String> collectionArg, Map<String, String> mapArg, String stringArg, "
                             + "Iterable<String> iterableArg, double dArg) {",
+                        "    String localConstant = \"constant\";",
                         "    Validate.isTrue(bArg, \"message %d\", 123L);",
                         "    Validate.isTrue(bArg, \"message %f\", 0.0);",
                         "    Validate.isTrue(bArg, \"message %s %s\", \"msg\", \"msg\");",
@@ -118,6 +119,8 @@ public final class ValidateConstantMessageTests {
                         "    Validate.notEmpty(mapArg, \"message %s %s\", \"msg\", \"msg\");",
                         "    Validate.notEmpty(stringArg, \"message %s %s\", \"msg\", \"msg\");",
                         "    Validate.notBlank(stringArg, \"message %s %s\", \"msg\", \"msg\");",
+                        "    Validate.notBlank(stringArg, \"message %s %s\", \"msg\", compileTimeConstant);",
+                        "    Validate.notBlank(stringArg, \"message %s %s\", \"msg\", localConstant);",
                         "    Validate.noNullElements(arrayArg, \"message %s %s\", \"msg\", \"msg\");",
                         "    Validate.noNullElements(iterableArg, \"message %s %s\", \"msg\", \"msg\");",
                         "    Validate.validIndex(arrayArg, 1, \"message %s %s\", \"msg\", \"msg\");",
