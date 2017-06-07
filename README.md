@@ -74,7 +74,7 @@ particular directory structures that are unavailable when re-running tests.
 
 IDE configurations can be generated with `./gradlew idea eclipse`.
 
-
+Generally, you should check generated `.baseline` folder into version control. Though it is not compulsory, since it can be recreated using the `baselineUpdateConfig` task, checking it into git enables your project to customize its rules and share them across developers.
 
 
 
