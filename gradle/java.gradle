@@ -6,6 +6,10 @@ apply plugin: 'com.palantir.baseline-idea'
 
 sourceCompatibility = 1.8
 
+checkstyle {
+    configDir = rootProject.file(".baseline")
+}
+
 if (System.env.CIRCLE_TEST_REPORTS) {
     test.reports.junitXml.destination = new File(System.env.CIRCLE_TEST_REPORTS, project.getName())
 }
