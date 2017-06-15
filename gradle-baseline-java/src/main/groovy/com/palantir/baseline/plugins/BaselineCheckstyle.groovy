@@ -60,6 +60,7 @@ class BaselineCheckstyle extends AbstractBaselinePlugin {
 
         // Configure checkstyle
         project.checkstyle {
+            configDir = project.file("${configDir}/checkstyle")
             configFile = project.file("${configDir}/checkstyle/checkstyle.xml")
             configProperties = configProps
         }
