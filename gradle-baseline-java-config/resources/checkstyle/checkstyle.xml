@@ -74,6 +74,7 @@
         <module name="AvoidStarImport"/> <!-- Java Style Guide: No wildcard imports -->
         <module name="AvoidStaticImport"> <!-- Java Style Guide: No static imports -->
             <property name="excludes" value="
+                java.util.Collections.*,java.util.Collectors.*,
                 org.junit.Assert.*,org.junit.Assume.*,
                 org.hamcrest.CoreMatchers.*,org.hamcrest.Matchers.*,org.hamcrest.MatcherAssert.*,
                 org.hamcrest.core.AllOf.*,org.hamcrest.core.Is.*,org.hamcrest.core.StringContains.*,org.hamcrest.core.IsEqual.*,
