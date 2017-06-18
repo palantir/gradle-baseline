@@ -54,9 +54,10 @@ class BaselineCheckstyle extends AbstractBaselinePlugin {
     def configureCheckstyle() {
         project.logger.debug("Baseline: Configuring Checkstyle tasks")
 
+        def baselineConfigDir = configDir
         // Configure checkstyle
         project.checkstyle {
-            configDir = project.file("${configDir}/checkstyle")
+            configDir = project.file("${baselineConfigDir}/checkstyle")
         }
 
         // Set custom source rules for checkstyleMain task.
