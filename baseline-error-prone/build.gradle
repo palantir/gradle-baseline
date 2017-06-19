@@ -6,6 +6,7 @@ dependencies {
 
     testCompile 'com.fasterxml.jackson.core:jackson-annotations'
     testCompile 'com.google.errorprone:error_prone_test_helpers'
+    testCompile 'commons-lang:commons-lang'
     testCompile 'org.slf4j:slf4j-api'
     testCompile 'org.apache.commons:commons-lang3'
 

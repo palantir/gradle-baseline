@@ -49,16 +49,18 @@ public final class ValidateConstantMessage extends BugChecker implements BugChec
     private static final Matcher<ExpressionTree> VALIDATE_METHODS_MESSAGE_THIRD_PARAM =
             Matchers.anyOf(
                     MethodMatchers.staticMethod()
-                            // all org.apache.commons.lang.Validate methods have the message as the second arg
+                            .onClassAny("org.apache.commons.lang.Validate")
+                            .named("allElementsOfType"),
+                    MethodMatchers.staticMethod()
                             .onClassAny("org.apache.commons.lang3.Validate")
                             .withNameMatching(
                                     Pattern.compile("validIndex|matchesPattern|isInstanceOf|isAssignableFrom")));
+
     private static final Matcher<ExpressionTree> VALIDATE_METHODS_MESSAGE_FOURTH_PARAM =
-            Matchers.anyOf(
-                    MethodMatchers.staticMethod()
-                            // all org.apache.commons.lang.Validate methods have the message as the second arg
-                            .onClass("org.apache.commons.lang3.Validate")
-                            .withNameMatching(Pattern.compile("inclusiveBetween|exclusiveBetween")));
+            MethodMatchers.staticMethod()
+                    // no org.apache.commons.lang.Validate methods have the message as the fourth arg
+                    .onClass("org.apache.commons.lang3.Validate")
+                    .withNameMatching(Pattern.compile("inclusiveBetween|exclusiveBetween"));
 
     private final Matcher<ExpressionTree> compileTimeConstExpressionMatcher =
             new CompileTimeConstantExpressionMatcher();

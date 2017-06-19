@@ -51,7 +51,6 @@ public final class ValidateConstantMessageTests {
     @Test
     public void positive() throws Exception {
         test("Validate.isTrue(param != \"string\", String.format(\"constant %s\", param));");
-
         test("Validate.isTrue(param != \"string\", \"constant\" + param);");
         test("Validate.isTrue(param != \"string\", \"constant\" + param, 0.0);");
         test("Validate.isTrue(param != \"string\", \"constant\" + param, 123L);");
@@ -92,6 +91,12 @@ public final class ValidateConstantMessageTests {
         test("Validate.isInstanceOf(BigDecimal.class, BigDecimal.ONE, \"constant\" + param);");
         test("Validate.isAssignableFrom(Object.class, BigDecimal.class, "
                 + "\"constant\" + param);");
+
+        test("org.apache.commons.lang.Validate.isTrue(bArg, \"message\" + param);");
+        test("org.apache.commons.lang.Validate.notNull(stringArg, \"message\" + param);");
+        test("org.apache.commons.lang.Validate.notEmpty(arrayArg, \"message\" + param);");
+        test("org.apache.commons.lang.Validate.noNullElements(arrayArg, \"message\" + param);");
+        test("org.apache.commons.lang.Validate.allElementsOfType(collectionArg, Object.class, \"message\" + param);");
     }
 
     @Test
@@ -107,41 +112,69 @@ public final class ValidateConstantMessageTests {
                         "class Test {",
                         "  private static final String compileTimeConstant = \"constant\";",
                         "  void f(boolean bArg, int iArg, Object oArg, Integer[] arrayArg, "
-                            + "Collection<String> collectionArg, Map<String, String> mapArg, String stringArg, "
-                            + "Iterable<String> iterableArg, double dArg) {",
-                        "    String localConstant = \"constant\";",
+                                + "Collection<String> collectionArg, Map<String, String> mapArg, String stringArg, "
+                                + "Iterable<String> iterableArg, double dArg) {",
+
+                        "    Validate.isTrue(bArg);",
                         "    Validate.isTrue(bArg, \"message %d\", 123L);",
                         "    Validate.isTrue(bArg, \"message %f\", 0.0);",
-                        "    Validate.notBlank(stringArg, \"message %s\", compileTimeConstant);",
-                        "    Validate.notBlank(stringArg, \"message %s\", localConstant);",
-                        "    Validate.isTrue(bArg, \"message %s %s\", \"msg\", \"msg\");",
-                        "    Validate.notNull(oArg, \"message %s %s\", \"msg\", \"msg\");",
-                        "    Validate.notEmpty(arrayArg, \"message %s %s\", \"msg\", \"msg\");",
-                        "    Validate.notEmpty(collectionArg, \"message %s %s\", \"msg\", \"msg\");",
-                        "    Validate.notEmpty(mapArg, \"message %s %s\", \"msg\", \"msg\");",
-                        "    Validate.notEmpty(stringArg, \"message %s %s\", \"msg\", \"msg\");",
-                        "    Validate.notBlank(stringArg, \"message %s %s\", \"msg\", \"msg\");",
-                        "    Validate.noNullElements(arrayArg, \"message %s %s\", \"msg\", \"msg\");",
-                        "    Validate.noNullElements(iterableArg, \"message %s %s\", \"msg\", \"msg\");",
-                        "    Validate.validIndex(arrayArg, 1, \"message %s %s\", \"msg\", \"msg\");",
-                        "    Validate.validIndex(collectionArg, 1, \"message %s %s\", \"msg\", \"msg\");",
-                        "    Validate.validIndex(stringArg, 1, \"message %s %s\", \"msg\", \"msg\");",
-                        "    Validate.validState(bArg, \"message %s %s\", \"msg\", \"msg\");",
-                        "    Validate.matchesPattern(stringArg, \"[A-Z]+\", \"message %s %s\", \"msg\", \"msg\");",
-                        "    Validate.notNaN(dArg, \"message %s %s\", \"msg\", \"msg\");",
-                        "    Validate.finite(dArg, \"message %s %s\", \"msg\", \"msg\");",
+                        "    Validate.isTrue(bArg, \"message %s %s\", \"msg\", stringArg);",
+                        "    Validate.notNull(oArg);",
+                        "    Validate.notNull(oArg, \"message %s %s\", \"msg\", stringArg);",
+                        "    Validate.notEmpty(arrayArg);",
+                        "    Validate.notEmpty(arrayArg, \"message %s %s\", \"msg\", stringArg);",
+                        "    Validate.notEmpty(collectionArg, \"message %s %s\", \"msg\", stringArg);",
+                        "    Validate.notEmpty(mapArg, \"message %s %s\", \"msg\", stringArg);",
+                        "    Validate.notEmpty(stringArg, \"message %s %s\", \"msg\", stringArg);",
+                        "    Validate.notBlank(stringArg);",
+                        "    Validate.notBlank(stringArg, \"message %s %s\", \"msg\", stringArg);",
+                        "    Validate.noNullElements(arrayArg);",
+                        "    Validate.noNullElements(arrayArg, \"message %s %s\", \"msg\", stringArg);",
+                        "    Validate.noNullElements(iterableArg, \"message %s %s\", \"msg\", stringArg);",
+                        "    Validate.validState(bArg);",
+                        "    Validate.validState(bArg, \"message %s %s\", \"msg\", stringArg);",
+                        "    Validate.notNaN(dArg);",
+                        "    Validate.notNaN(dArg, \"message %s %s\", \"msg\", stringArg);",
+                        "    Validate.finite(dArg);",
+                        "    Validate.finite(dArg, \"message %s %s\", \"msg\", stringArg);",
+
+                        // methods where the message template is the third arg
+                        "    Validate.validIndex(arrayArg, 1);",
+                        "    Validate.validIndex(arrayArg, 1, \"message %s %s\", \"msg\", stringArg);",
+                        "    Validate.validIndex(collectionArg, 1, \"message %s %s\", \"msg\", stringArg);",
+                        "    Validate.validIndex(stringArg, 1, \"message %s %s\", \"msg\", stringArg);",
+                        "    Validate.matchesPattern(stringArg, \"[A-Z]+\");",
+                        "    Validate.matchesPattern(stringArg, \"[A-Z]+\", \"message %s %s\", \"msg\", stringArg);",
+                        "    Validate.isInstanceOf(BigDecimal.class, BigDecimal.ONE);",
+                        "    Validate.isInstanceOf(BigDecimal.class, BigDecimal.ONE,"
+                                + " \"message %s %s\", \"msg\", stringArg);",
+                        "    Validate.isAssignableFrom(Object.class, BigDecimal.class);",
+                        "    Validate.isAssignableFrom(Object.class, BigDecimal.class,"
+                                + " \"message %s %s\", \"msg\", stringArg);",
+
+                        // methods where the message template is the fourth arg
+                        "    Validate.inclusiveBetween(BigDecimal.ZERO, BigDecimal.TEN, BigDecimal.ONE);",
                         "    Validate.inclusiveBetween(BigDecimal.ZERO, BigDecimal.TEN, BigDecimal.ONE,"
-                                + " \"message %s %s\", \"msg\", \"msg\");",
+                                + " \"message %s %s\", \"msg\", stringArg);",
                         "    Validate.inclusiveBetween(0L, 100L, 50L, \"message\");",
                         "    Validate.inclusiveBetween(0.0, 1.0, 0.5, \"message\");",
+                        "    Validate.exclusiveBetween(BigDecimal.ZERO, BigDecimal.TEN, BigDecimal.ONE);",
                         "    Validate.exclusiveBetween(BigDecimal.ZERO, BigDecimal.TEN, BigDecimal.ONE,"
-                                + " \"message %s %s\", \"msg\", \"msg\");",
+                                + " \"message %s %s\", \"msg\", stringArg);",
                         "    Validate.exclusiveBetween(0L, 100L, 50L, \"message\");",
                         "    Validate.exclusiveBetween(0.0, 1.0, 0.5, \"message\");",
-                        "    Validate.isInstanceOf(BigDecimal.class, BigDecimal.ONE,"
-                                + " \"message %s %s\", \"msg\", \"msg\");",
-                        "    Validate.isAssignableFrom(Object.class, BigDecimal.class,"
-                                + " \"message %s %s\", \"msg\", \"msg\");",
+
+                        // commons-lang 2.x methods
+                        "    org.apache.commons.lang.Validate.isTrue(bArg);",
+                        "    org.apache.commons.lang.Validate.isTrue(bArg, \"message\", stringArg);",
+                        "    org.apache.commons.lang.Validate.notNull(stringArg);",
+                        "    org.apache.commons.lang.Validate.notNull(stringArg, \"message\");",
+                        "    org.apache.commons.lang.Validate.notEmpty(arrayArg);",
+                        "    org.apache.commons.lang.Validate.notEmpty(arrayArg, \"message\");",
+                        "    org.apache.commons.lang.Validate.noNullElements(arrayArg);",
+                        "    org.apache.commons.lang.Validate.noNullElements(arrayArg, \"message\");",
+                        "    org.apache.commons.lang.Validate.allElementsOfType("
+                                + "collectionArg, Object.class, \"message\");",
                         "  }",
                         "}")
                 .doTest();
