@@ -25,12 +25,13 @@ import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.matchers.CompileTimeConstantExpressionMatcher;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
+import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
-import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import java.util.List;
 import java.util.Optional;
+import java.util.regex.Pattern;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -45,6 +46,19 @@ public final class ValidateConstantMessage extends BugChecker implements BugChec
     private static final Matcher<ExpressionTree> VALIDATE_METHODS =
             MethodMatchers.staticMethod()
                     .onClassAny("org.apache.commons.lang3.Validate", "org.apache.commons.lang.Validate");
+    private static final Matcher<ExpressionTree> VALIDATE_METHODS_MESSAGE_THIRD_PARAM =
+            Matchers.anyOf(
+                    MethodMatchers.staticMethod()
+                            // all org.apache.commons.lang.Validate methods have the message as the second arg
+                            .onClassAny("org.apache.commons.lang3.Validate")
+                            .withNameMatching(
+                                    Pattern.compile("validIndex|matchesPattern|isInstanceOf|isAssignableFrom")));
+    private static final Matcher<ExpressionTree> VALIDATE_METHODS_MESSAGE_FOURTH_PARAM =
+            Matchers.anyOf(
+                    MethodMatchers.staticMethod()
+                            // all org.apache.commons.lang.Validate methods have the message as the second arg
+                            .onClass("org.apache.commons.lang3.Validate")
+                            .withNameMatching(Pattern.compile("inclusiveBetween|exclusiveBetween")));
 
     private final Matcher<ExpressionTree> compileTimeConstExpressionMatcher =
             new CompileTimeConstantExpressionMatcher();
@@ -55,12 +69,19 @@ public final class ValidateConstantMessage extends BugChecker implements BugChec
             return Description.NO_MATCH;
         }
 
-        List<? extends ExpressionTree> args = tree.getArguments();
+        int messageArgIndex;
+        if (VALIDATE_METHODS_MESSAGE_FOURTH_PARAM.matches(tree, state)) {
+            messageArgIndex = 3;
+        } else if (VALIDATE_METHODS_MESSAGE_THIRD_PARAM.matches(tree, state)) {
+            messageArgIndex = 2;
+        } else {
+            messageArgIndex = 1;
+        }
 
-        Optional<? extends ExpressionTree> messageArg = args.stream()
-                .filter(arg -> ASTHelpers.isSameType(ASTHelpers.getType(arg),
-                        state.getTypeFromString("java.lang.String"), state))
-                .reduce((one, two) -> two);
+        List<? extends ExpressionTree> args = tree.getArguments();
+        Optional<? extends ExpressionTree> messageArg = messageArgIndex < args.size()
+                ? Optional.of(args.get(messageArgIndex))
+                : Optional.empty();
 
         if (!messageArg.isPresent() || compileTimeConstExpressionMatcher.matches(messageArg.get(), state)) {
             return Description.NO_MATCH;
