@@ -44,6 +44,9 @@
             </value>
           </option>
         </GroovyCodeStyleSettings>
+        <JavaCodeStyleSettings>
+          <option name="DO_NOT_WRAP_AFTER_SINGLE_ANNOTATION" value="true" />
+        </JavaCodeStyleSettings>
         <option name="JD_ALIGN_EXCEPTION_COMMENTS" value="false" />
         <option name="JD_ALIGN_PARAM_COMMENTS" value="false" />
         <option name="JD_DO_NOT_WRAP_ONE_LINE_COMMENTS" value="true" />
