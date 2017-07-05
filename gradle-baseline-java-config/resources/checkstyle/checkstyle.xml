@@ -39,6 +39,10 @@
         <property name="format" value="\s+$"/>
         <property name="message" value="Whitespace at end-of-line"/>
     </module>
+    <module name="RegexpSingleline">
+        <property name="format" value="Preconditions\.checkNotNull"/>
+        <property name="message" value="Use Java's built-in Objects.requireNonNull instead of Guava's checkNotNull"/>
+    </module>
     <module name="SuppressionFilter"> <!-- baseline-gradle: README.md -->
         <property name="file" value="${config_loc}/checkstyle-suppressions.xml"/>
     </module>
