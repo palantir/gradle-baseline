@@ -8,6 +8,7 @@ This section summarizes best practices for contributing to code repositories.
 Whether contributing to a repository owned by your team, or to another team's product or library, the first step should
 almost always (see below for exceptions) be to reach out to the team and discuss your contribution:
 
+- Read project-specific contribution notes in the README or CONTRIBUTING file
 - Check the relevant GitHub or JIRA issues for related work
 - Send an email, comment on a relevant ticket, or discuss your contribution over a beer
 
@@ -39,6 +40,9 @@ The contributor is generally responsible for shepherding a contribution or pull-
 require pinging code reviewers, rebasing a pull-request when necessary, making the requested changes, adding
 documentation and tests, etc. Project owners may reserve the right to eventually close idle contributions, so make sure
 to get it merged in a timely fashion.
+
+Suggestions for efficient and effective code reviews, as well as responsibilities of the reviewer or project owner, are
+discussed in the [best-practices document on Code Reviews](../code-reviews/readme.md).
 
 
 ### Keep contributions as small&focussed as possible
