@@ -45,3 +45,12 @@ to get it merged in a timely fashion.
 Generally, we prefer small and focussed contributions over bulky, vast ones. A rough guide line is that a contribution
 to another team's repository should not be longer than 200-300 lines unless
 [explicitly agreed and discussed](#discuss-the-scope-of-your-contributions).
+
+A common pattern is to split a contribution into several, isolated pieces and submit them as independent pull-requests.
+For example, if a contribution comprises a refactoring step, adds a new storage component, and exposes a new external
+API, then it can be split into three or four pieces: 
+
+- **[1]** a refactoring step (not changing any logic or behavior)
+- **[2]** the implementation of the storage layer (plus tests)
+- **[3a]** a proposal for the external API (this will likely not get merged without [3b])
+- **[3b]** the implementation of the API, connecting the storage layer from [2] with the API from [3a]
