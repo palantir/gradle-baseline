@@ -12,6 +12,8 @@ architecture we’ve previously established. But there are many possible
 standards to acknowledge, each dependent on need and use, and
 standards are established by experiment.*
 
+[Contributing to Repositories](contributing/readme.md)
+
 [Code Reviews Guide](code-reviews/readme.md)
 
 [Java Coding Guide](java-coding-guidelines/readme.md)
