@@ -45,8 +45,8 @@ Suggestions for efficient and effective code reviews, as well as responsibilitie
 discussed in the [best-practices document on Code Reviews](../code-reviews/readme.md).
 
 
-### Keep contributions as small&focussed as possible
-Generally, we prefer small and focussed contributions over bulky, vast ones. A rough guide line is that a contribution
+### Keep contributions as small and focused as possible
+Generally, we prefer small and focused contributions over bulky, vast ones. A rough guide line is that a contribution
 to another team's repository should not be longer than 200-300 lines unless
 [explicitly agreed and discussed](#discuss-the-scope-of-your-contributions).
 
