@@ -48,7 +48,7 @@ discussed in the [best-practices document on Code Reviews](../code-reviews/readm
 ### Keep contributions as small and focused as possible
 Generally, we prefer small and focused contributions over bulky, vast ones. A rough guide line is that a contribution
 to another team's repository should not be longer than 200-300 lines unless
-[explicitly agreed and discussed](#discuss-the-scope-of-your-contributions).
+[explicitly agreed and discussed](#discuss-the-scope-of-your-contribution).
 
 A common pattern is to split a contribution into several, isolated pieces and submit them as independent pull-requests.
 For example, if a contribution comprises a refactoring step, adds a new storage component, and exposes a new external
