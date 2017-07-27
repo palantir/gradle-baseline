@@ -2,7 +2,7 @@
 
 This section summarizes best practices for contributing to code repositories.
 
-*TL;DR: Reach out to the repository owners before making a pull-request, keep contributions focussed.*
+*TL;DR: Reach out to the repository owners before making a pull-request, keep contributions focused.*
 
 ### Discuss the scope of your contribution
 Whether contributing to a repository owned by your team, or to another team's product or library, the first step should
