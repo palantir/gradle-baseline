@@ -46,7 +46,7 @@ Conversely, project owners and reviewers should be empathetic towards contributo
 - constructive: *"try using fooFunction() instead of barFunction() here"* versus *"fix function"*
 - friendly: *"please use consistent variable naming (see other variables in this class)"* versus *silly naming*
 - educational: *".paralellStream() has bad performance characteristics in this case, see <link>"* instead of *"this is never going to scale"*
-- reasonable: do not ask to add an end-to-end test if non of the other code in the project has end-to-end tests
+- reasonable: do not ask to add an end-to-end test if none of the other code in the project has end-to-end tests
 - in scope: do not ask to also clean up or refactor this other unrelated class as part of this contribution
 
 Ultimately, if a contributed feature or fix is important to the project and the contributor is not able to finish it,
