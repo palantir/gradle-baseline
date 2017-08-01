@@ -41,6 +41,17 @@ require pinging code reviewers, rebasing a pull-request when necessary, making t
 documentation and tests, etc. Project owners may reserve the right to eventually close idle contributions, so make sure
 to get it merged in a timely fashion.
 
+Conversely, project owners and reviewers should be empathetic towards contributors; comments should be:
+
+- constructive: *"try using fooFunction() instead of barFunction() here"* versus *"fix function"*
+- friendly: *"please use consistent variable naming (see other variables in this class)"* versus *silly naming*
+- educational: *".paralellStream() has bad performance characteristics in this case, see <link>"* instead of *"this is never going to scale"*
+- reasonable: do not ask to add an end-to-end test if non of the other code in the project has end-to-end tests
+- in scope: do not ask to also clean up or refactor this other unrelated class as part of this contribution
+
+Ultimately, if a contributed feature or fix is important to the project and the contributor is not able to finish it,
+the project team should take over ownership until it is merged.
+
 Suggestions for efficient and effective code reviews, as well as responsibilities of the reviewer or project owner, are
 discussed in the [best-practices document on Code Reviews](../code-reviews/readme.md).
 
