@@ -1,5 +1,7 @@
 # Baseline
 
+*[Chesterton's fence](https://en.wikipedia.org/wiki/Wikipedia:Chesterton%27s_fence) is the principle that reforms should not be made until the reasoning behind the existing state of affairs is understood.*
+
 ## [Java Style Guide](java-style-guide/readme.md)
 Code is more often read than written. Style guides exist to make reading code more pleasant and efficient by
 standardizing formatting. Whether you follow our style guides precisely or use them as the basis for your
