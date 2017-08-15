@@ -17,13 +17,12 @@
 package com.palantir.baseline.plugins
 
 import groovy.xml.XmlUtil
+import java.nio.file.Files
+import java.nio.file.Paths
 import org.gradle.api.Project
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.plugins.ide.idea.IdeaPlugin
 import org.gradle.plugins.ide.idea.model.IdeaModel
-
-import java.nio.file.Files
-import java.nio.file.Paths
 
 class BaselineIdea extends AbstractBaselinePlugin {
 
@@ -96,8 +95,8 @@ class BaselineIdea extends AbstractBaselinePlugin {
             }
         }
 
-        def firstFileName = copyrightDir.relativize(copyrightFiles.iterator().toList().last().toPath())
-        copyrightManager.@default = firstFileName
+        def lastFileName = copyrightDir.relativize(copyrightFiles.iterator().toList().last().toPath())
+        copyrightManager.@default = lastFileName
     }
 
     private void addCheckstyle(node) {
