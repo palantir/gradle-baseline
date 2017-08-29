@@ -9,7 +9,7 @@ Eclipse/IntelliJ projects. It configures [Checkstyle](http://checkstyle.sourcefo
 configurations consistent with the
 [Baseline Java Style Guide and Best Practices](https://github.com/palantir/gradle-baseline/tree/develop/docs)
 
-The Baseline plugins are compatible with Gradle 3.3.0 and above.
+The Baseline plugins are compatible with Gradle 4.0.0 and above.
 
 
 
