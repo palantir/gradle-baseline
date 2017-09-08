@@ -1,0 +1,11 @@
+package com.example;
+
+public class MyClass {
+    public void methodA() {
+        System.exit(0);
+    }
+
+    public void methodB() {
+        System.exit(1);
+    }
+}

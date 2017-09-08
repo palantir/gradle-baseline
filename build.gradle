@@ -37,3 +37,4 @@ allprojects {
     version System.env.CIRCLE_TAG ?: gitVersion()
     description = 'A Gradle plugin for applying Baseline-recommended build and IDE settings'
 }
+

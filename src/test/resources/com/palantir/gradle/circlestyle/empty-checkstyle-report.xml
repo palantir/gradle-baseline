@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<testsuites failures="0" id="myproject" name="myproject" tests="0" time="123.000">
+<testsuite failures="0" id="checkstyleMain" name="checkstyleMain" tests="0" time="123.000"/>
+</testsuites>

@@ -1,0 +1,20 @@
+package com.example;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+import org.junit.Test;
+
+public class MyClassTests {
+
+    @Test
+    public void doublesTwo() {
+        int result = MyClass.doubleIt(2);
+        assertThat(result).isEqualTo(4);
+    }
+    
+    @Test
+    public void doublesThree() {
+        int result = MyClass.doubleIt(3);
+        assertThat(result).isEqualTo(6);
+    }
+}

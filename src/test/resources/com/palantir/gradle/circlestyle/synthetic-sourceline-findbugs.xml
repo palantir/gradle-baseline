@@ -1,0 +1,56 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<BugCollection version="3.0.1" sequence="0" timestamp="1517833410853" analysisTimestamp="1517833412562" release="">
+  <BugInstance type="PT_FINAL_TYPE_PARAM" priority="2" rank="12" abbrev="PTFP" category="CORRECTNESS" instanceHash="f173d7c1ff5c0a96f539088f95577923" instanceOccurrenceNum="0" instanceOccurrenceMax="0">
+    <ShortMessage>Parameter of final type</ShortMessage>
+    <LongMessage>Parameter 0 of new com.example.Application$StatusResource(Foo, Bar, Baz) is of final type com.example.Foo</LongMessage>
+    <Int value="0">
+      <Message>Value 0</Message>
+    </Int>
+    <Class classname="com.example.Application$StatusResource" primary="true">
+      <SourceLine classname="com.example.Application$StatusResource" start="211" end="264" sourcefile="Application.java" sourcepath="com.example.Application.java">
+        <Message>At Application.java:[lines 211-264]</Message>
+      </SourceLine>
+      <Message>In class com.example.Application$StatusResource</Message>
+    </Class>
+    <Method classname="com.example.Application$StatusResource" name="&lt;init&gt;" signature="(Lcom/example/Foo;Lcom/example/Bar;Ljava/util/function/Supplier;)V" isStatic="false" primary="true">
+      <SourceLine classname="com.example.Application$StatusResource" start="218" end="222" startBytecode="0" endBytecode="125" sourcefile="Application.java" sourcepath="com.example.Application.java"/>
+      <Message>In method new com.example.Application$StatusResource(Foo, Bar, Supplier)</Message>
+    </Method>
+    <Type descriptor="Lcom/example/Foo;">
+      <SourceLine classname="com.example.Foo" start="22" end="51" sourcefile="Foo.java" sourcepath="com/example/Foo.java">
+        <Message>At Foo.java:[lines 22-51]</Message>
+      </SourceLine>
+      <Message>Type com.example.Foo</Message>
+    </Type>
+    <SourceLine classname="com.example.Application$StatusResource" start="218" end="222" startBytecode="0" endBytecode="125" sourcefile="Application.java" sourcepath="com.example.Application.java" synthetic="true">
+      <Message>At Application.java:[lines 218-222]</Message>
+    </SourceLine>
+  </BugInstance>
+  <BugInstance type="PT_FINAL_TYPE_PARAM" priority="2" rank="12" abbrev="PTFP" category="CORRECTNESS" instanceHash="8a432ef37aef9703c86b077cd7e6f252" instanceOccurrenceNum="0" instanceOccurrenceMax="0">
+    <ShortMessage>Parameter of final type</ShortMessage>
+    <LongMessage>Parameter 1 of new com.example.Application$StatusResource(Foo, Bar, Supplier) is of final type com.example.Bar</LongMessage>
+    <Int value="1">
+      <Message>Value 1</Message>
+    </Int>
+    <Class classname="com.example.Application$StatusResource" primary="true">
+      <SourceLine classname="com.example.Application$StatusResource" start="211" end="264" sourcefile="Application.java" sourcepath="com.example.Application.java">
+        <Message>At Application.java:[lines 211-264]</Message>
+      </SourceLine>
+      <Message>In class com.example.Application$StatusResource</Message>
+    </Class>
+    <Method classname="com.example.Application$StatusResource" name="&lt;init&gt;" signature="(Lcom/example/Foo;Lcom/example/Bar;Ljava/util/function/Supplier;)V" isStatic="false" primary="true">
+      <SourceLine classname="com.example.Application$StatusResource" start="218" end="222" startBytecode="0" endBytecode="125" sourcefile="Application.java" sourcepath="com.example.Application.java"/>
+      <Message>In method new com.example.Application$StatusResource(Foo, Bar, Supplier)</Message>
+    </Method>
+    <Type descriptor="Lcom/example/Bar;">
+      <SourceLine classname="com.example.Bar" start="29" end="78" sourcefile="Bar.java" sourcepath="com/example/Bar.java">
+        <Message>At Bar.java:[lines 29-78]</Message>
+      </SourceLine>
+      <Message>Type com.example.Bar</Message>
+    </Type>
+    <SourceLine classname="com.example.Application$StatusResource" start="218" end="222" startBytecode="0" endBytecode="125" sourcefile="Application.java" sourcepath="com.example.Application.java" synthetic="true">
+      <Message>At Application.java:[lines 218-222]</Message>
+    </SourceLine>
+  </BugInstance>
+</BugCollection>

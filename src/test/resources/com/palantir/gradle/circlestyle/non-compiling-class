@@ -1,0 +1,15 @@
+package com.example;
+
+import java.util.ArrayList;
+import java.util.List;
+
+public class MyClass {
+
+    private final int a = "hello";
+    private final int b = 1;
+    
+    public void methodA() {
+        b = 2;
+        List<Integer> foo = new ArrayList();
+    }
+}

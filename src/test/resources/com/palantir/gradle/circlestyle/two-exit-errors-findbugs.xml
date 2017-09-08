@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<BugCollection version="3.0.1" sequence="0" timestamp="1506433235953" analysisTimestamp="1506433235986" release="">
+  <Project projectName="">
+    <Jar>/home/ubuntu/fooproject/build/classes/java/main</Jar>
+    <SrcDir>/home/ubuntu/fooproject/src/main/java/com/example/MyClass.java</SrcDir>
+  </Project>
+  <BugInstance type="DM_EXIT" priority="2" rank="16" abbrev="Dm" category="BAD_PRACTICE" instanceHash="9b4801df2f7c8255cc10ece57a73ee51" instanceOccurrenceNum="0" instanceOccurrenceMax="0" cweid="382">
+    <ShortMessage>Method invokes System.exit(...)</ShortMessage>
+    <LongMessage>com.example.MyClass.methodA() invokes System.exit(...), which shuts down the entire virtual machine</LongMessage>
+    <Class classname="com.example.MyClass" primary="true">
+      <SourceLine classname="com.example.MyClass" start="3" end="10" sourcefile="MyClass.java" sourcepath="com/example/MyClass.java">
+        <Message>At MyClass.java:[lines 3-10]</Message>
+      </SourceLine>
+      <Message>In class com.example.MyClass</Message>
+    </Class>
+    <Method classname="com.example.MyClass" name="methodA" signature="()V" isStatic="false" primary="true">
+      <SourceLine classname="com.example.MyClass" start="5" end="6" startBytecode="0" endBytecode="50" sourcefile="MyClass.java" sourcepath="com/example/MyClass.java"/>
+      <Message>In method com.example.MyClass.methodA()</Message>
+    </Method>
+    <SourceLine classname="com.example.MyClass" primary="true" start="5" end="5" startBytecode="1" endBytecode="1" sourcefile="MyClass.java" sourcepath="com/example/MyClass.java">
+      <Message>At MyClass.java:[line 5]</Message>
+    </SourceLine>
+  </BugInstance>
+  <BugInstance type="DM_EXIT" priority="2" rank="16" abbrev="Dm" category="BAD_PRACTICE" instanceHash="9cccf92c47b8fa246541c23de9b8f7e7" instanceOccurrenceNum="0" instanceOccurrenceMax="0" cweid="382">
+    <ShortMessage>Method invokes System.exit(...)</ShortMessage>
+    <LongMessage>com.example.MyClass.methodB() invokes System.exit(...), which shuts down the entire virtual machine</LongMessage>
+    <Class classname="com.example.MyClass" primary="true">
+      <SourceLine classname="com.example.MyClass" start="3" end="10" sourcefile="MyClass.java" sourcepath="com/example/MyClass.java">
+        <Message>At MyClass.java:[lines 3-10]</Message>
+      </SourceLine>
+      <Message>In class com.example.MyClass</Message>
+    </Class>
+    <Method classname="com.example.MyClass" name="methodB" signature="()V" isStatic="false" primary="true">
+      <SourceLine classname="com.example.MyClass" start="9" end="10" startBytecode="0" endBytecode="50" sourcefile="MyClass.java" sourcepath="com/example/MyClass.java"/>
+      <Message>In method com.example.MyClass.methodB()</Message>
+    </Method>
+    <SourceLine classname="com.example.MyClass" primary="true" start="9" end="9" startBytecode="1" endBytecode="1" sourcefile="MyClass.java" sourcepath="com/example/MyClass.java">
+      <Message>At MyClass.java:[line 9]</Message>
+    </SourceLine>
+  </BugInstance>
+  <BugCategory category="BAD_PRACTICE">
+    <Description>Bad practice</Description>
+  </BugCategory>
+  <BugPattern type="DM_EXIT" abbrev="Dm" category="BAD_PRACTICE" cweid="382">
+    <ShortDescription>Method invokes System.exit(...)</ShortDescription>
+    <Details><![CDATA[
+
+  <p> Invoking System.exit shuts down the entire Java virtual machine. This
+   should only been done when it is appropriate. Such calls make it
+   hard or impossible for your code to be invoked by other code.
+   Consider throwing a RuntimeException instead.</p>
+
+    ]]></Details>
+  </BugPattern>
+  <BugCode abbrev="Dm">
+    <Description>Dubious method used</Description>
+  </BugCode>
+  <Errors errors="0" missingClasses="0"></Errors>
+  <FindBugsSummary timestamp="Tue, 26 Sep 2017 14:40:35 +0100" total_classes="1" referenced_classes="10" total_bugs="2" total_size="9" num_packages="1" java_version="1.7.0_71" vm_version="24.71-b01" cpu_seconds="2.71" clock_seconds="1.04" peak_mbytes="95.22" alloc_mbytes="3641.00" gc_seconds="0.01" priority_2="2">
+    <FileStats path="com/example/MyClass.java" bugCount="2" size="9" bugHash="e9b9c7e044c3cf96ba668626ba392970"/>
+    <PackageStats package="com.example" total_bugs="2" total_types="1" total_size="9" priority_2="2">
+      <ClassStats class="com.example.MyClass" sourceFile="MyClass.java" interface="false" size="9" bugs="2" priority_2="2"/>
+    </PackageStats>
+    <FindBugsProfile>
+      <ClassProfile name="edu.umd.cs.findbugs.classfile.engine.ClassInfoAnalysisEngine" totalMilliseconds="191" invocations="300" avgMicrosecondsPerInvocation="639" maxMicrosecondsPerInvocation="12445" standardDeviationMircosecondsPerInvocation="1405"/>
+      <ClassProfile name="edu.umd.cs.findbugs.classfile.engine.ClassDataAnalysisEngine" totalMilliseconds="58" invocations="301" avgMicrosecondsPerInvocation="195" maxMicrosecondsPerInvocation="680" standardDeviationMircosecondsPerInvocation="99"/>
+      <ClassProfile name="edu.umd.cs.findbugs.detect.FieldItemSummary" totalMilliseconds="50" invocations="10" avgMicrosecondsPerInvocation="5090" maxMicrosecondsPerInvocation="15507" standardDeviationMircosecondsPerInvocation="5167"/>
+      <ClassProfile name="edu.umd.cs.findbugs.util.TopologicalSort" totalMilliseconds="43" invocations="269" avgMicrosecondsPerInvocation="161" maxMicrosecondsPerInvocation="2133" standardDeviationMircosecondsPerInvocation="276"/>
+      <ClassProfile name="edu.umd.cs.findbugs.OpcodeStack$JumpInfoFactory" totalMilliseconds="37" invocations="33" avgMicrosecondsPerInvocation="1144" maxMicrosecondsPerInvocation="5181" standardDeviationMircosecondsPerInvocation="1142"/>
+      <ClassProfile name="edu.umd.cs.findbugs.classfile.engine.bcel.MethodGenFactory" totalMilliseconds="37" invocations="3" avgMicrosecondsPerInvocation="12547" maxMicrosecondsPerInvocation="37422" standardDeviationMircosecondsPerInvocation="17589"/>
+      <ClassProfile name="edu.umd.cs.findbugs.detect.FindNoSideEffectMethods" totalMilliseconds="36" invocations="10" avgMicrosecondsPerInvocation="3683" maxMicrosecondsPerInvocation="14034" standardDeviationMircosecondsPerInvocation="4348"/>
+      <ClassProfile name="edu.umd.cs.findbugs.classfile.engine.bcel.JavaClassAnalysisEngine" totalMilliseconds="21" invocations="22" avgMicrosecondsPerInvocation="999" maxMicrosecondsPerInvocation="12607" standardDeviationMircosecondsPerInvocation="2625"/>
+      <ClassProfile name="edu.umd.cs.findbugs.detect.NoteDirectlyRelevantTypeQualifiers" totalMilliseconds="18" invocations="10" avgMicrosecondsPerInvocation="1844" maxMicrosecondsPerInvocation="5379" standardDeviationMircosecondsPerInvocation="1814"/>
+      <ClassProfile name="edu.umd.cs.findbugs.detect.BuildObligationPolicyDatabase" totalMilliseconds="15" invocations="10" avgMicrosecondsPerInvocation="1563" maxMicrosecondsPerInvocation="3471" standardDeviationMircosecondsPerInvocation="1245"/>
+    </FindBugsProfile>
+  </FindBugsSummary>
+  <ClassFeatures></ClassFeatures>
+  <History></History>
+</BugCollection>

@@ -1,0 +1,9 @@
+package com.example;
+
+public class MyClass {
+    public static int doubleIt(int input) {
+        return 4;
+    }
+    
+    private MyClass() { }
+}
