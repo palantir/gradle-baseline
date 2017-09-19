@@ -36,7 +36,7 @@ import java.util.regex.Pattern;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "LogWithSafeArgs",
+        name = "Slf4jLogsafeArgs",
         category = Category.ONE_OFF,
         severity = SeverityLevel.ERROR,
         summary = "Allow only com.palantir.logsafe.Arg types as parameter inputs to slf4j log messages.")

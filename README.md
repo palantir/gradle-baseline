@@ -235,6 +235,7 @@ Baseline configures the following checks in addition to the [error-prone's out-o
 checks](https://errorprone.info):
 
 - Slf4jConstantLogMessage: Allow only compile-time constant slf4j log message strings.
+- Slf4jLogsafeArgs: Allow only com.palantir.logsafe.Arg types as parameter inputs to slf4j log messages.
 
 
 

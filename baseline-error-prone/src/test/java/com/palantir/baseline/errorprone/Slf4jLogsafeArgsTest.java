@@ -18,14 +18,14 @@ package com.palantir.baseline.errorprone;
 
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.CompilationTestHelper;
-import java.util.List;
 import org.junit.Before;
 import org.junit.Test;
 
 public final class Slf4jLogsafeArgsTest {
 
+    private static final ImmutableList<String> LOG_LEVELS = ImmutableList.of("trace", "debug", "info", "warn", "error");
+
     private CompilationTestHelper compilationHelper;
-    private List<String> logLevels = ImmutableList.of("trace", "debug", "info", "warn", "error");
 
     @Before
     public void before() {
@@ -33,8 +33,7 @@ public final class Slf4jLogsafeArgsTest {
     }
 
     private void test(String logArgs, String failingArgs) throws Exception {
-
-        logLevels.forEach(logLevel -> compilationHelper
+        LOG_LEVELS.forEach(logLevel -> compilationHelper
                 .addSourceLines(
                         "Test.java",
                         "import com.palantir.logsafe.SafeArg;",
@@ -89,7 +88,7 @@ public final class Slf4jLogsafeArgsTest {
 
     @Test
     public void testPassingLogsafeArgs() throws Exception {
-        compilationHelper
+        LOG_LEVELS.forEach(logLevel -> compilationHelper
                 .addSourceLines(
                         "Test.java",
                         "import com.palantir.logsafe.SafeArg;",
@@ -104,42 +103,55 @@ public final class Slf4jLogsafeArgsTest {
                         "  void f() {",
                         "",
                         "    // log.<>(String)",
-                        "    log.trace(\"constant\");",
-                        "    log.trace(\"constant\" + compileTimeConstant);",
+                        "    log." + logLevel + "(\"constant\");",
+                        "    log." + logLevel + "(\"constant\" + compileTimeConstant);",
                         "",
                         "    // log.<>(String, Arg<T>)",
-                        "    log.trace(\"constant {}\", SafeArg.of(\"name\", \"string\"));",
+                        "    log." + logLevel + "(\"constant {}\", SafeArg.of(\"name\", \"string\"));",
                         "",
                         "    // log.<>(String, Arg<T>, Arg<T>)",
-                        "    log.trace(\"constant {} {}\", SafeArg.of(\"name\", \"string\"), UnsafeArg.of(\"name2\", \"string2\"));",
+                        "    log." + logLevel + "(\"constant {} {}\",",
+                        "        SafeArg.of(\"name\", \"string\"),",
+                        "        UnsafeArg.of(\"name2\", \"string2\"));",
                         "",
                         "    // log.<>(Marker, String)",
-                        "    log.trace(new DummyMarker(), \"constant\");",
+                        "    log." + logLevel + "(new DummyMarker(), \"constant\");",
                         "",
                         "    // log.<>(Marker, String, Arg<T>)",
-                        "    log.trace(new DummyMarker(), \"constant {}\", SafeArg.of(\"name\", \"string\"));",
+                        "    log." + logLevel + "(new DummyMarker(), \"constant {}\",",
+                        "        SafeArg.of(\"name\", \"string\"));",
                         "",
                         "    // log.<>(Marker, String, Arg<T>, Arg<T>)",
-                        "    log.trace(\"constant {} {}\", SafeArg.of(\"name\", \"string\"), UnsafeArg.of(\"name2\", \"string2\"));",
+                        "    log." + logLevel + "(\"constant {} {}\",",
+                        "        SafeArg.of(\"name\", \"string\"),",
+                        "        UnsafeArg.of(\"name2\", \"string2\"));",
                         "",
                         "    // log.<>(String, Exception)",
-                        "    log.trace(\"constant\", new Exception());",
-                        "    log.trace(\"constant\" + compileTimeConstant, new Exception());",
+                        "    log." + logLevel + "(\"constant\", new Exception());",
+                        "    log." + logLevel + "(\"constant\" + compileTimeConstant, new Exception());",
                         "",
                         "    // log.<>(String, Arg<T>, Exception)",
-                        "    log.trace(\"constant {}\", SafeArg.of(\"name\", \"string\"), new Exception());",
+                        "    log." + logLevel + "(\"constant {}\", SafeArg.of(\"name\", \"string\"), new Exception());",
                         "",
                         "    // log.<>(String, Arg<T>, Arg<T>, Exception)",
-                        "    log.trace(\"constant {} {}\", SafeArg.of(\"name\", \"string\"), UnsafeArg.of(\"name2\", \"string2\"), new Exception());",
+                        "    log." + logLevel + "(\"constant {} {}\",",
+                        "        SafeArg.of(\"name\", \"string\"),",
+                        "        UnsafeArg.of(\"name2\", \"string2\"),",
+                        "        new Exception());",
                         "",
                         "    // log.<>(Marker, String, Exception)",
-                        "    log.trace(new DummyMarker(), \"constant\", new Exception());",
+                        "    log." + logLevel + "(new DummyMarker(), \"constant\", new Exception());",
                         "",
                         "    // log.<>(Marker, String, Arg<T>, Exception)",
-                        "    log.trace(new DummyMarker(), \"constant {}\", SafeArg.of(\"name\", \"string\"), new Exception());",
+                        "    log." + logLevel + "(new DummyMarker(), \"constant {}\",",
+                        "        SafeArg.of(\"name\", \"string\"),",
+                        "        new Exception());",
                         "",
                         "    // log.<>(Marker, String, Arg<T>, Arg<T>, Exception)",
-                        "    log.trace(\"constant {} {}\", SafeArg.of(\"name\", \"string\"), UnsafeArg.of(\"name2\", \"string2\"), new Exception());",
+                        "    log." + logLevel + "(\"constant {} {}\",",
+                        "        SafeArg.of(\"name\", \"string\"),",
+                        "        UnsafeArg.of(\"name2\", \"string2\"),",
+                        "        new Exception());",
                         "",
                         "  }",
                         "",
@@ -154,7 +166,6 @@ public final class Slf4jLogsafeArgsTest {
                         "    public boolean contains(String name) { return false; }",
                         "  }",
                         "}")
-                .doTest();
+                .doTest());
     }
-
 }
