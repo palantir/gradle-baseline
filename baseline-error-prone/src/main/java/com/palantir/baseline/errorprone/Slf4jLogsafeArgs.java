@@ -78,10 +78,10 @@ public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocati
 
         if (badArgs.isEmpty()) {
             return Description.NO_MATCH;
+        } else {
+            return buildDescription(tree)
+                    .setMessage("slf4j log statement does not use logsafe parameters for arguments " + badArgs)
+                    .build();
         }
-
-        return buildDescription(tree)
-                .setMessage("slf4j log statement does not use logsafe parameters for arguments " + badArgs)
-                .build();
     }
 }
