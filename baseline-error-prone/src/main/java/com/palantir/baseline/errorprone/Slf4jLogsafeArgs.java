@@ -38,6 +38,8 @@ import java.util.regex.Pattern;
 @BugPattern(
         name = "Slf4jLogsafeArgs",
         category = Category.ONE_OFF,
+        link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
+        linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
         summary = "Allow only com.palantir.logsafe.Arg types as parameter inputs to slf4j log messages.")
 public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocationTreeMatcher {
