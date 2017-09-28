@@ -83,7 +83,7 @@ public final class Slf4jLogsafeArgsTest {
                 "[2]");
 
         // log.<>(String, Object, Arg<T>, Exception)"
-        test("\"constant {} {}\", \"string\", SafeArg.of(\"name\", \"string\")", "[1]");
+        test("\"constant {} {}\", \"string\", SafeArg.of(\"name\", \"string\"), new Exception()", "[1]");
     }
 
     @Test
@@ -122,7 +122,7 @@ public final class Slf4jLogsafeArgsTest {
                         "        SafeArg.of(\"name\", \"string\"));",
                         "",
                         "    // log.<>(Marker, String, Arg<T>, Arg<T>)",
-                        "    log." + logLevel + "(\"constant {} {}\",",
+                        "    log." + logLevel + "(new DummyMarker(), \"constant {} {}\",",
                         "        SafeArg.of(\"name\", \"string\"),",
                         "        UnsafeArg.of(\"name2\", \"string2\"));",
                         "",
@@ -148,7 +148,7 @@ public final class Slf4jLogsafeArgsTest {
                         "        new Exception());",
                         "",
                         "    // log.<>(Marker, String, Arg<T>, Arg<T>, Exception)",
-                        "    log." + logLevel + "(\"constant {} {}\",",
+                        "    log." + logLevel + "(new DummyMarker(), \"constant {} {}\",",
                         "        SafeArg.of(\"name\", \"string\"),",
                         "        UnsafeArg.of(\"name2\", \"string2\"),",
                         "        new Exception());",
