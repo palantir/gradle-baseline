@@ -17,13 +17,13 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
+import com.google.common.collect.ImmutableList.Builder;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.BugPattern.Category;
 import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.bugpatterns.BugChecker.MethodInvocationTreeMatcher;
-import com.google.errorprone.matchers.CompileTimeConstantExpressionMatcher;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
@@ -36,13 +36,13 @@ import java.util.regex.Pattern;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "Slf4jConstantLogMessage",
+        name = "Slf4jLogsafeArgs",
         category = Category.ONE_OFF,
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        severity = SeverityLevel.ERROR,
-        summary = "Allow only compile-time constant slf4j log message strings.")
-public final class Slf4jConstantLogMessage extends BugChecker implements MethodInvocationTreeMatcher {
+        severity = SeverityLevel.WARNING,
+        summary = "Allow only com.palantir.logsafe.Arg types as parameter inputs to slf4j log messages.")
+public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
 
@@ -52,28 +52,38 @@ public final class Slf4jConstantLogMessage extends BugChecker implements MethodI
                             .onDescendantOf("org.slf4j.Logger")
                             .withNameMatching(Pattern.compile("trace|debug|info|warn|error")));
 
-    private final Matcher<ExpressionTree> compileTimeConstExpressionMatcher =
-            new CompileTimeConstantExpressionMatcher();
-
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
         if (!LOG_METHOD.matches(tree, state)) {
             return Description.NO_MATCH;
         }
 
-        List<? extends ExpressionTree> args = tree.getArguments();
-        ExpressionTree messageArg = ASTHelpers.isCastable(
-                ASTHelpers.getType(tree.getArguments().get(0)),
+        List<? extends ExpressionTree> allArgs = tree.getArguments();
+        int lastIndex = allArgs.size() - 1;
+        int startArg = ASTHelpers.isCastable(
+                ASTHelpers.getType(allArgs.get(0)),
                 state.getTypeFromString("org.slf4j.Marker"),
-                state)
-                ? args.get(1)
-                : args.get(0);
+                state) ? 2 : 1;
+        int endArg = ASTHelpers.isCastable(
+                ASTHelpers.getType(allArgs.get(lastIndex)),
+                state.getTypeFromString("java.lang.Exception"),
+                state) ? lastIndex - 1 : lastIndex;
 
-        if (compileTimeConstExpressionMatcher.matches(messageArg, state)) {
-            return Description.NO_MATCH;
+        Builder<Integer> badArgsBuilder = new Builder<>();
+        for (int i = startArg; i <= endArg; i++) {
+            if (!ASTHelpers.isCastable(ASTHelpers.getType(allArgs.get(i)),
+                    state.getTypeFromString("com.palantir.logsafe.Arg"), state)) {
+                badArgsBuilder.add(i);
+            }
         }
+        List<Integer> badArgs = badArgsBuilder.build();
 
-        return buildDescription(tree).setMessage("slf4j log statement uses a non-constant expression").build();
+        if (badArgs.isEmpty()) {
+            return Description.NO_MATCH;
+        } else {
+            return buildDescription(tree)
+                    .setMessage("slf4j log statement does not use logsafe parameters for arguments " + badArgs)
+                    .build();
+        }
     }
-
 }

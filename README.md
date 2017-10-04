@@ -222,7 +222,22 @@ dependencies {
 }
 ```
 
-Tip: Warnings on generated code can be suppressed as follows:
+#### Error-prone suppressions
+
+Error-prone rules can be suppressed on a per-line or per-block basis just like Checkstyle rules:
+
+```Java
+@SuppressWarnings("Slf4jConstantLogMessage")
+```
+
+Rules can be suppressed at the project level, or have their severity modified, by adding the following to the project's `build.gradle`:
+
+```groovy
+tasks.withType(JavaCompile) {
+    options.compilerArgs += ['-Xep:Slf4jLogsafeArgs:OFF']
+}
+```
+Warnings on generated code can be suppressed as follows:
 
 ```groovy
 tasks.withType(JavaCompile) {
@@ -230,15 +245,15 @@ tasks.withType(JavaCompile) {
 }
 ```
 
+More information on error-prone severity handling can be found at [errorprone.info/docs/flags](http://errorprone.info/docs/flags).
+
 #### Baseline error-prone checks
 Baseline configures the following checks in addition to the [error-prone's out-of-the-box
 checks](https://errorprone.info):
 
 - Slf4jConstantLogMessage: Allow only compile-time constant slf4j log message strings.
-
-
-
-
+- Slf4jLogsafeArgs: Allow only com.palantir.logsafe.Arg types as parameter inputs to slf4j log messages. More information on
+Safe Logging can be found at [github.com/palantir/safe-logging](https://github.com/palantir/safe-logging).
 
 ### Copyright Checks
 
