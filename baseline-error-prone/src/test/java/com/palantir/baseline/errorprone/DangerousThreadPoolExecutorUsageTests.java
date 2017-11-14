@@ -8,13 +8,13 @@ import com.google.errorprone.CompilationTestHelper;
 import org.junit.Before;
 import org.junit.Test;
 
-public final class DangerousExecutorUsageTests {
+public final class DangerousThreadPoolExecutorUsageTests {
 
     private CompilationTestHelper compilationHelper;
 
     @Before
     public void before() {
-        compilationHelper = CompilationTestHelper.newInstance(DangerousExecutorUsage.class, getClass());
+        compilationHelper = CompilationTestHelper.newInstance(DangerousThreadPoolExecutorUsage.class, getClass());
     }
 
     @Test

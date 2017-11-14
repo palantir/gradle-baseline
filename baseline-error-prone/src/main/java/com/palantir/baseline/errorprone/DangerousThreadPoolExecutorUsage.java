@@ -19,18 +19,19 @@ import java.util.concurrent.ThreadPoolExecutor;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "DangerousExecutorUsage",
+        name = "DangerousThreadPoolExecutorUsage",
         category = Category.JDK,
         severity = SeverityLevel.ERROR,
-        summary = "Disallow most direct ThreadPoolExecutor usages.")
-public final class DangerousExecutorUsage extends BugChecker implements BugChecker.NewClassTreeMatcher {
+        summary = "Disallow direct ThreadPoolExecutor usages.")
+public final class DangerousThreadPoolExecutorUsage extends BugChecker implements BugChecker.NewClassTreeMatcher {
     private static final String ERROR_MESSAGE = "Should not normally use ThreadPoolExecutor directly. "
             + "ThreadPoolExecutor is a nuanced class. In our experience, when executors are configured "
             + "in non-default ways (i.e. the ones in Executors), we usually see bad behaviour. This check "
-            + "is intended to be advisory - it's fine to @SuppressWarnings(\"DangerousExecutorUsage\") in certain "
-            + "cases, but is usually not recommended. The most common bug is to set corePoolSize != maxPoolSize "
-            + "and to have an unbounded or large work queue; the executor will never grow beyond the corePoolSize. "
-            + "If you have questions here, feel free to ask around internally, or read the source.";
+            + "is intended to be advisory - it's fine to @SuppressWarnings(\"DangerousThreadPoolExecutorUsage\") "
+            + "in certain cases, but is usually not recommended. The most common bug is to set "
+            + "corePoolSize != maxPoolSize and to have an unbounded or large work queue; the executor will never "
+            + "grow beyond the corePoolSize. If you have questions here, feel free to ask around internally, or "
+            + "read the source.";
 
     private static final String THREAD_POOL_EXECUTOR = ThreadPoolExecutor.class.getCanonicalName();
     private static final Matcher<ExpressionTree> matcher = new IsSubtypeOf<>(THREAD_POOL_EXECUTOR);
