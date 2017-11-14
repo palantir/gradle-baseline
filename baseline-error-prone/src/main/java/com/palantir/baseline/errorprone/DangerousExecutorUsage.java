@@ -30,7 +30,7 @@ public final class DangerousExecutorUsage extends BugChecker implements BugCheck
             + "is intended to be advisory - it's fine to @SuppressWarnings(\"DangerousExecutorUsage\") in certain "
             + "cases, but is usually not recommended. The most common bug is to set corePoolSize != maxPoolSize "
             + "and to have an unbounded or large work queue; the executor will never grow beyond the corePoolSize. "
-            + "If you have questions here, feel free to ask around internally, or reading the source.";
+            + "If you have questions here, feel free to ask around internally, or read the source.";
 
     private static final String THREAD_POOL_EXECUTOR = ThreadPoolExecutor.class.getCanonicalName();
     private static final Matcher<ExpressionTree> matcher = new IsSubtypeOf<>(THREAD_POOL_EXECUTOR);
