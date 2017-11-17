@@ -6,6 +6,7 @@ buildscript {
     }
 
     dependencies {
+        classpath 'gradle.plugin.com.palantir:gradle-circle-style:1.1.1'
         classpath 'com.gradle.publish:plugin-publish-plugin:0.9.1'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
         classpath 'com.netflix.nebula:nebula-dependency-recommender:4.2.1'
@@ -24,6 +25,7 @@ apply plugin: 'com.palantir.baseline-config'
 apply plugin: 'com.palantir.baseline-idea'
 apply plugin: 'maven'
 apply plugin: 'maven-publish'
+apply plugin: 'com.palantir.circle.style'
 
 tasks.test.dependsOn tasks.publishToMavenLocal
 
