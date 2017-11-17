@@ -81,6 +81,7 @@
                 org.hamcrest.collection.IsMapContaining.*,
                 org.mockito.ArgumentMatchers.*,org.mockito.Mockito.*,org.mockito.Matchers.*,
                 org.assertj.core.api.Assertions.*,
+                org.assertj.guava.api.Assertions.*,
                 com.google.common.base.Preconditions.*,com.google.common.truth.Truth.*,
                 org.apache.commons.lang3.Validate.*"/>
         </module>
