@@ -76,6 +76,7 @@
             <property name="excludes" value="
                 java.util.Collections.*,java.util.stream.Collectors.*,
                 org.junit.Assert.*,org.junit.Assume.*,
+                org.junit.jupiter.api.Assertions.*,org.junit.jupiter.api.Assumptions.*,
                 org.hamcrest.CoreMatchers.*,org.hamcrest.Matchers.*,org.hamcrest.MatcherAssert.*,
                 org.hamcrest.core.AllOf.*,org.hamcrest.core.Is.*,org.hamcrest.core.StringContains.*,org.hamcrest.core.IsEqual.*,
                 org.hamcrest.collection.IsMapContaining.*,
