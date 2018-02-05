@@ -83,6 +83,7 @@
                 org.assertj.core.api.Assertions.*,
                 org.assertj.guava.api.Assertions.*,
                 com.google.common.base.Preconditions.*,com.google.common.truth.Truth.*,
+                com.palantir.remoting.api.testing.Assertions.*,
                 org.apache.commons.lang3.Validate.*"/>
         </module>
         <module name="ClassTypeParameterName"> <!-- Java Style Guide: Type variable names -->
