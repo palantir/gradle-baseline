@@ -74,7 +74,8 @@
         <module name="AvoidStarImport"/> <!-- Java Style Guide: No wildcard imports -->
         <module name="AvoidStaticImport"> <!-- Java Style Guide: No static imports -->
             <property name="excludes" value="
-                java.util.Collections.*,java.util.stream.Collectors.*,
+                java.util.Collections.*,
+                java.util.stream.Collectors.*,
                 com.google.common.base.Preconditions.*,
                 org.apache.commons.lang3.Validate.*"/>
         </module>
