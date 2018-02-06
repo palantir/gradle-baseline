@@ -75,14 +75,7 @@
         <module name="AvoidStaticImport"> <!-- Java Style Guide: No static imports -->
             <property name="excludes" value="
                 java.util.Collections.*,java.util.stream.Collectors.*,
-                org.junit.Assert.*,org.junit.Assume.*,
-                org.hamcrest.CoreMatchers.*,org.hamcrest.Matchers.*,org.hamcrest.MatcherAssert.*,
-                org.hamcrest.core.AllOf.*,org.hamcrest.core.Is.*,org.hamcrest.core.StringContains.*,org.hamcrest.core.IsEqual.*,
-                org.hamcrest.collection.IsMapContaining.*,
-                org.mockito.ArgumentMatchers.*,org.mockito.Mockito.*,org.mockito.Matchers.*,
-                org.assertj.core.api.Assertions.*,
-                org.assertj.guava.api.Assertions.*,
-                com.google.common.base.Preconditions.*,com.google.common.truth.Truth.*,
+                com.google.common.base.Preconditions.*,
                 org.apache.commons.lang3.Validate.*"/>
         </module>
         <module name="ClassTypeParameterName"> <!-- Java Style Guide: Type variable names -->
