@@ -12,12 +12,9 @@ buildscript {
         classpath 'com.netflix.nebula:nebula-dependency-recommender:5.0.0'
         classpath 'com.netflix.nebula:nebula-publishing-plugin:5.1.4'
         classpath 'com.palantir.baseline:gradle-baseline-java:0.17.1'
+        classpath 'com.palantir.gradle.gitversion:gradle-git-version:0.5.3'
+        classpath 'gradle.plugin.org.inferred:gradle-processors:1.2.12'
     }
-}
-
-plugins {
-    id 'com.palantir.git-version' version '0.5.3'
-    id 'org.inferred.processors' version '1.2.12'
 }
 
 apply plugin: 'java'
@@ -26,6 +23,7 @@ apply plugin: 'com.palantir.baseline-idea'
 apply plugin: 'maven'
 apply plugin: 'maven-publish'
 apply plugin: 'com.palantir.circle.style'
+
 
 tasks.test.dependsOn tasks.publishToMavenLocal
 
@@ -40,9 +38,10 @@ allprojects {
         maven { url "https://plugins.gradle.org/m2/" }
     }
 
+    apply plugin: 'com.palantir.git-version'
     apply plugin: 'org.inferred.processors'
-
     apply plugin: 'nebula.dependency-recommender'
+
     dependencyRecommendations {
         strategy OverrideTransitives
         propertiesFile file: project.rootProject.file('versions.props')
