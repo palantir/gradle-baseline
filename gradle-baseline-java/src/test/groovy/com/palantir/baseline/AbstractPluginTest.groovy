@@ -31,6 +31,7 @@ class AbstractPluginTest extends Specification {
 
     def setup() {
         buildFile = file('build.gradle')
+        file("gradle.properties") << "org.gradle.daemon=false"
         println("Build directory: \n" + projectDir.absolutePath)
         multiProject = new MultiProjectIntegrationHelper(projectDir, file("settings.gradle"))
     }
