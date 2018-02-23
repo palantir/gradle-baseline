@@ -14,7 +14,7 @@ The Internet provides a wealth of material on code reviews:
 [more best practices](https://www.atlassian.com/agile/software-development/code-reviews),
 [statistics on code review effectiveness for catching bugs](https://blog.codinghorror.com/code-reviews-just-do-it/),
 and [examples of code reviews gone wrong](https://blog.fogcreek.com/effective-code-reviews-9-tips-from-a-converted-skeptic/).
-Oh, and of course there is are
+Oh, and of course there are
 [books](https://books.google.com/books/about/Peer_Reviews_in_Software.html?id=d7BQAAAAMAAJ),
 too.  Long story short, this document presents Palantir's take on code reviews.
 Organizations with deep cultural reluctance to peer reviews may want to consult
@@ -33,7 +33,10 @@ This guide covers the following topics:
 
 ## Motivation
 
-Code reviews (CRs) improve code quality and have positive effects on team and company culture. In more detail:
+We perform code reviews (CRs) in order to improve code quality and benefit from
+[positive effects on team and company
+culture](https://blog.fullstory.com/what-we-learned-from-google-code-reviews-arent-just-for-catching-bugs).
+For example:
 
 - **Committers are motivated** by the notion of a set
   of reviewers who will look over the change request: the committer tends to
@@ -69,7 +72,6 @@ Code reviews (CRs) improve code quality and have positive effects on team and co
   (e.g., dead code, logic or algorithm bugs, performance or architecture
   concerns) are often much easier to
   spot for critical reviewers with an outside perspective.
-  (Finding other people's bugs is often a rather satisfying sport ...)
   Studies have found that even short and informal code reviews have significant
   [impact on code quality and bug frequency](https://blog.codinghorror.com/code-reviews-just-do-it/).
 
@@ -89,16 +91,32 @@ reviewers') time and maintaining code quality. In certain regulatory environment
 code review may be required even for trivial changes.
 
 Code reviews are classless: being the most senior person on the team does not
-imply that your code does not need review. In the extremely rare case your code
-is actually flawless, less experienced team members can learn from you; in the
-more common case they will point out bugs, suggest newer libraries or techniques,
-or puzzle until they proudly find a more efficient or elegant implementation.
+imply that your code does not need review. Even if, in the rare case, code is
+flawless, the review provides an opportunity for mentorship and collaboration,
+and, minimally, diversifies the understanding of code in the code base. 
+
+
+## When to review
+
+Code reviews should happen after automated checks (tests, style, other CI)
+have completed successfully, but before the code merges to the repository's
+mainline branch. We generally don't perform formal code review of aggregate
+changes since the last release.
+
+For complex changes that should merge into the mainline branch as a single unit
+but are too large to fit into one reasonable CR, consider a stacked CR model:
+Create a primary branch `feature/big-feature` and a number of secondary branches
+-- e.g., `feature/big-feature-api`, `feature/big-feature-testing`, etc. -- that
+each encapsulate a subset of the functionality and that get individually
+code-reviewed against the `feature/big-feature` branch.  Once all secondary
+branches are merged into `feature/big-feature`, create a CR for merging the
+latter into the main branch.
 
 
 ## Preparing code for review
 
 It is the author's responsibility to submit CRs that are easy to review in order
-not to waste the reviewers' time and motivation:
+not to waste reviewers' time and motivation:
 
 - **Scope and size:** Changes should have a narrow, well-defined, self-contained
   scope that they cover exhaustively. For example, a change may implement
@@ -110,16 +128,6 @@ not to waste the reviewers' time and motivation:
   defines the API for a new feature in terms of interfaces and
   documentation, and a second change that adds implementations for
   those interfaces.
-
-  For features or code contributions that only make sense as one unit
-  but that are too large to fit into one reasonable CR, consider a
-  stacked CR model: Create a main branch `feature/big-feature`
-  and a number of secondary branches -- e.g.,
-  `feature/big-feature-api`, `feature/big-feature-testing`, etc. --
-  that each encapsulate a subset of the functionality and that get
-  individually code-reviewed against the `feature/big-feature` branch.
-  Once all secondary branches are merged into `feature/big-feature`,
-  create a CR for merging the latter into the main branch.
 
 - Only submit **complete**, **self-reviewed** (by diff), and **self-tested** CRs.
   In order to save reviewers' time, test the submitted changes (i.e., run the test suite),
@@ -141,7 +149,11 @@ not to waste the reviewers' time and motivation:
     refactoring commit.
 
   - Expensive human review-time should be spent on the program logic
-    rather than file naming or code formatting.
+    rather than style or syntax debates. We prefer settling
+    those with automated tooling like
+    [Checkstyle](http://checkstyle.sourceforge.net/),
+    [TSLint](https://github.com/palantir/tslint),
+    [Baseline](https://github.com/palantir/gradle-baseline), etc.
 
 
 ## Commit messages
@@ -200,7 +212,7 @@ team members and thus has the potential to block progress.
 Consequently, code reviews need to be prompt (on the order of
 hours, not days), and team members and leads need to be aware of
 the time commitment and prioritize review time accordingly. If you
-don’t think you can complete a review in time, please let the committer
+don't think you can complete a review in time, please let the committer
 know right away so they can find someone else.
 
 A review should be thorough enough that the reviewer could explain the change at
@@ -234,7 +246,7 @@ pay attention to in a code review:
   some underlying pattern you spotted that isn't captured by the
   current code?
 
-- **Do you potential for useful abstractions?** Partially duplicated code
+- **Do you see potential for useful abstractions?** Partially duplicated code
   often indicates that a more abstract or general piece of functionality
   can be extracted and then reused in different contexts.
 
@@ -248,6 +260,11 @@ pay attention to in a code review:
   or functionality is duplicated on purpose, e.g., in order to avoid
   dependencies. In such cases, a code comment can clarify the intent.
   Is the introduced functionality already provided by an existing library?
+
+- **Does the change follow standard patterns?** Established code bases
+  often exhibit patterns around naming conventions, program logic
+  decomposition, data type definitions, etc. It is usually desirable
+  that changes are implemented in accordance with existing patterns.
 
 - **Does the change add compile-time or run-time dependencies (especially
   between sub-projects)?** We want to keep our products loosely coupled,
@@ -263,7 +280,8 @@ pay attention to in a code review:
 
 - **Does the code adhere to coding guidelines and code style?** Is the
   code consistent with the project in terms of style, API conventions,
-  etc.?
+  etc.? As mentioned above, we prefer to settle style debates with automated
+  tooling.
 
 - **Does this code have TODOs?** TODOs just pile up in code, and become
   stale over time. Have the author submit a ticket on GitHub Issues or JIRA and
