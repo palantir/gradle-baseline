@@ -1,6 +1,7 @@
 # Code reviews
 
 ![XKCD Code Quality](https://imgs.xkcd.com/comics/code_quality.png)
+
 [XKCD 'Code Quality', copied under CC BY-NC 2.5](https://xkcd.com/1513/)
 
 The Internet provides a wealth of material on code reviews: 
@@ -56,7 +57,7 @@ For example:
     improve or consolidate the change; for example, someone else may be
     concurrently working on a similar feature or fix.
 
-  - Positive Interaction and communication strengthens social bonds between
+  - Positive interaction and communication strengthens social bonds between
     team members.
 
 - **Consistency** in a code base makes code easier to read and
@@ -77,7 +78,8 @@ For example:
 
 - **Security reviews** are required in some environments. They are performed
   by application security engineers following industry-standard
-  procedures and frameworks.
+  procedures and frameworks. For example, see 
+  [OWASP](https://www.owasp.org/index.php/Code_Review_Introduction).
 
 
 ## What to review
@@ -106,7 +108,7 @@ changes since the last release.
 For complex changes that should merge into the mainline branch as a single unit
 but are too large to fit into one reasonable CR, consider a stacked CR model:
 Create a primary branch `feature/big-feature` and a number of secondary branches
--- e.g., `feature/big-feature-api`, `feature/big-feature-testing`, etc. -- that
+(e.g., `feature/big-feature-api`, `feature/big-feature-testing`, etc.) that
 each encapsulate a subset of the functionality and that get individually
 code-reviewed against the `feature/big-feature` branch.  Once all secondary
 branches are merged into `feature/big-feature`, create a CR for merging the
@@ -132,7 +134,7 @@ not to waste reviewers' time and motivation:
 - Only submit **complete**, **self-reviewed** (by diff), and **self-tested** CRs.
   In order to save reviewers' time, test the submitted changes (i.e., run the test suite),
   make sure they pass all builds as well as all tests and code quality
-  checks -- both locally and on the CI servers -- *before assigning
+  checks, both locally and on the CI servers, *before assigning
   reviewers*.
 
 - **Refactoring CRs:** Refactoring CRs should not alter behavior;
@@ -149,11 +151,13 @@ not to waste reviewers' time and motivation:
     refactoring commit.
 
   - Expensive human review-time should be spent on the program logic
-    rather than style or syntax debates. We prefer settling
+    rather than style, syntax, or formatting debates. We prefer settling
     those with automated tooling like
     [Checkstyle](http://checkstyle.sourceforge.net/),
     [TSLint](https://github.com/palantir/tslint),
-    [Baseline](https://github.com/palantir/gradle-baseline), etc.
+    [Baseline](https://github.com/palantir/gradle-baseline),
+    [Prettier](https://github.com/prettier/prettier),
+    etc.
 
 
 ## Commit messages
@@ -285,7 +289,7 @@ pay attention to in a code review:
 
 - **Does this code have TODOs?** TODOs just pile up in code, and become
   stale over time. Have the author submit a ticket on GitHub Issues or JIRA and
-  attach the issue number to the TODO. The CR should not contain
+  attach the issue number to the TODO. The proposed code change should not contain
   commented-out code.
 
 ### Maintainability
@@ -314,7 +318,7 @@ pay attention to in a code review:
   be adequately tested with unit tests alone, especially if the code
   interacts with outside systems or configuration. 
 
-- **Leave feedback on documentation, comments, and commit messages.**
+- **Leave feedback on code-level documentation, comments, and commit messages.**
   Redundant comments clutter the code, and terse commit messages
   mystify future contributors. This isn't always applicable, but quality
   comments and commit messages will pay for themselves down the line.
