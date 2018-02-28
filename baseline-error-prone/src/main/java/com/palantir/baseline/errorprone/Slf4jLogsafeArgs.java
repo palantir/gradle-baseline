@@ -66,7 +66,7 @@ public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocati
                 state) ? 2 : 1;
         int endArg = ASTHelpers.isCastable(
                 ASTHelpers.getType(allArgs.get(lastIndex)),
-                state.getTypeFromString("java.lang.Exception"),
+                state.getTypeFromString("java.lang.Throwable"),
                 state) ? lastIndex - 1 : lastIndex;
 
         Builder<Integer> badArgsBuilder = new Builder<>();

@@ -78,12 +78,12 @@ public final class Slf4jLogsafeArgsTest {
         // log.<>(Marker, String, Object, Arg<T>)"
         test("new DummyMarker(), \"constant {} {}\", \"string\", SafeArg.of(\"name\", \"string\")", "[2]");
 
-        // log.<>(Marker, String, Object, Arg<T>, Exception)"
-        test("new DummyMarker(), \"constant {} {}\", \"string\", UnsafeArg.of(\"name\", \"string\"), new Exception()",
+        // log.<>(Marker, String, Object, Arg<T>, Throwable)"
+        test("new DummyMarker(), \"constant {} {}\", \"string\", UnsafeArg.of(\"name\", \"string\"), new Throwable()",
                 "[2]");
 
-        // log.<>(String, Object, Arg<T>, Exception)"
-        test("\"constant {} {}\", \"string\", SafeArg.of(\"name\", \"string\"), new Exception()", "[1]");
+        // log.<>(String, Object, Arg<T>, Throwable)"
+        test("\"constant {} {}\", \"string\", SafeArg.of(\"name\", \"string\"), new Throwable()", "[1]");
     }
 
     @Test
@@ -126,32 +126,32 @@ public final class Slf4jLogsafeArgsTest {
                         "        SafeArg.of(\"name\", \"string\"),",
                         "        UnsafeArg.of(\"name2\", \"string2\"));",
                         "",
-                        "    // log.<>(String, Exception)",
-                        "    log." + logLevel + "(\"constant\", new Exception());",
-                        "    log." + logLevel + "(\"constant\" + compileTimeConstant, new Exception());",
+                        "    // log.<>(String, Throwable)",
+                        "    log." + logLevel + "(\"constant\", new Throwable());",
+                        "    log." + logLevel + "(\"constant\" + compileTimeConstant, new Throwable());",
                         "",
-                        "    // log.<>(String, Arg<T>, Exception)",
-                        "    log." + logLevel + "(\"constant {}\", SafeArg.of(\"name\", \"string\"), new Exception());",
+                        "    // log.<>(String, Arg<T>, Throwable)",
+                        "    log." + logLevel + "(\"constant {}\", SafeArg.of(\"name\", \"string\"), new Throwable());",
                         "",
-                        "    // log.<>(String, Arg<T>, Arg<T>, Exception)",
+                        "    // log.<>(String, Arg<T>, Arg<T>, Throwable)",
                         "    log." + logLevel + "(\"constant {} {}\",",
                         "        SafeArg.of(\"name\", \"string\"),",
                         "        UnsafeArg.of(\"name2\", \"string2\"),",
-                        "        new Exception());",
+                        "        new Throwable());",
                         "",
-                        "    // log.<>(Marker, String, Exception)",
-                        "    log." + logLevel + "(new DummyMarker(), \"constant\", new Exception());",
+                        "    // log.<>(Marker, String, Throwable)",
+                        "    log." + logLevel + "(new DummyMarker(), \"constant\", new Throwable());",
                         "",
-                        "    // log.<>(Marker, String, Arg<T>, Exception)",
+                        "    // log.<>(Marker, String, Arg<T>, Throwable)",
                         "    log." + logLevel + "(new DummyMarker(), \"constant {}\",",
                         "        SafeArg.of(\"name\", \"string\"),",
-                        "        new Exception());",
+                        "        new Throwable());",
                         "",
-                        "    // log.<>(Marker, String, Arg<T>, Arg<T>, Exception)",
+                        "    // log.<>(Marker, String, Arg<T>, Arg<T>, Throwable)",
                         "    log." + logLevel + "(new DummyMarker(), \"constant {} {}\",",
                         "        SafeArg.of(\"name\", \"string\"),",
                         "        UnsafeArg.of(\"name2\", \"string2\"),",
-                        "        new Exception());",
+                        "        new Throwable());",
                         "",
                         "  }",
                         "",
