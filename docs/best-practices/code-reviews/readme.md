@@ -347,7 +347,7 @@ switch to real-time communication or seek a third opinion.
 
 Verify that API endpoints perform appropriate authorization and authentication
 consistent with the rest of the code base. Check for other common weaknesses,
-e.g., weak configuration, code injection, malicious user input, etc. When in
+e.g., weak configuration, malicious user input, missing log events, etc. When in
 doubt, refer the CR to an application security expert.
 
 ### Comments: concise, friendly, actionable
