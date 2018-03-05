@@ -346,9 +346,9 @@ switch to real-time communication or seek a third opinion.
 ### Security
 
 Verify that API endpoints perform appropriate authorization and authentication
-consistent with the rest of the code base. Check for other common attack 
-vectors, e.g., weak configuration, code injection, malicious user input, etc. When
-in doubt, refer the CR to an application security expert.
+consistent with the rest of the code base. Check for other common weaknesses,
+e.g., weak configuration, code injection, malicious user input, etc. When in
+doubt, refer the CR to an application security expert.
 
 ### Comments: concise, friendly, actionable
 
