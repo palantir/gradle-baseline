@@ -76,11 +76,12 @@ For example:
   Studies have found that even short and informal code reviews have significant
   [impact on code quality and bug frequency](https://blog.codinghorror.com/code-reviews-just-do-it/).
 
-- **Security reviews** are required in some environments. They are performed
-  by application security engineers following industry standard
-  procedures and frameworks. For example, see 
-  [OWASP](https://www.owasp.org/index.php/Code_Review_Introduction).
-
+- **Compliance** and regulatory environments often demand reviews. CRs are a
+  great way to avoid common security traps. If your feature or environment has
+  significant security requirements it will benefit from (and probably require)
+  review by your local security curmudgeons ([OWASP's
+  guide](https://www.owasp.org/index.php/Code_Review_Introduction) is a good
+  example of the process).
 
 ## What to review
 
@@ -346,9 +347,9 @@ switch to real-time communication or seek a third opinion.
 ### Security
 
 Verify that API endpoints perform appropriate authorization and authentication
-consistent with the rest of the code base. Check for other common attach
-vectors, e.g., configuration, code inject, validation of user input, etc. When
-in doubt, refer the CR to an application security expert.
+consistent with the rest of the code base. Check for other common weaknesses,
+e.g., weak configuration, malicious user input, missing log events, etc. When in
+doubt, refer the CR to an application security expert.
 
 ### Comments: concise, friendly, actionable
 
