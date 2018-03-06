@@ -240,8 +240,8 @@ pay attention to in a code review:
   submitted code actually accomplish this purpose?
 
 - **Ask questions.** Functions and classes should exist for a reason.
-  When the reason is not clear to the reviewer, this be an indication that the code needs 
-  to be rewritten or supported with comments or tests.
+  When the reason is not clear to the reviewer, this may be an indication
+  that the code needs to be rewritten or supported with comments or tests.
 
 ### Implementation
 
