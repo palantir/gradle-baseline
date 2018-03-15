@@ -30,7 +30,7 @@ public final class UnclosedFilesListUsageTests {
     }
 
     @Test
-    public void testThrowsOnListWithNoTryWithResources() {
+    public void testThrowsOnList_noTryWithResources() {
         compilationHelper
                 .addSourceLines(
                         "Test.java",
@@ -49,7 +49,7 @@ public final class UnclosedFilesListUsageTests {
     }
 
     @Test
-    public void testThrowsOnWalkWithNoTryWithResources() {
+    public void testThrowsOnWalk_noTryWithResources() {
         compilationHelper
                 .addSourceLines(
                         "Test.java",
@@ -62,6 +62,33 @@ public final class UnclosedFilesListUsageTests {
                         "      Files.walk(Paths.get(\"/tmp\"));",
                         "    } catch (java.io.IOException e) {",
                         "    }",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testThrowsOnWalk_aDifferentTryWithResources() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.io.IOException;",
+                        "import java.io.StringWriter;",
+                        "import java.io.Writer;",
+                        "import java.nio.file.Files;",
+                        "import java.nio.file.Path;",
+                        "import java.nio.file.Paths;",
+                        "import java.util.stream.Stream;",
+                        "class Test {",
+                        "  void f(String param) {",
+                        "    try (Writer writer = new StringWriter()) {",
+                        "      // BUG: Diagnostic contains: java.nio.file.Files must be called within a try-with",
+                        "      Stream<Path> files = Files.list(Paths.get(\"/tmp\"));",
+                        "      files.forEach(path -> {",
+                        "        try { writer.write(path.toString()); }",
+                        "        catch (IOException e) {}",
+                        "      });",
+                        "    } catch (IOException e) {}",
                         "  }",
                         "}")
                 .doTest();

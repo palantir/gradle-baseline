@@ -73,7 +73,8 @@ public final class UnclosedFilesStreamUsage extends BugChecker implements BugChe
             return Description.NO_MATCH;
         }
         return buildDescription(tree)
-                .setMessage("java.nio.file.Files must be called within a try-with-resources block")
+                .setMessage("Methods returning a Stream<> in java.nio.file.Files must be called "
+                        + "within a try-with-resources block")
                 .build();
     }
 
