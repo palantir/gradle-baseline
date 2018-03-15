@@ -38,7 +38,8 @@ import java.util.regex.Pattern;
         name = "UnclosedFilesStreamUsage",
         category = Category.ONE_OFF,
         severity = SeverityLevel.ERROR,
-        summary = "Ensure a stream returned by java.nio.file.Files#{list,walk} is closed.")
+        summary = "Ensure a stream returned by java.nio.file.Files#{list,walk} "
+                + "is closed to prevent leaking file descriptors.")
 public final class UnclosedFilesStreamUsage extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
