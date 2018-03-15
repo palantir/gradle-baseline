@@ -38,7 +38,7 @@ import java.util.regex.Pattern;
         name = "UnclosedFilesStreamUsage",
         category = Category.ONE_OFF,
         severity = SeverityLevel.ERROR,
-        summary = "Ensure a stream returned by java.nio.file.Files#{list,walk} "
+        summary = "Ensure a stream returned by java.nio.file.Files#{find,lines,list,walk} "
                 + "is closed to prevent leaking file descriptors.")
 public final class UnclosedFilesStreamUsage extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
@@ -46,7 +46,7 @@ public final class UnclosedFilesStreamUsage extends BugChecker implements BugChe
 
     private static final MethodMatchers.MethodNameMatcher filesStreamMatcher = MethodMatchers.staticMethod()
             .onClass("java.nio.file.Files")
-            .withNameMatching(Pattern.compile("list|walk"));
+            .withNameMatching(Pattern.compile("find|lines|list|walk"));
 
     private static final Matcher<Tree> tryResourcesMatcher = (Matcher<Tree>)
             (methodInvocationTree, state) -> Optional.ofNullable(state.findEnclosing(TryTree.class))
