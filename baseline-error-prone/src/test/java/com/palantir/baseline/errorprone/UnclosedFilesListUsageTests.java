@@ -26,11 +26,11 @@ public final class UnclosedFilesListUsageTests {
 
     @Before
     public void before() {
-        compilationHelper = CompilationTestHelper.newInstance(UnclosedFilesListUsage.class, getClass());
+        compilationHelper = CompilationTestHelper.newInstance(UnclosedFilesStreamUsage.class, getClass());
     }
 
     @Test
-    public void testThrowsOnNoTryWithResources() {
+    public void testThrowsOnListWithNoTryWithResources() {
         compilationHelper
                 .addSourceLines(
                         "Test.java",
@@ -39,8 +39,27 @@ public final class UnclosedFilesListUsageTests {
                         "class Test {",
                         "  void f(String param) {",
                         "    try {",
-                        "      // BUG: Diagnostic contains: must be used within a try-with-resources block",
+                        "      // BUG: Diagnostic contains: java.nio.file.Files must be called within a try-with",
                         "      Files.list(Paths.get(\"/tmp\"));",
+                        "    } catch (java.io.IOException e) {",
+                        "    }",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testThrowsOnWalkWithNoTryWithResources() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.nio.file.Files;",
+                        "import java.nio.file.Paths;",
+                        "class Test {",
+                        "  void f(String param) {",
+                        "    try {",
+                        "      // BUG: Diagnostic contains: java.nio.file.Files must be called within a try-with",
+                        "      Files.walk(Paths.get(\"/tmp\"));",
                         "    } catch (java.io.IOException e) {",
                         "    }",
                         "  }",

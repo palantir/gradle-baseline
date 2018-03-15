@@ -35,17 +35,17 @@ import java.util.regex.Pattern;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "UnclosedFilesListUsage",
+        name = "UnclosedFilesStreamUsage",
         category = Category.ONE_OFF,
         severity = SeverityLevel.ERROR,
-        summary = "Ensure a stream returned by java.nio.file.Files#list is closed.")
-public final class UnclosedFilesListUsage extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
+        summary = "Ensure a stream returned by java.nio.file.Files#{list,walk} is closed.")
+public final class UnclosedFilesStreamUsage extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
 
-    private static final MethodMatchers.MethodNameMatcher filesListMatcher = MethodMatchers.staticMethod()
+    private static final MethodMatchers.MethodNameMatcher filesStreamMatcher = MethodMatchers.staticMethod()
             .onClass("java.nio.file.Files")
-            .withNameMatching(Pattern.compile("list"));
+            .withNameMatching(Pattern.compile("list|walk"));
 
     private static final Matcher<Tree> tryResourcesMatcher = (Matcher<Tree>)
             (methodInvocationTree, state) -> Optional.ofNullable(state.findEnclosing(TryTree.class))
@@ -68,11 +68,11 @@ public final class UnclosedFilesListUsage extends BugChecker implements BugCheck
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
-        if (!Matchers.allOf(filesListMatcher, Matchers.not(tryResourcesMatcher)).matches(tree, state)) {
+        if (!Matchers.allOf(filesStreamMatcher, Matchers.not(tryResourcesMatcher)).matches(tree, state)) {
             return Description.NO_MATCH;
         }
         return buildDescription(tree)
-                .setMessage("java.nio.file.Files#list must be used within a try-with-resources block")
+                .setMessage("java.nio.file.Files must be called within a try-with-resources block")
                 .build();
     }
 
