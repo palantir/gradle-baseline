@@ -328,7 +328,7 @@
             <property name="message" value="Redundant ''static'' modifier."/>
         </module>
         <module name="RegexpSinglelineJava">
-            <property name="format" value="(\/\/TODO)|(\/\/ TODO:)|(\/\/ TODO\(\))|(\/\/ TODO\(.*\):[^ ])|(\/\/ TODO\(.*\)[^:])"/>
+            <property name="format" value="(\/\/TODO)|(\/\/ TODO:)|(\/\/ TODO\(\))|(\/\/ TODO\([a-z]*\):[^ ])|(\/\/ TODO\([a-z]*\)[^:])"/>
             <property name="message" value="TODO format: // TODO(flastname): explanation"/>
         </module>
         <module name="RegexpSinglelineJava">
