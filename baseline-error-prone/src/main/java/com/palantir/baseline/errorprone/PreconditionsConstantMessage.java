@@ -45,7 +45,7 @@ public final class PreconditionsConstantMessage extends BugChecker implements Bu
     private static final Matcher<ExpressionTree> PRECONDITIONS_METHOD =
             Matchers.anyOf(
                     MethodMatchers.staticMethod()
-                            .onClass("com.google.common.base.Preconditions")
+                            .onClass("com.google.common.base.Preconditions", "com.palantir.logsafe.Preconditions")
                             .withNameMatching(Pattern.compile("checkArgument|checkState|checkNotNull")));
 
     private final Matcher<ExpressionTree> compileTimeConstExpressionMatcher =
