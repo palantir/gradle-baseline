@@ -39,6 +39,11 @@
         <property name="format" value="\s+$"/>
         <property name="message" value="Whitespace at end-of-line"/>
     </module>
+    <module name="RegexpMultiline"> <!-- no double line breaks -->
+        <property name="fileExtensions" value="java"/>
+        <property name="format" value="^\n\n$"/>
+        <property name="message" value="Multi-line breaks"/>
+    </module>
     <module name="SuppressionFilter"> <!-- baseline-gradle: README.md -->
         <property name="file" value="${config_loc}/checkstyle-suppressions.xml"/>
     </module>
