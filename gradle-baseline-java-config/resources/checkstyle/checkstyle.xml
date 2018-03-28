@@ -76,6 +76,7 @@
             <property name="excludes" value="
                 java.util.Collections.*,
                 java.util.stream.Collectors.*,
+                com.palantir.logsafe.Preconditions.*,
                 com.google.common.base.Preconditions.*,
                 org.apache.commons.lang3.Validate.*"/>
         </module>
