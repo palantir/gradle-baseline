@@ -1,5 +1,5 @@
 /*
- * (c) Copyright 2017 Palantir Technologies Inc. All rights reserved.
+ * (c) Copyright 2018 Palantir Technologies Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,57 +19,47 @@ package com.palantir.baseline.errorprone;
 import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.BugPattern.Category;
+import com.google.errorprone.BugPattern.LinkType;
 import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
-import com.google.errorprone.matchers.CompileTimeConstantExpressionMatcher;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
-import java.util.List;
 import java.util.regex.Pattern;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "PreconditionsConstantMessage",
+        name = "LogSafePreconditionsMessageFormat",
         category = Category.ONE_OFF,
+        link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
+        linkType = LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
-        summary = "Allow only constant messages to Preconditions.checkX() methods")
-public final class PreconditionsConstantMessage extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
+        summary = "logsafe Preconditions.checkX() methods must have '{}' style formatting.")
+public final class LogSafePreconditionsMessageFormat extends PreconditionsMessageFormat {
 
     private static final long serialVersionUID = 1L;
 
-    private static final Matcher<ExpressionTree> PRECONDITIONS_METHOD =
+    private static final Matcher<ExpressionTree> LOGSAFE_PRECONDITIONS_METHOD =
             Matchers.anyOf(
                     MethodMatchers.staticMethod()
-                            .onClassAny("com.google.common.base.Preconditions", "com.palantir.logsafe.Preconditions")
+                            .onClassAny("com.palantir.logsafe.Preconditions")
                             .withNameMatching(Pattern.compile("checkArgument|checkState|checkNotNull")));
 
-    private final Matcher<ExpressionTree> compileTimeConstExpressionMatcher =
-            new CompileTimeConstantExpressionMatcher();
+    public LogSafePreconditionsMessageFormat() {
+        super(LOGSAFE_PRECONDITIONS_METHOD);
+    }
 
     @Override
-    public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
-        if (!PRECONDITIONS_METHOD.matches(tree, state)) {
-            return Description.NO_MATCH;
-        }
-
-        List<? extends ExpressionTree> args = tree.getArguments();
-        if (args.size() <= 1) {
-            return Description.NO_MATCH;
-        }
-
-        ExpressionTree messageArg = args.get(1);
-
-        if (compileTimeConstExpressionMatcher.matches(messageArg, state)) {
+    protected Description matchMessageFormat(MethodInvocationTree tree, String message, VisitorState state) {
+        if (!message.contains("%s")) {
             return Description.NO_MATCH;
         }
 
         return buildDescription(tree).setMessage(
-                "Preconditions.checkX() statement uses a non-constant message. "
-                        + "Consider using a template string with '%s'.").build();
+                "Use '{}' style formatting in Preconditions, not printf-style formatting.").build();
     }
 }

@@ -293,11 +293,6 @@
             <property name="message" value="Use ? rather than ? extends Object."/>
         </module>
         <module name="RegexpSinglelineJava">
-            <property name="format" value="\bPreconditions\.check.*\{\}"/>
-            <property name="message" value="Use printf-style formatting in Preconditions, not '{}' style formatting."/>
-            <property name="ignoreComments" value="true"/>
-        </module>
-        <module name="RegexpSinglelineJava">
             <property name="format" value="(?i)log(ger)?\.(debug|info|warn|error)\(.*%[sd]"/>
             <property name="message" value="SLF4J loggers support '{}' style formatting."/>
             <property name="ignoreComments" value="true"/>
