@@ -57,6 +57,6 @@ public final class GuavaPreconditionsMessageFormat extends PreconditionsMessageF
         }
 
         return buildDescription(tree).setMessage(
-                "Use printf-style formatting in Preconditions, not '{}' style formatting.").build();
+                "Use printf-style formatting in Guava Preconditions, not '{}' style formatting.").build();
     }
 }
