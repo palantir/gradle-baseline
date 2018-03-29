@@ -20,7 +20,7 @@ import com.google.errorprone.CompilationTestHelper;
 import org.junit.Before;
 import org.junit.Test;
 
-public final class PreconditionsConstantMessageTests {
+public final class PreconditionsConstantMessageTests extends PreconditionsTests {
 
     private CompilationTestHelper compilationHelper;
 
@@ -29,121 +29,31 @@ public final class PreconditionsConstantMessageTests {
         compilationHelper = CompilationTestHelper.newInstance(PreconditionsConstantMessage.class, getClass());
     }
 
-    private void test(String call) throws Exception {
-        compilationHelper
-                .addSourceLines(
-                        "Test.java",
-                        "import com.google.common.base.Preconditions;",
-                        "class Test {",
-                        "  void f(String param) {",
-                        "    // BUG: Diagnostic contains: non-constant message",
-                        "    " + call,
-                        "  }",
-                        "}")
-                .doTest();
+    @Override
+    public CompilationTestHelper compilationHelper() {
+        return compilationHelper;
     }
 
     @Test
     public void positive() throws Exception {
-        test("Preconditions.checkArgument(param != \"string\", \"constant\" + param);");
-        test("Preconditions.checkState(param != \"string\", \"constant\" + param);");
-        test("Preconditions.checkNotNull(param, \"constant\" + param);");
+        String diagnostic = "non-constant message";
+        failGuava(diagnostic, "Preconditions.checkArgument(param != \"string\", \"constant\" + param);");
+        failGuava(diagnostic, "Preconditions.checkState(param != \"string\", \"constant\" + param);");
+        failGuava(diagnostic, "Preconditions.checkNotNull(param, \"constant\" + param);");
 
-        test("Preconditions.checkArgument(param != \"string\", String.format(\"constant %s\", param));");
-        test("Preconditions.checkState(param != \"string\", String.format(\"constant %s\", param));");
-        test("Preconditions.checkNotNull(param, String.format(\"constant %s\", param));");
+        failGuava(diagnostic,
+                "Preconditions.checkArgument(param != \"string\", String.format(\"constant %s\", param));");
+        failGuava(diagnostic, "Preconditions.checkState(param != \"string\", String.format(\"constant %s\", param));");
+        failGuava(diagnostic, "Preconditions.checkNotNull(param, String.format(\"constant %s\", param));");
+
+        failLogSafe(diagnostic, "Preconditions.checkArgument(param != \"string\", \"constant\" + param);");
+        failLogSafe(diagnostic, "Preconditions.checkState(param != \"string\", \"constant\" + param);");
+        failLogSafe(diagnostic, "Preconditions.checkNotNull(param, \"constant\" + param);");
+
+        failLogSafe(diagnostic,
+                "Preconditions.checkArgument(param != \"string\", String.format(\"constant %s\", param));");
+        failLogSafe(diagnostic,
+                "Preconditions.checkState(param != \"string\", String.format(\"constant %s\", param));");
+        failLogSafe(diagnostic, "Preconditions.checkNotNull(param, String.format(\"constant %s\", param));");
     }
-
-    @Test
-    public void negative() throws Exception {
-        compilationHelper
-                .addSourceLines(
-                        "Test.java",
-                        "import com.google.common.base.Preconditions;",
-                        "import java.util.Iterator;",
-                        "class Test {",
-                        "  private static final String compileTimeConstant = \"constant\";",
-                        "  void f(boolean bArg, int iArg, Object oArg) {",
-                        "    Preconditions.checkArgument(bArg);",
-                        "    Preconditions.checkArgument(bArg, \"message\");",
-                        "    Preconditions.checkArgument(bArg, \"message %s\", 'a');",
-                        "    Preconditions.checkArgument(bArg, \"message %s\", 123);",
-                        "    Preconditions.checkArgument(bArg, \"message %s\", 123L);",
-                        "    Preconditions.checkArgument(bArg, \"message %s\", \"msg\");",
-                        "    Preconditions.checkArgument(bArg, \"message %s %s\", 'a', 'b');",
-                        "    Preconditions.checkArgument(bArg, \"message %s %s\", 'a', 123);",
-                        "    Preconditions.checkArgument(bArg, \"message %s %s\", 'a', 123L);",
-                        "    Preconditions.checkArgument(bArg, \"message %s %s\", 'a', \"msg\");",
-                        "    Preconditions.checkArgument(bArg, \"message %s %s\", 123, 'a');",
-                        "    Preconditions.checkArgument(bArg, \"message %s %s\", 123, 123);",
-                        "    Preconditions.checkArgument(bArg, \"message %s %s\", 123, 123L);",
-                        "    Preconditions.checkArgument(bArg, \"message %s %s\", 123, \"msg\");",
-                        "    Preconditions.checkArgument(bArg, \"message %s %s\", 123L, 'a');",
-                        "    Preconditions.checkArgument(bArg, \"message %s %s\", 123L, 123);",
-                        "    Preconditions.checkArgument(bArg, \"message %s %s\", 123L, 123L);",
-                        "    Preconditions.checkArgument(bArg, \"message %s %s\", 123L, \"msg\");",
-                        "    Preconditions.checkArgument(bArg, \"message %s %s\", \"msg\", 'a');",
-                        "    Preconditions.checkArgument(bArg, \"message %s %s\", \"msg\", 123);",
-                        "    Preconditions.checkArgument(bArg, \"message %s %s\", \"msg\", 123L);",
-                        "    Preconditions.checkArgument(bArg, \"message %s %s\", \"msg\", \"msg\");",
-                        "    Preconditions.checkArgument(bArg, \"message %s %s %s\", \"msg\", \"msg\", \"msg\");",
-                        "    Preconditions.checkArgument(bArg, \"message %s %s %s %s\","
-                                + " \"msg\", \"msg\", \"msg\", \"msg\");",
-                        "",
-                        "    Preconditions.checkState(iArg > 0);",
-                        "    Preconditions.checkState(iArg > 0, \"message\");",
-                        "    Preconditions.checkState(iArg > 0, \"message %s\", 'a');",
-                        "    Preconditions.checkState(iArg > 0, \"message %s\", 123);",
-                        "    Preconditions.checkState(iArg > 0, \"message %s\", 123L);",
-                        "    Preconditions.checkState(iArg > 0, \"message %s\", \"msg\");",
-                        "    Preconditions.checkState(iArg > 0, \"message %s %s\", 'a', 'b');",
-                        "    Preconditions.checkState(iArg > 0, \"message %s %s\", 'a', 123);",
-                        "    Preconditions.checkState(iArg > 0, \"message %s %s\", 'a', 123L);",
-                        "    Preconditions.checkState(iArg > 0, \"message %s %s\", 'a', \"msg\");",
-                        "    Preconditions.checkState(iArg > 0, \"message %s %s\", 123, 'a');",
-                        "    Preconditions.checkState(iArg > 0, \"message %s %s\", 123, 123);",
-                        "    Preconditions.checkState(iArg > 0, \"message %s %s\", 123, 123L);",
-                        "    Preconditions.checkState(iArg > 0, \"message %s %s\", 123, \"msg\");",
-                        "    Preconditions.checkState(iArg > 0, \"message %s %s\", 123L, 'a');",
-                        "    Preconditions.checkState(iArg > 0, \"message %s %s\", 123L, 123);",
-                        "    Preconditions.checkState(iArg > 0, \"message %s %s\", 123L, 123L);",
-                        "    Preconditions.checkState(iArg > 0, \"message %s %s\", 123L, \"msg\");",
-                        "    Preconditions.checkState(iArg > 0, \"message %s %s\", \"msg\", 'a');",
-                        "    Preconditions.checkState(iArg > 0, \"message %s %s\", \"msg\", 123);",
-                        "    Preconditions.checkState(iArg > 0, \"message %s %s\", \"msg\", 123L);",
-                        "    Preconditions.checkState(iArg > 0, \"message %s %s\", \"msg\", \"msg\");",
-                        "    Preconditions.checkState(iArg > 0, \"message %s %s %s\", \"msg\", \"msg\", \"msg\");",
-                        "    Preconditions.checkState(iArg > 0, \"message %s %s %s %s\","
-                                + " \"msg\", \"msg\", \"msg\", \"msg\");",
-                        "",
-                        "    Preconditions.checkNotNull(oArg);",
-                        "    Preconditions.checkNotNull(oArg, \"message\");",
-                        "    Preconditions.checkNotNull(oArg, \"message %s\", 'a');",
-                        "    Preconditions.checkNotNull(oArg, \"message %s\", 123);",
-                        "    Preconditions.checkNotNull(oArg, \"message %s\", 123L);",
-                        "    Preconditions.checkNotNull(oArg, \"message %s\", \"msg\");",
-                        "    Preconditions.checkNotNull(oArg, \"message %s %s\", 'a', 'b');",
-                        "    Preconditions.checkNotNull(oArg, \"message %s %s\", 'a', 123);",
-                        "    Preconditions.checkNotNull(oArg, \"message %s %s\", 'a', 123L);",
-                        "    Preconditions.checkNotNull(oArg, \"message %s %s\", 'a', \"msg\");",
-                        "    Preconditions.checkNotNull(oArg, \"message %s %s\", 123, 'a');",
-                        "    Preconditions.checkNotNull(oArg, \"message %s %s\", 123, 123);",
-                        "    Preconditions.checkNotNull(oArg, \"message %s %s\", 123, 123L);",
-                        "    Preconditions.checkNotNull(oArg, \"message %s %s\", 123, \"msg\");",
-                        "    Preconditions.checkNotNull(oArg, \"message %s %s\", 123L, 'a');",
-                        "    Preconditions.checkNotNull(oArg, \"message %s %s\", 123L, 123);",
-                        "    Preconditions.checkNotNull(oArg, \"message %s %s\", 123L, 123L);",
-                        "    Preconditions.checkNotNull(oArg, \"message %s %s\", 123L, \"msg\");",
-                        "    Preconditions.checkNotNull(oArg, \"message %s %s\", \"msg\", 'a');",
-                        "    Preconditions.checkNotNull(oArg, \"message %s %s\", \"msg\", 123);",
-                        "    Preconditions.checkNotNull(oArg, \"message %s %s\", \"msg\", 123L);",
-                        "    Preconditions.checkNotNull(oArg, \"message %s %s\", \"msg\", \"msg\");",
-                        "    Preconditions.checkNotNull(oArg, \"message %s %s %s\", \"msg\", \"msg\", \"msg\");",
-                        "    Preconditions.checkNotNull(oArg, \"message %s %s %s %s\","
-                                + " \"msg\", \"msg\", \"msg\", \"msg\");",
-                        "  }",
-                        "}")
-                .doTest();
-    }
-
 }
