@@ -548,8 +548,7 @@ A single blank line appears:
 - As required by other sections of this document (such as
   Section Import statements).
 
-Two consecutive blank lines are permitted, but never required (or
-encouraged). More than two consecutive blank lines are discouraged.
+Two consecutive blank lines are not permitted.
 
 #### Horizontal whitespace
 
