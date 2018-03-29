@@ -35,7 +35,7 @@ public final class LogSafePreconditionsMessageFormatTests extends PreconditionsT
 
     @Test
     public void positive() throws Exception {
-        String diagnostic = "Use '{}' style formatting";
+        String diagnostic = "Do not use printf-style formatting";
         failLogSafe(diagnostic, "Preconditions.checkArgument(param != \"string\", \"message %s\","
                 + " UnsafeArg.of(\"long\", 123L));");
         failLogSafe(diagnostic, "Preconditions.checkState(param != \"string\", \"message %s\","

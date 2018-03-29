@@ -38,7 +38,7 @@ import java.util.regex.Pattern;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
-        summary = "logsafe Preconditions.checkX() methods must have '{}' style formatting.")
+        summary = "logsafe Preconditions.checkX() methods should not have print-f style formatting.")
 public final class LogSafePreconditionsMessageFormat extends PreconditionsMessageFormat {
 
     private static final long serialVersionUID = 1L;
@@ -60,6 +60,6 @@ public final class LogSafePreconditionsMessageFormat extends PreconditionsMessag
         }
 
         return buildDescription(tree).setMessage(
-                "Use '{}' style formatting in Preconditions, not printf-style formatting.").build();
+                "Do not use printf-style formatting in logsafe Preconditions.").build();
     }
 }
