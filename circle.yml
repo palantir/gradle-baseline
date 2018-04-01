@@ -4,6 +4,10 @@ machine:
   environment:
     TERM: dumb
 
+dependencies:
+  override:
+    - ./gradlew resolveConfigurations --parallel
+
 test:
   override:
     - ./gradlew publishToMavenLocal  # ensure artifacts are available to tests
