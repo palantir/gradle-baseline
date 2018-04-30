@@ -16,6 +16,7 @@
 
 package com.palantir.baseline
 
+import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 
 class BaselineClasspathDuplicatesIntegrationTest extends AbstractPluginTest {
@@ -24,6 +25,9 @@ class BaselineClasspathDuplicatesIntegrationTest extends AbstractPluginTest {
         plugins {
             id 'java'
             id 'com.palantir.baseline-classpath-duplicates'
+        }
+        repositories {
+            mavenCentral()
         }
     """.stripIndent()
 
@@ -36,12 +40,20 @@ class BaselineClasspathDuplicatesIntegrationTest extends AbstractPluginTest {
         result.task(':checkUniqueClassNames').outcome == TaskOutcome.SUCCESS
     }
 
-    def 'Task should not run twice if configuration is unchanged'() {
+    def 'Task should detect duplicates'() {
         when:
         buildFile << standardBuildFile
+        buildFile << """
+        dependencies {
+            compile group: 'javax.el', name: 'javax.el-api', version: '3.0.0'
+            compile group: 'javax.servlet.jsp', name: 'jsp-api', version: '2.1'
+        }   
+        """.stripIndent()
+        BuildResult result = with('checkUniqueClassNames').buildAndFail()
 
         then:
-        with('checkUniqueClassNames').build().task(':checkUniqueClassNames').outcome == TaskOutcome.SUCCESS
-        with('checkUniqueClassNames').build().task(':checkUniqueClassNames').outcome == TaskOutcome.UP_TO_DATE
+        result.task(':checkUniqueClassNames').outcome == TaskOutcome.FAILED
+        result.getOutput().contains("testRuntime contains duplicate classes")
+        println result.getOutput()
     }
 }
