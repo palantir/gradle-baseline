@@ -19,7 +19,8 @@ package com.palantir.baseline.plugins;
 import com.palantir.baseline.tasks.CheckUniqueClassNamesTask;
 import org.gradle.api.Project;
 
-public final class BaselineClasspathDuplicatesPlugin extends AbstractBaselinePlugin {
+@SuppressWarnings("checkstyle:designforextension") // making this 'final' breaks gradle
+public class BaselineClasspathDuplicatesPlugin extends AbstractBaselinePlugin {
 
     @Override
     public void apply(Project project) {
