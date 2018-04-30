@@ -23,7 +23,7 @@ jobs:
             - ~/.gradle/caches
 
       - run: ./gradlew publishToMavenLocal --parallel  # ensure artifacts are available to tests
-      - run: ./gradlew clean build --parallel
+      - run: ./gradlew clean build
       - run: pushd docs && sh lint.sh && popd
 
       - deploy:
