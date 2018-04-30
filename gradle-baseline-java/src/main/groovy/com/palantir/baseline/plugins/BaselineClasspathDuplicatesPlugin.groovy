@@ -16,43 +16,21 @@
 
 package com.palantir.baseline.plugins
 
-import java.util.jar.JarEntry
-import java.util.jar.JarFile
+import com.palantir.baseline.tasks.CheckUniqueClassNamesTask
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
-import org.gradle.internal.impldep.com.google.common.collect.HashMultimap
-import org.gradle.internal.impldep.com.google.common.collect.SetMultimap
 
 class BaselineClasspathDuplicatesPlugin extends AbstractBaselinePlugin  {
 
     @Override
     void apply(Project project) {
         if (project.plugins.hasPlugin(JavaPlugin)) {
-            def task = project.tasks.create("checkClasspathIsDuplicateFree") {
-                dependsOn: project.configurations.testRuntime
-                doLast {
-                    SetMultimap<String, File> classToJarMap = HashMultimap.create()
-                    project.configurations.testRuntime.getResolvedConfiguration().getFiles().each { File jarFile ->
-                        new JarFile(jarFile).entries()
-                                // Only check class uniquness for now
-                                .find({JarEntry entry -> entry.getName().endsWith(".class")})
-                                .each {JarEntry entry -> classToJarMap.put(entry.getName(), jarFile)
-                        }
-                    }
-                    StringBuilder errors = new StringBuilder();
-                    classToJarMap.keys().forEach({key ->
-                        Set<File> jars = classToJarMap.get(key)
-                        if (jars.size() > 1) {
-                            errors.append("Multiple copies of $key discovered in: $jars\n")
-                        }
-                    })
-                    if (errors.length() > 0) {
-                        throw new IllegalStateException("Encountered classpath conflicts:\n$errors")
-                    }
-                }
-            }
 
-            project.tasks.check.dependsOn task
+            CheckUniqueClassNamesTask task =
+                    project.getTasks().create("checkUniqueClassNames", CheckUniqueClassNamesTask)
+            task.setConfiguration(project.getConfigurations().getByName("testRuntime"))
+
+            project.getTasks().getByName("check").dependsOn()
         }
     }
 }
