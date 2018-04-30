@@ -54,9 +54,9 @@ pluginBundle {
             id = 'com.palantir.baseline-idea'
             displayName = 'Palantir Baseline IntelliJ Plugin'
         }
-        baselineClasspathDuplicatesPlugin {
-            id = 'com.palantir.baseline-classpath-duplicates'
-            displayName = 'Palantir Baseline Classpath Duplicates Plugin'
+        baselineClassUniquenessPlugin {
+            id = 'com.palantir.baseline-class-uniqueness'
+            displayName = 'Palantir Baseline Class Uniqueness Plugin'
         }
     }
 }

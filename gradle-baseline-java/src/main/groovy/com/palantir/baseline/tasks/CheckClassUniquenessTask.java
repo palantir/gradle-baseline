@@ -42,11 +42,11 @@ import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 
 @SuppressWarnings("checkstyle:designforextension") // making this 'final' breaks gradle
-public class CheckUniqueClassNamesTask extends DefaultTask {
+public class CheckClassUniquenessTask extends DefaultTask {
 
     private Configuration configuration;
 
-    public CheckUniqueClassNamesTask() {
+    public CheckClassUniquenessTask() {
         setGroup("Verification");
         setDescription("Checks that the given configuration contains no identically named classes.");
     }

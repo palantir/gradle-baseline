@@ -21,12 +21,12 @@ import java.util.stream.Stream
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 
-class BaselineClasspathDuplicatesIntegrationTest extends AbstractPluginTest {
+class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
 
     def standardBuildFile = """
         plugins {
             id 'java'
-            id 'com.palantir.baseline-classpath-duplicates'
+            id 'com.palantir.baseline-class-uniqueness'
         }
         subprojects {
             apply plugin: 'java'
@@ -42,7 +42,7 @@ class BaselineClasspathDuplicatesIntegrationTest extends AbstractPluginTest {
 
         then:
         def result = with('check', '--stacktrace').build()
-        result.task(':checkUniqueClassNames').outcome == TaskOutcome.SUCCESS
+        result.task(':checkClassUniqueness').outcome == TaskOutcome.SUCCESS
     }
 
     def 'detect duplicates in two external jars'() {
@@ -54,7 +54,7 @@ class BaselineClasspathDuplicatesIntegrationTest extends AbstractPluginTest {
             compile group: 'javax.servlet.jsp', name: 'jsp-api', version: '2.1'
         }   
         """.stripIndent()
-        BuildResult result = with('checkUniqueClassNames').buildAndFail()
+        BuildResult result = with('checkClassUniqueness').buildAndFail()
 
         then:
         result.getOutput().contains("Identically named classes found in 2 jars ([javax.servlet.jsp:jsp-api:2.1, javax.el:javax.el-api:3.0.0]): [javax.")
@@ -66,11 +66,11 @@ class BaselineClasspathDuplicatesIntegrationTest extends AbstractPluginTest {
         buildFile << standardBuildFile
 
         then:
-        BuildResult result1 = with('checkUniqueClassNames').build()
-        result1.task(':checkUniqueClassNames').outcome == TaskOutcome.SUCCESS
+        BuildResult result1 = with('checkClassUniqueness').build()
+        result1.task(':checkClassUniqueness').outcome == TaskOutcome.SUCCESS
 
-        BuildResult result = with('checkUniqueClassNames').build()
-        result.task(':checkUniqueClassNames').outcome == TaskOutcome.UP_TO_DATE
+        BuildResult result = with('checkClassUniqueness').build()
+        result.task(':checkClassUniqueness').outcome == TaskOutcome.UP_TO_DATE
     }
 
     def 'passes when no duplicates are present'() {
@@ -84,10 +84,10 @@ class BaselineClasspathDuplicatesIntegrationTest extends AbstractPluginTest {
             compile 'com.netflix.nebula:nebula-test:6.4.2'
         }
         """.stripIndent()
-        BuildResult result = with('checkUniqueClassNames', '--info').build()
+        BuildResult result = with('checkClassUniqueness', '--info').build()
 
         then:
-        result.task(":checkUniqueClassNames").outcome == TaskOutcome.SUCCESS
+        result.task(":checkClassUniqueness").outcome == TaskOutcome.SUCCESS
         println result.getOutput()
     }
 
@@ -113,7 +113,7 @@ class BaselineClasspathDuplicatesIntegrationTest extends AbstractPluginTest {
         """.stripIndent()
 
         then:
-        BuildResult result = with('checkUniqueClassNames').buildAndFail()
+        BuildResult result = with('checkClassUniqueness').buildAndFail()
         result.output.contains("Identically named classes found in 2 jars")
     }
 
@@ -134,8 +134,8 @@ class BaselineClasspathDuplicatesIntegrationTest extends AbstractPluginTest {
         """.stripIndent()
 
         then:
-        BuildResult result = with('checkUniqueClassNames', '--info').build()
+        BuildResult result = with('checkClassUniqueness', '--info').build()
         println result.getOutput()
-        result.task(":checkUniqueClassNames").outcome == TaskOutcome.SUCCESS // ideally should should say failed!
+        result.task(":checkClassUniqueness").outcome == TaskOutcome.SUCCESS // ideally should should say failed!
     }
 }
