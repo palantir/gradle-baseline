@@ -95,10 +95,13 @@ public class CheckUniqueClassNamesTask extends DefaultTask {
         Map<String, Collection<ModuleVersionIdentifier>> classToJarMap = new ConcurrentHashMap<>();
 
         Instant before = Instant.now();
-        for (ResolvedArtifact resolvedArtifact : getConfiguration().getResolvedConfiguration().getResolvedArtifacts()) {
-            try (JarFile jarFile1 = new JarFile(resolvedArtifact.getFile())) {
-                Enumeration<JarEntry> entries = jarFile1.entries();
+        Set<ResolvedArtifact> dependencies = getConfiguration()
+                .getResolvedConfiguration()
+                .getResolvedArtifacts();
 
+        dependencies.parallelStream().forEach(resolvedArtifact -> {
+            try (JarFile jarFile = new JarFile(resolvedArtifact.getFile())) {
+                Enumeration<JarEntry> entries = jarFile.entries();
                 while (entries.hasMoreElements()) {
                     JarEntry jarEntry = entries.nextElement();
 
@@ -113,11 +116,11 @@ public class CheckUniqueClassNamesTask extends DefaultTask {
             } catch (Exception e) {
                 getLogger().error("Failed to read JarFile {}", resolvedArtifact, e);
             }
-        }
+        });
         Instant after = Instant.now();
 
-        getLogger().info("Scanned {} classes for uniqueness ({}ms)",
-                classToJarMap.size(), Duration.between(before, after).toMillis());
+        getLogger().info("Checked {} classes from {} dependencies for uniqueness ({}ms)",
+                classToJarMap.size(), dependencies.size(), Duration.between(before, after).toMillis());
 
         return classToJarMap;
     }

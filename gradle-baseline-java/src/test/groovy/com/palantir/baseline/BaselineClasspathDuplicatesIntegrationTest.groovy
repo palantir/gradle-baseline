@@ -49,12 +49,11 @@ class BaselineClasspathDuplicatesIntegrationTest extends AbstractPluginTest {
             compile group: 'javax.servlet.jsp', name: 'jsp-api', version: '2.1'
         }   
         """.stripIndent()
-        BuildResult result = with('checkUniqueClassNames', '--quiet').buildAndFail()
+        BuildResult result = with('checkUniqueClassNames').buildAndFail()
 
         then:
         result.getOutput().contains("Identically named classes found in 2 jars ([javax.servlet.jsp:jsp-api:2.1, javax.el:javax.el-api:3.0.0]): [javax.")
         result.getOutput().contains("'testRuntime' contains multiple copies of identically named classes")
-        println result.getOutput()
     }
 
     def 'task should be up-to-date when classpath is unchanged'() {
@@ -67,5 +66,23 @@ class BaselineClasspathDuplicatesIntegrationTest extends AbstractPluginTest {
 
         BuildResult result = with('checkUniqueClassNames').build()
         result.task(':checkUniqueClassNames').outcome == TaskOutcome.UP_TO_DATE
+    }
+
+    def 'passes when no duplicates are present'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << """
+        dependencies {
+            compile 'com.google.guava:guava:19.0'
+            compile 'org.apache.commons:commons-io:1.3.2'
+            compile 'junit:junit:4.12'
+            compile 'com.netflix.nebula:nebula-test:6.4.2'
+        }
+        """.stripIndent()
+        BuildResult result = with('checkUniqueClassNames', '--info').build()
+
+        then:
+        result.task(":checkUniqueClassNames").outcome == TaskOutcome.SUCCESS
+        println result.getOutput()
     }
 }
