@@ -100,7 +100,14 @@ public class CheckUniqueClassNamesTask extends DefaultTask {
                 .getResolvedArtifacts();
 
         dependencies.parallelStream().forEach(resolvedArtifact -> {
-            try (JarFile jarFile = new JarFile(resolvedArtifact.getFile())) {
+
+            File file = resolvedArtifact.getFile();
+            if (!file.exists()) {
+                getLogger().info("Skipping non-existent jar {}: {}", resolvedArtifact, file);
+                return;
+            }
+
+            try (JarFile jarFile = new JarFile(file)) {
                 Enumeration<JarEntry> entries = jarFile.entries();
                 while (entries.hasMoreElements()) {
                     JarEntry jarEntry = entries.nextElement();
@@ -114,7 +121,8 @@ public class CheckUniqueClassNamesTask extends DefaultTask {
                             resolvedArtifact.getModuleVersion().getId());
                 }
             } catch (Exception e) {
-                getLogger().error("Failed to read JarFile {}", resolvedArtifact, e);
+                getLogger().error("Failed to read JarFile {}, skipping...", resolvedArtifact, e);
+                throw new RuntimeException(e);
             }
         });
         Instant after = Instant.now();

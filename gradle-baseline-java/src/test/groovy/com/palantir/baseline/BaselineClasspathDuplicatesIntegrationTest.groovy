@@ -16,6 +16,8 @@
 
 package com.palantir.baseline
 
+import java.nio.file.Files
+import java.util.stream.Stream
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 
@@ -25,6 +27,9 @@ class BaselineClasspathDuplicatesIntegrationTest extends AbstractPluginTest {
         plugins {
             id 'java'
             id 'com.palantir.baseline-classpath-duplicates'
+        }
+        subprojects {
+            apply plugin: 'java'
         }
         repositories {
             mavenCentral()
@@ -84,5 +89,53 @@ class BaselineClasspathDuplicatesIntegrationTest extends AbstractPluginTest {
         then:
         result.task(":checkUniqueClassNames").outcome == TaskOutcome.SUCCESS
         println result.getOutput()
+    }
+
+    def 'should detect duplicates from transitive dependencies'() {
+        when:
+        multiProject.addSubproject('foo', """
+        dependencies {
+            compile group: 'javax.el', name: 'javax.el-api', version: '3.0.0'
+        } 
+        """)
+        multiProject.addSubproject('bar', """
+        dependencies {
+            compile group: 'javax.servlet.jsp', name: 'jsp-api', version: '2.1'
+        } 
+        """)
+
+        buildFile << standardBuildFile
+        buildFile << """
+        dependencies {
+            compile project(':foo')
+            compile project(':bar')
+        }
+        """.stripIndent()
+
+        then:
+        BuildResult result = with('checkUniqueClassNames').buildAndFail()
+        result.output.contains("Identically named classes found in 2 jars")
+    }
+
+    def 'currently skips duplicates from user-authored code'() {
+        when:
+        Stream.of(multiProject.addSubproject('foo'), multiProject.addSubproject('bar')).forEach({ subproject ->
+            File myClass = new File(subproject, "src/main/com/something/MyClass.java")
+            Files.createDirectories(myClass.toPath().getParent())
+            myClass << "package com.something; class MyClass {}"
+        })
+
+        buildFile << standardBuildFile
+        buildFile << """
+        dependencies {
+            compile project(':foo')
+            compile project(':bar')
+        }
+        """.stripIndent()
+
+        then:
+        BuildResult result = with('checkUniqueClassNames', '--info').build()
+        println result.getOutput()
+        result.task(":checkUniqueClassNames").outcome == TaskOutcome.SUCCESS // ideally should should say failed!
     }
 }
