@@ -19,6 +19,9 @@ package com.palantir.baseline
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 
+/**
+ * This test depends on ./gradlew :baseline-error-prone:publishToMavenLocal
+ */
 class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
 
     def standardBuildFile = '''
