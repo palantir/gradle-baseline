@@ -95,7 +95,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
             }
         }
 
-        def lastFileName = copyrightDir.relativize(copyrightFiles.iterator().toList().last().toPath())
+        def lastFileName = copyrightDir.relativize(copyrightFiles.iterator().toList().sort().last().toPath())
         copyrightManager.@default = lastFileName
     }
 
