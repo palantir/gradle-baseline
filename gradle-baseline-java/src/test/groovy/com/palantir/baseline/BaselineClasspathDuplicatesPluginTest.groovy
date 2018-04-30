@@ -37,6 +37,6 @@ class BaselineClasspathDuplicatesPluginTest extends Specification {
 
     def baselineClasspathConflictTaskCreated() {
         expect:
-        project.tasks.getByName("silentConflict")
+        project.tasks.getByName("checkClasspathIsDuplicateFree")
     }
 }

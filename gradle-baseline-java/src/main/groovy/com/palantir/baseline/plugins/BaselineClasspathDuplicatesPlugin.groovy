@@ -28,7 +28,7 @@ class BaselineClasspathDuplicatesPlugin extends AbstractBaselinePlugin  {
     @Override
     void apply(Project project) {
         if (project.plugins.hasPlugin(JavaPlugin)) {
-            def silentConflict = project.tasks.create("silentConflict") {
+            def task = project.tasks.create("checkClasspathIsDuplicateFree") {
                 dependsOn: project.configurations.testRuntime
                 doLast {
                     SetMultimap<String, File> classToJarMap = HashMultimap.create()
@@ -36,8 +36,7 @@ class BaselineClasspathDuplicatesPlugin extends AbstractBaselinePlugin  {
                         new JarFile(jarFile).entries()
                                 // Only check class uniquness for now
                                 .find({JarEntry entry -> entry.getName().endsWith(".class")})
-                                .each {JarEntry entry ->
-                            classToJarMap.put(entry.getName(), jarFile)
+                                .each {JarEntry entry -> classToJarMap.put(entry.getName(), jarFile)
                         }
                     }
                     StringBuilder errors = new StringBuilder();
@@ -53,7 +52,7 @@ class BaselineClasspathDuplicatesPlugin extends AbstractBaselinePlugin  {
                 }
             }
 
-            project.tasks.check.dependsOn silentConflict
+            project.tasks.check.dependsOn task
         }
     }
 }
