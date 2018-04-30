@@ -26,11 +26,10 @@ public class BaselineClasspathDuplicatesPlugin extends AbstractBaselinePlugin {
     public void apply(Project project) {
         project.getPlugins().withId("java", plugin -> {
 
-            CheckUniqueClassNamesTask task = project.getTasks().create("checkUniqueClassNames",
-                    CheckUniqueClassNamesTask.class);
-            task.setConfiguration(project.getConfigurations().getByName("testRuntime"));
-
-            project.getTasks().getByName("check").dependsOn(task);
+            project.getTasks().create("checkUniqueClassNames", CheckUniqueClassNamesTask.class, task -> {
+                task.setConfiguration(project.getConfigurations().getByName("testRuntime"));
+                project.getTasks().getByName("check").dependsOn(task);
+            });
 
         });
     }
