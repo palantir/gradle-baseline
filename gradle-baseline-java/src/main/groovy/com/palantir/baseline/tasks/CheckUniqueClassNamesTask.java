@@ -64,7 +64,7 @@ public class CheckUniqueClassNamesTask extends DefaultTask {
                         continue;
                     }
 
-                    HashSet<File> initialSet = new HashSet<>();
+                    Set<File> initialSet = new HashSet<>();
                     Set<File> previous = classToJarMap.putIfAbsent(jarEntry.getName(), initialSet);
                     if (previous != null) {
                         previous.add(file);
