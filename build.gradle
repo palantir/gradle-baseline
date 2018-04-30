@@ -12,6 +12,7 @@ buildscript {
         classpath 'com.netflix.nebula:nebula-dependency-recommender:5.2.0'
         classpath 'com.netflix.nebula:nebula-publishing-plugin:5.1.4'
         classpath 'com.palantir.baseline:gradle-baseline-java:0.19.0'
+        classpath 'com.palantir.configurationresolver:gradle-configuration-resolver-plugin:0.3.0'
     }
 }
 
@@ -41,6 +42,7 @@ allprojects {
     }
 
     apply plugin: 'org.inferred.processors'
+    apply plugin: 'com.palantir.configuration-resolver'
 
     apply plugin: 'nebula.dependency-recommender'
     dependencyRecommendations {

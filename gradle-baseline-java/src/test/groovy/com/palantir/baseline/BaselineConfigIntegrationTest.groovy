@@ -16,6 +16,10 @@
 
 package com.palantir.baseline
 
+/**
+ * This test relies on running ./gradlew :gradle-baseline-java-config:publishToMavenLocal.
+ * This will also not behave well if the repo is dirty.
+ */
 class BaselineConfigIntegrationTest extends AbstractPluginTest {
     def projectVersion = "git describe --tags".execute().text.trim()
     def standardBuildFile = """
@@ -41,7 +45,7 @@ class BaselineConfigIntegrationTest extends AbstractPluginTest {
 
         then:
         with('baselineUpdateConfig').build()
-        directory('.baseline').list().toList() == ['checkstyle', 'copyright', 'eclipse', 'idea']
+        directory('.baseline').list().toList().toSet() == ['checkstyle', 'copyright', 'eclipse', 'idea'].toSet()
     }
 
     def 'Fails if no configuration dependency is specified'() {
