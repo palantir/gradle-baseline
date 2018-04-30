@@ -26,8 +26,8 @@ class BaselineClasspathDuplicatesPluginTest extends Specification {
 
     def setup() {
         project = ProjectBuilder.builder().build()
-        project.plugins.apply 'java'
         project.plugins.apply BaselineClasspathDuplicatesPlugin
+        project.plugins.apply 'java'
     }
 
     def baselineClasspathConflictPluginApplied() {
