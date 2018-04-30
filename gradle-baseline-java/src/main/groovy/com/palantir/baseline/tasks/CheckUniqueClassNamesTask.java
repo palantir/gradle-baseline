@@ -17,7 +17,6 @@
 package com.palantir.baseline.tasks;
 
 import java.io.File;
-import java.io.IOException;
 import java.util.Enumeration;
 import java.util.Set;
 import java.util.jar.JarEntry;
@@ -29,7 +28,7 @@ import org.gradle.api.tasks.TaskAction;
 import org.gradle.internal.impldep.com.google.common.collect.HashMultimap;
 import org.gradle.internal.impldep.com.google.common.collect.SetMultimap;
 
-@SuppressWarnings("checkstyle:designforextension") // adding 'final' breaks nebula-test
+@SuppressWarnings("checkstyle:designforextension") // making this 'final' breaks gradle
 public class CheckUniqueClassNamesTask extends DefaultTask {
 
     private Configuration configuration;
@@ -49,21 +48,25 @@ public class CheckUniqueClassNamesTask extends DefaultTask {
     }
 
     @TaskAction
-    public void checkForDuplicateClasses() throws IOException {
+    public void checkForDuplicateClasses() {
         Set<File> files = getConfiguration().getResolvedConfiguration().getFiles();
         SetMultimap<String, File> classToJarMap = HashMultimap.create();
 
-        for (File jarFile : files) {
-            Enumeration<JarEntry> entries = new JarFile(jarFile).entries();
+        for (File file : files) {
+            try (JarFile jarFile1 = new JarFile(file)) {
+                Enumeration<JarEntry> entries = jarFile1.entries();
 
-            while (entries.hasMoreElements()) {
-                JarEntry jarEntry = entries.nextElement();
+                while (entries.hasMoreElements()) {
+                    JarEntry jarEntry = entries.nextElement();
 
-                if (!jarEntry.getName().endsWith(".class")) {
-                    continue;
+                    if (!jarEntry.getName().endsWith(".class")) {
+                        continue;
+                    }
+
+                    classToJarMap.put(jarEntry.getName(), file);
                 }
-
-                classToJarMap.put(jarEntry.getName(), jarFile);
+            } catch (Exception e) {
+                getLogger().error("Failed to read JarFile {}", file, e);
             }
         }
 

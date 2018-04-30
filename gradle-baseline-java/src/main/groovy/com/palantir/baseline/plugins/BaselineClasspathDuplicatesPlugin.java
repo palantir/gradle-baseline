@@ -14,22 +14,22 @@
  * limitations under the License.
  */
 
-package com.palantir.baseline.plugins
+package com.palantir.baseline.plugins;
 
-import com.palantir.baseline.tasks.CheckUniqueClassNamesTask
-import org.gradle.api.Project
+import com.palantir.baseline.tasks.CheckUniqueClassNamesTask;
+import org.gradle.api.Project;
 
-class BaselineClasspathDuplicatesPlugin extends AbstractBaselinePlugin  {
+public final class BaselineClasspathDuplicatesPlugin extends AbstractBaselinePlugin {
 
     @Override
-    void apply(Project project) {
-        project.getPlugins().withId("java", {
+    public void apply(Project project) {
+        project.getPlugins().withId("java", plugin -> {
 
-            CheckUniqueClassNamesTask task =
-                    project.getTasks().create("checkUniqueClassNames", CheckUniqueClassNamesTask)
-            task.setConfiguration(project.getConfigurations().getByName("testRuntime"))
+            CheckUniqueClassNamesTask task = project.getTasks().create("checkUniqueClassNames",
+                    CheckUniqueClassNamesTask.class);
+            task.setConfiguration(project.getConfigurations().getByName("testRuntime"));
 
-            project.getTasks().getByName("check").dependsOn(task)
+            project.getTasks().getByName("check").dependsOn(task);
 
         });
     }
