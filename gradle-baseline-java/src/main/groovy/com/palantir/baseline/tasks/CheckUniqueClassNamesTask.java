@@ -29,7 +29,8 @@ import org.gradle.api.tasks.TaskAction;
 import org.gradle.internal.impldep.com.google.common.collect.HashMultimap;
 import org.gradle.internal.impldep.com.google.common.collect.SetMultimap;
 
-public final class CheckUniqueClassNamesTask extends DefaultTask {
+@SuppressWarnings("checkstyle:designforextension") // adding 'final' breaks nebula-test
+public class CheckUniqueClassNamesTask extends DefaultTask {
 
     private Configuration configuration;
 
