@@ -1,5 +1,6 @@
 version: 2
 jobs:
+
   build:
     docker:
       - image: circleci/openjdk:8-node
@@ -24,6 +25,9 @@ jobs:
 
       - run: ./gradlew publishToMavenLocal --parallel  # ensure artifacts are available to tests
       - run: ./gradlew clean build
+
+      - store_test_results:
+          path: ~/project/gradle-baseline-java/build/reports/tests/
 
       - deploy:
           command: |
