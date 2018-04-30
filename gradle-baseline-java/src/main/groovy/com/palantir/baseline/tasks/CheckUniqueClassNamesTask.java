@@ -17,6 +17,10 @@
 package com.palantir.baseline.tasks;
 
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -26,7 +30,11 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Classpath;
+import org.gradle.api.tasks.CompileClasspath;
+import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
 
 @SuppressWarnings("checkstyle:designforextension") // making this 'final' breaks gradle
@@ -39,9 +47,12 @@ public class CheckUniqueClassNamesTask extends DefaultTask {
         setDescription("Checks that the given configuration contains no identically named classes.");
     }
 
-    @Input
-    public Configuration getConfiguration() {
-        return configuration;
+    @InputFiles
+    @Classpath
+    @CompileClasspath
+    @SkipWhenEmpty
+    public Iterable<File> getClasspath() {
+        return configuration.getResolvedConfiguration().getFiles();
     }
 
     public void setConfiguration(Configuration configuration) {
@@ -50,10 +61,9 @@ public class CheckUniqueClassNamesTask extends DefaultTask {
 
     @TaskAction
     public void checkForDuplicateClasses() {
-        Set<File> files = getConfiguration().getResolvedConfiguration().getFiles();
         Map<String, Set<File>> classToJarMap = new HashMap<>();
 
-        for (File file : files) {
+        for (File file : getClasspath()) {
             try (JarFile jarFile1 = new JarFile(file)) {
                 Enumeration<JarEntry> entries = jarFile1.entries();
 
@@ -87,9 +97,32 @@ public class CheckUniqueClassNamesTask extends DefaultTask {
         }
 
         if (errors.length() > 0) {
+            writeResult(false);
             throw new IllegalStateException(String.format(
                     "%s contains duplicate classes: %s",
-                    getConfiguration().getName(), errors.toString()));
+                    configuration.getName(), errors.toString()));
+        }
+
+        writeResult(true);
+    }
+
+    /**
+     * This only exists to convince gradle this task is incremental.
+     */
+    @OutputFile
+    public File getResultFile() {
+        return getProject().getBuildDir().toPath()
+                .resolve(Paths.get("uniqueClassNames", configuration.getName()))
+                .toFile();
+    }
+
+    private void writeResult(boolean success) {
+        try {
+            File result = getResultFile();
+            Files.createDirectories(result.toPath().getParent());
+            Files.write(result.toPath(), Boolean.toString(success).getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to write boolean result file", e);
         }
     }
 }

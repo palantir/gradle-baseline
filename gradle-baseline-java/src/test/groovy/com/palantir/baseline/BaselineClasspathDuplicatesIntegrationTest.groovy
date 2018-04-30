@@ -40,7 +40,7 @@ class BaselineClasspathDuplicatesIntegrationTest extends AbstractPluginTest {
         result.task(':checkUniqueClassNames').outcome == TaskOutcome.SUCCESS
     }
 
-    def 'Task should detect duplicates'() {
+    def 'detect duplicates in two external jars'() {
         when:
         buildFile << standardBuildFile
         buildFile << """
@@ -55,5 +55,17 @@ class BaselineClasspathDuplicatesIntegrationTest extends AbstractPluginTest {
         result.task(':checkUniqueClassNames').outcome == TaskOutcome.FAILED
         result.getOutput().contains("testRuntime contains duplicate classes")
         println result.getOutput()
+    }
+
+    def 'task should be up-to-date when classpath is unchanged'() {
+        when:
+        buildFile << standardBuildFile
+
+        then:
+        BuildResult result1 = with('checkUniqueClassNames').build()
+        result1.task(':checkUniqueClassNames').outcome == TaskOutcome.SUCCESS
+
+        BuildResult result = with('checkUniqueClassNames').build()
+        result.task(':checkUniqueClassNames').outcome == TaskOutcome.UP_TO_DATE
     }
 }
