@@ -57,6 +57,39 @@ public class CheckUniqueClassNamesTask extends DefaultTask {
 
     @TaskAction
     public void checkForDuplicateClasses() {
+        Map<String, Set<ModuleVersionIdentifier>> classToJarMap = constructClassNameToSourceJarMap();
+
+        Map<Set<ModuleVersionIdentifier>, Set<String>> jarsToOverlappingClasses = new HashMap<>();
+        for (String className : classToJarMap.keySet()) {
+            Set<ModuleVersionIdentifier> sourceJars = classToJarMap.get(className);
+            if (sourceJars.size() == 1) {
+                continue;
+            }
+
+            addToMultiMap(jarsToOverlappingClasses, sourceJars, className);
+        }
+
+        boolean success = jarsToOverlappingClasses.isEmpty();
+        writeResult(success);
+
+        if (!success) {
+            jarsToOverlappingClasses.forEach((problemJars, classes) -> {
+                getLogger().error("Identically named classes found in {} jars ({}): {}",
+                        problemJars.size(), problemJars, classes);
+            });
+
+            throw new IllegalStateException(String.format(
+                    "'%s' contains multiple copies of identically named classes - "
+                            + "this may cause different runtime behaviour depending on classpath ordering.\n"
+                            + "To resolve this, try excluding one of the following jars, "
+                            + "changing a version or shadowing:\n\n\t%s",
+                    configuration.getName(),
+                    jarsToOverlappingClasses.keySet()
+            ));
+        }
+    }
+
+    private Map<String, Set<ModuleVersionIdentifier>> constructClassNameToSourceJarMap() {
         Map<String, Set<ModuleVersionIdentifier>> classToJarMap = new HashMap<>();
 
         for (ResolvedArtifact resolvedArtifact : getConfiguration().getResolvedConfiguration().getResolvedArtifacts()) {
@@ -79,38 +112,7 @@ public class CheckUniqueClassNamesTask extends DefaultTask {
             }
         }
 
-        Map<Set<ModuleVersionIdentifier>, Set<String>> jarsToOverlappingClasses = new HashMap<>();
-        for (String className : classToJarMap.keySet()) {
-            Set<ModuleVersionIdentifier> sourceJars = classToJarMap.get(className);
-            if (sourceJars.size() == 1) {
-                continue;
-            }
-
-            addToMultiMap(jarsToOverlappingClasses, sourceJars, className);
-        }
-
-        boolean success = jarsToOverlappingClasses.isEmpty();
-        writeResult(success);
-
-        if (!success) {
-            for (Set<ModuleVersionIdentifier> problemJars : jarsToOverlappingClasses.keySet()) {
-                Set<String> classes = jarsToOverlappingClasses.get(problemJars);
-
-                int problemSize = problemJars.size();
-                getLogger().error("Identically named classes found in {} jars ({}): {}",
-                        problemSize, problemJars, classes);
-            }
-
-            throw new IllegalStateException(String.format(
-                    "'%s' contains multiple copies of identically named classes - "
-                            + "this may cause different runtime behaviour depending on classpath ordering.\n"
-                            + "To resolve this, try excluding one of the following jars, "
-                            + "changing a version or shadowing:\n\n\t%s",
-                    configuration.getName(),
-                    jarsToOverlappingClasses.keySet()
-            ));
-        }
-
+        return classToJarMap;
     }
 
     /**
