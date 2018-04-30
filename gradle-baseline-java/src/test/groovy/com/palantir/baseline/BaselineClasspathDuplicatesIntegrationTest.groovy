@@ -16,7 +16,6 @@
 
 package com.palantir.baseline
 
-import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 
 class BaselineClasspathDuplicatesIntegrationTest extends AbstractPluginTest {
@@ -28,15 +27,6 @@ class BaselineClasspathDuplicatesIntegrationTest extends AbstractPluginTest {
         }
     """.stripIndent()
 
-    def 'Plugin can be applied'() {
-        when:
-        buildFile << standardBuildFile
-
-        then:
-        BuildResult result = with('tasks', '--stacktrace').build()
-        assert result.getOutput().contains("checkUniqueClassNames aaa")
-    }
-
     def 'Task should run as part of :check'() {
         when:
         buildFile << standardBuildFile
@@ -44,5 +34,14 @@ class BaselineClasspathDuplicatesIntegrationTest extends AbstractPluginTest {
         then:
         def result = with('check', '--stacktrace').build()
         result.task(':checkUniqueClassNames').outcome == TaskOutcome.SUCCESS
+    }
+
+    def 'Task should not run twice if configuration is unchanged'() {
+        when:
+        buildFile << standardBuildFile
+
+        then:
+        with('checkUniqueClassNames').build().task(':checkUniqueClassNames').outcome == TaskOutcome.SUCCESS
+        with('checkUniqueClassNames').build().task(':checkUniqueClassNames').outcome == TaskOutcome.UP_TO_DATE
     }
 }
