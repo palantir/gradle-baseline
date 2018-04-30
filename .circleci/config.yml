@@ -27,7 +27,7 @@ jobs:
       - run: ./gradlew clean build
 
       - store_test_results:
-          path: ~/project/gradle-baseline-java/build/reports/tests/
+          path: /tmp/store_test_results
 
       - deploy:
           command: |
