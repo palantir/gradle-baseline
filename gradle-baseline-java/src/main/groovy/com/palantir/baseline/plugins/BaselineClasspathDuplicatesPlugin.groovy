@@ -23,10 +23,7 @@ import org.gradle.api.plugins.JavaPlugin
 import org.gradle.internal.impldep.com.google.common.collect.HashMultimap
 import org.gradle.internal.impldep.com.google.common.collect.SetMultimap
 
-/**
- * Adds a simple test for shadowed classes.
- */
-class BaselineClasspathConflict extends AbstractBaselinePlugin  {
+class BaselineClasspathDuplicatesPlugin extends AbstractBaselinePlugin  {
 
     @Override
     void apply(Project project) {

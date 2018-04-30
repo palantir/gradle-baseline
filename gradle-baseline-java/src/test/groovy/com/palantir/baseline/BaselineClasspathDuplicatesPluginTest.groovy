@@ -16,23 +16,23 @@
 
 package com.palantir.baseline
 
-import com.palantir.baseline.plugins.BaselineClasspathConflict
+import com.palantir.baseline.plugins.BaselineClasspathDuplicatesPlugin
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import spock.lang.Specification
 
-class BaselineClasspathConflictTest extends Specification {
+class BaselineClasspathDuplicatesPluginTest extends Specification {
     private Project project
 
     def setup() {
         project = ProjectBuilder.builder().build()
         project.plugins.apply 'java'
-        project.plugins.apply BaselineClasspathConflict
+        project.plugins.apply BaselineClasspathDuplicatesPlugin
     }
 
     def baselineClasspathConflictPluginApplied() {
         expect:
-        project.plugins.hasPlugin(BaselineClasspathConflict.class)
+        project.plugins.hasPlugin(BaselineClasspathDuplicatesPlugin.class)
     }
 
     def baselineClasspathConflictTaskCreated() {
