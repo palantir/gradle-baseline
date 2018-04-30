@@ -29,7 +29,7 @@ class BaselineClasspathDuplicatesPlugin extends AbstractBaselinePlugin  {
                     project.getTasks().create("checkUniqueClassNames", CheckUniqueClassNamesTask)
             task.setConfiguration(project.getConfigurations().getByName("testRuntime"))
 
-            project.getTasks().getByName("check").dependsOn()
+            project.getTasks().getByName("check").dependsOn(task)
 
         });
     }
