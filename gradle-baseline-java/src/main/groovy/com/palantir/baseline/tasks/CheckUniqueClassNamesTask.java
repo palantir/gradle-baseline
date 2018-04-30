@@ -18,6 +18,9 @@ package com.palantir.baseline.tasks;
 
 import java.io.File;
 import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
@@ -25,8 +28,6 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
-import org.gradle.internal.impldep.com.google.common.collect.HashMultimap;
-import org.gradle.internal.impldep.com.google.common.collect.SetMultimap;
 
 @SuppressWarnings("checkstyle:designforextension") // making this 'final' breaks gradle
 public class CheckUniqueClassNamesTask extends DefaultTask {
@@ -50,7 +51,7 @@ public class CheckUniqueClassNamesTask extends DefaultTask {
     @TaskAction
     public void checkForDuplicateClasses() {
         Set<File> files = getConfiguration().getResolvedConfiguration().getFiles();
-        SetMultimap<String, File> classToJarMap = HashMultimap.create();
+        Map<String, Set<File>> classToJarMap = new HashMap<>();
 
         for (File file : files) {
             try (JarFile jarFile1 = new JarFile(file)) {
@@ -63,7 +64,13 @@ public class CheckUniqueClassNamesTask extends DefaultTask {
                         continue;
                     }
 
-                    classToJarMap.put(jarEntry.getName(), file);
+                    HashSet<File> initialSet = new HashSet<>();
+                    Set<File> previous = classToJarMap.putIfAbsent(jarEntry.getName(), initialSet);
+                    if (previous != null) {
+                        previous.add(file);
+                    } else {
+                        initialSet.add(file);
+                    }
                 }
             } catch (Exception e) {
                 getLogger().error("Failed to read JarFile {}", file, e);
@@ -71,7 +78,7 @@ public class CheckUniqueClassNamesTask extends DefaultTask {
         }
 
         StringBuilder errors = new StringBuilder();
-        for (String className : classToJarMap.keys()) {
+        for (String className : classToJarMap.keySet()) {
             Set<File> jars = classToJarMap.get(className);
             if (jars.size() > 1) {
                 errors.append(String.format(
