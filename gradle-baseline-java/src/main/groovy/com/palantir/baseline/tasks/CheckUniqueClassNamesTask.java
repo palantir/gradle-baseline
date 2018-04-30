@@ -30,11 +30,10 @@ import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.tasks.Classpath;
-import org.gradle.api.tasks.CompileClasspath;
-import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.artifacts.ModuleVersionIdentifier;
+import org.gradle.api.artifacts.ResolvedArtifact;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
 
 @SuppressWarnings("checkstyle:designforextension") // making this 'final' breaks gradle
@@ -47,12 +46,9 @@ public class CheckUniqueClassNamesTask extends DefaultTask {
         setDescription("Checks that the given configuration contains no identically named classes.");
     }
 
-    @InputFiles
-    @Classpath
-    @CompileClasspath
-    @SkipWhenEmpty
-    public Iterable<File> getClasspath() {
-        return configuration.getResolvedConfiguration().getFiles();
+    @Input
+    public Configuration getConfiguration() {
+        return configuration;
     }
 
     public void setConfiguration(Configuration configuration) {
@@ -61,10 +57,10 @@ public class CheckUniqueClassNamesTask extends DefaultTask {
 
     @TaskAction
     public void checkForDuplicateClasses() {
-        Map<String, Set<File>> classToJarMap = new HashMap<>();
+        Map<String, Set<ModuleVersionIdentifier>> classToJarMap = new HashMap<>();
 
-        for (File file : getClasspath()) {
-            try (JarFile jarFile1 = new JarFile(file)) {
+        for (ResolvedArtifact resolvedArtifact : getConfiguration().getResolvedConfiguration().getResolvedArtifacts()) {
+            try (JarFile jarFile1 = new JarFile(resolvedArtifact.getFile())) {
                 Enumeration<JarEntry> entries = jarFile1.entries();
 
                 while (entries.hasMoreElements()) {
@@ -74,36 +70,47 @@ public class CheckUniqueClassNamesTask extends DefaultTask {
                         continue;
                     }
 
-                    Set<File> initialSet = new HashSet<>();
-                    Set<File> previous = classToJarMap.putIfAbsent(jarEntry.getName(), initialSet);
-                    if (previous != null) {
-                        previous.add(file);
-                    } else {
-                        initialSet.add(file);
-                    }
+                    addToMultiMap(classToJarMap,
+                            jarEntry.getName().replaceAll("/", ".").replaceAll(".class", ""),
+                            resolvedArtifact.getModuleVersion().getId());
                 }
             } catch (Exception e) {
-                getLogger().error("Failed to read JarFile {}", file, e);
+                getLogger().error("Failed to read JarFile {}", resolvedArtifact, e);
             }
         }
 
-        StringBuilder errors = new StringBuilder();
+        Map<Set<ModuleVersionIdentifier>, Set<String>> jarsToOverlappingClasses = new HashMap<>();
         for (String className : classToJarMap.keySet()) {
-            Set<File> jars = classToJarMap.get(className);
-            if (jars.size() > 1) {
-                errors.append(String.format(
-                        "%s appears in: %s\n", className, jars));
+            Set<ModuleVersionIdentifier> sourceJars = classToJarMap.get(className);
+            if (sourceJars.size() == 1) {
+                continue;
             }
+
+            addToMultiMap(jarsToOverlappingClasses, sourceJars, className);
         }
 
-        if (errors.length() > 0) {
-            writeResult(false);
+        boolean success = jarsToOverlappingClasses.isEmpty();
+        writeResult(success);
+
+        if (!success) {
+            for (Set<ModuleVersionIdentifier> problemJars : jarsToOverlappingClasses.keySet()) {
+                Set<String> classes = jarsToOverlappingClasses.get(problemJars);
+
+                int problemSize = problemJars.size();
+                getLogger().error("Identically named classes found in {} jars ({}): {}",
+                        problemSize, problemJars, classes);
+            }
+
             throw new IllegalStateException(String.format(
-                    "%s contains duplicate classes: %s",
-                    configuration.getName(), errors.toString()));
+                    "'%s' contains multiple copies of identically named classes - "
+                            + "this may cause different runtime behaviour depending on classpath ordering.\n"
+                            + "To resolve this, try excluding one of the following jars, "
+                            + "changing a version or shadowing:\n\n\t%s",
+                    configuration.getName(),
+                    jarsToOverlappingClasses.keySet()
+            ));
         }
 
-        writeResult(true);
     }
 
     /**
@@ -124,5 +131,12 @@ public class CheckUniqueClassNamesTask extends DefaultTask {
         } catch (IOException e) {
             throw new RuntimeException("Unable to write boolean result file", e);
         }
+    }
+
+    // implemented here so we don't pull in guava
+    private static <K, V> boolean addToMultiMap(Map<K, Set<V>> multiMap, K key, V value) {
+        Set<V> initialSet = new HashSet<V>();
+        Set<V> existing = multiMap.putIfAbsent(key, initialSet);
+        return existing != null ? existing.add(value) : initialSet.add(value);
     }
 }
