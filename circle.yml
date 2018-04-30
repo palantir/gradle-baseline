@@ -10,8 +10,8 @@ dependencies:
 
 test:
   override:
-    - ./gradlew publishToMavenLocal  # ensure artifacts are available to tests
-    - ./gradlew clean build
+    - ./gradlew publishToMavenLocal --parallel  # ensure artifacts are available to tests
+    - ./gradlew clean build --parallel
     - pushd docs && sh lint.sh && popd
 
 deployment:
