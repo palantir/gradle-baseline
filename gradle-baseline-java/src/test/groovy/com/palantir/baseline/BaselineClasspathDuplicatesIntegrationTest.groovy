@@ -52,7 +52,7 @@ class BaselineClasspathDuplicatesIntegrationTest extends AbstractPluginTest {
         BuildResult result = with('checkUniqueClassNames', '--quiet').buildAndFail()
 
         then:
-        result.getOutput().contains("Identically named classes found in 2 jars ([javax.servlet.jsp:jsp-api:2.1, javax.el:javax.el-api:3.0.0]): [javax.el.ExpressionFactory,")
+        result.getOutput().contains("Identically named classes found in 2 jars ([javax.servlet.jsp:jsp-api:2.1, javax.el:javax.el-api:3.0.0]): [javax.")
         result.getOutput().contains("'testRuntime' contains multiple copies of identically named classes")
         println result.getOutput()
     }

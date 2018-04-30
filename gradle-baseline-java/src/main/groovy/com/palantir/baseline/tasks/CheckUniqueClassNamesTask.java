@@ -21,11 +21,16 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.time.Duration;
+import java.time.Instant;
+import java.util.Collection;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
 import org.gradle.api.DefaultTask;
@@ -57,20 +62,17 @@ public class CheckUniqueClassNamesTask extends DefaultTask {
 
     @TaskAction
     public void checkForDuplicateClasses() {
-        Map<String, Set<ModuleVersionIdentifier>> classToJarMap = constructClassNameToSourceJarMap();
+        Map<String, Collection<ModuleVersionIdentifier>> classToJarMap = constructClassNameToSourceJarMap();
 
-        Map<Set<ModuleVersionIdentifier>, Set<String>> jarsToOverlappingClasses = new HashMap<>();
-        for (String className : classToJarMap.keySet()) {
-            Set<ModuleVersionIdentifier> sourceJars = classToJarMap.get(className);
-            if (sourceJars.size() == 1) {
-                continue;
+        Map<Set<ModuleVersionIdentifier>, Collection<String>> jarsToOverlappingClasses = new HashMap<>();
+        classToJarMap.forEach((className, sourceJars) -> {
+            if (sourceJars.size() > 1) {
+                addToMultiMap(jarsToOverlappingClasses, new HashSet<>(sourceJars), className);
             }
-
-            addToMultiMap(jarsToOverlappingClasses, sourceJars, className);
-        }
+        });
 
         boolean success = jarsToOverlappingClasses.isEmpty();
-        writeResult(success);
+        writeResultFile(success);
 
         if (!success) {
             jarsToOverlappingClasses.forEach((problemJars, classes) -> {
@@ -89,9 +91,10 @@ public class CheckUniqueClassNamesTask extends DefaultTask {
         }
     }
 
-    private Map<String, Set<ModuleVersionIdentifier>> constructClassNameToSourceJarMap() {
-        Map<String, Set<ModuleVersionIdentifier>> classToJarMap = new HashMap<>();
+    private Map<String, Collection<ModuleVersionIdentifier>> constructClassNameToSourceJarMap() {
+        Map<String, Collection<ModuleVersionIdentifier>> classToJarMap = new ConcurrentHashMap<>();
 
+        Instant before = Instant.now();
         for (ResolvedArtifact resolvedArtifact : getConfiguration().getResolvedConfiguration().getResolvedArtifacts()) {
             try (JarFile jarFile1 = new JarFile(resolvedArtifact.getFile())) {
                 Enumeration<JarEntry> entries = jarFile1.entries();
@@ -111,6 +114,10 @@ public class CheckUniqueClassNamesTask extends DefaultTask {
                 getLogger().error("Failed to read JarFile {}", resolvedArtifact, e);
             }
         }
+        Instant after = Instant.now();
+
+        getLogger().info("Scanned {} classes for uniqueness ({}ms)",
+                classToJarMap.size(), Duration.between(before, after).toMillis());
 
         return classToJarMap;
     }
@@ -125,7 +132,7 @@ public class CheckUniqueClassNamesTask extends DefaultTask {
                 .toFile();
     }
 
-    private void writeResult(boolean success) {
+    private void writeResultFile(boolean success) {
         try {
             File result = getResultFile();
             Files.createDirectories(result.toPath().getParent());
@@ -135,10 +142,15 @@ public class CheckUniqueClassNamesTask extends DefaultTask {
         }
     }
 
-    // implemented here so we don't pull in guava
-    private static <K, V> boolean addToMultiMap(Map<K, Set<V>> multiMap, K key, V value) {
-        Set<V> initialSet = new HashSet<V>();
-        Set<V> existing = multiMap.putIfAbsent(key, initialSet);
-        return existing != null ? existing.add(value) : initialSet.add(value);
+    /**
+     * Implemented here so we don't pull in guava.  Note that CopyOnWriteArrayList is threadsafe
+     * so we can parallelize elsewhere.
+     */
+    private static <K, V> void addToMultiMap(Map<K, Collection<V>> multiMap, K key, V value) {
+        multiMap.compute(key, (unused, collection) -> {
+            Collection<V> newCollection = collection != null ? collection : new CopyOnWriteArrayList<>();
+            newCollection.add(value);
+            return newCollection;
+        });
     }
 }
