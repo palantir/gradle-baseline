@@ -16,6 +16,10 @@
 
 package com.palantir.baseline
 
+/**
+ * This test relies on running ./gradlew :gradle-baseline-java-config:publishToMavenLocal.
+ * This will also not behave well if the repo is dirty.
+ */
 class BaselineConfigIntegrationTest extends AbstractPluginTest {
     def projectVersion = "git describe --tags".execute().text.trim()
     def standardBuildFile = """
