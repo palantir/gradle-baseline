@@ -1,0 +1,43 @@
+version: 2
+jobs:
+  build:
+    docker:
+      - image: circleci/openjdk:8-node
+    steps:
+      - checkout
+
+      - restore_cache:
+          key: gradle-wrapper-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}
+      - restore_cache:
+          key: gradle-cache-{{ checksum "versions.props" }}-{{ checksum "build.gradle" }}
+
+      - run: ./gradlew --parallel resolveConfigurations
+
+      - save_cache:
+          key: gradle-wrapper-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}
+          paths:
+            - ~/.gradle/wrapper
+      - save_cache:
+          key: gradle-cache-{{ checksum "versions.props" }}-{{ checksum "build.gradle" }}
+          paths:
+            - ~/.gradle/caches
+
+      - run: ./gradlew publishToMavenLocal --parallel  # ensure artifacts are available to tests
+      - run: ./gradlew clean build --parallel
+      - run: pushd docs && sh lint.sh && popd
+
+      - deploy:
+          command: |
+            if [[ "${CIRCLE_TAG}" =~ [0-9]+(\.[0-9]+)+(-[a-zA-Z]+[0-9]*)* ]]; then
+              ./gradlew --info bintrayUpload
+            fi
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build:
+          filters:
+            # CircleCI2 will ignore tags without this. https://circleci.com/docs/2.0/workflows/#git-tag-job-execution
+            tags:
+              only: /.*/
