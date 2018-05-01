@@ -30,7 +30,7 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
+import java.util.TreeMap;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.jar.JarEntry;
@@ -103,16 +103,18 @@ public class CheckClassUniquenessTask extends DefaultTask {
                 .max(Comparator.naturalOrder()).get();
         String format = "%-" + (maxLength + 1) + "s";
 
-        Set<String> tableRows = new TreeSet<>();
-        jarsToOverlappingClasses.forEach((problemJars, classes) -> {
-            StringBuilder builder = new StringBuilder();
-            builder.append(String.format("\t%-14s", "(" + classes.size() + " classes) "));
-            problemJars.forEach(jar -> builder.append(String.format(format, jar)));
+        TreeMap<String, Integer> sortedTable = jarsToOverlappingClasses.entrySet().stream().collect(Collectors.toMap(
+                entry -> entry.getKey().stream().map(jar -> String.format(format, jar)).collect(Collectors.joining()),
+                entry -> entry.getValue().size(),
+                (a, b) -> {
+                    throw new RuntimeException("Unexpected collision: " + a + ", " + b);
+                },
+                TreeMap::new));
 
-            tableRows.add(builder.toString());
-        });
-
-        return tableRows.stream().collect(Collectors.joining("\n"));
+        StringBuilder builder = new StringBuilder();
+        sortedTable.forEach((jars, classes) ->
+                builder.append(String.format("\t%-14s", "(" + classes + " classes) ") + jars + "\n"));
+        return builder.toString();
     }
 
     private Map<String, Collection<ModuleVersionIdentifier>> constructClassNameToSourceJarMap() {
