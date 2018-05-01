@@ -24,15 +24,18 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Enumeration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
@@ -84,11 +87,32 @@ public class CheckClassUniquenessTask extends DefaultTask {
                     "'%s' contains multiple copies of identically named classes - "
                             + "this may cause different runtime behaviour depending on classpath ordering.\n"
                             + "To resolve this, try excluding one of the following jars, "
-                            + "changing a version or shadowing:\n\n\t%s",
+                            + "changing a version or shadowing:\n\n%s",
                     configuration.getName(),
-                    jarsToOverlappingClasses.keySet()
+                    formatProblemJarsTable(jarsToOverlappingClasses)
             ));
         }
+    }
+
+    private String formatProblemJarsTable(
+            Map<Set<ModuleVersionIdentifier>, Collection<String>> jarsToOverlappingClasses) {
+
+        int maxLength = jarsToOverlappingClasses.keySet().stream().flatMap(Set::stream)
+                .map(ModuleVersionIdentifier::toString)
+                .map(String::length)
+                .max(Comparator.naturalOrder()).get();
+        String format = "%-" + (maxLength + 1) + "s";
+
+        Set<String> tableRows = new TreeSet<>();
+        jarsToOverlappingClasses.forEach((problemJars, classes) -> {
+            StringBuilder builder = new StringBuilder();
+            builder.append(String.format("\t%-14s", "(" + classes.size() + " classes) "));
+            problemJars.forEach(jar -> builder.append(String.format(format, jar)));
+
+            tableRows.add(builder.toString());
+        });
+
+        return tableRows.stream().collect(Collectors.joining("\n"));
     }
 
     private Map<String, Collection<ModuleVersionIdentifier>> constructClassNameToSourceJarMap() {
