@@ -26,7 +26,7 @@ public class BaselineClassUniquenessPlugin extends AbstractBaselinePlugin {
     public void apply(Project project) {
         project.getPlugins().withId("java", plugin -> {
             project.getTasks().create("checkClassUniqueness", CheckClassUniquenessTask.class, task -> {
-                task.setConfiguration(project.getConfigurations().getByName("testRuntime"));
+                task.setConfiguration(project.getConfigurations().getByName("runtime"));
                 project.getTasks().getByName("check").dependsOn(task);
             });
         });
