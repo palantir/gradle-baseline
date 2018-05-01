@@ -165,7 +165,7 @@ absence by responding with a 204 or 404 error code (see
 Error handling: throw and [JSON-encode exceptions](#error-handling-throw-and-json-encode-exceptions)
 above). For endpoints that answer queries of the form "does this resource exist" or "provide
 this resource if it exists", we recommend indicating absence by error
-code 204 and specifying the Java method signature by a Java8 or Guava
+code 204 and specifying the Java method signature by a Java8
 `Optional` type in order to facilitate exception-free client code (see
 [digesting absence](#Digesting-absence)), for example:
 
@@ -177,9 +177,9 @@ Optional<Resource> getResource(@PathParam("resourceName") String resourceName);
 ```
 
 **Note**: This method never returns an empty JSON object, or a
-Jackson-serialized version of `Optional#absent()`. At the HTTP-level,
+Jackson-serialized version of `Optional#empty()`. At the HTTP-level,
 it returns a 204 response that clients can transparently decode into
-`Optional#abent()`, see Digesting absence below.
+`Optional#empty()`, see Digesting absence below.
 
 **HTTP Compression: used**
 
@@ -227,7 +227,7 @@ As discussed above (see [Error handling](#error-handling) and
 [Indicating absence](#indicating-absence)), the service will respond with error 204 in
 case the requested resource is absent. If the Java interface has
 return type `Optional<Foo>`, then the client should decode 204
-responses to `Optional#absent`.
+responses to `Optional#empty`.
 
 ## Java Project Layout
 
@@ -262,9 +262,6 @@ The server implementation of the above API resides in a separate module
 `<service>-service`. Implementors have free reign over dependencies and
 Java version requirements. This package should be designed such that no
 API user has to (or would even want to) import any of its functionality.
-Functionality shared by the service implementation and clients should be
-exposed in a separate, light-weight (i.e., mostly dependency-free)
-package, e.g., `<service>-common`.
 
 ## Frontend-Serving Services
 
