@@ -18,7 +18,7 @@
 
 - The groupId should be ``com.<organization-name>.<project>`` where ``<project>`` does not contain
 more ``.s``
-- The groupId should not contain dashes or underscores
+- The groupId should not contain underscores
 - The artifactId should be ``gradle-<project>-plugin``
 - The plugin name should be ``com.<organization-name>.<project>`` where the project name may include
  dashes
@@ -31,7 +31,7 @@ more ``.s``
 - Should be added to [Gradle Plugin Repository](https://plugins.gradle.org/) listing
 - Releases should be published to JCenter
 - Snapshots should be published to OSS JFrog
-- Should be tested + published by CircleCIdev u
+- Should be tested + published by CircleCI
 
 ### Compliance
 

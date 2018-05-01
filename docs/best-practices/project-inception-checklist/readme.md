@@ -61,29 +61,6 @@ Given a version number MAJOR.MINOR.PATCH, increment the:
 Additional labels for pre-release and build metadata are available as
 extensions to the MAJOR.MINOR.PATCH format.
 
-## Verification and Development Setup Scripts
-
-In order to lower the barrier-to-entry for contributors, every project
-should provide `./scripts/verify` and `./scripts/setup` scripts with the
-following contract:
-
-- `./scripts/verify` verifies the correctness of the current state of
-  the project working directory. Intended for use in CI or
-  local environments. For example, could invoke `./gradlew build` in
-  order to compile and test a Java project.
-
-- `./scripts/setup` sets up the default local
-  development environment(s) -- including downloading dependencies and
-  additional sources, setting up IDE-specific configuration, etc. Can
-  be run repeatedly to incorporate upstream changes to the
-  development setup. For example, could invoke
-  `./gradlew idea eclipse` in order to generate Eclipse and IntelliJ
-  project files for a Java project.
-
-The scripts should be executable on Linux/MacOS environments via
-`./scripts/foo`, i.e., should carry execution permissions and an
-appropriate Shebang (`#!`) instruction.
-
 ## Technology-Specific Checklists
 
 The above recommendations are appropriate for all software development projects. Depending on which

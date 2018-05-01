@@ -15,10 +15,7 @@ Why Gradle? See [here](http://gradle.org/whygradle-build-automation/).
 Use [gradle-baseline](https://github.com/palantir/gradle-baseline) to configure code-quality tools
 for your project.
 
-## Test Coverage
-
-Java projects should enforce at least 70% test coverage through
-[Jacoco](https://docs.gradle.org/current/userguide/jacoco_plugin.html).
+## Tests
 
 See [Tests](../testing-software/readme.md) for an introduction to
 effectively testing applications.
