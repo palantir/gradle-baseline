@@ -633,7 +633,7 @@ non-primitive types such as Java8/Joda-Time
 
 There are many ways for a method to return or indicate failure: return
 null, throw an exception, return an empty collection, return
-Optional.absent(), etc pp. Any of these has its merits, but the
+Optional.empty(), etc pp. Any of these has its merits, but the
 important thing is to be consistent, at least within the same method and
 class.
 
