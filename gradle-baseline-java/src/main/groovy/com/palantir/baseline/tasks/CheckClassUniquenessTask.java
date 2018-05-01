@@ -21,25 +21,14 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Collection;
 import java.util.Comparator;
-import java.util.Enumeration;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.TreeMap;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.CopyOnWriteArrayList;
-import java.util.jar.JarEntry;
-import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
-import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
@@ -65,20 +54,14 @@ public class CheckClassUniquenessTask extends DefaultTask {
 
     @TaskAction
     public void checkForDuplicateClasses() {
-        Map<String, Collection<ModuleVersionIdentifier>> classToJarMap = constructClassNameToSourceJarMap();
-
-        Map<Set<ModuleVersionIdentifier>, Collection<String>> jarsToOverlappingClasses = new HashMap<>();
-        classToJarMap.forEach((className, sourceJars) -> {
-            if (sourceJars.size() > 1) {
-                addToMultiMap(jarsToOverlappingClasses, new HashSet<>(sourceJars), className);
-            }
-        });
-
-        boolean success = jarsToOverlappingClasses.isEmpty();
+        ClassUniquenessAnalyzer analyzer = new ClassUniquenessAnalyzer(getLogger());
+        analyzer.analyzeConfiguration(getConfiguration());
+        boolean success = analyzer.getProblemJars().isEmpty();
         writeResultFile(success);
 
         if (!success) {
-            jarsToOverlappingClasses.forEach((problemJars, classes) -> {
+            analyzer.getProblemJars().forEach((problemJars) -> {
+                Set<String> classes = analyzer.getDuplicateClassesInProblemJars(problemJars);
                 getLogger().error("Identically named classes found in {} jars ({}): {}",
                         problemJars.size(), problemJars, classes);
             });
@@ -89,21 +72,19 @@ public class CheckClassUniquenessTask extends DefaultTask {
                             + "To resolve this, try excluding one of the following jars, "
                             + "changing a version or shadowing:\n\n%s",
                     configuration.getName(),
-                    formatProblemJarsTable(jarsToOverlappingClasses)
+                    formatSummary(analyzer)
             ));
         }
     }
 
-    private String formatProblemJarsTable(
-            Map<Set<ModuleVersionIdentifier>, Collection<String>> jarsToOverlappingClasses) {
-
-        int maxLength = jarsToOverlappingClasses.keySet().stream().flatMap(Set::stream)
+    private static String formatSummary(ClassUniquenessAnalyzer summary) {
+        int maxLength = summary.jarsToClasses().keySet().stream().flatMap(Set::stream)
                 .map(ModuleVersionIdentifier::toString)
                 .map(String::length)
                 .max(Comparator.naturalOrder()).get();
         String format = "%-" + (maxLength + 1) + "s";
 
-        Map<String, Integer> sortedTable = jarsToOverlappingClasses.entrySet().stream().collect(Collectors.toMap(
+        Map<String, Integer> sortedTable = summary.jarsToClasses().entrySet().stream().collect(Collectors.toMap(
                 entry -> entry.getKey().stream().map(jar -> String.format(format, jar)).collect(Collectors.joining()),
                 entry -> entry.getValue().size(),
                 (first, second) -> {
@@ -115,48 +96,6 @@ public class CheckClassUniquenessTask extends DefaultTask {
         sortedTable.forEach((jars, classes) ->
                 builder.append(String.format("\t%-14s", "(" + classes + " classes) ") + jars + "\n"));
         return builder.toString();
-    }
-
-    private Map<String, Collection<ModuleVersionIdentifier>> constructClassNameToSourceJarMap() {
-        Map<String, Collection<ModuleVersionIdentifier>> classToJarMap = new ConcurrentHashMap<>();
-
-        Instant before = Instant.now();
-        Set<ResolvedArtifact> dependencies = getConfiguration()
-                .getResolvedConfiguration()
-                .getResolvedArtifacts();
-
-        dependencies.parallelStream().forEach(resolvedArtifact -> {
-
-            File file = resolvedArtifact.getFile();
-            if (!file.exists()) {
-                getLogger().info("Skipping non-existent jar {}: {}", resolvedArtifact, file);
-                return;
-            }
-
-            try (JarFile jarFile = new JarFile(file)) {
-                Enumeration<JarEntry> entries = jarFile.entries();
-                while (entries.hasMoreElements()) {
-                    JarEntry jarEntry = entries.nextElement();
-
-                    if (!jarEntry.getName().endsWith(".class")) {
-                        continue;
-                    }
-
-                    addToMultiMap(classToJarMap,
-                            jarEntry.getName().replaceAll("/", ".").replaceAll(".class", ""),
-                            resolvedArtifact.getModuleVersion().getId());
-                }
-            } catch (Exception e) {
-                getLogger().error("Failed to read JarFile {}, skipping...", resolvedArtifact, e);
-                throw new RuntimeException(e);
-            }
-        });
-        Instant after = Instant.now();
-
-        getLogger().info("Checked {} classes from {} dependencies for uniqueness ({}ms)",
-                classToJarMap.size(), dependencies.size(), Duration.between(before, after).toMillis());
-
-        return classToJarMap;
     }
 
     /**
@@ -177,17 +116,5 @@ public class CheckClassUniquenessTask extends DefaultTask {
         } catch (IOException e) {
             throw new RuntimeException("Unable to write boolean result file", e);
         }
-    }
-
-    /**
-     * Implemented here so we don't pull in guava.  Note that CopyOnWriteArrayList is threadsafe
-     * so we can parallelize elsewhere.
-     */
-    private static <K, V> void addToMultiMap(Map<K, Collection<V>> multiMap, K key, V value) {
-        multiMap.compute(key, (unused, collection) -> {
-            Collection<V> newCollection = collection != null ? collection : new CopyOnWriteArrayList<>();
-            newCollection.add(value);
-            return newCollection;
-        });
     }
 }
