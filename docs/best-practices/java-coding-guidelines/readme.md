@@ -1581,8 +1581,7 @@ because it is considered an unsafe publish. This can result in
 Foo whose 'baz' is always null.
 
 The easiest way to avoid leaking this is to do the work in a static
-factory method (see Avoid doing work in
-constructors\_ below).
+factory method (see [Avoid doing work in constructors][] below).
 
 See *Java Concurrency in Practice, section 3.2 "Publication and Escape"*
 
@@ -1590,11 +1589,11 @@ See *Java Concurrency in Practice, section 3.2 "Publication and Escape"*
 
 ### Use appropriate assertion methods
 
-Hamcrest and JUnit provide a variety of different static methods for
+AssertJ and JUnit provide a variety of different static methods for
 asserting equality, null/not-null, etc, between variables. While
 different methods may assert the same fact -- e.g.,
 `assertTrue(addOne(1) == 2)`, `assertEquals(addOne(1), 2)`, and
-`assertThat(addOne(1), is(2))` -- they often differ in the type of error
+`assertThat(addOne(1)).isEqualTo(2)` -- they often differ in the type of error
 message produced if the assertion fails. Choose the method that produces
 the most useful error message, for example:
 
@@ -1606,9 +1605,6 @@ the most useful error message, for example:
   assertTrue(a == b);              assertEquals(a, b);
   assertFalse(a != b);             assertEquals(a, b);
   -------------------------------- ------------------------
-
-Always use Hamcrest's `Matchers.*` static assertion methods instead of
-`CoreMatchers.*`.
 
 ### Avoid assertNotNull
 
@@ -1761,7 +1757,7 @@ same semantics in production as in tests.
 
 ### Avoid non-trivial static methods
 
-Avoid static methods unless they trivial, fast, and free from
+Avoid static methods unless they are trivial, fast, and free from
 dependencies. Violating any of these three constructs makes it hard to
 unit test functionality.
 
@@ -1779,7 +1775,7 @@ See *Effective Java, 2nd Edition, Item 52*
 
 ### Prefer a single constructor
 
-It follows from Avoid doing work in constructors\_ that a class should
+It follows from [Avoid doing work in constructors][] that a class should
 only have one constructor. Multiple constructors imply that work is
 being done inside at least one of them. Additionally, the purpose of the
 different constructors is hidden because constructors don't have names.
