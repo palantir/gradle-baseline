@@ -103,11 +103,11 @@ public class CheckClassUniquenessTask extends DefaultTask {
                 .max(Comparator.naturalOrder()).get();
         String format = "%-" + (maxLength + 1) + "s";
 
-        TreeMap<String, Integer> sortedTable = jarsToOverlappingClasses.entrySet().stream().collect(Collectors.toMap(
+        Map<String, Integer> sortedTable = jarsToOverlappingClasses.entrySet().stream().collect(Collectors.toMap(
                 entry -> entry.getKey().stream().map(jar -> String.format(format, jar)).collect(Collectors.joining()),
                 entry -> entry.getValue().size(),
-                (a, b) -> {
-                    throw new RuntimeException("Unexpected collision: " + a + ", " + b);
+                (first, second) -> {
+                    throw new RuntimeException("Unexpected collision: " + first + ", " + second);
                 },
                 TreeMap::new));
 

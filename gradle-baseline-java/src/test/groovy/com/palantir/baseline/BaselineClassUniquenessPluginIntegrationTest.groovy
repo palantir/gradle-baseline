@@ -33,6 +33,7 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         }
         repositories {
             mavenCentral()
+            maven { url 'https://dl.bintray.com/palantir/releases' }
         }
     """.stripIndent()
 
@@ -52,13 +53,25 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         dependencies {
             compile group: 'javax.el', name: 'javax.el-api', version: '3.0.0'
             compile group: 'javax.servlet.jsp', name: 'jsp-api', version: '2.1'
+            compile 'com.google.code.findbugs:annotations:3.0.0'
+            compile 'com.github.stephenc.jcip:jcip-annotations:1.0-1'
+            compile 'commons-logging:commons-logging:1.2'
+            compile 'org.slf4j:jcl-over-slf4j:1.7.25'
+            compile 'com.palantir.tritium:tritium-api:0.9.0'
+            compile 'com.palantir.tritium:tritium-core:0.9.0'
         }   
         """.stripIndent()
         BuildResult result = with('checkClassUniqueness').buildAndFail()
 
         then:
         result.getOutput().contains("Identically named classes found in 2 jars ([javax.servlet.jsp:jsp-api:2.1, javax.el:javax.el-api:3.0.0]): [javax.")
-        result.getOutput().contains("'testRuntime' contains multiple copies of identically named classes")
+        result.getOutput().contains("'runtime' contains multiple copies of identically named classes")
+        result.getOutput().contains("(4 classes)   com.google.code.findbugs:annotations:3.0.1      net.jcip:jcip-annotations:1.0                   com.github.stephenc.jcip:jcip-annotations:1.0-1");
+        result.getOutput().contains("(35 classes)  com.google.code.findbugs:jsr305:3.0.1           com.google.code.findbugs:annotations:3.0.1");
+        result.getOutput().contains("(1 classes)   com.palantir.tritium:tritium-api:0.9.0          com.palantir.tritium:tritium-core:0.9.0");
+        result.getOutput().contains("(6 classes)   commons-logging:commons-logging:1.2             org.slf4j:jcl-over-slf4j:1.7.25");
+        result.getOutput().contains("(26 classes)  javax.servlet.jsp:jsp-api:2.1                   javax.el:javax.el-api:3.0.0");
+        println result.getOutput()
     }
 
     def 'task should be up-to-date when classpath is unchanged'() {
@@ -96,12 +109,12 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         multiProject.addSubproject('foo', """
         dependencies {
             compile group: 'javax.el', name: 'javax.el-api', version: '3.0.0'
-        } 
+        }
         """)
         multiProject.addSubproject('bar', """
         dependencies {
             compile group: 'javax.servlet.jsp', name: 'jsp-api', version: '2.1'
-        } 
+        }
         """)
 
         buildFile << standardBuildFile
