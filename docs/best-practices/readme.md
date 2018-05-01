@@ -20,6 +20,4 @@ standards are established by experiment.*
 
 [Microservices Best Practices](microservices/readme.md)
 
-[Project Inception Checklist](project-inception-checklist/readme.md)
-
 [Testing Software Intro](testing-software/readme.md)
