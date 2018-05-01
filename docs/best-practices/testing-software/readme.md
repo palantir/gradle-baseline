@@ -208,7 +208,7 @@ explicit, and concise, and it is almost always more stable and easier to
 set up a mock object than to instantiate and populate a full
 implementation of a particular class or interface. Testing functionality
 with real implementations is the duty of integration or end-to-end
-tests. See the section on [Writing testable code][] for an example.
+tests. See the section on [Writing testable code](#writing-testable-code) for an example.
 
 ### Writing Testable Code
 

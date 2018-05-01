@@ -1580,8 +1580,9 @@ because it is considered an unsafe publish. This can result in
 (theoretically) permanently incoherently constructed objects, such as a
 Foo whose 'baz' is always null.
 
-The easiest way to avoid leaking this is to do the work in a static
-factory method (see [Avoid doing work in constructors][] below).
+The easiest way to avoid leaking this is to do the work in a static factory
+method (see [Avoid doing work in
+constructors](#avoid-doing-work-in-constructors) below).
 
 See *Java Concurrency in Practice, section 3.2 "Publication and Escape"*
 
@@ -1775,15 +1776,15 @@ See *Effective Java, 2nd Edition, Item 52*
 
 ### Prefer a single constructor
 
-It follows from [Avoid doing work in constructors][] that a class should
-only have one constructor. Multiple constructors imply that work is
-being done inside at least one of them. Additionally, the purpose of the
-different constructors is hidden because constructors don't have names.
-Static factories are an easy way to get around this problem.
-Additionally, when there's a static factory for a class, it's helpful to
-hide the constructor so that users know to call the factory. Referencing
-the example in
-Constructor parameters should be interfaces, data objects, or primitive types\_:
+It follows from [Avoid doing work in
+constructors](#avoid-doing-work-in-constructors) that a class should only have
+one constructor. Multiple constructors imply that work is being done inside at
+least one of them. Additionally, the purpose of the different constructors is
+hidden because constructors don't have names. Static factories are an easy way
+to get around this problem. Additionally, when there's a static factory for a
+class, it's helpful to hide the constructor so that users know to call the
+factory. Referencing the example in Constructor parameters should be interfaces,
+data objects, or primitive types\_:
 
 ``` java
 public static FeedsRowProcessor create(PalantirContext context) {
