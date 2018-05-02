@@ -38,7 +38,7 @@ repositories {
 apply plugin: 'com.palantir.baseline-config'
 
 dependencies {
-    // Adds a dependency on the Baseline configuration files. Typically use
+    // Adds a dependency on the Baseline configuration files. Typically use 
     // the same version as the plugin itself.
     baseline "com.palantir.baseline:gradle-baseline-java-config:<version>@zip"
 }
