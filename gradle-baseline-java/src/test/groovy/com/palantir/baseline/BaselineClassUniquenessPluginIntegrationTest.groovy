@@ -64,11 +64,11 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         BuildResult result = with('checkClassUniqueness').buildAndFail()
 
         then:
-        result.getOutput().contains("Identically named classes found in 2 jars ([javax.servlet.jsp:jsp-api:2.1, javax.el:javax.el-api:3.0.0]): [javax.")
+        result.getOutput().contains("26 Identically named classes found in ([javax.servlet.jsp:jsp-api:2.1, javax.el:javax.el-api:3.0.0]), 0 were identical implementations too: [javax.")
         result.getOutput().contains("'runtime' contains multiple copies of identically named classes")
-        result.getOutput().contains("(4 classes)   com.google.code.findbugs:annotations:3.0.1      net.jcip:jcip-annotations:1.0                   com.github.stephenc.jcip:jcip-annotations:1.0-1");
-        result.getOutput().contains("(35 classes)  com.google.code.findbugs:jsr305:3.0.1           com.google.code.findbugs:annotations:3.0.1");
-        result.getOutput().contains("(1 classes)   com.palantir.tritium:tritium-api:0.9.0          com.palantir.tritium:tritium-core:0.9.0");
+        result.getOutput().contains("(1 classes)   com.google.code.findbugs:annotations:3.0.1      net.jcip:jcip-annotations:1.0                   com.github.stephenc.jcip:jcip-annotations:1.0-1");
+        result.getOutput().contains("(0 classes)   com.google.code.findbugs:jsr305:3.0.1           com.google.code.findbugs:annotations:3.0.1");
+        result.getOutput().contains("(0 classes)   com.palantir.tritium:tritium-api:0.9.0          com.palantir.tritium:tritium-core:0.9.0");
         result.getOutput().contains("(6 classes)   commons-logging:commons-logging:1.2             org.slf4j:jcl-over-slf4j:1.7.25");
         result.getOutput().contains("(26 classes)  javax.servlet.jsp:jsp-api:2.1                   javax.el:javax.el-api:3.0.0");
         println result.getOutput()
@@ -127,7 +127,7 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
 
         then:
         BuildResult result = with('checkClassUniqueness').buildAndFail()
-        result.output.contains("Identically named classes found in 2 jars")
+        result.output.contains("26 Identically named classes found in ([javax.servlet.jsp:jsp-api:2.1, javax.el:javax.el-api:3.0.0])")
     }
 
     def 'currently skips duplicates from user-authored code'() {

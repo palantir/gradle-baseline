@@ -61,9 +61,12 @@ public class CheckClassUniquenessTask extends DefaultTask {
 
         if (!success) {
             analyzer.getProblemJars().forEach((problemJars) -> {
-                Set<String> classes = analyzer.getDuplicateClassesInProblemJars(problemJars);
-                getLogger().error("Identically named classes found in {} jars ({}): {}",
-                        problemJars.size(), problemJars, classes);
+                Set<String> classes = analyzer.getSharedClassesInProblemJars(problemJars);
+                Set<String> differingClasses = analyzer.getDifferingSharedClassesInProblemJars(problemJars);
+                getLogger().error(
+                        "{} Identically named classes found in ({}), {} were identical implementations too: {}",
+                        differingClasses.size(), problemJars,
+                        classes.size() - differingClasses.size(), differingClasses);
             });
 
             throw new IllegalStateException(String.format(
@@ -86,7 +89,7 @@ public class CheckClassUniquenessTask extends DefaultTask {
 
         Map<String, Integer> sortedTable = summary.jarsToClasses().entrySet().stream().collect(Collectors.toMap(
                 entry -> entry.getKey().stream().map(jar -> String.format(format, jar)).collect(Collectors.joining()),
-                entry -> entry.getValue().size(),
+                entry -> summary.getDifferingSharedClassesInProblemJars(entry.getKey()).size(),
                 (first, second) -> {
                     throw new RuntimeException("Unexpected collision: " + first + ", " + second);
                 },
