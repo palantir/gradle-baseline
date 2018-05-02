@@ -30,5 +30,8 @@ class Baseline implements Plugin<Project> {
         project.plugins.apply BaselineEclipse
         project.plugins.apply BaselineIdea
         project.plugins.apply BaselineErrorProne
+
+        // TODO(dfox): enable this when it has been validated on a few real projects
+        // project.plugins.apply BaselineClassUniquenessPlugin
     }
 }

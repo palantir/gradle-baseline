@@ -51,6 +51,7 @@ apply plugin: 'com.palantir.baseline-eclipse'
 apply plugin: 'com.palantir.baseline-idea'
 apply plugin: 'org.inferred.processors'  // installs the "processor" configuration needed for baseline-error-prone
 apply plugin: 'com.palantir.baseline-error-prone'
+apply plugin: 'com.palantir.baseline-class-uniqueness'
 ```
 
 - Run ``./gradlew baselineUpdateConfig`` to download the config files
@@ -254,6 +255,13 @@ checks](https://errorprone.info):
 - Slf4jConstantLogMessage: Allow only compile-time constant slf4j log message strings.
 - Slf4jLogsafeArgs: Allow only com.palantir.logsafe.Arg types as parameter inputs to slf4j log messages. More information on
 Safe Logging can be found at [github.com/palantir/safe-logging](https://github.com/palantir/safe-logging).
+
+
+### Class Uniqueness Plugin (com.palantir.baseline-class-uniqueness)
+
+Run `./gradlew checkClassUniqueness` to scan all jars on the `runtime` classpath for identically named classes.
+This task will run automatically as part of `./gradlew build`.
+
 
 ### Copyright Checks
 

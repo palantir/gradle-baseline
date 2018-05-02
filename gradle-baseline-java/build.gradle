@@ -10,10 +10,10 @@ repositories {
 dependencies {
     compile gradleApi()
     compile 'net.ltgt.gradle:gradle-errorprone-plugin'
+    compile 'com.google.guava:guava'
 
     testCompile gradleTestKit()
     testCompile 'com.netflix.nebula:nebula-test' // for better temp directory junit rule only
-    testCompile 'com.google.guava:guava'
     testCompile 'net.lingala.zip4j:zip4j'
     testCompile 'org.apache.commons:commons-io'
 }
@@ -53,6 +53,10 @@ pluginBundle {
         baselineIdeaPlugin {
             id = 'com.palantir.baseline-idea'
             displayName = 'Palantir Baseline IntelliJ Plugin'
+        }
+        baselineClassUniquenessPlugin {
+            id = 'com.palantir.baseline-class-uniqueness'
+            displayName = 'Palantir Baseline Class Uniqueness Plugin'
         }
     }
 }
