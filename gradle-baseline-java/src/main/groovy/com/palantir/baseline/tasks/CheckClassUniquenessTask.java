@@ -71,8 +71,7 @@ public class CheckClassUniquenessTask extends DefaultTask {
             throw new IllegalStateException(String.format(
                     "'%s' contains multiple copies of identically named classes - "
                             + "this may cause different runtime behaviour depending on classpath ordering.\n"
-                            + "To resolve this, try excluding one of the following jars, "
-                            + "changing a version or shadowing:\n\n%s",
+                            + "To resolve this, try excluding one of the following jars:\n\n%s",
                     configuration.getName(),
                     formatSummary(analyzer)
             ));

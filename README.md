@@ -38,7 +38,7 @@ repositories {
 apply plugin: 'com.palantir.baseline-config'
 
 dependencies {
-    // Adds a dependency on the Baseline configuration files. Typically use 
+    // Adds a dependency on the Baseline configuration files. Typically use
     // the same version as the plugin itself.
     baseline "com.palantir.baseline:gradle-baseline-java-config:<version>@zip"
 }
@@ -259,7 +259,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 
 ### Class Uniqueness Plugin (com.palantir.baseline-class-uniqueness)
 
-Run `./gradlew checkClassUniqueness` to scan all jars on the `testRuntime` classpath for identically named classes.
+Run `./gradlew checkClassUniqueness` to scan all jars on the `runtime` classpath for identically named classes.
 This task will run automatically as part of `./gradlew build`.
 
 

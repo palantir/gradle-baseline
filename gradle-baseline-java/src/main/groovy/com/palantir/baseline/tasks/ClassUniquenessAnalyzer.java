@@ -56,7 +56,7 @@ public final class ClassUniquenessAnalyzer {
                 .getResolvedConfiguration()
                 .getResolvedArtifacts();
 
-        Map<String, Set<ModuleVersionIdentifier>> tempClassToJarMap = new HashMap<>();
+        Map<String, Set<ModuleVersionIdentifier>> tempClassToJarsMap = new HashMap<>();
         Map<String, Set<HashCode>> tempClassToHashCode = new HashMap<>();
 
         dependencies.stream().forEach(resolvedArtifact -> {
@@ -78,7 +78,7 @@ public final class ClassUniquenessAnalyzer {
                     HashingInputStream inputStream = new HashingInputStream(Hashing.sha256(), jarInputStream);
                     ByteStreams.exhaust(inputStream);
 
-                    multiMapPut(tempClassToJarMap,
+                    multiMapPut(tempClassToJarsMap,
                             className,
                             resolvedArtifact.getModuleVersion().getId());
 
@@ -92,7 +92,7 @@ public final class ClassUniquenessAnalyzer {
             }
         });
 
-        tempClassToJarMap.entrySet().stream()
+        tempClassToJarsMap.entrySet().stream()
                 .filter(entry -> entry.getValue().size() > 1)
                 .forEach(entry -> {
                     // add to the top level map
@@ -111,7 +111,7 @@ public final class ClassUniquenessAnalyzer {
 
         Instant after = Instant.now();
         log.info("Checked {} classes from {} dependencies for uniqueness ({}ms)",
-                tempClassToJarMap.size(), dependencies.size(), Duration.between(before, after).toMillis());
+                tempClassToJarsMap.size(), dependencies.size(), Duration.between(before, after).toMillis());
     }
 
     public Collection<Set<ModuleVersionIdentifier>> getProblemJars() {
