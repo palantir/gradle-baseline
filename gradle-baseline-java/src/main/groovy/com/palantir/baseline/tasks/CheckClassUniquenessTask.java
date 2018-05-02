@@ -54,17 +54,14 @@ public class CheckClassUniquenessTask extends DefaultTask {
     public final void checkForDuplicateClasses() {
         ClassUniquenessAnalyzer analyzer = new ClassUniquenessAnalyzer(getLogger());
         analyzer.analyzeConfiguration(getConfiguration());
-        boolean success = analyzer.getProblemJars().isEmpty();
+        boolean success = analyzer.getDifferingProblemJars().isEmpty();
         writeResultFile(success);
 
         if (!success) {
-            analyzer.getProblemJars().forEach((problemJars) -> {
-                Set<String> classes = analyzer.getSharedClassesInProblemJars(problemJars);
+            analyzer.getDifferingProblemJars().forEach((problemJars) -> {
                 Set<String> differingClasses = analyzer.getDifferingSharedClassesInProblemJars(problemJars);
-                getLogger().error(
-                        "{} Identically named classes found in ({}), {} were identical implementations too: {}",
-                        differingClasses.size(), problemJars,
-                        classes.size() - differingClasses.size(), differingClasses);
+                getLogger().error("{} Identically named classes with differing impls found in {}: {}",
+                        differingClasses.size(), problemJars, differingClasses);
             });
 
             throw new IllegalStateException(String.format(

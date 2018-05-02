@@ -64,7 +64,7 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         BuildResult result = with('checkClassUniqueness').buildAndFail()
 
         then:
-        result.getOutput().contains("26 Identically named classes found in ([javax.servlet.jsp:jsp-api:2.1, javax.el:javax.el-api:3.0.0]), 0 were identical implementations too: [javax.")
+        result.getOutput().contains("6 Identically named classes with differing impls found in [commons-logging:commons-logging:1.2, org.slf4j:jcl-over-slf4j:1.7.25]: [org.")
         result.getOutput().contains("'runtime' contains multiple copies of identically named classes")
         result.getOutput().contains("(1 classes)   com.google.code.findbugs:annotations:3.0.1      net.jcip:jcip-annotations:1.0                   com.github.stephenc.jcip:jcip-annotations:1.0-1");
         result.getOutput().contains("(6 classes)   commons-logging:commons-logging:1.2             org.slf4j:jcl-over-slf4j:1.7.25");
@@ -125,7 +125,7 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
 
         then:
         BuildResult result = with('checkClassUniqueness').buildAndFail()
-        result.output.contains("26 Identically named classes found in ([javax.servlet.jsp:jsp-api:2.1, javax.el:javax.el-api:3.0.0])")
+        result.output.contains("26 Identically named classes with differing impls found in [javax.servlet.jsp:jsp-api:2.1, javax.el:javax.el-api:3.0.0]: [javax.")
     }
 
     def 'currently skips duplicates from user-authored code'() {
