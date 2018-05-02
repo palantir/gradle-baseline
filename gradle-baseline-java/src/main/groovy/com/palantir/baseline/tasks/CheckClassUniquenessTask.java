@@ -78,8 +78,8 @@ public class CheckClassUniquenessTask extends DefaultTask {
     }
 
     private static String formatSummary(ClassUniquenessAnalyzer summary) {
-        Collection<Set<ModuleVersionIdentifier>> allProblemJars = summary.getProblemJars();
-        
+        Collection<Set<ModuleVersionIdentifier>> allProblemJars = summary.getDifferingProblemJars();
+
         int maxLength = allProblemJars.stream().flatMap(Set::stream)
                 .map(ModuleVersionIdentifier::toString)
                 .map(String::length)
@@ -95,6 +95,8 @@ public class CheckClassUniquenessTask extends DefaultTask {
 
             String jars = problemJars.stream().map(jar -> String.format(format, jar)).collect(Collectors.joining());
             builder.append(jars);
+
+            builder.append('\n');
         });
 
         return builder.toString();

@@ -42,7 +42,7 @@ import org.slf4j.Logger;
 
 public final class ClassUniquenessAnalyzer {
 
-    private final Map<String, Set<ModuleVersionIdentifier>> classToJarsMap = new HashMap<>();
+    private final Map<String, Set<ModuleVersionIdentifier>> classToJars = new HashMap<>();
     private final Map<Set<ModuleVersionIdentifier>, Set<String>> jarsToClasses = new HashMap<>();
     private final Map<String, Set<HashCode>> classToHashCodes = new HashMap<>();
     private final Logger log;
@@ -57,7 +57,7 @@ public final class ClassUniquenessAnalyzer {
                 .getResolvedConfiguration()
                 .getResolvedArtifacts();
 
-        Map<String, Set<ModuleVersionIdentifier>> tempClassToJarsMap = new HashMap<>();
+        Map<String, Set<ModuleVersionIdentifier>> tempClassToJars = new HashMap<>();
         Map<String, Set<HashCode>> tempClassToHashCodes = new HashMap<>();
 
         dependencies.stream().forEach(resolvedArtifact -> {
@@ -79,7 +79,7 @@ public final class ClassUniquenessAnalyzer {
                     HashingInputStream inputStream = new HashingInputStream(Hashing.sha256(), jarInputStream);
                     ByteStreams.exhaust(inputStream);
 
-                    multiMapPut(tempClassToJarsMap,
+                    multiMapPut(tempClassToJars,
                             className,
                             resolvedArtifact.getModuleVersion().getId());
 
@@ -93,11 +93,11 @@ public final class ClassUniquenessAnalyzer {
             }
         });
 
-        tempClassToJarsMap.entrySet().stream()
+        tempClassToJars.entrySet().stream()
                 .filter(entry -> entry.getValue().size() > 1)
                 .forEach(entry -> {
-                    // add to the top level map
-                    entry.getValue().forEach(value -> multiMapPut(classToJarsMap, entry.getKey(), value));
+                    // we have determined this is a duplicate, so save it in the top level map
+                    entry.getValue().forEach(value -> multiMapPut(classToJars, entry.getKey(), value));
 
                     // add to the opposite direction index
                     multiMapPut(jarsToClasses, entry.getValue(), entry.getKey());
@@ -112,7 +112,7 @@ public final class ClassUniquenessAnalyzer {
 
         Instant after = Instant.now();
         log.info("Checked {} classes from {} dependencies for uniqueness ({}ms)",
-                tempClassToJarsMap.size(), dependencies.size(), Duration.between(before, after).toMillis());
+                tempClassToJars.size(), dependencies.size(), Duration.between(before, after).toMillis());
     }
 
     /**
@@ -121,11 +121,7 @@ public final class ClassUniquenessAnalyzer {
      * clashing name doesn't have any effect.
      */
     public Collection<Set<ModuleVersionIdentifier>> getProblemJars() {
-        return classToJarsMap.values();
-    }
-
-    public Map<Set<ModuleVersionIdentifier>, Set<String>> jarsToClasses() {
-        return jarsToClasses;
+        return classToJars.values();
     }
 
     /**
@@ -136,7 +132,17 @@ public final class ClassUniquenessAnalyzer {
     }
 
     /**
-     * Class names which appear in all of the given jars and also do not have identical implementations.
+     * Jars which contain identically named classes with non-identical implementations.
+     */
+    public Collection<Set<ModuleVersionIdentifier>> getDifferingProblemJars() {
+        return classToJars.values()
+                .stream()
+                .filter(jars -> getDifferingSharedClassesInProblemJars(jars).size() > 0)
+                .collect(Collectors.toSet());
+    }
+
+    /**
+     * Class names which appear in all of the given jars and also have non-identical implementations.
      */
     public Set<String> getDifferingSharedClassesInProblemJars(Collection<ModuleVersionIdentifier> problemJars) {
         return getSharedClassesInProblemJars(problemJars).stream()
