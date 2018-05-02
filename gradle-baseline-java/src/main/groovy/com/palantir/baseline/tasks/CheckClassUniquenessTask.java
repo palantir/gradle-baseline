@@ -21,10 +21,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
+import java.util.Collection;
 import java.util.Comparator;
-import java.util.Map;
 import java.util.Set;
-import java.util.TreeMap;
 import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.artifacts.Configuration;
@@ -79,23 +78,25 @@ public class CheckClassUniquenessTask extends DefaultTask {
     }
 
     private static String formatSummary(ClassUniquenessAnalyzer summary) {
-        int maxLength = summary.jarsToClasses().keySet().stream().flatMap(Set::stream)
+        Collection<Set<ModuleVersionIdentifier>> allProblemJars = summary.getProblemJars();
+        
+        int maxLength = allProblemJars.stream().flatMap(Set::stream)
                 .map(ModuleVersionIdentifier::toString)
                 .map(String::length)
                 .max(Comparator.naturalOrder()).get();
         String format = "%-" + (maxLength + 1) + "s";
 
-        Map<String, Integer> sortedTable = summary.jarsToClasses().entrySet().stream().collect(Collectors.toMap(
-                entry -> entry.getKey().stream().map(jar -> String.format(format, jar)).collect(Collectors.joining()),
-                entry -> summary.getDifferingSharedClassesInProblemJars(entry.getKey()).size(),
-                (first, second) -> {
-                    throw new RuntimeException("Unexpected collision: " + first + ", " + second);
-                },
-                TreeMap::new));
-
         StringBuilder builder = new StringBuilder();
-        sortedTable.forEach((jars, classes) ->
-                builder.append(String.format("\t%-14s", "(" + classes + " classes) ") + jars + "\n"));
+
+        allProblemJars.forEach(problemJars -> {
+            int count = summary.getDifferingSharedClassesInProblemJars(problemJars).size();
+            String countColumn = String.format("\t%-14s", "(" + count + " classes) ");
+            builder.append(countColumn);
+
+            String jars = problemJars.stream().map(jar -> String.format(format, jar)).collect(Collectors.joining());
+            builder.append(jars);
+        });
+
         return builder.toString();
     }
 
