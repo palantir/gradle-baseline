@@ -34,6 +34,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
+import java.util.stream.Collectors;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
@@ -43,7 +44,7 @@ public final class ClassUniquenessAnalyzer {
 
     private final Map<String, Set<ModuleVersionIdentifier>> classToJarsMap = new HashMap<>();
     private final Map<Set<ModuleVersionIdentifier>, Set<String>> jarsToClasses = new HashMap<>();
-    private final Map<String, Set<HashCode>> classToHashCode = new HashMap<>();
+    private final Map<String, Set<HashCode>> classToHashCodes = new HashMap<>();
     private final Logger log;
 
     public ClassUniquenessAnalyzer(Logger log) {
@@ -57,7 +58,7 @@ public final class ClassUniquenessAnalyzer {
                 .getResolvedArtifacts();
 
         Map<String, Set<ModuleVersionIdentifier>> tempClassToJarsMap = new HashMap<>();
-        Map<String, Set<HashCode>> tempClassToHashCode = new HashMap<>();
+        Map<String, Set<HashCode>> tempClassToHashCodes = new HashMap<>();
 
         dependencies.stream().forEach(resolvedArtifact -> {
             File file = resolvedArtifact.getFile();
@@ -82,7 +83,7 @@ public final class ClassUniquenessAnalyzer {
                             className,
                             resolvedArtifact.getModuleVersion().getId());
 
-                    multiMapPut(tempClassToHashCode,
+                    multiMapPut(tempClassToHashCodes,
                             className,
                             inputStream.hash());
                 }
@@ -103,10 +104,10 @@ public final class ClassUniquenessAnalyzer {
                 });
 
         // figure out which classes have differing hashes
-        tempClassToHashCode.entrySet().stream()
+        tempClassToHashCodes.entrySet().stream()
                 .filter(entry -> entry.getValue().size() > 1)
                 .forEach(entry -> {
-                    entry.getValue().forEach(value -> multiMapPut(classToHashCode, entry.getKey(), value));
+                    entry.getValue().forEach(value -> multiMapPut(classToHashCodes, entry.getKey(), value));
                 });
 
         Instant after = Instant.now();
@@ -114,6 +115,11 @@ public final class ClassUniquenessAnalyzer {
                 tempClassToJarsMap.size(), dependencies.size(), Duration.between(before, after).toMillis());
     }
 
+    /**
+     * Any groups jars that all contain some identically named classes.
+     * Note: may contain non-scary duplicates - class files which are 100% identical, so their
+     * clashing name doesn't have any effect.
+     */
     public Collection<Set<ModuleVersionIdentifier>> getProblemJars() {
         return classToJarsMap.values();
     }
@@ -122,13 +128,19 @@ public final class ClassUniquenessAnalyzer {
         return jarsToClasses;
     }
 
-    public Set<String> getSharedClassesInProblemJars(Set<ModuleVersionIdentifier> problemJars) {
+    /**
+     * Class names that appear in all of the given jars.
+     */
+    public Set<String> getSharedClassesInProblemJars(Collection<ModuleVersionIdentifier> problemJars) {
         return jarsToClasses.get(problemJars);
     }
 
-    public Set<String> getDifferingSharedClassesInProblemJars(Set<ModuleVersionIdentifier> problemJars) {
-        return jarsToClasses.get(problemJars).stream()
-                .filter(classToHashCode::containsKey)
+    /**
+     * Class names which appear in all of the given jars and also do not have identical implementations.
+     */
+    public Set<String> getDifferingSharedClassesInProblemJars(Collection<ModuleVersionIdentifier> problemJars) {
+        return getSharedClassesInProblemJars(problemJars).stream()
+                .filter(classToHashCodes::containsKey)
                 .collect(toSet());
     }
 
