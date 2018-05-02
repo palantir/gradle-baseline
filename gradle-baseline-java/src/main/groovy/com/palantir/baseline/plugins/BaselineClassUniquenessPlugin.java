@@ -19,11 +19,10 @@ package com.palantir.baseline.plugins;
 import com.palantir.baseline.tasks.CheckClassUniquenessTask;
 import org.gradle.api.Project;
 
-@SuppressWarnings("checkstyle:designforextension") // making this 'final' breaks gradle
 public class BaselineClassUniquenessPlugin extends AbstractBaselinePlugin {
 
     @Override
-    public void apply(Project project) {
+    public final void apply(Project project) {
         project.getPlugins().withId("java", plugin -> {
             project.getTasks().create("checkClassUniqueness", CheckClassUniquenessTask.class, task -> {
                 task.setConfiguration(project.getConfigurations().getByName("runtime"));

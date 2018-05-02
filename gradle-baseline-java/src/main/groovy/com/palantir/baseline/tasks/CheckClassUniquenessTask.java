@@ -33,7 +33,6 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 
-@SuppressWarnings("checkstyle:designforextension") // making this 'final' breaks gradle
 public class CheckClassUniquenessTask extends DefaultTask {
 
     private Configuration configuration;
@@ -44,16 +43,16 @@ public class CheckClassUniquenessTask extends DefaultTask {
     }
 
     @Input
-    public Configuration getConfiguration() {
+    public final Configuration getConfiguration() {
         return configuration;
     }
 
-    public void setConfiguration(Configuration configuration) {
+    public final void setConfiguration(Configuration configuration) {
         this.configuration = configuration;
     }
 
     @TaskAction
-    public void checkForDuplicateClasses() {
+    public final void checkForDuplicateClasses() {
         ClassUniquenessAnalyzer analyzer = new ClassUniquenessAnalyzer(getLogger());
         analyzer.analyzeConfiguration(getConfiguration());
         boolean success = analyzer.getProblemJars().isEmpty();
@@ -105,7 +104,7 @@ public class CheckClassUniquenessTask extends DefaultTask {
      * This only exists to convince gradle this task is incremental.
      */
     @OutputFile
-    public File getResultFile() {
+    public final File getResultFile() {
         return getProject().getBuildDir().toPath()
                 .resolve(Paths.get("uniqueClassNames", configuration.getName()))
                 .toFile();
