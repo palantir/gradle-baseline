@@ -37,9 +37,9 @@ subset of *representative cases*.
 ## Unit Tests
 
 The examples in this section are written in Java using the standard
-[JUnit](http://junit.org/) and [Hamcrest](https://github.com/hamcrest)
-libraries for which a plethora of
-[tutorials](http://www.vogella.com/tutorials/JUnit/article.html) are
+[JUnit](http://junit.org/) and
+[AssertJ](http://joel-costigliola.github.io/assertj/) libraries for which a
+plethora of [tutorials](http://www.vogella.com/tutorials/JUnit/article.html) are
 available. Conceptually similar approaches exist in other languages.
 
 Unit tests validate that all code paths of small code units work as
@@ -63,9 +63,9 @@ Unit tests are typically executed before every build, both locally and
 on the CI servers. In order to make this feasible, consider the
 following guidelines:
 
-- Branches shared by more than one developer (e.g., `develop`,
-  `master`, `fix/...`) should never fail unit tests. Your Continuous Integration system should
-  refuse to merge a branch with failing tests, and overriding this
+- Branches shared by more than one developer (e.g., `develop`, `master`,
+  `feature/...`) should never fail unit tests. Your Continuous Integration
+  system should refuse to merge a branch with failing tests, and overriding this
   behavior is bad practice.
 - Unit tests need to be fast and light on computational resource. In
   particular, do not abuse unit tests for performance tests or testing
@@ -97,7 +97,7 @@ such as JUnit provide static methods that make for very literal testing
 code:
 
 ``` java
-assertThat(MyUtilityClass.upperCase("test string"), is("TEST STRING"));
+assertThat(MyUtilityClass.upperCase("test string")).isEqualTo("TEST STRING");
 ```
 
 **Test each code path separately**. Each test should exercise one code
@@ -107,10 +107,10 @@ path or distinct, atomic behavior.
 // BAD. Don't do this.
 @Test
 public void testSorting() {
-    assertThat(MySort.sort(ImmutableList.<String>of()), is(emptyCollectionOf(String.class)));
-    assertThat(MySort.sort(ImmutableList.of("a")), is(ImmutableList.of("a")));
-    assertThat(MySort.sort(ImmutableList.of("c", "b", "a")), is(ImmutableList.of("a", "b", "c")));
-    assertThat(MySort.sort(ImmutableList.of(3, 2, 1)), is(ImmutableList.of(1, 2, 3)));
+    assertThat(MySort.sort(ImmutableList.<String>of())).isEmpty();
+    assertThat(MySort.sort(ImmutableList.of("a"))).isEqualTo(ImmutableList.of("a"));
+    assertThat(MySort.sort(ImmutableList.of("c", "b", "a"))).isEqualTo(ImmutableList.of("a", "b", "c"));
+    assertThat(MySort.sort(ImmutableList.of(3, 2, 1))).isEqualTo(ImmutableList.of(1, 2, 3));
 
     // Test that sorting is stable.
     String a1 = "a";
@@ -127,19 +127,19 @@ public void testSorting() {
 // Good.
 @Test
 public void testSorting_emptyList() {
-    assertThat(MySort.sort(ImmutableList.<String>of()), is(emptyCollectionOf(String.class)));
+    assertThat(MySort.sort(ImmutableList.<String>of())).isEmpty();
 }
 
 @Test
 public void testSorting_singletonList() {
-    assertThat(MySort.sort(ImmutableList.of("a")), is(ImmutableList.of("a")));
+    assertThat(MySort.sort(ImmutableList.of("a"))).isEqualTo(ImmutableList.of("a"));
 }
 
 @Test
 public void testSorting_standardCases() {
-    assertThat(MySort.sort(ImmutableList.of("c", "b", "a")), is(ImmutableList.of("a", "b", "c")));
-    assertThat(MySort.sort(ImmutableList.of(3, 2, 1)), is(ImmutableList.of(1, 2, 3)));
-    assertThat(MySort.sort(ImmutableList.of(2, 1, 3)), is(ImmutableList.of(1, 2, 3)));
+    assertThat(MySort.sort(ImmutableList.of("c", "b", "a"))).isEqualTo(ImmutableList.of("a", "b", "c"));
+    assertThat(MySort.sort(ImmutableList.of(3, 2, 1))).isEqualTo(ImmutableList.of(1, 2, 3));
+    assertThat(MySort.sort(ImmutableList.of(2, 1, 3))).isEqualTo(ImmutableList.of(1, 2, 3));
 }
 
 @Test
@@ -198,7 +198,7 @@ tests for:
 **Use matchers instead of implementing equals()**. Override `equals()`
 when mandated by application or library logic, but *never* implement
 `equals()` merely in order to simplify your life in unit tests. Use
-Hamcrest matchers instead. This may seem cumbersome at first, but the
+AssertJ matchers instead. This may seem cumbersome at first, but the
 net benefit is huge as soon as more than one property of an object is
 tested or there is more than one test.
 
@@ -208,7 +208,7 @@ explicit, and concise, and it is almost always more stable and easier to
 set up a mock object than to instantiate and populate a full
 implementation of a particular class or interface. Testing functionality
 with real implementations is the duty of integration or end-to-end
-tests. See the section on Writing testable code\_ for an example.
+tests. See the section on [Writing testable code](#writing-testable-code) for an example.
 
 ### Writing Testable Code
 
@@ -264,7 +264,7 @@ connection is configurable through the `dbHost`, `dbUsername`, and
 @Test
 public void testGetValidUsers() {
     Backend backend = new Backend("localhost", "admin", "password");
-    assertThat(backend.getValidUsers(), is(ImmutableList.of("vanessa", "peter")));
+    assertThat(backend.getValidUsers()).isEqualTo(ImmutableList.of("vanessa", "peter"));
 }
 ```
 
