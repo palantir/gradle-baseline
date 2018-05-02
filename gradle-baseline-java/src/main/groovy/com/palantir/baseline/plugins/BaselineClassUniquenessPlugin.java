@@ -19,6 +19,13 @@ package com.palantir.baseline.plugins;
 import com.palantir.baseline.tasks.CheckClassUniquenessTask;
 import org.gradle.api.Project;
 
+/**
+ * This plugin is similar to https://github.com/nebula-plugins/gradle-lint-plugin/wiki/Duplicate-Classes-Rule
+ * but goes one step further and actually hashes any identically named classfiles to figure out if they're
+ * <i>completely</i> identical (and therefore safely interchangeable).
+ *
+ * The task only fails if it finds classes which have the same name but different implementations.
+ */
 public class BaselineClassUniquenessPlugin extends AbstractBaselinePlugin {
 
     @Override
