@@ -38,7 +38,7 @@ repositories {
 apply plugin: 'com.palantir.baseline-config'
 
 dependencies {
-    // Adds a dependency on the Baseline configuration files. Typically use 
+    // Adds a dependency on the Baseline configuration files. Typically use
     // the same version as the plugin itself.
     baseline "com.palantir.baseline:gradle-baseline-java-config:<version>@zip"
 }
@@ -261,6 +261,19 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 
 Run `./gradlew checkClassUniqueness` to scan all jars on the `runtime` classpath for identically named classes.
 This task will run automatically as part of `./gradlew build`.
+
+If you discover multiple jars on your classpath contain clashing classes, you should ideally try to fix them upstream and then depend on the fixed version.  If this is not feasible, you may be able to tell Gradle to [use a substituted dependency instead](https://docs.gradle.org/current/userguide/customizing_dependency_resolution_behavior.html#sec:module_substitution):
+
+```gradle
+configurations.all {
+    resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+        if (details.requested.name == 'log4j') {
+            details.useTarget group: 'org.slf4j', name: 'log4j-over-slf4j', version: '1.7.10'
+            details.because "prefer 'log4j-over-slf4j' over any version of 'log4j'"
+        }
+    }
+}
+```
 
 
 ### Copyright Checks
