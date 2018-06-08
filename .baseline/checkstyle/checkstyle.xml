@@ -128,6 +128,10 @@
             <message key="import.illegal" value="Must not import repackaged classes."/>
         </module>
         <module name="IllegalImport">
+            <property name="illegalPkgs" value="^org\.gradle\..*internal"/>
+            <message key="import.illegal" value="Do not rely on gradle internal classes as these may change in minor releases - use org.gradle.api versions instead."/>
+        </module>
+        <module name="IllegalImport">
             <property name="illegalPkgs" value="org.apache.commons.lang"/>
             <message key="import.illegal" value="lang is deprecated, use lang3 instead."/>
         </module>
