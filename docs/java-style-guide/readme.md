@@ -221,12 +221,6 @@ top-level class it contains, plus the `.java` extension.
 
 Source files are encoded in **UTF-8**.
 
-### File length: 2000 lines
-
-(not in [Google Java Style Guide](https://github.com/google/styleguide))
-
-Source files contain at most 2000 lines.
-
 ### Special characters
 
 #### Line ending: LF
@@ -332,10 +326,8 @@ Unused or redundant imports should be removed.
 
 Static imports of project-specific methods limit readability as they
 obfuscate method provenance. Static imports are thus discouraged with
-the exception of folklore methods under `org.junit.Assert`,
-`org.hamcrest.Matchers`, `org.assertj.core.api.Assertions`,
-`org.mockito.Mockito`, Guava `Preconditions`, and Apache Commons Lang3
-`Validate`.
+the exception of folklore methods such as Guava `Preconditions`, and
+Apache Commons Lang3 `Validate`.
 
 ### Class declaration
 

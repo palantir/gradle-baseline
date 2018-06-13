@@ -124,8 +124,12 @@
             <message key="import.illegal" value="Use JUnit 4-style (org.junit.*) test classes and assertions instead of JUnit 3 (junit.framework.*)."/>
         </module>
         <module name="IllegalImport"> <!-- Java Coding Guidelines: Import the canonical package -->
-            <property name="illegalPkgs" value="sun, org.elasticsearch.common.base, jersey.repackaged.com.google.common, com.google.api.client.repackaged, org.apache.hadoop.thirdparty.guava, com.clearspring.analytics.util, org.spark_project.guava"/>
+            <property name="illegalPkgs" value="org.elasticsearch.common.base, jersey.repackaged.com.google.common, com.google.api.client.repackaged, org.apache.hadoop.thirdparty.guava, com.clearspring.analytics.util, org.spark_project.guava"/>
             <message key="import.illegal" value="Must not import repackaged classes."/>
+        </module>
+        <module name="IllegalImport">
+            <property name="illegalPkgs" value="sun"/>
+            <message key="import.illegal" value="Must not use Oracle's Java implementation details. See http://www.oracle.com/technetwork/java/faq-sun-packages-142232.html ."/>
         </module>
         <module name="IllegalImport">
             <property name="illegalPkgs" value="org.apache.commons.lang"/>
@@ -324,7 +328,7 @@
             <property name="message" value="Redundant ''static'' modifier."/>
         </module>
         <module name="RegexpSinglelineJava">
-            <property name="format" value="(\/\/TODO)|(\/\/ TODO:)|(\/\/ TODO\(\))|(\/\/ TODO\(.*+\):[^ ])|(\/\/ TODO\(.*+\)[^:])|(\/\/ TODO\(.*[\s\(\)]+.*\):)"/>
+            <property name="format" value="\/\/TODO|\/\/ TODO(?!\([^()\s]+\): )"/>
             <property name="message" value="TODO format: // TODO(#issue): explanation"/>
         </module>
         <module name="RegexpSinglelineJava">

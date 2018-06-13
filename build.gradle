@@ -6,12 +6,13 @@ buildscript {
     }
 
     dependencies {
-        classpath 'gradle.plugin.com.palantir:gradle-circle-style:1.1.1'
+        classpath 'gradle.plugin.com.palantir:gradle-circle-style:1.1.2'
         classpath 'com.gradle.publish:plugin-publish-plugin:0.9.1'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.6'
-        classpath 'com.netflix.nebula:nebula-dependency-recommender:5.0.0'
+        classpath 'com.netflix.nebula:nebula-dependency-recommender:5.2.0'
         classpath 'com.netflix.nebula:nebula-publishing-plugin:5.1.4'
-        classpath 'com.palantir.baseline:gradle-baseline-java:0.17.1'
+        classpath 'com.palantir.baseline:gradle-baseline-java:0.20.1'
+        classpath 'com.palantir.configurationresolver:gradle-configuration-resolver-plugin:0.3.0'
     }
 }
 
@@ -41,6 +42,7 @@ allprojects {
     }
 
     apply plugin: 'org.inferred.processors'
+    apply plugin: 'com.palantir.configuration-resolver'
 
     apply plugin: 'nebula.dependency-recommender'
     dependencyRecommendations {

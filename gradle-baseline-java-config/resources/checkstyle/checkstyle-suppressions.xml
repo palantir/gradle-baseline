@@ -21,7 +21,5 @@
     <suppress files="\.(bdr|eot|gif|gzip|jar|json|otf|png|svg|ttf|woff|zip)$" checks="NewlineAtEndOfFile" />
 
     <!-- Generated code should not be subjected to checkstyle. -->
-    <suppress files="[/\\].*[/\\]generated_src[/\\]" checks="." />
-    <suppress files="[/\\].*[/\\]generated_testSrc[/\\]" checks="." />
-    <suppress files="[/\\].*[/\\]generated[/\\]" checks="." />
+    <suppress files="[/\\].*[/\\]generated.*[/\\]" checks="." />
 </suppressions>
