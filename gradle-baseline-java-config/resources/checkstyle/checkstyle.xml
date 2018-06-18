@@ -163,7 +163,7 @@
             <property name="message" value="Avoid using corresponding octal or Unicode escape."/>
         </module>
         <module name="IllegalType"> <!-- Java Coding Guide: Limit coupling on concrete classes -->
-            <property name="illegalClassNames" value="java.util.HashSet, java.util.HashMap, java.util.LinkedHashMap, java.util.LinkedHashSet, java.util.TreeSet, java.util.TreeMap, com.google.common.collect.ArrayListMultimap, com.google.common.collect.ForwardingListMultimap, com.google.common.collect.ForwardingMultimap, com.google.common.collect.ForwardingSetMultimap, com.google.common.collect.ForwardingSortedSetMultimap, com.google.common.collect.HashMultimap, com.google.common.collect.LinkedHashMultimap, com.google.common.collect.LinkedListMultimap, com.google.common.collect.TreeMultimap"/>
+            <property name="illegalClassNames" value="java.util.ArrayList, java.util.HashSet, java.util.HashMap, java.util.LinkedList, java.util.LinkedHashMap, java.util.LinkedHashSet, java.util.TreeSet, java.util.TreeMap, com.google.common.collect.ArrayListMultimap, com.google.common.collect.ForwardingListMultimap, com.google.common.collect.ForwardingMultimap, com.google.common.collect.ForwardingSetMultimap, com.google.common.collect.ForwardingSortedSetMultimap, com.google.common.collect.HashMultimap, com.google.common.collect.LinkedHashMultimap, com.google.common.collect.LinkedListMultimap, com.google.common.collect.TreeMultimap"/>
         </module>
         <module name="ImportOrder"> <!-- Java Style Guide: Ordering and spacing -->
             <property name="groups" value="/.*/"/>
