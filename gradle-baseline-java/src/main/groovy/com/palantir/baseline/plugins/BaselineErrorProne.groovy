@@ -32,7 +32,7 @@ class BaselineErrorProne extends AbstractBaselinePlugin {
             errorprone "com.palantir.baseline:baseline-error-prone:${extractVersionString()}"
         }
 
-        tasks.withType(JavaCompile) {
+        project.tasks.withType(JavaCompile) {
             options.compilerArgs += [
                     "-XepDisableWarningsInGeneratedCode",
                     "-Werror"
