@@ -19,6 +19,7 @@ package com.palantir.baseline.plugins
 import net.ltgt.gradle.errorprone.ErrorPronePlugin
 import org.gradle.api.GradleException
 import org.gradle.api.Project
+import org.gradle.api.tasks.compile.JavaCompile
 
 class BaselineErrorProne extends AbstractBaselinePlugin {
 
@@ -29,6 +30,13 @@ class BaselineErrorProne extends AbstractBaselinePlugin {
         project.dependencies {
             // TODO(rfink): This is somewhat ugly. Is there a better to add the processor dependency on the library?
             errorprone "com.palantir.baseline:baseline-error-prone:${extractVersionString()}"
+        }
+
+        tasks.withType(JavaCompile) {
+            options.compilerArgs += [
+                    "-XepDisableWarningsInGeneratedCode",
+                    "-Werror"
+            ]
         }
     }
 
