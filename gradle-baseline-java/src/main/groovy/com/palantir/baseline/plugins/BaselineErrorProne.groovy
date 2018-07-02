@@ -35,7 +35,8 @@ class BaselineErrorProne extends AbstractBaselinePlugin {
         project.tasks.withType(JavaCompile) {
             options.compilerArgs += [
                     "-XepDisableWarningsInGeneratedCode",
-                    "-Werror"
+                    "-Xep:EqualsHashCode:ERROR",
+                    "-Xep:EqualsIncompatibleType:ERROR",
             ]
         }
     }
