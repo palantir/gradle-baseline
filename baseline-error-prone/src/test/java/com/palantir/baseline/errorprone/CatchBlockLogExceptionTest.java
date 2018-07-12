@@ -51,6 +51,11 @@ public class CatchBlockLogExceptionTest {
         test(RuntimeException.class, "log.info(\"hello\");", Optional.of(errorMsg));
     }
 
+    @Test
+    public void testNoLogStatement() {
+        test(RuntimeException.class, "// Do nothing", Optional.empty());
+    }
+
     private void test(Class<? extends Throwable> exceptionClass, String catchStatement, Optional<String> error) {
         compilationHelper
                 .addSourceLines(
