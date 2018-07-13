@@ -39,7 +39,7 @@ import java.util.regex.Pattern;
         category = Category.ONE_OFF,
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = LinkType.CUSTOM,
-        severity = SeverityLevel.WARNING,
+        severity = SeverityLevel.ERROR,
         summary = "log statement in catch block does not log the caught exception.")
 public final class CatchBlockLogException extends BugChecker implements BugChecker.CatchTreeMatcher {
 
