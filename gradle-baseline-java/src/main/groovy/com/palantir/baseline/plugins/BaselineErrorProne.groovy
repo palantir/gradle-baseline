@@ -33,8 +33,9 @@ class BaselineErrorProne extends AbstractBaselinePlugin {
         }
 
         project.tasks.withType(JavaCompile) {
+            options.compilerArgumentProviders +=
+                    {["-Xbootclasspath/p:${project.getConfigurations().getByName("errorprone").getAsPath()}"]}
             options.compilerArgs += [
-                    "-Xbootclasspath/p:${project.getConfigurations().getByName("errorprone").getAsPath()}",
                     "-XepDisableWarningsInGeneratedCode",
                     "-Xep:EqualsHashCode:ERROR",
                     "-Xep:EqualsIncompatibleType:ERROR",
@@ -42,7 +43,7 @@ class BaselineErrorProne extends AbstractBaselinePlugin {
         }
 
         project.tasks.withType(Test) {
-            jvmArgs "-Xbootclasspath/p:${project.getConfigurations().getByName("errorprone").getAsPath()}"
+            jvmArgumentProviders {["-Xbootclasspath/p:${project.getConfigurations().getByName("errorprone").getAsPath()}"]}
         }
     }
 

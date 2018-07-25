@@ -28,7 +28,6 @@ class AbstractPluginTest extends Specification {
     @Rule
     TemporaryFolder folder = new TemporaryFolder()
 
-    File settingsFile
     File buildFile
     File settingsFile
     MultiProjectIntegrationHelper multiProject
@@ -37,9 +36,8 @@ class AbstractPluginTest extends Specification {
     def setup() {
         projectDir = folder.getRoot()
         buildFile = file('build.gradle')
-        settingsFile = file('settings.gradle')
         println("Build directory: \n" + projectDir.absolutePath)
-        multiProject = new MultiProjectIntegrationHelper(projectDir, settingsFile)
+        multiProject = new MultiProjectIntegrationHelper(projectDir, file("settings.gradle"))
     }
 
     GradleRunner with(String... tasks) {

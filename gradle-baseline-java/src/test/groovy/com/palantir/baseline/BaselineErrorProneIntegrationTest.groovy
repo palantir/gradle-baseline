@@ -24,16 +24,6 @@ import org.gradle.testkit.runner.TaskOutcome
  */
 class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
 
-    def standardSettingsFile = '''
-        pluginManagement {
-            repositories {
-                mavenLocal()  // for baseline artifacts
-                gradlePluginPortal()
-                jcenter()  // for error-prone artifacts
-            }
-        }
-    '''.stripIndent()
-
     def standardBuildFile = '''
         plugins {
             id 'java'
@@ -63,10 +53,6 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
             }
         }
         '''.stripIndent()
-
-    def setup() {
-        settingsFile << standardSettingsFile
-    }
 
     def 'Can apply plugin'() {
         when:
