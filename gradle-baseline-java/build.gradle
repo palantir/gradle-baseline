@@ -10,6 +10,7 @@ repositories {
 dependencies {
     compile gradleApi()
     compile 'net.ltgt.gradle:gradle-errorprone-plugin'
+    compile 'com.palantir:gradle-circle-style'
     compile 'com.google.guava:guava'
 
     testCompile gradleTestKit()

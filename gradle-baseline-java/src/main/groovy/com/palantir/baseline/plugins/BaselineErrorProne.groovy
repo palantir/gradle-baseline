@@ -17,7 +17,6 @@
 package com.palantir.baseline.plugins
 
 import net.ltgt.gradle.errorprone.ErrorPronePlugin
-import org.gradle.api.GradleException
 import org.gradle.api.Project
 import org.gradle.api.tasks.compile.JavaCompile
 
