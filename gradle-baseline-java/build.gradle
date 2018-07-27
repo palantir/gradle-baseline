@@ -56,7 +56,7 @@ pluginBundle {
             displayName = 'Palantir Baseline Class Uniqueness Plugin'
         }
         baselineCircleCiPlugin {
-            id = 'com,palantir.baseline-circleci'
+            id = 'com.palantir.baseline-circleci'
             displayName = 'Palantir Baseline CircleCi Plugin'
         }
     }
