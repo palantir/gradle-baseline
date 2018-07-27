@@ -22,6 +22,9 @@ class BaselineCircleCiIntegrationTest extends AbstractPluginTest {
             id 'java'
             id 'com.palantir.baseline-circleci'
         }
+        test {
+            environment 'CIRCLE_ARTIFACTS', "${projectDir}/artifacts"
+        }
     '''.stripIndent()
 
     def javaFile = '''
@@ -30,10 +33,12 @@ class BaselineCircleCiIntegrationTest extends AbstractPluginTest {
         '''.stripIndent()
 
     def 'collects html reports'() {
+        when:
         buildFile << standardBuildFile
         file('src/main/java/test/Test.java') << javaFile
 
         then:
         with('test').build()
+        directory("artifacts").exists()
     }
 }
