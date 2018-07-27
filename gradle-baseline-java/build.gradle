@@ -5,9 +5,9 @@ apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
     compile gradleApi()
-    compile 'net.ltgt.gradle:gradle-errorprone-plugin'
-    compile 'gradle.plugin.com.palantir:gradle-circle-style'
     compile 'com.google.guava:guava'
+    compile 'gradle.plugin.com.palantir:gradle-circle-style'
+    compile 'net.ltgt.gradle:gradle-errorprone-plugin'
 
     testCompile gradleTestKit()
     testCompile 'com.netflix.nebula:nebula-test' // for better temp directory junit rule only

@@ -38,7 +38,7 @@ class BaselineCircleCiIntegrationTest extends AbstractPluginTest {
         file('src/main/java/test/Test.java') << javaFile
 
         then:
-        with('test').build()
+        with('test', '--stacktrace', '--info').build()
         directory("artifacts").exists()
     }
 }
