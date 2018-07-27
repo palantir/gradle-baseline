@@ -14,13 +14,26 @@
  * limitations under the License.
  */
 
-package com.palantir.baseline.plugins
+package com.palantir.baseline
 
-import org.gradle.api.Project
+class BaselineCircleCiIntegrationTest extends AbstractPluginTest {
+    def standardBuildFile = '''
+        plugins {
+            id 'java'
+            id 'com.palantir.baseline-circleci'
+        }
+    '''.stripIndent()
 
-class BaselineCircleCI extends AbstractBaselinePlugin {
-    @Override
-    void apply(Project project) {
-        project.pluginManager.apply CircleStylePlugin
+    def javaFile = '''
+        package test;
+        public class Test { void test() {} }
+        '''.stripIndent()
+
+    def 'collects html reports'() {
+        buildFile << standardBuildFile
+        file('src/main/java/test/Test.java') << javaFile
+
+        then:
+        with('test').build()
     }
 }

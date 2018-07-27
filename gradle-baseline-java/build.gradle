@@ -3,14 +3,10 @@ apply plugin: 'java-gradle-plugin'
 apply from: "${rootDir}/gradle/publish-libs.gradle"
 apply from: "${rootDir}/gradle/java.gradle"
 
-repositories {
-    jcenter()
-}
-
 dependencies {
     compile gradleApi()
     compile 'net.ltgt.gradle:gradle-errorprone-plugin'
-    compile 'com.palantir:gradle-circle-style'
+    compile 'gradle.plugin.com.palantir:gradle-circle-style'
     compile 'com.google.guava:guava'
 
     testCompile gradleTestKit()
@@ -58,6 +54,10 @@ pluginBundle {
         baselineClassUniquenessPlugin {
             id = 'com.palantir.baseline-class-uniqueness'
             displayName = 'Palantir Baseline Class Uniqueness Plugin'
+        }
+        baselineCircleCiPlugin {
+            id = 'com,palantir.baseline-circleci'
+            displayName = 'Palantir Baseline CircleCi Plugin'
         }
     }
 }
