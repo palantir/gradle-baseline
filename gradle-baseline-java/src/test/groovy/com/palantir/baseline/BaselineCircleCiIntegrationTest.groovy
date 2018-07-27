@@ -16,29 +16,68 @@
 
 package com.palantir.baseline
 
+
+import org.gradle.testkit.runner.BuildResult
+import org.gradle.testkit.runner.TaskOutcome
+
 class BaselineCircleCiIntegrationTest extends AbstractPluginTest {
     def standardBuildFile = '''
         plugins {
             id 'java'
             id 'com.palantir.baseline-circleci'
         }
-        test {
-            environment 'CIRCLE_ARTIFACTS', "${projectDir}/artifacts"
+        
+        repositories {
+            jcenter()
+        }
+        
+        dependencies {
+            testCompile 'junit:junit:4.12'
         }
     '''.stripIndent()
 
     def javaFile = '''
         package test;
-        public class Test { void test() {} }
+        
+        import org.junit.Test;
+        
+        public class TestClass { 
+            @Test
+            public void test() {} 
+        }
         '''.stripIndent()
+
+    def setup() {
+        new File(System.getenv('CIRCLE_ARTIFACTS')).toPath().deleteDir()
+    }
 
     def 'collects html reports'() {
         when:
         buildFile << standardBuildFile
-        file('src/main/java/test/Test.java') << javaFile
+        file('src/test/java/test/TestClass.java') << javaFile
 
+        String artifacts = System.getenv('CIRCLE_ARTIFACTS')
         then:
-        with('test', '--stacktrace', '--info').build()
-        directory("artifacts").exists()
+        BuildResult result = with('test').build()
+        result.task(':test').outcome == TaskOutcome.SUCCESS
+        new File(new File(artifacts, 'junit'), 'test').list().toList().toSet() == ['classes', 'css', 'index.html', 'js', 'packages'].toSet()
+    }
+
+    def 'collects build profiles'() {
+        when:
+        buildFile << standardBuildFile
+
+        String artifacts = System.getenv('CIRCLE_ARTIFACTS')
+        Set<String> defaultDirs = ['js', 'css'].toSet()
+        then:
+        BuildResult result = with('build', '--profile').build()
+        result.task(':build').outcome == TaskOutcome.SUCCESS
+        Set<String> files = new File(artifacts, 'profile').list().toList().toSet()
+        files.size() == 3
+        files.containsAll(defaultDirs)
+        files.removeAll(defaultDirs)
+        String profileFile = files.iterator().next()
+        profileFile.startsWith("profile-")
+        profileFile.endsWith(".html")
     }
 }

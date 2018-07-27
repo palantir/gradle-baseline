@@ -15,6 +15,11 @@ dependencies {
     testCompile 'org.apache.commons:commons-io'
 }
 
+test {
+    environment 'CIRCLE_ARTIFACTS', "${buildDir}/artifacts"
+    environment 'CIRCLE_TEST_REPORTS', "${buildDir}/circle-reports"
+}
+
 // Create version file included in jar so that the plugin can know about its own version
 task createVersionFile {
     def versionFile = file("src/main/resources/baseline-version.txt")

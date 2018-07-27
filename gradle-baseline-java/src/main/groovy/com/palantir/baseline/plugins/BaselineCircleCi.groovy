@@ -17,12 +17,16 @@
 package com.palantir.baseline.plugins
 
 import com.palantir.gradle.circlestyle.CircleStylePlugin
-import org.gradle.BuildResult
+import java.text.SimpleDateFormat
 import org.gradle.api.Project
-import org.gradle.api.file.CopySpec
 import org.gradle.api.tasks.testing.Test
+import org.gradle.profile.BuildProfile
+import org.gradle.profile.ProfileListener
+import org.gradle.profile.ProfileReportRenderer
 
 class BaselineCircleCi extends AbstractBaselinePlugin {
+    private static final SimpleDateFormat FILE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss")
+
     @Override
     void apply(Project project) {
         project.pluginManager.apply CircleStylePlugin
@@ -41,14 +45,17 @@ class BaselineCircleCi extends AbstractBaselinePlugin {
                 test.getReports().getHtml().setDestination(junitReportsDir)
             })
         })
-        project.getGradle().buildFinished({BuildResult result ->
-            File profileDir = new File(project.getRootProject().getBuildDir(), "reports/profile")
-            if (profileDirexists()) {
-                project.getRootProject().copy({CopySpec copySpec ->
-                    copySpec.into(new File(circleArtifactsDir, "profile"))
-                    copySpec.from(profileDir)
-                })
-            }
-        })
+
+        if (project.getGradle().startParameter.profile) {
+            project.getGradle().addListener(new ProfileListener() {
+                @Override
+                void buildFinished(BuildProfile buildProfile) {
+                    ProfileReportRenderer renderer = new ProfileReportRenderer()
+                    File file = new File(circleArtifactsDir, "profile/profile-" +
+                            FILE_DATE_FORMAT.format(new Date(buildProfile.getBuildStarted())) + ".html")
+                    renderer.writeTo(buildProfile, file)
+                }
+            })
+        }
     }
 }
