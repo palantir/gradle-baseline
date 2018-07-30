@@ -18,10 +18,16 @@ package com.palantir.baseline.plugins;
 
 import com.palantir.gradle.circlestyle.CircleStylePlugin;
 import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.attribute.FileAttribute;
+import java.nio.file.attribute.PosixFilePermission;
+import java.nio.file.attribute.PosixFilePermissions;
 import java.text.SimpleDateFormat;
 import java.util.Date;
+import java.util.Set;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.profile.ProfileListener;
@@ -29,13 +35,21 @@ import org.gradle.profile.ProfileReportRenderer;
 
 public final class BaselineCircleCi extends AbstractBaselinePlugin {
     private static final SimpleDateFormat FILE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
+    private static final FileAttribute<Set<PosixFilePermission>> PERMS_ATTRIBUTE =
+            PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x"));
 
     @Override
     public void apply(Project project) {
         project.getPluginManager().apply(CircleStylePlugin.class);
-        final String circleArtifactsDir = System.getenv("CIRCLE_ARTIFACTS");
+        String circleArtifactsDir = System.getenv("CIRCLE_ARTIFACTS");
         if (circleArtifactsDir == null) {
             return;
+        }
+
+        try {
+            Files.createDirectories(Paths.get(circleArtifactsDir), PERMS_ATTRIBUTE);
+        } catch (IOException e) {
+            throw new RuntimeException("failed to create CIRCLE_ARTIFACTS directory", e);
         }
 
         project.getRootProject().allprojects(proj ->
