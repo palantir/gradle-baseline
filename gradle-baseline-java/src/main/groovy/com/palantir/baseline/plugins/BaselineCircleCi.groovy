@@ -17,6 +17,8 @@
 package com.palantir.baseline.plugins
 
 import com.palantir.gradle.circlestyle.CircleStylePlugin
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.text.SimpleDateFormat
 import org.gradle.api.Project
 import org.gradle.api.tasks.testing.Test
@@ -37,12 +39,12 @@ class BaselineCircleCi extends AbstractBaselinePlugin {
 
         project.rootProject.allprojects({Project p ->
             p.getTasks().withType(Test.class, {Test test ->
-                File junitReportsDir = new File(circleArtifactsDir, "junit")
+                Path junitReportsDir = Paths.get(circleArtifactsDir, "junit")
                 for (String component : test.getPath().substring(1).split(":")) {
-                    junitReportsDir = new File(junitReportsDir, component)
+                    junitReportsDir = junitReportsDir.resolve(component)
                 }
                 test.getReports().getHtml().setEnabled(true)
-                test.getReports().getHtml().setDestination(junitReportsDir)
+                test.getReports().getHtml().setDestination(junitReportsDir.toFile())
             })
         })
 
@@ -51,8 +53,8 @@ class BaselineCircleCi extends AbstractBaselinePlugin {
                 @Override
                 void buildFinished(BuildProfile buildProfile) {
                     ProfileReportRenderer renderer = new ProfileReportRenderer()
-                    File file = new File(circleArtifactsDir, "profile/profile-" +
-                            FILE_DATE_FORMAT.format(new Date(buildProfile.getBuildStarted())) + ".html")
+                    File file = Paths.get(circleArtifactsDir, "profile", "profile-" +
+                            FILE_DATE_FORMAT.format(new Date(buildProfile.getBuildStarted())) + ".html").toFile()
                     renderer.writeTo(buildProfile, file)
                 }
             })
