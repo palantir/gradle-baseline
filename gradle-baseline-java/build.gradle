@@ -3,19 +3,21 @@ apply plugin: 'java-gradle-plugin'
 apply from: "${rootDir}/gradle/publish-libs.gradle"
 apply from: "${rootDir}/gradle/java.gradle"
 
-repositories {
-    jcenter()
-}
-
 dependencies {
     compile gradleApi()
-    compile 'net.ltgt.gradle:gradle-errorprone-plugin'
     compile 'com.google.guava:guava'
+    compile 'gradle.plugin.com.palantir:gradle-circle-style'
+    compile 'net.ltgt.gradle:gradle-errorprone-plugin'
 
     testCompile gradleTestKit()
     testCompile 'com.netflix.nebula:nebula-test' // for better temp directory junit rule only
     testCompile 'net.lingala.zip4j:zip4j'
     testCompile 'org.apache.commons:commons-io'
+}
+
+test {
+    environment 'CIRCLE_ARTIFACTS', "${buildDir}/artifacts"
+    environment 'CIRCLE_TEST_REPORTS', "${buildDir}/circle-reports"
 }
 
 // Create version file included in jar so that the plugin can know about its own version
@@ -57,6 +59,10 @@ pluginBundle {
         baselineClassUniquenessPlugin {
             id = 'com.palantir.baseline-class-uniqueness'
             displayName = 'Palantir Baseline Class Uniqueness Plugin'
+        }
+        baselineCircleCiPlugin {
+            id = 'com.palantir.baseline-circleci'
+            displayName = 'Palantir Baseline CircleCi Plugin'
         }
     }
 }

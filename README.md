@@ -52,6 +52,7 @@ apply plugin: 'com.palantir.baseline-idea'
 apply plugin: 'org.inferred.processors'  // installs the "processor" configuration needed for baseline-error-prone
 apply plugin: 'com.palantir.baseline-error-prone'
 apply plugin: 'com.palantir.baseline-class-uniqueness'
+apply plugin: 'com.palantir.baseline-circleci'
 ```
 
 - Run ``./gradlew baselineUpdateConfig`` to download the config files
@@ -274,6 +275,12 @@ configurations.all {
     }
 }
 ```
+
+### CircleCi Plugin (com.palantir.baseline-circleci)
+
+Applies [`com.palantir.circle.style`](https://github.com/palantir/gradle-circle-style) plugin which configures junit xml test output to be written to $CIRCLE_TEST_REPORTS directory.
+Additionally enables html reports for tests and stores the output in $CIRCLE_ARTIFACTS and if gradle is run with `--profile`
+the profiling output is also persisted in $CIRCLE_ARTIFACTS.
 
 
 ### Copyright Checks

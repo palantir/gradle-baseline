@@ -16,7 +16,6 @@
 
 package com.palantir.baseline.plugins
 
-import groovy.text.SimpleTemplateEngine
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.plugins.ide.eclipse.EclipsePlugin

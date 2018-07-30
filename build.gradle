@@ -1,12 +1,12 @@
 buildscript {
     repositories {
         jcenter()
-        maven { url "https://plugins.gradle.org/m2/" }
+        gradlePluginPortal()
         maven { url  "http://palantir.bintray.com/releases" }
     }
 
     dependencies {
-        classpath 'gradle.plugin.com.palantir:gradle-circle-style:1.1.2'
+        classpath 'gradle.plugin.com.palantir:gradle-circle-style:1.1.4'
         classpath 'com.gradle.publish:plugin-publish-plugin:0.9.1'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.3'
         classpath 'com.netflix.nebula:nebula-dependency-recommender:6.0.0'
@@ -37,8 +37,8 @@ dependencies {
 allprojects {
     repositories {
         jcenter()
+        gradlePluginPortal()
         maven { url  "http://palantir.bintray.com/releases" }
-        maven { url "https://plugins.gradle.org/m2/" }
     }
 
     apply plugin: 'org.inferred.processors'
