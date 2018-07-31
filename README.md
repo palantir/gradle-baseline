@@ -278,10 +278,15 @@ configurations.all {
 
 ### CircleCi Plugin (com.palantir.baseline-circleci)
 
-Applies [`com.palantir.circle.style`](https://github.com/palantir/gradle-circle-style) plugin which configures junit xml test output to be written to $CIRCLE_TEST_REPORTS directory.
-Additionally enables html reports for tests and stores the output in $CIRCLE_ARTIFACTS and if gradle is run with `--profile`
-the profiling output is also persisted in $CIRCLE_ARTIFACTS.
+Automatically applies the following plugins:
 
+- [`com.palantir.circle.style`](https://github.com/palantir/gradle-circle-style) - this configures checkstyle xml output to be written to the `$CIRCLE_TEST_REPORTS` directory.
+- [`com.palantir.configuration-resolver`](https://github.com/palantir/gradle-configuration-resolver-plugin) - this adds a `./gradlew resolveConfigurations` task which is useful for caching on CI.
+
+Also, the plugin:
+
+1. stores the HTML output of tests in `$CIRCLE_ARTIFACTS/junit`
+1. stores the HTML reports from `--profile` into `$CIRCLE_ARTIFACTS/reports`
 
 ### Copyright Checks
 
