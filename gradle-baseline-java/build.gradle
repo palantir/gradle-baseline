@@ -7,6 +7,7 @@ dependencies {
     compile gradleApi()
     compile 'com.google.guava:guava'
     compile 'gradle.plugin.com.palantir:gradle-circle-style'
+    compile 'com.palantir.configurationresolver:gradle-configuration-resolver-plugin'
     compile 'net.ltgt.gradle:gradle-errorprone-plugin'
 
     testCompile gradleTestKit()

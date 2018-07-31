@@ -16,6 +16,7 @@
 
 package com.palantir.baseline.plugins;
 
+import com.palantir.configurationresolver.ConfigurationResolverPlugin;
 import com.palantir.gradle.circlestyle.CircleStylePlugin;
 import java.io.File;
 import java.io.IOException;
@@ -28,12 +29,13 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Set;
+import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.profile.ProfileListener;
 import org.gradle.profile.ProfileReportRenderer;
 
-public final class BaselineCircleCi extends AbstractBaselinePlugin {
+public final class BaselineCircleCi implements Plugin<Project> {
     private static final SimpleDateFormat FILE_DATE_FORMAT = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
     private static final FileAttribute<Set<PosixFilePermission>> PERMS_ATTRIBUTE =
             PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x"));
@@ -51,6 +53,10 @@ public final class BaselineCircleCi extends AbstractBaselinePlugin {
         } catch (IOException e) {
             throw new RuntimeException("failed to create CIRCLE_ARTIFACTS directory", e);
         }
+
+        // the `./gradlew resolveConfigurations` task is used on CI to download all jars for convenient caching
+        project.getRootProject().allprojects(proj ->
+                proj.getPluginManager().apply(ConfigurationResolverPlugin.class));
 
         project.getRootProject().allprojects(proj ->
                 proj.getTasks().withType(Test.class, test -> {
