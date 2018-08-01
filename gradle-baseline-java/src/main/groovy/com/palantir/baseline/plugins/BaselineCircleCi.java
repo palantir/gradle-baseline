@@ -43,12 +43,14 @@ public final class BaselineCircleCi implements Plugin<Project> {
     @Override
     public void apply(Project project) {
         project.getPluginManager().apply(CircleStylePlugin.class);
+
         // the `./gradlew resolveConfigurations` task is used on CI to download all jars for convenient caching
         project.getRootProject().allprojects(proj ->
                 proj.getPluginManager().apply(ConfigurationResolverPlugin.class));
 
         String circleArtifactsDir = System.getenv("CIRCLE_ARTIFACTS");
         if (circleArtifactsDir == null) {
+            project.getLogger().info("$CIRCLE_ARTIFACTS variable is not set, not configuring junit/profiling reports");
             return;
         }
 
