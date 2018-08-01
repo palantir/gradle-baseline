@@ -43,6 +43,10 @@ public final class BaselineCircleCi implements Plugin<Project> {
     @Override
     public void apply(Project project) {
         project.getPluginManager().apply(CircleStylePlugin.class);
+        // the `./gradlew resolveConfigurations` task is used on CI to download all jars for convenient caching
+        project.getRootProject().allprojects(proj ->
+                proj.getPluginManager().apply(ConfigurationResolverPlugin.class));
+
         String circleArtifactsDir = System.getenv("CIRCLE_ARTIFACTS");
         if (circleArtifactsDir == null) {
             return;
@@ -53,10 +57,6 @@ public final class BaselineCircleCi implements Plugin<Project> {
         } catch (IOException e) {
             throw new RuntimeException("failed to create CIRCLE_ARTIFACTS directory", e);
         }
-
-        // the `./gradlew resolveConfigurations` task is used on CI to download all jars for convenient caching
-        project.getRootProject().allprojects(proj ->
-                proj.getPluginManager().apply(ConfigurationResolverPlugin.class));
 
         project.getRootProject().allprojects(proj ->
                 proj.getTasks().withType(Test.class, test -> {
