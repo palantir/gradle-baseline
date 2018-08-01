@@ -42,6 +42,12 @@ public final class BaselineCircleCi implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
+        if (project != project.getRootProject()) {
+            project.getLogger().warn(
+                    "com.palantir.baseline-circleci should be applied to the root project only, not '{}'",
+                    project.getName());
+        }
+
         project.getPluginManager().apply(CircleStylePlugin.class);
 
         // the `./gradlew resolveConfigurations` task is used on CI to download all jars for convenient caching
