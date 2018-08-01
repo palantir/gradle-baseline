@@ -51,6 +51,15 @@ class BaselineCircleCiIntegrationTest extends AbstractPluginTest {
         new File(System.getenv('CIRCLE_ARTIFACTS')).toPath().deleteDir()
     }
 
+    def 'applies the configuration resolver plugin'() {
+        when:
+        buildFile << standardBuildFile
+
+        then:
+        BuildResult result = with('resolveConfigurations').build()
+        result.task(':resolveConfigurations').outcome == TaskOutcome.SUCCESS
+    }
+
     def 'collects html reports'() {
         when:
         buildFile << standardBuildFile

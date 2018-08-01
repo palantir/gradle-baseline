@@ -42,9 +42,21 @@ public final class BaselineCircleCi implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
+        if (project != project.getRootProject()) {
+            project.getLogger().warn(
+                    "com.palantir.baseline-circleci should be applied to the root project only, not '{}'",
+                    project.getName());
+        }
+
         project.getPluginManager().apply(CircleStylePlugin.class);
+
+        // the `./gradlew resolveConfigurations` task is used on CI to download all jars for convenient caching
+        project.getRootProject().allprojects(proj ->
+                proj.getPluginManager().apply(ConfigurationResolverPlugin.class));
+
         String circleArtifactsDir = System.getenv("CIRCLE_ARTIFACTS");
         if (circleArtifactsDir == null) {
+            project.getLogger().info("$CIRCLE_ARTIFACTS variable is not set, not configuring junit/profiling reports");
             return;
         }
 
@@ -53,10 +65,6 @@ public final class BaselineCircleCi implements Plugin<Project> {
         } catch (IOException e) {
             throw new RuntimeException("failed to create CIRCLE_ARTIFACTS directory", e);
         }
-
-        // the `./gradlew resolveConfigurations` task is used on CI to download all jars for convenient caching
-        project.getRootProject().allprojects(proj ->
-                proj.getPluginManager().apply(ConfigurationResolverPlugin.class));
 
         project.getRootProject().allprojects(proj ->
                 proj.getTasks().withType(Test.class, test -> {
