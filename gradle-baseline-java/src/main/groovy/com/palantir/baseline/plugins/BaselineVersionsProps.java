@@ -16,6 +16,9 @@
 
 package com.palantir.baseline.plugins;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 
@@ -23,6 +26,29 @@ public class BaselineVersionsProps implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
+        warnIfAppliedToSubproject(project);
 
+        File versionsPropsFile = createVersionsPropsFileIfNecessary(project);
     }
+
+    private static File createVersionsPropsFileIfNecessary(Project project) {
+        File file = project.file("versions.props");
+        if (!file.canRead()) {
+            try {
+                Files.createFile(file.toPath());
+            } catch (IOException e) {
+                project.getLogger().warn("Unable to create empty versions.props file, please create this manually", e);
+            }
+        }
+        return file;
+    }
+
+    private static void warnIfAppliedToSubproject(Project project) {
+        if (project != project.getRootProject()) {
+            project.getLogger().warn(
+                    "com.palantir.baseline-versions-props should be applied to the root project only, not '{}'",
+                    project.getName());
+        }
+    }
+
 }
