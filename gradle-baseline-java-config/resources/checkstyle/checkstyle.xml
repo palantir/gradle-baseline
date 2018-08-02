@@ -48,12 +48,6 @@
         <property name="file" value="${config_loc}/checkstyle-suppressions.xml"/>
     </module>
     <module name="SuppressWarningsFilter"/> <!-- baseline-gradle: README.md -->
-    <module name="SuppressionCommentFilter"/> <!-- baseline-gradle: README.md -->
-    <module name="SuppressionCommentFilter">
-        <property name="offCommentFormat" value="CHECKSTYLE.OFF\: ([\w\|]+)"/>
-        <property name="onCommentFormat" value="CHECKSTYLE.ON\: ([\w\|]+)"/>
-        <property name="checkFormat" value="$1"/>
-    </module>
     <module name="TreeWalker">
         <module name="AbbreviationAsWordInName"> <!-- Java Style Guide: Camel case : defined -->
             <property name="ignoreFinal" value="false"/>
@@ -360,6 +354,12 @@
         <module name="StaticVariableName"/> <!-- Java Style Guide: Naming -->
         <module name="StringLiteralEquality"/> <!-- Java Coding Guidelines: String equality: use String#equals -->
         <module name="SuperClone"/>
+        <module name="SuppressionCommentFilter"/> <!-- baseline-gradle: README.md -->
+        <module name="SuppressionCommentFilter">
+            <property name="offCommentFormat" value="CHECKSTYLE.OFF\: ([\w\|]+)"/>
+            <property name="onCommentFormat" value="CHECKSTYLE.ON\: ([\w\|]+)"/>
+            <property name="checkFormat" value="$1"/>
+        </module>
         <module name="SuppressWarnings">
             <property name="format" value="serial"/>
         </module>
