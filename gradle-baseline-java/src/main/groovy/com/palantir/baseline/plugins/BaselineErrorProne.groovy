@@ -18,7 +18,9 @@ package com.palantir.baseline.plugins
 
 import net.ltgt.gradle.errorprone.ErrorPronePlugin
 import org.gradle.api.Project
+import org.gradle.api.artifacts.Configuration
 import org.gradle.api.tasks.compile.JavaCompile
+import org.gradle.api.tasks.javadoc.Javadoc
 import org.gradle.api.tasks.testing.Test
 
 class BaselineErrorProne extends AbstractBaselinePlugin {
@@ -32,10 +34,11 @@ class BaselineErrorProne extends AbstractBaselinePlugin {
             errorprone "com.palantir.baseline:baseline-error-prone:${extractVersionString()}"
         }
 
+        def errorProneConf = project.getConfigurations().getByName("errorprone")
         project.afterEvaluate { p ->
             p.tasks.withType(JavaCompile) {
                 options.compilerArgs += [
-                        "-Xbootclasspath/p:${project.getConfigurations().getByName("errorprone").getAsPath()}",
+                        "-Xbootclasspath/p:${errorProneConf.getAsPath()}",
                         "-XepDisableWarningsInGeneratedCode",
                         "-Xep:EqualsHashCode:ERROR",
                         "-Xep:EqualsIncompatibleType:ERROR",
@@ -43,7 +46,12 @@ class BaselineErrorProne extends AbstractBaselinePlugin {
             }
 
             p.tasks.withType(Test) {
-                jvmArgs "-Xbootclasspath/p:${project.getConfigurations().getByName("errorprone").getAsPath()}"
+                jvmArgs "-Xbootclasspath/p:${errorProneConf.getAsPath()}"
+            }
+
+            p.tasks.withType(Javadoc) {
+                options.bootClasspath.addAll(errorProneConf.resolve())
+                options.bootClasspath.addAll(System.properties["sun.boot.class.path"].split(File.pathSeparator).collect{new File(it)})
             }
         }
     }
