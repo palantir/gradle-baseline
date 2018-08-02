@@ -36,8 +36,9 @@ class AbstractPluginTest extends Specification {
     def setup() {
         projectDir = folder.getRoot()
         buildFile = file('build.gradle')
+        settingsFile = file('settings.gradle')
         println("Build directory: \n" + projectDir.absolutePath)
-        multiProject = new MultiProjectIntegrationHelper(projectDir, file("settings.gradle"))
+        multiProject = new MultiProjectIntegrationHelper(projectDir, settingsFile)
     }
 
     GradleRunner with(String... tasks) {
