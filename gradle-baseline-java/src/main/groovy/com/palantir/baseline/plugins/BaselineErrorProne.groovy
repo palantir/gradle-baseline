@@ -49,6 +49,8 @@ class BaselineErrorProne extends AbstractBaselinePlugin {
             }
 
             p.tasks.withType(Javadoc) {
+                // Add error-prone to bootstrap classpath of javadoc task.
+                // Since there's no way of appending to the classpath we need to explicitly add current bootstrap classpath.
                 options.bootClasspath.addAll(errorProneConf.resolve())
                 options.bootClasspath.addAll(System.properties["sun.boot.class.path"].split(File.pathSeparator).collect{new File(it)})
             }
