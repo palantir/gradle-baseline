@@ -6,8 +6,9 @@ com.google.guava:guava = 21.0
 com.palantir.baseline:* = 0.25.1
 com.palantir.configurationresolver:gradle-configuration-resolver-plugin = 0.3.0
 com.palantir.safe-logging:* = 1.4.0
-org.slf4j:slf4j-api = 1.7.25
+gradle.plugin.com.palantir:gradle-circle-style = 1.1.4
 net.ltgt.gradle:gradle-errorprone-plugin = 0.0.16
+org.slf4j:slf4j-api = 1.7.25
 
 # test deps
 com.netflix.nebula:nebula-test = 6.5.0
