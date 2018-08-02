@@ -289,7 +289,7 @@ Also, the plugin:
 1. stores the HTML reports from `--profile` into `$CIRCLE_ARTIFACTS/reports`
 
 
-## com.palantir.baseline-versions-props
+## com.palantir.baseline-versions
 
 Sources version numbers from a root level `versions.props` file.  This plugin should be applied in an `allprojects` block. It is effectively a shorthand for the following:
 

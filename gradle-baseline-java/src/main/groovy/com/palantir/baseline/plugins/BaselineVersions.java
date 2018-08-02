@@ -49,7 +49,7 @@ import org.gradle.api.Project;
  * }
  * </pre>
  */
-public final class BaselineVersionsProps implements Plugin<Project> {
+public final class BaselineVersions implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {

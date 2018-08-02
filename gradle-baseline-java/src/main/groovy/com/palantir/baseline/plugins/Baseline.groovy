@@ -31,7 +31,7 @@ class Baseline implements Plugin<Project> {
         project.plugins.apply BaselineIdea
         project.plugins.apply BaselineErrorProne
         project.plugins.apply BaselineCircleCi
-        project.plugins.apply BaselineVersionsProps
+        project.plugins.apply BaselineVersions
 
         // TODO(dfox): enable this when it has been validated on a few real projects
         // project.plugins.apply BaselineClassUniquenessPlugin
