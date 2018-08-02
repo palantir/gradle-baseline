@@ -26,7 +26,7 @@ import spock.lang.Specification
 class AbstractPluginTest extends Specification {
 
     @Rule
-    TemporaryFolder folder = new TemporaryFolder();
+    TemporaryFolder folder = new TemporaryFolder()
 
     File buildFile
     File settingsFile
