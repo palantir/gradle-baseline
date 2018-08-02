@@ -312,6 +312,14 @@ allprojects {
 }
 ```
 
+Features from nebula.dependency-recommender are still available (for now), so you can configure BOMs:
+
+```gradle
+dependencyRecommendations {
+    addFirst mavenBom(module: 'com.palantir.product:your-bom')
+}
+```
+
 ### Copyright Checks
 
 By default Baseline enforces Palantir copyright at the beginning of files. To change this, edit the template copyright
