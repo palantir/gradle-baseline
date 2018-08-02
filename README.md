@@ -312,11 +312,11 @@ allprojects {
 }
 ```
 
-Features from nebula.dependency-recommender are still available (for now), so you can configure BOMs:
+Features from [nebula.dependency-recommender](https://github.com/nebula-plugins/nebula-dependency-recommender-plugin) are still available (for now), so you can configure BOMs:
 
 ```gradle
 dependencyRecommendations {
-    addFirst mavenBom(module: 'com.palantir.product:your-bom')
+    mavenBom module: 'com.palantir.product:your-bom'
 }
 ```
 
