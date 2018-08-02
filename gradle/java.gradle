@@ -5,9 +5,3 @@ sourceCompatibility = 1.8
 if (System.env.CI) {
     test.reports.junitXml.destination = file("/tmp/store_test_results/${project.name}")
 }
-
-configurations.errorprone {
-    resolutionStrategy {
-        force('com.google.guava:guava:23.5-jre')
-    }
-}

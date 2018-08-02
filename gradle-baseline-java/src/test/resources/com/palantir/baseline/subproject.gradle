@@ -14,25 +14,32 @@
  * limitations under the License.
  */
 
-package com.palantir.baseline
+plugins {
+    id 'java'
+    id 'checkstyle'
+    id 'findbugs'
+}
 
+repositories {
+    jcenter()
+}
 
-import com.palantir.baseline.plugins.BaselineCircleCi
-import org.gradle.api.Project
-import org.gradle.testfixtures.ProjectBuilder
-import spock.lang.Specification
+sourceCompatibility = 1.7
 
-class BaselineCircleCiTest extends Specification {
-    private Project project
+dependencies {
+    testCompile 'junit:junit:4.12'
+    testCompile 'org.assertj:assertj-core:3.10.0'
+}
 
-    def setup() {
-        project = ProjectBuilder.builder().build()
-        project.plugins.apply 'java'
-        project.plugins.apply BaselineCircleCi
+tasks.withType(Checkstyle) {
+    reports {
+        xml.enabled = false
+        html.enabled = true
     }
+}
 
-    def baselineCircleCiApplied() {
-        expect:
-        project.plugins.hasPlugin(BaselineCircleCi.class)
+task failingTask {
+    doLast {
+        throw new RuntimeException("This task will always fail")
     }
 }
