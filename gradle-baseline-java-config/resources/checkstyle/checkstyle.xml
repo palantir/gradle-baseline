@@ -165,6 +165,10 @@
         <module name="IllegalType"> <!-- Java Coding Guide: Limit coupling on concrete classes -->
             <property name="illegalClassNames" value="java.util.ArrayList, java.util.HashSet, java.util.HashMap, java.util.LinkedList, java.util.LinkedHashMap, java.util.LinkedHashSet, java.util.TreeSet, java.util.TreeMap, com.google.common.collect.ArrayListMultimap, com.google.common.collect.ForwardingListMultimap, com.google.common.collect.ForwardingMultimap, com.google.common.collect.ForwardingSetMultimap, com.google.common.collect.ForwardingSortedSetMultimap, com.google.common.collect.HashMultimap, com.google.common.collect.LinkedHashMultimap, com.google.common.collect.LinkedListMultimap, com.google.common.collect.TreeMultimap"/>
         </module>
+        <module name="IllegalType">
+            <property name="illegalClassNames" value="com.google.common.cache.CacheBuilder, com.google.common.cache.Cache, com.google.common.cache.LoadingCache"/>
+            <message key="illegal.type" value="Do not use Guava caches, they are outperformed by and harder to use than Caffeine caches"/>
+        </module>
         <module name="ImportOrder"> <!-- Java Style Guide: Ordering and spacing -->
             <property name="groups" value="/.*/"/>
             <property name="option" value="top"/>
