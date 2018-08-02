@@ -18,9 +18,13 @@ package com.palantir.baseline
 
 import com.palantir.baseline.plugins.BaselineCheckstyle
 import com.palantir.baseline.plugins.BaselineEclipse
+import nebula.test.multiproject.MultiProjectIntegrationHelper
 import org.gradle.api.Project
+import org.gradle.api.plugins.quality.Checkstyle
 import org.gradle.api.plugins.quality.CheckstylePlugin
 import org.gradle.testfixtures.ProjectBuilder
+import org.junit.Rule
+import org.junit.rules.TemporaryFolder
 import spock.lang.Specification
 
 class BaselineCheckstyleTest extends Specification {
@@ -42,11 +46,25 @@ class BaselineCheckstyleTest extends Specification {
         project.plugins.hasPlugin(CheckstylePlugin.class)
     }
 
+    def includesResources() {
+        def file = new File(project.projectDir, 'src/test/resources/checkstyle.xml')
+        file.getParentFile().mkdirs()
+        when:
+        file << '''
+        <?xml version="1.0"?>
+        '''.stripIndent()
+
+        then:
+        def tasks = project.tasks.withType(Checkstyle.class)
+        for (Checkstyle task : tasks) {
+            assert task.getSource().getFiles().contains(file)
+        }
+    }
+
     def appliesEclipseNatures() {
         when:
         project.plugins.apply 'eclipse'
         project.plugins.apply BaselineEclipse
-        project.plugins.findPlugin(BaselineCheckstyle).configureCheckstyleForEclipse()
 
         then:
         project.eclipse.project.natures.contains("net.sf.eclipsecs.core.CheckstyleNature")
