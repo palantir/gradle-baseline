@@ -27,7 +27,7 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 
 /**
- * Transitively applies nebula.dependency recommender to replace the following common gradle snippet:
+ * Transitively applies nebula.dependency recommender to replace the following common gradle snippet.
  *
  * <pre>
  * buildscript {
@@ -53,46 +53,35 @@ public final class BaselineVersionsProps implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
-        warnIfAppliedToSubproject(project);
+        File rootVersionsPropsFile = rootVersionsPropsFile(project);
 
-        File versionsPropsFile = rootVersionsPropsFile(project);
+        // apply plugin: "nebula.dependency-recommender"
+        project.getPluginManager().apply(DependencyRecommendationsPlugin.class);
 
-        project.getRootProject().allprojects(proj -> {
-            // apply plugin: "nebula.dependency-recommender"
-            proj.getPluginManager().apply(DependencyRecommendationsPlugin.class);
+        // get dependencyRecommendations extension
+        RecommendationProviderContainer extension = project.getExtensions()
+                .getByType(RecommendationProviderContainer.class);
 
-            // get dependencyRecommendations extension
-            RecommendationProviderContainer extension = proj.getExtensions().getByType(
-                    RecommendationProviderContainer.class);
+        extension.setStrategy(RecommendationStrategies.OverrideTransitives); // default is 'ConflictResolved'
 
-            extension.setStrategy(RecommendationStrategies.OverrideTransitives); // default is 'ConflictResolved'
+        extension.propertiesFile(ImmutableMap.of("file", rootVersionsPropsFile));
 
-            extension.propertiesFile(ImmutableMap.of("file", versionsPropsFile));
-
-            // allow nested projects to specify their own nested versions.props file
-            if (proj != proj.getRootProject() && proj.file("versions.props").exists()) {
-                extension.propertiesFile(ImmutableMap.of("file", proj.file("versions.props")));
-            }
-        });
+        // allow nested projects to specify their own nested versions.props file
+        if (project != project.getRootProject() && project.file("versions.props").exists()) {
+            extension.propertiesFile(ImmutableMap.of("file", project.file("versions.props")));
+        }
     }
 
     private static File rootVersionsPropsFile(Project project) {
         File file = project.getRootProject().file("versions.props");
         if (!file.canRead()) {
             try {
+                project.getLogger().info("Could not find 'versions.props' file, creating...");
                 Files.createFile(file.toPath());
             } catch (IOException e) {
                 project.getLogger().warn("Unable to create empty versions.props file, please create this manually", e);
             }
         }
         return file;
-    }
-
-    private static void warnIfAppliedToSubproject(Project project) {
-        if (project != project.getRootProject()) {
-            project.getLogger().warn(
-                    "com.palantir.baseline-versions-props should be applied to the root project only, not '{}'",
-                    project.getName());
-        }
     }
 }
