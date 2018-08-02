@@ -32,17 +32,19 @@ class BaselineErrorProne extends AbstractBaselinePlugin {
             errorprone "com.palantir.baseline:baseline-error-prone:${extractVersionString()}"
         }
 
-        project.tasks.withType(JavaCompile) {
-            options.compilerArgs += [
-                    "-Xbootclasspath/p:${-> project.getConfigurations().getByName("errorprone").getAsPath()}",
-                    "-XepDisableWarningsInGeneratedCode",
-                    "-Xep:EqualsHashCode:ERROR",
-                    "-Xep:EqualsIncompatibleType:ERROR",
-            ]
-        }
+        project.afterEvaluate { p ->
+            p.tasks.withType(JavaCompile) {
+                options.compilerArgs += [
+                        "-Xbootclasspath/p:${-> project.getConfigurations().getByName("errorprone").getAsPath()}",
+                        "-XepDisableWarningsInGeneratedCode",
+                        "-Xep:EqualsHashCode:ERROR",
+                        "-Xep:EqualsIncompatibleType:ERROR",
+                ]
+            }
 
-        project.tasks.withType(Test) {
-            jvmArgs "-Xbootclasspath/p:${-> project.getConfigurations().getByName("errorprone").getAsPath()}"
+            p.tasks.withType(Test) {
+                jvmArgs "-Xbootclasspath/p:${-> project.getConfigurations().getByName("errorprone").getAsPath()}"
+            }
         }
     }
 
