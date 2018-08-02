@@ -26,7 +26,30 @@ import netflix.nebula.dependency.recommender.provider.RecommendationProviderCont
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 
-public class BaselineVersionsProps implements Plugin<Project> {
+/**
+ * Transitively applies nebula.dependency recommender to replace the following common gradle snippet:
+ *
+ * <pre>
+ * buildscript {
+ *     dependencies {
+ *         classpath 'com.netflix.nebula:nebula-dependency-recommender:5.2.0'
+ *     }
+ * }
+ *
+ * allprojects {
+ *     apply plugin: 'nebula.dependency-recommender'
+ *
+ *     dependencyRecommendations {
+ *         strategy OverrideTransitives
+ *         propertiesFile file: project.rootProject.file('versions.props')
+ *         if (file('versions.props').exists()) {
+ *             propertiesFile file: project.file('versions.props')
+ *         }
+ *     }
+ * }
+ * </pre>
+ */
+public final class BaselineVersionsProps implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
@@ -43,7 +66,7 @@ public class BaselineVersionsProps implements Plugin<Project> {
                     RecommendationProviderContainer.class);
 
             extension.setStrategy(RecommendationStrategies.OverrideTransitives); // default is 'ConflictResolved'
-            
+
             extension.propertiesFile(ImmutableMap.of("file", versionsPropsFile));
 
             // allow nested projects to specify their own nested versions.props file
