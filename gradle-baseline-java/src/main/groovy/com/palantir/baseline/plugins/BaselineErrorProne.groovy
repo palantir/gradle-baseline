@@ -19,6 +19,8 @@ package com.palantir.baseline.plugins
 import net.ltgt.gradle.errorprone.ErrorPronePlugin
 import org.gradle.api.Project
 import org.gradle.api.tasks.compile.JavaCompile
+import org.gradle.api.tasks.javadoc.Javadoc
+import org.gradle.api.tasks.testing.Test
 
 class BaselineErrorProne extends AbstractBaselinePlugin {
 
@@ -31,12 +33,27 @@ class BaselineErrorProne extends AbstractBaselinePlugin {
             errorprone "com.palantir.baseline:baseline-error-prone:${extractVersionString()}"
         }
 
-        project.tasks.withType(JavaCompile) {
-            options.compilerArgs += [
-                    "-XepDisableWarningsInGeneratedCode",
-                    "-Xep:EqualsHashCode:ERROR",
-                    "-Xep:EqualsIncompatibleType:ERROR",
-            ]
+        def errorProneConf = project.getConfigurations().getByName("errorprone")
+        project.afterEvaluate { p ->
+            p.tasks.withType(JavaCompile) {
+                options.compilerArgs += [
+                        "-Xbootclasspath/p:${errorProneConf.getAsPath()}",
+                        "-XepDisableWarningsInGeneratedCode",
+                        "-Xep:EqualsHashCode:ERROR",
+                        "-Xep:EqualsIncompatibleType:ERROR",
+                ]
+            }
+
+            p.tasks.withType(Test) {
+                jvmArgs "-Xbootclasspath/p:${errorProneConf.getAsPath()}"
+            }
+
+            p.tasks.withType(Javadoc) {
+                // Add error-prone to bootstrap classpath of javadoc task.
+                // Since there's no way of appending to the classpath we need to explicitly add current bootstrap classpath.
+                options.bootClasspath.addAll(errorProneConf.resolve())
+                options.bootClasspath.addAll(System.properties["sun.boot.class.path"].split(File.pathSeparator).collect{new File(it)})
+            }
         }
     }
 
