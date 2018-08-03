@@ -144,6 +144,7 @@
             <message key="import.illegal" value="math is deprecated, use math3 instead."/>
         </module>
         <module name="IllegalImport">
+            <property name="id" value="BanLoggingImplementations"/>
             <property name="illegalPkgs" value="org.apache.log4j, org.apache.logging.log4j, java.util.logging, ch.qos.logback"/>
             <message key="import.illegal" value="Use SLF4J instead of a logging framework directly."/>
         </module>
@@ -166,6 +167,7 @@
             <property name="illegalClassNames" value="java.util.ArrayList, java.util.HashSet, java.util.HashMap, java.util.LinkedList, java.util.LinkedHashMap, java.util.LinkedHashSet, java.util.TreeSet, java.util.TreeMap, com.google.common.collect.ArrayListMultimap, com.google.common.collect.ForwardingListMultimap, com.google.common.collect.ForwardingMultimap, com.google.common.collect.ForwardingSetMultimap, com.google.common.collect.ForwardingSortedSetMultimap, com.google.common.collect.HashMultimap, com.google.common.collect.LinkedHashMultimap, com.google.common.collect.LinkedListMultimap, com.google.common.collect.TreeMultimap"/>
         </module>
         <module name="IllegalType">
+            <property name="id" value="BanGuavaCaches"/>
             <property name="illegalClassNames" value="com.google.common.cache.CacheBuilder, com.google.common.cache.Cache, com.google.common.cache.LoadingCache"/>
             <message key="illegal.type" value="Do not use Guava caches, they are outperformed by and harder to use than Caffeine caches"/>
         </module>
