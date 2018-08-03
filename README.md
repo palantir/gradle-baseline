@@ -288,6 +288,38 @@ Also, the plugin:
 1. stores the HTML output of tests in `$CIRCLE_ARTIFACTS/junit`
 1. stores the HTML reports from `--profile` into `$CIRCLE_ARTIFACTS/reports`
 
+
+## com.palantir.baseline-versions
+
+Sources version numbers from a root level `versions.props` file.  This plugin should be applied in an `allprojects` block. It is effectively a shorthand for the following:
+
+```gradle
+buildscript {
+    dependencies {
+        classpath 'com.netflix.nebula:nebula-dependency-recommender:x.y.z'
+    }
+}
+
+allprojects {
+    apply plugin: 'nebula.dependency-recommender'
+    dependencyRecommendations {
+        strategy OverrideTransitives // use ConflictResolved to undo this
+        propertiesFile file: project.rootProject.file('versions.props')
+        if (file('versions.props').exists()) {
+            propertiesFile file: project.file('versions.props')
+        }
+    }
+}
+```
+
+Features from [nebula.dependency-recommender](https://github.com/nebula-plugins/nebula-dependency-recommender-plugin) are still available (for now), so you can configure BOMs:
+
+```gradle
+dependencyRecommendations {
+    mavenBom module: 'com.palantir.product:your-bom'
+}
+```
+
 ### Copyright Checks
 
 By default Baseline enforces Palantir copyright at the beginning of files. To change this, edit the template copyright
