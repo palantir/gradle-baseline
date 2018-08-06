@@ -27,10 +27,9 @@ class BaselineTest extends Specification {
     private Project subProject
 
     def setup() {
-        project = ProjectBuilder.builder().build()
-        subProject = ProjectBuilder.builder().withParent(project).build()
+        project = ProjectBuilder.builder().withName('rootProject').build()
+        subProject = ProjectBuilder.builder().withParent(project).withName('subProject').build()
         project.plugins.apply Baseline
-        project.evaluate()
     }
 
     def appliesToRootProjectAndSubprojects() {
@@ -41,7 +40,7 @@ class BaselineTest extends Specification {
         hasAllPlugins(subProject)
     }
 
-    def hasAllPlugins(Project p) {
+    void hasAllPlugins(Project p) {
         assert p.pluginManager.hasPlugin('com.palantir.baseline-checkstyle')
         assert p.pluginManager.hasPlugin('com.palantir.baseline-eclipse')
         assert p.pluginManager.hasPlugin('com.palantir.baseline-error-prone')
