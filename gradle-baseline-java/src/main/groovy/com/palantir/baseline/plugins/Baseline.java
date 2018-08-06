@@ -39,4 +39,5 @@ public final class Baseline implements Plugin<Project> {
             // project.getPluginManager().apply(BaselineClassUniquenessPlugin.class);
         });
     }
+
 }
