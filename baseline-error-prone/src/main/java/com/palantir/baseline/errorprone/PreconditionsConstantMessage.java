@@ -1,5 +1,5 @@
 /*
- * Copyright 2017 Palantir Technologies, Inc. All rights reserved.
+ * (c) Copyright 2017 Palantir Technologies Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
 @AutoService(BugChecker.class)
 @BugPattern(
         name = "PreconditionsConstantMessage",
-        category = Category.GUAVA,
+        category = Category.ONE_OFF,
         severity = SeverityLevel.ERROR,
         summary = "Allow only constant messages to Preconditions.checkX() methods")
 public final class PreconditionsConstantMessage extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
@@ -45,7 +45,7 @@ public final class PreconditionsConstantMessage extends BugChecker implements Bu
     private static final Matcher<ExpressionTree> PRECONDITIONS_METHOD =
             Matchers.anyOf(
                     MethodMatchers.staticMethod()
-                            .onClass("com.google.common.base.Preconditions")
+                            .onClassAny("com.google.common.base.Preconditions", "com.palantir.logsafe.Preconditions")
                             .withNameMatching(Pattern.compile("checkArgument|checkState|checkNotNull")));
 
     private final Matcher<ExpressionTree> compileTimeConstExpressionMatcher =
@@ -69,6 +69,7 @@ public final class PreconditionsConstantMessage extends BugChecker implements Bu
         }
 
         return buildDescription(tree).setMessage(
-                "Preconditions.checkX() statement uses a non-constant message").build();
+                "Preconditions.checkX() statement uses a non-constant message. "
+                        + "Consider using a template string with '%s'.").build();
     }
 }

@@ -15,24 +15,30 @@
  */
 package com.palantir.baseline
 
-import com.energizedwork.spock.extensions.TempDirectory
 import groovy.transform.CompileStatic
 import groovy.transform.TypeCheckingMode
 import nebula.test.multiproject.MultiProjectIntegrationHelper
 import org.gradle.testkit.runner.GradleRunner
+import org.junit.Rule
+import org.junit.rules.TemporaryFolder
 import spock.lang.Specification
 
 class AbstractPluginTest extends Specification {
 
-    @TempDirectory(clean = false)
-    File projectDir
+    @Rule
+    TemporaryFolder folder = new TemporaryFolder()
+
     File buildFile
+    File settingsFile
     MultiProjectIntegrationHelper multiProject
+    File projectDir
 
     def setup() {
+        projectDir = folder.getRoot()
         buildFile = file('build.gradle')
+        settingsFile = file('settings.gradle')
         println("Build directory: \n" + projectDir.absolutePath)
-        multiProject = new MultiProjectIntegrationHelper(projectDir, file("settings.gradle"))
+        multiProject = new MultiProjectIntegrationHelper(projectDir, settingsFile)
     }
 
     GradleRunner with(String... tasks) {

@@ -54,14 +54,10 @@ class BaselineCheckstyle extends AbstractBaselinePlugin {
     def configureCheckstyle() {
         project.logger.debug("Baseline: Configuring Checkstyle tasks")
 
-        def configProps = project.checkstyle.configProperties
-        // Required to enable checkstyle suppressions
-        configProps['samedir'] = "${configDir}/checkstyle"
-
+        def baselineConfigDir = configDir
         // Configure checkstyle
         project.checkstyle {
-            configFile = project.file("${configDir}/checkstyle/checkstyle.xml")
-            configProperties = configProps
+            configDir = project.file("${baselineConfigDir}/checkstyle")
         }
 
         // Set custom source rules for checkstyleMain task.

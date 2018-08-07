@@ -19,7 +19,7 @@
         <property name="lineSeparator" value="lf"/>
     </module>
     <module name="RegexpHeader">
-        <property name="header" value="^/\*$\n^ \* Copyright \d{4} Palantir Technologies, Inc\. All rights reserved\.$"/>
+        <property name="header" value="^/\*$\n^ \* \(c\) Copyright \d{4} Palantir Technologies Inc\. All rights reserved\.$"/>
         <property name="fileExtensions" value=".java,.ts"/>
     </module>
     <module name="RegexpMultiline"> <!-- Development Practices: Writing good unit tests -->
@@ -39,8 +39,13 @@
         <property name="format" value="\s+$"/>
         <property name="message" value="Whitespace at end-of-line"/>
     </module>
+    <module name="RegexpMultiline"> <!-- Java Style Guide: Vertical Whitespace -->
+	<property name="fileExtensions" value="java"/>
+        <property name="format" value="^\n\n$"/>
+        <property name="message" value="Two consecutive blank lines are not permitted."/>
+    </module>
     <module name="SuppressionFilter"> <!-- baseline-gradle: README.md -->
-        <property name="file" value="${samedir}/checkstyle-suppressions.xml"/>
+        <property name="file" value="${config_loc}/checkstyle-suppressions.xml"/>
     </module>
     <module name="SuppressWarningsFilter"/> <!-- baseline-gradle: README.md -->
     <module name="SuppressionCommentFilter"/> <!-- baseline-gradle: README.md -->
@@ -74,13 +79,10 @@
         <module name="AvoidStarImport"/> <!-- Java Style Guide: No wildcard imports -->
         <module name="AvoidStaticImport"> <!-- Java Style Guide: No static imports -->
             <property name="excludes" value="
-                org.junit.Assert.*,org.junit.Assume.*,
-                org.hamcrest.CoreMatchers.*,org.hamcrest.Matchers.*,org.hamcrest.MatcherAssert.*,
-                org.hamcrest.core.AllOf.*,org.hamcrest.core.Is.*,org.hamcrest.core.StringContains.*,org.hamcrest.core.IsEqual.*,
-                org.hamcrest.collection.IsMapContaining.*,
-                org.mockito.ArgumentMatchers.*,org.mockito.Mockito.*,org.mockito.Matchers.*,
-                org.assertj.core.api.Assertions.*,
-                com.google.common.base.Preconditions.*,com.google.common.truth.Truth.*,
+                java.util.Collections.*,
+                java.util.stream.Collectors.*,
+                com.palantir.logsafe.Preconditions.*,
+                com.google.common.base.Preconditions.*,
                 org.apache.commons.lang3.Validate.*"/>
         </module>
         <module name="ClassTypeParameterName"> <!-- Java Style Guide: Type variable names -->
@@ -122,8 +124,16 @@
             <message key="import.illegal" value="Use JUnit 4-style (org.junit.*) test classes and assertions instead of JUnit 3 (junit.framework.*)."/>
         </module>
         <module name="IllegalImport"> <!-- Java Coding Guidelines: Import the canonical package -->
-            <property name="illegalPkgs" value="sun, org.elasticsearch.common.base, jersey.repackaged.com.google.common, com.google.api.client.repackaged, org.apache.hadoop.thirdparty.guava, com.clearspring.analytics.util, org.spark_project.guava"/>
+            <property name="illegalPkgs" value="org.elasticsearch.common.base, jersey.repackaged.com.google.common, com.google.api.client.repackaged, org.apache.hadoop.thirdparty.guava, com.clearspring.analytics.util, org.spark_project.guava"/>
             <message key="import.illegal" value="Must not import repackaged classes."/>
+        </module>
+        <module name="IllegalImport">
+            <property name="illegalPkgs" value="^org\.gradle\..*internal"/>
+            <message key="import.illegal" value="Do not rely on gradle internal classes as these may change in minor releases - use org.gradle.api versions instead."/>
+        </module>
+        <module name="IllegalImport">
+            <property name="illegalPkgs" value="sun"/>
+            <message key="import.illegal" value="Must not use Oracle's Java implementation details. See http://www.oracle.com/technetwork/java/faq-sun-packages-142232.html ."/>
         </module>
         <module name="IllegalImport">
             <property name="illegalPkgs" value="org.apache.commons.lang"/>
@@ -134,6 +144,7 @@
             <message key="import.illegal" value="math is deprecated, use math3 instead."/>
         </module>
         <module name="IllegalImport">
+            <property name="id" value="BanLoggingImplementations"/>
             <property name="illegalPkgs" value="org.apache.log4j, org.apache.logging.log4j, java.util.logging, ch.qos.logback"/>
             <message key="import.illegal" value="Use SLF4J instead of a logging framework directly."/>
         </module>
@@ -157,7 +168,12 @@
             <property name="message" value="Avoid using corresponding octal or Unicode escape."/>
         </module>
         <module name="IllegalType"> <!-- Java Coding Guide: Limit coupling on concrete classes -->
-            <property name="illegalClassNames" value="java.util.HashSet, java.util.HashMap, java.util.LinkedHashMap, java.util.LinkedHashSet, java.util.TreeSet, java.util.TreeMap, com.google.common.collect.ArrayListMultimap, com.google.common.collect.ForwardingListMultimap, com.google.common.collect.ForwardingMultimap, com.google.common.collect.ForwardingSetMultimap, com.google.common.collect.ForwardingSortedSetMultimap, com.google.common.collect.HashMultimap, com.google.common.collect.LinkedHashMultimap, com.google.common.collect.LinkedListMultimap, com.google.common.collect.TreeMultimap"/>
+            <property name="illegalClassNames" value="java.util.ArrayList, java.util.HashSet, java.util.HashMap, java.util.LinkedList, java.util.LinkedHashMap, java.util.LinkedHashSet, java.util.TreeSet, java.util.TreeMap, com.google.common.collect.ArrayListMultimap, com.google.common.collect.ForwardingListMultimap, com.google.common.collect.ForwardingMultimap, com.google.common.collect.ForwardingSetMultimap, com.google.common.collect.ForwardingSortedSetMultimap, com.google.common.collect.HashMultimap, com.google.common.collect.LinkedHashMultimap, com.google.common.collect.LinkedListMultimap, com.google.common.collect.TreeMultimap"/>
+        </module>
+        <module name="IllegalType">
+            <property name="id" value="BanGuavaCaches"/>
+            <property name="illegalClassNames" value="com.google.common.cache.CacheBuilder, com.google.common.cache.Cache, com.google.common.cache.LoadingCache"/>
+            <message key="illegal.type" value="Do not use Guava caches, they are outperformed by and harder to use than Caffeine caches"/>
         </module>
         <module name="ImportOrder"> <!-- Java Style Guide: Ordering and spacing -->
             <property name="groups" value="/.*/"/>
@@ -177,11 +193,11 @@
             <property name="ignorePattern" value="^package.*|^import.*|a href|href|http://|https://|ftp://"/>
         </module>
         <module name="MemberName"> <!-- Java Style Guide: Non-constant field names -->
-            <property name="format" value="^[a-z][a-z0-9][a-zA-Z0-9]*$"/>
+            <property name="format" value="^[a-z][a-zA-Z0-9]+$"/>
             <message key="name.invalidPattern" value="Member name ''{0}'' must match pattern ''{1}''."/>
         </module>
         <module name="MethodName"> <!-- Java Style Guide: Method names -->
-            <property name="format" value="^[a-z][a-z0-9][a-zA-Z0-9_]*$"/>
+            <property name="format" value="^[a-z][a-zA-Z0-9_]+$"/>
             <message key="name.invalidPattern" value="Method name ''{0}'' must match pattern ''{1}''."/>
         </module>
         <module name="MethodParamPad"/> <!-- Java Style Guide: Horizontal whitespace -->
@@ -300,11 +316,6 @@
             <property name="message" value="Use ? rather than ? extends Object."/>
         </module>
         <module name="RegexpSinglelineJava">
-            <property name="format" value="\bPreconditions\.check.*\{\}"/>
-            <property name="message" value="Use printf-style formatting in Preconditions, not '{}' style formatting."/>
-            <property name="ignoreComments" value="true"/>
-        </module>
-        <module name="RegexpSinglelineJava">
             <property name="format" value="(?i)log(ger)?\.(debug|info|warn|error)\(.*%[sd]"/>
             <property name="message" value="SLF4J loggers support '{}' style formatting."/>
             <property name="ignoreComments" value="true"/>
@@ -331,8 +342,8 @@
             <property name="message" value="Redundant ''static'' modifier."/>
         </module>
         <module name="RegexpSinglelineJava">
-            <property name="format" value="(\/\/TODO)|(\/\/ TODO:)|(\/\/ TODO\(\))|(\/\/ TODO\(.*\):[^ ])|(\/\/ TODO\(.*\)[^:])"/>
-            <property name="message" value="TODO format: // TODO(flastname): explanation"/>
+            <property name="format" value="\/\/TODO|\/\/ TODO(?!\([^()\s]+\): )"/>
+            <property name="message" value="TODO format: // TODO(#issue): explanation"/>
         </module>
         <module name="RegexpSinglelineJava">
             <property name="format" value="(void setUp\(\))|(void setup\(\))|(void setupStatic\(\))|(void setUpStatic\(\))|(void beforeTest\(\))|(void teardown\(\))|(void tearDown\(\))|(void beforeStatic\(\))|(void afterStatic\(\))"/>
@@ -408,7 +419,7 @@
         <module name="LocalFinalVariableName"/> <!-- Java Style Guide: Local variable names -->
         <module name="LocalVariableName"> <!-- Java Style Guide: Local variable names -->
             <property name="tokens" value="VARIABLE_DEF"/>
-            <property name="format" value="^[a-z][a-z0-9][a-zA-Z0-9]*$"/>
+            <property name="format" value="^[a-z][a-zA-Z0-9]+$"/>
             <property name="allowOneCharVarInForLoop" value="true"/>
             <message key="name.invalidPattern" value="Local variable name ''{0}'' must match pattern ''{1}''."/>
         </module>
@@ -423,7 +434,7 @@
         <module name="NestedTryDepth"/> <!-- Java Coding Guide: Try/catch blocks: never nested -->
         <module name="NonEmptyAtclauseDescription"/> <!-- Java Style Guide: At-clauses -->
         <module name="ParameterName"> <!-- Java Style Guide: Parameter names -->
-            <property name="format" value="^[a-z][a-z0-9][a-zA-Z0-9]*$"/>
+            <property name="format" value="^[a-z][a-zA-Z0-9]+$"/>
             <message key="name.invalidPattern" value="Parameter name ''{0}'' must match pattern ''{1}''."/>
         </module>
         <module name="SingleLineJavadoc"/> <!-- Java Style Guide: General form -->

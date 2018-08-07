@@ -9,7 +9,7 @@ Eclipse/IntelliJ projects. It configures [Checkstyle](http://checkstyle.sourcefo
 configurations consistent with the
 [Baseline Java Style Guide and Best Practices](https://github.com/palantir/gradle-baseline/tree/develop/docs)
 
-The Baseline plugins are compatible with Gradle 3.3.0 and above.
+The Baseline plugins are compatible with Gradle 4.0.0 and above.
 
 
 
@@ -38,7 +38,7 @@ repositories {
 apply plugin: 'com.palantir.baseline-config'
 
 dependencies {
-    // Adds a dependency on the Baseline configuration files. Typically use 
+    // Adds a dependency on the Baseline configuration files. Typically use
     // the same version as the plugin itself.
     baseline "com.palantir.baseline:gradle-baseline-java-config:<version>@zip"
 }
@@ -51,6 +51,8 @@ apply plugin: 'com.palantir.baseline-eclipse'
 apply plugin: 'com.palantir.baseline-idea'
 apply plugin: 'org.inferred.processors'  // installs the "processor" configuration needed for baseline-error-prone
 apply plugin: 'com.palantir.baseline-error-prone'
+apply plugin: 'com.palantir.baseline-class-uniqueness'
+apply plugin: 'com.palantir.baseline-circleci'
 ```
 
 - Run ``./gradlew baselineUpdateConfig`` to download the config files
@@ -222,7 +224,22 @@ dependencies {
 }
 ```
 
-Tip: Warnings on generated code can be suppressed as follows:
+#### Error-prone suppressions
+
+Error-prone rules can be suppressed on a per-line or per-block basis just like Checkstyle rules:
+
+```Java
+@SuppressWarnings("Slf4jConstantLogMessage")
+```
+
+Rules can be suppressed at the project level, or have their severity modified, by adding the following to the project's `build.gradle`:
+
+```groovy
+tasks.withType(JavaCompile) {
+    options.compilerArgs += ['-Xep:Slf4jLogsafeArgs:OFF']
+}
+```
+Warnings on generated code can be suppressed as follows:
 
 ```groovy
 tasks.withType(JavaCompile) {
@@ -230,15 +247,78 @@ tasks.withType(JavaCompile) {
 }
 ```
 
+More information on error-prone severity handling can be found at [errorprone.info/docs/flags](http://errorprone.info/docs/flags).
+
 #### Baseline error-prone checks
 Baseline configures the following checks in addition to the [error-prone's out-of-the-box
 checks](https://errorprone.info):
 
 - Slf4jConstantLogMessage: Allow only compile-time constant slf4j log message strings.
+- Slf4jLogsafeArgs: Allow only com.palantir.logsafe.Arg types as parameter inputs to slf4j log messages. More information on
+Safe Logging can be found at [github.com/palantir/safe-logging](https://github.com/palantir/safe-logging).
 
 
+### Class Uniqueness Plugin (com.palantir.baseline-class-uniqueness)
+
+Run `./gradlew checkClassUniqueness` to scan all jars on the `runtime` classpath for identically named classes.
+This task will run automatically as part of `./gradlew build`.
+
+If you discover multiple jars on your classpath contain clashing classes, you should ideally try to fix them upstream and then depend on the fixed version.  If this is not feasible, you may be able to tell Gradle to [use a substituted dependency instead](https://docs.gradle.org/current/userguide/customizing_dependency_resolution_behavior.html#sec:module_substitution):
+
+```gradle
+configurations.all {
+    resolutionStrategy.eachDependency { DependencyResolveDetails details ->
+        if (details.requested.name == 'log4j') {
+            details.useTarget group: 'org.slf4j', name: 'log4j-over-slf4j', version: '1.7.10'
+            details.because "prefer 'log4j-over-slf4j' over any version of 'log4j'"
+        }
+    }
+}
+```
+
+### CircleCi Plugin (com.palantir.baseline-circleci)
+
+Automatically applies the following plugins:
+
+- [`com.palantir.circle.style`](https://github.com/palantir/gradle-circle-style) - this configures checkstyle xml output to be written to the `$CIRCLE_TEST_REPORTS` directory.
+- [`com.palantir.configuration-resolver`](https://github.com/palantir/gradle-configuration-resolver-plugin) - this adds a `./gradlew resolveConfigurations` task which is useful for caching on CI.
+
+Also, the plugin:
+
+1. stores the HTML output of tests in `$CIRCLE_ARTIFACTS/junit`
+1. stores the HTML reports from `--profile` into `$CIRCLE_ARTIFACTS/reports`
 
 
+## com.palantir.baseline-versions
+
+Sources version numbers from a root level `versions.props` file.  This plugin should be applied in an `allprojects` block. It is effectively a shorthand for the following:
+
+```gradle
+buildscript {
+    dependencies {
+        classpath 'com.netflix.nebula:nebula-dependency-recommender:x.y.z'
+    }
+}
+
+allprojects {
+    apply plugin: 'nebula.dependency-recommender'
+    dependencyRecommendations {
+        strategy OverrideTransitives // use ConflictResolved to undo this
+        propertiesFile file: project.rootProject.file('versions.props')
+        if (file('versions.props').exists()) {
+            propertiesFile file: project.file('versions.props')
+        }
+    }
+}
+```
+
+Features from [nebula.dependency-recommender](https://github.com/nebula-plugins/nebula-dependency-recommender-plugin) are still available (for now), so you can configure BOMs:
+
+```gradle
+dependencyRecommendations {
+    mavenBom module: 'com.palantir.product:your-bom'
+}
+```
 
 ### Copyright Checks
 
