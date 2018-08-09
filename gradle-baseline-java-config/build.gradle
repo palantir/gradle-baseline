@@ -11,20 +11,22 @@ task zipConfig(type: Zip) {
     }
 }
 
-bintrayUpload.dependsOn { generatePomFileForConfigPublicationPublication }
-bintrayUpload.dependsOn { zipConfig }
-
 bintray {
-    user = System.getenv('BINTRAY_USERNAME')
-    key = System.getenv('BINTRAY_PASSWORD')
+    user = System.env.BINTRAY_USERNAME
+    key = System.env.BINTRAY_PASSWORD
     publish = true
     pkg {
         repo = 'releases'
-        name = 'gradle-baseline'
+        name = rootProject.name
         userOrg = 'palantir'
         licenses = ['Apache-2.0']
         publications = ['ConfigPublication']
     }
+}
+
+publish.dependsOn bintrayUpload
+bintrayUpload.onlyIf {
+    versionDetails().isCleanTag
 }
 
 publishing {
