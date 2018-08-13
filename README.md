@@ -34,9 +34,6 @@ repositories {
     maven { url  "http://palantir.bintray.com/releases" }
 }
 
-// Apply for baselineUpdateConfig task
-apply plugin: 'com.palantir.baseline-config'
-
 dependencies {
     // Adds a dependency on the Baseline configuration files. Typically use
     // the same version as the plugin itself.
@@ -44,15 +41,11 @@ dependencies {
 }
 
 apply plugin: 'java'
-
-// Apply plugins selectively depending on required functionality.
-apply plugin: 'com.palantir.baseline-checkstyle'
-apply plugin: 'com.palantir.baseline-eclipse'
-apply plugin: 'com.palantir.baseline-idea'
 apply plugin: 'org.inferred.processors'  // installs the "processor" configuration needed for baseline-error-prone
-apply plugin: 'com.palantir.baseline-error-prone'
+apply plugin: 'com.palantir.baseline'
+
+// All plugins apart from class-uniqueness are applied by default by baseline plugin.
 apply plugin: 'com.palantir.baseline-class-uniqueness'
-apply plugin: 'com.palantir.baseline-circleci'
 ```
 
 - Run ``./gradlew baselineUpdateConfig`` to download the config files
@@ -135,7 +128,7 @@ the Baseline mailing list for troubleshooting.
 
 ### Applying Baseline plugins selectively or all at once
 
-The `com.palantir.baseline` plugin applies all `com.palantir.baseline-xyz` plugins to the current project. In order to
+The `com.palantir.baseline` plugin applies all `com.palantir.baseline-xyz` plugins to all projects. In order to
 use only Checkstyle and IntelliJ support from Baseline, apply the required plugins selectively, e.g.:
 
 ```Gradle
@@ -147,7 +140,7 @@ buildscript {
 
 apply plugin: 'com.palantir.baseline-idea'
 subprojects {
-    apply plugin: 'com.palantir.baseline' // Applies all com.palantir.baseline-xyz plugins
+    apply plugin: 'com.palantir.baseline-idea' // Applies all com.palantir.baseline-xyz plugins
 }
 ```
 
