@@ -9,7 +9,7 @@ buildscript {
         classpath 'com.gradle.publish:plugin-publish-plugin:0.10.0'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
         classpath 'com.netflix.nebula:nebula-publishing-plugin:8.2.0'
-        classpath 'com.palantir.baseline:gradle-baseline-java:0.28.0'
+        classpath 'com.palantir.baseline:gradle-baseline-java:0.29.0-rc1'
     }
 }
 
@@ -19,9 +19,7 @@ plugins {
 }
 
 apply plugin: 'java'
-apply plugin: 'com.palantir.baseline-config'
-apply plugin: 'com.palantir.baseline-idea'
-apply plugin: 'com.palantir.baseline-circleci'
+apply plugin: 'com.palantir.baseline'
 apply plugin: 'maven'
 apply plugin: 'maven-publish'
 
@@ -39,7 +37,6 @@ allprojects {
     }
 
     apply plugin: 'org.inferred.processors'
-    apply plugin: 'com.palantir.baseline-versions'
 
     group = 'com.palantir.baseline'
     version System.env.CIRCLE_TAG ?: gitVersion()

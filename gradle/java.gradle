@@ -1,8 +1,4 @@
 apply plugin: 'java'
-apply plugin: 'com.palantir.baseline-checkstyle'
-apply plugin: 'com.palantir.baseline-eclipse'
-apply plugin: 'com.palantir.baseline-error-prone'
-apply plugin: 'com.palantir.baseline-idea'
 
 sourceCompatibility = 1.8
 
