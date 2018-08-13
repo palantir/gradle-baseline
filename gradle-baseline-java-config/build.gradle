@@ -1,9 +1,8 @@
 description = 'Baseline configuration files for the Baseline Gradle plugin'
 
-apply plugin: 'eclipse'
-apply plugin: 'maven'
-apply plugin: 'maven-publish'
-apply plugin: 'com.jfrog.bintray'
+apply plugin: 'java'
+apply plugin: 'nebula.maven-base-publish'
+apply from: "${rootDir}/gradle/bintray-publish.gradle"
 
 task zipConfig(type: Zip) {
     from('resources') {
@@ -11,25 +10,9 @@ task zipConfig(type: Zip) {
     }
 }
 
-bintrayUpload.dependsOn { generatePomFileForConfigPublicationPublication }
-bintrayUpload.dependsOn { zipConfig }
-
-bintray {
-    user = System.getenv('BINTRAY_USERNAME')
-    key = System.getenv('BINTRAY_PASSWORD')
-    publish = true
-    pkg {
-        repo = 'releases'
-        name = 'gradle-baseline'
-        userOrg = 'palantir'
-        licenses = ['Apache-2.0']
-        publications = ['ConfigPublication']
-    }
-}
-
 publishing {
     publications {
-        ConfigPublication(MavenPublication) {
+        nebula(MavenPublication) {
             artifact(zipConfig) {
                 extension 'zip'
             }

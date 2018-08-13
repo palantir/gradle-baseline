@@ -1,4 +1,6 @@
-apply from: "${rootDir}/gradle/publish-libs.gradle"
+apply plugin: 'nebula.maven-publish'
+apply plugin: 'nebula.source-jar'
+apply from: "${rootDir}/gradle/bintray-publish.gradle"
 apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
@@ -12,12 +14,4 @@ dependencies {
     testCompile 'org.apache.commons:commons-lang3'
 
     processor 'com.google.auto.service:auto-service'
-}
-
-tasks.withType(JavaCompile) {
-    options.compilerArgs += ["-Xbootclasspath/p:${configurations.errorprone.asPath}"]
-}
-
-tasks.withType(Test) {
-    jvmArgs "-Xbootclasspath/p:${configurations.errorprone.asPath}"
 }
