@@ -13,11 +13,3 @@ dependencies {
 
     processor 'com.google.auto.service:auto-service'
 }
-
-tasks.withType(JavaCompile) {
-    options.compilerArgs += ["-Xbootclasspath/p:${configurations.errorprone.asPath}"]
-}
-
-tasks.withType(Test) {
-    jvmArgs "-Xbootclasspath/p:${configurations.errorprone.asPath}"
-}

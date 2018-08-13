@@ -6,32 +6,29 @@ buildscript {
     }
 
     dependencies {
-        classpath 'gradle.plugin.com.palantir:gradle-circle-style:1.1.4'
-        classpath 'com.gradle.publish:plugin-publish-plugin:0.9.1'
-        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.3'
-        classpath 'com.netflix.nebula:nebula-dependency-recommender:6.0.0'
-        classpath 'com.netflix.nebula:nebula-publishing-plugin:5.1.4'
-        classpath 'com.palantir.baseline:gradle-baseline-java:0.26.1'
-        classpath 'com.palantir.configurationresolver:gradle-configuration-resolver-plugin:0.3.0'
+        classpath 'com.gradle.publish:plugin-publish-plugin:0.10.0'
+        classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
+        classpath 'com.netflix.nebula:nebula-publishing-plugin:8.2.0'
+        classpath 'com.palantir.baseline:gradle-baseline-java:0.28.0'
     }
 }
 
 plugins {
-    id 'com.palantir.git-version' version '0.5.3'
-    id 'org.inferred.processors' version '1.2.12'
+    id 'com.palantir.git-version' version '0.11.0'
+    id 'org.inferred.processors' version '1.2.16'
 }
 
 apply plugin: 'java'
 apply plugin: 'com.palantir.baseline-config'
 apply plugin: 'com.palantir.baseline-idea'
+apply plugin: 'com.palantir.baseline-circleci'
 apply plugin: 'maven'
 apply plugin: 'maven-publish'
-apply plugin: 'com.palantir.circle.style'
 
 tasks.test.dependsOn tasks.publishToMavenLocal
 
 dependencies {
-    baseline group: 'com.palantir.baseline', name: 'gradle-baseline-java-config', ext: 'zip'
+    baseline 'com.palantir.baseline:gradle-baseline-java-config@zip'
 }
 
 allprojects {
@@ -42,13 +39,7 @@ allprojects {
     }
 
     apply plugin: 'org.inferred.processors'
-    apply plugin: 'com.palantir.configuration-resolver'
-
-    apply plugin: 'nebula.dependency-recommender'
-    dependencyRecommendations {
-        strategy OverrideTransitives
-        propertiesFile file: project.rootProject.file('versions.props')
-    }
+    apply plugin: 'com.palantir.baseline-versions'
 
     group = 'com.palantir.baseline'
     version System.env.CIRCLE_TAG ?: gitVersion()
