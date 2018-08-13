@@ -58,7 +58,7 @@ public class CheckClassUniquenessTask extends DefaultTask {
         writeResultFile(success);
 
         if (!success) {
-            analyzer.getDifferingProblemJars().forEach((problemJars) -> {
+            analyzer.getDifferingProblemJars().forEach(problemJars -> {
                 Set<String> differingClasses = analyzer.getDifferingSharedClassesInProblemJars(problemJars);
                 getLogger().error("{} Identically named classes with differing impls found in {}: {}",
                         differingClasses.size(), problemJars, differingClasses);
