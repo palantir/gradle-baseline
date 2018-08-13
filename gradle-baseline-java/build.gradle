@@ -1,7 +1,9 @@
 apply plugin: 'groovy'
 apply plugin: 'java-gradle-plugin'
 apply plugin: 'com.gradle.plugin-publish'
-apply from: "${rootDir}/gradle/publish-libs.gradle"
+apply plugin: 'nebula.maven-publish'
+apply plugin: 'nebula.source-jar'
+apply from: "${rootDir}/gradle/bintray-publish.gradle"
 apply from: "${rootDir}/gradle/java.gradle"
 
 configurations {
