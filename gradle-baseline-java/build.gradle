@@ -20,6 +20,8 @@ dependencies {
     testCompile 'org.apache.commons:commons-io'
 }
 
+tasks.test.dependsOn tasks.publishToMavenLocal
+
 test {
     environment 'CIRCLE_ARTIFACTS', "${buildDir}/artifacts"
     environment 'CIRCLE_TEST_REPORTS', "${buildDir}/circle-reports"

@@ -18,12 +18,7 @@ plugins {
     id 'org.inferred.processors' version '1.2.16'
 }
 
-apply plugin: 'java'
 apply plugin: 'com.palantir.baseline'
-apply plugin: 'maven'
-apply plugin: 'maven-publish'
-
-tasks.test.dependsOn tasks.publishToMavenLocal
 
 dependencies {
     baseline 'com.palantir.baseline:gradle-baseline-java-config@zip'
