@@ -21,7 +21,7 @@ package com.palantir.baseline
  * This will also not behave well if the repo is dirty.
  */
 class BaselineConfigIntegrationTest extends AbstractPluginTest {
-    def projectVersion = "git describe --tags".execute().text.trim()
+    def projectVersion = "git describe --tags --first-parent".execute().text.trim()
     def standardBuildFile = """
         plugins {
             id 'com.palantir.baseline-config'
