@@ -57,7 +57,7 @@ respective baseline-xyz plugins are applied).
    - Code style and code formatting rules conforming with Baseline style
    - Checkstyle configuration
 
-  Note that the Checkstyle-IDEA plugin is required to run the Baseline Checkstyle within IntelliJ.
+  Note that the CheckStyle-IDEA plugin is required to run the Baseline Checkstyle within IntelliJ.
 
 
 
@@ -185,7 +185,7 @@ The Eclipse plugin is compatible with the following versions: Checkstyle 7.5+, J
 ### IntelliJ Plugin (com.palantir.baseline-idea)
 
 Run `./gradlew idea` to (re-) generate IntelliJ project and module files from the templates in `.baseline`. The
-generated project is pre-configured with Baseline code style settings and support for the Checkstyle-IDEA plugin.
+generated project is pre-configured with Baseline code style settings and support for the CheckStyle-IDEA plugin.
 
 The `com.palantir.baseline-idea` plugin automatically applies the `idea` plugin.
 
