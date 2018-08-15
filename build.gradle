@@ -31,6 +31,9 @@ allprojects {
         maven { url  "http://palantir.bintray.com/releases" }
     }
 
+    // Since we are using gradle-baseline in gradle-baseline we need to undo forces on project dependencies. Following
+    // snippet forces the version to be the version originally resolved by gradle and not the force that nebula forced
+    // it to.
     configurations.all { c ->
         c.incoming.beforeResolve {
             c.resolutionStrategy.dependencySubstitution {
