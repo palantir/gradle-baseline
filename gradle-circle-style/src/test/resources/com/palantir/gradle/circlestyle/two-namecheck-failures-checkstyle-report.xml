@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<testsuites failures="2" id="fooproject" name="fooproject" tests="2" time="321.000">
+<testsuite failures="2" id="checkstyleTest" name="checkstyleTest" tests="2" time="321.000">
+<testcase id="ParameterNameCheck.org.example.server.FooApplication" name="ParameterNameCheck - org.example.server.FooApplication">
+<failure message="FooApplication.java:135: Parameter name 'b' must match pattern '^[a-z][a-zA-Z0-9][a-zA-Z0-9]*$'." type="ERROR">ERROR: Parameter name 'b' must match pattern '^[a-z][a-zA-Z0-9][a-zA-Z0-9]*$'.
+Category: com.puppycrawl.tools.checkstyle.checks.naming.ParameterNameCheck
+File: fooproject/src/main/java/org/example/server/FooApplication.java
+Line: 135
+</failure>
+</testcase>
+<testcase id="ParameterNameCheck.org.example.server.FooApplication" name="ParameterNameCheck - org.example.server.FooApplication">
+<failure message="FooApplication.java:181: Parameter name 'c' must match pattern '^[a-z][a-zA-Z0-9][a-zA-Z0-9]*$'." type="ERROR">ERROR: Parameter name 'c' must match pattern '^[a-z][a-zA-Z0-9][a-zA-Z0-9]*$'.
+Category: com.puppycrawl.tools.checkstyle.checks.naming.ParameterNameCheck
+File: fooproject/src/main/java/org/example/server/FooApplication.java
+Line: 181
+</failure>
+</testcase>
+</testsuite>
+</testsuites>

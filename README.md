@@ -273,13 +273,15 @@ configurations.all {
 
 Automatically applies the following plugins:
 
-- [`com.palantir.circle.style`](https://github.com/palantir/gradle-circle-style) - this configures checkstyle xml output to be written to the `$CIRCLE_TEST_REPORTS` directory.
 - [`com.palantir.configuration-resolver`](https://github.com/palantir/gradle-configuration-resolver-plugin) - this adds a `./gradlew resolveConfigurations` task which is useful for caching on CI.
 
 Also, the plugin:
 
-1. stores the HTML output of tests in `$CIRCLE_ARTIFACTS/junit`
-1. stores the HTML reports from `--profile` into `$CIRCLE_ARTIFACTS/reports`
+1. stores junit test reports in `$CIRCLE_TEST_REPORTS/junit`
+2. Converts java compilation errors and checkstyle errors into test failures stored under `$CIRCLE_TEST_REPORTS/javac` and `$CIRCLE_TEST_REPORTS/checkstyle` respectively
+![CHECKSTYLE — 1 FAILURE](images/checkstyle-circle-failure.png?raw=true "CircleCI failure image")
+3. stores the HTML output of tests in `$CIRCLE_ARTIFACTS/junit`
+4. stores the HTML reports from `--profile` into `$CIRCLE_ARTIFACTS/reports`
 
 
 ## com.palantir.baseline-versions

@@ -1,0 +1,5 @@
+package com.example;
+
+public class MyClass {
+    public static final int a_constant = 100;
+}

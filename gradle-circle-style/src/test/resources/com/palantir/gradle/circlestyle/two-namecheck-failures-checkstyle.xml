@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<checkstyle version="6.18">
+<file name="/home/ubuntu/fooproject/fooproject/src/main/java/org/example/server/FooConfiguration.java">
+</file>
+<file name="/home/ubuntu/fooproject/fooproject/src/main/java/org/example/server/FooApplication.java">
+<error line="135" column="69" severity="error" message="Parameter name &apos;b&apos; must match pattern &apos;^[a-z][a-zA-Z0-9][a-zA-Z0-9]*$&apos;." source="com.puppycrawl.tools.checkstyle.checks.naming.ParameterNameCheck"/>
+<error line="181" column="56" severity="error" message="Parameter name &apos;c&apos; must match pattern &apos;^[a-z][a-zA-Z0-9][a-zA-Z0-9]*$&apos;." source="com.puppycrawl.tools.checkstyle.checks.naming.ParameterNameCheck"/>
+</file>
+<file name="/home/ubuntu/fooproject/fooproject/src/main/java/org/example/server/FooAssetsConfiguration.java">
+</file>
+</checkstyle>

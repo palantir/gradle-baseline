@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<checkstyle version="6.18">
+<file name="/home/ubuntu/fooproject/fooproject/src/main/java/org/example/server/FooConfiguration.java">
+</file>
+<file name="/home/ubuntu/fooproject/fooproject/src/main/java/org/example/server/FooApplication.java">
+</file>
+<file name="/home/ubuntu/fooproject/fooproject/src/main/java/org/example/server/FooAssetsConfiguration.java">
+</file>
+</checkstyle>

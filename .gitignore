@@ -16,3 +16,4 @@ build
 gradle.properties
 docs/node_modules/
 gradle-baseline-java/src/main/resources/baseline-version.txt
+generated_src
