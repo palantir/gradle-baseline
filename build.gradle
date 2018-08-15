@@ -31,6 +31,18 @@ allprojects {
         maven { url  "http://palantir.bintray.com/releases" }
     }
 
+    configurations.all { c ->
+        c.incoming.beforeResolve {
+            c.resolutionStrategy.dependencySubstitution {
+                all { DependencySubstitution dep ->
+                    if (dep.requested instanceof ProjectComponentSelector) {
+                        dep.useTarget dep.requested
+                    }
+                }
+            }
+        }
+    }
+
     apply plugin: 'org.inferred.processors'
 
     group = 'com.palantir.baseline'
