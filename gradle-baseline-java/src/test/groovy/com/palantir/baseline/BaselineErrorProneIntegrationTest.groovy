@@ -24,15 +24,19 @@ import org.gradle.testkit.runner.TaskOutcome
  */
 class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
 
+    def standardSettings = '''
+    pluginManagement {
+        repositories {
+            mavenLocal()
+            jcenter()
+        }
+    }
+    '''.stripIndent()
     def standardBuildFile = '''
         plugins {
             id 'java'
             id 'com.palantir.baseline-error-prone'
             id 'org.inferred.processors' version '1.2.16'
-        }
-        repositories { 
-            mavenLocal()  // for baseline artifacts
-            jcenter()  // for error-prone artifacts
         }
     '''.stripIndent()
 
@@ -56,6 +60,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
 
     def 'Can apply plugin'() {
         when:
+        settingsFile << standardSettings
         buildFile << standardBuildFile
 
         then:
@@ -64,6 +69,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
 
     def 'compileJava fails when error-prone finds errors'() {
         when:
+        settingsFile << standardSettings
         buildFile << standardBuildFile
         file('src/main/java/test/Test.java') << inValidJavaFile
 
@@ -75,12 +81,12 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
 
     def 'compileJava succeeds when error-prone finds no errors'() {
         when:
+        settingsFile << standardSettings
         buildFile << standardBuildFile
         file('src/main/java/test/Test.java') << validJavaFile
 
         then:
         BuildResult result = with('compileJava').build()
         result.task(":compileJava").outcome == TaskOutcome.SUCCESS
-        //        result.output.contains("java.io.FileNotFoundException:")
     }
 }
