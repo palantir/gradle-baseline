@@ -19,11 +19,13 @@ package com.palantir.baseline.plugins;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.util.List;
 import java.util.stream.Collectors;
 import net.ltgt.gradle.errorprone.ErrorPronePlugin;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradle.api.tasks.testing.Test;
@@ -32,32 +34,39 @@ public final class BaselineErrorProne implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
-        project.getPluginManager().apply(ErrorPronePlugin.class);
-        Configuration rawErrorProneConf = project.getConfigurations().getByName("errorprone").copy();
-        project.getConfigurations().getByName("errorprone")
-                .defaultDependencies(dependencies -> dependencies.add(
-                        project.getDependencies().create("com.palantir.baseline:baseline-error-prone:latest.release")));
-        project.getTasks().withType(JavaCompile.class)
-                .configureEach(compile -> compile.getOptions().getCompilerArgs()
-                        .addAll(ImmutableList.of(
-                                "-Xbootclasspath/p:" + rawErrorProneConf.getAsPath(),
-                                "-XepDisableWarningsInGeneratedCode",
-                                "-Xep:EqualsHashCode:ERROR",
-                                "-Xep:EqualsIncompatibleType:ERROR"
-                        )));
-        project.getTasks().withType(Test.class)
-                .configureEach(test -> test.jvmArgs("-Xbootclasspath/p:" + rawErrorProneConf.getAsPath()));
-        // Add error-prone to bootstrap classpath of javadoc task.
-        // Since there's no way of appending to the classpath we need to explicitly add current bootstrap classpath.
-        project.getTasks().withType(Javadoc.class)
-                .configureEach(javadoc -> javadoc.getOptions().setBootClasspath(ImmutableList.<File>builder()
-                        .addAll(rawErrorProneConf.resolve())
-                        .addAll(Splitter.on(File.pathSeparator)
-                                .splitToList(System.getProperty("sun.boot.class.path"))
-                                .stream()
-                                .map(File::new)
-                                .collect(Collectors.toList()))
-                        .build()));
+        project.getPluginManager().withPlugin("java", plugin -> {
+            JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
+
+            project.getPluginManager().apply(ErrorPronePlugin.class);
+            Configuration rawErrorProneConf = project.getConfigurations().getByName("errorprone").copy();
+            project.getConfigurations().getByName("errorprone")
+                    .defaultDependencies(dependencies -> dependencies.add(
+                            project.getDependencies().create(
+                                    "com.palantir.baseline:baseline-error-prone:latest.release")));
+            if (!javaConvention.getSourceCompatibility().isJava9()) {
+                project.getTasks().withType(JavaCompile.class)
+                        .configureEach(compile -> compile.getOptions().getCompilerArgumentProviders()
+                                .addAll(ImmutableList.of(() -> ImmutableList.of(
+                                        "-Xbootclasspath/p:" + rawErrorProneConf.getAsPath(),
+                                        "-XepDisableWarningsInGeneratedCode",
+                                        "-Xep:EqualsHashCode:ERROR",
+                                        "-Xep:EqualsIncompatibleType:ERROR"))));
+                List<File> bootstrapClasspath = Splitter.on(File.pathSeparator)
+                        .splitToList(System.getProperty("sun.boot.class.path"))
+                        .stream()
+                        .map(File::new)
+                        .collect(Collectors.toList());
+                project.getTasks().withType(Test.class)
+                        .configureEach(test -> {
+                            test.setBootstrapClasspath(rawErrorProneConf);
+                            test.bootstrapClasspath(bootstrapClasspath);
+                        });
+                // Add error-prone to bootstrap classpath of javadoc task.
+                // Since there's no way of appending to the classpath we need to explicitly add current bootstrap classpath.
+                project.getTasks().withType(Javadoc.class)
+                        .configureEach(javadoc -> javadoc.getOptions().setBootClasspath(bootstrapClasspath));
+            }
+        });
     }
 
 }

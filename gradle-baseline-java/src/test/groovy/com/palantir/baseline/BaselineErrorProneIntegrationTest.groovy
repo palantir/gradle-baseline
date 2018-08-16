@@ -28,6 +28,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
     pluginManagement {
         repositories {
             mavenLocal()
+            gradlePluginPortal()
             jcenter()
         }
     }
