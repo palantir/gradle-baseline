@@ -43,6 +43,8 @@ public final class BaselineErrorProne implements Plugin<Project> {
                     .defaultDependencies(dependencies -> dependencies.add(
                             project.getDependencies().create(
                                     "com.palantir.baseline:baseline-error-prone:latest.release")));
+            // Add error-prone to bootstrap classpath of javadoc task.
+            // Since there's no way of appending to the classpath we need to explicitly add current bootstrap classpath.
             if (!javaConvention.getSourceCompatibility().isJava9()) {
                 List<File> bootstrapClasspath = Splitter.on(File.pathSeparator)
                         .splitToList(System.getProperty("sun.boot.class.path"))
@@ -63,8 +65,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
                             test.setBootstrapClasspath(rawErrorProneConf);
                             test.bootstrapClasspath(bootstrapClasspath);
                         });
-                // Add error-prone to bootstrap classpath of javadoc task.
-                // Since there's no way of appending to the classpath we need to explicitly add current bootstrap classpath.
                 project.getTasks().withType(Javadoc.class)
                         .configureEach(javadoc -> javadoc.getOptions().setBootClasspath(bootstrapClasspath));
             }
