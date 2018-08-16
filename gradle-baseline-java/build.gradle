@@ -30,14 +30,6 @@ test {
     environment 'CIRCLE_TEST_REPORTS', "${buildDir}/circle-reports"
 }
 
-// Create version file included in jar so that the plugin can know about its own version
-task createVersionFile {
-    def versionFile = file("src/main/resources/baseline-version.txt")
-    versionFile.parentFile.mkdirs()
-    versionFile.write(project.version, "UTF-8")
-}
-compileGroovy.dependsOn createVersionFile
-
 pluginBundle {
     website = 'https://github.com/palantir/gradle-baseline'
     vcsUrl = 'https://github.com/palantir/gradle-baseline'
