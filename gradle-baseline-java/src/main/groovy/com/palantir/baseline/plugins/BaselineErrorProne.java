@@ -49,7 +49,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
                                     "-XepDisableWarningsInGeneratedCode",
                                     "-Xep:EqualsHashCode:ERROR",
                                     "-Xep:EqualsIncompatibleType:ERROR")));
-            // Add error-prone to bootstrap classpath of javadoc task.
+            // Add error-prone to bootstrap classpath of tasks performing java compilation.
             // Since there's no way of appending to the classpath we need to explicitly add current bootstrap classpath.
             if (!javaConvention.getSourceCompatibility().isJava9()) {
                 List<File> bootstrapClasspath = Splitter.on(File.pathSeparator)
