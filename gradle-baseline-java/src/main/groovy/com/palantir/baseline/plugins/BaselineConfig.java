@@ -37,23 +37,33 @@ class BaselineConfig extends AbstractBaselinePlugin {
 
         // users can still override this default dependency, it just reduces boilerplate
         Optional<String> version = Optional.ofNullable(getClass().getPackage().getImplementationVersion());
-        configuration.defaultDependencies(d -> d.add(project.getDependencies().create(String.format(
+        configuration.defaultDependencies(d -> d.add(rootProject.getDependencies().create(String.format(
                 "com.palantir.baseline:gradle-baseline-java-config%s@zip", version.map(v -> ":" + v).orElse("")))));
 
         // Create task for generating configuration.
-        rootProject.getTasks().create("baselineUpdateConfig", task -> {
+        rootProject.getTasks().register("baselineUpdateConfig", task -> {
             task.setGroup("Baseline");
             task.setDescription("Installs or updates Baseline configuration files in .baseline/");
+            task.getInputs().files(configuration);
+            task.getOutputs().dir(getConfigDir());
+            task.getOutputs().dir(rootProject.getRootDir().toPath().resolve("project"));
             task.doLast(t -> {
-
                 if (configuration.getFiles().size() != 1) {
                     throw new IllegalArgumentException("Expected to find exactly one config dependency in the "
                             + "'baseline' configuration, found: " + configuration.getFiles());
                 }
 
                 rootProject.copy(copySpec -> {
-                    copySpec.from(project.zipTree(configuration.getSingleFile()));
+                    copySpec.from(rootProject.zipTree(configuration.getSingleFile()));
                     copySpec.into(getConfigDir());
+                    copySpec.exclude("**/scalastyle_config.xml");
+                    copySpec.setIncludeEmptyDirs(false);
+                });
+                rootProject.copy(copySpec -> {
+                    copySpec.from(rootProject.zipTree(configuration.getSingleFile())
+                            .filter(file -> file.getName().equals("scalastyle_config.xml")));
+                    copySpec.into(rootProject.getRootDir().toPath().resolve("project"));
+                    copySpec.setIncludeEmptyDirs(false);
                 });
             });
         });
