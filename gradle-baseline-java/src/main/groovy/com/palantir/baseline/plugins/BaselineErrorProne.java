@@ -56,7 +56,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
                                             "-Xep:EqualsHashCode:ERROR",
                                             "-Xep:EqualsIncompatibleType:ERROR"));
                             compile.getOptions().setBootstrapClasspath(
-                                    project.files(bootstrapClasspath).plus(rawErrorProneConf));
+                                    rawErrorProneConf.plus(project.files(bootstrapClasspath)));
                         });
                 project.getTasks().withType(Test.class)
                         .configureEach(test -> {
