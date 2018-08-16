@@ -28,12 +28,12 @@ class BaselineErrorProne extends AbstractBaselinePlugin {
         this.project = project
 
         project.plugins.apply(ErrorPronePlugin)
+        def rawErrorProneConf = project.configurations.getByName("errorprone").copyRecursive()
         project.dependencies {
             // TODO(rfink): This is somewhat ugly. Is there a better to add the processor dependency on the library?
             errorprone "com.palantir.baseline:baseline-error-prone:${extractVersionString()}"
         }
 
-        def errorProneConf = project.getConfigurations().getByName("errorprone")
         project.afterEvaluate { p ->
             p.tasks.withType(JavaCompile) {
                 options.compilerArgs += [
