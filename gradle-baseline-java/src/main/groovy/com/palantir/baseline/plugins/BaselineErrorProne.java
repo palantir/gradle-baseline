@@ -43,6 +43,12 @@ public final class BaselineErrorProne implements Plugin<Project> {
                     .defaultDependencies(dependencies -> dependencies.add(
                             project.getDependencies().create(
                                     "com.palantir.baseline:baseline-error-prone:latest.release")));
+            project.getTasks().withType(JavaCompile.class)
+                    .configureEach(compile -> compile.getOptions().getCompilerArgs()
+                            .addAll(ImmutableList.of(
+                                    "-XepDisableWarningsInGeneratedCode",
+                                    "-Xep:EqualsHashCode:ERROR",
+                                    "-Xep:EqualsIncompatibleType:ERROR")));
             // Add error-prone to bootstrap classpath of javadoc task.
             // Since there's no way of appending to the classpath we need to explicitly add current bootstrap classpath.
             if (!javaConvention.getSourceCompatibility().isJava9()) {
@@ -52,14 +58,8 @@ public final class BaselineErrorProne implements Plugin<Project> {
                         .map(File::new)
                         .collect(Collectors.toList());
                 project.getTasks().withType(JavaCompile.class)
-                        .configureEach(compile -> {
-                            compile.getOptions().getCompilerArgs()
-                                    .addAll(ImmutableList.of("-XepDisableWarningsInGeneratedCode",
-                                            "-Xep:EqualsHashCode:ERROR",
-                                            "-Xep:EqualsIncompatibleType:ERROR"));
-                            compile.getOptions().setBootstrapClasspath(
-                                    rawErrorProneConf.plus(project.files(bootstrapClasspath)));
-                        });
+                        .configureEach(compile -> compile.getOptions()
+                                .setBootstrapClasspath(rawErrorProneConf.plus(project.files(bootstrapClasspath))));
                 project.getTasks().withType(Test.class)
                         .configureEach(test -> {
                             test.setBootstrapClasspath(rawErrorProneConf);
