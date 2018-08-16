@@ -44,18 +44,20 @@ public final class BaselineErrorProne implements Plugin<Project> {
                             project.getDependencies().create(
                                     "com.palantir.baseline:baseline-error-prone:latest.release")));
             if (!javaConvention.getSourceCompatibility().isJava9()) {
-                project.getTasks().withType(JavaCompile.class)
-                        .configureEach(compile -> compile.getOptions().getCompilerArgumentProviders()
-                                .addAll(ImmutableList.of(() -> ImmutableList.of(
-                                        "-Xbootclasspath/p:" + rawErrorProneConf.getAsPath(),
-                                        "-XepDisableWarningsInGeneratedCode",
-                                        "-Xep:EqualsHashCode:ERROR",
-                                        "-Xep:EqualsIncompatibleType:ERROR"))));
                 List<File> bootstrapClasspath = Splitter.on(File.pathSeparator)
                         .splitToList(System.getProperty("sun.boot.class.path"))
                         .stream()
                         .map(File::new)
                         .collect(Collectors.toList());
+                project.getTasks().withType(JavaCompile.class)
+                        .configureEach(compile -> {
+                            compile.getOptions().getCompilerArgs()
+                                    .addAll(ImmutableList.of("-XepDisableWarningsInGeneratedCode",
+                                            "-Xep:EqualsHashCode:ERROR",
+                                            "-Xep:EqualsIncompatibleType:ERROR"));
+                            compile.getOptions().setBootstrapClasspath(
+                                    project.files(bootstrapClasspath).plus(rawErrorProneConf));
+                        });
                 project.getTasks().withType(Test.class)
                         .configureEach(test -> {
                             test.setBootstrapClasspath(rawErrorProneConf);
