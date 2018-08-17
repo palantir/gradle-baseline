@@ -40,7 +40,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
             project.getPluginManager().apply(ErrorPronePlugin.class);
             Configuration rawErrorProneConf = project.getConfigurations().getByName("errorprone").copy();
             project.getConfigurations().getByName("errorprone")
-                    .defaultDependencies(dependencies -> dependencies.add(
+                    .withDependencies(dependencies -> dependencies.add(
                             project.getDependencies().create(
                                     "com.palantir.baseline:baseline-error-prone:latest.release")));
             project.getTasks().withType(JavaCompile.class)
