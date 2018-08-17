@@ -19,7 +19,6 @@ package com.palantir.baseline.plugins;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import net.ltgt.gradle.errorprone.ErrorPronePlugin;
