@@ -14,9 +14,4 @@ dependencies {
     testCompile 'org.apache.commons:commons-lang3'
 
     processor 'com.google.auto.service:auto-service'
-    errorprone 'com.google.errorprone:error_prone_core'
-}
-
-configurations.errorprone {
-    exclude module: 'baseline-error-prone'
 }
