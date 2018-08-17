@@ -58,9 +58,9 @@ public final class BaselineErrorProne implements Plugin<Project> {
                         .configureEach(compile -> compile.getOptions().setBootstrapClasspath(errorProneFiles));
                 project.getTasks().withType(Test.class)
                         .configureEach(test -> test.setBootstrapClasspath(errorProneFiles));
-                project.getTasks().withType(Javadoc.class)
-                        .configureEach(javadoc -> javadoc.getOptions()
-                                .setBootClasspath(ImmutableList.copyOf(errorProneFiles.getFiles())));
+                // project.getTasks().withType(Javadoc.class)
+                //         .configureEach(javadoc -> javadoc.getOptions()
+                //                 .setBootClasspath(ImmutableList.copyOf(errorProneFiles.getFiles())));
             }
         });
     }
