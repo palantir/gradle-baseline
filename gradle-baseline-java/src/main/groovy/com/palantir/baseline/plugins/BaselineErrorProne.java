@@ -36,13 +36,11 @@ public final class BaselineErrorProne implements Plugin<Project> {
     public void apply(Project project) {
         project.getPluginManager().withPlugin("java", plugin -> {
             JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
-
             project.getPluginManager().apply(ErrorPronePlugin.class);
-            Configuration rawErrorProneConf = project.getConfigurations().getByName("errorprone").copy();
-            project.getConfigurations().getByName("errorprone")
-                    .withDependencies(dependencies -> dependencies.add(
-                            project.getDependencies().create(
-                                    "com.palantir.baseline:baseline-error-prone:latest.release")));
+            Configuration errorProneConf = project.getConfigurations().getByName("errorprone");
+            errorProneConf.withDependencies(dependencies -> dependencies.add(
+                    project.getDependencies().create(
+                            "com.palantir.baseline:baseline-error-prone:latest.release")));
             project.getTasks().withType(JavaCompile.class)
                     .configureEach(compile -> compile.getOptions().getCompilerArgs()
                             .addAll(ImmutableList.of(
@@ -59,10 +57,10 @@ public final class BaselineErrorProne implements Plugin<Project> {
                         .collect(Collectors.toList());
                 project.getTasks().withType(JavaCompile.class)
                         .configureEach(compile -> compile.getOptions()
-                                .setBootstrapClasspath(rawErrorProneConf.plus(project.files(bootstrapClasspath))));
+                                .setBootstrapClasspath(errorProneConf.plus(project.files(bootstrapClasspath))));
                 project.getTasks().withType(Test.class)
                         .configureEach(test -> {
-                            test.setBootstrapClasspath(rawErrorProneConf);
+                            test.setBootstrapClasspath(errorProneConf);
                             test.bootstrapClasspath(bootstrapClasspath);
                         });
                 project.getTasks().withType(Javadoc.class)
