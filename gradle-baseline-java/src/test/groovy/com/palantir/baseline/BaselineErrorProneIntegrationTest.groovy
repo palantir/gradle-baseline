@@ -28,11 +28,11 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         plugins {
             id 'java'
             id 'com.palantir.baseline-error-prone'
-            id 'org.inferred.processors' version '1.2.8'
+            id 'org.inferred.processors' version '1.2.16'
         }
-        repositories { 
-            mavenLocal()  // for baseline artifacts
-            jcenter()  // for error-prone artifacts
+        repositories {
+            mavenLocal()
+            jcenter()
         }
     '''.stripIndent()
 
@@ -81,6 +81,5 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         then:
         BuildResult result = with('compileJava').build()
         result.task(":compileJava").outcome == TaskOutcome.SUCCESS
-        //        result.output.contains("java.io.FileNotFoundException:")
     }
 }
