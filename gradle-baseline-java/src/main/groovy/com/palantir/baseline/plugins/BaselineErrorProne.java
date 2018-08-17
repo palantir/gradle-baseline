@@ -19,6 +19,7 @@ package com.palantir.baseline.plugins;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.util.AbstractList;
 import java.util.List;
 import java.util.stream.Collectors;
 import net.ltgt.gradle.errorprone.ErrorPronePlugin;
@@ -58,11 +59,36 @@ public final class BaselineErrorProne implements Plugin<Project> {
                         .configureEach(compile -> compile.getOptions().setBootstrapClasspath(errorProneFiles));
                 project.getTasks().withType(Test.class)
                         .configureEach(test -> test.setBootstrapClasspath(errorProneFiles));
-                // project.getTasks().withType(Javadoc.class)
-                //         .configureEach(javadoc -> javadoc.getOptions()
-                //                 .setBootClasspath(ImmutableList.copyOf(errorProneFiles.getFiles())));
+                project.getTasks().withType(Javadoc.class)
+                        .configureEach(javadoc -> javadoc.getOptions()
+                                .setBootClasspath(new LazyConfigurationList(errorProneFiles)));
             }
         });
+    }
+
+    private static final class LazyConfigurationList extends AbstractList<File> {
+        private final FileCollection files;
+        private List<File> fileList;
+
+        private LazyConfigurationList(FileCollection files) {
+            this.files = files;
+        }
+
+        @Override
+        public File get(int index) {
+            if (fileList == null) {
+                fileList = ImmutableList.copyOf(files.getFiles());
+            }
+            return fileList.get(index);
+        }
+
+        @Override
+        public int size() {
+            if (fileList == null) {
+                fileList = ImmutableList.copyOf(files.getFiles());
+            }
+            return fileList.size();
+        }
     }
 
 }
