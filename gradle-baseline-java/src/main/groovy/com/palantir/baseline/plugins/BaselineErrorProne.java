@@ -19,12 +19,13 @@ package com.palantir.baseline.plugins;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import java.io.File;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import net.ltgt.gradle.errorprone.ErrorPronePlugin;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
@@ -35,10 +36,8 @@ public final class BaselineErrorProne implements Plugin<Project> {
     @Override
     public void apply(Project project) {
         project.getPluginManager().withPlugin("java", plugin -> {
-            JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
             project.getPluginManager().apply(ErrorPronePlugin.class);
             project.getDependencies().add("errorprone", "com.palantir.baseline:baseline-error-prone:latest.release");
-            Configuration errorProneConf = project.getConfigurations().getByName("errorprone");
             project.getTasks().withType(JavaCompile.class)
                     .configureEach(compile -> compile.getOptions().getCompilerArgs()
                             .addAll(ImmutableList.of(
@@ -47,22 +46,22 @@ public final class BaselineErrorProne implements Plugin<Project> {
                                     "-Xep:EqualsIncompatibleType:ERROR")));
             // Add error-prone to bootstrap classpath of tasks performing java compilation.
             // Since there's no way of appending to the classpath we need to explicitly add current bootstrap classpath.
+            JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
             if (!javaConvention.getSourceCompatibility().isJava9()) {
                 List<File> bootstrapClasspath = Splitter.on(File.pathSeparator)
                         .splitToList(System.getProperty("sun.boot.class.path"))
                         .stream()
                         .map(File::new)
                         .collect(Collectors.toList());
+                FileCollection errorProneFiles = project.getConfigurations().getByName("errorprone")
+                        .plus(project.files(bootstrapClasspath));
                 project.getTasks().withType(JavaCompile.class)
-                        .configureEach(compile -> compile.getOptions()
-                                .setBootstrapClasspath(errorProneConf.plus(project.files(bootstrapClasspath))));
+                        .configureEach(compile -> compile.getOptions().setBootstrapClasspath(errorProneFiles));
                 project.getTasks().withType(Test.class)
-                        .configureEach(test -> {
-                            test.setBootstrapClasspath(errorProneConf);
-                            test.bootstrapClasspath(bootstrapClasspath);
-                        });
+                        .configureEach(test -> test.setBootstrapClasspath(errorProneFiles));
                 project.getTasks().withType(Javadoc.class)
-                        .configureEach(javadoc -> javadoc.getOptions().setBootClasspath(bootstrapClasspath));
+                        .configureEach(javadoc -> javadoc.getOptions()
+                                .setBootClasspath(ImmutableList.copyOf(errorProneFiles.getFiles())));
             }
         });
     }
