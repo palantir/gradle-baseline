@@ -54,7 +54,7 @@ class BaselineConfigIntegrationTest extends AbstractPluginTest {
 
         then:
         with('baselineUpdateConfig').buildAndFail().output.contains(
-                "Expected to find exactly one config dependency in the 'baseline' configuration, found: []")
+                "Could not find com.palantir.baseline:gradle-baseline-java-config:.")
     }
 
     def 'Fails if too many configuration dependencies are specified'() {
