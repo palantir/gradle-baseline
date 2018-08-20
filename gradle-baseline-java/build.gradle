@@ -30,6 +30,12 @@ test {
     environment 'CIRCLE_TEST_REPORTS', "${buildDir}/circle-reports"
 }
 
+jar {
+    manifest {
+        attributes("Implementation-Version" : project.version)
+    }
+}
+
 pluginBundle {
     website = 'https://github.com/palantir/gradle-baseline'
     vcsUrl = 'https://github.com/palantir/gradle-baseline'
