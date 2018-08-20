@@ -48,5 +48,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
             java.indentWithSpaces(4);
             java.endWithNewline();
         });
+        
+        project.getTasks().getByName("spotlessCheck", task -> task.setEnabled(false));
     }
 }
