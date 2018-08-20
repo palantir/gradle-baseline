@@ -26,6 +26,8 @@ class BaselineFormat extends AbstractBaselinePlugin {
 
     @Override
     public void apply(Project project) {
+        this.project = project;
+
         if (!project.getPluginManager().hasPlugin("java")) {
             project.getLogger().warn("com.palantir.baseline-format should not be applied to non-java project: {}",
                     project.getName());
@@ -49,7 +51,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
             java.indentWithSpaces(4);
             java.endWithNewline();
         });
-        
+
         Task formatTask = project.task("format");
 
         project.getTasks().getByName("spotlessApply", task -> formatTask.dependsOn(task));
