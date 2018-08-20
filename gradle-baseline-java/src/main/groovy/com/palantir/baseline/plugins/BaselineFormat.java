@@ -29,7 +29,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
         this.project = project;
 
         if (!project.getPluginManager().hasPlugin("java")) {
-            project.getLogger().warn("com.palantir.baseline-format should not be applied to non-java project: {}",
+            project.getLogger().info("com.palantir.baseline-format is a no-op when applied to non-java project: {}",
                     project.getName());
             return;
         }
