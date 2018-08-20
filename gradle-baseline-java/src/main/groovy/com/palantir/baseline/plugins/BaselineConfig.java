@@ -17,6 +17,8 @@ class BaselineConfig extends AbstractBaselinePlugin {
         }
 
         Configuration configuration = rootProject.getConfigurations().create("baseline");
+        configuration.defaultDependencies(d -> d.add(
+                project.getDependencies().create("com.palantir.baseline:gradle-baseline-java-config:0.29.4@zip")));
 
         // Create task for generating configuration.
         rootProject.getTasks().create("baselineUpdateConfig", task -> {
