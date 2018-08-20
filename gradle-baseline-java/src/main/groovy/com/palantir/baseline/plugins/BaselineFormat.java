@@ -52,9 +52,11 @@ class BaselineFormat extends AbstractBaselinePlugin {
             java.endWithNewline();
         });
 
-        Task formatTask = project.task("format");
-
-        project.getTasks().getByName("spotlessApply", task -> formatTask.dependsOn(task));
-        project.getTasks().getByName("spotlessCheck", task -> task.setEnabled(false));
+        // necessary because SpotlessPlugin creates tasks in an afterEvaluate block
+        project.afterEvaluate(p -> {
+            Task formatTask = project.task("format");
+            project.getTasks().getByName("spotlessApply", task -> formatTask.dependsOn(task));
+            project.getTasks().getByName("spotlessCheck", task -> task.setEnabled(false));
+        });
     }
 }
