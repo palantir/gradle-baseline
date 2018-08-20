@@ -217,6 +217,32 @@ dependencyRecommendations {
 ```
 
 Adds the following tasks:
+## `com.palantir.baseline-format`
+
+Adds a `./gradlew format` task which autoformats all Java files using Spotless and the Eclipse formatter.  This formatter is configured using the `.baseline/spotless/spotless.eclipse.xml` file. Roughly equivalent to:
+
+```gradle
+buildscript {
+    dependencies {
+        classpath 'com.diffplug.spotless:spotless-plugin-gradle:3.14.0'
+    }
+}
+
+apply plugin: 'com.diffplug.gradle.spotless'
+
+spotless {
+    java {
+        target 'src/main/java/**/*.java', 'src/main/test/**/*.java'
+        eclipse().configFile("${rootDir}/.baseline/spotless/spotless.eclipse.xml")
+        removeUnusedImports
+        trimTrailingWhitespace()
+        indentWithSpaces(4)
+        endWithNewline()
+    }
+}
+```
+
+### Copyright Checks
 
 - `checkVersionsProps` - A catch-all task to lint your versions.props file.
 - `checkBomConflict` - Ensures your versions.props pins don't force the same version that is already recommended by a BOM.
