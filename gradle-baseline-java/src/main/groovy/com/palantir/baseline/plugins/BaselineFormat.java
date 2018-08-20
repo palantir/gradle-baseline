@@ -20,6 +20,7 @@ import com.diffplug.gradle.spotless.SpotlessExtension;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 
 class BaselineFormat extends AbstractBaselinePlugin {
 
@@ -49,6 +50,9 @@ class BaselineFormat extends AbstractBaselinePlugin {
             java.endWithNewline();
         });
         
+        Task formatTask = project.task("format");
+
+        project.getTasks().getByName("spotlessApply", task -> formatTask.dependsOn(task));
         project.getTasks().getByName("spotlessCheck", task -> task.setEnabled(false));
     }
 }
