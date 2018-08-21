@@ -48,13 +48,20 @@ class BaselineConfigIntegrationTest extends AbstractPluginTest {
         directory('.baseline').list().toList().toSet() == ['checkstyle', 'copyright', 'eclipse', 'idea'].toSet()
     }
 
-    def 'Fails if no configuration dependency is specified'() {
+    def './gradlew baselineUpdateConfig should still work even if no configuration dependency is specified'() {
         when:
         buildFile << standardBuildFile
 
+        // forcing is necessary here because Implementation-Version is only available after publish, not during tests
+        buildFile << """
+        configurations.baseline {
+            resolutionStrategy { force 'com.palantir.baseline:gradle-baseline-java-config:${projectVersion}' }
+        }
+        """
+
         then:
-        with('baselineUpdateConfig').buildAndFail().output.contains(
-                "Expected to find exactly one config dependency in the 'baseline' configuration, found: []")
+        with('baselineUpdateConfig').build()
+        !directory('.baseline').list().toList().isEmpty()
     }
 
     def 'Fails if too many configuration dependencies are specified'() {

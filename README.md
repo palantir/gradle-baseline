@@ -34,12 +34,6 @@ repositories {
     maven { url  "http://palantir.bintray.com/releases" }
 }
 
-dependencies {
-    // Adds a dependency on the Baseline configuration files. Typically use
-    // the same version as the plugin itself.
-    baseline "com.palantir.baseline:gradle-baseline-java-config:<version>@zip"
-}
-
 apply plugin: 'java'
 apply plugin: 'org.inferred.processors'  // installs the "processor" configuration needed for baseline-error-prone
 apply plugin: 'com.palantir.baseline'
