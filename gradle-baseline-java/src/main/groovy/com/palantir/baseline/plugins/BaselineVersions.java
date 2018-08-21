@@ -20,11 +20,20 @@ import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 import netflix.nebula.dependency.recommender.DependencyRecommendationsPlugin;
 import netflix.nebula.dependency.recommender.RecommendationStrategies;
+import netflix.nebula.dependency.recommender.provider.RecommendationProvider;
 import netflix.nebula.dependency.recommender.provider.RecommendationProviderContainer;
+import org.apache.commons.lang3.tuple.Pair;
+import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.plugins.BasePlugin;
 
 /**
  * Transitively applies nebula.dependency recommender to replace the following common gradle snippet.
@@ -53,17 +62,31 @@ public final class BaselineVersions implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
-        File rootVersionsPropsFile = rootVersionsPropsFile(project);
+
 
         // apply plugin: "nebula.dependency-recommender"
         project.getPluginManager().apply(DependencyRecommendationsPlugin.class);
 
         // get dependencyRecommendations extension
-        RecommendationProviderContainer extension = project.getExtensions()
+        project
+                .getExtensions()
+                .getByType(RecommendationProviderContainer.class)
+                .whenObjectAdded(recommendationProvider -> applyPropsFile(project));
+
+        project.getTasks().create("checkBomConflict", BomConflictCheckTask.class);
+        project.getTasks().create("checkNoUnusedPin", NoUnusedPinCheckTask.class);
+        project.getPlugins().apply(BasePlugin.class);
+        project.getTasks().create("checkVersionsProp");
+        project.getTasks().getByName("checkVersionsProp").dependsOn("checkBomConflict", "checkNoUnusedPin");
+        project.getTasks().getByName("check").dependsOn("checkVersionsProp");
+    }
+
+    private static void applyPropsFile(Project project) {
+        File rootVersionsPropsFile = rootVersionsPropsFile(project);
+        RecommendationProviderContainer extension = project
+                .getExtensions()
                 .getByType(RecommendationProviderContainer.class);
-
         extension.setStrategy(RecommendationStrategies.OverrideTransitives); // default is 'ConflictResolved'
-
         extension.propertiesFile(ImmutableMap.of("file", rootVersionsPropsFile));
 
         // allow nested projects to specify their own nested versions.props file
@@ -83,5 +106,61 @@ public final class BaselineVersions implements Plugin<Project> {
             }
         }
         return file;
+    }
+
+    public static Set<String> getResolvedArtifacts(Project rootProject) {
+        Set<String> artifacts = new HashSet<>();
+        rootProject.getAllprojects().forEach(project -> {
+            project.getConfigurations().stream().forEach(configuration -> {
+                try {
+                    configuration
+                            .getResolvedConfiguration()
+                            .getResolvedArtifacts().stream()
+                            .map(resolvedArtifact ->
+                                    resolvedArtifact.getModuleVersion().getId().getGroup() + ":"
+                                            + resolvedArtifact.getName())
+                            .forEach(artifacts::add);
+                } catch (IllegalStateException e) {
+                    //in every case so far, tnose IleegalStateException are ignorable. It's just the specific
+                    // configuration that does not allow for its artifact dependencies to be resolved. just skip
+                } catch (Exception e) {
+                    throw new RuntimeException("Error during resolution of the artifacts of all"
+                            + "configuration from all subprojcts", e);
+                }
+            });
+        });
+        return artifacts;
+    }
+
+    public static void checkVersionsProp(Project project, Function<Pair<String, String>, Void> function) {
+        checkVersionsProp(project, function, "versions.props");
+    }
+
+    public static void checkVersionsProp(Project project, Function<Pair<String, String>, Void> function, String path) {
+        File propFile = project.getRootDir().toPath().resolve(path).toFile();
+        boolean active = true;
+        if (propFile.exists()) {
+            try {
+                List<String> lines = Files.newBufferedReader(propFile.toPath()).lines().collect(
+                        Collectors.toList());
+                for (String line : lines) {
+                    if (line.equals("# linter:ON")) {
+                        active = true;
+                    } else if (line.equals("# linter:OFF")) {
+                        active = false;
+                    }
+                    if (active && line.length() > 0 && line.charAt(0) != '#' && line.matches(".*:.*\\s*=\\s*.*")) {
+                        String[] split = line.split("\\s*=\\s*");
+                        String propName = split[0];
+                        String propVersion = split[1];
+                        function.apply(Pair.of(propName, propVersion));
+                    }
+                }
+            } catch (IOException e) {
+                throw new RuntimeException("Error reading " + path + " file");
+            }
+        } else {
+            throw new RuntimeException("No " + path + " file found");
+        }
     }
 }
