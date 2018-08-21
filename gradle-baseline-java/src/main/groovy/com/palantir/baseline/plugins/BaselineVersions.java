@@ -27,10 +27,8 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import netflix.nebula.dependency.recommender.DependencyRecommendationsPlugin;
 import netflix.nebula.dependency.recommender.RecommendationStrategies;
-import netflix.nebula.dependency.recommender.provider.RecommendationProvider;
 import netflix.nebula.dependency.recommender.provider.RecommendationProviderContainer;
 import org.apache.commons.lang3.tuple.Pair;
-import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.BasePlugin;
@@ -63,15 +61,16 @@ public final class BaselineVersions implements Plugin<Project> {
     @Override
     public void apply(Project project) {
 
-
         // apply plugin: "nebula.dependency-recommender"
         project.getPluginManager().apply(DependencyRecommendationsPlugin.class);
 
         // get dependencyRecommendations extension
-        project
+        RecommendationProviderContainer extension = project
                 .getExtensions()
-                .getByType(RecommendationProviderContainer.class)
-                .whenObjectAdded(recommendationProvider -> applyPropsFile(project));
+                .getByType(RecommendationProviderContainer.class);
+
+        extension.setStrategy(RecommendationStrategies.OverrideTransitives); // default is 'ConflictResolved';
+        extension.whenObjectAdded(recommendationProvider -> applyPropsFile(project));
 
         project.getTasks().create("checkBomConflict", BomConflictCheckTask.class);
         project.getTasks().create("checkNoUnusedPin", NoUnusedPinCheckTask.class);
@@ -86,9 +85,8 @@ public final class BaselineVersions implements Plugin<Project> {
         RecommendationProviderContainer extension = project
                 .getExtensions()
                 .getByType(RecommendationProviderContainer.class);
-        extension.setStrategy(RecommendationStrategies.OverrideTransitives); // default is 'ConflictResolved'
-        extension.propertiesFile(ImmutableMap.of("file", rootVersionsPropsFile));
 
+        extension.propertiesFile(ImmutableMap.of("file", rootVersionsPropsFile));
         // allow nested projects to specify their own nested versions.props file
         if (project != project.getRootProject() && project.file("versions.props").exists()) {
             extension.propertiesFile(ImmutableMap.of("file", project.file("versions.props")));
