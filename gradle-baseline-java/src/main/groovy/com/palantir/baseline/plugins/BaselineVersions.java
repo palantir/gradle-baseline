@@ -80,8 +80,10 @@ public final class BaselineVersions implements Plugin<Project> {
         project.getTasks().create("checkBomConflict", BomConflictCheckTask.class, rootVersionsPropsFile);
         project.getTasks().create("checkNoUnusedPin", NoUnusedPinCheckTask.class, rootVersionsPropsFile);
         project.getPluginManager().apply(BasePlugin.class);
-        project.getTasks().create("checkVersionsProps").dependsOn("checkBomConflict", "checkNoUnusedPin");
-        project.getTasks().getByName("check").dependsOn("checkVersionsProp");
+        project.getTasks().register("checkVersionsProps").configure(task -> {
+            task.dependsOn("checkBomConflict", "checkNoUnusedPin");
+            project.getTasks().getByName("check").dependsOn("checkVersionsProp");
+        });
     }
 
     private static File rootVersionsPropsFile(Project project) {
@@ -125,8 +127,7 @@ public final class BaselineVersions implements Plugin<Project> {
         boolean active = true;
         if (propsFile.exists()) {
             try {
-                List<String> lines = Files.newBufferedReader(propsFile.toPath()).lines().collect(
-                        Collectors.toList());
+                List<String> lines = Files.readAllLines(propsFile.toPath());
                 for (String line : lines) {
                     if (line.equals("# linter:ON")) {
                         active = true;

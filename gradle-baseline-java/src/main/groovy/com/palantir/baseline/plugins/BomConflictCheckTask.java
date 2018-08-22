@@ -62,17 +62,17 @@ public class BomConflictCheckTask extends DefaultTask {
         BaselineVersions.checkVersionsProp(getPropsFile(),
                 (propName, propVersion) -> {
                     String regex = propName.replaceAll("\\*", ".*");
-                    artifacts.forEach(artifactName -> {
-                        if (artifactName.matches(regex)) {
-                            resolvedConflicts.put(artifactName, propName);
-                        }
-                    });
-                    recommendations.forEach((bomName, bomVersion) -> {
-                        if (bomName.matches(regex)) {
-                            conflicts.add(new Conflict(propName, propVersion, bomName, bomVersion));
-                            resolvedConflicts.remove(bomName);
-                        }
-                    });
+                    artifacts.stream()
+                            .filter(artifactName -> artifactName.matches(regex))
+                            .forEach(artifactName -> resolvedConflicts.put(artifactName, propName));
+                    
+                    recommendations.entrySet()
+                            .stream()
+                            .filter(entry -> entry.getKey().matches(regex))
+                            .forEach(entry -> {
+                                conflicts.add(new Conflict(propName, propVersion, entry.getKey(), entry.getValue()));
+                                resolvedConflicts.remove(entry.getKey());
+                            });
                     return null;
                 });
 
