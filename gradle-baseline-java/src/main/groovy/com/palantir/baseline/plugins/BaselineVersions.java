@@ -80,10 +80,8 @@ public final class BaselineVersions implements Plugin<Project> {
         project.getTasks().create("checkBomConflict", BomConflictCheckTask.class, rootVersionsPropsFile);
         project.getTasks().create("checkNoUnusedPin", NoUnusedPinCheckTask.class, rootVersionsPropsFile);
         project.getPluginManager().apply(BasePlugin.class);
-        project.getTasks().register("checkVersionsProps").configure(task -> {
-            task.dependsOn("checkBomConflict", "checkNoUnusedPin");
-            project.getTasks().getByName("check").dependsOn("checkVersionsProp");
-        });
+        project.getTasks().getByName("checkVersionsProps").dependsOn("checkBomConflict", "checkNoUnusedPin");
+        project.getTasks().getByName("check").dependsOn("checkVersionsProp");
     }
 
     private static File rootVersionsPropsFile(Project project) {
