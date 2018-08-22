@@ -36,7 +36,7 @@ public class BomConflictCheckTask extends DefaultTask {
     private final File propsFile;
 
     @Inject
-    BomConflictCheckTask(File propsFile) {
+    public BomConflictCheckTask(File propsFile) {
         this.propsFile = propsFile;
     }
 

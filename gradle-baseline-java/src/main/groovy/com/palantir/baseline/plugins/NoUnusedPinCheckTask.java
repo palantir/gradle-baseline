@@ -32,7 +32,7 @@ public class NoUnusedPinCheckTask extends DefaultTask {
     private final File propsFile;
 
     @Inject
-    NoUnusedPinCheckTask(File propsFile) {
+    public NoUnusedPinCheckTask(File propsFile) {
         this.propsFile = propsFile;
     }
 
