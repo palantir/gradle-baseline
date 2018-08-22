@@ -69,9 +69,14 @@ public final class BaselineVersions implements Plugin<Project> {
                 .getByType(RecommendationProviderContainer.class);
 
         extension.setStrategy(RecommendationStrategies.OverrideTransitives); // default is 'ConflictResolved';
-        extension.whenObjectAdded(recommendationProvider -> applyPropsFile(project));
 
         File rootVersionsPropsFile = rootVersionsPropsFile(project);
+
+        extension.propertiesFile(ImmutableMap.of("file", rootVersionsPropsFile));
+        // allow nested projects to specify their own nested versions.props file
+        if (project != project.getRootProject() && project.file("versions.props").exists()) {
+            extension.propertiesFile(ImmutableMap.of("file", project.file("versions.props")));
+        }
         project.getTasks().create("checkBomConflict", BomConflictCheckTask.class, rootVersionsPropsFile);
         project.getTasks().create("checkNoUnusedPin", NoUnusedPinCheckTask.class, rootVersionsPropsFile);
         project.getPluginManager().apply(BasePlugin.class);
@@ -79,19 +84,6 @@ public final class BaselineVersions implements Plugin<Project> {
             task.dependsOn("checkBomConflict", "checkNoUnusedPin");
             project.getTasks().getByName("check").dependsOn("checkVersionsProp");
         });
-    }
-
-    private static void applyPropsFile(Project project) {
-        File rootVersionsPropsFile = rootVersionsPropsFile(project);
-        RecommendationProviderContainer extension = project
-                .getExtensions()
-                .getByType(RecommendationProviderContainer.class);
-
-        extension.propertiesFile(ImmutableMap.of("file", rootVersionsPropsFile));
-        // allow nested projects to specify their own nested versions.props file
-        if (project != project.getRootProject() && project.file("versions.props").exists()) {
-            extension.propertiesFile(ImmutableMap.of("file", project.file("versions.props")));
-        }
     }
 
     private static File rootVersionsPropsFile(Project project) {
