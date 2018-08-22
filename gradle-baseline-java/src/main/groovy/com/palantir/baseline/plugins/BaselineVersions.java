@@ -23,12 +23,11 @@ import java.nio.file.Files;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.Function;
+import java.util.function.BiFunction;
 import java.util.stream.Collectors;
 import netflix.nebula.dependency.recommender.DependencyRecommendationsPlugin;
 import netflix.nebula.dependency.recommender.RecommendationStrategies;
 import netflix.nebula.dependency.recommender.provider.RecommendationProviderContainer;
-import org.apache.commons.lang3.tuple.Pair;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.BasePlugin;
@@ -72,12 +71,14 @@ public final class BaselineVersions implements Plugin<Project> {
         extension.setStrategy(RecommendationStrategies.OverrideTransitives); // default is 'ConflictResolved';
         extension.whenObjectAdded(recommendationProvider -> applyPropsFile(project));
 
-        project.getTasks().create("checkBomConflict", BomConflictCheckTask.class);
-        project.getTasks().create("checkNoUnusedPin", NoUnusedPinCheckTask.class);
-        project.getPlugins().apply(BasePlugin.class);
-        project.getTasks().create("checkVersionsProps");
-        project.getTasks().getByName("checkVersionsProps").dependsOn("checkBomConflict", "checkNoUnusedPin");
-        project.getTasks().getByName("check").dependsOn("checkVersionsProp");
+        File rootVersionsPropsFile = rootVersionsPropsFile(project);
+        project.getTasks().create("checkBomConflict", BomConflictCheckTask.class, rootVersionsPropsFile);
+        project.getTasks().create("checkNoUnusedPin", NoUnusedPinCheckTask.class, rootVersionsPropsFile);
+        project.getPluginManager().apply(BasePlugin.class);
+        project.getTasks().register("checkVersionsProps").configure(task -> {
+            task.dependsOn("checkBomConflict", "checkNoUnusedPin");
+            project.getTasks().getByName("check").dependsOn("checkVersionsProp");
+        });
     }
 
     private static void applyPropsFile(Project project) {
@@ -130,16 +131,11 @@ public final class BaselineVersions implements Plugin<Project> {
         return artifacts;
     }
 
-    public static void checkVersionsProp(Project project, Function<Pair<String, String>, Void> function) {
-        checkVersionsProp(project, function, "versions.props");
-    }
-
-    public static void checkVersionsProp(Project project, Function<Pair<String, String>, Void> function, String path) {
-        File propFile = project.getRootDir().toPath().resolve(path).toFile();
+    public static void checkVersionsProp(File propsFile, BiFunction<String, String, Void> function) {
         boolean active = true;
-        if (propFile.exists()) {
+        if (propsFile.exists()) {
             try {
-                List<String> lines = Files.newBufferedReader(propFile.toPath()).lines().collect(
+                List<String> lines = Files.newBufferedReader(propsFile.toPath()).lines().collect(
                         Collectors.toList());
                 for (String line : lines) {
                     if (line.equals("# linter:ON")) {
@@ -151,14 +147,14 @@ public final class BaselineVersions implements Plugin<Project> {
                         String[] split = line.split("\\s*=\\s*");
                         String propName = split[0];
                         String propVersion = split[1];
-                        function.apply(Pair.of(propName, propVersion));
+                        function.apply(propName, propVersion);
                     }
                 }
             } catch (IOException e) {
-                throw new RuntimeException("Error reading " + path + " file");
+                throw new RuntimeException("Error reading " + propsFile.toPath() + " file");
             }
         } else {
-            throw new RuntimeException("No " + path + " file found");
+            throw new RuntimeException("No " + propsFile.toPath() + " file found");
         }
     }
 }

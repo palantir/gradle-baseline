@@ -16,21 +16,36 @@
 
 package com.palantir.baseline.plugins;
 
+import java.io.File;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.inject.Inject;
 import netflix.nebula.dependency.recommender.provider.RecommendationProviderContainer;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.TaskAction;
 
 
-public class BomConflictCheckTask extends DefaultTask {
+public final class BomConflictCheckTask extends DefaultTask {
+
+    private final File propsFile;
+
+    @Inject
+    BomConflictCheckTask(File propsFile) {
+        this.propsFile = propsFile;
+    }
+
+    @InputFile
+    public File getPropsFile() {
+        return propsFile;
+    }
 
     @TaskAction
-    public final void checkBomConflict() {
+    public void checkBomConflict() {
         final Map<String, String> recommendations = getProject().getExtensions()
                 .getByType(RecommendationProviderContainer.class)
                 .getMavenBomProvider()
@@ -38,10 +53,8 @@ public class BomConflictCheckTask extends DefaultTask {
         List<Conflict> conflicts = new LinkedList<>();
         Set<String> artifacts = BaselineVersions.getResolvedArtifacts(getProject());
         Map<String, String> resolvedConflicts = new HashMap<>();
-        BaselineVersions.checkVersionsProp(getProject(),
-                pair -> {
-                    String propName = pair.getLeft();
-                    String propVersion = pair.getRight();
+        BaselineVersions.checkVersionsProp(getPropsFile(),
+                (propName, propVersion) -> {
                     String regex = propName.replaceAll("\\*", ".*");
                     artifacts.forEach(artifactName -> {
                         if (artifactName.matches(regex)) {
