@@ -26,11 +26,12 @@ import java.util.stream.Collectors;
 import javax.inject.Inject;
 import netflix.nebula.dependency.recommender.provider.RecommendationProviderContainer;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.TaskAction;
 
 
-public final class BomConflictCheckTask extends DefaultTask {
+public class BomConflictCheckTask extends DefaultTask {
 
     private final File propsFile;
 
@@ -39,17 +40,22 @@ public final class BomConflictCheckTask extends DefaultTask {
         this.propsFile = propsFile;
     }
 
+    @Input
+    public final Map<String, String> getMavenBomRecommendations() {
+        return getProject().getExtensions()
+                .getByType(RecommendationProviderContainer.class)
+                .getMavenBomProvider()
+                .getRecommendations();
+    }
+
     @InputFile
-    public File getPropsFile() {
+    public final File getPropsFile() {
         return propsFile;
     }
 
     @TaskAction
-    public void checkBomConflict() {
-        final Map<String, String> recommendations = getProject().getExtensions()
-                .getByType(RecommendationProviderContainer.class)
-                .getMavenBomProvider()
-                .getRecommendations();
+    public final void checkBomConflict() {
+        final Map<String, String> recommendations = getMavenBomRecommendations();
         List<Conflict> conflicts = new LinkedList<>();
         Set<String> artifacts = BaselineVersions.getResolvedArtifacts(getProject());
         Map<String, String> resolvedConflicts = new HashMap<>();

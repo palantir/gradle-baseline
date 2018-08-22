@@ -23,10 +23,11 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.TaskAction;
 
-public final class NoUnusedPinCheckTask extends DefaultTask {
+public class NoUnusedPinCheckTask extends DefaultTask {
 
     private final File propsFile;
 
@@ -35,14 +36,19 @@ public final class NoUnusedPinCheckTask extends DefaultTask {
         this.propsFile = propsFile;
     }
 
+    @Input
+    public final Set<String> getResolvedArtifacts() {
+        return BaselineVersions.getResolvedArtifacts(getProject());
+    }
+
     @InputFile
-    public File getPropsFile() {
+    public final File getPropsFile() {
         return propsFile;
     }
 
     @TaskAction
-    public void checkNoUnusedPin() {
-        Set<String> artifacts = BaselineVersions.getResolvedArtifacts(getProject());
+    public final void checkNoUnusedPin() {
+        Set<String> artifacts = getResolvedArtifacts();
         List<String> unusedProps = new LinkedList<>();
         BaselineVersions.checkVersionsProp(getPropsFile(),
                 (propName, propVersion) -> {
