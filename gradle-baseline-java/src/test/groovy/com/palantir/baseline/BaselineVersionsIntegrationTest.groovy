@@ -24,7 +24,7 @@ import org.gradle.testkit.runner.TaskOutcome
 
 class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
 
-    def version = "42.42.42"
+    def bomVersion = "42.42.42"
 
     def standardBuildFile(File projectDir) {
         """
@@ -43,7 +43,7 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
         }
         
         dependencyRecommendations {
-            mavenBom module: 'com.palantir.product:your-bom:${version}'
+            mavenBom module: 'com.palantir.product:your-bom:${bomVersion}'
         }
         """.stripIndent()
     }
@@ -72,9 +72,9 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
                   </dependencyManagement>
                 </project>
             """.stripIndent()
-        Path bomPath = Paths.get(projectDir.toString(), "maven", "com", "palantir", "product", "your-bom", version)
+        Path bomPath = Paths.get(projectDir.toString(), "maven", "com", "palantir", "product", "your-bom", bomVersion)
         java.nio.file.Files.createDirectories(bomPath)
-        Files.write(bomContent.getBytes(StandardCharsets.UTF_8), bomPath.resolve("your-bom-${version}.pom").toFile())
+        Files.write(bomContent.getBytes(StandardCharsets.UTF_8), bomPath.resolve("your-bom-${bomVersion}.pom").toFile())
     }
 
     def setupVersionsProps(String propsContent) {
