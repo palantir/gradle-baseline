@@ -49,24 +49,63 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
     }
 
     def setupBom() {
-        String bomContent = """
-            42
-        """
+        String bomContent =
+
+            """<?xml version="1.0" encoding="UTF-8"?>
+                <project xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+                  <modelVersion>4.0.0</modelVersion>
+                  <groupId>com.palantir.product</groupId>
+                  <artifactId>your-bom</artifactId>
+                  <version>42.42.42</version>
+                  <dependencies>
+                  </dependencies>
+                  <name>your-bom</name>
+                  <description/>
+                  <dependencyManagement>
+                    <dependencies>
+                      <dependency>
+                        <groupId>junit</groupId>
+                        <artifactId>junit</artifactId>
+                        <version>4.12</version>
+                      </dependency>
+                      <dependency>
+                        <groupId>junit</groupId>
+                        <artifactId>junit</artifactId>
+                        <version>4.13</version>
+                      </dependency>
+                    </dependencies>
+                  </dependencyManagement>
+                </project>
+            """.stripIndent()
         Path bomPath = Paths.get(projectDir.toString(), "maven", "com", "palantir", "product", "your-bom", version)
         java.nio.file.Files.createDirectories(bomPath)
         Files.write(bomContent.getBytes(StandardCharsets.UTF_8), bomPath.resolve("your-bom-${version}.pom").toFile())
     }
 
-    def setupProps() {
-        String propsContent = """
-            42
-        """
+    def setupVersionsProps(String propsContent) {
         Files.write(propsContent.getBytes(StandardCharsets.UTF_8), projectDir.toPath().resolve("versions.props").toFile())
     }
 
     def setup() {
         setupBom()
-        setupProps()
+    }
+
+    def checkVersionsPropsSucceed() {
+        try {
+            with('checkVersionsProps', '--stacktrace').build()
+            ""
+        } catch (Exception e) {
+            e.getMessage()
+        }
+    }
+
+    def 'Override version conflict should succeed'() {
+        when:
+        setupVersionsProps("junit:junit = 4.11")
+        buildFile << standardBuildFile(projectDir)
+
+        then:
+        checkVersionsPropsSucceed() == ""
     }
 
     def 'Task should run as part of :check'() {
@@ -75,7 +114,38 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
 
         then:
         def result = with('check', '--stacktrace').build()
-        println result.output
         result.task(':checkVersionsProps').outcome == TaskOutcome.SUCCESS
     }
+
+    def 'Same version conflict should fail'() {
+        when:
+        setupVersionsProps("junit:junit = 4.12")
+        buildFile << standardBuildFile(projectDir)
+
+        then:
+            checkVersionsPropsSucceed()
+                    .contains("Critical conflicts between versions.props and the bom (overriding with same version)")
+
+    }
+
+    def 'Same version conflict but wildcard override at least one should succeed'() {
+        when:
+        setupVersionsProps("junit:* = 4.12")
+        buildFile << standardBuildFile(projectDir)
+
+        then:
+        checkVersionsPropsSucceed() == ""
+
+    }
+
+    def 'Unused version should fail'() {
+        when:
+        setupVersionsProps("notused:atall = 4.12")
+        buildFile << standardBuildFile(projectDir)
+
+        then:
+        checkVersionsPropsSucceed()
+                .contains("There are unused pins in your versions.props")
+    }
+
 }
