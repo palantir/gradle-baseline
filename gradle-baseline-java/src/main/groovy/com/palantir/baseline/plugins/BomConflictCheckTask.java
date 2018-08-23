@@ -77,7 +77,7 @@ public class BomConflictCheckTask extends DefaultTask {
                 });
 
         //Critical conflicts are versions.props line that only override bom recommendations with same version
-        //so it should avoid considering the case where a wildcard also pin an artifact not present in the
+        //so it should avoid considering the case where a wildcard also pin an artifact not present in the bom
         List<Conflict> critical = conflicts.stream()
                 .filter(c -> c.getBomVersion().equals(c.getPropVersion()))
                 .filter(c -> !resolvedConflicts.containsValue(c.getPropName()))

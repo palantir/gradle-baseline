@@ -39,7 +39,7 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
         }
         
         dependencies {
-            compile 'junit:junit'
+            compile 'org.scala-lang:scala-library'
         }
         
         dependencyRecommendations {
@@ -64,14 +64,9 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
                   <dependencyManagement>
                     <dependencies>
                       <dependency>
-                        <groupId>junit</groupId>
-                        <artifactId>junit</artifactId>
-                        <version>4.12</version>
-                      </dependency>
-                      <dependency>
-                        <groupId>junit</groupId>
-                        <artifactId>junit</artifactId>
-                        <version>4.13</version>
+                        <groupId>org.scala-lang</groupId>
+                        <artifactId>scala-library</artifactId>
+                        <version>2.12.5</version>
                       </dependency>
                     </dependencies>
                   </dependencyManagement>
@@ -101,7 +96,7 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
 
     def 'Override version conflict should succeed'() {
         when:
-        setupVersionsProps("junit:junit = 4.11")
+        setupVersionsProps("org.scala-lang:scala-library = 2.12.6")
         buildFile << standardBuildFile(projectDir)
 
         then:
@@ -119,7 +114,7 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
 
     def 'Same version conflict should fail'() {
         when:
-        setupVersionsProps("junit:junit = 4.12")
+        setupVersionsProps("org.scala-lang:scala-library = 2.12.5")
         buildFile << standardBuildFile(projectDir)
 
         then:
@@ -130,8 +125,11 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
 
     def 'Same version conflict but wildcard override at least one should succeed'() {
         when:
-        setupVersionsProps("junit:* = 4.12")
-        buildFile << standardBuildFile(projectDir)
+        setupVersionsProps("org.scala-lang:scala-* = 2.12.5")
+        buildFile << standardBuildFile(projectDir) + """
+        dependencies {
+            compile 'org.scala-lang:scala-reflect'
+        }"""
 
         then:
         checkVersionsPropsSucceed() == ""
@@ -140,7 +138,7 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
 
     def 'Unused version should fail'() {
         when:
-        setupVersionsProps("notused:atall = 4.12")
+        setupVersionsProps("notused:atall = 42.42")
         buildFile << standardBuildFile(projectDir)
 
         then:
