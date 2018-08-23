@@ -24,7 +24,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiFunction;
-import java.util.stream.Collectors;
 import netflix.nebula.dependency.recommender.DependencyRecommendationsPlugin;
 import netflix.nebula.dependency.recommender.RecommendationStrategies;
 import netflix.nebula.dependency.recommender.provider.RecommendationProviderContainer;
@@ -68,7 +67,7 @@ public final class BaselineVersions implements Plugin<Project> {
                 .getExtensions()
                 .getByType(RecommendationProviderContainer.class);
 
-        extension.setStrategy(RecommendationStrategies.OverrideTransitives); // default is 'ConflictResolved';
+        extension.setStrategy(RecommendationStrategies.OverrideTransitives); // default is 'ConflictResolved'
 
         File rootVersionsPropsFile = rootVersionsPropsFile(project);
 
@@ -80,10 +79,9 @@ public final class BaselineVersions implements Plugin<Project> {
         project.getTasks().create("checkBomConflict", BomConflictCheckTask.class, rootVersionsPropsFile);
         project.getTasks().create("checkNoUnusedPin", NoUnusedPinCheckTask.class, rootVersionsPropsFile);
         project.getPluginManager().apply(BasePlugin.class);
-        project.getTasks().register("checkVersionsProps").configure(task -> {
-            task.dependsOn("checkBomConflict", "checkNoUnusedPin");
-            project.getTasks().getByName("check").dependsOn("checkVersionsProp");
-        });
+        project.getTasks().register("checkVersionsProps").configure(task ->
+                task.dependsOn("checkBomConflict", "checkNoUnusedPin"));
+        project.getTasks().getByName("check").dependsOn("checkVersionsProps");
     }
 
     private static File rootVersionsPropsFile(Project project) {

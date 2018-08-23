@@ -65,7 +65,7 @@ public class BomConflictCheckTask extends DefaultTask {
                     artifacts.stream()
                             .filter(artifactName -> artifactName.matches(regex))
                             .forEach(artifactName -> resolvedConflicts.put(artifactName, propName));
-                    
+
                     recommendations.entrySet()
                             .stream()
                             .filter(entry -> entry.getKey().matches(regex))
