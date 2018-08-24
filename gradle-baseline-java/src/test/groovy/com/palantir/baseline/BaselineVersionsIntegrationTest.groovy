@@ -16,8 +16,8 @@
 
 package com.palantir.baseline
 
-import com.google.common.io.Files
 import java.nio.charset.StandardCharsets
+import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths;
 import org.gradle.testkit.runner.TaskOutcome
@@ -48,9 +48,8 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
         """.stripIndent()
     }
 
-    def setupBom() {
+    def setup() {
         String bomContent =
-
             """<?xml version="1.0" encoding="UTF-8"?>
                 <project xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
                   <modelVersion>4.0.0</modelVersion>
@@ -73,16 +72,12 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
                 </project>
             """.stripIndent()
         Path bomPath = Paths.get(projectDir.toString(), "maven", "com", "palantir", "product", "your-bom", bomVersion)
-        java.nio.file.Files.createDirectories(bomPath)
-        Files.write(bomContent.getBytes(StandardCharsets.UTF_8), bomPath.resolve("your-bom-${bomVersion}.pom").toFile())
+        Files.createDirectories(bomPath)
+        Files.write(bomPath.resolve("your-bom-${bomVersion}.pom"), bomContent.getBytes(StandardCharsets.UTF_8))
     }
 
     def setupVersionsProps(String propsContent) {
-        Files.write(propsContent.getBytes(StandardCharsets.UTF_8), projectDir.toPath().resolve("versions.props").toFile())
-    }
-
-    def setup() {
-        setupBom()
+        Files.write(projectDir.toPath().resolve("versions.props"), propsContent.getBytes(StandardCharsets.UTF_8))
     }
 
     def checkVersionsPropsSucceed() {

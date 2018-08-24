@@ -17,6 +17,7 @@
 package com.palantir.baseline.plugins;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -24,6 +25,8 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiFunction;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import netflix.nebula.dependency.recommender.DependencyRecommendationsPlugin;
 import netflix.nebula.dependency.recommender.RecommendationStrategies;
 import netflix.nebula.dependency.recommender.provider.RecommendationProviderContainer;
@@ -76,12 +79,11 @@ public final class BaselineVersions implements Plugin<Project> {
         if (project != project.getRootProject() && project.file("versions.props").exists()) {
             extension.propertiesFile(ImmutableMap.of("file", project.file("versions.props")));
         }
-        project.getTasks().create("checkBomConflict", BomConflictCheckTask.class, rootVersionsPropsFile);
-        project.getTasks().create("checkNoUnusedPin", NoUnusedPinCheckTask.class, rootVersionsPropsFile);
+        project.getTasks().register("checkBomConflict", BomConflictCheckTask.class, rootVersionsPropsFile);
+        project.getTasks().register("checkNoUnusedPin", NoUnusedPinCheckTask.class, rootVersionsPropsFile);
         project.getPluginManager().apply(BasePlugin.class);
-        project.getTasks().register("checkVersionsProps").configure(task ->
-                task.dependsOn("checkBomConflict", "checkNoUnusedPin"));
-        project.getTasks().getByName("check").dependsOn("checkVersionsProps");
+        project.getTasks().register("checkVersionsProps", task -> task.dependsOn("checkBomConflict", "checkNoUnusedPin"));
+        project.getTasks().named("check").get().dependsOn("checkVersionsProps");
     }
 
     private static File rootVersionsPropsFile(Project project) {
@@ -97,28 +99,26 @@ public final class BaselineVersions implements Plugin<Project> {
         return file;
     }
 
-    public static Set<String> getResolvedArtifacts(Project rootProject) {
-        Set<String> artifacts = new HashSet<>();
-        rootProject.getAllprojects().forEach(project -> {
-            project.getConfigurations().stream().forEach(configuration -> {
+    public static Set<String> getResolvedArtifacts(Project project) {
+        return project.getRootProject().getAllprojects().stream().flatMap(project1 ->
+            project1.getConfigurations().stream().flatMap(configuration -> {
                 try {
-                    configuration
+                    return configuration
                             .getResolvedConfiguration()
                             .getResolvedArtifacts().stream()
                             .map(resolvedArtifact ->
                                     resolvedArtifact.getModuleVersion().getId().getGroup() + ":"
-                                            + resolvedArtifact.getName())
-                            .forEach(artifacts::add);
+                                            + resolvedArtifact.getName());
                 } catch (IllegalStateException e) {
                     //in every case so far, tnose IleegalStateException are ignorable. It's just the specific
                     // configuration that does not allow for its artifact dependencies to be resolved. just skip
+                    return Stream.of();
                 } catch (Exception e) {
                     throw new RuntimeException("Error during resolution of the artifacts of all"
-                            + "configuration from all subprojcts", e);
+                            + "configuration from all subprojects", e);
                 }
-            });
-        });
-        return artifacts;
+            }))
+                .collect(Collectors.toSet());
     }
 
     public static void checkVersionsProp(File propsFile, BiFunction<String, String, Void> function) {

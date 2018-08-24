@@ -60,7 +60,7 @@ public class NoUnusedPinCheckTask extends DefaultTask {
                 });
 
         if (!unusedProps.isEmpty()) {
-            String unusedPropsString = unusedProps.stream().collect(Collectors.joining("\n"));
+            String unusedPropsString = String.join("\n", unusedProps);
             throw new RuntimeException("There are unused pins in your versions.props: \n" + unusedPropsString);
         }
     }
