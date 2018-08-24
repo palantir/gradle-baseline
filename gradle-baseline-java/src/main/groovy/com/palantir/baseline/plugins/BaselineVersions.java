@@ -17,11 +17,9 @@
 package com.palantir.baseline.plugins;
 
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Sets;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -82,7 +80,8 @@ public final class BaselineVersions implements Plugin<Project> {
         project.getTasks().register("checkBomConflict", BomConflictCheckTask.class, rootVersionsPropsFile);
         project.getTasks().register("checkNoUnusedPin", NoUnusedPinCheckTask.class, rootVersionsPropsFile);
         project.getPluginManager().apply(BasePlugin.class);
-        project.getTasks().register("checkVersionsProps", task -> task.dependsOn("checkBomConflict", "checkNoUnusedPin"));
+        project.getTasks().register("checkVersionsProps",
+                task -> task.dependsOn("checkBomConflict", "checkNoUnusedPin"));
         project.getTasks().named("check").get().dependsOn("checkVersionsProps");
     }
 
