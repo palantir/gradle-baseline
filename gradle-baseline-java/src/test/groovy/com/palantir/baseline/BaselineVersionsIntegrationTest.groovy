@@ -19,7 +19,8 @@ package com.palantir.baseline
 import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.Paths;
+import java.nio.file.Paths
+import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.TaskOutcome
 
 class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
@@ -80,13 +81,15 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
         Files.write(projectDir.toPath().resolve("versions.props"), propsContent.getBytes(StandardCharsets.UTF_8))
     }
 
-    def checkVersionsPropsSucceed() {
-        try {
-            with('checkVersionsProps', '--stacktrace').build()
-            ""
-        } catch (Exception e) {
-            e.getMessage()
-        }
+    def buildSucceed() {
+        BuildResult result = with('checkVersionsProps').build()
+        result.task(':checkVersionsProps').outcome == TaskOutcome.SUCCESS
+    }
+
+    def buildAndFailWith(String error) {
+        BuildResult result = with('checkVersionsProps', '--stacktrace').build()
+        result.task(':checkVersionsProps').outcome == TaskOutcome.FAILED
+        result.output.contains(error)
     }
 
     def 'Override version conflict should succeed'() {
@@ -95,7 +98,7 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
         buildFile << standardBuildFile(projectDir)
 
         then:
-        checkVersionsPropsSucceed() == ""
+        buildSucceed()
     }
 
     def 'Task should run as part of :check'() {
@@ -113,8 +116,7 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
         buildFile << standardBuildFile(projectDir)
 
         then:
-            checkVersionsPropsSucceed()
-                    .contains("Critical conflicts between versions.props and the bom (overriding with same version)")
+        buildAndFailWith("Critical conflicts between versions.props and the bom (overriding with same version)")
 
     }
 
@@ -127,7 +129,7 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
         }"""
 
         then:
-        checkVersionsPropsSucceed() == ""
+        buildSucceed()
 
     }
 
@@ -137,8 +139,7 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
         buildFile << standardBuildFile(projectDir)
 
         then:
-        checkVersionsPropsSucceed()
-                .contains("There are unused pins in your versions.props")
+        buildAndFailWith("There are unused pins in your versions.props")
     }
 
 }
