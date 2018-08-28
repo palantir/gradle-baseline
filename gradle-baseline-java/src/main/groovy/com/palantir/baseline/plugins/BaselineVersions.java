@@ -32,6 +32,7 @@ import netflix.nebula.dependency.recommender.provider.RecommendationProviderCont
 import org.apache.commons.lang3.tuple.Pair;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.plugins.BasePlugin;
 
 /**
@@ -102,23 +103,21 @@ public final class BaselineVersions implements Plugin<Project> {
 
     public static Set<String> getResolvedArtifacts(Project project) {
         return project.getRootProject().getAllprojects().stream().flatMap(project1 ->
-            project1.getConfigurations().stream().flatMap(configuration -> {
-                try {
-                    return configuration
-                            .getResolvedConfiguration()
-                            .getResolvedArtifacts().stream()
-                            .map(resolvedArtifact ->
-                                    resolvedArtifact.getModuleVersion().getId().getGroup() + ":"
-                                            + resolvedArtifact.getName());
-                } catch (IllegalStateException e) {
-                    //in every case so far, tnose IleegalStateException are ignorable. It's just the specific
-                    // configuration that does not allow for its artifact dependencies to be resolved. just skip
-                    return Stream.of();
-                } catch (Exception e) {
-                    throw new RuntimeException("Error during resolution of the artifacts of all"
-                            + "configuration from all subprojects", e);
-                }
-            }))
+                project1.getConfigurations().stream()
+                        .filter(Configuration::isCanBeResolved)
+                        .flatMap(configuration -> {
+                            try {
+                                return configuration
+                                        .getResolvedConfiguration()
+                                        .getResolvedArtifacts().stream()
+                                        .map(resolvedArtifact ->
+                                                resolvedArtifact.getModuleVersion().getId().getGroup() + ":"
+                                                        + resolvedArtifact.getName());
+                            } catch (Exception e) {
+                                throw new RuntimeException("Error during resolution of the artifacts of all"
+                                        + "configuration from all subprojects", e);
+                            }
+                        }))
                 .collect(Collectors.toSet());
     }
 
@@ -138,7 +137,7 @@ public final class BaselineVersions implements Plugin<Project> {
                         String[] split = line.split("\\s*=\\s*");
                         String propName = split[0];
                         String propVersion = split[1];
-                        accumulator.add(Pair.of(propName, propVersion))
+                        accumulator.add(Pair.of(propName, propVersion));
                     }
                 }
             } catch (IOException e) {

@@ -25,6 +25,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import netflix.nebula.dependency.recommender.provider.RecommendationProviderContainer;
+import org.apache.commons.lang3.tuple.Pair;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
@@ -58,24 +59,29 @@ public class BomConflictCheckTask extends DefaultTask {
         Map<String, String> recommendations = getMavenBomRecommendations();
         List<Conflict> conflicts = new LinkedList<>();
         Set<String> artifacts = BaselineVersions.getResolvedArtifacts(getProject());
-        Map<String, String> resolvedConflicts = new HashMap<>();
-        BaselineVersions.readVersionsProps(getPropsFile()).forEach(
-                pair -> {
+        Map<String, String> resolvedConflicts = BaselineVersions.readVersionsProps(getPropsFile())
+                .stream()
+                .flatMap(pair -> {
                     String propName = pair.getLeft();
                     String propVersion = pair.getRight();
                     String regex = propName.replaceAll("\\*", ".*");
-                    artifacts.stream()
-                            .filter(artifactName -> artifactName.matches(regex))
-                            .forEach(artifactName -> resolvedConflicts.put(artifactName, propName));
 
-                    recommendations.entrySet()
+                    Set<String> recommendationConflicts = recommendations
+                            .entrySet()
                             .stream()
                             .filter(entry -> entry.getKey().matches(regex))
-                            .forEach(entry -> {
+                            .map(entry -> {
                                 conflicts.add(new Conflict(propName, propVersion, entry.getKey(), entry.getValue()));
-                                resolvedConflicts.remove(entry.getKey());
-                            });
-                });
+                                return entry.getKey();
+                            })
+                            .collect(Collectors.toSet());
+
+                    return artifacts.stream()
+                            .filter(artifactName -> artifactName.matches(regex))
+                            .filter(artifactName -> !recommendationConflicts.contains(artifactName))
+                            .map(artifactName -> Pair.of(artifactName, propName));
+                })
+                .collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
 
         //Critical conflicts are versions.props line that only override bom recommendations with same version
         //so it should avoid considering the case where a wildcard also pin an artifact not present in the bom
