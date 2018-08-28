@@ -59,8 +59,10 @@ public class BomConflictCheckTask extends DefaultTask {
         List<Conflict> conflicts = new LinkedList<>();
         Set<String> artifacts = BaselineVersions.getResolvedArtifacts(getProject());
         Map<String, String> resolvedConflicts = new HashMap<>();
-        BaselineVersions.checkVersionsProp(getPropsFile(),
-                (propName, propVersion) -> {
+        BaselineVersions.readVersionsProps(getPropsFile()).forEach(
+                pair -> {
+                    String propName = pair.getLeft();
+                    String propVersion = pair.getRight();
                     String regex = propName.replaceAll("\\*", ".*");
                     artifacts.stream()
                             .filter(artifactName -> artifactName.matches(regex))
@@ -73,7 +75,6 @@ public class BomConflictCheckTask extends DefaultTask {
                                 conflicts.add(new Conflict(propName, propVersion, entry.getKey(), entry.getValue()));
                                 resolvedConflicts.remove(entry.getKey());
                             });
-                    return null;
                 });
 
         //Critical conflicts are versions.props line that only override bom recommendations with same version

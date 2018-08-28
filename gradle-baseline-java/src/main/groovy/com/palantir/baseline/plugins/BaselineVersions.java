@@ -17,6 +17,7 @@
 package com.palantir.baseline.plugins;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -28,6 +29,7 @@ import java.util.stream.Stream;
 import netflix.nebula.dependency.recommender.DependencyRecommendationsPlugin;
 import netflix.nebula.dependency.recommender.RecommendationStrategies;
 import netflix.nebula.dependency.recommender.provider.RecommendationProviderContainer;
+import org.apache.commons.lang3.tuple.Pair;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.BasePlugin;
@@ -120,8 +122,9 @@ public final class BaselineVersions implements Plugin<Project> {
                 .collect(Collectors.toSet());
     }
 
-    public static void checkVersionsProp(File propsFile, BiFunction<String, String, Void> function) {
+    public static List<Pair<String, String>> readVersionsProps(File propsFile) {
         boolean active = true;
+        List<Pair<String, String>> accumulator = Lists.newLinkedList();
         if (propsFile.exists()) {
             try {
                 List<String> lines = Files.readAllLines(propsFile.toPath());
@@ -135,7 +138,7 @@ public final class BaselineVersions implements Plugin<Project> {
                         String[] split = line.split("\\s*=\\s*");
                         String propName = split[0];
                         String propVersion = split[1];
-                        function.apply(propName, propVersion);
+                        accumulator.add(Pair.of(propName, propVersion))
                     }
                 }
             } catch (IOException e) {
@@ -144,5 +147,6 @@ public final class BaselineVersions implements Plugin<Project> {
         } else {
             throw new RuntimeException("No " + propsFile.toPath() + " file found");
         }
+        return accumulator;
     }
 }

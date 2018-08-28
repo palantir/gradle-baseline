@@ -17,10 +17,11 @@
 package com.palantir.baseline.plugins;
 
 import java.io.File;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 import javax.inject.Inject;
+import org.apache.commons.lang3.tuple.Pair;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
@@ -48,15 +49,13 @@ public class NoUnusedPinCheckTask extends DefaultTask {
     @TaskAction
     public final void checkNoUnusedPin() {
         Set<String> artifacts = getResolvedArtifacts();
-        List<String> unusedProps = new LinkedList<>();
-        BaselineVersions.checkVersionsProp(getPropsFile(),
-                (propName, propVersion) -> {
+        List<String> unusedProps = BaselineVersions.readVersionsProps(getPropsFile()).stream()
+                .map(Pair::getLeft)
+                .filter(propName -> {
                     String regex = propName.replaceAll("\\*", ".*");
-                    if (!artifacts.stream().anyMatch(artifact -> artifact.matches(regex))) {
-                        unusedProps.add(propName);
-                    }
-                    return null;
-                });
+                    return !artifacts.stream().anyMatch(artifact -> artifact.matches(regex));
+                })
+                .collect(Collectors.toList());
 
         if (!unusedProps.isEmpty()) {
             String unusedPropsString = String.join("\n", unusedProps);
