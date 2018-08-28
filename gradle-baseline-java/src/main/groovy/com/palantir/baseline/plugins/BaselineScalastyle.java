@@ -22,6 +22,7 @@ import groovy.util.Node;
 import groovy.xml.QName;
 import java.nio.file.Paths;
 import java.util.Optional;
+import netflix.nebula.dependency.recommender.provider.RecommendationProviderContainer;
 import org.github.ngbinh.scalastyle.ScalaStylePlugin;
 import org.github.ngbinh.scalastyle.ScalaStyleTask;
 import org.gradle.api.Project;
@@ -34,6 +35,9 @@ public final class BaselineScalastyle extends AbstractBaselinePlugin {
     public void apply(Project project) {
         this.project = project;
         project.getPluginManager().withPlugin("scala", plugin -> {
+            project.getPluginManager().withPlugin("nebula.dependency-recommender", nebulaPlugin ->
+                    project.getExtensions().configure(RecommendationProviderContainer.class,
+                            recommendations -> recommendations.excludeConfigurations("zinc")));
             JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
             project.getTasks().withType(ScalaCompile.class)
                     .configureEach(scalaCompile ->
