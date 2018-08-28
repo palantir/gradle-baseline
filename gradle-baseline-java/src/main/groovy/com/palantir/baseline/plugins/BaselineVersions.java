@@ -82,7 +82,7 @@ public final class BaselineVersions implements Plugin<Project> {
         project.getPluginManager().apply(BasePlugin.class);
         project.getTasks().register("checkVersionsProps",
                 task -> task.dependsOn("checkBomConflict", "checkNoUnusedPin"));
-        project.getTasks().named("check").get().dependsOn("checkVersionsProps");
+        project.getTasks().named("check").configure(task -> task.dependsOn("checkVersionsProps"));
     }
 
     private static File rootVersionsPropsFile(Project project) {
