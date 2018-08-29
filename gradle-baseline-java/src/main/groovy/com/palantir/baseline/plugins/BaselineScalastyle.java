@@ -27,6 +27,8 @@ import org.github.ngbinh.scalastyle.ScalaStylePlugin;
 import org.github.ngbinh.scalastyle.ScalaStyleTask;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.JavaPluginConvention;
+import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.scala.ScalaCompile;
 import org.gradle.plugins.ide.idea.model.IdeaModel;
 
@@ -46,7 +48,9 @@ public final class BaselineScalastyle extends AbstractBaselinePlugin {
             project.getRootProject().getPluginManager().withPlugin("idea", ideaPlugin ->
                     project.getRootProject().getExtensions()
                             .configure(IdeaModel.class, ideaModel -> configureIdeaPlugin(
-                                    ideaModel, javaConvention.getTargetCompatibility().toString())));
+                                    ideaModel,
+                                    javaConvention.getSourceSets().named(SourceSet.MAIN_SOURCE_SET_NAME).get(),
+                                    javaConvention.getTargetCompatibility().toString())));
             project.getPluginManager().apply(ScalaStylePlugin.class);
             project.getTasks().withType(ScalaStyleTask.class)
                     .configureEach(scalaStyleTask -> {
@@ -62,7 +66,9 @@ public final class BaselineScalastyle extends AbstractBaselinePlugin {
         });
     }
 
-    private void configureIdeaPlugin(IdeaModel ideaModel, String javaVersion) {
+    private void configureIdeaPlugin(IdeaModel ideaModel, SourceSet mainSourceSet, String javaVersion) {
+        // java source dir is empty hence we want a mixed compilation mode - scala compiler handles everything
+        String compilerMode = mainSourceSet.getJava().getSrcDirs().isEmpty() ? "Mixed" : "JavaThenScala";
         ideaModel.getProject()
                 .getIpr()
                 .withXml(xmlProvider -> {
@@ -84,7 +90,7 @@ public final class BaselineScalastyle extends AbstractBaselinePlugin {
                             .findFirst()
                             .orElseGet(() -> scalaCompilerConf.appendNode("option"));
                     compilerOrder.attributes().put("name", "compileOrder");
-                    compilerOrder.attributes().put("value", "JavaThenScala");
+                    compilerOrder.attributes().put("value", compilerMode);
                     Node parametersNode = (Node) Optional.ofNullable(
                             scalaCompilerConf.getAt(new QName("parameters")).get(0))
                             .orElseGet(() -> scalaCompilerConf.appendNode("parameters"));
