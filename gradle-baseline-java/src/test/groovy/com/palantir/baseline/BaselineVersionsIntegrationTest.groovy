@@ -88,7 +88,6 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
 
     def buildAndFailWith(String error) {
         BuildResult result = with('checkVersionsProps', '--stacktrace').buildAndFail()
-        result.task(':checkVersionsProps').outcome == TaskOutcome.FAILED
         result.output.contains(error)
     }
 
