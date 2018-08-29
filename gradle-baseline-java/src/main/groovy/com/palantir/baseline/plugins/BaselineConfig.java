@@ -59,12 +59,14 @@ class BaselineConfig extends AbstractBaselinePlugin {
                     copySpec.exclude("**/scalastyle_config.xml");
                     copySpec.setIncludeEmptyDirs(false);
                 });
-                rootProject.copy(copySpec -> {
-                    copySpec.from(rootProject.zipTree(configuration.getSingleFile())
-                            .filter(file -> file.getName().equals("scalastyle_config.xml")));
-                    copySpec.into(rootProject.getRootDir().toPath().resolve("project"));
-                    copySpec.setIncludeEmptyDirs(false);
-                });
+                if (rootProject.getAllprojects().stream().anyMatch(p -> p.getPluginManager().hasPlugin("scala"))) {
+                    rootProject.copy(copySpec -> {
+                        copySpec.from(rootProject.zipTree(configuration.getSingleFile())
+                                .filter(file -> file.getName().equals("scalastyle_config.xml")));
+                        copySpec.into(rootProject.getRootDir().toPath().resolve("project"));
+                        copySpec.setIncludeEmptyDirs(false);
+                    });
+                }
             });
         });
     }
