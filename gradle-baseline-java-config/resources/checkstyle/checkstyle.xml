@@ -123,11 +123,17 @@
             <message key="import.illegal" value="Use JUnit 4-style (org.junit.*) test classes and assertions instead of JUnit 3 (junit.framework.*)."/>
         </module>
         <module name="IllegalImport"> <!-- Java Coding Guidelines: Import the canonical package -->
-            <property name="illegalPkgs" value="org.elasticsearch.common.base, jersey.repackaged.com.google.common, com.google.api.client.repackaged, org.apache.hadoop.thirdparty.guava, com.clearspring.analytics.util, org.spark_project.guava, avro.shaded.com.google.common"/>
+            <property name="illegalPkgs" value="org.elasticsearch.common.base, com.clearspring.analytics.util, org.spark_project.guava"/>
+            <message key="import.illegal" value="Must not import repackaged classes."/>
+        </module>
+        <module name="IllegalImport"> <!-- Java Coding Guidelines: Import the canonical package -->
+            <property name="illegalPkgs" value=".*.(repackaged|shaded|thirdparty)"/>
+            <property name="regexp" value="true" />
             <message key="import.illegal" value="Must not import repackaged classes."/>
         </module>
         <module name="IllegalImport">
-            <property name="illegalPkgs" value="^org\.gradle\..*internal"/>
+            <property name="illegalPkgs" value="^org.gradle..*internal"/>
+            <property name="regexp" value="true" />
             <message key="import.illegal" value="Do not rely on gradle internal classes as these may change in minor releases - use org.gradle.api versions instead."/>
         </module>
         <module name="IllegalImport">
