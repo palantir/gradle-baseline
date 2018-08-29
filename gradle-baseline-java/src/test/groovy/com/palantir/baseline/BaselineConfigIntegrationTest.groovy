@@ -84,7 +84,7 @@ class BaselineConfigIntegrationTest extends AbstractPluginTest {
         then:
         with('--stacktrace', '--info', 'baselineUpdateConfig').build()
         !directory('.baseline').list().toList().isEmpty()
-        !directory('project').list().toList().isEmpty()
+        directory('project').list().toList().isEmpty()
     }
 
     def 'Fails if too many configuration dependencies are specified'() {

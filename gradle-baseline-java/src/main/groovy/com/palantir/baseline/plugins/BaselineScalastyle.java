@@ -77,6 +77,7 @@ public final class BaselineScalastyle extends AbstractBaselinePlugin {
                             .findFirst()
                             .orElseGet(() -> rootNode.appendNode(
                                     "component", ImmutableMap.of("name", "ScalaCompilerConfiguration")));
+                    // configure scala compilation order
                     Node compilerOrder = (Node) scalaCompilerConf.getAt(new QName("option"))
                             .stream()
                             .filter(o -> ((Node) o).attributes().get("name").equals("compileOrder"))
