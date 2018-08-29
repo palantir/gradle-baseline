@@ -48,8 +48,27 @@ class BaselineConfigIntegrationTest extends AbstractPluginTest {
         then:
         with('--stacktrace', '--info', 'baselineUpdateConfig').build()
         directory('.baseline').list().toList().toSet() == ['checkstyle', 'copyright', 'eclipse', 'idea'].toSet()
+        directory('project').list().toList().isEmpty()
+    }
+
+    def 'Installs scala config if scala is present'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << """
+        apply plugin: 'scala'
+        dependencies {
+            // NOTE: This only works on Git-clean repositories since it relies on the locally published config artifact,
+            // see ./gradle-baseline-java-config/build.gradle
+            baseline "com.palantir.baseline:gradle-baseline-java-config:${projectVersion}@zip"
+        }
+        """.stripIndent()
+
+        then:
+        with('--stacktrace', '--info', 'baselineUpdateConfig').build()
+        directory('.baseline').list().toList().toSet() == ['checkstyle', 'copyright', 'eclipse', 'idea'].toSet()
         directory('project').list().toList().toSet() == ['scalastyle_config.xml'].toSet()
     }
+
 
     def './gradlew baselineUpdateConfig should still work even if no configuration dependency is specified'() {
         when:
