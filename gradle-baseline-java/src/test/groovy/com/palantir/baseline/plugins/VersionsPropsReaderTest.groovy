@@ -29,7 +29,7 @@ class VersionsPropsReaderTest extends Specification {
                 "# linter:OFF",
                 "d:eeee = 1",
                 "# linter:ON",
-                "b:c=2  ",
+                "b:c=2  # this is a comment",
         ))
 
         then:
