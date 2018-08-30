@@ -20,11 +20,16 @@ import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Set;
+import java.util.stream.Collectors;
 import netflix.nebula.dependency.recommender.DependencyRecommendationsPlugin;
 import netflix.nebula.dependency.recommender.RecommendationStrategies;
 import netflix.nebula.dependency.recommender.provider.RecommendationProviderContainer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ModuleVersionIdentifier;
+import org.gradle.api.plugins.BasePlugin;
 
 /**
  * Transitively applies nebula.dependency recommender to replace the following common gradle snippet.
@@ -53,23 +58,30 @@ public final class BaselineVersions implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
-        File rootVersionsPropsFile = rootVersionsPropsFile(project);
 
         // apply plugin: "nebula.dependency-recommender"
         project.getPluginManager().apply(DependencyRecommendationsPlugin.class);
 
         // get dependencyRecommendations extension
-        RecommendationProviderContainer extension = project.getExtensions()
+        RecommendationProviderContainer extension = project
+                .getExtensions()
                 .getByType(RecommendationProviderContainer.class);
 
         extension.setStrategy(RecommendationStrategies.OverrideTransitives); // default is 'ConflictResolved'
 
-        extension.propertiesFile(ImmutableMap.of("file", rootVersionsPropsFile));
+        File rootVersionsPropsFile = rootVersionsPropsFile(project);
 
+        extension.propertiesFile(ImmutableMap.of("file", rootVersionsPropsFile));
         // allow nested projects to specify their own nested versions.props file
         if (project != project.getRootProject() && project.file("versions.props").exists()) {
             extension.propertiesFile(ImmutableMap.of("file", project.file("versions.props")));
         }
+        project.getTasks().register("checkBomConflict", BomConflictCheckTask.class, rootVersionsPropsFile);
+        project.getTasks().register("checkNoUnusedPin", NoUnusedPinCheckTask.class, rootVersionsPropsFile);
+        project.getPluginManager().apply(BasePlugin.class);
+        project.getTasks().register("checkVersionsProps",
+                task -> task.dependsOn("checkBomConflict", "checkNoUnusedPin"));
+        project.getTasks().named("check").configure(task -> task.dependsOn("checkVersionsProps"));
     }
 
     private static File rootVersionsPropsFile(Project project) {
@@ -83,5 +95,26 @@ public final class BaselineVersions implements Plugin<Project> {
             }
         }
         return file;
+    }
+
+    static Set<String> getResolvedArtifacts(Project project) {
+        return project.getConfigurations().stream()
+                .filter(Configuration::isCanBeResolved)
+                .flatMap(configuration -> {
+                    try {
+                        return configuration
+                                .getResolvedConfiguration()
+                                .getResolvedArtifacts()
+                                .stream()
+                                .map(resolvedArtifact -> {
+                                    ModuleVersionIdentifier id = resolvedArtifact.getModuleVersion().getId();
+                                    return id.getGroup() + ":" + id.getName();
+                                });
+                    } catch (Exception e) {
+                        throw new RuntimeException("Error during resolution of the artifacts of all "
+                                + "configuration from all subprojects", e);
+                    }
+                })
+        .collect(Collectors.toSet());
     }
 }
