@@ -135,11 +135,15 @@ public final class BaselineVersions implements Plugin<Project> {
                     } else if (line0.equals("# linter:OFF")) {
                         active = false;
                     }
+
+                    if (!active) {
+                        continue;
+                    }
+
                     int commentIndex = line0.indexOf("#");
                     String line = commentIndex >= 0 ? line0.substring(0, commentIndex) : line0;
-
                     Matcher matcher = VERSION_FORCE_REGEX.matcher(line);
-                    if (active && line.length() > 0 && line.charAt(0) != '#' && matcher.matches()) {
+                    if (matcher.matches()) {
                         String propName = matcher.group(1);
                         String propVersion = matcher.group(2);
                         accumulator.add(Pair.of(propName, propVersion));
