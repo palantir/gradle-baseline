@@ -70,7 +70,6 @@ class BaselineConfigIntegrationTest extends AbstractPluginTest {
         directory('project').list().toList().toSet() == ['scalastyle_config.xml'].toSet()
     }
 
-
     def './gradlew baselineUpdateConfig should still work even if no configuration dependency is specified'() {
         when:
         buildFile << standardBuildFile
