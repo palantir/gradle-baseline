@@ -105,25 +105,24 @@ public final class BaselineVersions implements Plugin<Project> {
     }
 
     public static Set<String> getResolvedArtifacts(Project project) {
-        return project.getRootProject().getAllprojects().stream().flatMap(subproject ->
-                subproject.getConfigurations().stream()
-                        .filter(Configuration::isCanBeResolved)
-                        .flatMap(configuration -> {
-                            try {
-                                return configuration
-                                        .getResolvedConfiguration()
-                                        .getResolvedArtifacts()
-                                        .stream()
-                                        .map(resolvedArtifact -> {
-                                            ModuleVersionIdentifier id = resolvedArtifact.getModuleVersion().getId();
-                                            return id.getGroup() + ":" + id.getName();
-                                        });
-                            } catch (Exception e) {
-                                throw new RuntimeException("Error during resolution of the artifacts of all "
-                                        + "configuration from all subprojects", e);
-                            }
-                        }))
-                .collect(Collectors.toSet());
+        return project.getConfigurations().stream()
+                .filter(Configuration::isCanBeResolved)
+                .flatMap(configuration -> {
+                    try {
+                        return configuration
+                                .getResolvedConfiguration()
+                                .getResolvedArtifacts()
+                                .stream()
+                                .map(resolvedArtifact -> {
+                                    ModuleVersionIdentifier id = resolvedArtifact.getModuleVersion().getId();
+                                    return id.getGroup() + ":" + id.getName();
+                                });
+                    } catch (Exception e) {
+                        throw new RuntimeException("Error during resolution of the artifacts of all "
+                                + "configuration from all subprojects", e);
+                    }
+                })
+        .collect(Collectors.toSet());
     }
 
     public static List<Pair<String, String>> readVersionsProps(File propsFile) {
