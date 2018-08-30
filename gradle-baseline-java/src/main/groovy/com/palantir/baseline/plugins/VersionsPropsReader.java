@@ -66,7 +66,7 @@ final class VersionsPropsReader {
         private final Iterator<String> iter;
         private boolean active;
 
-        public ToggleableIterator(Iterator<String> iter) {
+        ToggleableIterator(Iterator<String> iter) {
             this.iter = iter;
             active = true;
         }
