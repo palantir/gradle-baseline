@@ -22,7 +22,6 @@ import org.github.ngbinh.scalastyle.ScalaStyleTask
 import org.gradle.api.Project
 import org.gradle.api.XmlProvider
 import org.gradle.api.plugins.JavaPluginConvention
-import org.gradle.api.tasks.SourceSet
 import org.gradle.api.tasks.scala.ScalaCompile
 import org.gradle.plugins.ide.idea.model.IdeaModel
 import org.gradle.testfixtures.ProjectBuilder
@@ -34,6 +33,11 @@ final class BaselineScalastyleTest extends Specification {
     def validScalaFile = '''
         package test;
         case class Test(field: Int)
+        '''.stripIndent()
+
+    def validJavaFile = '''
+        package test;
+        public class Test { }
         '''.stripIndent()
 
     def setup() {
@@ -78,14 +82,10 @@ final class BaselineScalastyleTest extends Specification {
     }
 
     def configuresScalaMixedMode() {
+        def file = new File(project.projectDir, 'src/main/scala/test/Test.java')
+        file.getParentFile().mkdirs()
         when:
-        project.getConvention().getPlugin(JavaPluginConvention.class)
-                .getSourceSets()
-                .named(SourceSet.MAIN_SOURCE_SET_NAME)
-                .configure {sourceSet ->
-            sourceSet.scala.srcDir "src/main/java"
-            sourceSet.java.srcDirs = []
-        }
+        file << validJavaFile
 
         then:
         project.getRootProject()

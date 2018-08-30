@@ -23,10 +23,13 @@ import groovy.xml.QName;
 import java.nio.file.Paths;
 import java.util.Optional;
 import netflix.nebula.dependency.recommender.provider.RecommendationProviderContainer;
+import org.codehaus.groovy.runtime.InvokerHelper;
 import org.github.ngbinh.scalastyle.ScalaStylePlugin;
 import org.github.ngbinh.scalastyle.ScalaStyleTask;
 import org.gradle.api.Project;
+import org.gradle.api.plugins.Convention;
 import org.gradle.api.plugins.JavaPluginConvention;
+import org.gradle.api.tasks.ScalaSourceSet;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.scala.ScalaCompile;
 import org.gradle.plugins.ide.idea.model.IdeaModel;
@@ -66,8 +69,11 @@ public final class BaselineScalastyle extends AbstractBaselinePlugin {
     }
 
     private void configureIdeaPlugin(IdeaModel ideaModel, SourceSet mainSourceSet, String javaVersion) {
-        // java source dir is empty hence we want a mixed compilation mode - scala compiler handles everything
-        String compilerMode = mainSourceSet.getJava().getSrcDirs().isEmpty() ? "Mixed" : "JavaThenScala";
+        Convention scalaConvention = (Convention) InvokerHelper.getProperty(mainSourceSet, "convention");
+        ScalaSourceSet scalaSourceSet = scalaConvention.getPlugin(ScalaSourceSet.class);
+        // If scala source directory doesn't contain java files use "JavaThenScala" compilation mode
+        String compilerMode = scalaSourceSet.getScala().filter(file -> file.getName().endsWith("java")).isEmpty()
+                ? "JavaThenScala" : "Mixed";
         ideaModel.getProject()
                 .getIpr()
                 .withXml(xmlProvider -> {
