@@ -33,6 +33,7 @@ import org.apache.commons.lang3.tuple.Pair;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.plugins.BasePlugin;
 
 /**
@@ -111,10 +112,12 @@ public final class BaselineVersions implements Plugin<Project> {
                             try {
                                 return configuration
                                         .getResolvedConfiguration()
-                                        .getResolvedArtifacts().stream()
-                                        .map(resolvedArtifact ->
-                                                resolvedArtifact.getModuleVersion().getId().getGroup() + ":"
-                                                        + resolvedArtifact.getName());
+                                        .getResolvedArtifacts()
+                                        .stream()
+                                        .map(resolvedArtifact -> {
+                                            ModuleVersionIdentifier id = resolvedArtifact.getModuleVersion().getId();
+                                            return id.getGroup() + ":" + id.getName();
+                                        });
                             } catch (Exception e) {
                                 throw new RuntimeException("Error during resolution of the artifacts of all "
                                         + "configuration from all subprojects", e);
