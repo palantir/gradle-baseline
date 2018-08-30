@@ -139,7 +139,7 @@ public final class BaselineVersions implements Plugin<Project> {
                     }
                 }
             } catch (IOException e) {
-                throw new RuntimeException("Error reading " + propsFile.toPath() + " file");
+                throw new RuntimeException("Error reading " + propsFile.toPath() + " file", e);
             }
         } else {
             throw new RuntimeException("No " + propsFile.toPath() + " file found");
