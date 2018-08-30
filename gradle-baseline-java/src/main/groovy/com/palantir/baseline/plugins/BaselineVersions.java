@@ -16,16 +16,19 @@
 
 package com.palantir.baseline.plugins;
 
+import com.google.common.collect.AbstractIterator;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import netflix.nebula.dependency.recommender.DependencyRecommendationsPlugin;
 import netflix.nebula.dependency.recommender.RecommendationStrategies;
 import netflix.nebula.dependency.recommender.provider.RecommendationProviderContainer;
@@ -126,22 +129,11 @@ public final class BaselineVersions implements Plugin<Project> {
     }
 
     public static List<Pair<String, String>> readVersionsProps(File propsFile) {
-        boolean active = true;
         ImmutableList.Builder<Pair<String, String>> accumulator = ImmutableList.builder();
         if (propsFile.exists()) {
-            try {
-                List<String> lines = Files.readAllLines(propsFile.toPath());
-                for (String line0 : lines) {
-                    if (line0.equals("# linter:ON")) {
-                        active = true;
-                    } else if (line0.equals("# linter:OFF")) {
-                        active = false;
-                    }
-
-                    if (!active) {
-                        continue;
-                    }
-
+            try (Stream<String> lines = Files.lines(propsFile.toPath())) {
+                new ToggleableIterator(lines.map(String::trim).iterator()).forEachRemaining(line0 -> {
+                    // strip comment
                     int commentIndex = line0.indexOf("#");
                     String line = commentIndex >= 0 ? line0.substring(0, commentIndex) : line0;
                     Matcher matcher = VERSION_FORCE_REGEX.matcher(line);
@@ -150,7 +142,7 @@ public final class BaselineVersions implements Plugin<Project> {
                         String propVersion = matcher.group(2);
                         accumulator.add(Pair.of(propName, propVersion));
                     }
-                }
+                });
             } catch (IOException e) {
                 throw new RuntimeException("Error reading " + propsFile.toPath() + " file", e);
             }
@@ -158,5 +150,32 @@ public final class BaselineVersions implements Plugin<Project> {
             throw new RuntimeException("No " + propsFile.toPath() + " file found");
         }
         return accumulator.build();
+    }
+
+    private static class ToggleableIterator extends AbstractIterator<String> {
+        private final Iterator<String> iter;
+        private boolean active;
+
+        public ToggleableIterator(Iterator<String> iter) {
+            this.iter = iter;
+            active = true;
+        }
+
+        @Override
+        protected String computeNext() {
+            while (iter.hasNext()) {
+                String line0 = iter.next();
+                if (line0.equals("# linter:ON")) {
+                    active = true;
+                } else if (line0.equals("# linter:OFF")) {
+                    active = false;
+                }
+                if (!active) {
+                    continue;
+                }
+                return line0;
+            }
+            return endOfData();
+        }
     }
 }
