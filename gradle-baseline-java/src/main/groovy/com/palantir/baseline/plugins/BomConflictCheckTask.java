@@ -16,11 +16,11 @@
 
 package com.palantir.baseline.plugins;
 
+import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -83,11 +83,13 @@ public class BomConflictCheckTask extends DefaultTask {
                 })
                 .collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
 
+        Set<String> versionPropConflictingLines = ImmutableSet.copyOf(resolvedConflicts.values());
+
         //Critical conflicts are versions.props line that only override bom recommendations with same version
         //so it should avoid considering the case where a wildcard also pin an artifact not present in the bom
         List<Conflict> critical = conflicts.stream()
                 .filter(c -> c.getBomVersion().equals(c.getPropVersion()))
-                .filter(c -> !resolvedConflicts.containsValue(c.getPropName()))
+                .filter(c -> !versionPropConflictingLines.contains(c.getPropName()))
                 .collect(Collectors.toList());
 
         if (!conflicts.isEmpty()) {
