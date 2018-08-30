@@ -84,6 +84,7 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
     def buildSucceed() {
         BuildResult result = with('checkVersionsProps').build()
         result.task(':checkVersionsProps').outcome == TaskOutcome.SUCCESS
+        result
     }
 
     def buildAndFailWith(String error) {
@@ -97,7 +98,8 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
         buildFile << standardBuildFile(projectDir)
 
         then:
-        buildSucceed()
+        def result = buildSucceed()
+        result.output.contains("prop version not equal to bom version")
     }
 
     def 'Task should run as part of :check'() {
@@ -128,7 +130,8 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
         }"""
 
         then:
-        buildSucceed()
+        def result = buildSucceed()
+        result.output.contains("pin required by other non recommended artifacts: [org.scala-lang:scala-reflect]")
 
     }
 

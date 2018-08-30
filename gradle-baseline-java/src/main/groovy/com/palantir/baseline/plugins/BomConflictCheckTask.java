@@ -139,7 +139,7 @@ public class BomConflictCheckTask extends DefaultTask {
 
         public String criticalString(Map<String, String> resolvedConflicts) {
             if (!getBomVersion().equals(getPropVersion())) {
-                return "non critical: prop version not equals to bom version. (remove if unnecessary override)";
+                return "non critical: prop version not equal to bom version. (remove if unnecessary override)";
             } else if (resolvedConflicts.containsValue(getPropName())) {
                 return "non critical: pin required by other non recommended artifacts: ["
                         + resolvedConflicts.entrySet().stream()
