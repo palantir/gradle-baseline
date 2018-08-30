@@ -49,7 +49,7 @@ public class NoUnusedPinCheckTask extends DefaultTask {
     @TaskAction
     public final void checkNoUnusedPin() {
         Set<String> artifacts = getResolvedArtifacts();
-        List<String> unusedProps = BaselineVersions.readVersionsProps(getPropsFile()).stream()
+        List<String> unusedProps = VersionsPropsReader.readVersionsProps(getPropsFile()).stream()
                 .map(Pair::getLeft)
                 .filter(propName -> {
                     String regex = propName.replaceAll("\\*", ".*");
