@@ -56,6 +56,7 @@ class BaselineConfigIntegrationTest extends AbstractPluginTest {
         buildFile << standardBuildFile
         buildFile << """
         apply plugin: 'scala'
+//        apply plugin: 'com.palantir.baseline-scalastyle'
         dependencies {
             // NOTE: This only works on Git-clean repositories since it relies on the locally published config artifact,
             // see ./gradle-baseline-java-config/build.gradle
