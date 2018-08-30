@@ -53,7 +53,7 @@ public class NoUnusedPinCheckTask extends DefaultTask {
                 .map(Pair::getLeft)
                 .filter(propName -> {
                     String regex = propName.replaceAll("\\*", ".*");
-                    return !artifacts.stream().anyMatch(artifact -> artifact.matches(regex));
+                    return artifacts.stream().noneMatch(artifact -> artifact.matches(regex));
                 })
                 .collect(Collectors.toList());
 
