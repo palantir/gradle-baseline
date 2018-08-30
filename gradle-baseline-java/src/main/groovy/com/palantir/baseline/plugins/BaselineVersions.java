@@ -23,6 +23,8 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Set;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import netflix.nebula.dependency.recommender.DependencyRecommendationsPlugin;
 import netflix.nebula.dependency.recommender.RecommendationStrategies;
@@ -57,6 +59,8 @@ import org.gradle.api.plugins.BasePlugin;
  * </pre>
  */
 public final class BaselineVersions implements Plugin<Project> {
+
+    private static final Pattern VERSION_FORCE_REGEX = Pattern.compile("([^:=\\s]+:[^:=\\s]+)\\s*=\\s*([^\\s]+)");
 
     @Override
     public void apply(Project project) {
@@ -125,16 +129,19 @@ public final class BaselineVersions implements Plugin<Project> {
         if (propsFile.exists()) {
             try {
                 List<String> lines = Files.readAllLines(propsFile.toPath());
-                for (String line : lines) {
-                    if (line.equals("# linter:ON")) {
+                for (String line0 : lines) {
+                    if (line0.equals("# linter:ON")) {
                         active = true;
-                    } else if (line.equals("# linter:OFF")) {
+                    } else if (line0.equals("# linter:OFF")) {
                         active = false;
                     }
-                    if (active && line.length() > 0 && line.charAt(0) != '#' && line.matches(".*:.*\\s*=\\s*.*")) {
-                        String[] split = line.split("\\s*=\\s*");
-                        String propName = split[0];
-                        String propVersion = split[1];
+                    int commentIndex = line0.indexOf("#");
+                    String line = commentIndex >= 0 ? line0.substring(0, commentIndex) : line0;
+
+                    Matcher matcher = VERSION_FORCE_REGEX.matcher(line);
+                    if (active && line.length() > 0 && line.charAt(0) != '#' && matcher.matches()) {
+                        String propName = matcher.group(1);
+                        String propVersion = matcher.group(2);
                         accumulator.add(Pair.of(propName, propVersion));
                     }
                 }
