@@ -104,8 +104,8 @@ public final class BaselineVersions implements Plugin<Project> {
     }
 
     public static Set<String> getResolvedArtifacts(Project project) {
-        return project.getRootProject().getAllprojects().stream().flatMap(project1 ->
-                project1.getConfigurations().stream()
+        return project.getRootProject().getAllprojects().stream().flatMap(subproject ->
+                subproject.getConfigurations().stream()
                         .filter(Configuration::isCanBeResolved)
                         .flatMap(configuration -> {
                             try {
@@ -116,7 +116,7 @@ public final class BaselineVersions implements Plugin<Project> {
                                                 resolvedArtifact.getModuleVersion().getId().getGroup() + ":"
                                                         + resolvedArtifact.getName());
                             } catch (Exception e) {
-                                throw new RuntimeException("Error during resolution of the artifacts of all"
+                                throw new RuntimeException("Error during resolution of the artifacts of all "
                                         + "configuration from all subprojects", e);
                             }
                         }))
