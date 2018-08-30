@@ -16,8 +16,8 @@
 
 package com.palantir.baseline.plugins;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Lists;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -125,7 +125,7 @@ public final class BaselineVersions implements Plugin<Project> {
 
     public static List<Pair<String, String>> readVersionsProps(File propsFile) {
         boolean active = true;
-        List<Pair<String, String>> accumulator = Lists.newLinkedList();
+        ImmutableList.Builder<Pair<String, String>> accumulator = ImmutableList.builder();
         if (propsFile.exists()) {
             try {
                 List<String> lines = Files.readAllLines(propsFile.toPath());
@@ -155,6 +155,6 @@ public final class BaselineVersions implements Plugin<Project> {
         } else {
             throw new RuntimeException("No " + propsFile.toPath() + " file found");
         }
-        return accumulator;
+        return accumulator.build();
     }
 }
