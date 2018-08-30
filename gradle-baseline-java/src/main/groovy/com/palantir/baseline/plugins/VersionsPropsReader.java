@@ -50,6 +50,7 @@ final class VersionsPropsReader {
         new ToggleableIterator(lines.map(String::trim).iterator()).forEachRemaining(line0 -> {
             // strip comment
             int commentIndex = line0.indexOf("#");
+            // trim so VERSION_FORCE_REGEX doesn't have to match leading/trailing spaces
             String line = (commentIndex >= 0 ? line0.substring(0, commentIndex) : line0).trim();
             Matcher matcher = VERSION_FORCE_REGEX.matcher(line);
             if (matcher.matches()) {
