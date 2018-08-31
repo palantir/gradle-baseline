@@ -221,11 +221,19 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         plugins {
             id 'scala'
             id 'com.palantir.baseline-idea'
+            id 'com.palantir.baseline-scalastyle'
+        }
+        repositories {
+            jcenter()
+            mavenLocal()
+        }
+        dependencies {
+            compile 'org.scala-lang:scala-library:2.11.12'
         }
         '''.stripIndent()
 
         then:
-        BuildResult result = with('idea').build()
-        assert result.tasks(TaskOutcome.SUCCESS).collect { it.name }.contains('idea')
+        BuildResult result = with('--stacktrace', '--info', 'idea').build()
+        assert result.tasks(TaskOutcome.SUCCESS).collect { it.path }.contains(':idea')
     }
 }
