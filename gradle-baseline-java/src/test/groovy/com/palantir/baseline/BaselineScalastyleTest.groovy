@@ -71,13 +71,15 @@ final class BaselineScalastyleTest extends Specification {
     }
 
     def configuresTargetJvmVersion() {
-        JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
+        String targetVersion = project.getConvention()
+                .getPlugin(JavaPluginConvention.class)
+                .getTargetCompatibility()
+                .toString()
 
         expect:
         def tasks = project.tasks.withType(ScalaCompile.class)
         for (ScalaCompile task : tasks) {
-            assert task.getScalaCompileOptions().getAdditionalParameters()
-                    .contains("-target:jvm-" + javaConvention.getTargetCompatibility().toString())
+            assert task.getScalaCompileOptions().getAdditionalParameters().contains("-target:jvm-" + targetVersion)
         }
     }
 

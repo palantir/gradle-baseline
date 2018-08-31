@@ -214,4 +214,26 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         def iws = Files.asCharSource(new File(projectDir, projectDir.name + ".iws"), Charsets.UTF_8).read()
         iws ==~ '(?s).*name="WORKING_DIRECTORY"[^\\n]*value="file://abc".*'
     }
+
+    def 'scalastyle renders correctly'() {
+        when:
+        buildFile << '''
+        plugins {
+            id 'scala'
+            id 'com.palantir.baseline-idea'
+            id 'com.palantir.baseline-scalastyle'
+        }
+        repositories {
+            jcenter()
+            mavenLocal()
+        }
+        dependencies {
+            compile 'org.scala-lang:scala-library:2.11.12'
+        }
+        '''.stripIndent()
+
+        then:
+        BuildResult result = with('--stacktrace', '--info', 'idea').build()
+        assert result.tasks(TaskOutcome.SUCCESS).collect { it.path }.contains(':idea')
+    }
 }
