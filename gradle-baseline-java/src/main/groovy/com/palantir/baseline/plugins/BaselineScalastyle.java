@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableMap;
 import groovy.util.Node;
 import groovy.xml.QName;
 import java.nio.file.Paths;
-import java.util.Optional;
 import netflix.nebula.dependency.recommender.provider.RecommendationProviderContainer;
 import org.codehaus.groovy.runtime.InvokerHelper;
 import org.github.ngbinh.scalastyle.ScalaStylePlugin;
@@ -96,8 +95,8 @@ public final class BaselineScalastyle extends AbstractBaselinePlugin {
                             .orElseGet(() -> scalaCompilerConf.appendNode("option"));
                     compilerOrder.attributes().put("name", "compileOrder");
                     compilerOrder.attributes().put("value", compilerMode);
-                    Node parametersNode = (Node) Optional.ofNullable(
-                            scalaCompilerConf.getAt(new QName("parameters")).get(0))
+                    Node parametersNode = (Node) scalaCompilerConf.getAt(new QName("parameters")).stream()
+                            .findFirst()
                             .orElseGet(() -> scalaCompilerConf.appendNode("parameters"));
                     Node parameter = (Node) parametersNode.getAt(new QName("parameter")).stream()
                             .filter(o -> ((Node) o).attributes().get("value").equals(targetJvmVersion))
