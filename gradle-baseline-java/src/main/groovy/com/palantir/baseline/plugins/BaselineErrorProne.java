@@ -52,7 +52,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
 
 
             // This plugin interferes with gradles native annotation processor path configuration so need to configure
-            // it as well.
+            // it as well to avoid surprises.
             project.getPluginManager().withPlugin("org.inferred.processors", processorsplugin ->
                     project.getConfigurations()
                             .named(ErrorProneJavacPluginPlugin.CONFIGURATION_NAME)
@@ -68,8 +68,9 @@ public final class BaselineErrorProne implements Plugin<Project> {
                                 errorProneOptions.check("EqualsIncompatibleType", CheckSeverity.ERROR);
                             }));
 
-            // Add error-prone to bootstrap classpath of tasks performing java compilation.
-            // Since there's no way of appending to the classpath we need to explicitly add current bootstrap classpath.
+            // In case of java 8 we need to add errorprone javac compiler to bootstrap classpath of tasks that perform
+            // compilation or code analysis. ErrorProneJavacPluginPlugin handles JavaCompile cases via errorproneJavac
+            // configuration and we do similar thing for Test and Javadoc type tasks
             if (!javaConvention.getSourceCompatibility().isJava9Compatible()) {
                 project.getDependencies().add(ErrorProneJavacPluginPlugin.JAVAC_CONFIGURATION_NAME,
                         "com.google.errorprone:javac:" + ERROR_PRONE_JAVAC_VERSION);
