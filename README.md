@@ -186,32 +186,20 @@ The `com.palantir.baseline-idea` plugin automatically applies the `idea` plugin.
 Generated IntelliJ projects have default per-project code formatting rules as well as Checkstyle configuration. The JDK
 and Java language level settings are picked up from the Gradle `sourceCompatibility` property on a per-module basis.
 
-### Error-prone
+### `com.palantir.baseline-error-prone`
 
-The `com.palantir.baseline-error-prone` plugin brings in the `net.ltgt.errorprone` plugin and adds an annotation-processor dependency on Baseline-specific error-checks (see below). We recommend applying the `org.inferred.processors` plugin in order to configure an appropriate `processor` configuration. The minimal setup is as follows:
-
+The `com.palantir.baseline-error-prone` plugin brings in the `net.ltgt.errorprone-javacplugin` plugin. We recommend applying the `org.inferred.processors` plugin 1.12.18+ in order to avoid `error: plug-in not found: ErrorProne`. The minimal setup is as follows:
 
 ```groovy
 buildscript {
     dependencies {
-        classpath 'gradle.plugin.org.inferred:gradle-processors:1.2.3'
+        classpath 'gradle.plugin.org.inferred:gradle-processors:1.2.18'
     }
 }
 
 apply plugin: 'org.inferred.processors'
 apply plugin: 'com.palantir.baseline-error-prone'
 ```
-
-The version of the error-prone library defaults to "latest" and can be adjusted via the `errorprone` configuration, see
-[gradle-errorprone-plugin](https://github.com/tbroyer/gradle-errorprone-plugin) for details.
-
-```groovy
-dependencies {
-    errorprone 'com.google.errorprone:error_prone_core:2.0.19'  // update version as desired
-}
-```
-
-#### Error-prone suppressions
 
 Error-prone rules can be suppressed on a per-line or per-block basis just like Checkstyle rules:
 
@@ -221,16 +209,13 @@ Error-prone rules can be suppressed on a per-line or per-block basis just like C
 
 Rules can be suppressed at the project level, or have their severity modified, by adding the following to the project's `build.gradle`:
 
-```groovy
-tasks.withType(JavaCompile) {
-    options.compilerArgs += ['-Xep:Slf4jLogsafeArgs:OFF']
-}
-```
-Warnings on generated code can be suppressed as follows:
-
-```groovy
-tasks.withType(JavaCompile) {
-    options.compilerArgs += ['-XepDisableWarningsInGeneratedCode']
+```gradle
+tasks.withType(JavaCompile).configureEach {
+    options.errorprone.errorproneArgs += ['-Xep:Slf4jLogsafeArgs:OFF']
+    // alternatively, using the DSL:
+    options.errorprone {
+        check('Slf4jLogsafeArgs', CheckSeverity.OFF)
+    }
 }
 ```
 

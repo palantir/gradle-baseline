@@ -13,7 +13,7 @@ dependencies {
     compile 'com.palantir.configurationresolver:gradle-configuration-resolver-plugin'
     compile 'com.netflix.nebula:nebula-dependency-recommender'
     compile 'org.github.ngbinh.scalastyle:gradle-scalastyle-plugin_2.11'
-    compile 'net.ltgt.gradle:gradle-errorprone-plugin'
+    compile 'net.ltgt.gradle:gradle-errorprone-javacplugin-plugin'
 
     testCompile gradleTestKit()
     testCompile 'com.github.stefanbirkner:system-rules'
