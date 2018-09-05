@@ -70,14 +70,18 @@ public final class BaselineVersions implements Plugin<Project> {
         extension.setStrategy(RecommendationStrategies.OverrideTransitives); // default is 'ConflictResolved'
 
         File rootVersionsPropsFile = rootVersionsPropsFile(project);
-
         extension.propertiesFile(ImmutableMap.of("file", rootVersionsPropsFile));
-        // allow nested projects to specify their own nested versions.props file
-        if (project != project.getRootProject() && project.file("versions.props").exists()) {
-            extension.propertiesFile(ImmutableMap.of("file", project.file("versions.props")));
+        
+        if (project != project.getRootProject()) {
+            // allow nested projects to specify their own nested versions.props file
+            if (project.file("versions.props").exists()) {
+                extension.propertiesFile(ImmutableMap.of("file", project.file("versions.props")));
+            }
+        } else {
+            project.getTasks().register("checkNoUnusedPin", NoUnusedPinCheckTask.class, rootVersionsPropsFile);
         }
+        
         project.getTasks().register("checkBomConflict", BomConflictCheckTask.class, rootVersionsPropsFile);
-        project.getTasks().register("checkNoUnusedPin", NoUnusedPinCheckTask.class, rootVersionsPropsFile);
         project.getPluginManager().apply(BasePlugin.class);
         project.getTasks().register("checkVersionsProps",
                 task -> task.dependsOn("checkBomConflict", "checkNoUnusedPin"));
