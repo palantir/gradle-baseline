@@ -282,7 +282,7 @@
         <module name="RegexpSinglelineJava">
             <property name="id" value="BanJacksonFindAndRegisterModulesMethod"/>
             <property name="format" value="findAndRegisterModules"/>
-            <property name="message" value="Use ObjectMapper#registerModule(<yourModule>) explicitly. ObjectMapper#findAndRegisterModules() is dangerous because it will change behaviour depending on which modules are on your classpath (including transitive dependencies)."/>
+            <property name="message" value="Use ObjectMapper#registerModule(&lt;yourModule&gt;) explicitly. ObjectMapper#findAndRegisterModules() is dangerous because it will change behaviour depending on which modules are on your classpath (including transitive dependencies)."/>
         </module>
         <module name="RegexpSinglelineJava"> <!-- Java Coding Guidelines: Use appropriate assertion methods -->
             <property name="format" value="CoreMatchers\.notNull"/>
