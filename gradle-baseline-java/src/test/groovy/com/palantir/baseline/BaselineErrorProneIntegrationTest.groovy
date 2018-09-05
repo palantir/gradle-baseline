@@ -68,7 +68,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         file('src/main/java/test/Test.java') << inValidJavaFile
 
         then:
-        BuildResult result = with('compileJava').buildAndFail()
+        BuildResult result = with('--debug', '--stacktrace', 'compileJava').buildAndFail()
         result.task(":compileJava").outcome == TaskOutcome.FAILED
         result.output.contains("[ArrayEquals] Reference equality used to compare arrays")
     }
@@ -79,7 +79,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         file('src/main/java/test/Test.java') << validJavaFile
 
         then:
-        BuildResult result = with('compileJava').build()
+        BuildResult result = with('--debug', '--stacktrace', 'compileJava').build()
         result.task(":compileJava").outcome == TaskOutcome.SUCCESS
     }
 }
