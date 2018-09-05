@@ -188,12 +188,12 @@ and Java language level settings are picked up from the Gradle `sourceCompatibil
 
 ### `com.palantir.baseline-error-prone`
 
-The `com.palantir.baseline-error-prone` plugin brings in the `net.ltgt.errorprone-javacplugin` plugin. We recommend applying the `org.inferred.processors` plugin 1.12.17+ in order to avoid `error: plug-in not found: ErrorProne`. The minimal setup is as follows:
+The `com.palantir.baseline-error-prone` plugin brings in the `net.ltgt.errorprone-javacplugin` plugin. We recommend applying the `org.inferred.processors` plugin 1.12.18+ in order to avoid `error: plug-in not found: ErrorProne`. The minimal setup is as follows:
 
 ```groovy
 buildscript {
     dependencies {
-        classpath 'gradle.plugin.org.inferred:gradle-processors:1.2.17'
+        classpath 'gradle.plugin.org.inferred:gradle-processors:1.2.18'
     }
 }
 
