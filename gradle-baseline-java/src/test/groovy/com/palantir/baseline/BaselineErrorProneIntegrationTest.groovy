@@ -28,7 +28,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         plugins {
             id 'java'
             id 'com.palantir.baseline-error-prone'
-            id 'org.inferred.processors' version '1.2.17'
+            id 'org.inferred.processors' version '1.2.18'
         }
         repositories {
             mavenLocal()
@@ -68,7 +68,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         file('src/main/java/test/Test.java') << inValidJavaFile
 
         then:
-        BuildResult result = with('--debug', '--stacktrace', 'compileJava').buildAndFail()
+        BuildResult result = with('compileJava').buildAndFail()
         result.task(":compileJava").outcome == TaskOutcome.FAILED
         result.output.contains("[ArrayEquals] Reference equality used to compare arrays")
     }
@@ -79,7 +79,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         file('src/main/java/test/Test.java') << validJavaFile
 
         then:
-        BuildResult result = with('--debug', '--stacktrace', 'compileJava').build()
+        BuildResult result = with('compileJava').build()
         result.task(":compileJava").outcome == TaskOutcome.SUCCESS
     }
 }
