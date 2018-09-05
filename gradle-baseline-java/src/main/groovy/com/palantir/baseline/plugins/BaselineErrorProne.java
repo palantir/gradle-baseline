@@ -50,15 +50,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
                     ErrorProneJavacPluginPlugin.CONFIGURATION_NAME,
                     "com.palantir.baseline:baseline-error-prone:" + version);
 
-
-            // This plugin interferes with gradles native annotation processor path configuration so need to configure
-            // it as well to avoid surprises.
-            project.getPluginManager().withPlugin("org.inferred.processors", processorsplugin ->
-                    project.getConfigurations()
-                            .named(ErrorProneJavacPluginPlugin.CONFIGURATION_NAME)
-                            .configure(errorProneConf -> project.getConfigurations()
-                                    .named("processor")
-                                    .configure(conf -> conf.extendsFrom(errorProneConf))));
             project.getTasks().withType(JavaCompile.class).configureEach(javaCompile ->
                     ((ExtensionAware) javaCompile.getOptions()).getExtensions()
                             .configure(ErrorProneOptions.class, errorProneOptions -> {
