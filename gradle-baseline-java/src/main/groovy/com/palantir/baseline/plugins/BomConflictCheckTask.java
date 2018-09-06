@@ -111,13 +111,24 @@ public class BomConflictCheckTask extends DefaultTask {
                 .collect(Collectors.joining("\n\n"));
     }
 
-    private String allConflictsWithBom(String bomName, List<Conflict> conflicts, Map<String, String> resolvedConflicts) {
-        return "bom:            " + bomName + " -> " + conflicts.get(0).getBomVersion() + "\n"
-                + conflicts.stream()
-                    .map(conflict -> conflict.detail(resolvedConflicts))
-                    .map(str -> "    " + str)
-                    .collect(Collectors.joining("\n"));
+    private String allConflictsWithBom(String propName, List<Conflict> conflicts,
+            Map<String, String> resolvedConflicts) {
+        String sameVersionExplanation = resolvedConflicts.containsValue(propName)
+                ? "  non critical: pin required by other non recommended artifacts: ["
+                        + resolvedConflicts.entrySet().stream()
+                        .filter(e -> e.getValue().equals(propName))
+                        .map(Map.Entry::getKey)
+                        .collect(Collectors.joining(", ")) + "]\n"
+                : "";
 
+        String bomDetails = conflicts.size() == 1
+                ? "  bom:            " + conflicts.get(0).bomDetail()
+                : "  bom:\n" + conflicts.stream()
+                        .map(Conflict::bomDetail)
+                        .map(str -> "                  " + str)
+                        .collect(Collectors.joining("\n"));
+        return sameVersionExplanation + "  versions.props: " + propName + " -> " + conflicts.get(0).getPropVersion()
+                + "\n" + bomDetails;
     }
 
     private static class Conflict {
@@ -149,26 +160,9 @@ public class BomConflictCheckTask extends DefaultTask {
             return bomVersion;
         }
 
-        public String criticalString(Map<String, String> resolvedConflicts) {
-            if (!getBomVersion().equals(getPropVersion())) {
-                return "non critical: prop version != bom version.";
-            } else if (resolvedConflicts.containsValue(getPropName())) {
-                return "non critical: pin required by other non recommended artifacts: ["
-                        + resolvedConflicts.entrySet().stream()
-                        .filter(e -> e.getValue().equals(getPropName()))
-                        .map(Map.Entry::getKey)
-                        .collect(Collectors.joining(", ")) + "]";
-
-            } else {
-                return "critical: prop version == bom version. [redundant]";
-            }
+        public String bomDetail() {
+            return bomName + " -> " + bomVersion;
         }
-
-        public String detail(Map<String, String> resolvedConflicts) {
-            return  "prop:            " + getPropName() + " -> " + getPropVersion()
-                    + " " + criticalString(resolvedConflicts);
-        }
-
     }
 }
 

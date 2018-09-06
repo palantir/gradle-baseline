@@ -68,6 +68,11 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
                         <artifactId>scala-library</artifactId>
                         <version>2.12.5</version>
                       </dependency>
+                      <dependency>
+                        <groupId>org.scala-lang</groupId>
+                        <artifactId>scala-idris</artifactId>
+                        <version>2.12.5</version>
+                      </dependency>
                     </dependencies>
                   </dependencyManagement>
                 </project>
@@ -99,7 +104,6 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
 
         then:
         def result = buildSucceed()
-        println(result.output)
         result.output.contains("prop version != bom version")
     }
 
@@ -132,6 +136,7 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
 
         then:
         def result = buildSucceed()
+        println(result.output)
         result.output.contains("pin required by other non recommended artifacts: [org.scala-lang:scala-reflect]")
 
     }
