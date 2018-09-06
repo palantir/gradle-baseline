@@ -56,9 +56,12 @@ public class BomConflictCheckTask extends DefaultTask {
 
     @TaskAction
     public final void checkBomConflict() {
-        Map<String, String> recommendations = getMavenBomRecommendations();
         List<Conflict> conflicts = new LinkedList<>();
         Set<String> artifacts = BaselineVersions.getResolvedArtifacts(getProject());
+        Map<String, String> recommendations = getMavenBomRecommendations()
+                .entrySet().stream()
+                .filter(entry -> artifacts.contains(entry.getKey()))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
         Map<String, String> resolvedConflicts = VersionsPropsReader.readVersionsProps(getPropsFile())
                 .stream()
                 .flatMap(pair -> {

@@ -70,7 +70,7 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
                       </dependency>
                       <dependency>
                         <groupId>org.scala-lang</groupId>
-                        <artifactId>scala-idris</artifactId>
+                        <artifactId>scala-compiler</artifactId>
                         <version>2.12.5</version>
                       </dependency>
                     </dependencies>
@@ -132,12 +132,15 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
         buildFile << standardBuildFile(projectDir) + """
         dependencies {
             compile 'org.scala-lang:scala-reflect'
+            compile 'org.scala-lang:scala-compiler'
         }"""
 
         then:
         def result = buildSucceed()
-        println(result.output)
         result.output.contains("pin required by other non recommended artifacts: [org.scala-lang:scala-reflect]")
+        result.output.contains("  bom:\n" +
+                "                  org.scala-lang:scala-compiler -> 2.12.5\n" +
+                "                  org.scala-lang:scala-library -> 2.12.5")
 
     }
 
