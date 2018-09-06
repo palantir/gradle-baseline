@@ -16,12 +16,14 @@
 
 package com.palantir.baseline.plugins;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import netflix.nebula.dependency.recommender.DependencyRecommendationsPlugin;
 import netflix.nebula.dependency.recommender.RecommendationStrategies;
 import netflix.nebula.dependency.recommender.provider.RecommendationProviderContainer;
@@ -106,7 +108,7 @@ public final class BaselineVersions implements Plugin<Project> {
 
     static Set<String> getResolvedArtifacts(Project project) {
         return project.getConfigurations().stream()
-                .filter(Configuration::isCanBeResolved)
+             //   .filter(Configuration::isCanBeResolved)
                 .flatMap(configuration -> {
                     try {
                         return configuration
@@ -118,8 +120,9 @@ public final class BaselineVersions implements Plugin<Project> {
                                     return id.getGroup() + ":" + id.getName();
                                 });
                     } catch (Exception e) {
-                        throw new RuntimeException("Error during resolution of the artifacts of all "
-                                + "configuration from all subprojects", e);
+                        return Stream.empty();
+                        //throw new RuntimeException("Error during resolution of the artifacts of all "
+                        //        + "configuration from all subprojects", e);
                     }
                 })
                 .collect(Collectors.toSet());

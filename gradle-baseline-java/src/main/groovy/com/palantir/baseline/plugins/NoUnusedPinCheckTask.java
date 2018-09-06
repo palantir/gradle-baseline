@@ -51,6 +51,7 @@ public class NoUnusedPinCheckTask extends DefaultTask {
     @TaskAction
     public final void checkNoUnusedPin() {
         Set<String> artifacts = getResolvedArtifacts();
+        artifacts.forEach(System.out::println);
         List<String> unusedProps = VersionsPropsReader.readVersionsProps(getPropsFile()).stream()
                 .map(Pair::getLeft)
                 .filter(propName -> {
