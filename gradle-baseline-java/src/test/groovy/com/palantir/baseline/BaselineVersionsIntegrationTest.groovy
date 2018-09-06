@@ -104,7 +104,9 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
 
         then:
         def result = buildSucceed()
-        result.output.contains("prop version != bom version")
+        result.output.contains("There are conflicts between versions.props and the bom:\n" +
+                "  versions.props: org.scala-lang:scala-library -> 2.12.6\n" +
+                "  bom:            org.scala-lang:scala-library -> 2.12.5")
     }
 
     def 'Task should run as part of :check'() {
