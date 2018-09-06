@@ -71,7 +71,7 @@ public final class BaselineVersions implements Plugin<Project> {
 
         File rootVersionsPropsFile = rootVersionsPropsFile(project);
         extension.propertiesFile(ImmutableMap.of("file", rootVersionsPropsFile));
-        
+
         if (project != project.getRootProject()) {
             // allow nested projects to specify their own nested versions.props file
             if (project.file("versions.props").exists()) {
@@ -80,7 +80,7 @@ public final class BaselineVersions implements Plugin<Project> {
         } else {
             project.getTasks().register("checkNoUnusedPin", NoUnusedPinCheckTask.class, rootVersionsPropsFile);
         }
-        
+
         project.getTasks().register("checkBomConflict", BomConflictCheckTask.class, rootVersionsPropsFile);
         project.getPluginManager().apply(BasePlugin.class);
         project.getTasks().register("checkVersionsProps",
@@ -119,6 +119,6 @@ public final class BaselineVersions implements Plugin<Project> {
                                 + "configuration from all subprojects", e);
                     }
                 })
-        .collect(Collectors.toSet());
+                .collect(Collectors.toSet());
     }
 }
