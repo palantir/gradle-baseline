@@ -99,7 +99,8 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
 
         then:
         def result = buildSucceed()
-        result.output.contains("prop version not equal to bom version")
+        println(result.output)
+        result.output.contains("prop version != bom version")
     }
 
     def 'Task should run as part of :check'() {

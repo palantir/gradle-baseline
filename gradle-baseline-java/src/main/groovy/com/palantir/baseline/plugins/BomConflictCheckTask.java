@@ -106,8 +106,18 @@ public class BomConflictCheckTask extends DefaultTask {
 
     private String conflictsToString(List<Conflict> conflicts, Map<String, String> resolvedConflicts) {
         return conflicts.stream()
-                .map(conflict -> conflict.details(resolvedConflicts))
-                .collect(Collectors.joining("\n"));
+                .collect(Collectors.groupingBy(Conflict::getPropName)).entrySet().stream()
+                .map(entry -> allConflictsWithBom(entry.getKey(), entry.getValue(), resolvedConflicts))
+                .collect(Collectors.joining("\n\n"));
+    }
+
+    private String allConflictsWithBom(String bomName, List<Conflict> conflicts, Map<String, String> resolvedConflicts) {
+        return "bom:            " + bomName + " -> " + conflicts.get(0).getBomVersion() + "\n"
+                + conflicts.stream()
+                    .map(conflict -> conflict.detail(resolvedConflicts))
+                    .map(str -> "    " + str)
+                    .collect(Collectors.joining("\n"));
+
     }
 
     private static class Conflict {
@@ -141,7 +151,7 @@ public class BomConflictCheckTask extends DefaultTask {
 
         public String criticalString(Map<String, String> resolvedConflicts) {
             if (!getBomVersion().equals(getPropVersion())) {
-                return "non critical: prop version not equal to bom version. (remove if unnecessary override)";
+                return "non critical: prop version != bom version.";
             } else if (resolvedConflicts.containsValue(getPropName())) {
                 return "non critical: pin required by other non recommended artifacts: ["
                         + resolvedConflicts.entrySet().stream()
@@ -150,15 +160,15 @@ public class BomConflictCheckTask extends DefaultTask {
                         .collect(Collectors.joining(", ")) + "]";
 
             } else {
-                return "critical: prop version equals to bom version. [redundant]";
+                return "critical: prop version == bom version. [redundant]";
             }
         }
 
-        public String details(Map<String, String> resolvedConflicts) {
-            return "bom:            " + getBomName() + " -> " + getBomVersion() + "\n"
-                    + "versions.props: " + getPropName() + " -> " + getPropVersion() + "\n"
-                    + criticalString(resolvedConflicts) + "\n";
+        public String detail(Map<String, String> resolvedConflicts) {
+            return  "prop:            " + getPropName() + " -> " + getPropVersion()
+                    + " " + criticalString(resolvedConflicts);
         }
+
     }
 }
 
