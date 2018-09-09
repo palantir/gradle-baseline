@@ -72,7 +72,6 @@ public final class BaselineVersions implements Plugin<Project> {
         File rootVersionsPropsFile = rootVersionsPropsFile(project);
         extension.propertiesFile(ImmutableMap.of("file", rootVersionsPropsFile));
 
-
         project.getTasks().register("checkBomConflict", BomConflictCheckTask.class, rootVersionsPropsFile);
         if (project != project.getRootProject()) {
             // allow nested projects to specify their own nested versions.props file
