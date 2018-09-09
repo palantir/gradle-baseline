@@ -78,8 +78,7 @@ public final class BaselineVersions implements Plugin<Project> {
             if (project.file("versions.props").exists()) {
                 extension.propertiesFile(ImmutableMap.of("file", project.file("versions.props")));
             }
-            project.getTasks().register("checkVersionsProps",
-                    task -> task.dependsOn("checkBomConflict"));
+            project.getTasks().register("checkVersionsProps", task -> task.dependsOn("checkBomConflict"));
         } else {
             project.getTasks().register("checkNoUnusedPin", NoUnusedPinCheckTask.class, rootVersionsPropsFile);
             project.getTasks().register("checkVersionsProps",
