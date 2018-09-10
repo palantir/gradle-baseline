@@ -56,9 +56,9 @@ public class BomConflictCheckTask extends DefaultTask {
 
     @TaskAction
     public final void checkBomConflict() {
-        Map<String, String> recommendations = getMavenBomRecommendations();
         List<Conflict> conflicts = new LinkedList<>();
         Set<String> artifacts = BaselineVersions.getResolvedArtifacts(getProject());
+        Map<String, String> recommendations = getMavenBomRecommendations();
         Map<String, String> resolvedConflicts = VersionsPropsReader.readVersionsProps(getPropsFile())
                 .stream()
                 .flatMap(pair -> {
@@ -106,8 +106,29 @@ public class BomConflictCheckTask extends DefaultTask {
 
     private String conflictsToString(List<Conflict> conflicts, Map<String, String> resolvedConflicts) {
         return conflicts.stream()
-                .map(conflict -> conflict.details(resolvedConflicts))
-                .collect(Collectors.joining("\n"));
+                .collect(Collectors.groupingBy(Conflict::getPropName)).entrySet().stream()
+                .map(entry -> allConflictsWithBom(entry.getKey(), entry.getValue(), resolvedConflicts))
+                .collect(Collectors.joining("\n\n"));
+    }
+
+    private String allConflictsWithBom(String propName, List<Conflict> conflicts,
+            Map<String, String> resolvedConflicts) {
+        String sameVersionExplanation = resolvedConflicts.containsValue(propName)
+                ? "  non critical: pin required by other non recommended artifacts: ["
+                        + resolvedConflicts.entrySet().stream()
+                        .filter(e -> e.getValue().equals(propName))
+                        .map(Map.Entry::getKey)
+                        .collect(Collectors.joining(", ")) + "]\n"
+                : "";
+
+        String bomDetails = conflicts.size() == 1
+                ? "  bom:            " + conflicts.get(0).bomDetail()
+                : "  bom:\n" + conflicts.stream()
+                        .map(Conflict::bomDetail)
+                        .map(str -> "                  " + str)
+                        .collect(Collectors.joining("\n"));
+        return sameVersionExplanation + "  versions.props: " + propName + " -> " + conflicts.get(0).getPropVersion()
+                + "\n" + bomDetails;
     }
 
     private static class Conflict {
@@ -139,25 +160,8 @@ public class BomConflictCheckTask extends DefaultTask {
             return bomVersion;
         }
 
-        public String criticalString(Map<String, String> resolvedConflicts) {
-            if (!getBomVersion().equals(getPropVersion())) {
-                return "non critical: prop version not equal to bom version. (remove if unnecessary override)";
-            } else if (resolvedConflicts.containsValue(getPropName())) {
-                return "non critical: pin required by other non recommended artifacts: ["
-                        + resolvedConflicts.entrySet().stream()
-                        .filter(e -> e.getValue().equals(getPropName()))
-                        .map(Map.Entry::getKey)
-                        .collect(Collectors.joining(", ")) + "]";
-
-            } else {
-                return "critical: prop version equals to bom version. [redundant]";
-            }
-        }
-
-        public String details(Map<String, String> resolvedConflicts) {
-            return "bom:            " + getBomName() + " -> " + getBomVersion() + "\n"
-                    + "versions.props: " + getPropName() + " -> " + getPropVersion() + "\n"
-                    + criticalString(resolvedConflicts) + "\n";
+        public String bomDetail() {
+            return bomName + " -> " + bomVersion;
         }
     }
 }

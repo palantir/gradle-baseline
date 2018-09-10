@@ -68,6 +68,11 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
                         <artifactId>scala-library</artifactId>
                         <version>2.12.5</version>
                       </dependency>
+                      <dependency>
+                        <groupId>org.scala-lang</groupId>
+                        <artifactId>scala-compiler</artifactId>
+                        <version>2.12.5</version>
+                      </dependency>
                     </dependencies>
                   </dependencyManagement>
                 </project>
@@ -99,7 +104,9 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
 
         then:
         def result = buildSucceed()
-        result.output.contains("prop version not equal to bom version")
+        result.output.contains("There are conflicts between versions.props and the bom:\n" +
+                "  versions.props: org.scala-lang:scala-library -> 2.12.6\n" +
+                "  bom:            org.scala-lang:scala-library -> 2.12.5")
     }
 
     def 'Task should run as part of :check'() {
@@ -127,11 +134,15 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
         buildFile << standardBuildFile(projectDir) + """
         dependencies {
             compile 'org.scala-lang:scala-reflect'
+            compile 'org.scala-lang:scala-compiler'
         }"""
 
         then:
         def result = buildSucceed()
         result.output.contains("pin required by other non recommended artifacts: [org.scala-lang:scala-reflect]")
+        result.output.contains("  bom:\n" +
+                "                  org.scala-lang:scala-compiler -> 2.12.5\n" +
+                "                  org.scala-lang:scala-library -> 2.12.5")
 
     }
 
