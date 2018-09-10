@@ -64,6 +64,11 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
                   <dependencyManagement>
                     <dependencies>
                       <dependency>
+                        <groupId>com.palantir.product</groupId>
+                        <artifactId>your-bom</artifactId>
+                        <version>${bomVersion}</version>
+                      </dependency>
+                      <dependency>
                         <groupId>org.scala-lang</groupId>
                         <artifactId>scala-library</artifactId>
                         <version>2.12.5</version>
@@ -153,6 +158,34 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
 
         then:
         buildAndFailWith("There are unused pins in your versions.props")
+    }
+
+    def 'recommending bom version shouldn\'t fail even if bom recommends itself'() {
+        when:
+        setupVersionsProps("org.scala-lang:scala-library = 2.12.6\ncom.palantir.product:your-bom = ${bomVersion}")
+        buildFile <<
+        """
+        plugins {
+            id 'java'
+            id 'com.palantir.baseline-versions'
+        }
+
+        repositories {
+            mavenCentral()
+            maven { url "file://${projectDir.absolutePath}/maven" }
+        }
+
+        dependencies {
+            compile 'org.scala-lang:scala-library'
+        }
+
+        dependencyRecommendations {
+            mavenBom module: 'com.palantir.product:your-bom'
+        }
+        """.stripIndent()
+
+        then:
+        buildSucceed()
     }
 
 }
