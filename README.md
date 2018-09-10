@@ -43,16 +43,15 @@ apply plugin: 'org.inferred.processors'  // installs the "processor" configurati
 apply plugin: 'com.palantir.baseline'
 ```
 
-- Run ``./gradlew baselineUpdateConfig`` to download the config files
+- Run `./gradlew baselineUpdateConfig` to download the config files
 referenced in the `dependencies.baseline` configuration and extract them to .baseline/
-- Any subsequent ``./gradlew build`` invokes Checkstyle as part of the build and test tasks (if the
-respective baseline-xyz plugins are applied).
-- The ``eclipse`` and ``idea`` Gradle tasks generate projects pre-configured with Baseline settings:
+- Any subsequent `./gradlew build` invokes Checkstyle automatically
+- The `eclipse` and `idea` Gradle tasks generate projects pre-configured with Baseline settings:
 
    - Code style and code formatting rules conforming with Baseline style
    - Checkstyle configuration
 
-  Note that the CheckStyle-IDEA plugin is required to run the Baseline Checkstyle within IntelliJ.
+  Note that the [CheckStyle-IDEA](https://plugins.jetbrains.com/plugin/1065-checkstyle-idea) plugin is required to run the Baseline Checkstyle within IntelliJ.
 
 
 
