@@ -21,7 +21,7 @@ See also the [Baseline Java Style Guide and Best Practises](./docs).
 
 ## Usage
 
-- Add the Baseline plugins to the `build.gradle` configuration of the Gradle project:
+It is recommended to add `apply plugin: 'com.palantir.baseline` to your root project's build.gradle.  Individual plugins will be automatically applied to appropriate subprojects.
 
 ```Gradle
 buildscript {
@@ -43,16 +43,26 @@ apply plugin: 'org.inferred.processors'  // installs the "processor" configurati
 apply plugin: 'com.palantir.baseline'
 ```
 
-- Run `./gradlew baselineUpdateConfig` to download the config files
-referenced in the `dependencies.baseline` configuration and extract them to .baseline/
-- Any subsequent `./gradlew build` invokes Checkstyle automatically
-- The `eclipse` and `idea` Gradle tasks generate projects pre-configured with Baseline settings:
+Run **`./gradlew baselineUpdateConfig`** to download config files and extract them to the `.baseline/` directory.  These files should be committed to your repository to ensure reproducible builds.
 
-   - Code style and code formatting rules conforming with Baseline style
-   - Checkstyle configuration
+_Tip: Install the [CheckStyle-IDEA](https://plugins.jetbrains.com/plugin/1065-checkstyle-idea) plugin to run checkstyle from within IntelliJ._
 
-  Note that the [CheckStyle-IDEA](https://plugins.jetbrains.com/plugin/1065-checkstyle-idea) plugin is required to run the Baseline Checkstyle within IntelliJ.
+## Selective usage
 
+Alternatively, you can apply plugins selectively, e.g.:
+
+```Gradle
+apply plugin: 'com.palantir.baseline-config'
+
+allprojects {
+    apply plugin: 'com.palantir.baseline-idea'
+}
+
+subprojects {
+    apply plugin: 'java'
+    apply plugin: 'com.palantir.baseline-checkstyle'
+}
+```
 
 
 
@@ -95,48 +105,6 @@ used, with the following exception:
 
 
 ## Advanced usage
-
-### Multiple-project builds
-
-All `com.palantir.baseline-xyz` plugins can be applied selectively to subprojects. For example:
-
-```Gradle
-buildscript {
-    dependencies {
-        classpath 'com.palantir.baseline:gradle-baseline-java:<version>'
-    }
-}
-
-apply plugin: 'com.palantir.baseline-idea'
-
-subprojects {
-    apply plugin: 'java'
-    apply plugin: 'com.palantir.baseline-checkstyle'
-    apply plugin: 'com.palantir.baseline-idea'
-}
-```
-
-Depending on the Gradle setup, you may need to edit `gradle/shared.gradle` (or similar) instead. Feel free to contact
-the Baseline mailing list for troubleshooting.
-
-
-### Applying Baseline plugins selectively or all at once
-
-The `com.palantir.baseline` plugin applies all `com.palantir.baseline-xyz` plugins to all projects. In order to
-use only Checkstyle and IntelliJ support from Baseline, apply the required plugins selectively, e.g.:
-
-```Gradle
-buildscript {
-    dependencies {
-        classpath 'com.palantir.baseline:gradle-baseline-java:<version>'
-    }
-}
-
-apply plugin: 'com.palantir.baseline-idea'
-subprojects {
-    apply plugin: 'com.palantir.baseline-idea' // Applies all com.palantir.baseline-xyz plugins
-}
-```
 
 
 
