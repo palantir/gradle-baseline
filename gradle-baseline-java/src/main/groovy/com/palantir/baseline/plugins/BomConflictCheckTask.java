@@ -17,13 +17,14 @@
 package com.palantir.baseline.plugins;
 
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Lists;
 import java.io.File;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
+import netflix.nebula.dependency.recommender.DependencyRecommendationsPlugin;
 import netflix.nebula.dependency.recommender.provider.RecommendationProviderContainer;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gradle.api.DefaultTask;
@@ -56,9 +57,16 @@ public class BomConflictCheckTask extends DefaultTask {
 
     @TaskAction
     public final void checkBomConflict() {
-        List<Conflict> conflicts = new LinkedList<>();
+        List<Conflict> conflicts = Lists.newArrayList();
         Set<String> artifacts = BaselineVersions.getResolvedArtifacts(getProject());
         Map<String, String> recommendations = getMavenBomRecommendations();
+        Set<String> bomDeps = getProject().getConfigurations()
+                .getByName(DependencyRecommendationsPlugin.NEBULA_RECOMMENDER_BOM)
+                .getAllDependencies()
+                .stream()
+                .map(dep -> dep.getGroup() + ":" + dep.getName())
+                .collect(Collectors.toSet());
+
         Map<String, String> resolvedConflicts = VersionsPropsReader.readVersionsProps(getPropsFile())
                 .stream()
                 .flatMap(pair -> {
@@ -69,6 +77,8 @@ public class BomConflictCheckTask extends DefaultTask {
                     Set<String> recommendationConflicts = recommendations
                             .entrySet()
                             .stream()
+                            // Don't report conflicts for artifacts that are used to configure bom recommendations
+                            .filter(entry -> !bomDeps.contains(entry.getKey()))
                             .filter(entry -> entry.getKey().matches(regex))
                             .map(entry -> {
                                 conflicts.add(new Conflict(propName, propVersion, entry.getKey(), entry.getValue()));
