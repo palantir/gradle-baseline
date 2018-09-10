@@ -38,8 +38,7 @@ public class NoUnusedPinCheckTask extends DefaultTask {
 
     @Input
     public final Set<String> getResolvedArtifacts() {
-        return getProject().getAllprojects()
-                .stream()
+        return getProject().getAllprojects().stream()
                 .flatMap(project -> BaselineVersions.getResolvedArtifacts(project).stream())
                 .collect(Collectors.toSet());
     }
@@ -61,8 +60,8 @@ public class NoUnusedPinCheckTask extends DefaultTask {
                 .collect(Collectors.toList());
 
         if (!unusedProps.isEmpty()) {
-            throw new RuntimeException(
-                    "There are unused pins in your versions.props: \n" + String.join("\n", unusedProps));
+            String unusedPropsString = String.join("\n", unusedProps);
+            throw new RuntimeException("There are unused pins in your versions.props: \n" + unusedPropsString);
         }
     }
 
