@@ -3,20 +3,24 @@
 [![CircleCI Build Status](https://circleci.com/gh/palantir/gradle-baseline/tree/develop.svg?style=shield)](https://circleci.com/gh/palantir/gradle-baseline)
 [![Bintray Release](https://api.bintray.com/packages/palantir/releases/gradle-baseline/images/download.svg) ](https://bintray.com/palantir/releases/gradle-baseline/_latestVersion)
 
-Baseline Java is a collection of Gradle plugins for configuring code quality tools in builds and generated
-Eclipse/IntelliJ projects. It configures [Checkstyle](http://checkstyle.sourceforge.net) and
-[error-prone](https://errorprone.info) for style and formatting checks, and Eclipse/IntelliJ code style and formatting
-configurations consistent with the
-[Baseline Java Style Guide and Best Practices](https://github.com/palantir/gradle-baseline/tree/develop/docs)
+_Baseline is a family of Gradle plugins for configuring Java projects with sensible defaults for code-style, static analysis, dependency versioning, CircleCI and IntelliJ IDEA/Eclipse integration._
 
-The Baseline plugins are compatible with Gradle 4.0.0 and above.
+| Plugin                                   | Description            |
+|------------------------------------------|------------------------|
+| `com.palantir.baseline-eclipse`          | Configures [Eclipse](https://www.eclipse.org/downloads/) with code style and copyright headers
+| `com.palantir.baseline-idea`             | Configures [Intellij IDEA](https://www.jetbrains.com/idea/) with code style and copyright headers
+| `com.palantir.baseline-error-prone`      | Static analysis for your Java code using Google's [error-prone](http://errorprone.info/).
+| `com.palantir.baseline-class-uniqueness` | Analyses your classpath to ensure no fully-qualified class is defined more than once.
+| `com.palantir.baseline-circleci`         | [CircleCI](https://circleci.com/) integration using `$CIRCLE_ARTIFACTS` and `$CIRCLE_TEST_REPORTS` dirs
+| `com.palantir.baseline-checkstyle`       | Enforces consistent Java formatting using [checkstyle](http://checkstyle.sourceforge.net/)
+| `com.palantir.baseline-scalastyle`       | Enforces formatting using [scalastyle](http://www.scalastyle.org/)
+| `com.palantir.baseline-versions`         | Source dependency versions from a `versions.props` file using [nebula dependency recommender](https://github.com/nebula-plugins/nebula-dependency-recommender-plugin)
+| `com.palantir.baseline-config`           | Config files for the above plugins
 
+See also the [Baseline Java Style Guide and Best Practises](./docs).
 
+## Usage
 
-
-
-
-## Quick start
 - Add the Baseline plugins to the `build.gradle` configuration of the Gradle project:
 
 ```Gradle
@@ -37,9 +41,6 @@ repositories {
 apply plugin: 'java'
 apply plugin: 'org.inferred.processors'  // installs the "processor" configuration needed for baseline-error-prone
 apply plugin: 'com.palantir.baseline'
-
-// All plugins apart from class-uniqueness are applied by default by baseline plugin.
-apply plugin: 'com.palantir.baseline-class-uniqueness'
 ```
 
 - Run ``./gradlew baselineUpdateConfig`` to download the config files
