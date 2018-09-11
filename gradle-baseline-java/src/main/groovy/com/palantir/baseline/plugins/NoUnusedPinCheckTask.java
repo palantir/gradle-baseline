@@ -38,10 +38,7 @@ public class NoUnusedPinCheckTask extends DefaultTask {
 
     @Input
     public final Set<String> getResolvedArtifacts() {
-        return getProject().getAllprojects()
-                .stream()
-                .flatMap(project -> BaselineVersions.getResolvedArtifacts(project).stream())
-                .collect(Collectors.toSet());
+        return BaselineVersions.getAllProjectsResolvedArtifacts(getProject());
     }
 
     @InputFile
