@@ -63,7 +63,7 @@ public class BomConflictCheckTask extends DefaultTask {
     @TaskAction
     public final void checkBomConflict() {
         List<Conflict> conflicts = Lists.newArrayList();
-        Set<String> artifacts =  getResolvedArtifacts();
+        Set<String> artifacts = getResolvedArtifacts();
         Map<String, String> recommendations = getMavenBomRecommendations();
         Set<String> bomDeps = getProject().getConfigurations()
                 .getByName(DependencyRecommendationsPlugin.NEBULA_RECOMMENDER_BOM)
