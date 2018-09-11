@@ -50,6 +50,11 @@ public class BomConflictCheckTask extends DefaultTask {
                 .getRecommendations();
     }
 
+    @Input
+    public final Set<String> getResolvedArtifacts() {
+        return BaselineVersions.getAllProjectsResolvedArtifacts(getProject());
+    }
+
     @InputFile
     public final File getPropsFile() {
         return propsFile;
@@ -58,7 +63,7 @@ public class BomConflictCheckTask extends DefaultTask {
     @TaskAction
     public final void checkBomConflict() {
         List<Conflict> conflicts = Lists.newArrayList();
-        Set<String> artifacts = BaselineVersions.getResolvedArtifacts(getProject());
+        Set<String> artifacts =  getResolvedArtifacts();
         Map<String, String> recommendations = getMavenBomRecommendations();
         Set<String> bomDeps = getProject().getConfigurations()
                 .getByName(DependencyRecommendationsPlugin.NEBULA_RECOMMENDER_BOM)

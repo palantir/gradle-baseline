@@ -102,6 +102,13 @@ public final class BaselineVersions implements Plugin<Project> {
         return file;
     }
 
+    static Set<String> getAllProjectsResolvedArtifacts(Project project) {
+        return project.getRootProject().getAllprojects()
+                .stream()
+                .flatMap(project2 -> getResolvedArtifacts(project2).stream())
+                .collect(Collectors.toSet());
+    }
+
     static Set<String> getResolvedArtifacts(Project project) {
         return project.getConfigurations().stream()
                 .filter(Configuration::isCanBeResolved)
