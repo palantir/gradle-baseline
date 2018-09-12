@@ -108,7 +108,7 @@ public class BomConflictCheckTask extends DefaultTask {
                 .collect(Collectors.toList());
 
         if (!conflicts.isEmpty()) {
-            getProject().getLogger().warn("There are conflicts between versions.props and the bom:\n{}",
+            getProject().getLogger().info("There are conflicts between versions.props and the bom:\n{}",
                     conflictsToString(conflicts, resolvedConflicts));
 
             if (!critical.isEmpty()) {

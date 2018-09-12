@@ -92,7 +92,7 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
     }
 
     def buildSucceed() {
-        BuildResult result = with('checkVersionsProps').build()
+        BuildResult result = with('--info', 'checkVersionsProps').build()
         result.task(':checkVersionsProps').outcome == TaskOutcome.SUCCESS
         result
     }
