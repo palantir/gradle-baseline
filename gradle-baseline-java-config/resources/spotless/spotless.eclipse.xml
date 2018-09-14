@@ -20,7 +20,7 @@
         <setting id="org.eclipse.jdt.core.formatter.alignment_for_binary_expression" value="16"/>
         <setting id="org.eclipse.jdt.core.formatter.alignment_for_compact_if" value="16"/>
         <setting id="org.eclipse.jdt.core.formatter.alignment_for_conditional_expression" value="80"/>
-        <setting id="org.eclipse.jdt.core.formatter.alignment_for_enum_constants" value="16"/>
+        <setting id="org.eclipse.jdt.core.formatter.alignment_for_enum_constants" value="80"/>
         <setting id="org.eclipse.jdt.core.formatter.alignment_for_expressions_in_array_initializer" value="16"/>
         <setting id="org.eclipse.jdt.core.formatter.alignment_for_expressions_in_for_loop_header" value="16"/>
         <setting id="org.eclipse.jdt.core.formatter.alignment_for_method_declaration" value="0"/>
