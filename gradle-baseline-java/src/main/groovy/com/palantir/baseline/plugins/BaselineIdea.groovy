@@ -107,7 +107,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
         }
 
         project.logger.debug "Baseline: Configuring Checkstyle for Idea"
-        def checkstyleFile = "LOCAL_FILE:\$PRJ_DIR\$.baseline/checkstyle/checkstyle.xml"
+        def checkstyleFile = "LOCAL_FILE:\$PROJECT_DIR\$/.baseline/checkstyle/checkstyle.xml"
         node.append(new XmlParser().parseText("""
             <component name="CheckStyle-IDEA">
               <option name="configuration">
