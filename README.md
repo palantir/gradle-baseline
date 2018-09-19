@@ -1,23 +1,26 @@
 # Baseline Java code quality plugins
-
 [![CircleCI Build Status](https://circleci.com/gh/palantir/gradle-baseline/tree/develop.svg?style=shield)](https://circleci.com/gh/palantir/gradle-baseline)
 [![Bintray Release](https://api.bintray.com/packages/palantir/releases/gradle-baseline/images/download.svg) ](https://bintray.com/palantir/releases/gradle-baseline/_latestVersion)
 
-Baseline Java is a collection of Gradle plugins for configuring code quality tools in builds and generated
-Eclipse/IntelliJ projects. It configures [Checkstyle](http://checkstyle.sourceforge.net) and
-[error-prone](https://errorprone.info) for style and formatting checks, and Eclipse/IntelliJ code style and formatting
-configurations consistent with the
-[Baseline Java Style Guide and Best Practices](https://github.com/palantir/gradle-baseline/tree/develop/docs)
+_Baseline is a family of Gradle plugins for configuring Java projects with sensible defaults for code-style, static analysis, dependency versioning, CircleCI and IntelliJ IDEA/Eclipse integration._
 
-The Baseline plugins are compatible with Gradle 4.0.0 and above.
+| Plugin                                   | Description            |
+|------------------------------------------|------------------------|
+| `com.palantir.baseline-idea`             | Configures [Intellij IDEA](https://www.jetbrains.com/idea/) with code style and copyright headers
+| `com.palantir.baseline-eclipse`          | Configures [Eclipse](https://www.eclipse.org/downloads/) with code style and copyright headers
+| `com.palantir.baseline-error-prone`      | Static analysis for your Java code using Google's [error-prone](http://errorprone.info/).
+| `com.palantir.baseline-checkstyle`       | Enforces consistent Java formatting using [checkstyle](http://checkstyle.sourceforge.net/)
+| `com.palantir.baseline-scalastyle`       | Enforces formatting using [scalastyle](http://www.scalastyle.org/)
+| `com.palantir.baseline-class-uniqueness` | Analyses your classpath to ensure no fully-qualified class is defined more than once.
+| `com.palantir.baseline-circleci`         | [CircleCI](https://circleci.com/) integration using `$CIRCLE_ARTIFACTS` and `$CIRCLE_TEST_REPORTS` dirs
+| `com.palantir.baseline-versions`         | Source dependency versions from a `versions.props` file using [nebula dependency recommender](https://github.com/nebula-plugins/nebula-dependency-recommender-plugin)
+| `com.palantir.baseline-config`           | Config files for the above plugins
+
+See also the [Baseline Java Style Guide and Best Practises](./docs).
 
 
-
-
-
-
-## Quick start
-- Add the Baseline plugins to the `build.gradle` configuration of the Gradle project:
+## Usage
+It is recommended to add `apply plugin: 'com.palantir.baseline` to your root project's build.gradle.  Individual plugins will be automatically applied to appropriate subprojects.
 
 ```Gradle
 buildscript {
@@ -37,132 +40,41 @@ repositories {
 apply plugin: 'java'
 apply plugin: 'org.inferred.processors'  // installs the "processor" configuration needed for baseline-error-prone
 apply plugin: 'com.palantir.baseline'
-
-// All plugins apart from class-uniqueness are applied by default by baseline plugin.
-apply plugin: 'com.palantir.baseline-class-uniqueness'
 ```
 
-- Run ``./gradlew baselineUpdateConfig`` to download the config files
-referenced in the `dependencies.baseline` configuration and extract them to .baseline/
-- Any subsequent ``./gradlew build`` invokes Checkstyle as part of the build and test tasks (if the
-respective baseline-xyz plugins are applied).
-- The ``eclipse`` and ``idea`` Gradle tasks generate projects pre-configured with Baseline settings:
+Run **`./gradlew baselineUpdateConfig`** to download config files and extract them to the `.baseline/` directory.  These files should be committed to your repository to ensure reproducible builds.
 
-   - Code style and code formatting rules conforming with Baseline style
-   - Checkstyle configuration
-
-  Note that the CheckStyle-IDEA plugin is required to run the Baseline Checkstyle within IntelliJ.
+_Tip: Install the [CheckStyle-IDEA](https://plugins.jetbrains.com/plugin/1065-checkstyle-idea) plugin to run checkstyle from within IntelliJ._
 
 
-
-
-## Development environment
-Tests are run with `./gradlew publishToMavenLocal build`, the publishing step is required in order to make Baseline
-artifacts available to the tests. Note that some of the tests only work when run for the first time since they assume
-particular directory structures that are unavailable when re-running tests.
-
-IDE configurations can be generated with `./gradlew idea eclipse`.
-
-Generally, you should check generated `.baseline` folder into version control. Though it is not compulsory, since it can be recreated using the `baselineUpdateConfig` task, checking it into git enables your project to customize its rules and share them across developers.
-
-
-
-## Plugin Architecture Overview
-
-The Baseline plugins `com.palantir.baseline-checkstyle`, `com.palantir.baseline-eclipse`,
-`com.palantir.baseline-idea`, `com.palantir.baseline-error-prone` apply the configuration present in `.baseline` to the
-respective Gradle tasks. For example, any Gradle Checkstyle tasks uses the Checkstyle configuration in
-`.baseline/checkstyle/checkstyle.xml`, and any IntelliJ/Eclipse project generated by `./gradlew eclipse idea` is
-configured with Baseline code formatting and Checkstyle rules. Note that each of these plugins automatically applies the
-underlying Gradle plugin: `com.palantir.baseline-checkstyle` applies `checkstyle`, `com.palantir.baseline-eclipse`
-applies `eclipse`, `com.palantir.baseline-error-prone` applies `net.ltgt.errorprone`, etc.
-
-
-
-
-
-## Configuration
-
-The standard Gradle configuration options for the underlying plugins (Eclipse, IntelliJ, Checkstyle) can be
-used, with the following exception:
-
-- `checkstyle.configFile` - not compatible with Baseline since the file location is hard-coded to
-`.baseline/checkstyle/checkstyle.xml`
-
-
-
-
-
-
-## Advanced usage
-
-### Multiple-project builds
-
-All `com.palantir.baseline-xyz` plugins can be applied selectively to subprojects. For example:
+## Selective usage
+Alternatively, you can apply plugins selectively, e.g.:
 
 ```Gradle
-buildscript {
-    dependencies {
-        classpath 'com.palantir.baseline:gradle-baseline-java:<version>'
-    }
-}
+apply plugin: 'com.palantir.baseline-config'
 
-apply plugin: 'com.palantir.baseline-idea'
+allprojects {
+    apply plugin: 'com.palantir.baseline-idea'
+}
 
 subprojects {
     apply plugin: 'java'
     apply plugin: 'com.palantir.baseline-checkstyle'
-    apply plugin: 'com.palantir.baseline-idea'
-}
-```
-
-Depending on the Gradle setup, you may need to edit `gradle/shared.gradle` (or similar) instead. Feel free to contact
-the Baseline mailing list for troubleshooting.
-
-
-### Applying Baseline plugins selectively or all at once
-
-The `com.palantir.baseline` plugin applies all `com.palantir.baseline-xyz` plugins to all projects. In order to
-use only Checkstyle and IntelliJ support from Baseline, apply the required plugins selectively, e.g.:
-
-```Gradle
-buildscript {
-    dependencies {
-        classpath 'com.palantir.baseline:gradle-baseline-java:<version>'
-    }
-}
-
-apply plugin: 'com.palantir.baseline-idea'
-subprojects {
-    apply plugin: 'com.palantir.baseline-idea' // Applies all com.palantir.baseline-xyz plugins
 }
 ```
 
 
+## com.palantir.baseline-idea
+Run `./gradlew idea` to (re-) generate IntelliJ project and module files from the templates in `.baseline`. The
+generated project is pre-configured with Baseline code style settings and support for the CheckStyle-IDEA plugin.
+
+The `com.palantir.baseline-idea` plugin automatically applies the `idea` plugin.
+
+Generated IntelliJ projects have default per-project code formatting rules as well as Checkstyle configuration. The JDK
+and Java language level settings are picked up from the Gradle `sourceCompatibility` property on a per-module basis.
 
 
-
-### Checkstyle Plugin (com.palantir.baseline-checkstyle)
-
-Checkstyle rules can be suppressed on a per-line or per-block basis. (It is good practice to first consider formatting
-the code block in question according to the project's style guidelines before adding suppression statements.) To
-suppress a particular check, say `MagicNumberCheck`, from an entire class or method, annotate the class or method with
-the lowercase check name without the "Check" suffix:
-
-```Java
-@SuppressWarnings("checkstyle:magicnumber")
-```
-
-Checkstyle rules can also be suppressed using comments, which is useful for checks such as `IllegalImport` where
-annotations cannot be used to suppress the violation. To suppress checks for particular lines, add the comment
-`// CHECKSTYLE:OFF` before the first line to suppress and add the comment `// CHECKSTYLE:ON` after the last line.
-
-To disable certain checks for an entire file, apply [custom suppressions](http://checkstyle.sourceforge.net/config.html)
-in `.baseline/checkstyle/checkstyle-suppressions`.
-
-
-### Eclipse Plugin (com.palantir.baseline-eclipse)
-
+## com.palantir.baseline-eclipse
 Run `./gradlew eclipse` to repopulate projects from the templates in `.baseline`.
 
 The `com.palantir.baseline-eclipse` plugin automatically applies the `eclipse` plugin, but not the `java` plugin. The
@@ -176,18 +88,7 @@ Generated Eclipse projects have default per-project code formatting rules as wel
 The Eclipse plugin is compatible with the following versions: Checkstyle 7.5+, JDK 1.7, 1.8
 
 
-### IntelliJ Plugin (com.palantir.baseline-idea)
-
-Run `./gradlew idea` to (re-) generate IntelliJ project and module files from the templates in `.baseline`. The
-generated project is pre-configured with Baseline code style settings and support for the CheckStyle-IDEA plugin.
-
-The `com.palantir.baseline-idea` plugin automatically applies the `idea` plugin.
-
-Generated IntelliJ projects have default per-project code formatting rules as well as Checkstyle configuration. The JDK
-and Java language level settings are picked up from the Gradle `sourceCompatibility` property on a per-module basis.
-
-### `com.palantir.baseline-error-prone`
-
+## com.palantir.baseline-error-prone
 The `com.palantir.baseline-error-prone` plugin brings in the `net.ltgt.errorprone-javacplugin` plugin. We recommend applying the `org.inferred.processors` plugin 1.12.18+ in order to avoid `error: plug-in not found: ErrorProne`. The minimal setup is as follows:
 
 ```groovy
@@ -230,8 +131,30 @@ checks](https://errorprone.info):
 Safe Logging can be found at [github.com/palantir/safe-logging](https://github.com/palantir/safe-logging).
 
 
-### Class Uniqueness Plugin (com.palantir.baseline-class-uniqueness)
+## com.palantir.baseline-checkstyle
+Checkstyle rules can be suppressed on a per-line or per-block basis. (It is good practice to first consider formatting
+the code block in question according to the project's style guidelines before adding suppression statements.) To
+suppress a particular check, say `MagicNumberCheck`, from an entire class or method, annotate the class or method with
+the lowercase check name without the "Check" suffix:
 
+```Java
+@SuppressWarnings("checkstyle:magicnumber")
+```
+
+Checkstyle rules can also be suppressed using comments, which is useful for checks such as `IllegalImport` where
+annotations cannot be used to suppress the violation. To suppress checks for particular lines, add the comment
+`// CHECKSTYLE:OFF` before the first line to suppress and add the comment `// CHECKSTYLE:ON` after the last line.
+
+To disable certain checks for an entire file, apply [custom suppressions](http://checkstyle.sourceforge.net/config.html)
+in `.baseline/checkstyle/checkstyle-suppressions.xml`.
+
+### Copyright Checks
+
+By default Baseline enforces Palantir copyright at the beginning of files. To change this, edit the template copyright
+in `.baseline/copyright/*.txt` and the RegexpHeader checkstyle configuration in `.baseline/checkstyle/checkstyle.xml`
+
+
+## com.palantir.baseline-class-uniqueness
 Run `./gradlew checkClassUniqueness` to scan all jars on the `runtime` classpath for identically named classes.
 This task will run automatically as part of `./gradlew build`.
 
@@ -248,8 +171,8 @@ configurations.all {
 }
 ```
 
-### CircleCi Plugin (com.palantir.baseline-circleci)
 
+## com.palantir.baseline-circleci
 Automatically applies the following plugins:
 
 - [`com.palantir.configuration-resolver`](https://github.com/palantir/gradle-configuration-resolver-plugin) - this adds a `./gradlew resolveConfigurations` task which is useful for caching on CI.
@@ -264,7 +187,6 @@ Also, the plugin:
 
 
 ## com.palantir.baseline-versions
-
 Sources version numbers from a root level `versions.props` file.  This plugin should be applied in an `allprojects` block. It is effectively a shorthand for the following:
 
 ```gradle
@@ -294,7 +216,8 @@ dependencyRecommendations {
 }
 ```
 
-### Copyright Checks
+Adds the following tasks:
 
-By default Baseline enforces Palantir copyright at the beginning of files. To change this, edit the template copyright
-in `.baseline/copyright/*.txt` and the RegexpHeader checkstyle configuration in `.baseline/checkstyle/checkstyle.xml`
+- `checkVersionsProps` - A catch-all task to lint your versions.props file.
+- `checkBomConflict` - Ensures your versions.props pins don't force the same version that is already recommended by a BOM.
+- `checkNoUnusedPin` - Ensures all versions in your versions.props correspond to an actual gradle dependency.
