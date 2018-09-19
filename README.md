@@ -219,5 +219,5 @@ dependencyRecommendations {
 Adds the following tasks:
 
 - `checkVersionsProps` - A catch-all task to lint your versions.props file.
-- `checkBomConflict` - Ensures your versions.props don't conflict with versions sourced from a BOM.
+- `checkBomConflict` - Ensures your versions.props pins don't force the same version that is already recommended by a BOM.
 - `checkNoUnusedPin` - Ensures all versions in your versions.props correspond to an actual gradle dependency.
