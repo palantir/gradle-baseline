@@ -17,8 +17,6 @@
 package com.palantir.baseline.plugins;
 
 import com.diffplug.gradle.spotless.SpotlessExtension;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 
