@@ -47,7 +47,7 @@ class BaselineConfigIntegrationTest extends AbstractPluginTest {
 
         then:
         with('--stacktrace', '--info', 'baselineUpdateConfig').build()
-        directory('.baseline').list().toList().toSet() == ['checkstyle', 'copyright', 'eclipse', 'idea', 'spotless'].toSet()
+        directory('.baseline').list().toList().toSet() == ['checkstyle', 'copyright', 'eclipse', 'idea'].toSet()
         directory('project').list().toList().isEmpty()
     }
 
