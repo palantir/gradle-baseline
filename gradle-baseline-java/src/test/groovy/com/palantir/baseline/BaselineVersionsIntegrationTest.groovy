@@ -151,6 +151,30 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
 
     }
 
+    def 'Version props conflict without exact artifact should fail'() {
+        when:
+        setupVersionsProps("com.fasterxml.jackson.*:* = 2.9.6\ncom.fasterxml.jackson.core:* = 2.9.5")
+        buildFile << standardBuildFile(projectDir) + """
+        dependencies {
+            compile 'com.fasterxml.jackson.core:jackson-core'
+        }"""
+
+        then:
+        buildAndFailWith("")
+    }
+
+    def 'Version props conflict with exact artifact should succeed'() {
+        when:
+        setupVersionsProps("com.fasterxml.jackson.*:* = 2.9.6\ncom.fasterxml.jackson.core:jackson-core = 2.9.5")
+        buildFile << standardBuildFile(projectDir) + """
+        dependencies {
+            compile 'com.fasterxml.jackson.core:jackson-core'
+        }"""
+
+        then:
+        buildSucceed()
+    }
+
     def 'Unused version should fail'() {
         when:
         setupVersionsProps("notused:atall = 42.42")

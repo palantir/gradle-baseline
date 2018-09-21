@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.inject.Inject;
 import netflix.nebula.dependency.recommender.DependencyRecommendationsPlugin;
 import netflix.nebula.dependency.recommender.provider.RecommendationProviderContainer;
@@ -96,7 +97,15 @@ public class BomConflictCheckTask extends DefaultTask {
                             .filter(artifactName -> !recommendationConflicts.contains(artifactName))
                             .map(artifactName -> Pair.of(artifactName, propName));
                 })
-                .collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
+                .collect(Collectors.toMap(
+                        Pair::getLeft,
+                        Pair::getRight,
+                        // Resolve conflicts by choosing the entry that exactly matches the artifact
+                        (propName1, propName2) -> Stream.of(propName1, propName2)
+                                .filter(propName -> !propName.contains("\\*"))
+                                .findFirst()
+                                .orElseThrow(() -> new IllegalStateException(
+                                        String.format("Conflicts in versions.props:\n%s\n%s", propName1, propName2)))));
 
         Set<String> versionPropConflictingLines = ImmutableSet.copyOf(resolvedConflicts.values());
 
