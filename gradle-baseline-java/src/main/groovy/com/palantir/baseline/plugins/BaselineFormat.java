@@ -24,29 +24,23 @@ class BaselineFormat extends AbstractBaselinePlugin {
 
     @Override
     public void apply(Project project) {
-        this.project = project;
+        project.getPluginManager().withPlugin("java", plugin -> {
+            project.getPluginManager().apply("com.diffplug.gradle.spotless");
 
-        if (!project.getPluginManager().hasPlugin("java")) {
-            project.getLogger().info("com.palantir.baseline-format is a no-op when applied to non-java project: {}",
-                    project.getName());
-            return;
-        }
+            project.getExtensions().getByType(SpotlessExtension.class).java(java -> {
+                // TODO(dfox): apply this to all source sets, not just 'main' and 'test'
+                java.target("src/main/java/**/*.java", "src/main/test/**/*.java");
+                java.removeUnusedImports();
+                // use empty string to specify one group for all non-static imports
+                java.importOrder("");
+                java.trimTrailingWhitespace();
+                java.indentWithSpaces(4);
+                java.endWithNewline();
+            });
 
-        project.getPluginManager().apply("com.diffplug.gradle.spotless");
-
-        project.getExtensions().getByType(SpotlessExtension.class).java(java -> {
-            // TODO(dfox): apply this to all source sets, not just 'main' and 'test'
-            java.target("src/main/java/**/*.java", "src/main/test/**/*.java");
-            java.removeUnusedImports();
-            // use empty string to specify one group for all non-static imports
-            java.importOrder("");
-            java.trimTrailingWhitespace();
-            java.indentWithSpaces(4);
-            java.endWithNewline();
+            // necessary because SpotlessPlugin creates tasks in an afterEvaluate block
+            Task formatTask = project.task("format");
+            project.afterEvaluate(p -> formatTask.dependsOn(project.getTasks().getByName("spotlessApply")));
         });
-
-        // necessary because SpotlessPlugin creates tasks in an afterEvaluate block
-        Task formatTask = project.task("format");
-        project.afterEvaluate(p -> formatTask.dependsOn(project.getTasks().getByName("spotlessApply")));
     }
 }
