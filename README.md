@@ -215,8 +215,12 @@ dependencyRecommendations {
     mavenBom module: 'com.palantir.product:your-bom'
 }
 ```
-
 Adds the following tasks:
+
+- `checkVersionsProps` - A catch-all task to lint your versions.props file.
+- `checkBomConflict` - Ensures your versions.props pins don't force the same version that is already recommended by a BOM.
+- `checkNoUnusedPin` - Ensures all versions in your versions.props correspond to an actual gradle dependency.
+
 ## `com.palantir.baseline-format`
 
 Adds a `./gradlew format` task which autoformats all Java files using [Spotless](https://github.com/diffplug/spotless). Roughly equivalent to:
@@ -241,9 +245,3 @@ spotless {
     }
 }
 ```
-
-### Copyright Checks
-
-- `checkVersionsProps` - A catch-all task to lint your versions.props file.
-- `checkBomConflict` - Ensures your versions.props pins don't force the same version that is already recommended by a BOM.
-- `checkNoUnusedPin` - Ensures all versions in your versions.props correspond to an actual gradle dependency.
