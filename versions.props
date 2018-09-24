@@ -13,6 +13,7 @@ net.ltgt.gradle:gradle-errorprone-javacplugin-plugin = 0.5
 org.github.ngbinh.scalastyle:gradle-scalastyle-plugin_2.11 = 1.0.1
 org.inferred:freebuilder = 1.14.6
 org.slf4j:slf4j-api = 1.7.25
+com.diffplug.spotless:spotless-plugin-gradle = 3.14.0
 
 # test deps
 com.netflix.nebula:nebula-test = 7.0.1

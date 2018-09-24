@@ -10,6 +10,7 @@ _Baseline is a family of Gradle plugins for configuring Java projects with sensi
 | `com.palantir.baseline-eclipse`          | Configures [Eclipse](https://www.eclipse.org/downloads/) with code style and copyright headers
 | `com.palantir.baseline-error-prone`      | Static analysis for your Java code using Google's [error-prone](http://errorprone.info/).
 | `com.palantir.baseline-checkstyle`       | Enforces consistent Java formatting using [checkstyle](http://checkstyle.sourceforge.net/)
+| `com.palantir.baseline-format`           | Formats your java files to comply with checkstyle
 | `com.palantir.baseline-scalastyle`       | Enforces formatting using [scalastyle](http://www.scalastyle.org/)
 | `com.palantir.baseline-class-uniqueness` | Analyses your classpath to ensure no fully-qualified class is defined more than once.
 | `com.palantir.baseline-circleci`         | [CircleCI](https://circleci.com/) integration using `$CIRCLE_ARTIFACTS` and `$CIRCLE_TEST_REPORTS` dirs
@@ -221,3 +222,28 @@ Adds the following tasks:
 - `checkVersionsProps` - A catch-all task to lint your versions.props file.
 - `checkBomConflict` - Ensures your versions.props pins don't force the same version that is already recommended by a BOM.
 - `checkNoUnusedPin` - Ensures all versions in your versions.props correspond to an actual gradle dependency.
+
+## com.palantir.baseline-format
+
+Adds a `./gradlew format` task which autoformats all Java files using [Spotless](https://github.com/diffplug/spotless). Roughly equivalent to:
+
+```gradle
+buildscript {
+    dependencies {
+        classpath 'com.diffplug.spotless:spotless-plugin-gradle:3.14.0'
+    }
+}
+
+apply plugin: 'com.diffplug.gradle.spotless'
+
+spotless {
+    java {
+        target 'src/main/java/**/*.java', 'src/main/test/**/*.java'
+        removeUnusedImports
+        importOrder ''
+        trimTrailingWhitespace
+        indentWithSpaces 4 
+        endWithNewline
+    }
+}
+```
