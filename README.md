@@ -215,6 +215,7 @@ dependencyRecommendations {
     mavenBom module: 'com.palantir.product:your-bom'
 }
 ```
+
 Adds the following tasks:
 
 - `checkVersionsProps` - A catch-all task to lint your versions.props file.
