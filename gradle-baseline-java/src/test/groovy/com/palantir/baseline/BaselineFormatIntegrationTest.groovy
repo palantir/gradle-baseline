@@ -48,7 +48,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         with('format', '--stacktrace').build()
     }
 
-    def 'cannot apply plugin when java plugin is missing'() {
+    def 'cannot run format task when java plugin is missing'() {
         when:
         buildFile << noJavaBuildFile
 

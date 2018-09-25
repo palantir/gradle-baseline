@@ -24,6 +24,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
 
     @Override
     public void apply(Project project) {
+        this.project = project;
         project.getPluginManager().withPlugin("java", plugin -> {
             project.getPluginManager().apply("com.diffplug.gradle.spotless");
 

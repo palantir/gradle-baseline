@@ -33,9 +33,9 @@ class BaselineFormatTest extends Specification {
         project.evaluate()
     }
 
-    def baselineFormatPluginApplied() {
+    def spotlessPluginApplied() {
         expect:
-        assertTrue project.plugins.hasPlugin(BaselineFormat.class)
+        assertTrue project.plugins.hasPlugin("com.diffplug.gradle.spotless")
     }
 
     def baselineFormatCreatesFormatTask() {
