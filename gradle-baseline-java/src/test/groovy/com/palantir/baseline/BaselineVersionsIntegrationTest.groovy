@@ -151,28 +151,22 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
 
     }
 
-    def 'Version props conflict without exact artifact should fail'() {
+    def 'Version props conflict with different values should succeed'() {
         when:
-        setupVersionsProps("com.fasterxml.jackson.*:* = 2.9.6\ncom.fasterxml.jackson.core:* = 2.9.5")
-        buildFile << standardBuildFile(projectDir) + """
-        dependencies {
-            compile 'com.fasterxml.jackson.core:jackson-core'
-        }"""
-
-        then:
-        buildAndFailWith("")
-    }
-
-    def 'Version props conflict with exact artifact should succeed'() {
-        when:
-        setupVersionsProps("com.fasterxml.jackson.*:* = 2.9.6\ncom.fasterxml.jackson.core:jackson-core = 2.9.5")
-        buildFile << standardBuildFile(projectDir) + """
-        dependencies {
-            compile 'com.fasterxml.jackson.core:jackson-core'
-        }"""
+        setupVersionsProps("org.scala-lang:* = 2.12.5\norg.scala-lang:scala-library = 2.12.6")
+        buildFile << standardBuildFile(projectDir)
 
         then:
         buildSucceed()
+    }
+
+    def 'Version props conflict with same values should fail'() {
+        when:
+        setupVersionsProps("org.scala-lang:scala-library = 2.12.5\norg.scala-lang:scala-library = 2.12.6")
+        buildFile << standardBuildFile(projectDir)
+
+        then:
+        buildAndFailWith("Duplicate versions.props entry: org.scala-lang:scala-library")
     }
 
     def 'Unused version should fail'() {

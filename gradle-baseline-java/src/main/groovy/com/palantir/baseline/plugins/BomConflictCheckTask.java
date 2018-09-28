@@ -19,6 +19,7 @@ package com.palantir.baseline.plugins;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import java.io.File;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -100,12 +101,15 @@ public class BomConflictCheckTask extends DefaultTask {
                 .collect(Collectors.toMap(
                         Pair::getLeft,
                         Pair::getRight,
-                        // Resolve conflicts by choosing the entry that exactly matches the artifact
-                        (propName1, propName2) -> Stream.of(propName1, propName2)
-                                .filter(propName -> !propName.contains("\\*"))
-                                .findFirst()
-                                .orElseThrow(() -> new IllegalStateException(
-                                        String.format("Conflicts in versions.props:\n%s\n%s", propName1, propName2)))));
+                        // Resolve conflicts by choosing the longer entry because it is more specific
+                        (propName1, propName2) -> {
+                            if (propName1.equals(propName2)) {
+                                throw new RuntimeException("Duplicate versions.props entry: " + propName1);
+                            }
+                            return Stream.of(propName1, propName2)
+                                    .max(Comparator.comparingLong(String::length))
+                                    .get();
+                        }));
 
         Set<String> versionPropConflictingLines = ImmutableSet.copyOf(resolvedConflicts.values());
 
