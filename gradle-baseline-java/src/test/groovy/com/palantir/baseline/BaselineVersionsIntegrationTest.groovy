@@ -151,22 +151,16 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
 
     }
 
-    def 'Version props conflict with different values should succeed'() {
+    def 'Version props conflict should succeed'() {
         when:
-        setupVersionsProps("org.scala-lang:* = 2.12.5\norg.scala-lang:scala-library = 2.12.6")
-        buildFile << standardBuildFile(projectDir)
+        setupVersionsProps("com.google.guava:* = 22.0\ncom.google.guava:guava = 23.0")
+        buildFile << standardBuildFile(projectDir) + """
+        dependencies {
+            compile 'com.google.guava:guava'
+        }"""
 
         then:
         buildSucceed()
-    }
-
-    def 'Version props conflict with same values should fail'() {
-        when:
-        setupVersionsProps("org.scala-lang:scala-library = 2.12.5\norg.scala-lang:scala-library = 2.12.6")
-        buildFile << standardBuildFile(projectDir)
-
-        then:
-        buildAndFailWith("Duplicate versions.props entry: org.scala-lang:scala-library")
     }
 
     def 'Unused version should fail'() {

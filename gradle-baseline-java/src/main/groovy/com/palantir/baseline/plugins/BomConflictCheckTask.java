@@ -19,12 +19,10 @@ package com.palantir.baseline.plugins;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
 import java.io.File;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import javax.inject.Inject;
 import netflix.nebula.dependency.recommender.DependencyRecommendationsPlugin;
 import netflix.nebula.dependency.recommender.provider.RecommendationProviderContainer;
@@ -102,14 +100,7 @@ public class BomConflictCheckTask extends DefaultTask {
                         Pair::getLeft,
                         Pair::getRight,
                         // Resolve conflicts by choosing the longer entry because it is more specific
-                        (propName1, propName2) -> {
-                            if (propName1.equals(propName2)) {
-                                throw new RuntimeException("Duplicate versions.props entry: " + propName1);
-                            }
-                            return Stream.of(propName1, propName2)
-                                    .max(Comparator.comparingLong(String::length))
-                                    .get();
-                        }));
+                        (propName1, propName2) -> propName1.length() > propName2.length() ? propName1 : propName2));
 
         Set<String> versionPropConflictingLines = ImmutableSet.copyOf(resolvedConflicts.values());
 
