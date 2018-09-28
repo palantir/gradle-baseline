@@ -335,6 +335,11 @@
             <property name="ignoreComments" value="true"/>
         </module>
         <module name="RegexpSinglelineJava">
+            <property name="format" value="System\.out\."/>
+            <property name="message" value="System.out usage is not generally allowed"/>
+            <property name="ignoreComments" value="true"/>
+        </module>
+        <module name="RegexpSinglelineJava">
             <property name="format" value="\bCharsets\."/>
             <property name="message" value="Use JDK StandardCharsets instead of alternatives."/>
         </module>
