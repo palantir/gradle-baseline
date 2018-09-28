@@ -335,8 +335,15 @@
             <property name="ignoreComments" value="true"/>
         </module>
         <module name="RegexpSinglelineJava">
+            <property name="id" value="BanSystemOut"/>
             <property name="format" value="System\.out\."/>
-            <property name="message" value="System.out usage is not generally allowed"/>
+            <property name="message" value="System.out usage is not generally allowed. Please use appropriate logging methods"/>
+            <property name="ignoreComments" value="true"/>
+        </module>
+        <module name="RegexpSinglelineJava">
+            <property name="id" value="BanSystemErr"/>
+            <property name="format" value="System\.err\."/>
+            <property name="message" value="System.err usage is not generally allowed. Please use appropriate logging methods"/>
             <property name="ignoreComments" value="true"/>
         </module>
         <module name="RegexpSinglelineJava">
