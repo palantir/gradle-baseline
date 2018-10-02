@@ -96,7 +96,11 @@ public class BomConflictCheckTask extends DefaultTask {
                             .filter(artifactName -> !recommendationConflicts.contains(artifactName))
                             .map(artifactName -> Pair.of(artifactName, propName));
                 })
-                .collect(Collectors.toMap(Pair::getLeft, Pair::getRight));
+                .collect(Collectors.toMap(
+                        Pair::getLeft,
+                        Pair::getRight,
+                        // Resolve conflicts by choosing the longer entry because it is more specific
+                        (propName1, propName2) -> propName1.length() > propName2.length() ? propName1 : propName2));
 
         Set<String> versionPropConflictingLines = ImmutableSet.copyOf(resolvedConflicts.values());
 

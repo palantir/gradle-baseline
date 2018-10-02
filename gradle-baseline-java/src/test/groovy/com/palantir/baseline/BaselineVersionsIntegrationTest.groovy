@@ -151,6 +151,18 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
 
     }
 
+    def 'Version props conflict should succeed'() {
+        when:
+        setupVersionsProps("com.google.guava:* = 22.0\ncom.google.guava:guava = 23.0")
+        buildFile << standardBuildFile(projectDir) + """
+        dependencies {
+            compile 'com.google.guava:guava'
+        }"""
+
+        then:
+        buildSucceed()
+    }
+
     def 'Unused version should fail'() {
         when:
         setupVersionsProps("notused:atall = 42.42")
