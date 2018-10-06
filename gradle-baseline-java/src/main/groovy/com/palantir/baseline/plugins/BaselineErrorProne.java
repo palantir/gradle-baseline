@@ -23,9 +23,9 @@ import java.util.AbstractList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import net.ltgt.gradle.errorprone.javacplugin.CheckSeverity;
-import net.ltgt.gradle.errorprone.javacplugin.ErrorProneJavacPluginPlugin;
-import net.ltgt.gradle.errorprone.javacplugin.ErrorProneOptions;
+import net.ltgt.gradle.errorprone.CheckSeverity;
+import net.ltgt.gradle.errorprone.ErrorProneOptions;
+import net.ltgt.gradle.errorprone.ErrorPronePlugin;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
@@ -42,12 +42,12 @@ public final class BaselineErrorProne implements Plugin<Project> {
     @Override
     public void apply(Project project) {
         project.getPluginManager().withPlugin("java", plugin -> {
-            project.getPluginManager().apply(ErrorProneJavacPluginPlugin.class);
+            project.getPluginManager().apply(ErrorPronePlugin.class);
             JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
             String version = Optional.ofNullable(getClass().getPackage().getImplementationVersion())
                     .orElse("latest.release");
             project.getDependencies().add(
-                    ErrorProneJavacPluginPlugin.CONFIGURATION_NAME,
+                    ErrorPronePlugin.CONFIGURATION_NAME,
                     "com.palantir.baseline:baseline-error-prone:" + version);
 
             project.getTasks().withType(JavaCompile.class).configureEach(javaCompile ->
@@ -63,10 +63,10 @@ public final class BaselineErrorProne implements Plugin<Project> {
             // compilation or code analysis. ErrorProneJavacPluginPlugin handles JavaCompile cases via errorproneJavac
             // configuration and we do similar thing for Test and Javadoc type tasks
             if (!javaConvention.getSourceCompatibility().isJava9Compatible()) {
-                project.getDependencies().add(ErrorProneJavacPluginPlugin.JAVAC_CONFIGURATION_NAME,
+                project.getDependencies().add(ErrorPronePlugin.JAVAC_CONFIGURATION_NAME,
                         "com.google.errorprone:javac:" + ERROR_PRONE_JAVAC_VERSION);
                 project.getConfigurations()
-                        .named(ErrorProneJavacPluginPlugin.JAVAC_CONFIGURATION_NAME)
+                        .named(ErrorPronePlugin.JAVAC_CONFIGURATION_NAME)
                         .configure(conf -> {
                             List<File> bootstrapClasspath = Splitter.on(File.pathSeparator)
                                     .splitToList(System.getProperty("sun.boot.class.path"))

@@ -90,7 +90,7 @@ The Eclipse plugin is compatible with the following versions: Checkstyle 7.5+, J
 
 
 ## com.palantir.baseline-error-prone
-The `com.palantir.baseline-error-prone` plugin brings in the `net.ltgt.errorprone-javacplugin` plugin. We recommend applying the `org.inferred.processors` plugin 1.12.18+ in order to avoid `error: plug-in not found: ErrorProne`. The minimal setup is as follows:
+The `com.palantir.baseline-error-prone` plugin brings in the `net.ltgt.errorprone-javacplugin` plugin. We recommend applying the `org.inferred.processors` plugin 1.3.0+ in order to avoid `error: plug-in not found: ErrorProne`. The minimal setup is as follows:
 
 ```groovy
 buildscript {
