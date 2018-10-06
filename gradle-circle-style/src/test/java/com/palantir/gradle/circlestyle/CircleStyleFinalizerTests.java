@@ -24,6 +24,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableMap;
+import com.google.common.io.Files;
 import com.google.common.io.Resources;
 import java.io.File;
 import java.io.IOException;
@@ -32,7 +33,6 @@ import javax.xml.transform.TransformerException;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.quality.Checkstyle;
 import org.gradle.api.reporting.SingleFileReport;
-import org.gradle.internal.impldep.com.google.common.io.Files;
 import org.gradle.testfixtures.ProjectBuilder;
 import org.junit.Rule;
 import org.junit.Test;
@@ -100,8 +100,8 @@ public class CircleStyleFinalizerTests {
         SingleFileReport xmlReport = checkstyle.getReports().getByName("xml");
 
         String originalReportXml = readTestFile("two-namecheck-failures-checkstyle.xml");
-        String modifiedReportXml = originalReportXml.replace(ROOT.toString(),
-                projectDir.getRoot().getCanonicalPath().toString());
+        String modifiedReportXml = originalReportXml.replace(
+                ROOT.toString(), projectDir.getRoot().getCanonicalPath());
         File modifiedReportFile = projectDir.newFile();
         Files.write(modifiedReportXml, modifiedReportFile, StandardCharsets.UTF_8);
 

@@ -21,8 +21,6 @@ import static org.mockito.Mockito.when;
 
 import com.palantir.gradle.circlestyle.Report.TestCase;
 import org.gradle.api.Task;
-import org.gradle.api.internal.tasks.TaskExecutionOutcome;
-import org.gradle.api.internal.tasks.TaskStateInternal;
 import org.gradle.api.plugins.quality.Checkstyle;
 import org.gradle.api.tasks.TaskState;
 import org.junit.Test;
@@ -88,14 +86,14 @@ public class CircleBuildFailureListenerTests {
     }
 
     private static TaskState succeeded() {
-        TaskStateInternal state = new TaskStateInternal();
-        state.setOutcome(TaskExecutionOutcome.EXECUTED);
+        org.gradle.api.internal.tasks.TaskStateInternal state = new org.gradle.api.internal.tasks.TaskStateInternal();
+        state.setOutcome(org.gradle.api.internal.tasks.TaskExecutionOutcome.EXECUTED);
         return state;
     }
 
     private static TaskState failed(String message) {
-        TaskStateInternal state = new TaskStateInternal();
-        state.setOutcome(TaskExecutionOutcome.EXECUTED);
+        org.gradle.api.internal.tasks.TaskStateInternal state = new org.gradle.api.internal.tasks.TaskStateInternal();
+        state.setOutcome(org.gradle.api.internal.tasks.TaskExecutionOutcome.EXECUTED);
         state.setOutcome(new RuntimeException(message));
         return state;
     }
