@@ -123,11 +123,17 @@
             <message key="import.illegal" value="Use JUnit 4-style (org.junit.*) test classes and assertions instead of JUnit 3 (junit.framework.*)."/>
         </module>
         <module name="IllegalImport"> <!-- Java Coding Guidelines: Import the canonical package -->
-            <property name="illegalPkgs" value="org.elasticsearch.common.base, jersey.repackaged.com.google.common, com.google.api.client.repackaged, org.apache.hadoop.thirdparty.guava, com.clearspring.analytics.util, org.spark_project.guava"/>
+            <property name="illegalPkgs" value="org.elasticsearch.common.base, com.clearspring.analytics.util, org.spark_project.guava"/>
+            <message key="import.illegal" value="Must not import repackaged classes."/>
+        </module>
+        <module name="IllegalImport"> <!-- Java Coding Guidelines: Import the canonical package -->
+            <property name="illegalPkgs" value=".*\.(repackaged|shaded|thirdparty)"/>
+            <property name="regexp" value="true" />
             <message key="import.illegal" value="Must not import repackaged classes."/>
         </module>
         <module name="IllegalImport">
-            <property name="illegalPkgs" value="^org\.gradle\..*internal"/>
+            <property name="illegalPkgs" value="^org\.gradle\.(internal|.*\.internal)"/>
+            <property name="regexp" value="true" />
             <message key="import.illegal" value="Do not rely on gradle internal classes as these may change in minor releases - use org.gradle.api versions instead."/>
         </module>
         <module name="IllegalImport">
@@ -146,6 +152,10 @@
             <property name="id" value="BanLoggingImplementations"/>
             <property name="illegalPkgs" value="org.apache.log4j, org.apache.logging.log4j, java.util.logging, ch.qos.logback"/>
             <message key="import.illegal" value="Use SLF4J instead of a logging framework directly."/>
+        </module>
+        <module name="IllegalImport">
+            <property name="illegalClasses" value="com.google.common.base.Optional, com.google.common.base.Supplier"/>
+            <message key="import.illegal" value="Use the Java8 version of Guava objects."/>
         </module>
         <module name="IllegalInstantiation"> <!-- Java Coding Guidelines: Never instantiate primitive types -->
             <property name="classes" value="java.lang.Boolean"/>
@@ -268,6 +278,11 @@
         <module name="RegexpSinglelineJava"> <!-- Java Coding Guidelines: Use appropriate assertion methods -->
             <property name="format" value="CoreMatchers\.equalTo"/>
             <property name="message" value="Use Assert.assertEquals()."/>
+        </module>
+        <module name="RegexpSinglelineJava">
+            <property name="id" value="BanJacksonFindAndRegisterModulesMethod"/>
+            <property name="format" value="findAndRegisterModules"/>
+            <property name="message" value="Use ObjectMapper#registerModule(&lt;yourModule&gt;) explicitly. ObjectMapper#findAndRegisterModules() is dangerous because it will change behaviour depending on which modules are on your classpath (including transitive dependencies)."/>
         </module>
         <module name="RegexpSinglelineJava"> <!-- Java Coding Guidelines: Use appropriate assertion methods -->
             <property name="format" value="CoreMatchers\.notNull"/>
