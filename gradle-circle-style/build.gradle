@@ -7,7 +7,7 @@ dependencies {
   compile gradleApi()
   compile 'com.google.guava:guava'
 
-  processor 'org.inferred:freebuilder'
+  annotationProcessor 'org.inferred:freebuilder'
 
   testCompile 'com.google.guava:guava'
   testCompile 'junit:junit'
