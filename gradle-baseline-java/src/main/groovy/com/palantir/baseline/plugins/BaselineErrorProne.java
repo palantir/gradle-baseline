@@ -58,16 +58,23 @@ public final class BaselineErrorProne implements Plugin<Project> {
                     "compileOnly",
                     "com.google.code.findbugs:jsr305");
 
-            project.getTasks().withType(JavaCompile.class).configureEach(javaCompile ->
-                    ((ExtensionAware) javaCompile.getOptions()).getExtensions()
-                            .configure(ErrorProneOptions.class, errorProneOptions -> {
-                                errorProneOptions.setEnabled(true);
-                                errorProneOptions.setDisableWarningsInGeneratedCode(true);
-                                errorProneOptions.check("EqualsHashCode", CheckSeverity.ERROR);
-                                errorProneOptions.check("EqualsIncompatibleType", CheckSeverity.ERROR);
-                                errorProneOptions.check("StreamResourceLeak", CheckSeverity.ERROR);
+            project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
+                System.out.println("javaCompile" + javaCompile);
+                ((ExtensionAware) javaCompile.getOptions()).getExtensions()
+                        .configure(ErrorProneOptions.class, errorProneOptions -> {
+                            errorProneOptions.setEnabled(true);
+                            errorProneOptions.setDisableWarningsInGeneratedCode(true);
+                            errorProneOptions.check("EqualsHashCode", CheckSeverity.ERROR);
+                            errorProneOptions.check("EqualsIncompatibleType", CheckSeverity.ERROR);
+                            errorProneOptions.check("StreamResourceLeak", CheckSeverity.ERROR);
+
+                            if (javaCompile.getName().equals("compileJava")) {
+                                // this is quite intricate to pass, so only enabling it on main code
                                 errorProneOptions.option("NullAway:AnnotatedPackages", "com.palantir");
-                            }));
+                            }
+                        });
+            });
+
 
             // In case of java 8 we need to add errorprone javac compiler to bootstrap classpath of tasks that perform
             // compilation or code analysis. ErrorProneJavacPluginPlugin handles JavaCompile cases via errorproneJavac
