@@ -67,10 +67,10 @@ public final class BaselineErrorProne implements Plugin<Project> {
                             errorProneOptions.check("EqualsHashCode", CheckSeverity.ERROR);
                             errorProneOptions.check("EqualsIncompatibleType", CheckSeverity.ERROR);
                             errorProneOptions.check("StreamResourceLeak", CheckSeverity.ERROR);
-
-                            if (javaCompile.getName().equals("compileJava")) {
-                                // this is quite intricate to pass, so only enabling it on main code
-                                errorProneOptions.option("NullAway:AnnotatedPackages", "com.palantir");
+                            errorProneOptions.option("NullAway:AnnotatedPackages", "com.palantir");
+                            // NullAway is quite hard to pass, so only enabling it on main code
+                            if (!javaCompile.getName().equals("compileJava")) {
+                                errorProneOptions.check("NullAway", CheckSeverity.OFF);
                             }
                         });
             });
