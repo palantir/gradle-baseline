@@ -54,6 +54,18 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         }
         '''.stripIndent()
 
+    def javaFileWithNulls = '''
+    package com.palantir.demo;
+    public class Demo {
+        void test() {
+            log(null);
+        }
+        void log(Object object) {
+            System.out.println(object.toString());
+        }
+    }
+    '''
+
     def 'Can apply plugin'() {
         when:
         buildFile << standardBuildFile
@@ -81,5 +93,16 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         then:
         BuildResult result = with('compileJava').build()
         result.task(":compileJava").outcome == TaskOutcome.SUCCESS
+    }
+
+    def 'compileJava succeeds with warning NullAway plugin detects likely NPE'() {
+        when:
+        buildFile << standardBuildFile
+        file('src/main/java/com/palantir/demo/Demo.java') << javaFileWithNulls
+
+        then:
+        BuildResult result = with('compileJava').build()
+        result.task(":compileJava").outcome == TaskOutcome.SUCCESS
+        result.output.contains("Demo.java:5: warning: [NullAway] passing @Nullable parameter 'null' where @NonNull is required")
     }
 }
