@@ -90,7 +90,7 @@ The Eclipse plugin is compatible with the following versions: Checkstyle 7.5+, J
 
 
 ## com.palantir.baseline-error-prone
-The `com.palantir.baseline-error-prone` plugin brings in the `net.ltgt.errorprone-javacplugin` plugin. We recommend applying the `org.inferred.processors` plugin 1.3.0+ in order to avoid `error: plug-in not found: ErrorProne`. The minimal setup is as follows:
+The `com.palantir.baseline-error-prone` plugin brings in the `net.ltgt.errorprone-javacplugin` plugin and also applies Uber's [NullAway](https://github.com/uber/NullAway) plugin. We recommend applying the `org.inferred.processors` plugin 1.3.0+ in order to avoid `error: plug-in not found: ErrorProne`. The minimal setup is as follows:
 
 ```groovy
 buildscript {
@@ -109,7 +109,7 @@ Error-prone rules can be suppressed on a per-line or per-block basis just like C
 @SuppressWarnings("Slf4jConstantLogMessage")
 ```
 
-Rules can be suppressed at the project level, or have their severity modified, by adding the following to the project's `build.gradle`:
+Rules can be suppressed at the project level, or have their severity modified, by adding the following to the project's `build.gradle`. More information on error-prone severity handling can be found at [errorprone.info/docs/flags](http://errorprone.info/docs/flags).
 
 ```gradle
 tasks.withType(JavaCompile).configureEach {
@@ -121,7 +121,7 @@ tasks.withType(JavaCompile).configureEach {
 }
 ```
 
-More information on error-prone severity handling can be found at [errorprone.info/docs/flags](http://errorprone.info/docs/flags).
+The NullAway plugin assumes that function arguments and return types are not null by default.  If you want to intentionally tell the plugin that a parameter or return type might be null, you must annotate it with the `@Nullable` annotation. (This is provided by a `compileOnly` dependency on `com.google.code.findbugs:jsr305`.)  See the NullAway guide on [Suppressing Warnings](https://github.com/uber/NullAway/wiki/Suppressing-Warnings) for other ways to make errors go away.
 
 #### Baseline error-prone checks
 Baseline configures the following checks in addition to the [error-prone's out-of-the-box
@@ -242,7 +242,7 @@ spotless {
         removeUnusedImports
         importOrder ''
         trimTrailingWhitespace
-        indentWithSpaces 4 
+        indentWithSpaces 4
         endWithNewline
     }
 }
