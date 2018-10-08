@@ -28,7 +28,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         plugins {
             id 'java'
             id 'com.palantir.baseline-error-prone'
-            id 'org.inferred.processors' version '1.2.18'
+            id 'org.inferred.processors' version '1.3.0'
         }
         repositories {
             mavenLocal()
