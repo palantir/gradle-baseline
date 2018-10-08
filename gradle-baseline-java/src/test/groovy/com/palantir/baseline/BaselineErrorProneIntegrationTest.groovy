@@ -74,6 +74,24 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         with('compileJava', '--info').build()
     }
 
+    def 'compileJava fails when there is an unclosed stream of files'() {
+        when:
+        buildFile << standardBuildFile
+        file('src/main/java/test/Test.java') << '''
+        package test;
+        public class Test {
+            void test() throws java.io.IOException {
+                java.nio.file.Files.list(java.nio.file.Paths.get("/")).collect(java.util.stream.Collectors.toList());
+            }
+        }
+        '''
+
+        then:
+        BuildResult result = with('compileJava').buildAndFail()
+        result.task(":compileJava").outcome == TaskOutcome.FAILED
+        result.output.contains("[StreamResourceLeak] Streams that encapsulate a closeable resource should be closed using try-with-resources")
+    }
+
     def 'compileJava fails when error-prone finds errors'() {
         when:
         buildFile << standardBuildFile

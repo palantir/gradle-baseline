@@ -65,6 +65,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
                                 errorProneOptions.setDisableWarningsInGeneratedCode(true);
                                 errorProneOptions.check("EqualsHashCode", CheckSeverity.ERROR);
                                 errorProneOptions.check("EqualsIncompatibleType", CheckSeverity.ERROR);
+                                errorProneOptions.check("StreamResourceLeak", CheckSeverity.ERROR);
                                 errorProneOptions.option("NullAway:AnnotatedPackages", "com.palantir");
                             }));
 
