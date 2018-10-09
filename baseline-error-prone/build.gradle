@@ -13,5 +13,5 @@ dependencies {
     testCompile 'org.slf4j:slf4j-api'
     testCompile 'org.apache.commons:commons-lang3'
 
-    processor 'com.google.auto.service:auto-service'
+    annotationProcessor 'com.google.auto.service:auto-service'
 }
