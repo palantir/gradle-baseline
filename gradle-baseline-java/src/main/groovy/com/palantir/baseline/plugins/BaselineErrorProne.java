@@ -30,6 +30,7 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.plugins.ExtensionAware;
+import org.gradle.api.plugins.ExtensionContainer;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
@@ -58,6 +59,13 @@ public final class BaselineErrorProne implements Plugin<Project> {
                                 errorProneOptions.check("EqualsHashCode", CheckSeverity.ERROR);
                                 errorProneOptions.check("EqualsIncompatibleType", CheckSeverity.ERROR);
                                 errorProneOptions.check("StreamResourceLeak", CheckSeverity.ERROR);
+
+                                // TODO(dsanduleac): #401 - remove once baseline-error-prone re-exposes CheckSeverity
+                                ExtensionContainer optionsExtensions =
+                                        ((ExtensionAware) errorProneOptions).getExtensions();
+                                if (optionsExtensions.findByName("CheckSeverity") == null) {
+                                    optionsExtensions.add("CheckSeverity", CheckSeverity.class);
+                                }
                             }));
 
             // In case of java 8 we need to add errorprone javac compiler to bootstrap classpath of tasks that perform
