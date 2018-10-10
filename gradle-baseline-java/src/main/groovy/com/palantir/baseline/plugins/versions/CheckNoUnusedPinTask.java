@@ -24,6 +24,7 @@ import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
@@ -51,8 +52,8 @@ public class CheckNoUnusedPinTask extends DefaultTask {
     }
 
     @InputFile
-    public final File getPropsFile() {
-        return propsFileProperty.getAsFile().get();
+    public final Provider<RegularFile> getPropsFile() {
+        return propsFileProperty;
     }
 
     @Option(option = "fix", description = "Whether to apply the suggested fix to versions.props")
@@ -63,7 +64,7 @@ public class CheckNoUnusedPinTask extends DefaultTask {
     @TaskAction
     public final void checkNoUnusedPin() {
         Set<String> artifacts = getResolvedArtifacts();
-        ParsedVersionsProps parsedVersionsProps = VersionsProps.readVersionsProps(getPropsFile());
+        ParsedVersionsProps parsedVersionsProps = VersionsProps.readVersionsProps(getPropsFile().get().getAsFile());
         List<String> unusedForces = parsedVersionsProps.forces()
                 .stream()
                 .map(VersionForce::name)
@@ -82,7 +83,7 @@ public class CheckNoUnusedPinTask extends DefaultTask {
                     + unusedForces.stream()
                     .map(name -> String.format(" - '%s'", name))
                     .collect(Collectors.joining("\n")));
-            VersionsProps.writeVersionsProps(parsedVersionsProps, unusedForces, getPropsFile());
+            VersionsProps.writeVersionsProps(parsedVersionsProps, unusedForces, getPropsFile().get().getAsFile());
             return;
         }
 

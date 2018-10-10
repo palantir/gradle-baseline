@@ -29,6 +29,7 @@ import netflix.nebula.dependency.recommender.DependencyRecommendationsPlugin;
 import netflix.nebula.dependency.recommender.provider.RecommendationProviderContainer;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
@@ -65,8 +66,8 @@ public class CheckBomConflictTask extends DefaultTask {
     }
 
     @InputFile
-    public final File getPropsFile() {
-        return propsFileProperty.getAsFile().get();
+    public final Provider<RegularFile> getPropsFile() {
+        return propsFileProperty;
     }
 
     @Option(option = "fix", description = "Whether to apply the suggested fix to versions.props")
@@ -86,7 +87,7 @@ public class CheckBomConflictTask extends DefaultTask {
                 .map(dep -> dep.getGroup() + ":" + dep.getName())
                 .collect(Collectors.toSet());
 
-        ParsedVersionsProps parsedVersionsProps = VersionsProps.readVersionsProps(getPropsFile());
+        ParsedVersionsProps parsedVersionsProps = VersionsProps.readVersionsProps(getPropsFile().get().getAsFile());
         // Map of (artifact name not defined from BOM) -> (version props line it 'vindicates', i.e. confirms is used)
         Map<String, String> resolvedConflicts = parsedVersionsProps
                 .forces()
@@ -144,7 +145,7 @@ public class CheckBomConflictTask extends DefaultTask {
                     + toRemove.stream()
                     .map(name -> String.format(" - '%s'", name))
                     .collect(Collectors.joining("\n")));
-            VersionsProps.writeVersionsProps(parsedVersionsProps, toRemove, getPropsFile());
+            VersionsProps.writeVersionsProps(parsedVersionsProps, toRemove, getPropsFile().get().getAsFile());
             return;
         }
 
