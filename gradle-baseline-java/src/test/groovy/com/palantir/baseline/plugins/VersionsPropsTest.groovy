@@ -21,10 +21,10 @@ import org.apache.commons.lang3.tuple.Pair
 import org.assertj.core.api.Assertions
 import spock.lang.Specification
 
-class VersionsPropsReaderTest extends Specification {
+class VersionsPropsTest extends Specification {
     def readVersionsProps() {
         when:
-        def props = VersionsPropsReader.readVersionsProps(Stream.of(
+        def props = VersionsProps.readVersionsProps(Stream.of(
                 "  a:b  = c",
                 "# linter:OFF",
                 "d:eeee = 1",

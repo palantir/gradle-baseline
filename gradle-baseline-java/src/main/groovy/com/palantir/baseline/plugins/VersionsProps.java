@@ -16,21 +16,26 @@
 
 package com.palantir.baseline.plugins;
 
+import com.google.common.base.Preconditions;
+import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.inferred.freebuilder.FreeBuilder;
 
-final class VersionsPropsReader {
+final class VersionsProps {
     private static final Pattern VERSION_FORCE_REGEX = Pattern.compile("([^:=\\s]+:[^:=\\s]+)\\s*=\\s*([^\\s]+)");
 
-    private VersionsPropsReader() {}
+    private VersionsProps() {}
 
     @FreeBuilder
     public interface ParsedVersionsProps {
@@ -43,8 +48,8 @@ final class VersionsPropsReader {
 
         List<VersionForce> forces();
 
-        VersionsPropsReader.ParsedVersionsProps.Builder toBuilder();
-        class Builder extends VersionsPropsReader_ParsedVersionsProps_Builder { }
+        VersionsProps.ParsedVersionsProps.Builder toBuilder();
+        class Builder extends VersionsProps_ParsedVersionsProps_Builder { }
     }
 
     @FreeBuilder
@@ -52,8 +57,8 @@ final class VersionsPropsReader {
         String name();
         String version();
 
-        VersionsPropsReader.VersionForce.Builder toBuilder();
-        class Builder extends VersionsPropsReader_VersionForce_Builder { }
+        VersionsProps.VersionForce.Builder toBuilder();
+        class Builder extends VersionsProps_VersionForce_Builder { }
     }
 
     static ParsedVersionsProps readVersionsProps(File propsFile) {
@@ -101,5 +106,33 @@ final class VersionsPropsReader {
         }
         return builder.build();
     }
+
+    /**
+     * Writes back a {@link ParsedVersionsProps} to the {@code propsFile}, removing the given {@code forcesToRemove}
+     * from the file.
+     *
+     * @throws NullPointerException if any of the {@code forcesToRemove} weren't found in
+     * {@link ParsedVersionsProps#namesToLocationMap}.
+     */
+    static void writeVersionsProps(
+            ParsedVersionsProps parsedVersionsProps, List<String> forcesToRemove, File propsFile) {
+        List<String> lines = parsedVersionsProps.lines();
+        Set<Integer> indicesToSkip = forcesToRemove
+                .stream()
+                .map(parsedVersionsProps.namesToLocationMap()::get)
+                .map(Preconditions::checkNotNull)
+                .collect(Collectors.toSet());
+        try (BufferedWriter writer0 = Files.newBufferedWriter(propsFile.toPath(), StandardOpenOption.TRUNCATE_EXISTING);
+                PrintWriter writer = new PrintWriter(writer0)) {
+            for (int index = 0; index < lines.size(); index++) {
+                if (!indicesToSkip.contains(index)) {
+                    writer.println(lines.get(index));
+                }
+            }
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+    }
+
 
 }

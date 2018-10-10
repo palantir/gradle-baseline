@@ -16,14 +16,9 @@
 
 package com.palantir.baseline.plugins;
 
-import com.palantir.baseline.plugins.VersionsPropsReader.ParsedVersionsProps;
-import com.palantir.baseline.plugins.VersionsPropsReader.VersionForce;
-import java.io.BufferedWriter;
+import com.palantir.baseline.plugins.VersionsProps.ParsedVersionsProps;
+import com.palantir.baseline.plugins.VersionsProps.VersionForce;
 import java.io.File;
-import java.io.IOException;
-import java.io.PrintWriter;
-import java.nio.file.Files;
-import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -62,7 +57,7 @@ public class NoUnusedPinCheckTask extends DefaultTask {
     @TaskAction
     public final void checkNoUnusedPin() {
         Set<String> artifacts = getResolvedArtifacts();
-        ParsedVersionsProps parsedVersionsProps = VersionsPropsReader.readVersionsProps(getPropsFile());
+        ParsedVersionsProps parsedVersionsProps = VersionsProps.readVersionsProps(getPropsFile());
         List<String> unusedForces = parsedVersionsProps.forces()
                 .stream()
                 .map(VersionForce::name)
@@ -74,22 +69,7 @@ public class NoUnusedPinCheckTask extends DefaultTask {
 
         if (!unusedForces.isEmpty()) {
             if (fix) {
-                List<String> lines = parsedVersionsProps.lines();
-                Set<Integer> indicesToSkip = unusedForces
-                        .stream()
-                        .map(parsedVersionsProps.namesToLocationMap()::get)
-                        .collect(Collectors.toSet());
-                try (BufferedWriter writer0 = Files.newBufferedWriter(
-                        propsFile.toPath(), StandardOpenOption.TRUNCATE_EXISTING);
-                     PrintWriter writer = new PrintWriter(writer0)) {
-                    for (int index = 0; index < lines.size(); index++) {
-                        if (!indicesToSkip.contains(index)) {
-                            writer.println(lines.get(index));
-                        }
-                    }
-                } catch (IOException e) {
-                    throw new RuntimeException(e);
-                }
+                VersionsProps.writeVersionsProps(parsedVersionsProps, unusedForces, propsFile);
             } else {
                 throw new RuntimeException(
                         "There are unused pins in your versions.props: \n" + unusedForces
