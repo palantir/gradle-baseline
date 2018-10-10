@@ -22,7 +22,7 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.options.Option;
 
 public class CheckVersionsPropsTask extends DefaultTask {
-    private Property<Boolean> fix = getProject().getObjects().property(Boolean.class);
+    private final Property<Boolean> shouldFix = getProject().getObjects().property(Boolean.class);
 
     public CheckVersionsPropsTask() {
         setGroup(BaselineVersions.GROUP);
@@ -30,11 +30,11 @@ public class CheckVersionsPropsTask extends DefaultTask {
     }
 
     @Option(option = "fix", description = "Whether to apply the suggested fix to versions.props")
-    public final void setFix(boolean fix) {
-        this.fix.set(fix);
+    public final void setShouldFix(boolean shouldFix) {
+        this.shouldFix.set(shouldFix);
     }
 
-    final Provider<Boolean> getFix() {
-        return fix;
+    final Provider<Boolean> getShouldFix() {
+        return shouldFix;
     }
 }
