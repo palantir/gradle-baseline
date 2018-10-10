@@ -16,8 +16,9 @@
 
 package com.palantir.baseline.plugins;
 
-import com.palantir.baseline.plugins.VersionsProps.ParsedVersionsProps;
-import com.palantir.baseline.plugins.VersionsProps.VersionForce;
+import com.palantir.baseline.util.VersionsProps;
+import com.palantir.baseline.util.VersionsProps.ParsedVersionsProps;
+import com.palantir.baseline.util.VersionsProps.VersionForce;
 import java.io.File;
 import java.util.List;
 import java.util.Set;

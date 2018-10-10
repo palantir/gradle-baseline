@@ -18,7 +18,8 @@ package com.palantir.baseline.plugins;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
-import com.palantir.baseline.plugins.VersionsProps.ParsedVersionsProps;
+import com.palantir.baseline.util.VersionsProps;
+import com.palantir.baseline.util.VersionsProps.ParsedVersionsProps;
 import java.io.File;
 import java.util.List;
 import java.util.Map;

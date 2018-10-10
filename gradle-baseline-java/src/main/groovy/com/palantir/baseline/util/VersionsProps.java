@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.palantir.baseline.plugins;
+package com.palantir.baseline.util;
 
 import com.google.common.base.Preconditions;
 import java.io.BufferedWriter;
@@ -32,7 +32,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.inferred.freebuilder.FreeBuilder;
 
-final class VersionsProps {
+public final class VersionsProps {
     private static final Pattern VERSION_FORCE_REGEX = Pattern.compile("([^:=\\s]+:[^:=\\s]+)\\s*=\\s*([^\\s]+)");
 
     private VersionsProps() {}
@@ -61,7 +61,7 @@ final class VersionsProps {
         class Builder extends VersionsProps_VersionForce_Builder { }
     }
 
-    static ParsedVersionsProps readVersionsProps(File propsFile) {
+    public static ParsedVersionsProps readVersionsProps(File propsFile) {
         if (propsFile.exists()) {
             try (Stream<String> lines = Files.lines(propsFile.toPath())) {
                 return readVersionsProps(lines);
@@ -114,7 +114,7 @@ final class VersionsProps {
      * @throws NullPointerException if any of the {@code forcesToRemove} weren't found in
      * {@link ParsedVersionsProps#namesToLocationMap}.
      */
-    static void writeVersionsProps(
+    public static void writeVersionsProps(
             ParsedVersionsProps parsedVersionsProps, List<String> forcesToRemove, File propsFile) {
         List<String> lines = parsedVersionsProps.lines();
         Set<Integer> indicesToSkip = forcesToRemove

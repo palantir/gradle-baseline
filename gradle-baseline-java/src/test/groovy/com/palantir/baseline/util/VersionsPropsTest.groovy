@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.palantir.baseline.plugins
+package com.palantir.baseline.util
 
 import java.util.stream.Stream
 import org.apache.commons.lang3.tuple.Pair
