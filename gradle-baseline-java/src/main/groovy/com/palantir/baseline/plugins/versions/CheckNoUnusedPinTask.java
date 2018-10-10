@@ -40,6 +40,8 @@ public class CheckNoUnusedPinTask extends DefaultTask {
 
     public CheckNoUnusedPinTask() {
         shouldFix.set(false);
+        setGroup(BaselineVersions.GROUP);
+        setDescription("Ensures all versions in your versions.props correspond to an actual gradle dependency");
     }
 
     final void setPropsFile(File propsFile) {

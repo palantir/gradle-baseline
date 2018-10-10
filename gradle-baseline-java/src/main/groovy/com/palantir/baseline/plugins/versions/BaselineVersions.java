@@ -57,6 +57,8 @@ import org.gradle.api.tasks.TaskProvider;
  */
 public final class BaselineVersions implements Plugin<Project> {
 
+    static final String GROUP = "com.palantir.baseline-versions";
+
     @Override
     public void apply(Project project) {
 

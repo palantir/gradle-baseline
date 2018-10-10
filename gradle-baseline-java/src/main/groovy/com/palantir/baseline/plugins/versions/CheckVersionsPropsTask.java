@@ -24,6 +24,11 @@ import org.gradle.api.tasks.options.Option;
 public class CheckVersionsPropsTask extends DefaultTask {
     private Property<Boolean> fix = getProject().getObjects().property(Boolean.class);
 
+    public CheckVersionsPropsTask() {
+        setGroup(BaselineVersions.GROUP);
+        setDescription("Checks your versions.props file for best practices");
+    }
+
     @Option(option = "fix", description = "Whether to apply the suggested fix to versions.props")
     public final void setFix(boolean fix) {
         this.fix.set(fix);

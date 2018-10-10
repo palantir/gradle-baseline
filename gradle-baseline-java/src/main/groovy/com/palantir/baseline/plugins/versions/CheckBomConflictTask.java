@@ -46,6 +46,9 @@ public class CheckBomConflictTask extends DefaultTask {
 
     public CheckBomConflictTask() {
         shouldFix.set(false);
+        setGroup(BaselineVersions.GROUP);
+        setDescription("Ensures your versions.props pins don't force the same version that is already recommended by a "
+                + "BOM");
     }
 
     final void setPropsFile(File propsFile) {
