@@ -21,7 +21,7 @@ See also the [Baseline Java Style Guide and Best Practises](./docs).
 
 
 ## Usage
-It is recommended to add `apply plugin: 'com.palantir.baseline` to your root project's build.gradle.  Individual plugins will be automatically applied to appropriate subprojects.
+It is recommended to add `apply plugin: 'com.palantir.baseline'` to your root project's build.gradle.  Individual plugins will be automatically applied to appropriate subprojects.
 
 ```Gradle
 buildscript {
