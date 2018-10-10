@@ -30,6 +30,8 @@ import netflix.nebula.dependency.recommender.DependencyRecommendationsPlugin;
 import netflix.nebula.dependency.recommender.provider.RecommendationProviderContainer;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.TaskAction;
@@ -39,11 +41,12 @@ import org.gradle.api.tasks.options.Option;
 public class BomConflictCheckTask extends DefaultTask {
 
     private final File propsFile;
-    private boolean fix = false;
+    private Property<Boolean> fix = getProject().getObjects().property(Boolean.class);
 
     @Inject
     public BomConflictCheckTask(File propsFile) {
         this.propsFile = propsFile;
+        fix.set(false);
     }
 
     @Input
@@ -65,8 +68,8 @@ public class BomConflictCheckTask extends DefaultTask {
     }
 
     @Option(option = "fix", description = "Whether to apply the suggested fix to versions.props")
-    public final void setFix(boolean fix) {
-        this.fix = fix;
+    public final void setFix(Provider<Boolean> fix) {
+        this.fix.set(fix);
     }
 
     @TaskAction
@@ -127,7 +130,7 @@ public class BomConflictCheckTask extends DefaultTask {
                     conflictsToString(conflicts, resolvedConflicts));
 
             if (!critical.isEmpty()) {
-                if (fix) {
+                if (fix.get()) {
                     List<String> toRemove = critical.stream().map(Conflict::getPropName).collect(Collectors.toList());
                     VersionsProps.writeVersionsProps(parsedVersionsProps, toRemove, propsFile);
                 } else {

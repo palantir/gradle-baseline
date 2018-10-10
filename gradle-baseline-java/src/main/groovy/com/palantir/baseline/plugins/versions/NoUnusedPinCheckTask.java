@@ -25,6 +25,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.TaskAction;
@@ -33,11 +35,12 @@ import org.gradle.api.tasks.options.Option;
 public class NoUnusedPinCheckTask extends DefaultTask {
 
     private final File propsFile;
-    private boolean fix = false;
+    private Property<Boolean> fix = getProject().getObjects().property(Boolean.class);
 
     @Inject
     public NoUnusedPinCheckTask(File propsFile) {
         this.propsFile = propsFile;
+        fix.set(false);
     }
 
     @Input
@@ -51,8 +54,8 @@ public class NoUnusedPinCheckTask extends DefaultTask {
     }
 
     @Option(option = "fix", description = "Whether to apply the suggested fix to versions.props")
-    public final void setFix(boolean fix) {
-        this.fix = fix;
+    public final void setFix(Provider<Boolean> fix) {
+        this.fix.set(fix);
     }
 
     @TaskAction
@@ -69,7 +72,7 @@ public class NoUnusedPinCheckTask extends DefaultTask {
                 .collect(Collectors.toList());
 
         if (!unusedForces.isEmpty()) {
-            if (fix) {
+            if (fix.get()) {
                 VersionsProps.writeVersionsProps(parsedVersionsProps, unusedForces, propsFile);
             } else {
                 throw new RuntimeException(

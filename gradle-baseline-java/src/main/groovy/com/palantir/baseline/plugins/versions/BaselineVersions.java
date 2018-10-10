@@ -30,6 +30,7 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.plugins.BasePlugin;
+import org.gradle.api.tasks.TaskProvider;
 
 /**
  * Transitively applies nebula.dependency recommender to replace the following common gradle snippet.
@@ -72,17 +73,25 @@ public final class BaselineVersions implements Plugin<Project> {
         File rootVersionsPropsFile = rootVersionsPropsFile(project);
         extension.propertiesFile(ImmutableMap.of("file", rootVersionsPropsFile));
 
-        project.getTasks().register("checkBomConflict", BomConflictCheckTask.class, rootVersionsPropsFile);
+        TaskProvider<BomConflictCheckTask> checkBomConflict =
+                project.getTasks().register("checkBomConflict", BomConflictCheckTask.class, rootVersionsPropsFile);
+        TaskProvider<CheckVersionsPropsTask> checkVersionsProps =
+                project.getTasks().register("checkVersionsProps", CheckVersionsPropsTask.class, task -> {
+                    task.dependsOn("checkBomConflict");
+                    checkBomConflict.get().setFix(task.getFix());
+                });
         if (project != project.getRootProject()) {
             // allow nested projects to specify their own nested versions.props file
             if (project.file("versions.props").exists()) {
                 extension.propertiesFile(ImmutableMap.of("file", project.file("versions.props")));
             }
-            project.getTasks().register("checkVersionsProps", task -> task.dependsOn("checkBomConflict"));
         } else {
-            project.getTasks().register("checkNoUnusedPin", NoUnusedPinCheckTask.class, rootVersionsPropsFile);
-            project.getTasks().register("checkVersionsProps",
-                    task -> task.dependsOn("checkBomConflict", "checkNoUnusedPin"));
+            TaskProvider<NoUnusedPinCheckTask> checkNoUnusedPin =
+                    project.getTasks().register("checkNoUnusedPin", NoUnusedPinCheckTask.class, rootVersionsPropsFile);
+            checkVersionsProps.configure(task -> {
+                task.dependsOn("checkNoUnusedPin");
+                checkNoUnusedPin.get().setFix(task.getFix());
+            });
         }
 
         project.getPluginManager().apply(BasePlugin.class);
