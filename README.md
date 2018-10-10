@@ -223,6 +223,8 @@ Adds the following tasks:
 - `checkBomConflict` - Ensures your versions.props pins don't force the same version that is already recommended by a BOM.
 - `checkNoUnusedPin` - Ensures all versions in your versions.props correspond to an actual gradle dependency.
 
+Run `./gradlew checkVersionsProps --fix` to solve the problems flagged by the above tasks.
+
 ### Troubleshooting
 
 If you declare a force in `versions.props` that you don't depend on, but query in your repo, such as:
