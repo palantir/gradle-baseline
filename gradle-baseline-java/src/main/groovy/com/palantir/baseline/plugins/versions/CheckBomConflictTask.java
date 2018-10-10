@@ -14,32 +14,45 @@
  * limitations under the License.
  */
 
-package com.palantir.baseline.plugins;
+package com.palantir.baseline.plugins.versions;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.palantir.baseline.util.VersionsProps;
+import com.palantir.baseline.util.VersionsProps.ParsedVersionsProps;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
 import netflix.nebula.dependency.recommender.DependencyRecommendationsPlugin;
 import netflix.nebula.dependency.recommender.provider.RecommendationProviderContainer;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.file.RegularFile;
+import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.options.Option;
 
 
-public class BomConflictCheckTask extends DefaultTask {
+public class CheckBomConflictTask extends DefaultTask {
 
-    private final File propsFile;
+    private final Property<Boolean> shouldFix = getProject().getObjects().property(Boolean.class);
+    private final RegularFileProperty propsFileProperty = newInputFile();
 
-    @Inject
-    public BomConflictCheckTask(File propsFile) {
-        this.propsFile = propsFile;
+    public CheckBomConflictTask() {
+        shouldFix.set(false);
+        setGroup(BaselineVersions.GROUP);
+        setDescription("Ensures your versions.props pins don't force the same version that is already recommended by a "
+                + "BOM");
+    }
+
+    final void setPropsFile(File propsFile) {
+        this.propsFileProperty.set(propsFile);
     }
 
     @Input
@@ -56,8 +69,13 @@ public class BomConflictCheckTask extends DefaultTask {
     }
 
     @InputFile
-    public final File getPropsFile() {
-        return propsFile;
+    public final Provider<RegularFile> getPropsFile() {
+        return propsFileProperty;
+    }
+
+    @Option(option = "fix", description = "Whether to apply the suggested fix to versions.props")
+    public final void setShouldFix(Provider<Boolean> shouldFix) {
+        this.shouldFix.set(shouldFix);
     }
 
     @TaskAction
@@ -72,11 +90,13 @@ public class BomConflictCheckTask extends DefaultTask {
                 .map(dep -> dep.getGroup() + ":" + dep.getName())
                 .collect(Collectors.toSet());
 
-        Map<String, String> resolvedConflicts = VersionsPropsReader.readVersionsProps(getPropsFile())
+        ParsedVersionsProps parsedVersionsProps = VersionsProps.readVersionsProps(getPropsFile().get().getAsFile());
+        // Map of (artifact name not defined from BOM) -> (version props line it 'vindicates', i.e. confirms is used)
+        Map<String, String> resolvedConflicts = parsedVersionsProps
+                .forces()
                 .stream()
-                .flatMap(pair -> {
-                    String propName = pair.getLeft();
-                    String propVersion = pair.getRight();
+                .flatMap(force -> {
+                    String propName = force.name();
                     String regex = propName.replaceAll("\\*", ".*");
 
                     Set<String> recommendationConflicts = recommendations
@@ -86,7 +106,8 @@ public class BomConflictCheckTask extends DefaultTask {
                             .filter(entry -> !bomDeps.contains(entry.getKey()))
                             .filter(entry -> entry.getKey().matches(regex))
                             .map(entry -> {
-                                conflicts.add(new Conflict(propName, propVersion, entry.getKey(), entry.getValue()));
+                                conflicts.add(
+                                        new Conflict(propName, force.version(), entry.getKey(), entry.getValue()));
                                 return entry.getKey();
                             })
                             .collect(Collectors.toSet());
@@ -102,25 +123,37 @@ public class BomConflictCheckTask extends DefaultTask {
                         // Resolve conflicts by choosing the longer entry because it is more specific
                         (propName1, propName2) -> propName1.length() > propName2.length() ? propName1 : propName2));
 
-        Set<String> versionPropConflictingLines = ImmutableSet.copyOf(resolvedConflicts.values());
+        Set<String> versionPropsVindicatedLines = ImmutableSet.copyOf(resolvedConflicts.values());
 
         //Critical conflicts are versions.props line that only override bom recommendations with same version
         //so it should avoid considering the case where a wildcard also pin an artifact not present in the bom
         List<Conflict> critical = conflicts.stream()
                 .filter(c -> c.getBomVersion().equals(c.getPropVersion()))
-                .filter(c -> !versionPropConflictingLines.contains(c.getPropName()))
+                .filter(c -> !versionPropsVindicatedLines.contains(c.getPropName()))
                 .collect(Collectors.toList());
 
-        if (!conflicts.isEmpty()) {
-            getProject().getLogger().info("There are conflicts between versions.props and the bom:\n{}",
-                    conflictsToString(conflicts, resolvedConflicts));
+        if (conflicts.isEmpty()) {
+            return;
+        }
+        getProject().getLogger().info("There are conflicts between versions.props and the bom:\n{}",
+                conflictsToString(conflicts, resolvedConflicts));
 
-            if (!critical.isEmpty()) {
-                throw new RuntimeException("Critical conflicts between versions.props and the bom "
-                        + "(overriding with same version)\n" + conflictsToString(critical, resolvedConflicts));
-            }
+        if (critical.isEmpty()) {
+            return;
         }
 
+        if (shouldFix.get()) {
+            List<String> toRemove = critical.stream().map(Conflict::getPropName).collect(Collectors.toList());
+            getProject().getLogger().lifecycle("Removing critical conflicts from versions.props:\n"
+                    + toRemove.stream()
+                    .map(name -> String.format(" - '%s'", name))
+                    .collect(Collectors.joining("\n")));
+            VersionsProps.writeVersionsProps(parsedVersionsProps, toRemove, getPropsFile().get().getAsFile());
+            return;
+        }
+
+        throw new RuntimeException("Critical conflicts between versions.props and the bom "
+                + "(overriding with same version)\n" + conflictsToString(critical, resolvedConflicts));
     }
 
     private String conflictsToString(List<Conflict> conflicts, Map<String, String> resolvedConflicts) {

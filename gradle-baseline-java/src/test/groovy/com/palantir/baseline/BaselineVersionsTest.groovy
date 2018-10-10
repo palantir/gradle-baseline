@@ -16,7 +16,7 @@
 
 package com.palantir.baseline
 
-import com.palantir.baseline.plugins.BaselineVersions
+import com.palantir.baseline.plugins.versions.BaselineVersions
 import netflix.nebula.dependency.recommender.DependencyRecommendationsPlugin
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder

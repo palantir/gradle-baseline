@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.palantir.baseline.plugins;
+package com.palantir.baseline.plugins.versions;
 
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
@@ -30,6 +30,7 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.plugins.BasePlugin;
+import org.gradle.api.tasks.TaskProvider;
 
 /**
  * Transitively applies nebula.dependency recommender to replace the following common gradle snippet.
@@ -56,6 +57,8 @@ import org.gradle.api.plugins.BasePlugin;
  */
 public final class BaselineVersions implements Plugin<Project> {
 
+    static final String GROUP = "com.palantir.baseline-versions";
+
     @Override
     public void apply(Project project) {
 
@@ -72,17 +75,26 @@ public final class BaselineVersions implements Plugin<Project> {
         File rootVersionsPropsFile = rootVersionsPropsFile(project);
         extension.propertiesFile(ImmutableMap.of("file", rootVersionsPropsFile));
 
-        project.getTasks().register("checkBomConflict", BomConflictCheckTask.class, rootVersionsPropsFile);
         if (project != project.getRootProject()) {
             // allow nested projects to specify their own nested versions.props file
             if (project.file("versions.props").exists()) {
                 extension.propertiesFile(ImmutableMap.of("file", project.file("versions.props")));
             }
-            project.getTasks().register("checkVersionsProps", task -> task.dependsOn("checkBomConflict"));
         } else {
-            project.getTasks().register("checkNoUnusedPin", NoUnusedPinCheckTask.class, rootVersionsPropsFile);
-            project.getTasks().register("checkVersionsProps",
-                    task -> task.dependsOn("checkBomConflict", "checkNoUnusedPin"));
+            TaskProvider<CheckBomConflictTask> checkBomConflict = project.getTasks().register(
+                    "checkBomConflict", CheckBomConflictTask.class, task -> task.setPropsFile(rootVersionsPropsFile));
+            TaskProvider<CheckNoUnusedPinTask> checkNoUnusedPin = project.getTasks().register(
+                    "checkNoUnusedPin", CheckNoUnusedPinTask.class, task -> task.setPropsFile(rootVersionsPropsFile));
+
+            project.getTasks().register("checkVersionsProps", CheckVersionsPropsTask.class, task -> {
+                task.dependsOn(checkBomConflict, checkNoUnusedPin);
+                // If we just run checkVersionsProps --fix, we want to propagate its option to its dependent tasks
+                checkBomConflict.get().setShouldFix(task.getShouldFix());
+                checkNoUnusedPin.get().setShouldFix(task.getShouldFix());
+            });
+            // If we run with --parallel --fix, both checkNoUnusedPin and checkBomConflict will try to overwrite the
+            // versions file at the same time. Therefore, make sure checkBomConflict runs first.
+            checkNoUnusedPin.configure(task -> task.mustRunAfter(checkBomConflict));
         }
 
         project.getPluginManager().apply(BasePlugin.class);

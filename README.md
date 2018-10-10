@@ -223,6 +223,23 @@ Adds the following tasks:
 - `checkBomConflict` - Ensures your versions.props pins don't force the same version that is already recommended by a BOM.
 - `checkNoUnusedPin` - Ensures all versions in your versions.props correspond to an actual gradle dependency.
 
+Run `./gradlew checkVersionsProps --fix` to solve the problems flagged by the above tasks.
+
+### Troubleshooting
+
+If you declare a force in `versions.props` that you don't depend on, but query in your repo, such as:
+```groovy
+dependencyRecommendations.getRecommendedVersion('group', 'name')
+```
+
+Then `checkNoUnusedPin` will fail because it can't determine where the version is used. To work around this, you can
+put the version at the end of the file after a `# linter:OFF` line, e.g.:
+
+```properties
+# linter:OFF
+group:name = 1.0.0
+```
+
 ## com.palantir.baseline-format
 
 Adds a `./gradlew format` task which autoformats all Java files using [Spotless](https://github.com/diffplug/spotless). Roughly equivalent to:
