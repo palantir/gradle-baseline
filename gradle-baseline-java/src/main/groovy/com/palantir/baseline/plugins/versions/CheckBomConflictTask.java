@@ -128,24 +128,28 @@ public class CheckBomConflictTask extends DefaultTask {
                 .filter(c -> !versionPropsVindicatedLines.contains(c.getPropName()))
                 .collect(Collectors.toList());
 
-        if (!conflicts.isEmpty()) {
-            getProject().getLogger().info("There are conflicts between versions.props and the bom:\n{}",
-                    conflictsToString(conflicts, resolvedConflicts));
-
-            if (!critical.isEmpty()) {
-                if (shouldFix.get()) {
-                    List<String> toRemove = critical.stream().map(Conflict::getPropName).collect(Collectors.toList());
-                    getProject().getLogger().lifecycle("Removing critical conflicts from versions.props:\n"
-                            + toRemove.stream()
-                            .map(name -> String.format(" - '%s'", name))
-                            .collect(Collectors.joining("\n")));
-                    VersionsProps.writeVersionsProps(parsedVersionsProps, toRemove, getPropsFile());
-                } else {
-                    throw new RuntimeException("Critical conflicts between versions.props and the bom "
-                            + "(overriding with same version)\n" + conflictsToString(critical, resolvedConflicts));
-                }
-            }
+        if (conflicts.isEmpty()) {
+            return;
         }
+        getProject().getLogger().info("There are conflicts between versions.props and the bom:\n{}",
+                conflictsToString(conflicts, resolvedConflicts));
+
+        if (critical.isEmpty()) {
+            return;
+        }
+
+        if (shouldFix.get()) {
+            List<String> toRemove = critical.stream().map(Conflict::getPropName).collect(Collectors.toList());
+            getProject().getLogger().lifecycle("Removing critical conflicts from versions.props:\n"
+                    + toRemove.stream()
+                    .map(name -> String.format(" - '%s'", name))
+                    .collect(Collectors.joining("\n")));
+            VersionsProps.writeVersionsProps(parsedVersionsProps, toRemove, getPropsFile());
+            return;
+        }
+
+        throw new RuntimeException("Critical conflicts between versions.props and the bom "
+                + "(overriding with same version)\n" + conflictsToString(critical, resolvedConflicts));
     }
 
     private String conflictsToString(List<Conflict> conflicts, Map<String, String> resolvedConflicts) {

@@ -73,20 +73,23 @@ public class CheckNoUnusedPinTask extends DefaultTask {
                 })
                 .collect(Collectors.toList());
 
-        if (!unusedForces.isEmpty()) {
-            if (shouldFix.get()) {
-                getProject().getLogger().lifecycle("Removing unused pins from versions.props:\n"
-                        + unusedForces.stream()
-                        .map(name -> String.format(" - '%s'", name))
-                        .collect(Collectors.joining("\n")));
-                VersionsProps.writeVersionsProps(parsedVersionsProps, unusedForces, getPropsFile());
-            } else {
-                throw new RuntimeException(
-                        "There are unused pins in your versions.props: \n" + unusedForces
-                                + "\n\n"
-                                + "Rerun with --fix to remove them.");
-            }
+        if (unusedForces.isEmpty()) {
+            return;
         }
+
+        if (shouldFix.get()) {
+            getProject().getLogger().lifecycle("Removing unused pins from versions.props:\n"
+                    + unusedForces.stream()
+                    .map(name -> String.format(" - '%s'", name))
+                    .collect(Collectors.joining("\n")));
+            VersionsProps.writeVersionsProps(parsedVersionsProps, unusedForces, getPropsFile());
+            return;
+        }
+
+        throw new RuntimeException(
+                "There are unused pins in your versions.props: \n" + unusedForces
+                        + "\n\n"
+                        + "Rerun with --fix to remove them.");
     }
 
 }
