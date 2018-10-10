@@ -78,6 +78,7 @@ public final class BaselineVersions implements Plugin<Project> {
         TaskProvider<CheckVersionsPropsTask> checkVersionsProps =
                 project.getTasks().register("checkVersionsProps", CheckVersionsPropsTask.class, task -> {
                     task.dependsOn("checkBomConflict");
+                    // If we just run checkVersionsProps --fix, we want to propagate its option to its dependent tasks
                     checkBomConflict.get().setFix(task.getFix());
                 });
         if (project != project.getRootProject()) {
@@ -90,6 +91,7 @@ public final class BaselineVersions implements Plugin<Project> {
                     project.getTasks().register("checkNoUnusedPin", NoUnusedPinCheckTask.class, rootVersionsPropsFile);
             checkVersionsProps.configure(task -> {
                 task.dependsOn("checkNoUnusedPin");
+                // If we just run checkVersionsProps --fix, we want to propagate its option to its dependent tasks
                 checkNoUnusedPin.get().setFix(task.getFix());
             });
         }
