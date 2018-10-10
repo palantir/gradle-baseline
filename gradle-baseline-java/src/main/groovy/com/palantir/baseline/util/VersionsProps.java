@@ -66,14 +66,11 @@ public final class VersionsProps {
     }
 
     public static ParsedVersionsProps readVersionsProps(File propsFile) {
-        if (propsFile.exists()) {
-            try (Stream<String> lines = Files.lines(propsFile.toPath())) {
-                return readVersionsProps(lines);
-            } catch (IOException e) {
-                throw new RuntimeException("Error reading " + propsFile.toPath() + " file", e);
-            }
-        } else {
-            throw new RuntimeException("No " + propsFile.toPath() + " file found");
+        Preconditions.checkArgument(propsFile.exists(), "No " + propsFile.toPath() + " file found");
+        try (Stream<String> lines = Files.lines(propsFile.toPath())) {
+            return readVersionsProps(lines);
+        } catch (IOException e) {
+            throw new RuntimeException("Error reading " + propsFile.toPath() + " file", e);
         }
     }
 
