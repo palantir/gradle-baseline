@@ -85,6 +85,7 @@ public class BomConflictCheckTask extends DefaultTask {
                 .collect(Collectors.toSet());
 
         ParsedVersionsProps parsedVersionsProps = VersionsProps.readVersionsProps(getPropsFile());
+        // Map of (artifact name not defined from BOM) -> (version props line it 'vindicates', i.e. confirms is used)
         Map<String, String> resolvedConflicts = parsedVersionsProps
                 .forces()
                 .stream()
@@ -116,13 +117,13 @@ public class BomConflictCheckTask extends DefaultTask {
                         // Resolve conflicts by choosing the longer entry because it is more specific
                         (propName1, propName2) -> propName1.length() > propName2.length() ? propName1 : propName2));
 
-        Set<String> versionPropConflictingLines = ImmutableSet.copyOf(resolvedConflicts.values());
+        Set<String> versionPropsVindicatedLines = ImmutableSet.copyOf(resolvedConflicts.values());
 
         //Critical conflicts are versions.props line that only override bom recommendations with same version
         //so it should avoid considering the case where a wildcard also pin an artifact not present in the bom
         List<Conflict> critical = conflicts.stream()
                 .filter(c -> c.getBomVersion().equals(c.getPropVersion()))
-                .filter(c -> !versionPropConflictingLines.contains(c.getPropName()))
+                .filter(c -> !versionPropsVindicatedLines.contains(c.getPropName()))
                 .collect(Collectors.toList());
 
         if (!conflicts.isEmpty()) {
