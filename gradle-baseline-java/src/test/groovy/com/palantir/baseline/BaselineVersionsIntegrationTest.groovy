@@ -20,7 +20,7 @@ import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import org.gradle.testkit.runner.BuildResult;
+import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 
 class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
@@ -102,6 +102,16 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
         result.output.contains(error)
     }
 
+    def buildWithFixWorks() {
+        def currentVersionsProps = file('versions.props').readLines()
+        // Check that running with --fix modifies the file
+        with('checkVersionsProps', '--fix').build()
+        assert file('versions.props').readLines() != currentVersionsProps
+
+        // Check that the task now succeeds
+        with('checkVersionsProps').build()
+    }
+
     def 'Override version conflict should succeed'() {
         when:
         setupVersionsProps("org.scala-lang:scala-library = 2.12.6")
@@ -130,7 +140,7 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
 
         then:
         buildAndFailWith("Critical conflicts between versions.props and the bom (overriding with same version)")
-
+        buildWithFixWorks()
     }
 
     def 'Same version conflict but wildcard override at least one should succeed'() {
@@ -170,6 +180,7 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
 
         then:
         buildAndFailWith("There are unused pins in your versions.props")
+        buildWithFixWorks()
     }
 
     def 'recommending bom version shouldn\'t fail even if bom recommends itself'() {
