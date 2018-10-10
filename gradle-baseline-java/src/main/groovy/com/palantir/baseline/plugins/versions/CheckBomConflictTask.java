@@ -40,11 +40,11 @@ import org.gradle.api.tasks.options.Option;
 
 public class CheckBomConflictTask extends DefaultTask {
 
-    private final Property<Boolean> fix = getProject().getObjects().property(Boolean.class);
+    private final Property<Boolean> shouldFix = getProject().getObjects().property(Boolean.class);
     private final RegularFileProperty propsFileProperty = newInputFile();
 
     public CheckBomConflictTask() {
-        fix.set(false);
+        shouldFix.set(false);
     }
 
     final void setPropsFile(File propsFile) {
@@ -70,8 +70,8 @@ public class CheckBomConflictTask extends DefaultTask {
     }
 
     @Option(option = "fix", description = "Whether to apply the suggested fix to versions.props")
-    public final void setFix(Provider<Boolean> fix) {
-        this.fix.set(fix);
+    public final void setShouldFix(Provider<Boolean> shouldFix) {
+        this.shouldFix.set(shouldFix);
     }
 
     @TaskAction
@@ -133,7 +133,7 @@ public class CheckBomConflictTask extends DefaultTask {
                     conflictsToString(conflicts, resolvedConflicts));
 
             if (!critical.isEmpty()) {
-                if (fix.get()) {
+                if (shouldFix.get()) {
                     List<String> toRemove = critical.stream().map(Conflict::getPropName).collect(Collectors.toList());
                     getProject().getLogger().lifecycle("Removing critical conflicts from versions.props:\n"
                             + toRemove.stream()
