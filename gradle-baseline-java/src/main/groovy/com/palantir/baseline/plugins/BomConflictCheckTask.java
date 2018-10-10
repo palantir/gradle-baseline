@@ -18,6 +18,7 @@ package com.palantir.baseline.plugins;
 
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Lists;
+import com.palantir.baseline.plugins.VersionsProps.ParsedVersionsProps;
 import java.io.File;
 import java.util.List;
 import java.util.Map;
@@ -31,11 +32,13 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.options.Option;
 
 
 public class BomConflictCheckTask extends DefaultTask {
 
     private final File propsFile;
+    private boolean fix = false;
 
     @Inject
     public BomConflictCheckTask(File propsFile) {
@@ -60,6 +63,11 @@ public class BomConflictCheckTask extends DefaultTask {
         return propsFile;
     }
 
+    @Option(option = "fix", description = "Whether to apply the suggested fix to versions.props")
+    public final void setFix(boolean fix) {
+        this.fix = fix;
+    }
+
     @TaskAction
     public final void checkBomConflict() {
         List<Conflict> conflicts = Lists.newArrayList();
@@ -72,7 +80,8 @@ public class BomConflictCheckTask extends DefaultTask {
                 .map(dep -> dep.getGroup() + ":" + dep.getName())
                 .collect(Collectors.toSet());
 
-        Map<String, String> resolvedConflicts = VersionsPropsReader.readVersionsProps(getPropsFile())
+        ParsedVersionsProps parsedVersionsProps = VersionsProps.readVersionsProps(getPropsFile());
+        Map<String, String> resolvedConflicts = parsedVersionsProps
                 .forces()
                 .stream()
                 .flatMap(force -> {
@@ -117,11 +126,15 @@ public class BomConflictCheckTask extends DefaultTask {
                     conflictsToString(conflicts, resolvedConflicts));
 
             if (!critical.isEmpty()) {
-                throw new RuntimeException("Critical conflicts between versions.props and the bom "
-                        + "(overriding with same version)\n" + conflictsToString(critical, resolvedConflicts));
+                if (fix) {
+                    List<String> toRemove = critical.stream().map(Conflict::getPropName).collect(Collectors.toList());
+                    VersionsProps.writeVersionsProps(parsedVersionsProps, toRemove, propsFile);
+                } else {
+                    throw new RuntimeException("Critical conflicts between versions.props and the bom "
+                            + "(overriding with same version)\n" + conflictsToString(critical, resolvedConflicts));
+                }
             }
         }
-
     }
 
     private String conflictsToString(List<Conflict> conflicts, Map<String, String> resolvedConflicts) {
