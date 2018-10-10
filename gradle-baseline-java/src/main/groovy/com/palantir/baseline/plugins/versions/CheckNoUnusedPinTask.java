@@ -23,8 +23,8 @@ import java.io.File;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
@@ -32,15 +32,17 @@ import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.options.Option;
 
-public class NoUnusedPinCheckTask extends DefaultTask {
+public class CheckNoUnusedPinTask extends DefaultTask {
 
-    private final File propsFile;
-    private Property<Boolean> fix = getProject().getObjects().property(Boolean.class);
+    private final Property<Boolean> fix = getProject().getObjects().property(Boolean.class);
+    private final RegularFileProperty propsFileProperty = newInputFile();
 
-    @Inject
-    public NoUnusedPinCheckTask(File propsFile) {
-        this.propsFile = propsFile;
+    public CheckNoUnusedPinTask() {
         fix.set(false);
+    }
+
+    final void setPropsFile(File propsFile) {
+        this.propsFileProperty.set(propsFile);
     }
 
     @Input
@@ -50,7 +52,7 @@ public class NoUnusedPinCheckTask extends DefaultTask {
 
     @InputFile
     public final File getPropsFile() {
-        return propsFile;
+        return propsFileProperty.getAsFile().get();
     }
 
     @Option(option = "fix", description = "Whether to apply the suggested fix to versions.props")
@@ -77,7 +79,7 @@ public class NoUnusedPinCheckTask extends DefaultTask {
                         + unusedForces.stream()
                         .map(name -> String.format(" - '%s'", name))
                         .collect(Collectors.joining("\n")));
-                VersionsProps.writeVersionsProps(parsedVersionsProps, unusedForces, propsFile);
+                VersionsProps.writeVersionsProps(parsedVersionsProps, unusedForces, getPropsFile());
             } else {
                 throw new RuntimeException(
                         "There are unused pins in your versions.props: \n" + unusedForces

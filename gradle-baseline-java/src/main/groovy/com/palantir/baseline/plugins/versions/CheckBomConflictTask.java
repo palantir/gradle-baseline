@@ -25,11 +25,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
-import javax.inject.Inject;
 import netflix.nebula.dependency.recommender.DependencyRecommendationsPlugin;
 import netflix.nebula.dependency.recommender.provider.RecommendationProviderContainer;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
@@ -38,15 +38,17 @@ import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.options.Option;
 
 
-public class BomConflictCheckTask extends DefaultTask {
+public class CheckBomConflictTask extends DefaultTask {
 
-    private final File propsFile;
-    private Property<Boolean> fix = getProject().getObjects().property(Boolean.class);
+    private final Property<Boolean> fix = getProject().getObjects().property(Boolean.class);
+    private final RegularFileProperty propsFileProperty = newInputFile();
 
-    @Inject
-    public BomConflictCheckTask(File propsFile) {
-        this.propsFile = propsFile;
+    public CheckBomConflictTask() {
         fix.set(false);
+    }
+
+    final void setPropsFile(File propsFile) {
+        this.propsFileProperty.set(propsFile);
     }
 
     @Input
@@ -64,7 +66,7 @@ public class BomConflictCheckTask extends DefaultTask {
 
     @InputFile
     public final File getPropsFile() {
-        return propsFile;
+        return propsFileProperty.getAsFile().get();
     }
 
     @Option(option = "fix", description = "Whether to apply the suggested fix to versions.props")
@@ -137,7 +139,7 @@ public class BomConflictCheckTask extends DefaultTask {
                             + toRemove.stream()
                             .map(name -> String.format(" - '%s'", name))
                             .collect(Collectors.joining("\n")));
-                    VersionsProps.writeVersionsProps(parsedVersionsProps, toRemove, propsFile);
+                    VersionsProps.writeVersionsProps(parsedVersionsProps, toRemove, getPropsFile());
                 } else {
                     throw new RuntimeException("Critical conflicts between versions.props and the bom "
                             + "(overriding with same version)\n" + conflictsToString(critical, resolvedConflicts));

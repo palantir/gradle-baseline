@@ -79,10 +79,10 @@ public final class BaselineVersions implements Plugin<Project> {
                 extension.propertiesFile(ImmutableMap.of("file", project.file("versions.props")));
             }
         } else {
-            TaskProvider<BomConflictCheckTask> checkBomConflict =
-                    project.getTasks().register("checkBomConflict", BomConflictCheckTask.class, rootVersionsPropsFile);
-            TaskProvider<NoUnusedPinCheckTask> checkNoUnusedPin =
-                    project.getTasks().register("checkNoUnusedPin", NoUnusedPinCheckTask.class, rootVersionsPropsFile);
+            TaskProvider<CheckBomConflictTask> checkBomConflict = project.getTasks().register(
+                    "checkBomConflict", CheckBomConflictTask.class, task -> task.setPropsFile(rootVersionsPropsFile));
+            TaskProvider<CheckNoUnusedPinTask> checkNoUnusedPin = project.getTasks().register(
+                    "checkNoUnusedPin", CheckNoUnusedPinTask.class, task -> task.setPropsFile(rootVersionsPropsFile));
 
             project.getTasks().register("checkVersionsProps", CheckVersionsPropsTask.class, task -> {
                 task.dependsOn(checkBomConflict, checkNoUnusedPin);
