@@ -73,32 +73,26 @@ public final class BaselineVersions implements Plugin<Project> {
         File rootVersionsPropsFile = rootVersionsPropsFile(project);
         extension.propertiesFile(ImmutableMap.of("file", rootVersionsPropsFile));
 
-        TaskProvider<BomConflictCheckTask> checkBomConflict =
-                project.getTasks().register("checkBomConflict", BomConflictCheckTask.class, rootVersionsPropsFile);
-        TaskProvider<CheckVersionsPropsTask> checkVersionsProps =
-                project.getTasks().register("checkVersionsProps", CheckVersionsPropsTask.class, task -> {
-                    task.dependsOn("checkBomConflict");
-                    // If we just run checkVersionsProps --fix, we want to propagate its option to its dependent tasks
-                    checkBomConflict.get().setFix(task.getFix());
-                });
         if (project != project.getRootProject()) {
             // allow nested projects to specify their own nested versions.props file
             if (project.file("versions.props").exists()) {
                 extension.propertiesFile(ImmutableMap.of("file", project.file("versions.props")));
             }
         } else {
+            TaskProvider<BomConflictCheckTask> checkBomConflict =
+                    project.getTasks().register("checkBomConflict", BomConflictCheckTask.class, rootVersionsPropsFile);
             TaskProvider<NoUnusedPinCheckTask> checkNoUnusedPin =
                     project.getTasks().register("checkNoUnusedPin", NoUnusedPinCheckTask.class, rootVersionsPropsFile);
-            checkVersionsProps.configure(task -> {
-                task.dependsOn("checkNoUnusedPin");
+
+            project.getTasks().register("checkVersionsProps", CheckVersionsPropsTask.class, task -> {
+                task.dependsOn(checkBomConflict, checkNoUnusedPin);
                 // If we just run checkVersionsProps --fix, we want to propagate its option to its dependent tasks
+                checkBomConflict.get().setFix(task.getFix());
                 checkNoUnusedPin.get().setFix(task.getFix());
             });
             // If we run with --parallel --fix, both checkNoUnusedPin and checkBomConflict will try to overwrite the
             // versions file at the same time. Therefore, make sure checkBomConflict runs first.
-            checkNoUnusedPin.configure(task -> {
-                task.mustRunAfter(checkBomConflict);
-            });
+            checkNoUnusedPin.configure(task -> task.mustRunAfter(checkBomConflict));
         }
 
         project.getPluginManager().apply(BasePlugin.class);
