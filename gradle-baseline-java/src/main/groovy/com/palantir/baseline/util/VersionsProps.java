@@ -57,6 +57,10 @@ public final class VersionsProps {
         String name();
         String version();
 
+        static VersionForce of(String name, String version) {
+            return new Builder().name(name).version(version).build();
+        }
+
         VersionsProps.VersionForce.Builder toBuilder();
         class Builder extends VersionsProps_VersionForce_Builder { }
     }

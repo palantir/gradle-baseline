@@ -16,26 +16,27 @@
 
 package com.palantir.baseline.util
 
-import java.util.stream.Stream
-import org.apache.commons.lang3.tuple.Pair
-import org.assertj.core.api.Assertions
 import spock.lang.Specification
 
 class VersionsPropsTest extends Specification {
     def readVersionsProps() {
-        when:
-        def props = VersionsProps.readVersionsProps(Stream.of(
+        def lines = [
                 "  a:b  = c",
                 "# linter:OFF",
                 "d:eeee = 1",
                 "# linter:ON",
                 "b:c=2  # this is a comment",
-        ))
+        ]
+
+        when:
+        def parsedVersionsProps = VersionsProps.readVersionsProps(lines.stream())
 
         then:
-        Assertions.assertThat(props).containsExactly(
-                Pair.of("a:b", "c"),
-                Pair.of("b:c", "2"),
-        )
+        parsedVersionsProps.forces() == [
+                VersionsProps.VersionForce.of("a:b", "c"),
+                VersionsProps.VersionForce.of("b:c", "2"),
+        ]
+
+        parsedVersionsProps.lines() == lines.collect { it.trim() }
     }
 }
