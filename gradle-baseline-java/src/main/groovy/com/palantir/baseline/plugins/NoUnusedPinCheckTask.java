@@ -16,20 +16,28 @@
 
 package com.palantir.baseline.plugins;
 
+import com.palantir.baseline.plugins.VersionsPropsReader.ParsedVersionsProps;
+import com.palantir.baseline.plugins.VersionsPropsReader.VersionForce;
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.IOException;
+import java.io.PrintWriter;
+import java.nio.file.Files;
+import java.nio.file.StandardOpenOption;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
-import org.apache.commons.lang3.tuple.Pair;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.options.Option;
 
 public class NoUnusedPinCheckTask extends DefaultTask {
 
     private final File propsFile;
+    private boolean fix = false;
 
     @Inject
     public NoUnusedPinCheckTask(File propsFile) {
@@ -46,20 +54,48 @@ public class NoUnusedPinCheckTask extends DefaultTask {
         return propsFile;
     }
 
+    @Option(option = "fix", description = "Whether to apply the suggested fix to versions.props")
+    public final void setFix(boolean fix) {
+        this.fix = fix;
+    }
+
     @TaskAction
     public final void checkNoUnusedPin() {
         Set<String> artifacts = getResolvedArtifacts();
-        List<String> unusedProps = VersionsPropsReader.readVersionsProps(getPropsFile()).stream()
-                .map(Pair::getLeft)
+        ParsedVersionsProps parsedVersionsProps = VersionsPropsReader.readVersionsProps(getPropsFile());
+        List<String> unusedForces = parsedVersionsProps.forces()
+                .stream()
+                .map(VersionForce::name)
                 .filter(propName -> {
                     String regex = propName.replaceAll("\\*", ".*");
                     return artifacts.stream().noneMatch(artifact -> artifact.matches(regex));
                 })
                 .collect(Collectors.toList());
 
-        if (!unusedProps.isEmpty()) {
-            throw new RuntimeException(
-                    "There are unused pins in your versions.props: \n" + String.join("\n", unusedProps));
+        if (!unusedForces.isEmpty()) {
+            if (fix) {
+                List<String> lines = parsedVersionsProps.lines();
+                Set<Integer> indicesToSkip = unusedForces
+                        .stream()
+                        .map(parsedVersionsProps.namesToLocationMap()::get)
+                        .collect(Collectors.toSet());
+                try (BufferedWriter writer0 = Files.newBufferedWriter(
+                        propsFile.toPath(), StandardOpenOption.TRUNCATE_EXISTING);
+                     PrintWriter writer = new PrintWriter(writer0)) {
+                    for (int index = 0; index < lines.size(); index++) {
+                        if (!indicesToSkip.contains(index)) {
+                            writer.println(lines.get(index));
+                        }
+                    }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            } else {
+                throw new RuntimeException(
+                        "There are unused pins in your versions.props: \n" + unusedForces
+                                + "\n\n"
+                                + "Rerun with --fix to remove them.");
+            }
         }
     }
 

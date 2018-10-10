@@ -73,10 +73,10 @@ public class BomConflictCheckTask extends DefaultTask {
                 .collect(Collectors.toSet());
 
         Map<String, String> resolvedConflicts = VersionsPropsReader.readVersionsProps(getPropsFile())
+                .forces()
                 .stream()
-                .flatMap(pair -> {
-                    String propName = pair.getLeft();
-                    String propVersion = pair.getRight();
+                .flatMap(force -> {
+                    String propName = force.name();
                     String regex = propName.replaceAll("\\*", ".*");
 
                     Set<String> recommendationConflicts = recommendations
@@ -86,7 +86,8 @@ public class BomConflictCheckTask extends DefaultTask {
                             .filter(entry -> !bomDeps.contains(entry.getKey()))
                             .filter(entry -> entry.getKey().matches(regex))
                             .map(entry -> {
-                                conflicts.add(new Conflict(propName, propVersion, entry.getKey(), entry.getValue()));
+                                conflicts.add(
+                                        new Conflict(propName, force.version(), entry.getKey(), entry.getValue()));
                                 return entry.getKey();
                             })
                             .collect(Collectors.toSet());
