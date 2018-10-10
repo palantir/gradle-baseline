@@ -16,6 +16,7 @@
 
 package com.palantir.baseline.plugins;
 
+import com.palantir.baseline.plugins.versions.BaselineVersions;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.palantir.baseline.plugins;
+package com.palantir.baseline.plugins.versions;
 
 import com.google.common.collect.ImmutableMap;
 import java.io.File;
