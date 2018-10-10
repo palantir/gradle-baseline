@@ -94,6 +94,11 @@ public final class BaselineVersions implements Plugin<Project> {
                 // If we just run checkVersionsProps --fix, we want to propagate its option to its dependent tasks
                 checkNoUnusedPin.get().setFix(task.getFix());
             });
+            // If we run with --parallel --fix, both checkNoUnusedPin and checkBomConflict will try to overwrite the
+            // versions file at the same time. Therefore, make sure checkBomConflict runs first.
+            checkNoUnusedPin.configure(task -> {
+                task.mustRunAfter(checkBomConflict);
+            });
         }
 
         project.getPluginManager().apply(BasePlugin.class);
