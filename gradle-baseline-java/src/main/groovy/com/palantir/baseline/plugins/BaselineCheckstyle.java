@@ -33,7 +33,7 @@ import org.gradle.plugins.ide.eclipse.model.EclipseProject;
  */
 public final class BaselineCheckstyle extends AbstractBaselinePlugin {
 
-    private static final String DEFAULT_CHECKSTYLE_VERSION = "8.12";
+    private static final String DEFAULT_CHECKSTYLE_VERSION = "8.13";
 
     @Override
     public void apply(Project project) {
