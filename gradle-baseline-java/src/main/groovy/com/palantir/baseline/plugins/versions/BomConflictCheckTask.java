@@ -133,6 +133,10 @@ public class BomConflictCheckTask extends DefaultTask {
             if (!critical.isEmpty()) {
                 if (fix.get()) {
                     List<String> toRemove = critical.stream().map(Conflict::getPropName).collect(Collectors.toList());
+                    getProject().getLogger().lifecycle("Removing critical conflicts from versions.props:\n"
+                            + toRemove.stream()
+                            .map(name -> String.format(" - '%s'", name))
+                            .collect(Collectors.joining("\n")));
                     VersionsProps.writeVersionsProps(parsedVersionsProps, toRemove, propsFile);
                 } else {
                     throw new RuntimeException("Critical conflicts between versions.props and the bom "
