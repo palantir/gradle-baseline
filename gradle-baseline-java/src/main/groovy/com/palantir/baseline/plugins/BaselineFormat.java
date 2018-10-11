@@ -19,6 +19,7 @@ package com.palantir.baseline.plugins;
 import com.diffplug.gradle.spotless.SpotlessExtension;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.plugins.JavaPluginConvention;
 
 class BaselineFormat extends AbstractBaselinePlugin {
 
@@ -29,8 +30,15 @@ class BaselineFormat extends AbstractBaselinePlugin {
             project.getPluginManager().apply("com.diffplug.gradle.spotless");
 
             project.getExtensions().getByType(SpotlessExtension.class).java(java -> {
-                // TODO(dfox): apply this to all source sets, not just 'main' and 'test'
-                java.target("src/main/java/**/*.java", "src/main/test/**/*.java");
+                Object[] allJavaFiles = project
+                        .getExtensions()
+                        .getByType(JavaPluginConvention.class)
+                        .getSourceSets()
+                        .stream()
+                        .map(sourceSet -> sourceSet.getAllSource().filter(file -> file.getName().endsWith(".java")))
+                        .toArray();
+
+                java.target(allJavaFiles);
                 java.removeUnusedImports();
                 // use empty string to specify one group for all non-static imports
                 java.importOrder("");
