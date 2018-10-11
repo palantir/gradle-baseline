@@ -30,10 +30,10 @@ class BaselineFormat extends AbstractBaselinePlugin {
         project.getPluginManager().withPlugin("java", plugin -> {
             project.getPluginManager().apply("com.diffplug.gradle.spotless");
 
-            project.getConvention().getPlugin(SpotlessExtension.class).java(java -> {
+            project.getExtensions().getByType(SpotlessExtension.class).java(java -> {
                 Object[] allJavaFiles = project
-                        .getExtensions()
-                        .getByType(JavaPluginConvention.class)
+                        .getConvention()
+                        .getPlugin(JavaPluginConvention.class)
                         .getSourceSets()
                         .stream()
                         .map(SourceSet::getJava)
