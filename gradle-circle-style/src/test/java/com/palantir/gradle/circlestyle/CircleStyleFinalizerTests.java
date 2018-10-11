@@ -63,7 +63,8 @@ public class CircleStyleFinalizerTests {
 
         finalizer.createCircleReport();
 
-        String report = Resources.toString(targetFile.toURI().toURL(), StandardCharsets.UTF_8);
+        String report = Resources.toString(targetFile.toURI().toURL(), StandardCharsets.UTF_8)
+                .replaceAll("\\s*", "");
         String expectedReport = Resources.toString(
                 testFile("two-namecheck-failures-checkstyle-report.xml"), StandardCharsets.UTF_8);
 
