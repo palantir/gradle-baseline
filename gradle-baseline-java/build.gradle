@@ -23,7 +23,7 @@ dependencies {
     testCompile 'net.lingala.zip4j:zip4j'
     testCompile 'org.assertj:assertj-core'
 
-    processor 'org.inferred:freebuilder'
+    annotationProcessor 'org.inferred:freebuilder'
 }
 
 tasks.test.dependsOn tasks.publishToMavenLocal
