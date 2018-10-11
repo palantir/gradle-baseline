@@ -17,7 +17,7 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
-import com.google.common.collect.ImmutableList.Builder;
+import com.google.common.collect.ImmutableList;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.BugPattern.Category;
 import com.google.errorprone.BugPattern.SeverityLevel;
@@ -69,7 +69,7 @@ public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocati
                 state.getTypeFromString("java.lang.Throwable"),
                 state) ? lastIndex - 1 : lastIndex;
 
-        Builder<Integer> badArgsBuilder = new Builder<>();
+        ImmutableList.Builder<Integer> badArgsBuilder = new ImmutableList.Builder<>();
         for (int i = startArg; i <= endArg; i++) {
             if (!ASTHelpers.isCastable(ASTHelpers.getType(allArgs.get(i)),
                     state.getTypeFromString("com.palantir.logsafe.Arg"), state)) {
