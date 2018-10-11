@@ -20,6 +20,7 @@ import com.diffplug.gradle.spotless.SpotlessExtension;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.plugins.JavaPluginConvention;
+import org.gradle.api.tasks.SourceSet;
 
 class BaselineFormat extends AbstractBaselinePlugin {
 
@@ -35,7 +36,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
                         .getByType(JavaPluginConvention.class)
                         .getSourceSets()
                         .stream()
-                        .map(sourceSet -> sourceSet.getAllSource().filter(file -> file.getName().endsWith(".java")))
+                        .map(SourceSet::getJava)
                         .toArray();
 
                 java.target(allJavaFiles);
