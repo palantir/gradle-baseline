@@ -48,7 +48,6 @@ public class BaselineCircleCiJavaIntegrationTests {
     public void before() {
         reportsDir = new File(projectDir.getRoot(), "circle/reports");
         env.set("CIRCLE_TEST_REPORTS", reportsDir.toString());
-        env.set("TEST_CLASSPATH", pluginClasspath());
 
         copyTestFile("build.gradle", projectDir, "build.gradle");
         copyTestFile("subproject.gradle", projectDir, "subproject/build.gradle");
@@ -61,6 +60,7 @@ public class BaselineCircleCiJavaIntegrationTests {
         copyTestFile("non-compiling-class", projectDir, "src/main/java/com/example/MyClass.java");
 
         BuildResult result = GradleRunner.create()
+                .withPluginClasspath()
                 .withProjectDir(projectDir.getRoot())
                 .withArguments("--stacktrace", "compileJava")
                 .buildAndFail();
@@ -89,6 +89,7 @@ public class BaselineCircleCiJavaIntegrationTests {
         copyTestFile("tested-class-tests", projectDir, "src/test/java/com/example/MyClassTests.java");
 
         BuildResult result = GradleRunner.create()
+                .withPluginClasspath()
                 .withProjectDir(projectDir.getRoot())
                 .withArguments("--stacktrace", "test")
                 .buildAndFail();
@@ -109,6 +110,7 @@ public class BaselineCircleCiJavaIntegrationTests {
         copyTestFile("tested-class-tests", projectDir, "subproject/src/test/java/com/example/MyClassTests.java");
 
         BuildResult result = GradleRunner.create()
+                .withPluginClasspath()
                 .withProjectDir(projectDir.getRoot())
                 .withArguments("--stacktrace", "subproject:test")
                 .buildAndFail();
@@ -128,6 +130,7 @@ public class BaselineCircleCiJavaIntegrationTests {
         copyTestFile("checkstyle-violating-class", projectDir, "src/main/java/com/example/MyClass.java");
 
         BuildResult result = GradleRunner.create()
+                .withPluginClasspath()
                 .withProjectDir(projectDir.getRoot())
                 .withArguments("--stacktrace", "checkstyleMain")
                 .buildAndFail();
@@ -142,6 +145,7 @@ public class BaselineCircleCiJavaIntegrationTests {
     @Test
     public void buildStepFailureIntegrationTest() throws IOException {
         BuildResult result = GradleRunner.create()
+                .withPluginClasspath()
                 .withProjectDir(projectDir.getRoot())
                 .withArguments("--stacktrace", "failingTask")
                 .buildAndFail();
@@ -160,6 +164,7 @@ public class BaselineCircleCiJavaIntegrationTests {
         assertThat(new File(reportsDir, "gradle/build2.xml").createNewFile()).isTrue();
 
         BuildResult result = GradleRunner.create()
+                .withPluginClasspath()
                 .withProjectDir(projectDir.getRoot())
                 .withArguments("--stacktrace", "failingTask")
                 .buildAndFail();
@@ -174,14 +179,17 @@ public class BaselineCircleCiJavaIntegrationTests {
     @Test
     public void canCallGradleThreeTimesInARow() {
         GradleRunner.create()
+                .withPluginClasspath()
                 .withProjectDir(projectDir.getRoot())
                 .withArguments("--stacktrace", "dependencies")
                 .build();
         GradleRunner.create()
+                .withPluginClasspath()
                 .withProjectDir(projectDir.getRoot())
                 .withArguments("--stacktrace", "compileJava")
                 .build();
         GradleRunner.create()
+                .withPluginClasspath()
                 .withProjectDir(projectDir.getRoot())
                 .withArguments("--stacktrace", "compileTestJava")
                 .build();

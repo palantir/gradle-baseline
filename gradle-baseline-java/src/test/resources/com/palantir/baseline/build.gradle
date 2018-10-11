@@ -1,22 +1,12 @@
 plugins {
     id 'java'
     id 'checkstyle'
-    id 'findbugs'
+    id 'com.palantir.baseline-circleci'
 }
 
 repositories {
     jcenter()
 }
-
-// Apply CircleStylePlugin
-String[] classpath = System.env.TEST_CLASSPATH.split(':')
-URL[] urls = new URL[classpath.length]
-for (int i = 0; i < classpath.length; ++i) {
-    urls[i] = new File(classpath[i]).toURI().toURL()
-}
-ClassLoader testClassLoader = new URLClassLoader(urls, getClass().classLoader)
-def pluginClass = testClassLoader.loadClass('com.palantir.baseline.plugins.BaselineCircleCi')
-plugins.apply(pluginClass)
 
 sourceCompatibility = 1.8
 
