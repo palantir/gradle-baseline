@@ -70,4 +70,22 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
             public class Test { void test() {} }
         '''.stripIndent()
     }
+
+    def 'format task works on new source sets'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << '''
+            sourceSets { foo }
+        '''.stripIndent()
+        file('src/foo/java/test/Test.java') << validJavaFile
+
+        then:
+        BuildResult result = with('format').build()
+        result.task(":format").outcome == TaskOutcome.SUCCESS
+        result.task(":spotlessApply").outcome == TaskOutcome.SUCCESS
+        file('src/foo/java/test/Test.java').text == '''
+            package test;
+            public class Test { void test() {} }
+        '''.stripIndent()
+    }
 }
