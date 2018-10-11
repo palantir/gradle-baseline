@@ -26,6 +26,7 @@ dependencies {
     processor 'org.inferred:freebuilder'
 }
 
+tasks.test.dependsOn tasks.findByPath(':gradle-baseline-java-config:publishToMavenLocal')
 tasks.test.dependsOn tasks.publishToMavenLocal
 
 test {
