@@ -35,7 +35,7 @@ public final class JUnitReportCreatorTests {
                 .elapsedTimeNanos(123_000_000_000L)
                 .build());
         String xml = XmlUtils.write(new StringWriter(), junitReport).toString()
-                .replaceAll("\\s*", "");
+                .replaceAll("\\p{Blank}*(?=<)", "");
 
         assertThat(xml).isEqualTo(readTestFile("empty-checkstyle-report.xml"));
     }
@@ -44,7 +44,7 @@ public final class JUnitReportCreatorTests {
     public void testTwoErrors() throws TransformerException {
         Document junitReport = reportToXml(REPORT);
         String xml = XmlUtils.write(new StringWriter(), junitReport).toString()
-                .replaceAll("\\s*", "");
+                .replaceAll("\\p{Blank}*(?=<)", "");
 
         assertThat(xml).isEqualTo(readTestFile("two-namecheck-failures-checkstyle-report.xml"));
     }
