@@ -36,7 +36,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
                         .getPlugin(JavaPluginConvention.class)
                         .getSourceSets()
                         .stream()
-                        .map(SourceSet::getJava)
+                        .map(SourceSet::getAllJava)
                         .toArray();
 
                 java.target(allJavaFiles);
