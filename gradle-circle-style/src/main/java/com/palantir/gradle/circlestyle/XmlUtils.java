@@ -46,6 +46,7 @@ final class XmlUtils {
 
     public static Writer write(Writer writer, Document document) throws TransformerException {
         Transformer transformer = TransformerFactory.newInstance().newTransformer();
+        transformer.setOutputProperty(OutputKeys.INDENT, "yes");
         transformer.setOutputProperty(OutputKeys.METHOD, "xml");
         transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
         transformer.transform(new DOMSource(document), new StreamResult(writer));
