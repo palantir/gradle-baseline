@@ -69,7 +69,7 @@ public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocati
                 state.getTypeFromString("java.lang.Throwable"),
                 state) ? lastIndex - 1 : lastIndex;
 
-        ImmutableList.Builder<Integer> badArgsBuilder = new ImmutableList.Builder<>();
+        ImmutableList.Builder<Integer> badArgsBuilder = ImmutableList.builder();
         for (int i = startArg; i <= endArg; i++) {
             if (!ASTHelpers.isCastable(ASTHelpers.getType(allArgs.get(i)),
                     state.getTypeFromString("com.palantir.logsafe.Arg"), state)) {
