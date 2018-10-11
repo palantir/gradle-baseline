@@ -124,6 +124,22 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
                 "  bom:            org.scala-lang:scala-library -> 2.12.5")
     }
 
+    def 'Trivially passes check on multiple projects'() {
+        buildFile << """
+            plugins {
+                id 'com.palantir.baseline-versions'
+            }
+            allprojects {
+                apply plugin: 'com.palantir.baseline-versions'
+            }
+        """.stripIndent()
+
+        multiProject.addSubproject('foo', "apply plugin: 'java'")
+
+        expect:
+        with('check').build()
+    }
+
     def 'Task should run as part of :check'() {
         when:
         buildFile << standardBuildFile(projectDir)
