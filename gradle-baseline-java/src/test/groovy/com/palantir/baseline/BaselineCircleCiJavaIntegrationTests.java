@@ -195,15 +195,6 @@ public class BaselineCircleCiJavaIntegrationTests {
                 .build();
     }
 
-    private static String pluginClasspath() {
-        URLClassLoader classloader = (URLClassLoader) ClassLoader.getSystemClassLoader();
-        List<String> classpath = new ArrayList<>();
-        for (URL url : classloader.getURLs()) {
-            classpath.add(url.getFile());
-        }
-        return Joiner.on(':').join(classpath);
-    }
-
     private static void copyTestFile(String source, TemporaryFolder root, String target) {
         File targetFile = new File(root.getRoot(), target);
         targetFile.getParentFile().mkdirs();
