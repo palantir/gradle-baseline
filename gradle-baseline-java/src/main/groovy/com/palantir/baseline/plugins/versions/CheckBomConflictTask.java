@@ -74,7 +74,11 @@ public class CheckBomConflictTask extends DefaultTask {
     }
 
     @Option(option = "fix", description = "Whether to apply the suggested fix to versions.props")
-    public final void setShouldFix(Provider<Boolean> shouldFix) {
+    public final void setShouldFix(boolean shouldFix) {
+        this.shouldFix.set(shouldFix);
+    }
+
+    final void setShouldFix(Provider<Boolean> shouldFix) {
         this.shouldFix.set(shouldFix);
     }
 
