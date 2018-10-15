@@ -72,6 +72,9 @@ public final class BaselineVersions implements Plugin<Project> {
 
         extension.setStrategy(RecommendationStrategies.OverrideTransitives); // default is 'ConflictResolved'
 
+        // Should be ErrorPronePlugin.CONFIGURATION_NAME but can't be sure they won't break this so hard-coding it
+        extension.excludeConfigurations("errorprone");
+
         File rootVersionsPropsFile = rootVersionsPropsFile(project);
         extension.propertiesFile(ImmutableMap.of("file", rootVersionsPropsFile));
 
