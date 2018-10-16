@@ -20,9 +20,15 @@ import com.palantir.baseline.util.VersionsProps;
 import com.palantir.baseline.util.VersionsProps.ParsedVersionsProps;
 import com.palantir.baseline.util.VersionsProps.VersionForce;
 import java.io.File;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map.Entry;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.apache.commons.lang3.tuple.Pair;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.file.RegularFileProperty;
@@ -71,14 +77,29 @@ public class CheckNoUnusedPinTask extends DefaultTask {
     public final void checkNoUnusedPin() {
         Set<String> artifacts = getResolvedArtifacts();
         ParsedVersionsProps parsedVersionsProps = VersionsProps.readVersionsProps(getPropsFile().get().getAsFile());
-        List<String> unusedForces = parsedVersionsProps.forces()
+
+        List<Pair<String, Predicate<String>>> versionsPropToPredicate = parsedVersionsProps
+                .forces()
                 .stream()
                 .map(VersionForce::name)
-                .filter(propName -> {
-                    String regex = propName.replaceAll("\\*", ".*");
-                    return artifacts.stream().noneMatch(artifact -> artifact.matches(regex));
-                })
+                .map(propName -> Pair.of(
+                        propName, Pattern.compile(propName.replaceAll("\\*", ".*")).asPredicate()))
                 .collect(Collectors.toList());
+
+        Set<String> unusedForces = versionsPropToPredicate
+                .stream()
+                .map(Pair::getLeft)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        // Remove the force that each artifact uses. This will be the last matching force, if any.
+        artifacts.forEach(artifact -> {
+            Optional<String> matching = versionsPropToPredicate
+                    .stream()
+                    .filter(pair -> pair.getRight().test(artifact))
+                    .map(Entry::getKey)
+                    .reduce((first, second) -> second);
+            matching.ifPresent(unusedForces::remove);
+        });
 
         if (unusedForces.isEmpty()) {
             return;
@@ -89,7 +110,8 @@ public class CheckNoUnusedPinTask extends DefaultTask {
                     + unusedForces.stream()
                     .map(name -> String.format(" - '%s'", name))
                     .collect(Collectors.joining("\n")));
-            VersionsProps.writeVersionsProps(parsedVersionsProps, unusedForces, getPropsFile().get().getAsFile());
+            VersionsProps.writeVersionsProps(
+                    parsedVersionsProps, unusedForces.stream(), getPropsFile().get().getAsFile());
             return;
         }
 

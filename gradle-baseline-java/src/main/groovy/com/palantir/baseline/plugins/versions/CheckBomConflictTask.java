@@ -152,7 +152,7 @@ public class CheckBomConflictTask extends DefaultTask {
                     + toRemove.stream()
                     .map(name -> String.format(" - '%s'", name))
                     .collect(Collectors.joining("\n")));
-            VersionsProps.writeVersionsProps(parsedVersionsProps, toRemove, getPropsFile().get().getAsFile());
+            VersionsProps.writeVersionsProps(parsedVersionsProps, toRemove.stream(), getPropsFile().get().getAsFile());
             return;
         }
 

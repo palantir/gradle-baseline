@@ -116,10 +116,9 @@ public final class VersionsProps {
      * {@link ParsedVersionsProps#namesToLocationMap}.
      */
     public static void writeVersionsProps(
-            ParsedVersionsProps parsedVersionsProps, List<String> forcesToRemove, File propsFile) {
+            ParsedVersionsProps parsedVersionsProps, Stream<String> forcesToRemove, File propsFile) {
         List<String> lines = parsedVersionsProps.lines();
         Set<Integer> indicesToSkip = forcesToRemove
-                .stream()
                 .map(parsedVersionsProps.namesToLocationMap()::get)
                 .map(Preconditions::checkNotNull)
                 .collect(Collectors.toSet());
