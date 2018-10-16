@@ -124,8 +124,8 @@ public class CheckBomConflictTask extends DefaultTask {
                 .collect(Collectors.toMap(
                         Pair::getLeft,
                         Pair::getRight,
-                        // Resolve conflicts by choosing the longer entry because it is more specific
-                        (propName1, propName2) -> propName1.length() > propName2.length() ? propName1 : propName2));
+                        // Resolve conflicts by choosing the latest matching entry, because that's how nebula works.
+                        (propName1, propName2) -> propName2));
 
         Set<String> versionPropsVindicatedLines = ImmutableSet.copyOf(resolvedConflicts.values());
 
@@ -152,7 +152,7 @@ public class CheckBomConflictTask extends DefaultTask {
                     + toRemove.stream()
                     .map(name -> String.format(" - '%s'", name))
                     .collect(Collectors.joining("\n")));
-            VersionsProps.writeVersionsProps(parsedVersionsProps, toRemove, getPropsFile().get().getAsFile());
+            VersionsProps.writeVersionsProps(parsedVersionsProps, toRemove.stream(), getPropsFile().get().getAsFile());
             return;
         }
 
