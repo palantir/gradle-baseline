@@ -30,6 +30,7 @@ import org.gradle.api.plugins.Convention;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.ScalaSourceSet;
 import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.TaskCollection;
 import org.gradle.api.tasks.scala.ScalaCompile;
 import org.gradle.plugins.ide.idea.model.IdeaModel;
 
@@ -53,17 +54,17 @@ public final class BaselineScalastyle extends AbstractBaselinePlugin {
                                     javaConvention.getSourceSets().named(SourceSet.MAIN_SOURCE_SET_NAME).get(),
                                     javaConvention.getTargetCompatibility().toString())));
             project.getPluginManager().apply(ScalaStylePlugin.class);
-            project.getTasks().withType(ScalaStyleTask.class)
-                    .configureEach(scalaStyleTask -> {
-                        scalaStyleTask.setConfigLocation(project.getRootDir().toPath()
-                                .resolve(Paths.get("project", "scalastyle_config.xml")).toString());
-                        scalaStyleTask.setIncludeTestSourceDirectory(true);
-                        scalaStyleTask.setFailOnWarning(true);
-                        javaConvention.getSourceSets()
-                                .forEach(sourceSet -> sourceSet.getAllSource().getSrcDirs()
-                                        .forEach(resourceDir -> scalaStyleTask.source(resourceDir.toString())));
-                        project.getTasks().named("check").configure(task -> task.dependsOn(scalaStyleTask.getPath()));
-                    });
+            TaskCollection<ScalaStyleTask> scalaStyleTasks = project.getTasks().withType(ScalaStyleTask.class);
+            scalaStyleTasks.configureEach(scalaStyleTask -> {
+                scalaStyleTask.setConfigLocation(project.getRootDir().toPath()
+                        .resolve(Paths.get("project", "scalastyle_config.xml")).toString());
+                scalaStyleTask.setIncludeTestSourceDirectory(true);
+                scalaStyleTask.setFailOnWarning(true);
+                javaConvention.getSourceSets()
+                        .forEach(sourceSet -> sourceSet.getAllSource().getSrcDirs()
+                                .forEach(resourceDir -> scalaStyleTask.source(resourceDir.toString())));
+            });
+            project.getTasks().named("check").configure(task -> task.dependsOn(scalaStyleTasks));
         });
     }
 
