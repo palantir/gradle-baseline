@@ -40,12 +40,6 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
     public class Test { void test() {} }
     '''.stripIndent()
 
-    def validGeneratedJavaFile = '''
-    package test;
-    import java.lang.Void;
-    public class Test { Void test() {} }
-    '''.stripIndent()
-
     def 'can apply plugin'() {
         when:
         buildFile << standardBuildFile
@@ -117,10 +111,17 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
     def 'format ignores generated files'() {
         when:
         buildFile << standardBuildFile
-        file('src/generated/java/test/Test.java') << validGeneratedJavaFile
+        buildFile << '''
+            sourceSets { generated }
+        '''.stripIndent()
+        file('src/generated/java/test/Test.java') << '''
+            package test;
+            import java.lang.Void;
+            public class Test { Void test() {} }
+        '''.stripIndent()
 
         then:
-        BuildResult result = with(':spotlessJavaCheck').build();
+        BuildResult result = with('spotlessJavaCheck').build();
         result.task(":spotlessJava").outcome == TaskOutcome.SUCCESS
     }
 }

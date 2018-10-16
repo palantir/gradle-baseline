@@ -17,10 +17,13 @@
 package com.palantir.baseline.plugins;
 
 import com.diffplug.gradle.spotless.SpotlessExtension;
+import java.nio.file.Path;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.FileCollection;
 import org.gradle.api.plugins.JavaPluginConvention;
+import org.gradle.api.tasks.SourceSet;
 
 class BaselineFormat extends AbstractBaselinePlugin {
 
@@ -37,10 +40,9 @@ class BaselineFormat extends AbstractBaselinePlugin {
                         .getConvention()
                         .getPlugin(JavaPluginConvention.class)
                         .getSourceSets()
-                        .all(sourceSet -> allJavaFiles.from(sourceSet.getAllJava()));
+                        .all(sourceSet -> allJavaFiles.from(nonGeneratedJava(project, sourceSet)));
 
                 java.target(allJavaFiles);
-                // java.ignoreErrorForPath("**/generated*/**");
                 java.removeUnusedImports();
                 // use empty string to specify one group for all non-static imports
                 java.importOrder("");
@@ -52,6 +54,13 @@ class BaselineFormat extends AbstractBaselinePlugin {
             // necessary because SpotlessPlugin creates tasks in an afterEvaluate block
             Task formatTask = project.task("format");
             project.afterEvaluate(p -> formatTask.dependsOn(project.getTasks().getByName("spotlessApply")));
+        });
+    }
+
+    private static FileCollection nonGeneratedJava(Project project, SourceSet sourceSet) {
+        return sourceSet.getAllJava().filter(file -> {
+            Path projectScopedPath = project.getProjectDir().toPath().relativize(file.toPath());
+            return !projectScopedPath.toString().contains("generated");
         });
     }
 }
