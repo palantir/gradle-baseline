@@ -38,7 +38,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
     package test;
     import com.java.tests;
     public class Test { void test() {} }
-        '''.stripIndent()
+    '''.stripIndent()
 
     def 'can apply plugin'() {
         when:
@@ -106,5 +106,22 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
             package test;
             public class Test { void test() {} }
         '''.stripIndent()
+    }
+
+    def 'format ignores generated files'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << '''
+            sourceSets { generated }
+        '''.stripIndent()
+        file('src/generated/java/test/Test.java') << '''
+            package test;
+            import java.lang.Void;
+            public class Test { Void test() {} }
+        '''.stripIndent()
+
+        then:
+        BuildResult result = with('spotlessJavaCheck').build();
+        result.task(":spotlessJava").outcome == TaskOutcome.SUCCESS
     }
 }
