@@ -55,17 +55,16 @@ public final class BaselineScalastyle extends AbstractBaselinePlugin {
                                     javaConvention.getTargetCompatibility().toString())));
             project.getPluginManager().apply(ScalaStylePlugin.class);
             TaskCollection<ScalaStyleTask> scalaStyleTasks = project.getTasks().withType(ScalaStyleTask.class);
+            scalaStyleTasks.configureEach(scalaStyleTask -> {
+                scalaStyleTask.setConfigLocation(project.getRootDir().toPath()
+                        .resolve(Paths.get("project", "scalastyle_config.xml")).toString());
+                scalaStyleTask.setIncludeTestSourceDirectory(true);
+                scalaStyleTask.setFailOnWarning(true);
+                javaConvention.getSourceSets()
+                        .forEach(sourceSet -> sourceSet.getAllSource().getSrcDirs()
+                                .forEach(resourceDir -> scalaStyleTask.source(resourceDir.toString())));
+            });
             project.getTasks().named("check").configure(task -> task.dependsOn(scalaStyleTasks));
-            scalaStyleTasks
-                    .configureEach(scalaStyleTask -> {
-                        scalaStyleTask.setConfigLocation(project.getRootDir().toPath()
-                                .resolve(Paths.get("project", "scalastyle_config.xml")).toString());
-                        scalaStyleTask.setIncludeTestSourceDirectory(true);
-                        scalaStyleTask.setFailOnWarning(true);
-                        javaConvention.getSourceSets()
-                                .forEach(sourceSet -> sourceSet.getAllSource().getSrcDirs()
-                                        .forEach(resourceDir -> scalaStyleTask.source(resourceDir.toString())));
-                    });
         });
     }
 
