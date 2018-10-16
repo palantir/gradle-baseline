@@ -97,9 +97,9 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
         result
     }
 
-    def buildAndFailWith(String error) {
+    void buildAndFailWith(String error) {
         BuildResult result = with('checkVersionsProps', '--stacktrace').buildAndFail()
-        result.output.contains(error)
+        assert result.output.contains(error)
     }
 
     def buildWithFixWorks() {
@@ -162,7 +162,8 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
     def 'Same version conflict but wildcard override at least one should succeed'() {
         when:
         setupVersionsProps("org.scala-lang:scala-* = 2.12.5")
-        buildFile << standardBuildFile(projectDir) + """
+        buildFile << standardBuildFile(projectDir)
+        buildFile << """
         dependencies {
             compile 'org.scala-lang:scala-reflect'
             compile 'org.scala-lang:scala-compiler'
@@ -174,19 +175,38 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
         result.output.contains("  bom:\n" +
                 "                  org.scala-lang:scala-compiler -> 2.12.5\n" +
                 "                  org.scala-lang:scala-library -> 2.12.5")
-
     }
 
     def 'Version props conflict should succeed'() {
         when:
-        setupVersionsProps("com.google.guava:* = 22.0\ncom.google.guava:guava = 23.0")
-        buildFile << standardBuildFile(projectDir) + """
+        setupVersionsProps("""
+            com.fasterxml.jackson.*:* = 2.9.3
+            com.fasterxml.jackson.core:jackson-annotations = 2.9.5
+        """.stripIndent())
+        buildFile << standardBuildFile(projectDir)
+        buildFile << """
         dependencies {
-            compile 'com.google.guava:guava'
-        }"""
+            compile 'com.fasterxml.jackson.core:jackson-databind'
+        }""".stripIndent()
 
         then:
         buildSucceed()
+    }
+
+    def 'Last matching version should win'() {
+        when:
+        setupVersionsProps("""
+            org.slf4j:slf4j-api = 1.7.25
+            org.slf4j:* = 1.7.20  # this wins even though the line above looks more 'specific'
+        """.stripIndent())
+        buildFile << standardBuildFile(projectDir)
+        buildFile << """
+        dependencies {
+            compile 'org.slf4j:slf4j-api'
+        }""".stripIndent()
+
+        then:
+        buildAndFailWith('There are unused pins in your versions.props: \n[org.slf4j:slf4j-api]')
     }
 
     def 'Unused version should fail'() {
