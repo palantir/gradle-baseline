@@ -40,7 +40,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
                         .all(sourceSet -> allJavaFiles.from(sourceSet.getAllJava()));
 
                 java.target(allJavaFiles);
-                java.ignoreErrorForPath("**/generated*/**");
+                // java.ignoreErrorForPath("**/generated*/**");
                 java.removeUnusedImports();
                 // use empty string to specify one group for all non-static imports
                 java.importOrder("");
