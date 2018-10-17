@@ -82,8 +82,10 @@ public class CheckNoUnusedPinTask extends DefaultTask {
                 .forces()
                 .stream()
                 .map(VersionForce::name)
-                .map(propName -> Pair.of(
-                        propName, Pattern.compile(propName.replaceAll("\\*", ".*")).asPredicate()))
+                .map(propName -> {
+                    Pattern pattern = Pattern.compile(propName.replaceAll("\\*", ".*"));
+                    return Pair.of(propName, (Predicate<String>) s -> pattern.matcher(s).matches());
+                })
                 .collect(Collectors.toList());
 
         Set<String> unusedForces = versionsPropToPredicate
