@@ -49,6 +49,21 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
         """.stripIndent()
     }
 
+    static String pomWithJarPackaging(String group, String artifact, String version) {
+        return """
+            <?xml version="1.0" encoding="UTF-8"?>
+            <project xmlns="http://maven.apache.org/POM/4.0.0" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+            <modelVersion>4.0.0</modelVersion>
+            <groupId>$group</groupId>
+            <artifactId>$artifact</artifactId>
+            <packaging>jar</packaging>
+            <version>$version</version>
+            <description/>
+            <dependencies/>
+            </project>
+        """.stripIndent()
+    }
+
     def setup() {
         String bomContent =
             """<?xml version="1.0" encoding="UTF-8"?>
@@ -110,6 +125,30 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
 
         // Check that the task now succeeds
         with('checkVersionsProps').build()
+    }
+
+    def 'checkVersionsProps does not resolve artifacts'() {
+        setupVersionsProps("")
+        buildFile << """
+            plugins {
+                id 'java'
+                id 'com.palantir.baseline-versions'
+            }
+        
+            repositories {
+                maven { url "${projectDir.toURI()}/maven" }
+            }
+            dependencies {
+                compile 'com.palantir.product:foo:1.0.0'
+            }
+        """.stripIndent()
+
+        // We're not producing a jar for this dependency, so artifact resolution would fail
+        file('maven/com/palantir/product/foo/1.0.0/foo-1.0.0.pom') <<
+                pomWithJarPackaging("com.palantir.product", "foo", "1.0.0")
+
+        expect:
+        buildSucceed()
     }
 
     def 'Override version conflict should succeed'() {
