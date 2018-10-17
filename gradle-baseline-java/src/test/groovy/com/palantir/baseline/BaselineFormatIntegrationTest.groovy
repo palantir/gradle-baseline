@@ -112,16 +112,24 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         when:
         buildFile << standardBuildFile
         buildFile << '''
-            sourceSets { generated }
+            sourceSets {
+                main {
+                    java { srcDir 'src/generated/java' }
+                }
+            }
+            
+            // ensure file is in the source set
+            sourceSets.main.allJava.filter { it.name == "Test.java" }.singleFile
         '''.stripIndent()
-        file('src/generated/java/test/Test.java') << '''
+        def javaFileContents = '''
             package test;
             import java.lang.Void;
             public class Test { Void test() {} }
         '''.stripIndent()
+        file('src/generated/java/test/Test.java') << javaFileContents
 
         then:
-        BuildResult result = with('spotlessJavaCheck').build();
+        BuildResult result = with('spotlessJavaCheck').build()
         result.task(":spotlessJava").outcome == TaskOutcome.SUCCESS
     }
 }
