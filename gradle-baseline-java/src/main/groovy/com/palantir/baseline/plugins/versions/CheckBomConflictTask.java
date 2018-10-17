@@ -65,7 +65,7 @@ public class CheckBomConflictTask extends DefaultTask {
 
     @Input
     public final Set<String> getResolvedArtifacts() {
-        return BaselineVersions.getAllProjectsResolvedArtifacts(getProject());
+        return BaselineVersions.getAllProjectsResolvedModuleIdentifiers(getProject());
     }
 
     @InputFile

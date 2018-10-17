@@ -28,7 +28,9 @@ import netflix.nebula.dependency.recommender.provider.RecommendationProviderCont
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ModuleVersionIdentifier;
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
+import org.gradle.api.artifacts.result.ResolutionResult;
+import org.gradle.api.artifacts.result.ResolvedComponentResult;
 import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.tasks.TaskProvider;
 
@@ -114,26 +116,27 @@ public final class BaselineVersions implements Plugin<Project> {
         return file;
     }
 
-    static Set<String> getAllProjectsResolvedArtifacts(Project project) {
+    static Set<String> getAllProjectsResolvedModuleIdentifiers(Project project) {
         return project.getRootProject().getAllprojects()
                 .stream()
-                .flatMap(project2 -> getResolvedArtifacts(project2).stream())
+                .flatMap(project2 -> getResolvedModuleIdentifiers(project2).stream())
                 .collect(Collectors.toSet());
     }
 
-    static Set<String> getResolvedArtifacts(Project project) {
+    static Set<String> getResolvedModuleIdentifiers(Project project) {
         return project.getConfigurations().stream()
                 .filter(Configuration::isCanBeResolved)
                 .flatMap(configuration -> {
                     try {
-                        return configuration
-                                .getResolvedConfiguration()
-                                .getResolvedArtifacts()
+                        ResolutionResult resolutionResult = configuration.getIncoming().getResolutionResult();
+                        return resolutionResult
+                                .getAllComponents()
                                 .stream()
-                                .map(resolvedArtifact -> {
-                                    ModuleVersionIdentifier id = resolvedArtifact.getModuleVersion().getId();
-                                    return id.getGroup() + ":" + id.getName();
-                                });
+                                .map(ResolvedComponentResult::getId)
+                                .filter(cid -> !cid.equals(resolutionResult.getRoot().getId())) // remove the project
+                                .filter(cid -> cid instanceof ModuleComponentIdentifier)
+                                .map(mcid -> ((ModuleComponentIdentifier) mcid).getModuleIdentifier())
+                                .map(mid -> mid.getGroup() + ":" + mid.getName());
                     } catch (Exception e) {
                         throw new RuntimeException("Error during resolution of the artifacts of all "
                                 + "configuration from all subprojects", e);
