@@ -38,7 +38,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
                         .getPlugin(JavaPluginConvention.class)
                         .getSourceSets()
                         .all(sourceSet -> allJavaFiles.from(
-                                sourceSet.getAllJava().filter(file -> file.toString().contains("/generated"))));
+                                sourceSet.getAllJava().filter(file -> !file.toString().contains("/generated"))));
 
                 java.target(allJavaFiles);
                 java.removeUnusedImports();
