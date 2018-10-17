@@ -114,7 +114,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         buildFile << '''
             sourceSets {
                 main {
-                    java { srcDir 'src/generated' }
+                    java { srcDir 'src/generated/java' }
                 }
             }
             
