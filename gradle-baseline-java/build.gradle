@@ -24,6 +24,7 @@ dependencies {
     testCompile 'org.assertj:assertj-core'
 
     annotationProcessor 'org.inferred:freebuilder'
+    compileOnly 'org.inferred:freebuilder'
 }
 
 tasks.test.dependsOn tasks.findByPath(':gradle-baseline-java-config:publishToMavenLocal')

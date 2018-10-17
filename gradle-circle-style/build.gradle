@@ -8,6 +8,7 @@ dependencies {
   compile 'com.google.guava:guava'
 
   annotationProcessor 'org.inferred:freebuilder'
+  compileOnly 'org.inferred:freebuilder'
 
   testCompile 'com.google.guava:guava'
   testCompile 'junit:junit'
