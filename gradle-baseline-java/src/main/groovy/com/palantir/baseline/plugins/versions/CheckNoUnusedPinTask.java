@@ -25,6 +25,8 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gradle.api.DefaultTask;
@@ -76,23 +78,26 @@ public class CheckNoUnusedPinTask extends DefaultTask {
         Set<String> artifacts = getResolvedArtifacts();
         ParsedVersionsProps parsedVersionsProps = VersionsProps.readVersionsProps(getPropsFile().get().getAsFile());
 
-        List<Pair<String, String>> versionsPropToRegex = parsedVersionsProps
+        List<Pair<String, Predicate<String>>> versionsPropToPredicate = parsedVersionsProps
                 .forces()
                 .stream()
                 .map(VersionForce::name)
-                .map(propName -> Pair.of(propName, propName.replaceAll("\\*", ".*")))
+                .map(propName -> {
+                    Pattern pattern = Pattern.compile(propName.replaceAll("\\*", ".*"));
+                    return Pair.of(propName, (Predicate<String>) s -> pattern.matcher(s).matches());
+                })
                 .collect(Collectors.toList());
 
-        Set<String> unusedForces = versionsPropToRegex
+        Set<String> unusedForces = versionsPropToPredicate
                 .stream()
                 .map(Pair::getLeft)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
         // Remove the force that each artifact uses. This will be the last matching force, if any.
         artifacts.forEach(artifact -> {
-            Optional<String> matching = versionsPropToRegex
+            Optional<String> matching = versionsPropToPredicate
                     .stream()
-                    .filter(pair -> pair.getRight().matches(artifact))
+                    .filter(pair -> pair.getRight().test(artifact))
                     .map(Entry::getKey)
                     .reduce((first, second) -> second);
             matching.ifPresent(unusedForces::remove);
