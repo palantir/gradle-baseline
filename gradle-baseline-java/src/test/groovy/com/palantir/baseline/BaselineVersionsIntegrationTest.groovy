@@ -288,4 +288,21 @@ class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
         buildSucceed()
     }
 
+    def 'Unused check should use exact matching'() {
+        when:
+        setupVersionsProps("""
+            com.google.guava:guava-testlib = 23.0
+            com.google.guava:guava = 22.0
+        """.stripIndent())
+        buildFile << standardBuildFile(projectDir)
+        buildFile << """
+        dependencies {
+            compile 'com.google.guava:guava'
+            compile 'com.google.guava:guava-testlib'
+        }""".stripIndent()
+
+        then:
+        buildSucceed()
+    }
+
 }

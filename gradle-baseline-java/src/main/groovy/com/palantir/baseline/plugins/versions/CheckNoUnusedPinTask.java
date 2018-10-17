@@ -25,8 +25,6 @@ import java.util.List;
 import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Predicate;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.apache.commons.lang3.tuple.Pair;
 import org.gradle.api.DefaultTask;
@@ -78,24 +76,23 @@ public class CheckNoUnusedPinTask extends DefaultTask {
         Set<String> artifacts = getResolvedArtifacts();
         ParsedVersionsProps parsedVersionsProps = VersionsProps.readVersionsProps(getPropsFile().get().getAsFile());
 
-        List<Pair<String, Predicate<String>>> versionsPropToPredicate = parsedVersionsProps
+        List<Pair<String, String>> versionsPropToRegex = parsedVersionsProps
                 .forces()
                 .stream()
                 .map(VersionForce::name)
-                .map(propName -> Pair.of(
-                        propName, Pattern.compile(propName.replaceAll("\\*", ".*")).asPredicate()))
+                .map(propName -> Pair.of(propName, propName.replaceAll("\\*", ".*")))
                 .collect(Collectors.toList());
 
-        Set<String> unusedForces = versionsPropToPredicate
+        Set<String> unusedForces = versionsPropToRegex
                 .stream()
                 .map(Pair::getLeft)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
         // Remove the force that each artifact uses. This will be the last matching force, if any.
         artifacts.forEach(artifact -> {
-            Optional<String> matching = versionsPropToPredicate
+            Optional<String> matching = versionsPropToRegex
                     .stream()
-                    .filter(pair -> pair.getRight().test(artifact))
+                    .filter(pair -> pair.getRight().matches(artifact))
                     .map(Entry::getKey)
                     .reduce((first, second) -> second);
             matching.ifPresent(unusedForces::remove);
