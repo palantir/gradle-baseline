@@ -14,4 +14,5 @@ dependencies {
     testCompile 'org.apache.commons:commons-lang3'
 
     annotationProcessor 'com.google.auto.service:auto-service'
+    compileOnly 'com.google.auto.service:auto-service'
 }
