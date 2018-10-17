@@ -138,8 +138,8 @@ public final class BaselineVersions implements Plugin<Project> {
                                 .map(mcid -> ((ModuleComponentIdentifier) mcid).getModuleIdentifier())
                                 .map(mid -> mid.getGroup() + ":" + mid.getName());
                     } catch (Exception e) {
-                        throw new RuntimeException("Error during resolution of the artifacts of all "
-                                + "configuration from all subprojects", e);
+                        throw new RuntimeException(String.format("Error during resolution of the dependency graph of "
+                                + "configuration %s", configuration), e);
                     }
                 })
                 .collect(Collectors.toSet());
