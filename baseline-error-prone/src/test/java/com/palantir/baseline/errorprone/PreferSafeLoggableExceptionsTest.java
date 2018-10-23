@@ -40,6 +40,15 @@ public class PreferSafeLoggableExceptionsTest {
     }
 
     @Test
+    public void illegal_argument_exception_without_message_doesnt_match() {
+        compilationHelper.addSourceLines(
+                "Bean.java",
+                "class Bean {",
+                "Exception foo = new IllegalArgumentException(new RuntimeException());",
+                "}").doTest();
+    }
+
+    @Test
     public void illegal_state_exception() {
         compilationHelper.addSourceLines(
                 "Bean.java",
@@ -50,12 +59,30 @@ public class PreferSafeLoggableExceptionsTest {
     }
 
     @Test
+    public void illegal_state_exception_without_message_doesnt_match() {
+        compilationHelper.addSourceLines(
+                "Bean.java",
+                "class Bean {",
+                "Exception foo = new IllegalStateException(new RuntimeException());",
+                "}").doTest();
+    }
+
+    @Test
     public void io_exception() {
         compilationHelper.addSourceLines(
                 "Bean.java",
                 "class Bean {",
                 "// BUG: Diagnostic contains: Prefer SafeIOException",
                 "Exception foo = new java.io.IOException(\"Foo\");",
+                "}").doTest();
+    }
+
+    @Test
+    public void io_exception_without_message_doesnt_match() {
+        compilationHelper.addSourceLines(
+                "Bean.java",
+                "class Bean {",
+                "Exception foo = new java.io.IOException(new RuntimeException());",
                 "}").doTest();
     }
 }

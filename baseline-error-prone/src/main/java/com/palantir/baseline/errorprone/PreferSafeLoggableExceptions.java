@@ -24,9 +24,12 @@ import com.google.errorprone.matchers.CompileTimeConstantExpressionMatcher;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
+import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.NewClassTree;
 import java.io.IOException;
+import java.util.List;
+import java.util.Optional;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -43,15 +46,15 @@ public class PreferSafeLoggableExceptions extends BugChecker implements BugCheck
     // https://github.com/palantir/safe-logging/tree/develop/preconditions/src/main/java/com/palantir/logsafe/exceptions
     @Override
     public Description matchNewClass(NewClassTree tree, VisitorState state) {
-        // List<? extends ExpressionTree> args = tree.getArguments();
-        // Optional<? extends ExpressionTree> messageArg = args.stream()
-        //         .filter(arg -> ASTHelpers.isSameType(ASTHelpers.getType(arg),
-        //                 state.getTypeFromString("java.lang.String"), state))
-        //         .reduce((one, two) -> two);
-        //
+        List<? extends ExpressionTree> args = tree.getArguments();
+        Optional<? extends ExpressionTree> messageArg = args.stream()
+                .filter(arg -> ASTHelpers.isSameType(ASTHelpers.getType(arg),
+                        state.getTypeFromString("java.lang.String"), state))
+                .reduce((one, two) -> one);
         // if (!messageArg.isPresent() || compileTimeConstExpressionMatcher.matches(messageArg.get(), state)) {
-        //     return Description.NO_MATCH;
-        // }
+        if (!messageArg.isPresent()) {
+            return Description.NO_MATCH;
+        }
 
         if (Matchers.isSameType(IllegalArgumentException.class).matches(tree.getIdentifier(), state)) {
             return buildDescription(tree)
