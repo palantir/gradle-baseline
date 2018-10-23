@@ -32,7 +32,7 @@ import java.io.IOException;
 @BugPattern(
         name = "PreferSafeLoggableExceptions",
         category = BugPattern.Category.ONE_OFF,
-        severity = BugPattern.SeverityLevel.ERROR,
+        severity = BugPattern.SeverityLevel.SUGGESTION,
         summary = "Throw SafeLoggable exceptions to ensure the message will not be redacted")
 public class PreferSafeLoggableExceptions extends BugChecker implements BugChecker.NewClassTreeMatcher {
 
