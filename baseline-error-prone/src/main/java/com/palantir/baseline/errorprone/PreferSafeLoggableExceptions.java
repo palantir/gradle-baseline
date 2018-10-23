@@ -20,6 +20,7 @@ import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
+import com.google.errorprone.fixes.SuggestedFix;
 import com.google.errorprone.matchers.CompileTimeConstantExpressionMatcher;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
@@ -62,8 +63,13 @@ public class PreferSafeLoggableExceptions extends BugChecker implements BugCheck
         }
 
         if (Matchers.isSameType(IllegalArgumentException.class).matches(tree.getIdentifier(), state)) {
+            SuggestedFix fix = SuggestedFix.builder()
+                    .replace(tree.getIdentifier(), "SafeIllegalArgumentException")
+                    .addImport("com.palantir.logsafe.exceptions.SafeIllegalArgumentException")
+                    .build();
             return buildDescription(tree)
                     .setMessage("Prefer SafeIllegalArgumentException from com.palantir.safe-logging:preconditions")
+                    .addFix(fix)
                     .build();
         }
 

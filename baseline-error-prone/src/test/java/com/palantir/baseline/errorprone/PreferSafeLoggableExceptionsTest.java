@@ -16,6 +16,7 @@
 
 package com.palantir.baseline.errorprone;
 
+import com.google.errorprone.BugCheckerRefactoringTestHelper;
 import com.google.errorprone.CompilationTestHelper;
 import org.junit.Before;
 import org.junit.Test;
@@ -37,6 +38,26 @@ public class PreferSafeLoggableExceptionsTest {
                 "// BUG: Diagnostic contains: Prefer SafeIllegalArgumentException",
                 "Exception foo = new IllegalArgumentException(\"Foo\");",
                 "}").doTest();
+    }
+
+    @Test
+    public void auto_fix_illegal_argument_exception() {
+        BugCheckerRefactoringTestHelper.newInstance(new PreferSafeLoggableExceptions(), getClass())
+                .addInputLines(
+                        "Bean.java",
+                        "class Bean {",
+                        "  Exception foo = new IllegalArgumentException(\"Foo\");",
+                        "}",
+                        "")
+                .addOutputLines(
+                        "Bean.java",
+                        "import com.palantir.logsafe.exceptions.SafeIllegalArgumentException;",
+                        "",
+                        "class Bean {",
+                        "  Exception foo = new SafeIllegalArgumentException(\"Foo\");",
+                        "}",
+                        "")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
     @Test
