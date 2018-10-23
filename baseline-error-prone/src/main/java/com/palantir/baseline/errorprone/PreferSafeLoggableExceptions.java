@@ -51,8 +51,13 @@ public class PreferSafeLoggableExceptions extends BugChecker implements BugCheck
                 .filter(arg -> ASTHelpers.isSameType(ASTHelpers.getType(arg),
                         state.getTypeFromString("java.lang.String"), state))
                 .reduce((one, two) -> one);
-        // if (!messageArg.isPresent() || compileTimeConstExpressionMatcher.matches(messageArg.get(), state)) {
+
         if (!messageArg.isPresent()) {
+            return Description.NO_MATCH;
+        }
+
+        if (!compileTimeConstExpressionMatcher.matches(messageArg.get(), state)) {
+            // ignore exceptions with non-constant messages to minimise the hits
             return Description.NO_MATCH;
         }
 
