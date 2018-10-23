@@ -17,6 +17,7 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
+import com.google.common.collect.ImmutableMap;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
@@ -30,6 +31,7 @@ import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.NewClassTree;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 @AutoService(BugChecker.class)
@@ -37,8 +39,8 @@ import java.util.Optional;
         name = "PreferSafeLoggableExceptions",
         category = BugPattern.Category.ONE_OFF,
         severity = BugPattern.SeverityLevel.SUGGESTION,
-        summary = "Throw SafeLoggable exceptions to ensure the message will not be redacted")
-public class PreferSafeLoggableExceptions extends BugChecker implements BugChecker.NewClassTreeMatcher {
+        summary = "Throw SafeLoggable exceptions to ensure the exception message will not be redacted")
+public final class PreferSafeLoggableExceptions extends BugChecker implements BugChecker.NewClassTreeMatcher {
 
     private static final long serialVersionUID = 1L;
     private final Matcher<ExpressionTree> compileTimeConstExpressionMatcher =
@@ -49,8 +51,10 @@ public class PreferSafeLoggableExceptions extends BugChecker implements BugCheck
     public Description matchNewClass(NewClassTree tree, VisitorState state) {
         List<? extends ExpressionTree> args = tree.getArguments();
         Optional<? extends ExpressionTree> messageArg = args.stream()
-                .filter(arg -> ASTHelpers.isSameType(ASTHelpers.getType(arg),
-                        state.getTypeFromString("java.lang.String"), state))
+                .filter(arg -> ASTHelpers.isSameType(
+                        ASTHelpers.getType(arg),
+                        state.getTypeFromString("java.lang.String"),
+                        state))
                 .reduce((one, two) -> one);
 
         if (!messageArg.isPresent()) {
@@ -62,41 +66,23 @@ public class PreferSafeLoggableExceptions extends BugChecker implements BugCheck
             return Description.NO_MATCH;
         }
 
-        if (Matchers.isSameType(IllegalArgumentException.class).matches(tree.getIdentifier(), state)) {
-            SuggestedFix fix = SuggestedFix.builder()
-                    .replace(tree.getIdentifier(), "SafeIllegalArgumentException")
-                    .addImport("com.palantir.logsafe.exceptions.SafeIllegalArgumentException")
-                    .build();
-            return buildDescription(tree)
-                    .setMessage("Prefer SafeIllegalArgumentException from com.palantir.safe-logging:preconditions")
-                    .addFix(fix)
-                    .build();
-        }
+        Map<Class<?>, String> map = ImmutableMap.of(
+                IllegalArgumentException.class, "SafeIllegalArgumentException",
+                IllegalStateException.class, "SafeIllegalStateException",
+                IOException.class, "SafeIoException",
+                NullPointerException.class, "SafeNullPointerException",
+                RuntimeException.class, "SafeRuntimeException");
 
-        if (Matchers.isSameType(IllegalStateException.class).matches(tree.getIdentifier(), state)) {
-            return buildDescription(tree)
-                    .setMessage("Prefer SafeIllegalStateException from com.palantir.safe-logging:preconditions")
-                    .build();
-        }
-
-        if (Matchers.isSameType(IOException.class).matches(tree.getIdentifier(), state)) {
-            return buildDescription(tree)
-                    .setMessage("Prefer SafeIOException from com.palantir.safe-logging:preconditions")
-                    .build();
-        }
-
-        if (Matchers.isSameType(NullPointerException.class).matches(tree.getIdentifier(), state)) {
-            return buildDescription(tree)
-                    .setMessage("Prefer SafeNullPointerException from com.palantir.safe-logging:preconditions")
-                    .build();
-        }
-
-        if (Matchers.isSameType(RuntimeException.class).matches(tree.getIdentifier(), state)) {
-            return buildDescription(tree)
-                    .setMessage("Prefer SafeRuntimeException from com.palantir.safe-logging:preconditions")
-                    .build();
-        }
-
-        return Description.NO_MATCH;
+        return map.entrySet().stream()
+                .filter(entry -> Matchers.isSameType(entry.getKey()).matches(tree.getIdentifier(), state))
+                .map(entry -> buildDescription(tree)
+                        .setMessage("Prefer " + entry.getValue() + " from com.palantir.safe-logging:preconditions")
+                        .addFix(SuggestedFix.builder()
+                                .replace(tree.getIdentifier(), entry.getValue())
+                                .addImport("com.palantir.logsafe.exceptions." + entry.getValue())
+                                .build())
+                        .build())
+                .findAny()
+                .orElse(Description.NO_MATCH);
     }
 }

@@ -70,6 +70,26 @@ public class PreferSafeLoggableExceptionsTest {
     }
 
     @Test
+    public void auto_fix_illegal_state_exception() {
+        BugCheckerRefactoringTestHelper.newInstance(new PreferSafeLoggableExceptions(), getClass())
+                .addInputLines(
+                        "Bean.java",
+                        "class Bean {",
+                        "  Exception foo = new IllegalArgumentException(\"Foo\");",
+                        "}",
+                        "")
+                .addOutputLines(
+                        "Bean.java",
+                        "import com.palantir.logsafe.exceptions.SafeIllegalArgumentException;",
+                        "",
+                        "class Bean {",
+                        "  Exception foo = new SafeIllegalArgumentException(\"Foo\");",
+                        "}",
+                        "")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
     public void illegal_state_exception() {
         compilationHelper.addSourceLines(
                 "Bean.java",
@@ -93,7 +113,7 @@ public class PreferSafeLoggableExceptionsTest {
         compilationHelper.addSourceLines(
                 "Bean.java",
                 "class Bean {",
-                "// BUG: Diagnostic contains: Prefer SafeIOException",
+                "// BUG: Diagnostic contains: Prefer SafeIoException",
                 "Exception foo = new java.io.IOException(\"Foo\");",
                 "}").doTest();
     }
