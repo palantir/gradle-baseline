@@ -109,6 +109,15 @@ public class PreferSafeLoggableExceptionsTest {
     }
 
     @Test
+    public void illegal_state_exception_with_non_constant_message_doesnt_match() {
+        compilationHelper.addSourceLines(
+                "Bean.java",
+                "class Bean {",
+                "Exception foo = new IllegalStateException(\"I am a non-constant string\" + Math.random());",
+                "}").doTest();
+    }
+
+    @Test
     public void io_exception() {
         compilationHelper.addSourceLines(
                 "Bean.java",
