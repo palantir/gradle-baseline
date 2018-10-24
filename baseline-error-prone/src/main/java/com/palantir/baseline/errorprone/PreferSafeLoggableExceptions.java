@@ -37,6 +37,7 @@ import java.util.Optional;
 @AutoService(BugChecker.class)
 @BugPattern(
         name = "PreferSafeLoggableExceptions",
+        link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         category = BugPattern.Category.ONE_OFF,
         severity = BugPattern.SeverityLevel.SUGGESTION,
         summary = "Throw SafeLoggable exceptions to ensure the exception message will not be redacted")

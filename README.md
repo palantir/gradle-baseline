@@ -127,9 +127,15 @@ More information on error-prone severity handling can be found at [errorprone.in
 Baseline configures the following checks in addition to the [error-prone's out-of-the-box
 checks](https://errorprone.info):
 
-- Slf4jConstantLogMessage: Allow only compile-time constant slf4j log message strings.
-- Slf4jLogsafeArgs: Allow only com.palantir.logsafe.Arg types as parameter inputs to slf4j log messages. More information on
+- `Slf4jConstantLogMessage`: Allow only compile-time constant slf4j log message strings.
+- `Slf4jLogsafeArgs`: Allow only com.palantir.logsafe.Arg types as parameter inputs to slf4j log messages. More information on
 Safe Logging can be found at [github.com/palantir/safe-logging](https://github.com/palantir/safe-logging).
+- `PreferSafeLoggableExceptions`: Users should throw `SafeRuntimeException` instead of `RuntimeException` so that messages will not be needlessly redacted when logs are collected:
+
+```diff
+-throw new RuntimeException("explanation", e); // this message will be redacted when logs are collected
++throw new SafeRuntimeException("explanation", e); // this message will be preserved (allowing easier debugging)
+```
 
 
 ## com.palantir.baseline-checkstyle
@@ -259,7 +265,7 @@ spotless {
         removeUnusedImports
         importOrder ''
         trimTrailingWhitespace
-        indentWithSpaces 4 
+        indentWithSpaces 4
         endWithNewline
     }
 }
