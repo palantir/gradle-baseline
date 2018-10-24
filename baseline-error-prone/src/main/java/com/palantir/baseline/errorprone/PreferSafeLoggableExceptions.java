@@ -18,15 +18,18 @@ package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Streams;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.fixes.SuggestedFix;
 import com.google.errorprone.matchers.CompileTimeConstantExpressionMatcher;
 import com.google.errorprone.matchers.Description;
+import com.google.errorprone.matchers.JUnitMatchers;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.util.ASTHelpers;
+import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.NewClassTree;
 import java.io.IOException;
@@ -38,6 +41,7 @@ import java.util.Optional;
 @BugPattern(
         name = "PreferSafeLoggableExceptions",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
+        linkType = BugPattern.LinkType.CUSTOM,
         category = BugPattern.Category.ONE_OFF,
         severity = BugPattern.SeverityLevel.SUGGESTION,
         summary = "Throw SafeLoggable exceptions to ensure the exception message will not be redacted")
@@ -47,9 +51,13 @@ public final class PreferSafeLoggableExceptions extends BugChecker implements Bu
     private final Matcher<ExpressionTree> compileTimeConstExpressionMatcher =
             new CompileTimeConstantExpressionMatcher();
 
-    // https://github.com/palantir/safe-logging/tree/develop/preconditions/src/main/java/com/palantir/logsafe/exceptions
     @Override
     public Description matchNewClass(NewClassTree tree, VisitorState state) {
+        if (isTestCode(state)) {
+            // devs don't have to use log-collection infrastructure in tests, so this would be purely annoying
+            return Description.NO_MATCH;
+        }
+
         List<? extends ExpressionTree> args = tree.getArguments();
         Optional<? extends ExpressionTree> messageArg = args.stream()
                 .filter(arg -> ASTHelpers.isSameType(
@@ -67,6 +75,7 @@ public final class PreferSafeLoggableExceptions extends BugChecker implements Bu
             return Description.NO_MATCH;
         }
 
+        // github.com/palantir/safe-logging/tree/develop/preconditions/src/main/java/com/palantir/logsafe/exceptions
         Map<Class<?>, String> map = ImmutableMap.of(
                 IllegalArgumentException.class, "SafeIllegalArgumentException",
                 IllegalStateException.class, "SafeIllegalStateException",
@@ -85,5 +94,11 @@ public final class PreferSafeLoggableExceptions extends BugChecker implements Bu
                         .build())
                 .findAny()
                 .orElse(Description.NO_MATCH);
+    }
+
+    private static boolean isTestCode(VisitorState state) {
+        return Streams.stream(state.getPath().iterator())
+                .filter(ancestor -> ancestor instanceof ClassTree)
+                .anyMatch(ancestor -> JUnitMatchers.hasJUnit4TestCases.matches((ClassTree) ancestor, state));
     }
 }
