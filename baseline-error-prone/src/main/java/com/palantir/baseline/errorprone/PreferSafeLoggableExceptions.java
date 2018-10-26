@@ -99,6 +99,11 @@ public final class PreferSafeLoggableExceptions extends BugChecker implements Bu
     private static boolean isTestCode(VisitorState state) {
         return Streams.stream(state.getPath().iterator())
                 .filter(ancestor -> ancestor instanceof ClassTree)
-                .anyMatch(ancestor -> JUnitMatchers.hasJUnit4TestCases.matches((ClassTree) ancestor, state));
+                .anyMatch(ancestor -> Matchers
+                        .anyOf(JUnitMatchers.hasJUnit4TestCases, hasJUnit5TestCases)
+                        .matches((ClassTree) ancestor, state));
     }
+
+    private static final Matcher<ClassTree> hasJUnit5TestCases =
+            Matchers.hasMethod(Matchers.hasAnnotationOnAnyOverriddenMethod("org.junit.jupiter.api.Test"));
 }
