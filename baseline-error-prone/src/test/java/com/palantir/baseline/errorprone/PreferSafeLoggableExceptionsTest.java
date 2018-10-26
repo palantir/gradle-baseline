@@ -118,6 +118,44 @@ public class PreferSafeLoggableExceptionsTest {
     }
 
     @Test
+    public void illegal_state_exception_in_junit4_test_method_doesnt_match() {
+        compilationHelper.addSourceLines(
+                "FooTest.java",
+                "import org.junit.Test;",
+                "class FooTest {",
+                "  @Test",
+                "  public void run_junit4_test() {",
+                "    throw new IllegalStateException(\"constant\");",
+                "  }",
+                "}").doTest();
+    }
+
+    @Test
+    public void illegal_state_exception_in_junit5_test_method_doesnt_match() {
+        compilationHelper.addSourceLines(
+                "FooTest.java",
+                "import org.junit.jupiter.api.Test;",
+                "class FooTest {",
+                "  @Test",
+                "  public void run_junit5_test() {",
+                "    throw new IllegalStateException(\"constant\");",
+                "  }",
+                "}").doTest();
+    }
+
+    @Test
+    public void illegal_state_exception_in_test_field_doesnt_match() {
+        compilationHelper.addSourceLines(
+                "FooTest.java",
+                "import org.junit.Test;",
+                "class FooTest {",
+                "  Exception foo = new IllegalStateException(\"constant\");",
+                "  @Test",
+                "  public void doSomething() {}",
+                "}").doTest();
+    }
+
+    @Test
     public void io_exception() {
         compilationHelper.addSourceLines(
                 "Bean.java",
