@@ -136,7 +136,7 @@
             <property name="regexp" value="true" />
             <message key="import.illegal" value="Do not rely on gradle internal classes as these may change in minor releases - use org.gradle.api versions instead."/>
         </module>
-	<module name="IllegalImport">
+        <module name="IllegalImport">
             <property name="id" value="BanPalantirInternal"/>
             <property name="illegalPkgs" value="^com\.palantir\.(internal|.*\.internal)"/>
             <property name="regexp" value="true" />
