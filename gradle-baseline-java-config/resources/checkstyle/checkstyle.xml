@@ -138,7 +138,7 @@
         </module>
         <module name="IllegalImport">
             <property name="id" value="BanPalantirInternal"/>
-            <property name="illegalPkgs" value="^com\.palantir\.(internal|.*\.internal)"/>
+            <property name="illegalPkgs" value="^com\.palantir\.(internal|.*\.internal)(\.|$)"/>
             <property name="regexp" value="true" />
             <message key="import.illegal" value="Do not rely on internal classes as these may change in minor releases."/>
         </module>
