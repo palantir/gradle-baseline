@@ -28,11 +28,13 @@ It is recommended to add `apply plugin: 'com.palantir.baseline'` to your root pr
 ```Gradle
 buildscript {
     repositories {
+        gradlePluginPortal()
         maven { url  "http://palantir.bintray.com/releases" }
     }
 
     dependencies {
         classpath 'com.palantir.baseline:gradle-baseline-java:<version>'
+        classpath 'gradle.plugin.org.inferred:gradle-processors:2.1.0'
     }
 }
 
