@@ -60,13 +60,4 @@ class BaselineCheckstyleTest extends Specification {
             assert task.getSource().getFiles().contains(file)
         }
     }
-
-    def appliesEclipseNatures() {
-        when:
-        project.plugins.apply 'eclipse'
-        project.plugins.apply BaselineEclipse
-
-        then:
-        project.eclipse.project.natures.contains("net.sf.eclipsecs.core.CheckstyleNature")
-    }
 }

@@ -76,7 +76,6 @@ public final class BaselineCheckstyle extends AbstractBaselinePlugin {
         project.getPluginManager().withPlugin("eclipse", plugin -> {
             EclipseProject eclipseProject = project.getExtensions().getByType(EclipseModel.class).getProject();
             eclipseProject.buildCommand("net.sf.eclipsecs.core.CheckstyleBuilder");
-            eclipseProject.natures("net.sf.eclipsecs.core.CheckstyleNature");
         });
     }
 
