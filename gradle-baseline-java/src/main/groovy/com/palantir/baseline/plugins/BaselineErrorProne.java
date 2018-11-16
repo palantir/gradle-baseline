@@ -26,6 +26,7 @@ import java.util.stream.Collectors;
 import net.ltgt.gradle.errorprone.CheckSeverity;
 import net.ltgt.gradle.errorprone.ErrorProneOptions;
 import net.ltgt.gradle.errorprone.ErrorPronePlugin;
+import org.gradle.api.JavaVersion;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
@@ -63,7 +64,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
             // In case of java 8 we need to add errorprone javac compiler to bootstrap classpath of tasks that perform
             // compilation or code analysis. ErrorProneJavacPluginPlugin handles JavaCompile cases via errorproneJavac
             // configuration and we do similar thing for Test and Javadoc type tasks
-            if (!javaConvention.getSourceCompatibility().isJava9Compatible()) {
+            if (!JavaVersion.current().isJava9Compatible()) {
                 project.getDependencies().add(ErrorPronePlugin.JAVAC_CONFIGURATION_NAME,
                         "com.google.errorprone:javac:" + ERROR_PRONE_JAVAC_VERSION);
                 project.getConfigurations()
