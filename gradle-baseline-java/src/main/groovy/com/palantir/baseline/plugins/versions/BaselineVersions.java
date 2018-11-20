@@ -77,7 +77,7 @@ public final class BaselineVersions implements Plugin<Project> {
         File rootVersionsPropsFile = rootVersionsPropsFile(project);
         extension.propertiesFile(ImmutableMap.of("file", rootVersionsPropsFile));
 
-        if (project != project.getRootProject()) {
+        if (project != project.getRootProject() && !Boolean.getBoolean("nebula.features.coreBomSupport")) {
             // allow nested projects to specify their own nested versions.props file
             if (project.file("versions.props").exists()) {
                 extension.propertiesFile(ImmutableMap.of("file", project.file("versions.props")));
