@@ -31,6 +31,8 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolutionResult;
 import org.gradle.api.artifacts.result.ResolvedComponentResult;
+import org.gradle.api.logging.Logger;
+import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.BasePlugin;
 import org.gradle.api.tasks.TaskProvider;
 
@@ -59,6 +61,7 @@ import org.gradle.api.tasks.TaskProvider;
  */
 public final class BaselineVersions implements Plugin<Project> {
 
+    private static final Logger log = Logging.getLogger(BaselineVersions.class);
     static final String GROUP = "com.palantir.baseline-versions";
 
     @Override
@@ -66,6 +69,11 @@ public final class BaselineVersions implements Plugin<Project> {
 
         // apply plugin: "nebula.dependency-recommender"
         project.getPluginManager().apply(DependencyRecommendationsPlugin.class);
+
+        if (Boolean.getBoolean("nebula.features.coreBomSupport")) {
+            log.info("Not configuring nebula.dependency-recommender because coreBomSupport is enabled");
+            return;
+        }
 
         // get dependencyRecommendations extension
         RecommendationProviderContainer extension = project
@@ -107,10 +115,10 @@ public final class BaselineVersions implements Plugin<Project> {
         File file = project.getRootProject().file("versions.props");
         if (!file.canRead()) {
             try {
-                project.getLogger().info("Could not find 'versions.props' file, creating...");
+                log.info("Could not find 'versions.props' file, creating...");
                 Files.createFile(file.toPath());
             } catch (IOException e) {
-                project.getLogger().warn("Unable to create empty versions.props file, please create this manually", e);
+                log.warn("Unable to create empty versions.props file, please create this manually", e);
             }
         }
         return file;
