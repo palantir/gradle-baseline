@@ -40,7 +40,7 @@ jobs:
       - store_artifacts: { path: ~/artifacts }
 
   build-11:
-    docker: [{ image: 'circleci/openjdk:11-node' }]
+    docker: [{ image: 'circleci/openjdk@sha256:115a4f4395aef5b098b23486dfee7c4b9f03c63dff31cd0cef851db51eabb3c8' }]
     resource_class: xlarge
     environment:
       GRADLE_OPTS: -Dorg.gradle.console=plain -Dorg.gradle.internal.launcher.welcomeMessageEnabled=false
