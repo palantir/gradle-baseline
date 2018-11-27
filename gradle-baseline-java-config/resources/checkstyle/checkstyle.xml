@@ -370,6 +370,11 @@
             <property name="format" value="(void setUp\(\))|(void setup\(\))|(void setupStatic\(\))|(void setUpStatic\(\))|(void beforeTest\(\))|(void teardown\(\))|(void tearDown\(\))|(void beforeStatic\(\))|(void afterStatic\(\))"/>
             <property name="message" value="Test setup/teardown methods are called before(), beforeClass(), after(), afterClass(), but not setUp, teardown, etc."/>
         </module>
+        <module name="RegexpSinglelineJava">
+            <property name="id" value="BanShutdownHooks"/>
+            <property name="format" value=".*addShutdownHook\("/>
+            <property name="message" value="Use your webserver's managed resource functionality instead of using Runtime#addShutdownHook directly."/>
+        </module>
         <module name="RightCurly"> <!-- Java Style Guide: Nonempty blocks: K & R style -->
             <property name="option" value="same"/>
             <property name="tokens" value="LITERAL_TRY, LITERAL_CATCH, LITERAL_FINALLY, LITERAL_IF, LITERAL_ELSE, LITERAL_DO"/>
