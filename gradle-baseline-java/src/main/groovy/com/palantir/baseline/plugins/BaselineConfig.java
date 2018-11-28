@@ -17,7 +17,9 @@
 package com.palantir.baseline.plugins;
 
 import java.util.Optional;
+import org.gradle.api.Action;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 
 /**
@@ -47,31 +49,48 @@ class BaselineConfig extends AbstractBaselinePlugin {
             task.getInputs().files(configuration);
             task.getOutputs().dir(getConfigDir());
             task.getOutputs().dir(rootProject.getRootDir().toPath().resolve("project"));
-            task.doLast(t -> {
-                if (configuration.getFiles().size() != 1) {
-                    throw new IllegalArgumentException("Expected to find exactly one config dependency in the "
-                            + "'baseline' configuration, found: " + configuration.getFiles());
-                }
+            task.doLast(new BaselineUpdateConfigAction(configuration, rootProject));
+        });
+    }
 
+    private class BaselineUpdateConfigAction implements Action<Task> {
+        private final Configuration configuration;
+        private final Project rootProject;
+
+        BaselineUpdateConfigAction(Configuration configuration, Project rootProject) {
+            this.configuration = configuration;
+            this.rootProject = rootProject;
+        }
+
+        @Override
+        public void execute(Task task) {
+            if (configuration.getFiles().size() != 1) {
+                throw new IllegalArgumentException("Expected to find exactly one config dependency in the "
+                        + "'baseline' configuration, found: " + configuration.getFiles());
+            }
+
+            rootProject.copy(copySpec -> {
+                copySpec.from(rootProject.zipTree(configuration.getSingleFile()));
+                copySpec.into(BaselineConfig.this.getConfigDir());
+                copySpec.exclude("**/scalastyle_config.xml");
+                copySpec.setIncludeEmptyDirs(false);
+            });
+            if (rootProject
+                    .getAllprojects()
+                    .stream()
+                    .anyMatch(p -> p.getPluginManager().hasPlugin("scala") && p
+                            .getPluginManager()
+                            .hasPlugin("com.palantir.baseline-scalastyle"))) {
+                // Matches intellij scala plugin settings per
+                // https://github.com/JetBrains/intellij-scala/blob/baaa7c1dabe5222c4bca7c4dd8d80890ad2a8c6b/scala/scala-impl/src/org/jetbrains/plugins/scala/codeInspection/scalastyle/ScalastyleCodeInspection.scala#L19
                 rootProject.copy(copySpec -> {
-                    copySpec.from(rootProject.zipTree(configuration.getSingleFile()));
-                    copySpec.into(getConfigDir());
-                    copySpec.exclude("**/scalastyle_config.xml");
+                    copySpec.from(rootProject
+                            .zipTree(configuration.getSingleFile())
+                            .filter(file -> file.getName().equals("scalastyle_config.xml")));
+                    copySpec.into(rootProject.getRootDir().toPath().resolve("project"));
                     copySpec.setIncludeEmptyDirs(false);
                 });
-                if (rootProject.getAllprojects().stream().anyMatch(p ->
-                        p.getPluginManager().hasPlugin("scala")
-                                && p.getPluginManager().hasPlugin("com.palantir.baseline-scalastyle"))) {
-                    // Matches intellij scala plugin settings per
-                    // https://github.com/JetBrains/intellij-scala/blob/baaa7c1dabe5222c4bca7c4dd8d80890ad2a8c6b/scala/scala-impl/src/org/jetbrains/plugins/scala/codeInspection/scalastyle/ScalastyleCodeInspection.scala#L19
-                    rootProject.copy(copySpec -> {
-                        copySpec.from(rootProject.zipTree(configuration.getSingleFile())
-                                .filter(file -> file.getName().equals("scalastyle_config.xml")));
-                        copySpec.into(rootProject.getRootDir().toPath().resolve("project"));
-                        copySpec.setIncludeEmptyDirs(false);
-                    });
-                }
-            });
-        });
+            }
+        }
     }
 }
