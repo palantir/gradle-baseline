@@ -27,6 +27,7 @@ public class CheckVersionsPropsTask extends DefaultTask {
     public CheckVersionsPropsTask() {
         setGroup(BaselineVersions.GROUP);
         setDescription("Checks your versions.props file for best practices");
+        shouldFix.set(false);
     }
 
     @Option(option = "fix", description = "Whether to apply the suggested fix to versions.props")

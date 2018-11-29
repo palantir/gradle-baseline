@@ -23,7 +23,7 @@ import java.nio.file.Paths
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 
-class BaselineVersionsIntegrationTest  extends AbstractPluginTest {
+class BaselineVersionsIntegrationTest extends AbstractPluginTest {
 
     def bomVersion = "42.42.42"
 

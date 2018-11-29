@@ -20,10 +20,9 @@ import org.gradle.testkit.runner.TaskOutcome
 
 /**
  * This test relies on running ./gradlew :gradle-baseline-java-config:publishToMavenLocal.
- * This will also not behave well if the repo is dirty.
  */
 class BaselineConfigIntegrationTest extends AbstractPluginTest {
-    def projectVersion = "git describe --tags --first-parent".execute().text.trim()
+    def projectVersion = "git describe --tags --first-parent --dirty=.dirty".execute().text.trim()
     def standardBuildFile = """
         plugins {
             id 'com.palantir.baseline-config'
