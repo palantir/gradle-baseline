@@ -135,6 +135,7 @@ checks](https://errorprone.info):
 - `Slf4jLogsafeArgs`: Allow only com.palantir.logsafe.Arg types as parameter inputs to slf4j log messages. More information on
 Safe Logging can be found at [github.com/palantir/safe-logging](https://github.com/palantir/safe-logging).
 - `PreferSafeLoggableExceptions`: Users should throw `SafeRuntimeException` instead of `RuntimeException` so that messages will not be needlessly redacted when logs are collected:
+- `ShutdownHook`: Applications should not use `Runtime#addShutdownHook`.
 
 ```diff
 -throw new RuntimeException("explanation", e); // this message will be redacted when logs are collected
