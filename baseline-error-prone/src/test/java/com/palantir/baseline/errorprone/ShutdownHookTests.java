@@ -17,7 +17,6 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.errorprone.CompilationTestHelper;
-import java.util.Optional;
 import org.junit.Before;
 import org.junit.Test;
 
@@ -35,23 +34,39 @@ public class ShutdownHookTests {
     }
 
     @Test
-    public void testUsesShutdownHooks() {
-        test("addShutdownHook(new Thread())", Optional.of(errorMsg));
-        test("removeShutdownHook(new Thread())", Optional.of(errorMsg));
-    }
-
-    @Test
-    public void testDoesNotUseShutdownHooks() {
-        test("availableProcessors()", Optional.empty());
-    }
-
-    private void test(String method, Optional<String> error) {
+    public void testRemoveShutdownHook() {
         compilationHelper.addSourceLines(
                 "Test.java",
                 "class Test {",
                 "  void f(String param) {",
-                "// " + error.orElse(""),
-                "    Runtime.getRuntime()." + method + ";",
+                "// " + errorMsg,
+                "    Runtime.getRuntime().removeShutdownHook(new Thread());",
+                "  }",
+                "}"
+        ).doTest();
+    }
+
+    @Test
+    public void testUsesAddShutdownHook() {
+        compilationHelper.addSourceLines(
+                "Test.java",
+                "class Test {",
+                "  void f(String param) {",
+                "// " + errorMsg,
+                "    Runtime.getRuntime().addShutdownHook(new Thread());",
+                "  }",
+                "}"
+        ).doTest();
+    }
+
+    @Test
+    public void testDoesNotUseShutdownHooks() {
+        compilationHelper.addSourceLines(
+                "Test.java",
+                "class Test {",
+                "  void f(String param) {",
+                "// ",
+                "    Runtime.getRuntime().availableProcessors();",
                 "  }",
                 "}"
         ).doTest();

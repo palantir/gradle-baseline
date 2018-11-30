@@ -22,12 +22,10 @@ import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
-import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.predicates.TypePredicates;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
-import com.sun.source.tree.Tree;
 import java.util.regex.Pattern;
 
 @AutoService(BugChecker.class)
@@ -48,9 +46,6 @@ public final class ShutdownHook extends BugChecker implements BugChecker.MethodI
     private static final Matcher<ExpressionTree> shutdownHookMethods = MethodMatchers.instanceMethod()
             .onClass(TypePredicates.isExactType("java.lang.Runtime"))
             .withNameMatching(Pattern.compile("addShutdownHook|removeShutdownHook"));
-
-    private static final Matcher<Tree> containsShutdownHookMethod = Matchers.contains(
-            Matchers.toType(ExpressionTree.class, shutdownHookMethods));
 
     @Override
     public Description matchMethodInvocation(
