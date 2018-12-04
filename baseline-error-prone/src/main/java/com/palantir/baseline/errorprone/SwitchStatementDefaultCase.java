@@ -35,7 +35,7 @@ import java.util.Objects;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = LinkType.CUSTOM,
         severity = SeverityLevel.SUGGESTION,
-        summary = "Avoid default cases in switch statements to correctly handle new enum variants")
+        summary = "Avoid default cases in switch statements to correctly handle new enum values")
 public final class SwitchStatementDefaultCase extends BugChecker implements BugChecker.SwitchTreeMatcher {
 
     @Override

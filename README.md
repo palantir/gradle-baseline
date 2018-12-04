@@ -135,13 +135,12 @@ checks](https://errorprone.info):
 - `Slf4jLogsafeArgs`: Allow only com.palantir.logsafe.Arg types as parameter inputs to slf4j log messages. More information on
 Safe Logging can be found at [github.com/palantir/safe-logging](https://github.com/palantir/safe-logging).
 - `PreferSafeLoggableExceptions`: Users should throw `SafeRuntimeException` instead of `RuntimeException` so that messages will not be needlessly redacted when logs are collected:
+    ```diff
+    -throw new RuntimeException("explanation", e); // this message will be redacted when logs are collected
+    +throw new SafeRuntimeException("explanation", e); // this message will be preserved (allowing easier debugging)
+    ```
 - `ShutdownHook`: Applications should not use `Runtime#addShutdownHook`.
-
-```diff
--throw new RuntimeException("explanation", e); // this message will be redacted when logs are collected
-+throw new SafeRuntimeException("explanation", e); // this message will be preserved (allowing easier debugging)
-```
-
+- `SwitchStatementDefaultCase`: Switch statements should avoid using default cases. Default cases prevent the [MissingCasesInEnumSwitch](http://errorprone.info/bugpattern/MissingCasesInEnumSwitch.html) check from detecting when an enum value is not explicitly handled. This check is important to help avoid incorrect behavior when new enum values are introduced.
 
 ## com.palantir.baseline-checkstyle
 Checkstyle rules can be suppressed on a per-line or per-block basis. (It is good practice to first consider formatting
