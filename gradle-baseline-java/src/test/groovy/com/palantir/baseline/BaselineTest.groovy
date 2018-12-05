@@ -36,16 +36,25 @@ class BaselineTest extends Specification {
         expect:
         assert project.pluginManager.hasPlugin('com.palantir.baseline-circleci')
         assert project.pluginManager.hasPlugin('com.palantir.baseline-config')
-        hasAllPlugins(project)
+        assert !project.pluginManager.hasPlugin('com.palantir.baseline-eclipse')
+        hasAllProjectPlugins(project)
         hasAllPlugins(subProject)
     }
 
     void hasAllPlugins(Project p) {
+        hasAllProjectPlugins(p)
+        hasEclipsePlugins(p)
+    }
+
+    void hasAllProjectPlugins(Project p) {
         assert p.pluginManager.hasPlugin('com.palantir.baseline-checkstyle')
-        assert p.pluginManager.hasPlugin('com.palantir.baseline-eclipse')
         assert p.pluginManager.hasPlugin('com.palantir.baseline-error-prone')
         assert p.pluginManager.hasPlugin('com.palantir.baseline-idea')
         assert p.pluginManager.hasPlugin('com.palantir.baseline-versions')
+    }
+
+    void hasEclipsePlugins(Project p) {
+        assert p.pluginManager.hasPlugin('com.palantir.baseline-eclipse')
     }
 
 }
