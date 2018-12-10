@@ -68,10 +68,9 @@ class BaselineEclipse extends AbstractBaselinePlugin {
     void apply(Project project) {
         this.project = project
 
-        project.plugins.apply EclipsePlugin
-
         // Configure Eclipse JDT Core by merging in Baseline settings.
-        project.plugins.withType(EclipsePlugin, { plugin ->
+        project.plugins.withType(JavaPlugin, { plugin ->
+            project.plugins.apply EclipsePlugin
             project.afterEvaluate {
                 project.eclipse {
                     if (jdt != null) {
@@ -97,47 +96,40 @@ class BaselineEclipse extends AbstractBaselinePlugin {
                         }
                     }
                 }
-            }
-        })
 
-        // Configure Checkstyle/JdtUI settings by copying in the default Baseline config file.
-        // Warning: this may interfere with other Gradle plugins that may try to mutate these files.
-        project.afterEvaluate { Project p ->
-            def eclipseTemplate = project.task(
-                "eclipseTemplate",
-                group: "Baseline",
-                description: "Update Eclipse settings from stored templates."
-            ).doLast {
-                // Copy static files verbatim.
-                project.copy {
-                    from project.file("${configDir}/eclipse/static")
-                    into project.file(".")
-                    eachFile { fileDetails ->
-                        fileDetails.path = fileDetails.path.replaceAll('dotfile.', '.')
+                // Configure Checkstyle/JdtUI settings by copying in the default Baseline config file.
+                // Warning: this may interfere with other Gradle plugins that may try to mutate these files.
+                def eclipseTemplate = project.task(
+                    "eclipseTemplate",
+                    group: "Baseline",
+                    description: "Update Eclipse settings from stored templates."
+                ).doLast {
+                    // Copy static files verbatim.
+                    project.copy {
+                        from project.file("${configDir}/eclipse/static")
+                        into project.file(".")
+                        eachFile { fileDetails ->
+                            fileDetails.path = fileDetails.path.replaceAll('dotfile.', '.')
+                        }
+                        includeEmptyDirs = false  // Skip directories that become empty due to the renaming above.
                     }
-                    includeEmptyDirs = false  // Skip directories that become empty due to the renaming above.
+
+                    // Copy dynamic templates and replace '${variableName}' markers in source files.
+                    project.copy {
+                        from project.file("${configDir}/eclipse/dynamic")
+                        into project.file(".")
+                        eachFile { fileDetails ->
+                            fileDetails.path = fileDetails.path.replaceAll('dotfile.', '.')
+                        }
+                        includeEmptyDirs = false  // Skip directories that become empty due to the renaming above.
+                        expand(configDir: configDir)
+                    }
                 }
 
-                // Copy dynamic templates and replace '${variableName}' markers in source files.
-                project.copy {
-                    from project.file("${configDir}/eclipse/dynamic")
-                    into project.file(".")
-                    eachFile { fileDetails ->
-                        fileDetails.path = fileDetails.path.replaceAll('dotfile.', '.')
-                    }
-                    includeEmptyDirs = false  // Skip directories that become empty due to the renaming above.
-                    expand(configDir: configDir)
-                }
-            }
+                // Run eclipseTemplate when eclipse task is run
+                project.tasks.eclipse.dependsOn(eclipseTemplate)
 
-            // Run eclipseTemplate when eclipse task is run
-            eclipseTemplate.onlyIf {
-                project.plugins.hasPlugin(JavaPlugin)
-            }
-            project.tasks.eclipse.dependsOn(eclipseTemplate)
-
-            // Override default Eclipse JRE.
-            if (project.plugins.hasPlugin(JavaPlugin)) {
+                // Override default Eclipse JRE.
                 project.tasks.eclipseClasspath.doFirst {
                     String eclipseClassPath = "org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-" + project.sourceCompatibility;
                     project.eclipse.classpath {
@@ -146,6 +138,6 @@ class BaselineEclipse extends AbstractBaselinePlugin {
                     }
                 }
             }
-        }
+        })
     }
 }

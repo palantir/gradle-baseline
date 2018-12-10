@@ -36,6 +36,8 @@ class BaselineTest extends Specification {
         expect:
         assert project.pluginManager.hasPlugin('com.palantir.baseline-circleci')
         assert project.pluginManager.hasPlugin('com.palantir.baseline-config')
+        // eclipse plugin not applied to root project because it is not a java project
+        assert !project.pluginManager.hasPlugin('eclipse')
         hasAllPlugins(project)
         hasAllPlugins(subProject)
     }

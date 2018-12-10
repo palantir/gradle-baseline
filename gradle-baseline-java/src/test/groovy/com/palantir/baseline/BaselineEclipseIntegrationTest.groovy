@@ -50,15 +50,6 @@ class BaselineEclipseIntegrationTest extends AbstractPluginTest {
         result.task(':eclipseTemplate').outcome == TaskOutcome.SUCCESS
     }
 
-    def 'Eclipse task works without Java plugin'() {
-        when:
-        buildFile << noJavaBuildFile
-
-        then:
-        def result = with('eclipse').build()
-        result.task(':eclipseTemplate').outcome == TaskOutcome.SKIPPED
-    }
-
     def 'Eclipse task sets jdt core properties'() {
         when:
         buildFile << standardBuildFile
