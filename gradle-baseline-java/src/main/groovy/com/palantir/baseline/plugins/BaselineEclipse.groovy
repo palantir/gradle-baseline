@@ -18,7 +18,6 @@ package com.palantir.baseline.plugins
 
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
-import org.gradle.plugins.ide.eclipse.EclipsePlugin
 
 /**
  * Configures the Gradle 'eclipse' task with Baseline settings.
@@ -68,10 +67,9 @@ class BaselineEclipse extends AbstractBaselinePlugin {
     void apply(Project project) {
         this.project = project
 
-        project.plugins.apply EclipsePlugin
-
         // Configure Eclipse JDT Core by merging in Baseline settings.
-        project.plugins.withType(EclipsePlugin, { plugin ->
+        project.plugins.withType(JavaPlugin, { plugin ->
+            project.plugins.apply EclipsePlugin
             project.afterEvaluate {
                 project.eclipse {
                     if (jdt != null) {
@@ -131,19 +129,14 @@ class BaselineEclipse extends AbstractBaselinePlugin {
             }
 
             // Run eclipseTemplate when eclipse task is run
-            eclipseTemplate.onlyIf {
-                project.plugins.hasPlugin(JavaPlugin)
-            }
             project.tasks.eclipse.dependsOn(eclipseTemplate)
 
             // Override default Eclipse JRE.
-            if (project.plugins.hasPlugin(JavaPlugin)) {
-                project.tasks.eclipseClasspath.doFirst {
-                    String eclipseClassPath = "org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-" + project.sourceCompatibility;
-                    project.eclipse.classpath {
-                        containers.clear()
-                        containers.add(eclipseClassPath)
-                    }
+            project.tasks.eclipseClasspath.doFirst {
+                String eclipseClassPath = "org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-" + project.sourceCompatibility;
+                project.eclipse.classpath {
+                    containers.clear()
+                    containers.add(eclipseClassPath)
                 }
             }
         }
