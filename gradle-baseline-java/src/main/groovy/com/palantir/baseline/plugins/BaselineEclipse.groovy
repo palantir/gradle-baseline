@@ -18,6 +18,7 @@ package com.palantir.baseline.plugins
 
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
+import org.gradle.plugins.ide.eclipse.EclipsePlugin
 
 /**
  * Configures the Gradle 'eclipse' task with Baseline settings.
