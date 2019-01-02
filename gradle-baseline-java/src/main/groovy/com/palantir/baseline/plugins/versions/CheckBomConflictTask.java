@@ -42,7 +42,7 @@ import org.gradle.api.tasks.options.Option;
 public class CheckBomConflictTask extends DefaultTask {
 
     private final Property<Boolean> shouldFix = getProject().getObjects().property(Boolean.class);
-    private final RegularFileProperty propsFileProperty = newInputFile();
+    private final RegularFileProperty propsFileProperty = getProject().getObjects().fileProperty();
 
     public CheckBomConflictTask() {
         shouldFix.set(false);
