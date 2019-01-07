@@ -71,22 +71,4 @@ class BaselineCircleCiIntegrationTest extends AbstractPluginTest {
         result.task(':test').outcome == TaskOutcome.SUCCESS
         new File(new File(artifacts, 'junit'), 'test').list().toList().toSet() == ['classes', 'css', 'index.html', 'js', 'packages'].toSet()
     }
-
-    def 'collects build profiles'() {
-        when:
-        buildFile << standardBuildFile
-
-        String artifacts = System.getenv('CIRCLE_ARTIFACTS')
-        Set<String> defaultDirs = ['js', 'css'].toSet()
-        then:
-        BuildResult result = with('build', '--profile').build()
-        result.task(':build').outcome == TaskOutcome.SUCCESS
-        Set<String> files = new File(artifacts, 'profile').list().toList().toSet()
-        files.size() == 3
-        files.containsAll(defaultDirs)
-        files.removeAll(defaultDirs)
-        String profileFile = files.iterator().next()
-        profileFile.startsWith("profile-")
-        profileFile.endsWith(".html")
-    }
 }
