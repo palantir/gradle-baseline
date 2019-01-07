@@ -194,7 +194,6 @@ Also, the plugin:
 2. Converts java compilation errors and checkstyle errors into test failures stored under `$CIRCLE_TEST_REPORTS/javac` and `$CIRCLE_TEST_REPORTS/checkstyle` respectively
 ![CHECKSTYLE — 1 FAILURE](images/checkstyle-circle-failure.png?raw=true "CircleCI failure image")
 3. stores the HTML output of tests in `$CIRCLE_ARTIFACTS/junit`
-4. stores the HTML reports from `--profile` into `$CIRCLE_ARTIFACTS/reports`
 
 
 ## com.palantir.baseline-versions

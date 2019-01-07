@@ -34,19 +34,14 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Set;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.quality.Checkstyle;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.testing.Test;
-import org.gradle.profile.ProfileListener;
-import org.gradle.profile.ProfileReportRenderer;
 
 public final class BaselineCircleCi implements Plugin<Project> {
-    private final SimpleDateFormat fileDateFormat = new SimpleDateFormat("yyyy-MM-dd-HH-mm-ss");
     private static final FileAttribute<Set<PosixFilePermission>> PERMS_ATTRIBUTE =
             PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x"));
 
@@ -82,15 +77,6 @@ public final class BaselineCircleCi implements Plugin<Project> {
                     test.getReports().getHtml().setEnabled(true);
                     test.getReports().getHtml().setDestination(junitPath(circleArtifactsDir, test.getPath()));
                 }));
-
-        if (project.getGradle().getStartParameter().isProfile()) {
-            project.getGradle().addListener((ProfileListener) buildProfile -> {
-                ProfileReportRenderer renderer = new ProfileReportRenderer();
-                File file = Paths.get(circleArtifactsDir, "profile", "profile-"
-                        + fileDateFormat.format(new Date(buildProfile.getBuildStarted())) + ".html").toFile();
-                renderer.writeTo(buildProfile, file);
-            });
-        }
     }
 
     private void configurePluginsForReports(Project project) {
