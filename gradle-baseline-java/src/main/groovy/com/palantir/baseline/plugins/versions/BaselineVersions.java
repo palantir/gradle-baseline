@@ -140,7 +140,7 @@ public final class BaselineVersions implements Plugin<Project> {
                         return resolutionResult
                                 .getAllComponents()
                                 .stream()
-                                .map(ResolvedComponentResult::getId)
+                                .map(result -> result.getId())
                                 .filter(cid -> !cid.equals(resolutionResult.getRoot().getId())) // remove the project
                                 .filter(cid -> cid instanceof ModuleComponentIdentifier)
                                 .map(mcid -> ((ModuleComponentIdentifier) mcid).getModuleIdentifier())
