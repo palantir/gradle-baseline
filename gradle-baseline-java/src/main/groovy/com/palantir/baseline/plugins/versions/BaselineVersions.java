@@ -30,7 +30,6 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolutionResult;
-import org.gradle.api.artifacts.result.ResolvedComponentResult;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.BasePlugin;
@@ -140,7 +139,7 @@ public final class BaselineVersions implements Plugin<Project> {
                         return resolutionResult
                                 .getAllComponents()
                                 .stream()
-                                .map(ResolvedComponentResult::getId)
+                                .map(result -> result.getId())
                                 .filter(cid -> !cid.equals(resolutionResult.getRoot().getId())) // remove the project
                                 .filter(cid -> cid instanceof ModuleComponentIdentifier)
                                 .map(mcid -> ((ModuleComponentIdentifier) mcid).getModuleIdentifier())
