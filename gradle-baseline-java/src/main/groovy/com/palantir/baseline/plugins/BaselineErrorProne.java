@@ -31,7 +31,6 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.plugins.ExtensionAware;
-import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradle.api.tasks.testing.Test;
@@ -44,7 +43,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
     public void apply(Project project) {
         project.getPluginManager().withPlugin("java", plugin -> {
             project.getPluginManager().apply(ErrorPronePlugin.class);
-            JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
             String version = Optional.ofNullable(getClass().getPackage().getImplementationVersion())
                     .orElse("latest.release");
             project.getDependencies().add(
@@ -60,6 +58,15 @@ public final class BaselineErrorProne implements Plugin<Project> {
                                 errorProneOptions.check("EqualsIncompatibleType", CheckSeverity.ERROR);
                                 errorProneOptions.check("StreamResourceLeak", CheckSeverity.ERROR);
                             }));
+
+            project.getPluginManager().withPlugin("java-gradle-plugin", appliedPlugin -> {
+                project.getTasks().withType(JavaCompile.class).configureEach(javaCompile ->
+                        ((ExtensionAware) javaCompile.getOptions()).getExtensions()
+                                .configure(ErrorProneOptions.class, errorProneOptions -> {
+                                    errorProneOptions.check("Slf4jLogsafeArgs", CheckSeverity.OFF);
+                                    errorProneOptions.check("PreferSafeLoggableExceptions", CheckSeverity.OFF);
+                                }));
+            });
 
             // In case of java 8 we need to add errorprone javac compiler to bootstrap classpath of tasks that perform
             // compilation or code analysis. ErrorProneJavacPluginPlugin handles JavaCompile cases via errorproneJavac
