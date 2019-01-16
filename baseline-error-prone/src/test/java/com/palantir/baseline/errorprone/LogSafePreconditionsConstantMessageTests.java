@@ -1,5 +1,5 @@
 /*
- * (c) Copyright 2017 Palantir Technologies Inc. All rights reserved.
+ * (c) Copyright 2019 Palantir Technologies Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,13 +20,13 @@ import com.google.errorprone.CompilationTestHelper;
 import org.junit.Before;
 import org.junit.Test;
 
-public final class PreconditionsConstantMessageTests extends PreconditionsTests {
+public final class LogSafePreconditionsConstantMessageTests extends PreconditionsTests {
 
     private CompilationTestHelper compilationHelper;
 
     @Before
     public void before() {
-        compilationHelper = CompilationTestHelper.newInstance(PreconditionsConstantMessage.class, getClass());
+        compilationHelper = CompilationTestHelper.newInstance(LogSafePreconditionsConstantMessage.class, getClass());
     }
 
     @Override
@@ -37,13 +37,15 @@ public final class PreconditionsConstantMessageTests extends PreconditionsTests 
     @Test
     public void positive() throws Exception {
         String diagnostic = "non-constant message";
-        failGuava(diagnostic, "Preconditions.checkArgument(param != \"string\", \"constant\" + param);");
-        failGuava(diagnostic, "Preconditions.checkState(param != \"string\", \"constant\" + param);");
-        failGuava(diagnostic, "Preconditions.checkNotNull(param, \"constant\" + param);");
 
-        failGuava(diagnostic,
+        failLogSafe(diagnostic, "Preconditions.checkArgument(param != \"string\", \"constant\" + param);");
+        failLogSafe(diagnostic, "Preconditions.checkState(param != \"string\", \"constant\" + param);");
+        failLogSafe(diagnostic, "Preconditions.checkNotNull(param, \"constant\" + param);");
+
+        failLogSafe(diagnostic,
                 "Preconditions.checkArgument(param != \"string\", String.format(\"constant %s\", param));");
-        failGuava(diagnostic, "Preconditions.checkState(param != \"string\", String.format(\"constant %s\", param));");
-        failGuava(diagnostic, "Preconditions.checkNotNull(param, String.format(\"constant %s\", param));");
+        failLogSafe(diagnostic,
+                "Preconditions.checkState(param != \"string\", String.format(\"constant %s\", param));");
+        failLogSafe(diagnostic, "Preconditions.checkNotNull(param, String.format(\"constant %s\", param));");
     }
 }

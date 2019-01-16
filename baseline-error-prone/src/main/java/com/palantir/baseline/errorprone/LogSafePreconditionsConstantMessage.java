@@ -1,5 +1,5 @@
 /*
- * (c) Copyright 2017 Palantir Technologies Inc. All rights reserved.
+ * (c) Copyright 2019 Palantir Technologies Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,18 +34,19 @@ import java.util.regex.Pattern;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "PreconditionsConstantMessage",
+        name = "LogSafePreconditionsConstantMessage",
         category = Category.ONE_OFF,
         severity = SeverityLevel.ERROR,
-        summary = "Allow only constant messages to Preconditions.checkX() methods")
-public final class PreconditionsConstantMessage extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
+        summary = "Allow only constant messages to logsafe Preconditions.checkX() methods")
+public final class LogSafePreconditionsConstantMessage
+        extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
 
     private static final Matcher<ExpressionTree> PRECONDITIONS_METHOD =
             Matchers.anyOf(
                     MethodMatchers.staticMethod()
-                            .onClassAny("com.google.common.base.Preconditions")
+                            .onClassAny("com.palantir.logsafe.Preconditions")
                             .withNameMatching(Pattern.compile("checkArgument|checkState|checkNotNull")));
 
     private final Matcher<ExpressionTree> compileTimeConstExpressionMatcher =
@@ -70,6 +71,6 @@ public final class PreconditionsConstantMessage extends BugChecker implements Bu
 
         return buildDescription(tree).setMessage(
                 "Preconditions.checkX() statement uses a non-constant message. "
-                        + "Consider using a template string with '%s'.").build();
+                        + "Dynamic components are required to be wrapped with either SafeArg or UnsafeArg.").build();
     }
 }
