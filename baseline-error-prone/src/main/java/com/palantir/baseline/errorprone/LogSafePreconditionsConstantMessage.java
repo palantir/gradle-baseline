@@ -46,7 +46,7 @@ public final class LogSafePreconditionsConstantMessage
     private static final Matcher<ExpressionTree> PRECONDITIONS_METHOD =
             Matchers.anyOf(
                     MethodMatchers.staticMethod()
-                            .onClassAny("com.palantir.logsafe.Preconditions")
+                            .onClass("com.palantir.logsafe.Preconditions")
                             .withNameMatching(Pattern.compile("checkArgument|checkState|checkNotNull")));
 
     private final Matcher<ExpressionTree> compileTimeConstExpressionMatcher =
