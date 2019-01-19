@@ -22,7 +22,6 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
-import spock.lang.Unroll
 
 class BaselineVersionsIntegrationTest extends AbstractPluginTest {
 
@@ -251,21 +250,14 @@ class BaselineVersionsIntegrationTest extends AbstractPluginTest {
         file('versions.props').text.trim() == "org.slf4j:* = 1.7.20"
     }
 
-    @Unroll
-    def 'Unused version should fail when core bom support = #coreBomSupport'() {
+    def 'Unused version should fail'() {
         when:
         setupVersionsProps("notused:atall = 42.42")
         buildFile << standardBuildFile(projectDir)
-        if (coreBomSupport) {
-            file('gradle.properties') << 'systemProp.nebula.features.coreBomSupport = true'
-        }
 
         then:
         buildAndFailWith("There are unused pins in your versions.props")
         buildWithFixWorks()
-
-        where:
-        coreBomSupport << [false, true]
     }
 
     def 'recommending bom version shouldn\'t fail even if bom recommends itself'() {
