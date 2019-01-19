@@ -229,23 +229,19 @@ dependencyRecommendations {
 Adds the following tasks:
 
 - `checkVersionsProps` - A catch-all task to lint your versions.props file.
-- `checkBomConflict`<sup>†</sup> - Ensures your versions.props pins don't force the same version that is already recommended by a BOM.
+- `checkBomConflict` - Ensures your versions.props pins don't force the same version that is already recommended by a BOM.
 - `checkNoUnusedPin` - Ensures all versions in your versions.props correspond to an actual gradle dependency.
 
 Run `./gradlew checkVersionsProps --fix` to solve the problems flagged by the above tasks.
 
-<small>_† `checkBomConflict` only exists if `nebula.dependency-recommender` wasn't disabled; please see below_</small> 
+### Turning it off
 
-### Configuration
-
-You can disable `nebula.dependency-recommender` by setting the following project property in `gradle.properties`:
+When using the `com.palantir.baseline` plugin, you can disable just `com.palantir.baseline-versions` without having to stop applying the main plugin. To do this, set the following project property in `gradle.properties`:
 ```diff
-+com.palantir.baseline-versions.disable-nebula
++com.palantir.baseline-versions.disable
 ```
 
-This is a temporary solution, intended to facilitate a move towards managing versions using [gradle constraints](https://docs.gradle.org/current/userguide/managing_transitive_dependencies.html#sec:dependency_constraints), which are safer.
-
-In that mode, `versions.props` is still considered the source for your versions, and consequently the plugin still offers some of the linting tasks, but you are responsible for configuring version constraints based on the contents of `versions.props` (via some other plugin).
+This is intended to facilitate a move towards managing versions using [gradle constraints](https://docs.gradle.org/current/userguide/managing_transitive_dependencies.html#sec:dependency_constraints), which are safer.
 
 ### Troubleshooting
 

@@ -68,38 +68,23 @@ public final class BaselineVersions implements Plugin<Project> {
      * {@code versions.props} anymore.
      */
     public static final boolean IS_CORE_BOM_ENABLED = Boolean.getBoolean("nebula.features.coreBomSupport");
-    public static final String DISABLE_NEBULA_PROPERTY = "com.palantir.baseline-versions.disable-nebula";
+    public static final String DISABLE_PROPERTY = "com.palantir.baseline-versions.disable";
 
     @Override
     public void apply(Project project) {
 
-        boolean disableNebula = project.hasProperty(DISABLE_NEBULA_PROPERTY);
-
-        // Preserve previous behaviour that whether or not 'core bom support' is enabled, we still apply the nebula
-        // .dependency-recommender plugin.
-        if (!disableNebula) {
-            // apply plugin: "nebula.dependency-recommender"
-            project.getPluginManager().apply(DependencyRecommendationsPlugin.class);
+        if (project.hasProperty(DISABLE_PROPERTY)) {
+            log.info("Not configuring com.palantir.baseline-versions because " + DISABLE_PROPERTY + " was set");
+            return;
         }
+        // apply plugin: "nebula.dependency-recommender"
+        project.getPluginManager().apply(DependencyRecommendationsPlugin.class);
 
-        File rootVersionsPropsFile = rootVersionsPropsFile(project);
-
-        boolean doNotConfigureNebula = disableNebula || IS_CORE_BOM_ENABLED;
-        if (doNotConfigureNebula) {
-            log.info("Not configuring nebula.dependency-recommender because coreBomSupport is enabled or "
-                    + DISABLE_NEBULA_PROPERTY + " was defined");
-        } else {
-            configureNebulaDependencyRecommender(project, rootVersionsPropsFile);
-        }
-
-        if (project != project.getRootProject()) {
+        if (IS_CORE_BOM_ENABLED) {
+            log.info("Not configuring nebula.dependency-recommender because coreBomSupport is enabled");
             return;
         }
 
-        configureRootProject(project, rootVersionsPropsFile, doNotConfigureNebula);
-    }
-
-    private static void configureNebulaDependencyRecommender(Project project, File rootVersionsPropsFile) {
         // get dependencyRecommendations extension
         RecommendationProviderContainer extension = project
                 .getExtensions()
@@ -107,6 +92,7 @@ public final class BaselineVersions implements Plugin<Project> {
 
         extension.setStrategy(RecommendationStrategies.OverrideTransitives); // default is 'ConflictResolved'
 
+        File rootVersionsPropsFile = rootVersionsPropsFile(project);
         extension.propertiesFile(ImmutableMap.of("file", rootVersionsPropsFile));
 
         if (project != project.getRootProject()) {
@@ -114,39 +100,24 @@ public final class BaselineVersions implements Plugin<Project> {
             if (project.file("versions.props").exists()) {
                 extension.propertiesFile(ImmutableMap.of("file", project.file("versions.props")));
             }
-        }
-    }
+        } else {
+            TaskProvider<CheckBomConflictTask> checkBomConflict = project.getTasks().register(
+                    "checkBomConflict", CheckBomConflictTask.class, task -> task.setPropsFile(rootVersionsPropsFile));
+            TaskProvider<CheckNoUnusedPinTask> checkNoUnusedPin = project.getTasks().register(
+                    "checkNoUnusedPin", CheckNoUnusedPinTask.class, task -> task.setPropsFile(rootVersionsPropsFile));
 
-    private static void configureRootProject(
-            Project rootProject, File rootVersionsPropsFile, boolean doNotConfigureNebula) {
-        TaskProvider<CheckNoUnusedPinTask> checkNoUnusedPin = rootProject.getTasks().register(
-                "checkNoUnusedPin", CheckNoUnusedPinTask.class, task -> task.setPropsFile(rootVersionsPropsFile));
-        TaskProvider<CheckVersionsPropsTask> checkVersionsPropsTask =
-                rootProject.getTasks().register("checkVersionsProps", CheckVersionsPropsTask.class, task -> {
-                    task.dependsOn(checkNoUnusedPin);
-                    // If we just run checkVersionsProps --fix, we want to propagate its option to its dependent tasks
-                    checkNoUnusedPin.get().setShouldFix(task.getShouldFix());
-                });
-
-        rootProject.getPluginManager().apply(BasePlugin.class);
-        rootProject.getTasks().named("check").configure(task -> task.dependsOn(checkVersionsPropsTask));
-
-        // If nebula is allowed, register the checkBomConflict task which requires it
-        if (!doNotConfigureNebula) {
-            TaskProvider<CheckBomConflictTask> checkBomConflict = rootProject
-                    .getTasks()
-                    .register("checkBomConflict",
-                            CheckBomConflictTask.class,
-                            task -> task.setPropsFile(rootVersionsPropsFile));
-
-            checkVersionsPropsTask.configure(task -> {
-                task.dependsOn(checkBomConflict);
+            project.getTasks().register("checkVersionsProps", CheckVersionsPropsTask.class, task -> {
+                task.dependsOn(checkBomConflict, checkNoUnusedPin);
                 // If we just run checkVersionsProps --fix, we want to propagate its option to its dependent tasks
                 checkBomConflict.get().setShouldFix(task.getShouldFix());
+                checkNoUnusedPin.get().setShouldFix(task.getShouldFix());
             });
             // If we run with --parallel --fix, both checkNoUnusedPin and checkBomConflict will try to overwrite the
             // versions file at the same time. Therefore, make sure checkBomConflict runs first.
             checkNoUnusedPin.configure(task -> task.mustRunAfter(checkBomConflict));
+
+            project.getPluginManager().apply(BasePlugin.class);
+            project.getTasks().named("check").configure(task -> task.dependsOn("checkVersionsProps"));
         }
     }
 
