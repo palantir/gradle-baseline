@@ -73,58 +73,67 @@ public final class BaselineVersions implements Plugin<Project> {
     @Override
     public void apply(Project project) {
 
-        boolean disableNebula =
-                project.hasProperty(DISABLE_NEBULA_PROPERTY) || IS_CORE_BOM_ENABLED;
+        boolean disableNebula = project.hasProperty(DISABLE_NEBULA_PROPERTY);
 
         // Preserve previous behaviour that whether or not 'core bom support' is enabled, we still apply the nebula
         // .dependency-recommender plugin.
-        if (!project.hasProperty(DISABLE_NEBULA_PROPERTY)) {
+        if (!disableNebula) {
             // apply plugin: "nebula.dependency-recommender"
             project.getPluginManager().apply(DependencyRecommendationsPlugin.class);
         }
 
         File rootVersionsPropsFile = rootVersionsPropsFile(project);
 
-        if (disableNebula) {
+        boolean doNotConfigureNebula = disableNebula || IS_CORE_BOM_ENABLED;
+        if (doNotConfigureNebula) {
             log.info("Not configuring nebula.dependency-recommender because coreBomSupport is enabled or "
                     + DISABLE_NEBULA_PROPERTY + " was defined");
         } else {
-            // get dependencyRecommendations extension
-            RecommendationProviderContainer extension = project
-                    .getExtensions()
-                    .getByType(RecommendationProviderContainer.class);
-
-            extension.setStrategy(RecommendationStrategies.OverrideTransitives); // default is 'ConflictResolved'
-
-            extension.propertiesFile(ImmutableMap.of("file", rootVersionsPropsFile));
-
-            if (project != project.getRootProject()) {
-                // allow nested projects to specify their own nested versions.props file
-                if (project.file("versions.props").exists()) {
-                    extension.propertiesFile(ImmutableMap.of("file", project.file("versions.props")));
-                }
-            }
+            configureNebulaDependencyRecommender(project, rootVersionsPropsFile);
         }
 
         if (project != project.getRootProject()) {
             return;
         }
 
-        TaskProvider<CheckNoUnusedPinTask> checkNoUnusedPin = project.getTasks().register(
+        configureRootProject(project, rootVersionsPropsFile, doNotConfigureNebula);
+    }
+
+    private static void configureNebulaDependencyRecommender(Project project, File rootVersionsPropsFile) {
+        // get dependencyRecommendations extension
+        RecommendationProviderContainer extension = project
+                .getExtensions()
+                .getByType(RecommendationProviderContainer.class);
+
+        extension.setStrategy(RecommendationStrategies.OverrideTransitives); // default is 'ConflictResolved'
+
+        extension.propertiesFile(ImmutableMap.of("file", rootVersionsPropsFile));
+
+        if (project != project.getRootProject()) {
+            // allow nested projects to specify their own nested versions.props file
+            if (project.file("versions.props").exists()) {
+                extension.propertiesFile(ImmutableMap.of("file", project.file("versions.props")));
+            }
+        }
+    }
+
+    private static void configureRootProject(
+            Project rootProject, File rootVersionsPropsFile, boolean doNotConfigureNebula) {
+        TaskProvider<CheckNoUnusedPinTask> checkNoUnusedPin = rootProject.getTasks().register(
                 "checkNoUnusedPin", CheckNoUnusedPinTask.class, task -> task.setPropsFile(rootVersionsPropsFile));
         TaskProvider<CheckVersionsPropsTask> checkVersionsPropsTask =
-                project.getTasks().register("checkVersionsProps", CheckVersionsPropsTask.class, task -> {
+                rootProject.getTasks().register("checkVersionsProps", CheckVersionsPropsTask.class, task -> {
                     task.dependsOn(checkNoUnusedPin);
                     // If we just run checkVersionsProps --fix, we want to propagate its option to its dependent tasks
                     checkNoUnusedPin.get().setShouldFix(task.getShouldFix());
                 });
 
-        project.getPluginManager().apply(BasePlugin.class);
-        project.getTasks().named("check").configure(task -> task.dependsOn(checkVersionsPropsTask));
+        rootProject.getPluginManager().apply(BasePlugin.class);
+        rootProject.getTasks().named("check").configure(task -> task.dependsOn(checkVersionsPropsTask));
 
         // If nebula is allowed, register the checkBomConflict task which requires it
-        if (!disableNebula) {
-            TaskProvider<CheckBomConflictTask> checkBomConflict = project
+        if (!doNotConfigureNebula) {
+            TaskProvider<CheckBomConflictTask> checkBomConflict = rootProject
                     .getTasks()
                     .register("checkBomConflict",
                             CheckBomConflictTask.class,
