@@ -62,14 +62,25 @@ public final class BaselineVersions implements Plugin<Project> {
 
     private static final Logger log = Logging.getLogger(BaselineVersions.class);
     static final String GROUP = "com.palantir.baseline-versions";
+    /**
+     * System property which, when true, instructs {@code nebula.dependency-recommender} to only support sourcing
+     * constraints from a BOM. In that case, nebula doesn't support sourcing recommendations from
+     * {@code versions.props} anymore.
+     */
+    public static final boolean IS_CORE_BOM_ENABLED = Boolean.getBoolean("nebula.features.coreBomSupport");
+    public static final String DISABLE_PROPERTY = "com.palantir.baseline-versions.disable";
 
     @Override
     public void apply(Project project) {
 
+        if (project.hasProperty(DISABLE_PROPERTY)) {
+            log.info("Not configuring com.palantir.baseline-versions because " + DISABLE_PROPERTY + " was set");
+            return;
+        }
         // apply plugin: "nebula.dependency-recommender"
         project.getPluginManager().apply(DependencyRecommendationsPlugin.class);
 
-        if (Boolean.getBoolean("nebula.features.coreBomSupport")) {
+        if (IS_CORE_BOM_ENABLED) {
             log.info("Not configuring nebula.dependency-recommender because coreBomSupport is enabled");
             return;
         }

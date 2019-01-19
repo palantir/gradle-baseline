@@ -234,6 +234,15 @@ Adds the following tasks:
 
 Run `./gradlew checkVersionsProps --fix` to solve the problems flagged by the above tasks.
 
+### Turning it off
+
+When using the `com.palantir.baseline` plugin, you can disable just `com.palantir.baseline-versions` without having to stop applying the main plugin. To do this, set the following project property in `gradle.properties`:
+```diff
++com.palantir.baseline-versions.disable = true
+```
+
+This is intended to facilitate a move towards managing versions using [gradle constraints](https://docs.gradle.org/current/userguide/managing_transitive_dependencies.html#sec:dependency_constraints), which are safer.
+
 ### Troubleshooting
 
 If you declare a force in `versions.props` that you don't depend on, but query in your repo, such as:
