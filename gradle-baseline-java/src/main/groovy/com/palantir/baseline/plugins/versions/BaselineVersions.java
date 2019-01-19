@@ -62,51 +62,82 @@ public final class BaselineVersions implements Plugin<Project> {
 
     private static final Logger log = Logging.getLogger(BaselineVersions.class);
     static final String GROUP = "com.palantir.baseline-versions";
+    /**
+     * System property which, when true, instructs {@code nebula.dependency-recommender} to only support sourcing
+     * constraints from a BOM. In that case, nebula doesn't support sourcing recommendations from
+     * {@code versions.props} anymore.
+     */
+    public static final boolean IS_CORE_BOM_ENABLED = Boolean.getBoolean("nebula.features.coreBomSupport");
+    public static final String DISABLE_NEBULA_PROPERTY = "com.palantir.baseline-versions.disable-nebula";
 
     @Override
     public void apply(Project project) {
 
-        // apply plugin: "nebula.dependency-recommender"
-        project.getPluginManager().apply(DependencyRecommendationsPlugin.class);
+        boolean disableNebula =
+                project.hasProperty(DISABLE_NEBULA_PROPERTY) || IS_CORE_BOM_ENABLED;
 
-        if (Boolean.getBoolean("nebula.features.coreBomSupport")) {
-            log.info("Not configuring nebula.dependency-recommender because coreBomSupport is enabled");
+        // Preserve previous behaviour that whether or not 'core bom support' is enabled, we still apply the nebula
+        // .dependency-recommender plugin.
+        if (!project.hasProperty(DISABLE_NEBULA_PROPERTY)) {
+            // apply plugin: "nebula.dependency-recommender"
+            project.getPluginManager().apply(DependencyRecommendationsPlugin.class);
+        }
+
+        File rootVersionsPropsFile = rootVersionsPropsFile(project);
+
+        if (disableNebula) {
+            log.info("Not configuring nebula.dependency-recommender because coreBomSupport is enabled or "
+                    + DISABLE_NEBULA_PROPERTY + " was defined");
+        } else {
+            // get dependencyRecommendations extension
+            RecommendationProviderContainer extension = project
+                    .getExtensions()
+                    .getByType(RecommendationProviderContainer.class);
+
+            extension.setStrategy(RecommendationStrategies.OverrideTransitives); // default is 'ConflictResolved'
+
+            extension.propertiesFile(ImmutableMap.of("file", rootVersionsPropsFile));
+
+            if (project != project.getRootProject()) {
+                // allow nested projects to specify their own nested versions.props file
+                if (project.file("versions.props").exists()) {
+                    extension.propertiesFile(ImmutableMap.of("file", project.file("versions.props")));
+                }
+            }
+        }
+
+        if (project != project.getRootProject()) {
             return;
         }
 
-        // get dependencyRecommendations extension
-        RecommendationProviderContainer extension = project
-                .getExtensions()
-                .getByType(RecommendationProviderContainer.class);
+        TaskProvider<CheckNoUnusedPinTask> checkNoUnusedPin = project.getTasks().register(
+                "checkNoUnusedPin", CheckNoUnusedPinTask.class, task -> task.setPropsFile(rootVersionsPropsFile));
+        TaskProvider<CheckVersionsPropsTask> checkVersionsPropsTask =
+                project.getTasks().register("checkVersionsProps", CheckVersionsPropsTask.class, task -> {
+                    task.dependsOn(checkNoUnusedPin);
+                    // If we just run checkVersionsProps --fix, we want to propagate its option to its dependent tasks
+                    checkNoUnusedPin.get().setShouldFix(task.getShouldFix());
+                });
 
-        extension.setStrategy(RecommendationStrategies.OverrideTransitives); // default is 'ConflictResolved'
+        project.getPluginManager().apply(BasePlugin.class);
+        project.getTasks().named("check").configure(task -> task.dependsOn(checkVersionsPropsTask));
 
-        File rootVersionsPropsFile = rootVersionsPropsFile(project);
-        extension.propertiesFile(ImmutableMap.of("file", rootVersionsPropsFile));
+        // If nebula is allowed, register the checkBomConflict task which requires it
+        if (!disableNebula) {
+            TaskProvider<CheckBomConflictTask> checkBomConflict = project
+                    .getTasks()
+                    .register("checkBomConflict",
+                            CheckBomConflictTask.class,
+                            task -> task.setPropsFile(rootVersionsPropsFile));
 
-        if (project != project.getRootProject()) {
-            // allow nested projects to specify their own nested versions.props file
-            if (project.file("versions.props").exists()) {
-                extension.propertiesFile(ImmutableMap.of("file", project.file("versions.props")));
-            }
-        } else {
-            TaskProvider<CheckBomConflictTask> checkBomConflict = project.getTasks().register(
-                    "checkBomConflict", CheckBomConflictTask.class, task -> task.setPropsFile(rootVersionsPropsFile));
-            TaskProvider<CheckNoUnusedPinTask> checkNoUnusedPin = project.getTasks().register(
-                    "checkNoUnusedPin", CheckNoUnusedPinTask.class, task -> task.setPropsFile(rootVersionsPropsFile));
-
-            project.getTasks().register("checkVersionsProps", CheckVersionsPropsTask.class, task -> {
-                task.dependsOn(checkBomConflict, checkNoUnusedPin);
+            checkVersionsPropsTask.configure(task -> {
+                task.dependsOn(checkBomConflict);
                 // If we just run checkVersionsProps --fix, we want to propagate its option to its dependent tasks
                 checkBomConflict.get().setShouldFix(task.getShouldFix());
-                checkNoUnusedPin.get().setShouldFix(task.getShouldFix());
             });
             // If we run with --parallel --fix, both checkNoUnusedPin and checkBomConflict will try to overwrite the
             // versions file at the same time. Therefore, make sure checkBomConflict runs first.
             checkNoUnusedPin.configure(task -> task.mustRunAfter(checkBomConflict));
-
-            project.getPluginManager().apply(BasePlugin.class);
-            project.getTasks().named("check").configure(task -> task.dependsOn("checkVersionsProps"));
         }
     }
 
