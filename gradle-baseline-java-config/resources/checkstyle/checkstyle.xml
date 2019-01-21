@@ -132,6 +132,7 @@
             <message key="import.illegal" value="Must not import repackaged classes."/>
         </module>
         <module name="IllegalImport"> <!-- Java Coding Guidelines: Import the canonical package -->
+            <property name="id" value="BanShadedClasses"/>
             <property name="illegalPkgs" value=".*\.(repackaged|shaded|thirdparty)"/>
             <property name="regexp" value="true" />
             <message key="import.illegal" value="Must not import repackaged classes."/>
