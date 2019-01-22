@@ -65,6 +65,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
                                 .configure(ErrorProneOptions.class, errorProneOptions -> {
                                     errorProneOptions.check("Slf4jLogsafeArgs", CheckSeverity.OFF);
                                     errorProneOptions.check("PreferSafeLoggableExceptions", CheckSeverity.OFF);
+                                    errorProneOptions.check("PreferSafeLoggingPreconditions", CheckSeverity.OFF);
                                 }));
             });
 
