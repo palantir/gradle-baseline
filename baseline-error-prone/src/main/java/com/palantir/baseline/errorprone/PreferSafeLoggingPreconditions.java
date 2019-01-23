@@ -57,7 +57,7 @@ public final class PreferSafeLoggingPreconditions extends BugChecker implements 
                             .withNameMatching(Pattern.compile("checkArgument|checkState|checkNotNull")),
                     MethodMatchers.staticMethod()
                             .onClass("java.util.Objects")
-                            .withNameMatching(Pattern.compile("requireNonNull")));
+                            .named("requireNonNull"));
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
@@ -99,6 +99,7 @@ public final class PreferSafeLoggingPreconditions extends BugChecker implements 
 
     private static String getLogSafeMethodName(MethodSymbol methodSymbol) {
         String name = methodSymbol.name.toString();
+        // Check to handle the java.util.Objects.requireNonNull case
         if (name.equals("requireNonNull")) {
             return "checkNotNull";
         }
