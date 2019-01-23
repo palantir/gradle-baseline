@@ -25,10 +25,12 @@ import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.CompileTimeConstantExpressionMatcher;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
+import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
+import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -48,17 +50,14 @@ public final class PreferSafeLoggingPreconditions extends BugChecker implements 
     private final Matcher<ExpressionTree> compileTimeConstExpressionMatcher =
             new CompileTimeConstantExpressionMatcher();
 
-    private static final String LOGSAFE_NAME = "com.palantir.logsafe.Preconditions";
-    private static final Matcher<ExpressionTree> PRECONDITIONS_MATCHER = MethodMatchers.staticMethod()
-            .onClass("com.google.common.base.Preconditions")
-            .withNameMatching(Pattern.compile("checkArgument|checkState|checkNotNull"));
-    private static final Matcher<ExpressionTree> OBJECTS_MATCHER = MethodMatchers.staticMethod()
-            .onClass("java.util.Objects")
-            .withNameMatching(Pattern.compile("requireNonNull"));
-
-    private static final String DESCRIPTION_MESSAGE =
-            "The call can be replaced with an equivalent one from com.palantir.logsafe.Preconditions for "
-                    + "standardization as the functionality is the same.";
+    private static final Matcher<ExpressionTree> METHOD_MATCHER =
+            Matchers.anyOf(
+                    MethodMatchers.staticMethod()
+                            .onClass("com.google.common.base.Preconditions")
+                            .withNameMatching(Pattern.compile("checkArgument|checkState|checkNotNull")),
+                    MethodMatchers.staticMethod()
+                            .onClass("java.util.Objects")
+                            .withNameMatching(Pattern.compile("requireNonNull")));
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
@@ -66,10 +65,7 @@ public final class PreferSafeLoggingPreconditions extends BugChecker implements 
             return Description.NO_MATCH;
         }
 
-        boolean matchPreconditions = PRECONDITIONS_MATCHER.matches(tree, state);
-        boolean matchObjects = OBJECTS_MATCHER.matches(tree, state);
-
-        if (!matchPreconditions && !matchObjects) {
+        if (!METHOD_MATCHER.matches(tree, state)) {
             return Description.NO_MATCH;
         }
 
@@ -89,17 +85,23 @@ public final class PreferSafeLoggingPreconditions extends BugChecker implements 
             }
         }
 
-        Description.Builder description = buildDescription(tree).setMessage(DESCRIPTION_MESSAGE);
         SuggestedFix.Builder fix = SuggestedFix.builder();
-        String qualifiedClassName = SuggestedFixes.qualifyType(state, fix, LOGSAFE_NAME);
-        if (matchPreconditions) {
-            String replacement = String.format("%s.%s", qualifiedClassName, ASTHelpers.getSymbol(tree).name);
-            fix.replace(tree.getMethodSelect(), replacement);
-            return description.addFix(fix.build()).build();
-        } else {
-            String replacement = String.format("%s.%s", qualifiedClassName, "checkNotNull");
-            fix.replace(tree.getMethodSelect(), replacement);
-            return description.addFix(fix.build()).build();
+        String logSafeQualifiedClassName = SuggestedFixes.qualifyType(state, fix, "com.palantir.logsafe.Preconditions");
+        String logSafeMethodName = getLogSafeMethodName(ASTHelpers.getSymbol(tree));
+        String replacement = String.format("%s.%s", logSafeQualifiedClassName, logSafeMethodName);
+
+        return buildDescription(tree)
+                .setMessage("The call can be replaced with an equivalent one from com.palantir.logsafe.Preconditions "
+                        + "for standardization as the functionality is the same.")
+                .addFix(fix.replace(tree.getMethodSelect(), replacement).build())
+                .build();
+    }
+
+    private static String getLogSafeMethodName(MethodSymbol methodSymbol) {
+        String name = methodSymbol.name.toString();
+        if (name.equals("requireNonNull")) {
+            return "checkNotNull";
         }
+        return name;
     }
 }
