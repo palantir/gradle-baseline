@@ -17,6 +17,7 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
+import com.google.common.collect.ImmutableMap;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
@@ -32,6 +33,7 @@ import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 
 @AutoService(BugChecker.class)
@@ -57,7 +59,16 @@ public final class PreferSafeLoggingPreconditions extends BugChecker implements 
                             .withNameMatching(Pattern.compile("checkArgument|checkState|checkNotNull")),
                     MethodMatchers.staticMethod()
                             .onClass("java.util.Objects")
-                            .named("requireNonNull"));
+                            .named("requireNonNull"),
+                    MethodMatchers.staticMethod()
+                            .onClass("org.apache.commons.lang3.Validate")
+                            .withNameMatching(Pattern.compile("isTrue|notNull|validState")));
+
+    private static final Map<String, String> METHOD_TRANSLATIONS = ImmutableMap.of(
+            "requireNonNull", "checkNotNull",
+            "isTrue", "checkArgument",
+            "notNull", "checkNotNull",
+            "validState", "checkState");
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
@@ -99,10 +110,6 @@ public final class PreferSafeLoggingPreconditions extends BugChecker implements 
 
     private static String getLogSafeMethodName(MethodSymbol methodSymbol) {
         String name = methodSymbol.name.toString();
-        // Check to handle the java.util.Objects.requireNonNull case
-        if (name.equals("requireNonNull")) {
-            return "checkNotNull";
-        }
-        return name;
+        return METHOD_TRANSLATIONS.getOrDefault(name, name);
     }
 }
