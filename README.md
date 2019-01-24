@@ -139,6 +139,11 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
     -throw new RuntimeException("explanation", e); // this message will be redacted when logs are collected
     +throw new SafeRuntimeException("explanation", e); // this message will be preserved (allowing easier debugging)
     ```
+- `PreferSafeLoggingPreconditions`: Users should use the safe-logging versions of Precondition checks for standardization when there is equivalent functionality
+    ```diff
+    -com.google.common.base.Preconditions.checkNotNull(variable, "message");
+    +com.palantir.logsafe.Preconditions.checkNotNull(variable, "message"); // equivalent functionality is available in the safe-logging variant
+    ```
 - `ShutdownHook`: Applications should not use `Runtime#addShutdownHook`.
 - `SwitchStatementDefaultCase`: Switch statements should avoid using default cases. Default cases prevent the [MissingCasesInEnumSwitch](http://errorprone.info/bugpattern/MissingCasesInEnumSwitch.html) check from detecting when an enum value is not explicitly handled. This check is important to help avoid incorrect behavior when new enum values are introduced.
 

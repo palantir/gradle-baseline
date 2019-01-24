@@ -18,18 +18,15 @@ package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Streams;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.fixes.SuggestedFix;
 import com.google.errorprone.matchers.CompileTimeConstantExpressionMatcher;
 import com.google.errorprone.matchers.Description;
-import com.google.errorprone.matchers.JUnitMatchers;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.util.ASTHelpers;
-import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.NewClassTree;
 import java.io.IOException;
@@ -53,7 +50,7 @@ public final class PreferSafeLoggableExceptions extends BugChecker implements Bu
 
     @Override
     public Description matchNewClass(NewClassTree tree, VisitorState state) {
-        if (isTestCode(state)) {
+        if (TestCheckUtils.isTestCode(state)) {
             // devs don't have to use log-collection infrastructure in tests, so this would be purely annoying
             return Description.NO_MATCH;
         }
@@ -95,15 +92,4 @@ public final class PreferSafeLoggableExceptions extends BugChecker implements Bu
                 .findAny()
                 .orElse(Description.NO_MATCH);
     }
-
-    private static boolean isTestCode(VisitorState state) {
-        return Streams.stream(state.getPath().iterator())
-                .filter(ancestor -> ancestor instanceof ClassTree)
-                .anyMatch(ancestor -> Matchers
-                        .anyOf(JUnitMatchers.hasJUnit4TestCases, hasJUnit5TestCases)
-                        .matches((ClassTree) ancestor, state));
-    }
-
-    private static final Matcher<ClassTree> hasJUnit5TestCases =
-            Matchers.hasMethod(Matchers.hasAnnotationOnAnyOverriddenMethod("org.junit.jupiter.api.Test"));
 }
