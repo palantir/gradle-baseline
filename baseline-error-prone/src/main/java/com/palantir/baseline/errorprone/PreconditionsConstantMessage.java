@@ -25,7 +25,6 @@ import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.matchers.CompileTimeConstantExpressionMatcher;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
-import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
@@ -43,10 +42,9 @@ public final class PreconditionsConstantMessage extends BugChecker implements Bu
     private static final long serialVersionUID = 1L;
 
     private static final Matcher<ExpressionTree> PRECONDITIONS_METHOD =
-            Matchers.anyOf(
-                    MethodMatchers.staticMethod()
-                            .onClass("com.google.common.base.Preconditions")
-                            .withNameMatching(Pattern.compile("checkArgument|checkState|checkNotNull")));
+            MethodMatchers.staticMethod()
+                    .onClass("com.google.common.base.Preconditions")
+                    .withNameMatching(Pattern.compile("checkArgument|checkState|checkNotNull"));
 
     private final Matcher<ExpressionTree> compileTimeConstExpressionMatcher =
             new CompileTimeConstantExpressionMatcher();

@@ -72,10 +72,6 @@ public final class PreferSafeLoggingPreconditions extends BugChecker implements 
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
-        if (TestCheckUtils.isTestCode(state)) {
-            return Description.NO_MATCH;
-        }
-
         if (!METHOD_MATCHER.matches(tree, state)) {
             return Description.NO_MATCH;
         }
@@ -94,6 +90,10 @@ public final class PreferSafeLoggingPreconditions extends BugChecker implements 
             if (!isStringType || !compileTimeConstExpressionMatcher.matches(messageArg, state)) {
                 return Description.NO_MATCH;
             }
+        }
+
+        if (TestCheckUtils.isTestCode(state)) {
+            return Description.NO_MATCH;
         }
 
         SuggestedFix.Builder fix = SuggestedFix.builder();
