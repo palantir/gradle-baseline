@@ -16,12 +16,13 @@
 
 package com.palantir.baseline.errorprone;
 
-import com.google.common.collect.Streams;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.matchers.JUnitMatchers;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.sun.source.tree.ClassTree;
+import com.sun.source.tree.Tree;
+import com.sun.source.util.TreePath;
 
 final class TestCheckUtils {
 
@@ -29,14 +30,19 @@ final class TestCheckUtils {
         // utility class
     }
 
+    /** Note that this is a relatively expensive check and should be executed after simpler validation. */
     static boolean isTestCode(VisitorState state) {
-        return Streams.stream(state.getPath().iterator())
-                .filter(ancestor -> ancestor instanceof ClassTree)
-                .anyMatch(ancestor -> Matchers
-                        .anyOf(JUnitMatchers.hasJUnit4TestCases, hasJUnit5TestCases)
-                        .matches((ClassTree) ancestor, state));
+        TreePath path = state.getPath();
+        for (Tree ancestor : path) {
+            if (ancestor instanceof ClassTree && hasTestCases.matches((ClassTree) ancestor, state)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static final Matcher<ClassTree> hasJUnit5TestCases =
             Matchers.hasMethod(Matchers.hasAnnotationOnAnyOverriddenMethod("org.junit.jupiter.api.Test"));
+    private static final Matcher<ClassTree> hasTestCases = Matchers
+            .anyOf(JUnitMatchers.hasJUnit4TestCases, hasJUnit5TestCases);
 }

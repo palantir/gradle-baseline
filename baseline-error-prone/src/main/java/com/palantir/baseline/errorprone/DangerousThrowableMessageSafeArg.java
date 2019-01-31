@@ -25,7 +25,6 @@ import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
-import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
@@ -44,17 +43,13 @@ public final class DangerousThrowableMessageSafeArg extends BugChecker
 
     private static final long serialVersionUID = 1L;
 
-    private static final Matcher<ExpressionTree> SAFEARG_FACTORY_METHOD =
-            Matchers.anyOf(
-                    MethodMatchers.staticMethod()
-                            .onClass("com.palantir.logsafe.SafeArg")
-                            .named("of"));
+    private static final Matcher<ExpressionTree> SAFEARG_FACTORY_METHOD = MethodMatchers.staticMethod()
+            .onClass("com.palantir.logsafe.SafeArg")
+            .named("of");
 
-    private static final Matcher<ExpressionTree> THROWABLE_MESSAGE_METHOD =
-            Matchers.anyOf(
-                    MethodMatchers.instanceMethod()
-                            .onDescendantOf(Throwable.class.getName())
-                            .named("getMessage"));
+    private static final Matcher<ExpressionTree> THROWABLE_MESSAGE_METHOD = MethodMatchers.instanceMethod()
+            .onDescendantOf(Throwable.class.getName())
+            .named("getMessage");
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {

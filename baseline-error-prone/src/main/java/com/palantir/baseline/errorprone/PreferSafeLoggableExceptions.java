@@ -31,8 +31,8 @@ import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.NewClassTree;
 import java.io.IOException;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -45,16 +45,28 @@ import java.util.Optional;
 public final class PreferSafeLoggableExceptions extends BugChecker implements BugChecker.NewClassTreeMatcher {
 
     private static final long serialVersionUID = 1L;
+
+    // github.com/palantir/safe-logging/tree/develop/preconditions/src/main/java/com/palantir/logsafe/exceptions
+    private static final ImmutableMap<Class<?>, String> EXCEPTION_MAPPINGS = ImmutableMap.of(
+            IllegalArgumentException.class, "SafeIllegalArgumentException",
+            IllegalStateException.class, "SafeIllegalStateException",
+            IOException.class, "SafeIoException",
+            NullPointerException.class, "SafeNullPointerException",
+            RuntimeException.class, "SafeRuntimeException");
+
+    private static final Matcher<ExpressionTree> FAST_EXCEPTION_TYPE_CHECK = Matchers.anyOf(
+            EXCEPTION_MAPPINGS.keySet().stream().map(Matchers::isSameType).collect(Collectors.toList()));
+
     private final Matcher<ExpressionTree> compileTimeConstExpressionMatcher =
             new CompileTimeConstantExpressionMatcher();
 
     @Override
     public Description matchNewClass(NewClassTree tree, VisitorState state) {
-        if (TestCheckUtils.isTestCode(state)) {
-            // devs don't have to use log-collection infrastructure in tests, so this would be purely annoying
+        // This is invoked for all new class creations, so we execute a fast check first to
+        // rule out irrelevant code before doing more involved work.
+        if (!FAST_EXCEPTION_TYPE_CHECK.matches(tree.getIdentifier(), state)) {
             return Description.NO_MATCH;
         }
-
         List<? extends ExpressionTree> args = tree.getArguments();
         Optional<? extends ExpressionTree> messageArg = args.stream()
                 .filter(arg -> ASTHelpers.isSameType(
@@ -72,15 +84,12 @@ public final class PreferSafeLoggableExceptions extends BugChecker implements Bu
             return Description.NO_MATCH;
         }
 
-        // github.com/palantir/safe-logging/tree/develop/preconditions/src/main/java/com/palantir/logsafe/exceptions
-        Map<Class<?>, String> map = ImmutableMap.of(
-                IllegalArgumentException.class, "SafeIllegalArgumentException",
-                IllegalStateException.class, "SafeIllegalStateException",
-                IOException.class, "SafeIoException",
-                NullPointerException.class, "SafeNullPointerException",
-                RuntimeException.class, "SafeRuntimeException");
+        if (TestCheckUtils.isTestCode(state)) {
+            // devs don't have to use log-collection infrastructure in tests, so this would be purely annoying
+            return Description.NO_MATCH;
+        }
 
-        return map.entrySet().stream()
+        return EXCEPTION_MAPPINGS.entrySet().stream()
                 .filter(entry -> Matchers.isSameType(entry.getKey()).matches(tree.getIdentifier(), state))
                 .map(entry -> buildDescription(tree)
                         .setMessage("Prefer " + entry.getValue() + " from com.palantir.safe-logging:preconditions")
@@ -90,6 +99,6 @@ public final class PreferSafeLoggableExceptions extends BugChecker implements Bu
                                 .build())
                         .build())
                 .findAny()
-                .orElse(Description.NO_MATCH);
+                .orElseThrow(() -> new IllegalStateException("Expected to match a known replaceable exception type"));
     }
 }

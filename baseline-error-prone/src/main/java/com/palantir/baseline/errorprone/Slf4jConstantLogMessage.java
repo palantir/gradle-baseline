@@ -26,7 +26,6 @@ import com.google.errorprone.bugpatterns.BugChecker.MethodInvocationTreeMatcher;
 import com.google.errorprone.matchers.CompileTimeConstantExpressionMatcher;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
-import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
@@ -46,11 +45,9 @@ public final class Slf4jConstantLogMessage extends BugChecker implements MethodI
 
     private static final long serialVersionUID = 1L;
 
-    private static final Matcher<ExpressionTree> LOG_METHOD =
-            Matchers.anyOf(
-                    MethodMatchers.instanceMethod()
-                            .onDescendantOf("org.slf4j.Logger")
-                            .withNameMatching(Pattern.compile("trace|debug|info|warn|error")));
+    private static final Matcher<ExpressionTree> LOG_METHOD = MethodMatchers.instanceMethod()
+            .onDescendantOf("org.slf4j.Logger")
+            .withNameMatching(Pattern.compile("trace|debug|info|warn|error"));
 
     private final Matcher<ExpressionTree> compileTimeConstExpressionMatcher =
             new CompileTimeConstantExpressionMatcher();

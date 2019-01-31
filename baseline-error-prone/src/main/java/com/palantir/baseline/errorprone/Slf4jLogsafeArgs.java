@@ -26,7 +26,6 @@ import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.bugpatterns.BugChecker.MethodInvocationTreeMatcher;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
-import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
@@ -46,11 +45,9 @@ public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocati
 
     private static final long serialVersionUID = 1L;
 
-    private static final Matcher<ExpressionTree> LOG_METHOD =
-            Matchers.anyOf(
-                    MethodMatchers.instanceMethod()
-                            .onDescendantOf("org.slf4j.Logger")
-                            .withNameMatching(Pattern.compile("trace|debug|info|warn|error")));
+    private static final Matcher<ExpressionTree> LOG_METHOD = MethodMatchers.instanceMethod()
+            .onDescendantOf("org.slf4j.Logger")
+            .withNameMatching(Pattern.compile("trace|debug|info|warn|error"));
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
