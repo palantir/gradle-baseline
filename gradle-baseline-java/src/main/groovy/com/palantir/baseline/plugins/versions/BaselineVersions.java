@@ -16,10 +16,13 @@
 
 package com.palantir.baseline.plugins.versions;
 
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Streams;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.Comparator;
 import java.util.Set;
 import java.util.stream.Collectors;
 import netflix.nebula.dependency.recommender.DependencyRecommendationsPlugin;
@@ -161,5 +164,27 @@ public final class BaselineVersions implements Plugin<Project> {
                     }
                 })
                 .collect(Collectors.toSet());
+    }
+
+    /**
+     * Compares {@code versions.props} matchers by weight. Higher weight means the matcher is more specific.
+     * For example,
+     * <pre>
+     *     com.google.guava:guava
+     * </pre>
+     * is more specific than
+     * <pre>
+     *     com.google.guava:*
+     * </pre>
+     */
+    static final Comparator<String> VERSIONS_PROPS_ENTRY_SPECIFIC_COMPARATOR =
+            Comparator.comparing(BaselineVersions::versionsPropsMatcherWeight);
+
+    /**
+     * The weight of a matcher in {@code versions.props} according to the disambiguation logic defined in
+     * {@code nebula.dependency-recommender}.
+     */
+    private static int versionsPropsMatcherWeight(String propertiesLine) {
+        return Streams.stream(Splitter.on("*").split(propertiesLine)).mapToInt(String::length).sum();
     }
 }
