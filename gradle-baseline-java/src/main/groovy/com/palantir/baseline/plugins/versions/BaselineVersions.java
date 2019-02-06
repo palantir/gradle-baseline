@@ -27,6 +27,7 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import netflix.nebula.dependency.recommender.DependencyRecommendationsPlugin;
 import netflix.nebula.dependency.recommender.RecommendationStrategies;
+import netflix.nebula.dependency.recommender.provider.FuzzyVersionResolver;
 import netflix.nebula.dependency.recommender.provider.RecommendationProviderContainer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -183,6 +184,8 @@ public final class BaselineVersions implements Plugin<Project> {
     /**
      * The weight of a matcher in {@code versions.props} according to the disambiguation logic defined in
      * {@code nebula.dependency-recommender}.
+     *
+     * This matches the logic in {@link FuzzyVersionResolver}.
      */
     private static int versionsPropsMatcherWeight(String propertiesLine) {
         return Streams.stream(Splitter.on("*").split(propertiesLine)).mapToInt(String::length).sum();
