@@ -24,6 +24,7 @@ import java.io.File;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BinaryOperator;
 import java.util.stream.Collectors;
 import netflix.nebula.dependency.recommender.DependencyRecommendationsPlugin;
 import netflix.nebula.dependency.recommender.provider.RecommendationProviderContainer;
@@ -121,11 +122,11 @@ public class CheckBomConflictTask extends DefaultTask {
                             .filter(artifactName -> !recommendationConflicts.contains(artifactName))
                             .map(artifactName -> Pair.of(artifactName, propName));
                 })
+                // Resolve conflicts by choosing the more specific entry
                 .collect(Collectors.toMap(
                         Pair::getLeft,
                         Pair::getRight,
-                        // Resolve conflicts by choosing the latest matching entry, because that's how nebula works.
-                        (propName1, propName2) -> propName2));
+                        BinaryOperator.maxBy(BaselineVersions.VERSIONS_PROPS_ENTRY_SPECIFIC_COMPARATOR)));
 
         Set<String> versionPropsVindicatedLines = ImmutableSet.copyOf(resolvedConflicts.values());
 

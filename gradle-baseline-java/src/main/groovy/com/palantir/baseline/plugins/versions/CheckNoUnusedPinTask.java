@@ -93,13 +93,13 @@ public class CheckNoUnusedPinTask extends DefaultTask {
                 .map(Pair::getLeft)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
-        // Remove the force that each artifact uses. This will be the last matching force, if any.
+        // Remove the force that each artifact uses. This will be the most specific force.
         artifacts.forEach(artifact -> {
             Optional<String> matching = versionsPropToPredicate
                     .stream()
                     .filter(pair -> pair.getRight().test(artifact))
                     .map(Entry::getKey)
-                    .reduce((first, second) -> second);
+                    .max(BaselineVersions.VERSIONS_PROPS_ENTRY_SPECIFIC_COMPARATOR);
             matching.ifPresent(unusedForces::remove);
         });
 

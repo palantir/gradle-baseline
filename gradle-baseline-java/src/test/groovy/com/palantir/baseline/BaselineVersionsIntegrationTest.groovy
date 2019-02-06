@@ -232,7 +232,7 @@ class BaselineVersionsIntegrationTest extends AbstractPluginTest {
         buildSucceed()
     }
 
-    def 'Last matching version should win'() {
+    def 'Most specific matching version should win'() {
         when:
         setupVersionsProps("""
             org.slf4j:slf4j-api = 1.7.25
@@ -245,9 +245,9 @@ class BaselineVersionsIntegrationTest extends AbstractPluginTest {
         }""".stripIndent()
 
         then:
-        buildAndFailWith('There are unused pins in your versions.props: \n[org.slf4j:slf4j-api]')
+        buildAndFailWith('There are unused pins in your versions.props: \n[org.slf4j:*]')
         buildWithFixWorks()
-        file('versions.props').text.trim() == "org.slf4j:* = 1.7.20"
+        file('versions.props').text.trim() == "org.slf4j:slf4j-api = 1.7.25"
     }
 
     def 'Unused version should fail'() {
