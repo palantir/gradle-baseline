@@ -16,9 +16,8 @@
 
 package com.palantir.baseline.plugins.versions;
 
-import com.google.common.base.Splitter;
+import com.google.common.base.CharMatcher;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.Streams;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -187,7 +186,7 @@ public final class BaselineVersions implements Plugin<Project> {
      *
      * This matches the logic in {@link FuzzyVersionResolver}.
      */
-    private static int versionsPropsMatcherWeight(String propertiesLine) {
-        return Streams.stream(Splitter.on("*").split(propertiesLine)).mapToInt(String::length).sum();
+    private static int versionsPropsMatcherWeight(String matcher) {
+        return CharMatcher.isNot('*').countIn(matcher);
     }
 }
