@@ -20,6 +20,6 @@ com.github.stefanbirkner:system-rules = 1.19.0
 org.apache.commons:commons-lang3 = 3.8.1
 org.assertj:assertj-core = 3.11.1
 org.hamcrest:hamcrest-core = 2.1
-org.junit.jupiter:* = 5.3.2
+org.junit.jupiter:* = 5.4.0
 org.mockito:mockito-core = 2.24.0
 com.fasterxml.jackson.*:* = 2.9.8
