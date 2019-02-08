@@ -39,7 +39,7 @@ public final class DangerousParallelStreamUsage extends BugChecker implements Bu
     private static final String ERROR_MESSAGE = "Should not use .parallel() on a Java stream. "
             + "Doing so has very subtle and potentially severe performance implications, so in general you're better "
             + "off either using an ExecutorCompletionService or https://github.com/amaembo/streamex, which allows you"
-            + " to provide a non-globally shared thread pool. "
+            + " to provide a non-globally-shared thread pool. "
             + "The implementation of Java parallel streams uses a globally shared ForkJoinPool and does not allow you "
             + "to provide your own pool. Fork/join pools implement work-stealing, where any thread might steal a task "
             + "from a different thread's queue when blocked waiting for a subtask to complete. This might not seem "
