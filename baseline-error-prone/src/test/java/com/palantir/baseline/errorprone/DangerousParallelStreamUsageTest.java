@@ -45,7 +45,7 @@ public final class DangerousParallelStreamUsageTest {
 
     @SuppressWarnings("MethodLength")
     @Test
-    public void should_not_warn_when_parallel_with_arguments_is_invoked_on_subclass_of_java_stream() {
+    public void should_also_warn_when_parallel_with_arguments_is_invoked_on_subclass_of_java_stream() {
         compilationHelper.addSourceLines(
                 "Test.java",
                 "import java.util.Comparator;",
@@ -242,7 +242,8 @@ public final class DangerousParallelStreamUsageTest {
                 "       FooStream<String> fooStream = new FooStream<>();",
                 "       // BUG: Diagnostic contains: Should not use .parallel() on a Java stream.",
                 "       fooStream.parallel();",
-                "       // This call should not fail because > 0 arguments",
+                "       // This should fail too because it still won't allow you to properly control parallelism",
+                "       // BUG: Diagnostic contains: Should not use .parallel() on a Java stream.",
                 "       fooStream.parallel(POOL_FOR_THIS_CLASS);",
                 "   }",
                 "}"
