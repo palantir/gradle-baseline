@@ -33,7 +33,6 @@ import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import java.util.List;
-import java.util.Map;
 import java.util.regex.Pattern;
 
 @AutoService(BugChecker.class)
@@ -64,7 +63,7 @@ public final class PreferSafeLoggingPreconditions extends BugChecker implements 
                             .onClass("org.apache.commons.lang3.Validate")
                             .withNameMatching(Pattern.compile("isTrue|notNull|validState")));
 
-    private static final Map<String, String> TRANSLATIONS_TO_LOGSAFE_PRECONDITIONS_METHODS = ImmutableMap.of(
+    private static final ImmutableMap<String, String> TRANSLATIONS_TO_LOGSAFE_PRECONDITIONS_METHODS = ImmutableMap.of(
             "requireNonNull", "checkNotNull", // java.util.Objects.requireNotNull
             "isTrue", "checkArgument", // org.apache.commons.lang3.Validate.isTrue
             "notNull", "checkNotNull", // org.apache.commons.lang3.Validate.notNull

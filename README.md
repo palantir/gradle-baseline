@@ -131,6 +131,7 @@ More information on error-prone severity handling can be found at [errorprone.in
 Baseline configures the following checks in addition to the [error-prone's out-of-the-box
 checks](https://errorprone.info):
 
+- `DangerousParallelStreamUsage`: Discourage the use of Java parallel streams.
 - `Slf4jConstantLogMessage`: Allow only compile-time constant slf4j log message strings.
 - `Slf4jLogsafeArgs`: Allow only com.palantir.logsafe.Arg types as parameter inputs to slf4j log messages. More information on
 Safe Logging can be found at [github.com/palantir/safe-logging](https://github.com/palantir/safe-logging).
