@@ -16,6 +16,7 @@ _Baseline is a family of Gradle plugins for configuring Java projects with sensi
 | `com.palantir.baseline-circleci`         | [CircleCI](https://circleci.com/) integration using `$CIRCLE_ARTIFACTS` and `$CIRCLE_TEST_REPORTS` dirs
 | `com.palantir.baseline-versions`         | Source dependency versions from a `versions.props` file using [nebula dependency recommender](https://github.com/nebula-plugins/nebula-dependency-recommender-plugin)
 | `com.palantir.baseline-config`           | Config files for the above plugins
+| `com.palantir.baseline-reproducibility`  | Sensible defaults to ensure Jar, Tar and Zip tasks can be reproduced
 
 See also the [Baseline Java Style Guide and Best Practises](./docs).
 
@@ -289,3 +290,18 @@ spotless {
     }
 }
 ```
+
+## com.palantir.baseline-reproducibility
+
+This plugin is a shorthand for the following snippet, which opts-in to reproducible behaviour for all Gradle's Jar, Tar and Zip tasks. (Surprisingly, these tasks are not reproducible by default).
+
+```gradle
+tasks.withType(AbstractArchiveTask) {
+    preserveFileTimestamps = false
+    reproducibleFileOrder = true
+}
+```
+
+It also warns if it detects usage of the [`nebula.info`](https://github.com/nebula-plugins/gradle-info-plugin) plugin which is known to violate the reproducibility of Jars by adding a 'Build-Date' entry to the MANIFEST.MF, which will be different on every run of `./gradlew jar`.
+
+_Complete byte-for-byte reproducibility is desirable because it enables the [Gradle build cache](https://docs.gradle.org/4.10/userguide/build_cache.html) to be much more effective._
