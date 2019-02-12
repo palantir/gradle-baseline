@@ -32,9 +32,9 @@ public final class BaselineReproducibility implements Plugin<Project> {
             t.setDuplicatesStrategy(DuplicatesStrategy.WARN);
         });
 
-        project.getPluginManager().withPlugin("nebula.info", p -> {
-            project.getLogger().warn("Please remove the 'nebula.info' plugin from '{}' as it breaks "
-                    + "reproducibility of jars by adding a 'Build-Date' entry to the MANIFEST.MF", p);
+        project.getPluginManager().withPlugin("nebula.info", plugin -> {
+            project.getLogger().warn("Please remove the 'nebula.info' plugin from {} as it breaks "
+                    + "reproducibility of jars by adding a 'Build-Date' entry to the MANIFEST.MF", project);
         });
     }
 }
