@@ -186,22 +186,33 @@ class BaselineIdea extends AbstractBaselinePlugin {
     }
 
     /**
-     * Configures JDK and Java language level of the given IdeaModel according to the sourceCompatibility property.
+     * Configures the Java language level of the given IdeaModel according to the sourceCompatibility property.
+     * If targetCompatibility is defined, set jdkName to that, else use sourceCompatibility for that too.
      */
     private void addJdkVersion(IdeaModel ideaModel) {
         def compileJavaTask = (JavaCompile) project.tasks.findByName('compileJava')
         if (compileJavaTask) {
-            def javaVersion = compileJavaTask.sourceCompatibility
-            def jdkVersion = 'JDK_' + javaVersion.replaceAll('\\.', '_')
-            project.logger.debug("BaselineIdea: Configuring IDEA Module for Java version: " + javaVersion)
+            def javaVersionForSourceCompatibility = compileJavaTask.sourceCompatibility
+            def jdkVersionForCompilation = javaVersionForSourceCompatibility
 
-            if (ideaModel.project != null) {
-                ideaModel.project.languageLevel = javaVersion
+            if (!compileJavaTask.targetCompatibility?.isEmpty()) {
+                jdkVersionForCompilation = compileJavaTask.targetCompatibility
             }
 
-            ideaModel.module.jdkName = javaVersion
+            project.logger.debug("BaselineIdea: " +
+                    "Configuring IDEA Module for with source compatibility: $javaVersionForSourceCompatibility and " +
+                    "jdk target version: $jdkVersionForCompilation"
+            )
+
+            if (ideaModel.project != null) {
+                ideaModel.project.languageLevel = javaVersionForSourceCompatibility
+            }
+
+            ideaModel.module.jdkName = jdkVersionForCompilation
+
             ideaModel.module.iml.withXml {
-                it.asNode().component.find { it.@name == 'NewModuleRootManager' }.@LANGUAGE_LEVEL = jdkVersion
+                def newModuleRootManager = it.asNode().component.find {it.@name == 'NewModuleRootManager'}
+                newModuleRootManager.@LANGUAGE_LEVEL = "JDK_${javaVersionForSourceCompatibility.replaceAll('\\.', '_')}"
             }
         } else {
             project.logger.debug("BaselineIdea: No Java version found in sourceCompatibility property.")

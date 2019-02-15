@@ -67,7 +67,7 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         with('idea').build()
     }
 
-    def 'Modules for subprojects pick up the correct sourceCompatibility'() {
+    def 'Modules for subprojects pick up the correct sourceCompatibility and targetCompatibility'() {
         when:
         buildFile << standardBuildFile
         buildFile << '''
@@ -83,18 +83,22 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
             apply plugin: 'java'
             apply plugin: 'com.palantir.baseline-idea'
             sourceCompatibility = 1.8
+            targetCompatibility = 11
         '''.stripIndent()
 
         then:
         with('idea').build()
         def rootIml = Files.asCharSource(new File(projectDir, projectDir.name + ".iml"), Charsets.UTF_8).read()
         rootIml ==~ /(?s).*orderEntry[^\\n]*jdkName="1.6".*/
+        rootIml ==~ /(?s).*LANGUAGE_LEVEL="JDK_1_6".*/
         def subproject1Iml = Files.asCharSource(new File(projectDir, "subproject1/subproject1.iml"),
                 Charsets.UTF_8).read()
         subproject1Iml ==~ /(?s).*orderEntry[^\\n]*jdkName="1.7".*/
+        subproject1Iml ==~ /(?s).*LANGUAGE_LEVEL="JDK_1_7".*/
         def subproject2Iml = Files.asCharSource(new File(projectDir, "subproject2/subproject2.iml"),
                 Charsets.UTF_8).read()
-        subproject2Iml ==~ /(?s).*orderEntry[^\\n]*jdkName="1.8".*/
+        subproject2Iml ==~ /(?s).*orderEntry[^\\n]*jdkName="11".*/
+        subproject2Iml ==~ /(?s).*LANGUAGE_LEVEL="JDK_1_8".*/
     }
 
     def 'Idea project has copyright configuration'() {
