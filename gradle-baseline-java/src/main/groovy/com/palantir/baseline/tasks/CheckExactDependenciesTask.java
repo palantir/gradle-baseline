@@ -43,7 +43,7 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.TaskAction;
 
 @SuppressWarnings("DesignForExtension")
-public class CheckUnusedDependenciesTask extends DefaultTask {
+public class CheckExactDependenciesTask extends DefaultTask {
 
     private static final ClassAnalyzer classAnalayzer = new DefaultClassAnalyzer();
     private static final DependencyAnalyzer dependencyAnalyzer = new ASMDependencyAnalyzer();
@@ -55,7 +55,7 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
     private Map<ResolvedArtifact, Set<String>> classesFromArtifact = new HashMap<>();
     private Map<ResolvedArtifact, ResolvedDependency> artifactsFromDependency = new HashMap<>();
 
-    public CheckUnusedDependenciesTask() {
+    public CheckExactDependenciesTask() {
         setGroup("Verification");
     }
 

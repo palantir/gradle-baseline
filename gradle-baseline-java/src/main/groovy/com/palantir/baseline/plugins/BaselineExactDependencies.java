@@ -16,7 +16,7 @@
 
 package com.palantir.baseline.plugins;
 
-import com.palantir.baseline.tasks.CheckUnusedDependenciesTask;
+import com.palantir.baseline.tasks.CheckExactDependenciesTask;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.JavaPlugin;
@@ -24,12 +24,12 @@ import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 
-public final class BaselineDependencies implements Plugin<Project> {
+public final class BaselineExactDependencies implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
         project.getPluginManager().withPlugin("java", plugin -> {
-            project.getTasks().create("checkUnusedDependencies", CheckUnusedDependenciesTask.class, task -> {
+            project.getTasks().create("checkExactDependencies", CheckExactDependenciesTask.class, task -> {
                 task.dependsOn(JavaPlugin.CLASSES_TASK_NAME);
 
                 SourceSetContainer sourceSets = project.getConvention()
@@ -37,6 +37,7 @@ public final class BaselineDependencies implements Plugin<Project> {
 
                 SourceSet mainSourceSet = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME);
                 task.setClasses(mainSourceSet.getOutput().getClassesDirs());
+
                 task.dependenciesConfiguration(
                         project.getConfigurations()
                                 .getByName(JavaPlugin.COMPILE_CLASSPATH_CONFIGURATION_NAME));
