@@ -12,6 +12,7 @@ dependencies {
     testCompile 'com.palantir.safe-logging:safe-logging'
     testCompile 'org.slf4j:slf4j-api'
     testCompile 'org.apache.commons:commons-lang3'
+    testCompile 'commons-lang:commons-lang'
     testCompile 'org.junit.jupiter:junit-jupiter-api'
 
     annotationProcessor 'com.google.auto.service:auto-service'
