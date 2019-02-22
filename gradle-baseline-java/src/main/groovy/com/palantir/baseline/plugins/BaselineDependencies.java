@@ -20,6 +20,7 @@ import com.palantir.baseline.tasks.CheckUnusedDependenciesTask;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.JavaPlugin;
+import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 
@@ -31,16 +32,14 @@ public final class BaselineDependencies implements Plugin<Project> {
             project.getTasks().create("checkUnusedDependencies", CheckUnusedDependenciesTask.class, task -> {
                 task.dependsOn(JavaPlugin.CLASSES_TASK_NAME);
 
-                SourceSetContainer sourceSets = (SourceSetContainer) project.getProperties().get("sourceSets");
+                SourceSetContainer sourceSets = project.getConvention()
+                        .getPlugin(JavaPluginConvention.class).getSourceSets();
+
                 SourceSet mainSourceSet = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME);
                 task.setClasses(mainSourceSet.getOutput().getClassesDirs());
-
-                task.dependenciesConfiguration(project.getConfigurations()
-                        .findByName("compile"));
-                task.dependenciesConfiguration(project.getConfigurations()
-                        .findByName("compileOnly"));
-                task.dependenciesConfiguration(project.getConfigurations()
-                        .findByName("provided"));
+                task.dependenciesConfiguration(
+                        project.getConfigurations()
+                                .getByName(JavaPlugin.COMPILE_CLASSPATH_CONFIGURATION_NAME));
             });
         });
     }
