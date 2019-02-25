@@ -59,15 +59,16 @@ class BaselineIdea extends AbstractBaselinePlugin {
             moveProjectReferencesToEnd(ideaModuleModel);
         }
 
-        // leftover ipr files from a different rootProject.name are confusing - let's proactively
-        // clean them up. Intentionally using an Action<Task> to allow up-to-dateness
+        // If someone renames a project, leftover {ipr,iml,ipr} files may still exist on disk and
+        // confuse users, so we proactively clean them up. Intentionally using an Action<Task> to allow up-to-dateness.
         Action<Task> cleanup = new Action<Task>() {
             void execute(Task t) {
                 project.delete(project.fileTree(
-                        dir: project.getProjectDir(),
-                        include: '*.ipr',
-                        exclude: "${rootProject.name}.ipr"
-                ))
+                        dir: project.getProjectDir(), include: '*.ipr', exclude: "${project.name}.ipr"));
+                project.delete(project.fileTree(
+                        dir: project.getProjectDir(), include: '*.iml', exclude: "${project.name}.iml"))
+                project.delete(project.fileTree(
+                        dir: project.getProjectDir(), include: '*.iws', exclude: "${project.name}.iws"))
             }
         }
 
