@@ -19,7 +19,9 @@ package com.palantir.baseline.plugins
 import groovy.xml.XmlUtil
 import java.nio.file.Files
 import java.nio.file.Paths
+import org.gradle.api.Action
 import org.gradle.api.Project
+import org.gradle.api.Task
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.plugins.ide.idea.IdeaPlugin
 import org.gradle.plugins.ide.idea.model.IdeaModel
@@ -56,6 +58,20 @@ class BaselineIdea extends AbstractBaselinePlugin {
             markResourcesDirs(ideaModuleModel);
             moveProjectReferencesToEnd(ideaModuleModel);
         }
+
+        // leftover ipr files from a different rootProject.name are confusing - let's proactively
+        // clean them up. Intentionally using an Action<Task> to allow up-to-dateness
+        Action<Task> cleanup = new Action<Task>() {
+            void execute(Task t) {
+                project.delete(project.fileTree(
+                        dir: project.getProjectDir(),
+                        include: '*.ipr',
+                        exclude: "${rootProject.name}.ipr"
+                ))
+            }
+        }
+
+        project.getTasks().findByName("idea").doLast(cleanup);
     }
 
     /**
