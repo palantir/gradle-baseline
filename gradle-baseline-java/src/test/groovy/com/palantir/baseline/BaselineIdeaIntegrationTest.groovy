@@ -236,4 +236,22 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         BuildResult result = with('--stacktrace', '--info', 'idea').build()
         assert result.tasks(TaskOutcome.SUCCESS).collect { it.path }.contains(':idea')
     }
+
+    def 'deletes redundant iml,ipr,iws files'() {
+        when:
+        buildFile << standardBuildFile
+        File real = new File(projectDir, projectDir.name + ".ipr")
+        File iws = createFile('foo.ipr')
+        File iml = createFile('foo.iml')
+        File ipr = createFile('foo.iws')
+
+        then:
+        !real.exists()
+        iws.exists() && iml.exists() && ipr.exists()
+
+        with('idea').build()
+
+        real.exists()
+        !iws.exists() && !iml.exists() && !ipr.exists()
+    }
 }
