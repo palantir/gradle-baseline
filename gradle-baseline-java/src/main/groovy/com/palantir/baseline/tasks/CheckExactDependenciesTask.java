@@ -51,9 +51,10 @@ public class CheckExactDependenciesTask extends DefaultTask {
     private List<Configuration> dependenciesConfigurations = new ArrayList<>();
     private FileCollection classes;
 
-    private Map<String, ResolvedArtifact> classToDependency = new HashMap<>();
-    private Map<ResolvedArtifact, Set<String>> classesFromArtifact = new HashMap<>();
-    private Map<ResolvedArtifact, ResolvedDependency> artifactsFromDependency = new HashMap<>();
+    // indexes, populated using the above analyzers
+    private final Map<String, ResolvedArtifact> classToDependency = new HashMap<>();
+    private final Map<ResolvedArtifact, Set<String>> classesFromArtifact = new HashMap<>();
+    private final Map<ResolvedArtifact, ResolvedDependency> artifactsFromDependency = new HashMap<>();
 
     public CheckExactDependenciesTask() {
         setGroup("Verification");
@@ -61,46 +62,24 @@ public class CheckExactDependenciesTask extends DefaultTask {
 
     @TaskAction
     public void checkUnusedDependencies() {
+
         Set<ResolvedDependency> declaredDependencies = getDependenciesConfigurations().stream()
                 .map(Configuration::getResolvedConfiguration)
                 .flatMap(resolved -> resolved.getFirstLevelModuleDependencies().stream())
                 .collect(Collectors.toSet());
 
-        // All artifacts
+        Set<ResolvedArtifact> declaredArtifacts = declaredDependencies.stream()
+                .flatMap(dependency -> dependency.getModuleArtifacts().stream())
+                .collect(Collectors.toSet());
+
         Set<ResolvedArtifact> allArtifacts = declaredDependencies.stream()
                 .flatMap(dependency -> dependency.getAllModuleArtifacts().stream())
                 .collect(Collectors.toSet());
 
-        // Construct caches of classes in each dependency
-        allArtifacts.forEach(artifact -> {
-            try {
-                // Construct class/artifact maps
-                Set<String> classesInArtifact = classAnalyzer.analyze(artifact.getFile().toURI().toURL());
-                classesFromArtifact.put(artifact, classesInArtifact);
-                classesInArtifact.forEach(clazz -> {
-                    if (classToDependency.put(clazz, artifact) != null) {
-                        getLogger().info("Found duplicate class {}", clazz);
-                    }
-                });
-            } catch (IOException e) {
-                throw new RuntimeException("Unable to analyze artifact", e);
-            }
-        });
-
-        // Declared artifacts
-        Set<ResolvedArtifact> declaredArtifacts = declaredDependencies.stream()
-                .flatMap(dependency -> {
-                    Set<ResolvedArtifact> artifacts = dependency.getModuleArtifacts();
-                    artifacts.forEach(artifact -> artifactsFromDependency.put(artifact, dependency));
-                    return artifacts.stream();
-                })
-                .collect(Collectors.toSet());
-
-        // Go through classes dirs to find which classes are referenced
-        Set<String> referencedClasses = referencedClasses();
+        populateIndexes(declaredDependencies, allArtifacts);
 
         // Gather the set of expected dependencies based on referenced classes
-        Set<ResolvedArtifact> expectedArtifacts = referencedClasses.stream()
+        Set<ResolvedArtifact> expectedArtifacts = referencedClasses().stream()
                 .map(clazz -> {
                     ResolvedArtifact maybeArtifact = classToDependency.get(clazz);
                     if (maybeArtifact == null) {
@@ -137,7 +116,7 @@ public class CheckExactDependenciesTask extends DefaultTask {
                 // and mapping the remaining ones back to the jars they came from.
                 Set<ResolvedArtifact> didYouMean = dependency.getAllModuleArtifacts().stream()
                         .flatMap(artifact -> classesFromArtifact.get(artifact).stream())
-                        .filter(referencedClasses::contains)
+                        .filter(referencedClasses()::contains)
                         .map(clazz -> classToDependency.get(clazz))
                         .filter(Objects::nonNull)
                         .filter(artifact -> !declaredArtifacts.contains(artifact))
@@ -152,9 +131,31 @@ public class CheckExactDependenciesTask extends DefaultTask {
         }
     }
 
+    private void populateIndexes(Set<ResolvedDependency> declaredDependencies, Set<ResolvedArtifact> allArtifacts) {
+        allArtifacts.forEach(artifact -> {
+            try {
+                // Construct class/artifact maps
+                Set<String> classesInArtifact = classAnalyzer.analyze(artifact.getFile().toURI().toURL());
+                classesFromArtifact.put(artifact, classesInArtifact);
+                classesInArtifact.forEach(clazz -> {
+                    if (classToDependency.put(clazz, artifact) != null) {
+                        getLogger().info("Found duplicate class {}", clazz);
+                    }
+                });
+            } catch (IOException e) {
+                throw new RuntimeException("Unable to analyze artifact", e);
+            }
+        });
+
+        declaredDependencies.stream().forEach(dependency -> {
+            Set<ResolvedArtifact> artifacts = dependency.getModuleArtifacts();
+            artifacts.forEach(artifact -> artifactsFromDependency.put(artifact, dependency));
+        });
+    }
+
     /** All classes which are mentioned in this project's source code. */
     private Set<String> referencedClasses() {
-        return Streams.stream(getClasses().iterator())
+        return Streams.stream(classes.iterator())
                 .flatMap(file -> {
                     try {
                         return dependencyAnalyzer.analyze(file.toURI().toURL()).stream();
