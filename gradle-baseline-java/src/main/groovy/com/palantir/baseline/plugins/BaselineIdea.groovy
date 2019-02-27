@@ -64,7 +64,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
         Action<Task> cleanup = new Action<Task>() {
             void execute(Task t) {
                 project.delete(project.fileTree(
-                        dir: project.getProjectDir(), include: '*.ipr', exclude: "${project.name}.ipr"));
+                        dir: project.getProjectDir(), include: '*.ipr', exclude: "${project.name}.ipr"))
                 project.delete(project.fileTree(
                         dir: project.getProjectDir(), include: '*.iml', exclude: "${project.name}.iml"))
                 project.delete(project.fileTree(
@@ -72,7 +72,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
             }
         }
 
-        project.getTasks().findByName("idea").doLast(cleanup);
+        project.getTasks().findByName("idea").doLast(cleanup)
     }
 
     /**
