@@ -20,7 +20,7 @@ import com.google.common.base.Joiner;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Streams;
 import java.io.IOException;
-import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
@@ -38,32 +38,38 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.provider.ListProperty;
+import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.TaskAction;
 
-@SuppressWarnings("DesignForExtension")
 public class CheckExactDependenciesTask extends DefaultTask {
 
     private static final ClassAnalyzer classAnalyzer = new DefaultClassAnalyzer();
     private static final DependencyAnalyzer dependencyAnalyzer = new ASMDependencyAnalyzer();
 
-    private List<Configuration> dependenciesConfigurations = new ArrayList<>();
-    private FileCollection classes;
-
     // indexes, populated using the above analyzers
+    // TODO(dfox): hoist these indexes so they are not recomputed for every subproject
     private final Map<String, ResolvedArtifact> classToDependency = new HashMap<>();
     private final Map<ResolvedArtifact, Set<String>> classesFromArtifact = new HashMap<>();
     private final Map<ResolvedArtifact, ResolvedDependency> artifactsFromDependency = new HashMap<>();
 
+    private final ListProperty<Configuration> dependenciesConfigurations;
+    private final Property<FileCollection> classes;
+
     public CheckExactDependenciesTask() {
         setGroup("Verification");
+        dependenciesConfigurations = getProject().getObjects().listProperty(Configuration.class);
+        dependenciesConfigurations.set(Collections.emptyList());
+
+        classes = getProject().getObjects().property(FileCollection.class);
     }
 
     @TaskAction
-    public void checkUnusedDependencies() {
-
-        Set<ResolvedDependency> declaredDependencies = getDependenciesConfigurations().stream()
+    public final void checkUnusedDependencies() {
+        Set<ResolvedDependency> declaredDependencies = dependenciesConfigurations.get().stream()
                 .map(Configuration::getResolvedConfiguration)
                 .flatMap(resolved -> resolved.getFirstLevelModuleDependencies().stream())
                 .collect(Collectors.toSet());
@@ -94,6 +100,7 @@ public class CheckExactDependenciesTask extends DefaultTask {
                 .sorted(Comparator.comparing(artifact -> artifact.getId().getDisplayName()))
                 .collect(Collectors.toList());
 
+        // TODO(dfox): don't print warnings for jars that define service loaded classes (e.g. meta-inf)
         List<ResolvedArtifact> declaredButUnused = Sets.difference(declaredArtifacts, expectedArtifacts).stream()
                 .sorted(Comparator.comparing(artifact -> artifact.getId().getDisplayName()))
                 .collect(Collectors.toList());
@@ -155,7 +162,7 @@ public class CheckExactDependenciesTask extends DefaultTask {
 
     /** All classes which are mentioned in this project's source code. */
     private Set<String> referencedClasses() {
-        return Streams.stream(classes.iterator())
+        return Streams.stream(classes.get().iterator())
                 .flatMap(file -> {
                     try {
                         return dependencyAnalyzer.analyze(file.toURI().toURL()).stream();
@@ -167,25 +174,20 @@ public class CheckExactDependenciesTask extends DefaultTask {
     }
 
     @Input
-    public List<Configuration> getDependenciesConfigurations() {
-        return dependenciesConfigurations.stream().filter(Objects::nonNull).collect(Collectors.toList());
+    public final Provider<List<Configuration>> getDependenciesConfigurations() {
+        return dependenciesConfigurations;
     }
 
-    public void setDependenciesConfigurations(List<Configuration> dependenciesConfigurations) {
-        this.dependenciesConfigurations = new ArrayList<>(dependenciesConfigurations);
-    }
-
-    public void dependenciesConfiguration(Configuration dependenciesConfiguration) {
-        this.dependenciesConfigurations.add(dependenciesConfiguration);
+    public final void dependenciesConfiguration(Configuration dependenciesConfiguration) {
+        this.dependenciesConfigurations.add(Objects.requireNonNull(dependenciesConfiguration));
     }
 
     @InputFiles
-    public FileCollection getClasses() {
+    public final Provider<FileCollection> getClasses() {
         return classes;
     }
 
-    public void setClasses(Object newClasses) {
-        this.classes = getProject().files(newClasses);
+    public final void setClasses(FileCollection newClasses) {
+        this.classes.set(getProject().files(newClasses));
     }
-
 }
