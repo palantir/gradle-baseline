@@ -19,6 +19,8 @@ package com.palantir.baseline.tasks;
 import com.google.common.base.Joiner;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Streams;
+import com.palantir.baseline.plugins.BaselineExactDependencies;
+import java.io.File;
 import java.io.IOException;
 import java.util.Collections;
 import java.util.Comparator;
@@ -28,10 +30,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-import org.apache.maven.shared.dependency.analyzer.ClassAnalyzer;
-import org.apache.maven.shared.dependency.analyzer.DefaultClassAnalyzer;
-import org.apache.maven.shared.dependency.analyzer.DependencyAnalyzer;
-import org.apache.maven.shared.dependency.analyzer.asm.ASMDependencyAnalyzer;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.artifacts.Configuration;
@@ -47,10 +45,6 @@ import org.gradle.api.tasks.TaskAction;
 
 public class CheckExactDependenciesTask extends DefaultTask {
 
-    private static final ClassAnalyzer classAnalyzer = new DefaultClassAnalyzer();
-    private static final DependencyAnalyzer dependencyAnalyzer = new ASMDependencyAnalyzer();
-
-    // indexes, populated using the above analyzers
     // TODO(dfox): hoist these indexes so they are not recomputed for every subproject
     private final Map<String, ResolvedArtifact> classToDependency = new HashMap<>();
     private final Map<ResolvedArtifact, Set<String>> classesFromArtifact = new HashMap<>();
@@ -142,7 +136,8 @@ public class CheckExactDependenciesTask extends DefaultTask {
         allArtifacts.forEach(artifact -> {
             try {
                 // Construct class/artifact maps
-                Set<String> classesInArtifact = classAnalyzer.analyze(artifact.getFile().toURI().toURL());
+                File jar = artifact.getFile();
+                Set<String> classesInArtifact = BaselineExactDependencies.JAR_ANALYZR.analyze(jar.toURI().toURL());
                 classesFromArtifact.put(artifact, classesInArtifact);
                 classesInArtifact.forEach(clazz -> {
                     if (classToDependency.put(clazz, artifact) != null) {
@@ -162,15 +157,13 @@ public class CheckExactDependenciesTask extends DefaultTask {
 
     /** All classes which are mentioned in this project's source code. */
     private Set<String> referencedClasses() {
-        return Streams.stream(classes.get().iterator())
-                .flatMap(file -> {
-                    try {
-                        return dependencyAnalyzer.analyze(file.toURI().toURL()).stream();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                })
-                .collect(Collectors.toSet());
+        return Streams.stream(classes.get().iterator()).flatMap(classFile -> {
+            try {
+                return BaselineExactDependencies.CLASS_FILE_ANALYZER.analyze(classFile.toURI().toURL()).stream();
+            } catch (IOException e) {
+                throw new RuntimeException(e);
+            }
+        }).collect(Collectors.toSet());
     }
 
     @Input

@@ -17,6 +17,10 @@
 package com.palantir.baseline.plugins;
 
 import com.palantir.baseline.tasks.CheckExactDependenciesTask;
+import org.apache.maven.shared.dependency.analyzer.ClassAnalyzer;
+import org.apache.maven.shared.dependency.analyzer.DefaultClassAnalyzer;
+import org.apache.maven.shared.dependency.analyzer.DependencyAnalyzer;
+import org.apache.maven.shared.dependency.analyzer.asm.ASMDependencyAnalyzer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -26,6 +30,9 @@ import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 
 public final class BaselineExactDependencies implements Plugin<Project> {
+
+    public static final ClassAnalyzer JAR_ANALYZR = new DefaultClassAnalyzer();
+    public static final DependencyAnalyzer CLASS_FILE_ANALYZER = new ASMDependencyAnalyzer();
 
     @Override
     public void apply(Project project) {
