@@ -45,7 +45,7 @@ import org.gradle.api.tasks.TaskAction;
 @SuppressWarnings("DesignForExtension")
 public class CheckExactDependenciesTask extends DefaultTask {
 
-    private static final ClassAnalyzer classAnalayzer = new DefaultClassAnalyzer();
+    private static final ClassAnalyzer classAnalyzer = new DefaultClassAnalyzer();
     private static final DependencyAnalyzer dependencyAnalyzer = new ASMDependencyAnalyzer();
 
     private List<Configuration> dependenciesConfigurations = new ArrayList<>();
@@ -75,15 +75,15 @@ public class CheckExactDependenciesTask extends DefaultTask {
         allArtifacts.forEach(artifact -> {
             try {
                 // Construct class/artifact maps
-                Set<String> classesInArtifact = classAnalayzer.analyze(artifact.getFile().toURI().toURL());
+                Set<String> classesInArtifact = classAnalyzer.analyze(artifact.getFile().toURI().toURL());
                 classesFromArtifact.put(artifact, classesInArtifact);
                 classesInArtifact.forEach(clazz -> {
                     if (classToDependency.put(clazz, artifact) != null) {
-                        getLogger().info("Found duplicate class " + clazz);
+                        getLogger().info("Found duplicate class {}", clazz);
                     }
                 });
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new RuntimeException("Unable to analyze artifact", e);
             }
         });
 
@@ -97,15 +97,7 @@ public class CheckExactDependenciesTask extends DefaultTask {
                 .collect(Collectors.toSet());
 
         // Go through classes dirs to find which classes are referenced
-        Set<String> referencedClasses = Streams.stream(getClasses().iterator())
-                .flatMap(file -> {
-                    try {
-                        return dependencyAnalyzer.analyze(file.toURI().toURL()).stream();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                })
-                .collect(Collectors.toSet());
+        Set<String> referencedClasses = referencedClasses();
 
         // Gather the set of expected dependencies based on referenced classes
         Set<ResolvedArtifact> expectedArtifacts = referencedClasses.stream()
@@ -158,6 +150,19 @@ public class CheckExactDependenciesTask extends DefaultTask {
             }
             throw new GradleException(sb.toString());
         }
+    }
+
+    /** All classes which are mentioned in this project's source code. */
+    private Set<String> referencedClasses() {
+        return Streams.stream(getClasses().iterator())
+                .flatMap(file -> {
+                    try {
+                        return dependencyAnalyzer.analyze(file.toURI().toURL()).stream();
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                })
+                .collect(Collectors.toSet());
     }
 
     @Input

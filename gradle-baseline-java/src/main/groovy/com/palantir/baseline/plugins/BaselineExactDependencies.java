@@ -19,6 +19,7 @@ package com.palantir.baseline.plugins;
 import com.palantir.baseline.tasks.CheckExactDependenciesTask;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
@@ -29,18 +30,17 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     @Override
     public void apply(Project project) {
         project.getPluginManager().withPlugin("java", plugin -> {
+
+            SourceSetContainer sourceSets = project.getConvention()
+                    .getPlugin(JavaPluginConvention.class).getSourceSets();
+            SourceSet mainSourceSet = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME);
+            Configuration compileClasspath = project.getConfigurations()
+                    .getByName(JavaPlugin.COMPILE_CLASSPATH_CONFIGURATION_NAME);
+
             project.getTasks().create("checkExactDependencies", CheckExactDependenciesTask.class, task -> {
                 task.dependsOn(JavaPlugin.CLASSES_TASK_NAME);
-
-                SourceSetContainer sourceSets = project.getConvention()
-                        .getPlugin(JavaPluginConvention.class).getSourceSets();
-
-                SourceSet mainSourceSet = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME);
                 task.setClasses(mainSourceSet.getOutput().getClassesDirs());
-
-                task.dependenciesConfiguration(
-                        project.getConfigurations()
-                                .getByName(JavaPlugin.COMPILE_CLASSPATH_CONFIGURATION_NAME));
+                task.dependenciesConfiguration(compileClasspath);
             });
         });
     }
