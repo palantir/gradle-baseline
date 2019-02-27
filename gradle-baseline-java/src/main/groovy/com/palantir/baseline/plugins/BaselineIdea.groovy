@@ -16,6 +16,7 @@
 
 package com.palantir.baseline.plugins
 
+
 import groovy.xml.XmlUtil
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -64,7 +65,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
         Action<Task> cleanup = new Action<Task>() {
             void execute(Task t) {
                 project.delete(project.fileTree(
-                        dir: project.getProjectDir(), include: '*.ipr', exclude: "${project.name}.ipr"));
+                        dir: project.getProjectDir(), include: '*.ipr', exclude: "${project.name}.ipr"))
                 project.delete(project.fileTree(
                         dir: project.getProjectDir(), include: '*.iml', exclude: "${project.name}.iml"))
                 project.delete(project.fileTree(

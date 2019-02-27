@@ -254,4 +254,25 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         real.exists()
         !iws.exists() && !iml.exists() && !ipr.exists()
     }
+
+    def 'does not delete subproject iml files'() {
+        when:
+        buildFile << standardBuildFile
+        def subproject = multiProject.addSubproject("subproject", standardBuildFile)
+
+        File real = new File(projectDir, projectDir.name + ".ipr")
+        File subIml = new File(subproject, subproject.name + ".iml")
+        File oldSubIml = createFile("old-subproject.iml", subproject)
+
+        then:
+        !real.exists()
+        !subIml.exists()
+        oldSubIml.exists()
+
+        with('idea').build()
+
+        real.exists()
+        subIml.exists()
+        !oldSubIml.exists()
+    }
 }
