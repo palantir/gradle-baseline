@@ -241,6 +241,7 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         when:
         buildFile << standardBuildFile
         File real = new File(projectDir, projectDir.name + ".ipr")
+        File funky = new File(projectDir, rootProject.name + "-" + projectDir.name + ".ipr")
         File iws = createFile('foo.ipr')
         File iml = createFile('foo.iml')
         File ipr = createFile('foo.iws')
@@ -248,10 +249,12 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         then:
         !real.exists()
         iws.exists() && iml.exists() && ipr.exists()
+        funky.exists()
 
         with('idea').build()
 
         real.exists()
         !iws.exists() && !iml.exists() && !ipr.exists()
+        funky.exists() // when a subproject & rootproject have the same name, the idea plugin creates 'foo-foo.ipr'
     }
 }

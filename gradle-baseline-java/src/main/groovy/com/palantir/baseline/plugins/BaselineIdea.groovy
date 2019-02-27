@@ -64,11 +64,17 @@ class BaselineIdea extends AbstractBaselinePlugin {
         Action<Task> cleanup = new Action<Task>() {
             void execute(Task t) {
                 project.delete(project.fileTree(
-                        dir: project.getProjectDir(), include: '*.ipr', exclude: "${project.name}.ipr"));
+                        dir: project.getProjectDir(),
+                        include: '*.ipr',
+                        exclude: "(${project.rootProject.name}-)?${project.name}.ipr"));
                 project.delete(project.fileTree(
-                        dir: project.getProjectDir(), include: '*.iml', exclude: "${project.name}.iml"))
+                        dir: project.getProjectDir(),
+                        include: '*.iml',
+                        exclude: "(${project.rootProject.name}-)?${project.name}.iml"))
                 project.delete(project.fileTree(
-                        dir: project.getProjectDir(), include: '*.iws', exclude: "${project.name}.iws"))
+                        dir: project.getProjectDir(),
+                        include: '*.iws',
+                        exclude: "(${project.rootProject.name}-)?${project.name}.iws"))
             }
         }
 
