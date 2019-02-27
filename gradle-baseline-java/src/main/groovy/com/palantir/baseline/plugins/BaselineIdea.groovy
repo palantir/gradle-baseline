@@ -16,7 +16,6 @@
 
 package com.palantir.baseline.plugins
 
-
 import groovy.xml.XmlUtil
 import java.nio.file.Files
 import java.nio.file.Paths
