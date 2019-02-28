@@ -65,6 +65,7 @@ public class CheckExactDependenciesTask extends DefaultTask {
 
     @TaskAction
     public final void checkUnusedDependencies() {
+
         Set<ResolvedDependency> declaredDependencies = dependenciesConfigurations.get().stream()
                 .map(Configuration::getResolvedConfiguration)
                 .flatMap(resolved -> resolved.getFirstLevelModuleDependencies().stream())
@@ -104,6 +105,7 @@ public class CheckExactDependenciesTask extends DefaultTask {
 
         if (!usedButUndeclared.isEmpty()) {
 
+            // TODO(dfox): suggest project(':project-name') when a jar actually comes from this project!
             String suggestion = usedButUndeclared.stream()
                     .filter(artifact -> !allowedExtraneous(artifact))
                     .map(artifact -> String.format("        implementation '%s:%s'",
@@ -154,15 +156,10 @@ public class CheckExactDependenciesTask extends DefaultTask {
     private void populateIndexes(Set<ResolvedDependency> declaredDependencies, Set<ResolvedArtifact> allArtifacts) {
         allArtifacts.forEach(artifact -> {
             try {
-                // Construct class/artifact maps
                 File jar = artifact.getFile();
                 Set<String> classesInArtifact = BaselineExactDependencies.JAR_ANALYZR.analyze(jar.toURI().toURL());
                 classesFromArtifact.put(artifact, classesInArtifact);
-                classesInArtifact.forEach(clazz -> {
-                    if (classToDependency.put(clazz, artifact) != null) {
-                        getLogger().info("Found duplicate class {}", clazz);
-                    }
-                });
+                classesInArtifact.forEach(clazz -> classToDependency.put(clazz, artifact));
             } catch (IOException e) {
                 throw new RuntimeException("Unable to analyze artifact", e);
             }
