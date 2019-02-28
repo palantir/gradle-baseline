@@ -16,7 +16,13 @@
 
 package com.palantir.baseline.plugins;
 
+import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.palantir.baseline.tasks.CheckExactDependenciesTask;
+import java.io.Serializable;
+import java.util.Collections;
+import java.util.List;
+import javax.inject.Inject;
 import org.apache.maven.shared.dependency.analyzer.ClassAnalyzer;
 import org.apache.maven.shared.dependency.analyzer.DefaultClassAnalyzer;
 import org.apache.maven.shared.dependency.analyzer.DependencyAnalyzer;
@@ -26,6 +32,7 @@ import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
+import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 
@@ -37,6 +44,11 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     @Override
     public void apply(Project project) {
         project.getPluginManager().withPlugin("java", plugin -> {
+            Extension extension = project.getExtensions().create("exactDependencies", Extension.class, project);
+
+            // this is liberally applied to ease the Java8 -> 11 transition
+            extension.ignore("javax.annotation:javax.annotation-api");
+            extension.ignore("org.slf4j:slf4j-api");
 
             SourceSetContainer sourceSets = project.getConvention()
                     .getPlugin(JavaPluginConvention.class).getSourceSets();
@@ -48,8 +60,29 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                 task.dependsOn(JavaPlugin.CLASSES_TASK_NAME);
                 task.setClasses(mainSourceSet.getOutput().getClassesDirs());
                 task.dependenciesConfiguration(compileClasspath);
+                task.allowExtraneous(extension.ignored);
             });
         });
     }
 
+    public static class Extension implements Serializable {
+        private final SetProperty<String> ignored;
+
+        @Inject
+        public Extension(Project project) {
+            this.ignored = project.getObjects().setProperty(String.class);
+            this.ignored.set(Collections.emptyList());
+        }
+
+        public final void ignore(String artifact) {
+            validate(artifact);
+            ignored.add(artifact);
+        }
+
+        private static void validate(String artifact) {
+            List<String> strings = Splitter.on(':').splitToList(artifact);
+            Preconditions.checkState(strings.size() == 2, "Artifact must be of the form 'group:name'. Found:",
+                    artifact);
+        }
+    }
 }

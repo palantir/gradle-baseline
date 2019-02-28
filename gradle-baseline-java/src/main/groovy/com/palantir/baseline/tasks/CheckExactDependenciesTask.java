@@ -16,7 +16,6 @@
 
 package com.palantir.baseline.tasks;
 
-import com.google.common.base.Joiner;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Streams;
 import com.palantir.baseline.plugins.BaselineExactDependencies;
@@ -33,12 +32,14 @@ import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.TaskAction;
@@ -52,13 +53,14 @@ public class CheckExactDependenciesTask extends DefaultTask {
 
     private final ListProperty<Configuration> dependenciesConfigurations;
     private final Property<FileCollection> classes;
+    private final SetProperty<String> allowExtraneous;
 
     public CheckExactDependenciesTask() {
         setGroup("Verification");
         dependenciesConfigurations = getProject().getObjects().listProperty(Configuration.class);
         dependenciesConfigurations.set(Collections.emptyList());
-
         classes = getProject().getObjects().property(FileCollection.class);
+        allowExtraneous = getProject().getObjects().setProperty(String.class);
     }
 
     @TaskAction
@@ -96,13 +98,25 @@ public class CheckExactDependenciesTask extends DefaultTask {
 
         // TODO(dfox): don't print warnings for jars that define service loaded classes (e.g. meta-inf)
         List<ResolvedArtifact> declaredButUnused = Sets.difference(declaredArtifacts, expectedArtifacts).stream()
+                .filter(artifact -> !allowedExtraneous(artifact))
                 .sorted(Comparator.comparing(artifact -> artifact.getId().getDisplayName()))
                 .collect(Collectors.toList());
 
         if (!usedButUndeclared.isEmpty()) {
-            getLogger().warn(
-                    "Used but undeclared dependencies:\n{}",
-                    Joiner.on("\t\n").join(usedButUndeclared));
+
+            String suggestion = usedButUndeclared.stream()
+                    .filter(artifact -> !allowedExtraneous(artifact))
+                    .map(artifact -> String.format("        implementation '%s:%s'",
+                            artifact.getModuleVersion().getId().getGroup(),
+                            artifact.getModuleVersion().getId().getName()))
+                    .sorted()
+                    .collect(Collectors.joining("\n", "    dependencies {\n", "\n    }"));
+
+            getLogger().warn("Found {} used but undeclared dependencies - consider adding the following explicit "
+                            + "dependencies to '{}', or avoid using classes from these jars:\n{}",
+                    usedButUndeclared.size(),
+                    getProject().getRootDir().toPath().relativize(getProject().getBuildFile().toPath()),
+                    suggestion);
         }
 
         if (!declaredButUnused.isEmpty()) {
@@ -130,6 +144,11 @@ public class CheckExactDependenciesTask extends DefaultTask {
             }
             throw new GradleException(sb.toString());
         }
+    }
+
+    private boolean allowedExtraneous(ResolvedArtifact artifact) {
+        ModuleVersionIdentifier id = artifact.getModuleVersion().getId();
+        return allowExtraneous.get().contains(id.getGroup() + ":" + id.getName());
     }
 
     private void populateIndexes(Set<ResolvedDependency> declaredDependencies, Set<ResolvedArtifact> allArtifacts) {
@@ -182,5 +201,14 @@ public class CheckExactDependenciesTask extends DefaultTask {
 
     public final void setClasses(FileCollection newClasses) {
         this.classes.set(getProject().files(newClasses));
+    }
+
+    public final void allowExtraneous(Provider<Set<String>> value) {
+        allowExtraneous.set(value);
+    }
+
+    @Input
+    public final Provider<Set<String>> getAllowExtraneous() {
+        return allowExtraneous;
     }
 }
