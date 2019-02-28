@@ -63,22 +63,21 @@ class BaselineIdea extends AbstractBaselinePlugin {
         // confuse users, so we proactively clean them up. Intentionally using an Action<Task> to allow up-to-dateness.
         Action<Task> cleanup = new Action<Task>() {
             void execute(Task t) {
-                project.delete(project.fileTree(
-                        dir: project.getProjectDir(),
-                        include: '*.ipr',
-                        exclude: "(${project.rootProject.name}-)?${project.name}.ipr"));
-                project.delete(project.fileTree(
-                        dir: project.getProjectDir(),
-                        include: '*.iml',
-                        exclude: "(${project.rootProject.name}-)?${project.name}.iml"))
-                project.delete(project.fileTree(
-                        dir: project.getProjectDir(),
-                        include: '*.iws',
-                        exclude: "(${project.rootProject.name}-)?${project.name}.iws"))
+                deleteRedundantIdeaFilesWithExtension(project, ".ipr")
+                deleteRedundantIdeaFilesWithExtension(project, ".iml")
+                deleteRedundantIdeaFilesWithExtension(project, ".iws")
             }
         }
 
         project.getTasks().findByName("idea").doLast(cleanup);
+    }
+
+    private static void deleteRedundantIdeaFilesWithExtension(Project project, String extension) {
+        Arrays.stream(project.getProjectDir().listFiles())
+                .filter({ it.isFile() && it.toString().endsWith(extension)})
+                .filter({ it.toPath().getFileName().toString() != project.name + extension})
+                .filter({ it.toPath().getFileName().toString() != project.rootProject.name + "-" + project.name + extension})
+                .forEach({ it.delete()})
     }
 
     /**

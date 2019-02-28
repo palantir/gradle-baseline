@@ -241,7 +241,8 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         when:
         buildFile << standardBuildFile
         File real = new File(projectDir, projectDir.name + ".ipr")
-        File funky = new File(projectDir, rootProject.name + "-" + projectDir.name + ".ipr")
+        // rootProject 'foobar' defined in resources/com.palantir.baseline/settings.gradle
+        File funky = createFile("foobar-" + projectDir.name + ".ipr")
         File iws = createFile('foo.ipr')
         File iml = createFile('foo.iml')
         File ipr = createFile('foo.iws')
@@ -251,7 +252,8 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         iws.exists() && iml.exists() && ipr.exists()
         funky.exists()
 
-        with('idea').build()
+        BuildResult r = with('idea', '-i').build()
+        println r.output
 
         real.exists()
         !iws.exists() && !iml.exists() && !ipr.exists()
