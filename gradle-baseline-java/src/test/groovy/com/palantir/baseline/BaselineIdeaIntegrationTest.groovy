@@ -28,6 +28,9 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
             id 'java'
             id 'com.palantir.baseline-idea'
         }
+        allprojects {
+            apply plugin: 'com.palantir.baseline-idea'
+        }
     '''.stripIndent()
 
     def setup() {
@@ -253,5 +256,42 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
 
         real.exists()
         !iws.exists() && !iml.exists() && !ipr.exists()
+    }
+
+    def 'does not delete subproject iml has different name than subproject'() {
+        def rootProjectName = projectDir.name
+
+        buildFile << standardBuildFile
+        File real = new File(projectDir, rootProjectName + ".ipr")
+        File iws = createFile('foo.ipr')
+        File iml = createFile('foo.iml')
+        File ipr = createFile('foo.iws')
+
+        def subprojectDir = multiProject.addSubproject('bar', '''
+            idea {
+                module {
+                    name = 'something-else'
+                }
+            }
+        '''.stripIndent())
+        def subprojectIml = new File(subprojectDir, 'something-else.iml')
+
+        expect:
+        !real.exists()
+        iws.exists() && iml.exists() && ipr.exists()
+
+        when:
+        with('idea').build()
+
+        then:
+        real.exists()
+        subprojectIml.exists() // expect 'idea' to have created it
+
+        when:
+        def otherSubprojectIml = createFile('some-other-name.iml', subprojectDir)
+        with('idea').build()
+
+        then:
+        !otherSubprojectIml.exists()
     }
 }
