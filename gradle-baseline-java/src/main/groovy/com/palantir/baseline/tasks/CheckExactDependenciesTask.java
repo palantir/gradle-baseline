@@ -21,6 +21,7 @@ import com.google.common.collect.Streams;
 import com.palantir.baseline.plugins.BaselineExactDependencies;
 import java.io.File;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -104,7 +105,6 @@ public class CheckExactDependenciesTask extends DefaultTask {
                 .collect(Collectors.toList());
 
         if (!usedButUndeclared.isEmpty()) {
-
             // TODO(dfox): suggest project(':project-name') when a jar actually comes from this project!
             String suggestion = usedButUndeclared.stream()
                     .filter(artifact -> !allowedExtraneous(artifact))
@@ -114,23 +114,23 @@ public class CheckExactDependenciesTask extends DefaultTask {
                     .sorted()
                     .collect(Collectors.joining("\n", "    dependencies {\n", "\n    }"));
 
-            getLogger().warn("Found {} used but undeclared dependencies - consider adding the following explicit "
+            getLogger().warn("Found {} implicit dependencies - consider adding the following explicit "
                             + "dependencies to '{}', or avoid using classes from these jars:\n{}",
                     usedButUndeclared.size(),
-                    getProject().getRootDir().toPath().relativize(getProject().getBuildFile().toPath()),
+                    buildFile(),
                     suggestion);
         }
 
         if (!declaredButUnused.isEmpty()) {
-            StringBuilder sb = new StringBuilder("Declared but unused dependencies:\n");
+            StringBuilder sb = new StringBuilder();
+            sb.append(String.format("Found %s extraneous dependencies, please delete them from '%s' or "
+                    + "choose one of the suggested fixes:\n", declaredButUnused.size(), buildFile()));
             for (ResolvedArtifact resolvedArtifact : declaredButUnused) {
-                sb.append('\t').append(resolvedArtifact).append('\n');
-
-                // Find the original first-level dependency corresponding to this artifact
-                ResolvedDependency dependency = artifactsFromDependency.get(resolvedArtifact);
+                sb.append('\t').append(asString(resolvedArtifact)).append('\n');
 
                 // Suggest fixes by looking at all transitive classes, filtering the ones we have declarations on,
                 // and mapping the remaining ones back to the jars they came from.
+                ResolvedDependency dependency = artifactsFromDependency.get(resolvedArtifact);
                 Set<ResolvedArtifact> didYouMean = dependency.getAllModuleArtifacts().stream()
                         .flatMap(artifact -> classesFromArtifact.get(artifact).stream())
                         .filter(referencedClasses()::contains)
@@ -141,16 +141,26 @@ public class CheckExactDependenciesTask extends DefaultTask {
 
                 if (!didYouMean.isEmpty()) {
                     sb.append("\t\tDid you mean:\n");
-                    didYouMean.forEach(transitive -> sb.append("\t\t\t").append(transitive).append('\n'));
+                    didYouMean.forEach(transitive -> sb.append("\t\t\timplementation '")
+                            .append(asString(transitive))
+                            .append("\' \n"));
                 }
             }
             throw new GradleException(sb.toString());
         }
     }
 
+    private Path buildFile() {
+        return getProject().getRootDir().toPath().relativize(getProject().getBuildFile().toPath());
+    }
+
     private boolean allowedExtraneous(ResolvedArtifact artifact) {
+        return allowExtraneous.get().contains(asString(artifact));
+    }
+
+    private static String asString(ResolvedArtifact artifact) {
         ModuleVersionIdentifier id = artifact.getModuleVersion().getId();
-        return allowExtraneous.get().contains(id.getGroup() + ":" + id.getName());
+        return id.getGroup() + ":" + id.getName();
     }
 
     private void populateIndexes(Set<ResolvedDependency> declaredDependencies, Set<ResolvedArtifact> allArtifacts) {
