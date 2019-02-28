@@ -16,6 +16,7 @@
 
 package com.palantir.baseline.plugins
 
+import groovy.transform.CompileStatic
 import groovy.xml.XmlUtil
 import java.nio.file.Files
 import java.nio.file.Paths
@@ -23,8 +24,11 @@ import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.FileTreeElement
+import org.gradle.api.specs.Spec
 import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.plugins.ide.idea.GenerateIdeaModule
+import org.gradle.plugins.ide.idea.GenerateIdeaProject
+import org.gradle.plugins.ide.idea.GenerateIdeaWorkspace
 import org.gradle.plugins.ide.idea.IdeaPlugin
 import org.gradle.plugins.ide.idea.model.IdeaModel
 
@@ -65,21 +69,27 @@ class BaselineIdea extends AbstractBaselinePlugin {
         // confuse users, so we proactively clean them up. Intentionally using an Action<Task> to allow up-to-dateness.
         Action<Task> cleanup = new Action<Task>() {
             void execute(Task t) {
-                def imlFile = t.project.tasks.withType(GenerateIdeaModule).getByName("ideaModule").outputFile
-                def isImlFile = { FileTreeElement details -> details.file == imlFile }
+                if (t.project.rootProject == t.project) {
+                    def iprFile = t.project.tasks.withType(GenerateIdeaProject).find().outputFile
+                    def iwsFile = t.project.tasks.withType(GenerateIdeaWorkspace).find().outputFile
+                    project.delete(project.fileTree(
+                            dir: project.getProjectDir(), include: '*.ipr', exclude: isFile(iprFile)))
+                    project.delete(project.fileTree(
+                            dir: project.getProjectDir(), include: '*.iws', exclude: isFile(iwsFile)))
+                }
 
+                def imlFile = t.project.tasks.withType(GenerateIdeaModule).find().outputFile
                 project.delete(project.fileTree(
-                        dir: project.getProjectDir(), include: '*.ipr', exclude: "${project.name}.ipr"))
-                project.delete(project.fileTree(
-                        dir: project.getProjectDir(), include: '*.iws', exclude: "${project.name}.iws"))
-
-                // Careful with these, as the file could be configured to something different
-                project.delete(project.fileTree(
-                        dir: project.getProjectDir(), include: '*.iml', exclude: isImlFile))
+                        dir: project.getProjectDir(), include: '*.iml', exclude: isFile(imlFile)))
             }
         }
 
         project.getTasks().findByName("idea").doLast(cleanup)
+    }
+
+    @CompileStatic
+    static Spec<FileTreeElement> isFile(File file) {
+        { FileTreeElement details -> details.file == file } as Spec<FileTreeElement>
     }
 
     /**
