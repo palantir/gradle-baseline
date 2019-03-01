@@ -18,7 +18,6 @@ package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
-import com.google.errorprone.BugPattern.Category;
 import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
@@ -32,7 +31,6 @@ import java.util.regex.Pattern;
 @AutoService(BugChecker.class)
 @BugPattern(
         name = "GuavaPreconditionsMessageFormat",
-        category = Category.GUAVA,
         severity = SeverityLevel.ERROR,
         summary = "Guava Preconditions.checkX() methods must use print-f style formatting.")
 public final class GuavaPreconditionsMessageFormat extends PreconditionsMessageFormat {

@@ -18,7 +18,6 @@ package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
-import com.google.errorprone.BugPattern.Category;
 import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
@@ -31,7 +30,6 @@ import com.sun.source.tree.MethodInvocationTree;
 @AutoService(BugChecker.class)
 @BugPattern(
         name = "DangerousParallelStreamUsage",
-        category = Category.JDK,
         severity = SeverityLevel.WARNING,
         summary = "Discourage usage of .parallel() in Java streams.")
 public final class DangerousParallelStreamUsage extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {

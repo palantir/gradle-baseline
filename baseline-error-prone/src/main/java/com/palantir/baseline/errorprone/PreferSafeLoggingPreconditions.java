@@ -40,7 +40,6 @@ import java.util.regex.Pattern;
         name = "PreferSafeLoggingPreconditions",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        category = BugPattern.Category.ONE_OFF,
         severity = BugPattern.SeverityLevel.SUGGESTION,
         summary = "Precondition and similar checks with a constant message and no parameters should use equivalent "
                 + "checks from com.palantir.logsafe.Preconditions for standardization as functionality is the same.")

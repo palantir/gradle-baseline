@@ -18,7 +18,6 @@ package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
-import com.google.errorprone.BugPattern.Category;
 import com.google.errorprone.BugPattern.LinkType;
 import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
@@ -33,7 +32,6 @@ import java.util.regex.Pattern;
 @AutoService(BugChecker.class)
 @BugPattern(
         name = "LogSafePreconditionsMessageFormat",
-        category = Category.ONE_OFF,
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
