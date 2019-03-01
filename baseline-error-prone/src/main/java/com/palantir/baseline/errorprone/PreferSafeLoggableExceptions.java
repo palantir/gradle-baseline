@@ -39,7 +39,6 @@ import java.util.stream.Collectors;
         name = "PreferSafeLoggableExceptions",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        category = BugPattern.Category.ONE_OFF,
         severity = BugPattern.SeverityLevel.SUGGESTION,
         summary = "Throw SafeLoggable exceptions to ensure the exception message will not be redacted")
 public final class PreferSafeLoggableExceptions extends BugChecker implements BugChecker.NewClassTreeMatcher {
