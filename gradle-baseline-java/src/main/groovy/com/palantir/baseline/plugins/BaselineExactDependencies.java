@@ -19,9 +19,17 @@ package com.palantir.baseline.plugins;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.palantir.baseline.tasks.CheckExactDependenciesTask;
+import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import javax.inject.Inject;
 import org.apache.maven.shared.dependency.analyzer.ClassAnalyzer;
 import org.apache.maven.shared.dependency.analyzer.DefaultClassAnalyzer;
@@ -30,6 +38,8 @@ import org.apache.maven.shared.dependency.analyzer.asm.ASMDependencyAnalyzer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ResolvedArtifact;
+import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.provider.SetProperty;
@@ -38,7 +48,7 @@ import org.gradle.api.tasks.SourceSetContainer;
 
 public final class BaselineExactDependencies implements Plugin<Project> {
 
-    public static final ClassAnalyzer JAR_ANALYZR = new DefaultClassAnalyzer();
+    public static final Indexes INDEXES = new Indexes();
     public static final DependencyAnalyzer CLASS_FILE_ANALYZER = new ASMDependencyAnalyzer();
 
     @Override
@@ -62,6 +72,8 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                 task.dependenciesConfiguration(compileClasspath);
                 task.allowExtraneous(extension.ignored);
             });
+
+            // TODO(dfox): run these tasks as part of `./gradlew check`
         });
     }
 
@@ -83,6 +95,56 @@ public final class BaselineExactDependencies implements Plugin<Project> {
             List<String> strings = Splitter.on(':').splitToList(artifact);
             Preconditions.checkState(strings.size() == 2, "Artifact must be of the form 'group:name'. Found:",
                     artifact);
+        }
+    }
+
+    // TODO(dfox): make this class thread safe
+    public static class Indexes {
+        private static final ClassAnalyzer JAR_ANALYZER = new DefaultClassAnalyzer();
+
+        private final Map<String, ResolvedArtifact> classToDependency = new HashMap<>();
+        private final Map<ResolvedArtifact, Set<String>> classesFromArtifact = new HashMap<>();
+        private final Map<ResolvedArtifact, ResolvedDependency> artifactsFromDependency = new HashMap<>();
+
+        public void populateIndexes(Set<ResolvedDependency> declaredDependencies) {
+            Set<ResolvedArtifact> allArtifacts = declaredDependencies.stream()
+                    .flatMap(dependency -> dependency.getAllModuleArtifacts().stream())
+                    .collect(Collectors.toSet());
+
+            allArtifacts.forEach(artifact -> {
+                try {
+                    File jar = artifact.getFile();
+                    Set<String> classesInArtifact = JAR_ANALYZER.analyze(jar.toURI().toURL());
+                    classesFromArtifact.put(artifact, classesInArtifact);
+                    classesInArtifact.forEach(clazz -> classToDependency.put(clazz, artifact));
+                } catch (IOException e) {
+                    throw new RuntimeException("Unable to analyze artifact", e);
+                }
+            });
+
+            declaredDependencies.stream().forEach(dependency -> {
+                Set<ResolvedArtifact> artifacts = dependency.getModuleArtifacts();
+                artifacts.forEach(artifact -> artifactsFromDependency.put(artifact, dependency));
+            });
+        }
+
+        /** Given a class, what dependency brought it in. */
+        public Optional<ResolvedArtifact> classToDependency(String clazz) {
+            return Optional.ofNullable(classToDependency.get(clazz));
+        }
+
+
+        /** Given an artifact, what classes does it contain. */
+        public Stream<String> classesFromArtifact(ResolvedArtifact resolvedArtifact) {
+            return Preconditions.checkNotNull(
+                    classesFromArtifact.get(resolvedArtifact),
+                    "Unable to find resolved artifact").stream();
+        }
+
+        public ResolvedDependency artifactsFromDependency(ResolvedArtifact resolvedArtifact) {
+            return Preconditions.checkNotNull(
+                    artifactsFromDependency.get(resolvedArtifact),
+                    "Unable to find resolved artifact");
         }
     }
 }

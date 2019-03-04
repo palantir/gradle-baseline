@@ -19,15 +19,13 @@ package com.palantir.baseline.tasks;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Streams;
 import com.palantir.baseline.plugins.BaselineExactDependencies;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
@@ -46,11 +44,6 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.TaskAction;
 
 public class CheckExactDependenciesTask extends DefaultTask {
-
-    // TODO(dfox): hoist these indexes so they are not recomputed for every subproject
-    private final Map<String, ResolvedArtifact> classToDependency = new HashMap<>();
-    private final Map<ResolvedArtifact, Set<String>> classesFromArtifact = new HashMap<>();
-    private final Map<ResolvedArtifact, ResolvedDependency> artifactsFromDependency = new HashMap<>();
 
     private final ListProperty<Configuration> dependenciesConfigurations;
     private final Property<FileCollection> classes;
@@ -72,26 +65,17 @@ public class CheckExactDependenciesTask extends DefaultTask {
                 .flatMap(resolved -> resolved.getFirstLevelModuleDependencies().stream())
                 .collect(Collectors.toSet());
 
-        Set<ResolvedArtifact> declaredArtifacts = declaredDependencies.stream()
-                .flatMap(dependency -> dependency.getModuleArtifacts().stream())
-                .collect(Collectors.toSet());
-
-        Set<ResolvedArtifact> allArtifacts = declaredDependencies.stream()
-                .flatMap(dependency -> dependency.getAllModuleArtifacts().stream())
-                .collect(Collectors.toSet());
-
-        populateIndexes(declaredDependencies, allArtifacts);
+        BaselineExactDependencies.INDEXES.populateIndexes(declaredDependencies);
 
         // Gather the set of expected dependencies based on referenced classes
         Set<ResolvedArtifact> expectedArtifacts = referencedClasses().stream()
-                .map(clazz -> {
-                    ResolvedArtifact maybeArtifact = classToDependency.get(clazz);
-                    if (maybeArtifact == null) {
-                        getLogger().debug("Failed to locate artifact for {}", clazz);
-                    }
-                    return maybeArtifact;
-                })
-                .filter(Objects::nonNull)
+                .map(BaselineExactDependencies.INDEXES::classToDependency)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .collect(Collectors.toSet());
+
+        Set<ResolvedArtifact> declaredArtifacts = declaredDependencies.stream()
+                .flatMap(dependency -> dependency.getModuleArtifacts().stream())
                 .collect(Collectors.toSet());
 
         List<ResolvedArtifact> usedButUndeclared = Sets.difference(expectedArtifacts, declaredArtifacts).stream()
@@ -130,12 +114,14 @@ public class CheckExactDependenciesTask extends DefaultTask {
 
                 // Suggest fixes by looking at all transitive classes, filtering the ones we have declarations on,
                 // and mapping the remaining ones back to the jars they came from.
-                ResolvedDependency dependency = artifactsFromDependency.get(resolvedArtifact);
+                ResolvedDependency dependency = BaselineExactDependencies.INDEXES
+                        .artifactsFromDependency(resolvedArtifact);
                 Set<ResolvedArtifact> didYouMean = dependency.getAllModuleArtifacts().stream()
-                        .flatMap(artifact -> classesFromArtifact.get(artifact).stream())
+                        .flatMap(BaselineExactDependencies.INDEXES::classesFromArtifact)
                         .filter(referencedClasses()::contains)
-                        .map(clazz -> classToDependency.get(clazz))
-                        .filter(Objects::nonNull)
+                        .map(BaselineExactDependencies.INDEXES::classToDependency)
+                        .filter(Optional::isPresent)
+                        .map(Optional::get)
                         .filter(artifact -> !declaredArtifacts.contains(artifact))
                         .collect(Collectors.toSet());
 
@@ -161,24 +147,6 @@ public class CheckExactDependenciesTask extends DefaultTask {
     private static String asString(ResolvedArtifact artifact) {
         ModuleVersionIdentifier id = artifact.getModuleVersion().getId();
         return id.getGroup() + ":" + id.getName();
-    }
-
-    private void populateIndexes(Set<ResolvedDependency> declaredDependencies, Set<ResolvedArtifact> allArtifacts) {
-        allArtifacts.forEach(artifact -> {
-            try {
-                File jar = artifact.getFile();
-                Set<String> classesInArtifact = BaselineExactDependencies.JAR_ANALYZR.analyze(jar.toURI().toURL());
-                classesFromArtifact.put(artifact, classesInArtifact);
-                classesInArtifact.forEach(clazz -> classToDependency.put(clazz, artifact));
-            } catch (IOException e) {
-                throw new RuntimeException("Unable to analyze artifact", e);
-            }
-        });
-
-        declaredDependencies.stream().forEach(dependency -> {
-            Set<ResolvedArtifact> artifacts = dependency.getModuleArtifacts();
-            artifacts.forEach(artifact -> artifactsFromDependency.put(artifact, dependency));
-        });
     }
 
     /** All classes which are mentioned in this project's source code. */
