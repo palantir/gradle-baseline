@@ -45,7 +45,7 @@ import org.gradle.api.tasks.TaskAction;
 public class CheckUnusedDependenciesTask extends DefaultTask {
 
     private final ListProperty<Configuration> dependenciesConfigurations;
-    private final Property<FileCollection> classes;
+    private final Property<FileCollection> sourceClasses;
     private final SetProperty<String> ignore;
 
     public CheckUnusedDependenciesTask() {
@@ -53,7 +53,7 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
         setDescription("Ensures no extraneous dependencies are declared");
         dependenciesConfigurations = getProject().getObjects().listProperty(Configuration.class);
         dependenciesConfigurations.set(Collections.emptyList());
-        classes = getProject().getObjects().property(FileCollection.class);
+        sourceClasses = getProject().getObjects().property(FileCollection.class);
         ignore = getProject().getObjects().setProperty(String.class);
         ignore.set(Collections.emptySet());
     }
@@ -66,7 +66,7 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
                 .collect(Collectors.toSet());
         BaselineExactDependencies.INDEXES.populateIndexes(declaredDependencies);
 
-        Set<ResolvedArtifact> necessaryArtifacts = Streams.stream(classes.get().iterator())
+        Set<ResolvedArtifact> necessaryArtifacts = Streams.stream(sourceClasses.get().iterator())
                 .flatMap(BaselineExactDependencies::referencedClasses)
                 .map(BaselineExactDependencies.INDEXES::classToDependency)
                 .filter(Optional::isPresent)
@@ -114,7 +114,7 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
 
     /** All classes which are mentioned in this project's source code. */
     private Set<String> referencedClasses() {
-        return Streams.stream(classes.get().iterator())
+        return Streams.stream(sourceClasses.get().iterator())
                 .flatMap(BaselineExactDependencies::referencedClasses)
                 .collect(Collectors.toSet());
     }
@@ -142,12 +142,12 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
     }
 
     @InputFiles
-    public final Provider<FileCollection> getClasses() {
-        return classes;
+    public final Provider<FileCollection> getSourceClasses() {
+        return sourceClasses;
     }
 
-    public final void setClasses(FileCollection newClasses) {
-        this.classes.set(getProject().files(newClasses));
+    public final void setSourceClasses(FileCollection newClasses) {
+        this.sourceClasses.set(getProject().files(newClasses));
     }
 
     public final void ignore(Provider<Set<String>> value) {

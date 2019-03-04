@@ -59,7 +59,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
 
             project.getTasks().create("checkUnusedDependencies", CheckUnusedDependenciesTask.class, task -> {
                 task.dependsOn(JavaPlugin.CLASSES_TASK_NAME);
-                task.setClasses(mainSourceSet.getOutput().getClassesDirs());
+                task.setSourceClasses(mainSourceSet.getOutput().getClassesDirs());
                 task.dependenciesConfiguration(compileClasspath);
 
                 // this is liberally applied to ease the Java8 -> 11 transition
@@ -68,7 +68,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
 
             project.getTasks().create("checkImplicitDependencies", CheckImplicitDependenciesTask.class, task -> {
                 task.dependsOn(JavaPlugin.CLASSES_TASK_NAME);
-                task.setClasses(mainSourceSet.getOutput().getClassesDirs());
+                task.setSourceClasses(mainSourceSet.getOutput().getClassesDirs());
                 task.dependenciesConfiguration(compileClasspath);
 
                 task.ignore("org.slf4j", "slf4j-api");

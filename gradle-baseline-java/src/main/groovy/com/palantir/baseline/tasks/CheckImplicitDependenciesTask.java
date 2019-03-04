@@ -45,7 +45,7 @@ import org.gradle.api.tasks.TaskAction;
 public class CheckImplicitDependenciesTask extends DefaultTask {
 
     private final ListProperty<Configuration> dependenciesConfigurations;
-    private final Property<FileCollection> classes;
+    private final Property<FileCollection> sourceClasses;
     private final SetProperty<String> ignore;
 
     public CheckImplicitDependenciesTask() {
@@ -53,7 +53,7 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
         setDescription("Ensures all dependencies are explicitly declared, not just transitively provided");
         dependenciesConfigurations = getProject().getObjects().listProperty(Configuration.class);
         dependenciesConfigurations.set(Collections.emptyList());
-        classes = getProject().getObjects().property(FileCollection.class);
+        sourceClasses = getProject().getObjects().property(FileCollection.class);
         ignore = getProject().getObjects().setProperty(String.class);
         ignore.set(Collections.emptySet());
     }
@@ -99,7 +99,7 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
 
     /** All classes which are mentioned in this project's source code. */
     private Set<String> referencedClasses() {
-        return Streams.stream(classes.get().iterator())
+        return Streams.stream(sourceClasses.get().iterator())
                 .flatMap(BaselineExactDependencies::referencedClasses)
                 .collect(Collectors.toSet());
     }
@@ -127,12 +127,12 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
     }
 
     @InputFiles
-    public final Provider<FileCollection> getClasses() {
-        return classes;
+    public final Provider<FileCollection> getSourceClasses() {
+        return sourceClasses;
     }
 
-    public final void setClasses(FileCollection newClasses) {
-        this.classes.set(getProject().files(newClasses));
+    public final void setSourceClasses(FileCollection newClasses) {
+        this.sourceClasses.set(getProject().files(newClasses));
     }
 
     public final void ignore(Provider<Set<String>> value) {
