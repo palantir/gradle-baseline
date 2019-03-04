@@ -43,13 +43,13 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.TaskAction;
 
-public class CheckExactDependenciesTask extends DefaultTask {
+public class CheckUnusedDependenciesTask extends DefaultTask {
 
     private final ListProperty<Configuration> dependenciesConfigurations;
     private final Property<FileCollection> classes;
     private final SetProperty<String> allowExtraneous;
 
-    public CheckExactDependenciesTask() {
+    public CheckUnusedDependenciesTask() {
         setGroup("Verification");
         dependenciesConfigurations = getProject().getObjects().listProperty(Configuration.class);
         dependenciesConfigurations.set(Collections.emptyList());
@@ -59,55 +59,29 @@ public class CheckExactDependenciesTask extends DefaultTask {
 
     @TaskAction
     public final void checkUnusedDependencies() {
-
         Set<ResolvedDependency> declaredDependencies = dependenciesConfigurations.get().stream()
                 .map(Configuration::getResolvedConfiguration)
                 .flatMap(resolved -> resolved.getFirstLevelModuleDependencies().stream())
                 .collect(Collectors.toSet());
-
         BaselineExactDependencies.INDEXES.populateIndexes(declaredDependencies);
 
-        // Gather the set of expected dependencies based on referenced classes
-        Set<ResolvedArtifact> expectedArtifacts = referencedClasses().stream()
+        Set<ResolvedArtifact> necessaryArtifacts = referencedClasses().stream()
                 .map(BaselineExactDependencies.INDEXES::classToDependency)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .collect(Collectors.toSet());
-
         Set<ResolvedArtifact> declaredArtifacts = declaredDependencies.stream()
                 .flatMap(dependency -> dependency.getModuleArtifacts().stream())
                 .collect(Collectors.toSet());
 
-        List<ResolvedArtifact> usedButUndeclared = Sets.difference(expectedArtifacts, declaredArtifacts).stream()
-                .sorted(Comparator.comparing(artifact -> artifact.getId().getDisplayName()))
-                .collect(Collectors.toList());
-
-        // TODO(dfox): don't print warnings for jars that define service loaded classes (e.g. meta-inf)
-        List<ResolvedArtifact> declaredButUnused = Sets.difference(declaredArtifacts, expectedArtifacts).stream()
+        List<ResolvedArtifact> declaredButUnused = Sets.difference(declaredArtifacts, necessaryArtifacts).stream()
                 .filter(artifact -> !allowedExtraneous(artifact))
                 .sorted(Comparator.comparing(artifact -> artifact.getId().getDisplayName()))
                 .collect(Collectors.toList());
-
-        if (!usedButUndeclared.isEmpty()) {
-            // TODO(dfox): suggest project(':project-name') when a jar actually comes from this project!
-            String suggestion = usedButUndeclared.stream()
-                    .filter(artifact -> !allowedExtraneous(artifact))
-                    .map(artifact -> String.format("        implementation '%s:%s'",
-                            artifact.getModuleVersion().getId().getGroup(),
-                            artifact.getModuleVersion().getId().getName()))
-                    .sorted()
-                    .collect(Collectors.joining("\n", "    dependencies {\n", "\n    }"));
-
-            getLogger().warn("Found {} implicit dependencies - consider adding the following explicit "
-                            + "dependencies to '{}', or avoid using classes from these jars:\n{}",
-                    usedButUndeclared.size(),
-                    buildFile(),
-                    suggestion);
-        }
-
         if (!declaredButUnused.isEmpty()) {
+            // TODO(dfox): don't print warnings for jars that define service loaded classes (e.g. meta-inf)
             StringBuilder sb = new StringBuilder();
-            sb.append(String.format("Found %s extraneous dependencies, please delete them from '%s' or "
+            sb.append(String.format("Found %s dependencies unused during compilation, please delete them from '%s' or "
                     + "choose one of the suggested fixes:\n", declaredButUnused.size(), buildFile()));
             for (ResolvedArtifact resolvedArtifact : declaredButUnused) {
                 sb.append('\t').append(asString(resolvedArtifact)).append('\n');

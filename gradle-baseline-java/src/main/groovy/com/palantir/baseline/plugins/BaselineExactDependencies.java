@@ -18,7 +18,8 @@ package com.palantir.baseline.plugins;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.palantir.baseline.tasks.CheckExactDependenciesTask;
+import com.palantir.baseline.tasks.CheckUnusedDependenciesTask;
+import com.palantir.baseline.tasks.CheckImplicitDependenciesTask;
 import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
@@ -66,7 +67,14 @@ public final class BaselineExactDependencies implements Plugin<Project> {
             Configuration compileClasspath = project.getConfigurations()
                     .getByName(JavaPlugin.COMPILE_CLASSPATH_CONFIGURATION_NAME);
 
-            project.getTasks().create("checkExactDependencies", CheckExactDependenciesTask.class, task -> {
+            project.getTasks().create("checkUnusedDependencies", CheckUnusedDependenciesTask.class, task -> {
+                task.dependsOn(JavaPlugin.CLASSES_TASK_NAME);
+                task.setClasses(mainSourceSet.getOutput().getClassesDirs());
+                task.dependenciesConfiguration(compileClasspath);
+                task.allowExtraneous(extension.ignored);
+            });
+
+            project.getTasks().create("checkImplicitDependencies", CheckImplicitDependenciesTask.class, task -> {
                 task.dependsOn(JavaPlugin.CLASSES_TASK_NAME);
                 task.setClasses(mainSourceSet.getOutput().getClassesDirs());
                 task.dependenciesConfiguration(compileClasspath);
