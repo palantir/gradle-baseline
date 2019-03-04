@@ -88,7 +88,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     }
 
     // TODO(dfox): make this class thread safe
-    public static class Indexes {
+    public static final class Indexes {
         private final Map<String, ResolvedArtifact> classToDependency = new HashMap<>();
         private final Map<ResolvedArtifact, Set<String>> classesFromArtifact = new HashMap<>();
         private final Map<ResolvedArtifact, ResolvedDependency> artifactsFromDependency = new HashMap<>();

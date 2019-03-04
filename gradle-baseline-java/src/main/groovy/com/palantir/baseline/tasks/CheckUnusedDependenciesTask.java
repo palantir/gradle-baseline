@@ -68,7 +68,6 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
 
         Set<ResolvedArtifact> necessaryArtifacts = Streams.stream(classes.get().iterator())
                 .flatMap(BaselineExactDependencies::referencedClasses)
-                .collect(Collectors.toSet()).stream()
                 .map(BaselineExactDependencies.INDEXES::classToDependency)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
@@ -78,7 +77,7 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
                 .collect(Collectors.toSet());
 
         List<ResolvedArtifact> declaredButUnused = Sets.difference(declaredArtifacts, necessaryArtifacts).stream()
-                .filter(artifact -> !ignore(artifact))
+                .filter(artifact -> !shouldIgnore(artifact))
                 .sorted(Comparator.comparing(artifact -> artifact.getId().getDisplayName()))
                 .collect(Collectors.toList());
         if (!declaredButUnused.isEmpty()) {
@@ -124,7 +123,7 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
         return getProject().getRootDir().toPath().relativize(getProject().getBuildFile().toPath());
     }
 
-    private boolean ignore(ResolvedArtifact artifact) {
+    private boolean shouldIgnore(ResolvedArtifact artifact) {
         return ignore.get().contains(asString(artifact));
     }
 

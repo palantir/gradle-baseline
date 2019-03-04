@@ -81,7 +81,7 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
         if (!usedButUndeclared.isEmpty()) {
             // TODO(dfox): suggest project(':project-name') when a jar actually comes from this project!
             String suggestion = usedButUndeclared.stream()
-                    .filter(artifact -> !ignore(artifact))
+                    .filter(artifact -> !shouldIgnore(artifact))
                     .map(artifact -> String.format("        implementation '%s:%s'",
                             artifact.getModuleVersion().getId().getGroup(),
                             artifact.getModuleVersion().getId().getName()))
@@ -108,7 +108,7 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
         return getProject().getRootDir().toPath().relativize(getProject().getBuildFile().toPath());
     }
 
-    private boolean ignore(ResolvedArtifact artifact) {
+    private boolean shouldIgnore(ResolvedArtifact artifact) {
         return ignore.get().contains(asString(artifact));
     }
 
@@ -144,7 +144,7 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
     }
 
     @Input
-    public final Provider<Set<String>> getIgnored() {
+    public final Provider<Set<String>> getAllowExtraneous() {
         return ignore;
     }
 }
