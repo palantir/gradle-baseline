@@ -18,7 +18,6 @@ package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
-import com.google.errorprone.BugPattern.Category;
 import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
@@ -33,7 +32,6 @@ import com.sun.source.tree.ExpressionTree;
 @AutoService(BugChecker.class)
 @BugPattern(
         name = "DangerousJsonTypeInfoUsage",
-        category = Category.ONE_OFF,
         severity = SeverityLevel.ERROR,
         summary = "Disallow usage of Jackson's JsonTypeInfo.Id.CLASS annotation for security reasons, "
                 + "cf. https://github.com/FasterXML/jackson-databind/issues/1599")

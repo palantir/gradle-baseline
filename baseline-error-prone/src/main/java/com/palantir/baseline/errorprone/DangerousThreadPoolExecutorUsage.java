@@ -6,7 +6,6 @@ package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
-import com.google.errorprone.BugPattern.Category;
 import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
@@ -20,7 +19,6 @@ import java.util.concurrent.ThreadPoolExecutor;
 @AutoService(BugChecker.class)
 @BugPattern(
         name = "DangerousThreadPoolExecutorUsage",
-        category = Category.JDK,
         severity = SeverityLevel.ERROR,
         summary = "Disallow direct ThreadPoolExecutor usages.")
 public final class DangerousThreadPoolExecutorUsage extends BugChecker implements BugChecker.NewClassTreeMatcher {

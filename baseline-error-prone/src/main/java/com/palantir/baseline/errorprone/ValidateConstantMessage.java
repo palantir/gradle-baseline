@@ -19,7 +19,6 @@ package com.palantir.baseline.errorprone;
 import com.google.auto.service.AutoService;
 import com.google.common.collect.ImmutableMap;
 import com.google.errorprone.BugPattern;
-import com.google.errorprone.BugPattern.Category;
 import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
@@ -35,7 +34,6 @@ import java.util.List;
 @AutoService(BugChecker.class)
 @BugPattern(
         name = "ValidateConstantMessage",
-        category = Category.ONE_OFF, // or APACHE
         severity = SeverityLevel.ERROR,
         summary = "Allow only constant messages to Validate.X() methods")
 public final class ValidateConstantMessage extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
