@@ -19,7 +19,6 @@ package com.palantir.baseline.tasks;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Streams;
 import com.palantir.baseline.plugins.BaselineExactDependencies;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Comparator;
@@ -47,14 +46,16 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
 
     private final ListProperty<Configuration> dependenciesConfigurations;
     private final Property<FileCollection> classes;
-    private final SetProperty<String> allowExtraneous;
+    private final SetProperty<String> ignore;
 
     public CheckUnusedDependenciesTask() {
         setGroup("Verification");
+        setDescription("Ensures no extraneous dependencies are declared");
         dependenciesConfigurations = getProject().getObjects().listProperty(Configuration.class);
         dependenciesConfigurations.set(Collections.emptyList());
         classes = getProject().getObjects().property(FileCollection.class);
-        allowExtraneous = getProject().getObjects().setProperty(String.class);
+        ignore = getProject().getObjects().setProperty(String.class);
+        ignore.set(Collections.emptySet());
     }
 
     @TaskAction
@@ -65,7 +66,9 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
                 .collect(Collectors.toSet());
         BaselineExactDependencies.INDEXES.populateIndexes(declaredDependencies);
 
-        Set<ResolvedArtifact> necessaryArtifacts = referencedClasses().stream()
+        Set<ResolvedArtifact> necessaryArtifacts = Streams.stream(classes.get().iterator())
+                .flatMap(BaselineExactDependencies::referencedClasses)
+                .collect(Collectors.toSet()).stream()
                 .map(BaselineExactDependencies.INDEXES::classToDependency)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
@@ -75,7 +78,7 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
                 .collect(Collectors.toSet());
 
         List<ResolvedArtifact> declaredButUnused = Sets.difference(declaredArtifacts, necessaryArtifacts).stream()
-                .filter(artifact -> !allowedExtraneous(artifact))
+                .filter(artifact -> !ignore(artifact))
                 .sorted(Comparator.comparing(artifact -> artifact.getId().getDisplayName()))
                 .collect(Collectors.toList());
         if (!declaredButUnused.isEmpty()) {
@@ -110,28 +113,24 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
         }
     }
 
+    /** All classes which are mentioned in this project's source code. */
+    private Set<String> referencedClasses() {
+        return Streams.stream(classes.get().iterator())
+                .flatMap(BaselineExactDependencies::referencedClasses)
+                .collect(Collectors.toSet());
+    }
+
     private Path buildFile() {
         return getProject().getRootDir().toPath().relativize(getProject().getBuildFile().toPath());
     }
 
-    private boolean allowedExtraneous(ResolvedArtifact artifact) {
-        return allowExtraneous.get().contains(asString(artifact));
+    private boolean ignore(ResolvedArtifact artifact) {
+        return ignore.get().contains(asString(artifact));
     }
 
     private static String asString(ResolvedArtifact artifact) {
         ModuleVersionIdentifier id = artifact.getModuleVersion().getId();
         return id.getGroup() + ":" + id.getName();
-    }
-
-    /** All classes which are mentioned in this project's source code. */
-    private Set<String> referencedClasses() {
-        return Streams.stream(classes.get().iterator()).flatMap(classFile -> {
-            try {
-                return BaselineExactDependencies.CLASS_FILE_ANALYZER.analyze(classFile.toURI().toURL()).stream();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }).collect(Collectors.toSet());
     }
 
     @Input
@@ -152,12 +151,16 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
         this.classes.set(getProject().files(newClasses));
     }
 
-    public final void allowExtraneous(Provider<Set<String>> value) {
-        allowExtraneous.set(value);
+    public final void ignore(Provider<Set<String>> value) {
+        ignore.set(value);
+    }
+
+    public final void ignore(String group, String name) {
+        ignore.add(group + ":" + name);
     }
 
     @Input
-    public final Provider<Set<String>> getAllowExtraneous() {
-        return allowExtraneous;
+    public final Provider<Set<String>> getIgnored() {
+        return ignore;
     }
 }

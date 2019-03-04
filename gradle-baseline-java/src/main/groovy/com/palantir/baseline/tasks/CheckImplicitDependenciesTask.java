@@ -19,7 +19,6 @@ package com.palantir.baseline.tasks;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Streams;
 import com.palantir.baseline.plugins.BaselineExactDependencies;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Comparator;
@@ -47,14 +46,16 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
 
     private final ListProperty<Configuration> dependenciesConfigurations;
     private final Property<FileCollection> classes;
-    private final SetProperty<String> allowExtraneous;
+    private final SetProperty<String> ignore;
 
     public CheckImplicitDependenciesTask() {
         setGroup("Verification");
+        setDescription("Ensures all dependencies are explicitly declared, not just transitively provided");
         dependenciesConfigurations = getProject().getObjects().listProperty(Configuration.class);
         dependenciesConfigurations.set(Collections.emptyList());
         classes = getProject().getObjects().property(FileCollection.class);
-        allowExtraneous = getProject().getObjects().setProperty(String.class);
+        ignore = getProject().getObjects().setProperty(String.class);
+        ignore.set(Collections.emptySet());
     }
 
     @TaskAction
@@ -80,7 +81,7 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
         if (!usedButUndeclared.isEmpty()) {
             // TODO(dfox): suggest project(':project-name') when a jar actually comes from this project!
             String suggestion = usedButUndeclared.stream()
-                    .filter(artifact -> !allowedExtraneous(artifact))
+                    .filter(artifact -> !ignore(artifact))
                     .map(artifact -> String.format("        implementation '%s:%s'",
                             artifact.getModuleVersion().getId().getGroup(),
                             artifact.getModuleVersion().getId().getName()))
@@ -98,21 +99,17 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
 
     /** All classes which are mentioned in this project's source code. */
     private Set<String> referencedClasses() {
-        return Streams.stream(classes.get().iterator()).flatMap(classFile -> {
-            try {
-                return BaselineExactDependencies.CLASS_FILE_ANALYZER.analyze(classFile.toURI().toURL()).stream();
-            } catch (IOException e) {
-                throw new RuntimeException(e);
-            }
-        }).collect(Collectors.toSet());
+        return Streams.stream(classes.get().iterator())
+                .flatMap(BaselineExactDependencies::referencedClasses)
+                .collect(Collectors.toSet());
     }
 
     private Path buildFile() {
         return getProject().getRootDir().toPath().relativize(getProject().getBuildFile().toPath());
     }
 
-    private boolean allowedExtraneous(ResolvedArtifact artifact) {
-        return allowExtraneous.get().contains(asString(artifact));
+    private boolean ignore(ResolvedArtifact artifact) {
+        return ignore.get().contains(asString(artifact));
     }
 
     private static String asString(ResolvedArtifact artifact) {
@@ -138,12 +135,16 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
         this.classes.set(getProject().files(newClasses));
     }
 
-    public final void allowExtraneous(Provider<Set<String>> value) {
-        allowExtraneous.set(value);
+    public final void ignore(Provider<Set<String>> value) {
+        ignore.set(value);
+    }
+
+    public final void ignore(String group, String name) {
+        ignore.add(group + ":" + name);
     }
 
     @Input
-    public final Provider<Set<String>> getAllowExtraneous() {
-        return allowExtraneous;
+    public final Provider<Set<String>> getIgnored() {
+        return ignore;
     }
 }

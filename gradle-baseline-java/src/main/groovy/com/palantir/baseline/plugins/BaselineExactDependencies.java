@@ -17,21 +17,16 @@
 package com.palantir.baseline.plugins;
 
 import com.google.common.base.Preconditions;
-import com.google.common.base.Splitter;
-import com.palantir.baseline.tasks.CheckUnusedDependenciesTask;
 import com.palantir.baseline.tasks.CheckImplicitDependenciesTask;
+import com.palantir.baseline.tasks.CheckUnusedDependenciesTask;
 import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
-import java.util.Collections;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import javax.inject.Inject;
 import org.apache.maven.shared.dependency.analyzer.ClassAnalyzer;
 import org.apache.maven.shared.dependency.analyzer.DefaultClassAnalyzer;
 import org.apache.maven.shared.dependency.analyzer.DependencyAnalyzer;
@@ -43,27 +38,22 @@ import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
-import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.SourceSet;
-import org.gradle.api.tasks.SourceSetContainer;
 
 public final class BaselineExactDependencies implements Plugin<Project> {
 
+    private static final ClassAnalyzer JAR_ANALYZER = new DefaultClassAnalyzer();
+    private static final DependencyAnalyzer CLASS_FILE_ANALYZER = new ASMDependencyAnalyzer();
+
     public static final Indexes INDEXES = new Indexes();
-    public static final DependencyAnalyzer CLASS_FILE_ANALYZER = new ASMDependencyAnalyzer();
 
     @Override
     public void apply(Project project) {
         project.getPluginManager().withPlugin("java", plugin -> {
-            Extension extension = project.getExtensions().create("exactDependencies", Extension.class, project);
-
-            // this is liberally applied to ease the Java8 -> 11 transition
-            extension.ignore("javax.annotation:javax.annotation-api");
-            extension.ignore("org.slf4j:slf4j-api");
-
-            SourceSetContainer sourceSets = project.getConvention()
-                    .getPlugin(JavaPluginConvention.class).getSourceSets();
-            SourceSet mainSourceSet = sourceSets.getByName(SourceSet.MAIN_SOURCE_SET_NAME);
+            SourceSet mainSourceSet = project.getConvention()
+                    .getPlugin(JavaPluginConvention.class)
+                    .getSourceSets()
+                    .getByName(SourceSet.MAIN_SOURCE_SET_NAME);
             Configuration compileClasspath = project.getConfigurations()
                     .getByName(JavaPlugin.COMPILE_CLASSPATH_CONFIGURATION_NAME);
 
@@ -71,45 +61,34 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                 task.dependsOn(JavaPlugin.CLASSES_TASK_NAME);
                 task.setClasses(mainSourceSet.getOutput().getClassesDirs());
                 task.dependenciesConfiguration(compileClasspath);
-                task.allowExtraneous(extension.ignored);
+
+                // this is liberally applied to ease the Java8 -> 11 transition
+                task.ignore("javax.annotation", "javax.annotation-api");
             });
 
             project.getTasks().create("checkImplicitDependencies", CheckImplicitDependenciesTask.class, task -> {
                 task.dependsOn(JavaPlugin.CLASSES_TASK_NAME);
                 task.setClasses(mainSourceSet.getOutput().getClassesDirs());
                 task.dependenciesConfiguration(compileClasspath);
-                task.allowExtraneous(extension.ignored);
+
+                task.ignore("org.slf4j", "slf4j-api");
             });
 
             // TODO(dfox): run these tasks as part of `./gradlew check`
         });
     }
 
-    public static class Extension implements Serializable {
-        private final SetProperty<String> ignored;
-
-        @Inject
-        public Extension(Project project) {
-            this.ignored = project.getObjects().setProperty(String.class);
-            this.ignored.set(Collections.emptyList());
-        }
-
-        public final void ignore(String artifact) {
-            validate(artifact);
-            ignored.add(artifact);
-        }
-
-        private static void validate(String artifact) {
-            List<String> strings = Splitter.on(':').splitToList(artifact);
-            Preconditions.checkState(strings.size() == 2, "Artifact must be of the form 'group:name'. Found:",
-                    artifact);
+    /** Given a {@code com/palantir/product/Foo.class} file, what other classes does it import/reference. */
+    public static Stream<String> referencedClasses(File classFile) {
+        try {
+            return BaselineExactDependencies.CLASS_FILE_ANALYZER.analyze(classFile.toURI().toURL()).stream();
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to analyze " + classFile, e);
         }
     }
 
     // TODO(dfox): make this class thread safe
     public static class Indexes {
-        private static final ClassAnalyzer JAR_ANALYZER = new DefaultClassAnalyzer();
-
         private final Map<String, ResolvedArtifact> classToDependency = new HashMap<>();
         private final Map<ResolvedArtifact, Set<String>> classesFromArtifact = new HashMap<>();
         private final Map<ResolvedArtifact, ResolvedDependency> artifactsFromDependency = new HashMap<>();
@@ -140,7 +119,6 @@ public final class BaselineExactDependencies implements Plugin<Project> {
         public Optional<ResolvedArtifact> classToDependency(String clazz) {
             return Optional.ofNullable(classToDependency.get(clazz));
         }
-
 
         /** Given an artifact, what classes does it contain. */
         public Stream<String> classesFromArtifact(ResolvedArtifact resolvedArtifact) {
