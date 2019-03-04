@@ -14,10 +14,15 @@ buildscript {
 }
 
 plugins {
+    id 'com.gradle.build-scan' version '2.2.1'
     id 'com.palantir.git-version' version '0.11.0'
     id 'org.inferred.processors' version '2.1.0'
 }
 
+buildScan {
+    termsOfServiceUrl = 'https://gradle.com/terms-of-service'
+    apply from: 'gradle/build-scans.gradle'
+}
 apply plugin: 'com.palantir.baseline'
 
 allprojects {

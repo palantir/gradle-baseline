@@ -16,7 +16,7 @@ jobs:
       - checkout
       - restore_cache: { key: 'gradle-wrapper-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}' }
       - restore_cache: { key: 'gradle-cache-{{ checksum "versions.props" }}-{{ checksum "build.gradle" }}' }
-      - run: ./gradlew --no-daemon --parallel --stacktrace  --continue --max-workers=8 --profile build
+      - run: ./gradlew --no-daemon --parallel --stacktrace  --continue --max-workers=8 --profile build --scan
       - save_cache:
           key: 'gradle-wrapper-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}'
           paths: [ ~/.gradle/wrapper ]
@@ -30,9 +30,9 @@ jobs:
           command: |
             # publishing snapshots to bintray does not work, so we only publish from tag builds (not develop)
             if [[ "${CIRCLE_TAG}" =~ [0-9]+(\.[0-9]+)+(-[a-zA-Z]+[0-9]*)* ]]; then
-              ./gradlew --no-daemon --parallel --stacktrace  --continue --max-workers=8 --profile publish
+              ./gradlew --no-daemon --parallel --stacktrace  --continue --max-workers=8 --profile publish --scan
             else
-              ./gradlew --no-daemon --parallel --stacktrace  --continue --max-workers=8 --profile publishToMavenLocal
+              ./gradlew --no-daemon --parallel --stacktrace  --continue --max-workers=8 --profile publishToMavenLocal --scan
               mkdir -p $CIRCLE_ARTIFACTS/poms
               find . -name 'pom-default.xml' -exec cp --parents {} $CIRCLE_ARTIFACTS/poms \;
             fi
@@ -51,7 +51,7 @@ jobs:
       - checkout
       - restore_cache: { key: 'gradle-wrapper-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}' }
       - restore_cache: { key: 'gradle-cache-{{ checksum "versions.props" }}-{{ checksum "build.gradle" }}' }
-      - run: ./gradlew --no-daemon --parallel --stacktrace  --continue --profile build
+      - run: ./gradlew --no-daemon --parallel --stacktrace  --continue --profile build --scan
       - save_cache:
           key: 'gradle-wrapper-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}'
           paths: [ ~/.gradle/wrapper ]
