@@ -40,7 +40,7 @@ class BaselineIntegrationTest extends AbstractPluginTest {
         multiProject.addSubproject("other-project")
 
         expect:
-        with().withGradleVersion(gradleVersion).build()
+        with().withArguments('-s').withGradleVersion(gradleVersion).build()
 
         where:
         gradleVersion << ['4.10.2', '5.0-milestone-1']
