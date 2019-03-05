@@ -4,19 +4,20 @@
 
 _Baseline is a family of Gradle plugins for configuring Java projects with sensible defaults for code-style, static analysis, dependency versioning, CircleCI and IntelliJ IDEA/Eclipse integration._
 
-| Plugin                                   | Description            |
-|------------------------------------------|------------------------|
-| `com.palantir.baseline-idea`             | Configures [Intellij IDEA](https://www.jetbrains.com/idea/) with code style and copyright headers
-| `com.palantir.baseline-eclipse`          | Configures [Eclipse](https://www.eclipse.org/downloads/) with code style and copyright headers
-| `com.palantir.baseline-error-prone`      | Static analysis for your Java code using Google's [error-prone](http://errorprone.info/).
-| `com.palantir.baseline-checkstyle`       | Enforces consistent Java formatting using [checkstyle](http://checkstyle.sourceforge.net/)
-| `com.palantir.baseline-format`           | Formats your java files to comply with checkstyle
-| `com.palantir.baseline-scalastyle`       | Enforces formatting using [scalastyle](http://www.scalastyle.org/)
-| `com.palantir.baseline-class-uniqueness` | Analyses your classpath to ensure no fully-qualified class is defined more than once.
-| `com.palantir.baseline-circleci`         | [CircleCI](https://circleci.com/) integration using `$CIRCLE_ARTIFACTS` and `$CIRCLE_TEST_REPORTS` dirs
-| `com.palantir.baseline-versions`         | Source dependency versions from a `versions.props` file using [nebula dependency recommender](https://github.com/nebula-plugins/nebula-dependency-recommender-plugin)
-| `com.palantir.baseline-config`           | Config files for the above plugins
-| `com.palantir.baseline-reproducibility`  | Sensible defaults to ensure Jar, Tar and Zip tasks can be reproduced
+| Plugin                                    | Description            |
+|-------------------------------------------|------------------------|
+| `com.palantir.baseline-idea`              | Configures [Intellij IDEA](https://www.jetbrains.com/idea/) with code style and copyright headers
+| `com.palantir.baseline-eclipse`           | Configures [Eclipse](https://www.eclipse.org/downloads/) with code style and copyright headers
+| `com.palantir.baseline-error-prone`       | Static analysis for your Java code using Google's [error-prone](http://errorprone.info/).
+| `com.palantir.baseline-checkstyle`        | Enforces consistent Java formatting using [checkstyle](http://checkstyle.sourceforge.net/)
+| `com.palantir.baseline-format`            | Formats your java files to comply with checkstyle
+| `com.palantir.baseline-scalastyle`        | Enforces formatting using [scalastyle](http://www.scalastyle.org/)
+| `com.palantir.baseline-class-uniqueness`  | Analyses your classpath to ensure no fully-qualified class is defined more than once.
+| `com.palantir.baseline-circleci`          | [CircleCI](https://circleci.com/) integration using `$CIRCLE_ARTIFACTS` and `$CIRCLE_TEST_REPORTS` dirs
+| `com.palantir.baseline-versions`          | Source dependency versions from a `versions.props` file using [nebula dependency recommender](https://github.com/nebula-plugins/nebula-dependency-recommender-plugin)
+| `com.palantir.baseline-config`            | Config files for the above plugins
+| `com.palantir.baseline-reproducibility`   | Sensible defaults to ensure Jar, Tar and Zip tasks can be reproduced
+| `com.palantir.baseline-exact-dependencies`| Ensures projects explicitly declare all the dependencies they rely on, no more and no less
 
 See also the [Baseline Java Style Guide and Best Practises](./docs).
 
@@ -305,3 +306,23 @@ tasks.withType(AbstractArchiveTask) {
 It also warns if it detects usage of the [`nebula.info`](https://github.com/nebula-plugins/gradle-info-plugin) plugin which is known to violate the reproducibility of Jars by adding a 'Build-Date' entry to the MANIFEST.MF, which will be different on every run of `./gradlew jar`.
 
 _Complete byte-for-byte reproducibility is desirable because it enables the [Gradle build cache](https://docs.gradle.org/4.10/userguide/build_cache.html) to be much more effective._
+
+
+## com.palantir.baseline-exact-dependencies
+
+This plugin adds two tasks to help users ensure they explicitly declare exactly the dependencies they need - nothing more and nothing less:
+
+- `checkUnusedDependencies` - fails if a project pulls in a jar but never compiles against classes from it.  This is undesirable because it inflates published jars and distributions.
+- `checkImplicitDependencies` - fails if source code relies on classes that only appear on the classpath transitively.  This is fragile because without a direct dependency on the relevant jar, a seemingly unrelated dependency upgrade could cause compilation to start failing.
+
+Both of these tasks can be configured to ignore specific dependencies if this improves the signal-to-noise ratio. The following snippet illustrates the defaults that are baked into the plugin:
+
+```gradle
+checkUnusedDependencies {
+    ignore 'javax.annotation', 'javax.annotation-api'
+}
+
+checkImplicitDependencies {
+    ignore 'org.slf4j', 'slf4j-api'
+}
+```
