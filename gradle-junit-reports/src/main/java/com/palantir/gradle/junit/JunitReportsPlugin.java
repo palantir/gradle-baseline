@@ -78,14 +78,14 @@ public final class JunitReportsPlugin implements Plugin<Project> {
     }
 
     private static void configureBuildFailureFinalizer(Project rootProject, Provider<Directory> reportsDir) {
-        Provider<RegularFile> targetFileProvider = reportsDir.flatMap(dir -> rootProject.getProviders().provider(() -> {
+        Provider<RegularFile> targetFileProvider = reportsDir.map(dir -> {
             int attemptNumber = 1;
             Path targetFile = dir.getAsFile().toPath().resolve("gradle").resolve("build.xml");
             while (targetFile.toFile().exists()) {
                 targetFile = dir.getAsFile().toPath().resolve("gradle").resolve("build" + (++attemptNumber) + ".xml");
             }
             return dir.file(targetFile.toAbsolutePath().toString());
-        }));
+        });
 
         BuildFailureListener listener = new BuildFailureListener();
         BuildFinishedAction action = new BuildFinishedAction(targetFileProvider, listener);
