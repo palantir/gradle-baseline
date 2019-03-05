@@ -50,7 +50,7 @@ public final class BuildFinishedAction implements Action<BuildResult> {
         Document xml = JunitReportCreator.reportToXml(report);
 
         try {
-            Files.createDirectories(getTargetFile());
+            Files.createDirectories(getTargetFile().getParent());
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
