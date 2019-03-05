@@ -18,6 +18,7 @@ package com.palantir.gradle.junit;
 
 import com.google.common.base.Splitter;
 import java.io.File;
+import java.nio.file.Path;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.file.Directory;
@@ -71,15 +72,23 @@ public final class JunitReportsPlugin implements Plugin<Project> {
 
     private static Provider<File> junitPath(DirectoryProperty basePath, String testPath) {
         return basePath
+                .map(dir -> dir.dir("junit"))
                 .map(dir -> dir.file(String.join(File.separator, Splitter.on(':').splitToList(testPath.substring(1)))))
                 .map(RegularFile::getAsFile);
     }
 
     private static void configureBuildFailureFinalizer(Project rootProject, Provider<Directory> reportsDir) {
-        Provider<RegularFile> targetFile = reportsDir.map(dir -> dir.file("gradle/build.xml"));
+        Provider<RegularFile> targetFileProvider = reportsDir.flatMap(dir -> rootProject.getProviders().provider(() -> {
+            int attemptNumber = 1;
+            Path targetFile = dir.getAsFile().toPath().resolve("gradle").resolve("build.xml");
+            while (targetFile.toFile().exists()) {
+                targetFile = dir.getAsFile().toPath().resolve("gradle").resolve("build" + (++attemptNumber) + ".xml");
+            }
+            return dir.file(targetFile.toAbsolutePath().toString());
+        }));
 
         BuildFailureListener listener = new BuildFailureListener();
-        BuildFinishedAction action = new BuildFinishedAction(targetFile, listener);
+        BuildFinishedAction action = new BuildFinishedAction(targetFileProvider, listener);
         rootProject.getGradle().addListener(listener);
         rootProject.getGradle().buildFinished(action);
     }
