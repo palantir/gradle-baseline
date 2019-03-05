@@ -21,12 +21,13 @@ import com.palantir.baseline.tasks.CheckImplicitDependenciesTask;
 import com.palantir.baseline.tasks.CheckUnusedDependenciesTask;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import javax.annotation.concurrent.ThreadSafe;
 import org.apache.maven.shared.dependency.analyzer.ClassAnalyzer;
 import org.apache.maven.shared.dependency.analyzer.DefaultClassAnalyzer;
 import org.apache.maven.shared.dependency.analyzer.DependencyAnalyzer;
@@ -40,11 +41,14 @@ import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
 
+/** Validates that java projects declare exactly the dependencies they rely on, no more and no less. */
 public final class BaselineExactDependencies implements Plugin<Project> {
 
     private static final ClassAnalyzer JAR_ANALYZER = new DefaultClassAnalyzer();
     private static final DependencyAnalyzer CLASS_FILE_ANALYZER = new ASMDependencyAnalyzer();
 
+    // All applications of this plugin share a single static 'Indexes' instance, because the classes
+    // contained in a particular jar are immutable.
     public static final Indexes INDEXES = new Indexes();
 
     @Override
@@ -73,8 +77,6 @@ public final class BaselineExactDependencies implements Plugin<Project> {
 
                 task.ignore("org.slf4j", "slf4j-api");
             });
-
-            // TODO(dfox): run these tasks as part of `./gradlew check`
         });
     }
 
@@ -87,11 +89,11 @@ public final class BaselineExactDependencies implements Plugin<Project> {
         }
     }
 
-    // TODO(dfox): make this class thread safe
+    @ThreadSafe
     public static final class Indexes {
-        private final Map<String, ResolvedArtifact> classToDependency = new HashMap<>();
-        private final Map<ResolvedArtifact, Set<String>> classesFromArtifact = new HashMap<>();
-        private final Map<ResolvedArtifact, ResolvedDependency> artifactsFromDependency = new HashMap<>();
+        private final Map<String, ResolvedArtifact> classToDependency = new ConcurrentHashMap<>();
+        private final Map<ResolvedArtifact, Set<String>> classesFromArtifact = new ConcurrentHashMap<>();
+        private final Map<ResolvedArtifact, ResolvedDependency> artifactsFromDependency = new ConcurrentHashMap<>();
 
         public void populateIndexes(Set<ResolvedDependency> declaredDependencies) {
             Set<ResolvedArtifact> allArtifacts = declaredDependencies.stream()

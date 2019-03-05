@@ -144,7 +144,7 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
     }
 
     @Input
-    public final Provider<Set<String>> getAllowExtraneous() {
+    public final Provider<Set<String>> getIgnored() {
         return ignore;
     }
 }
