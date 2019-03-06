@@ -22,5 +22,5 @@ commons-lang:commons-lang = 2.6
 org.assertj:assertj-core = 3.12.1
 org.hamcrest:hamcrest-core = 2.1
 org.junit.jupiter:* = 5.4.0
-org.mockito:mockito-core = 2.24.5
+org.mockito:mockito-core = 2.25.0
 com.fasterxml.jackson.*:* = 2.9.8
