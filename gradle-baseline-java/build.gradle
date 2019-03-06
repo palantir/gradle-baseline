@@ -7,7 +7,7 @@ apply from: "${rootDir}/gradle/bintray-publish.gradle"
 apply from: "${rootDir}/gradle/java.gradle"
 
 dependencies {
-    compile project(':gradle-circle-style')
+    compile project(':gradle-junit-reports')
     compile gradleApi()
     compile 'com.diffplug.spotless:spotless-plugin-gradle'
     compile 'com.google.guava:guava'

@@ -18,14 +18,8 @@ package com.palantir.baseline.plugins;
 
 import com.google.common.base.Splitter;
 import com.palantir.configurationresolver.ConfigurationResolverPlugin;
-import com.palantir.gradle.circlestyle.CheckstyleReportHandler;
-import com.palantir.gradle.circlestyle.CircleBuildFailureListener;
-import com.palantir.gradle.circlestyle.CircleBuildFinishedAction;
-import com.palantir.gradle.circlestyle.CircleStyleFinalizer;
-import com.palantir.gradle.circlestyle.JavacFailuresSupplier;
-import com.palantir.gradle.circlestyle.StyleTaskTimer;
-import com.palantir.gradle.circlestyle.TaskTimer;
-import com.palantir.gradle.circlestyle.XmlReportFailuresSupplier;
+import com.palantir.gradle.junit.JunitReportsExtension;
+import com.palantir.gradle.junit.JunitReportsPlugin;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -37,8 +31,6 @@ import java.nio.file.attribute.PosixFilePermissions;
 import java.util.Set;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.plugins.quality.Checkstyle;
-import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.testing.Test;
 
 public final class BaselineCircleCi implements Plugin<Project> {
@@ -47,14 +39,11 @@ public final class BaselineCircleCi implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
-        if (project != project.getRootProject()) {
-            project.getLogger().warn(
-                    "com.palantir.baseline-circleci should be applied to the root project only, not '{}'",
-                    project.getName());
-        }
+        project.getPluginManager().apply(JunitReportsPlugin.class);
 
         // the `./gradlew resolveConfigurations` task is used on CI to download all jars for convenient caching
         project.getRootProject().allprojects(p -> p.getPluginManager().apply(ConfigurationResolverPlugin.class));
+
         configurePluginsForReports(project);
         configurePluginsForArtifacts(project);
     }
@@ -82,8 +71,6 @@ public final class BaselineCircleCi implements Plugin<Project> {
     private void configurePluginsForReports(Project project) {
         String circleReportsDir = System.getenv("CIRCLE_TEST_REPORTS");
         if (circleReportsDir == null) {
-            project.getLogger().info("CIRCLE_TEST_REPORTS variable is not set,"
-                    + " not configuring junit/checkstyele/java compilation results");
             return;
         }
 
@@ -93,29 +80,8 @@ public final class BaselineCircleCi implements Plugin<Project> {
             throw new RuntimeException("failed to create CIRCLE_TEST_REPORTS directory", e);
         }
 
-        configureBuildFailureFinalizer(project.getRootProject(), circleReportsDir);
-
-        TaskTimer timer = new StyleTaskTimer();
-        project.getRootProject().getGradle().addListener(timer);
-
-        project.getRootProject().allprojects(proj -> {
-            proj.getTasks().withType(Test.class, test -> {
-                test.getReports().getJunitXml().setEnabled(true);
-                test.getReports().getJunitXml().setDestination(junitPath(circleReportsDir, test.getPath()));
-            });
-            proj.getTasks().withType(Checkstyle.class, checkstyle ->
-                    CircleStyleFinalizer.registerFinalizer(
-                            checkstyle,
-                            timer,
-                            XmlReportFailuresSupplier.create(checkstyle, new CheckstyleReportHandler()),
-                            Paths.get(circleReportsDir, "checkstyle")));
-            proj.getTasks().withType(JavaCompile.class, javac ->
-                    CircleStyleFinalizer.registerFinalizer(
-                            javac,
-                            timer,
-                            JavacFailuresSupplier.create(javac),
-                            Paths.get(circleReportsDir, "javac")));
-        });
+        project.getExtensions().configure(JunitReportsExtension.class, junitReports ->
+                junitReports.getReportsDirectory().set(new File(circleReportsDir)));
     }
 
     private static File junitPath(String basePath, String testPath) {
@@ -126,21 +92,4 @@ public final class BaselineCircleCi implements Plugin<Project> {
         return junitReportsDir.toFile();
     }
 
-    private static void configureBuildFailureFinalizer(Project rootProject, String circleReportsDir) {
-        int attemptNumber = 1;
-        Path targetFile = Paths.get(circleReportsDir, "gradle", "build.xml");
-        while (targetFile.toFile().exists()) {
-            targetFile = Paths.get(circleReportsDir, "gradle", "build" + (++attemptNumber) + ".xml");
-        }
-        Integer container;
-        try {
-            container = Integer.parseInt(System.getenv("CIRCLE_NODE_INDEX"));
-        } catch (NumberFormatException e) {
-            container = null;
-        }
-        CircleBuildFailureListener listener = new CircleBuildFailureListener();
-        CircleBuildFinishedAction action = new CircleBuildFinishedAction(container, targetFile, listener);
-        rootProject.getGradle().addListener(listener);
-        rootProject.getGradle().buildFinished(action);
-    }
 }
