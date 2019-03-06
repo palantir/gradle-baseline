@@ -14,6 +14,7 @@ dependencies {
     compile 'com.netflix.nebula:nebula-dependency-recommender'
     compile 'com.palantir.configurationresolver:gradle-configuration-resolver-plugin'
     compile 'net.ltgt.gradle:gradle-errorprone-plugin'
+    compile 'org.apache.maven.shared:maven-dependency-analyzer'
     compile 'org.github.ngbinh.scalastyle:gradle-scalastyle-plugin_2.11'
 
     testCompile gradleTestKit()
@@ -60,6 +61,10 @@ pluginBundle {
         baselineConfigPlugin {
             id = 'com.palantir.baseline-config'
             displayName = 'Palantir Baseline Configuration Plugin'
+        }
+        baselineExactDependenciesPlugin {
+            id = 'com.palantir.baseline-exact-dependencies'
+            displayName = 'Palantir Baseline Exact Dependencies Plugin'
         }
         baselineEclipsePlugin {
             id = 'com.palantir.baseline-eclipse'
