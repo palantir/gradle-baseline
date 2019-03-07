@@ -127,6 +127,10 @@
             <property name="illegalPkgs" value="junit.framework"/>
             <message key="import.illegal" value="Use JUnit 4-style (org.junit.*) test classes and assertions instead of JUnit 3 (junit.framework.*)."/>
         </module>
+        <module name="IllegalImport"> <!-- Some OpenJDK builds do not include javafx -->
+            <property name="illegalPkgs" value="javafx"/>
+            <message key="import.illegal" value="Must not import javafx classes."/>
+        </module>
         <module name="IllegalImport"> <!-- Java Coding Guidelines: Import the canonical package -->
             <property name="illegalPkgs" value="org.elasticsearch.common.base, com.clearspring.analytics.util, org.spark_project.guava"/>
             <message key="import.illegal" value="Must not import repackaged classes."/>
