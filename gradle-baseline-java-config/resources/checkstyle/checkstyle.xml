@@ -127,7 +127,7 @@
             <property name="illegalPkgs" value="junit.framework"/>
             <message key="import.illegal" value="Use JUnit 4-style (org.junit.*) test classes and assertions instead of JUnit 3 (junit.framework.*)."/>
         </module>
-        <module name="IllegalImport"> <!-- Some OpenJDK builds do not include javafx; only relevant for pre-Java 11 b/c javafx is gone completely in Java 11 -->
+        <module name="IllegalImport"> <!-- Only relevant for pre-Java 11 because javafx is gone completely in Java 11 -->
             <property name="id" value="BanJavafx"/>
             <property name="illegalPkgs" value="javafx"/>
             <message key="import.illegal" value="Must not import javafx classes because some OpenJDK builds do not include javafx."/>
