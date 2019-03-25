@@ -17,7 +17,7 @@
 package com.palantir.baseline.plugins;
 
 import com.google.common.collect.ImmutableList;
-import java.util.List;
+import java.util.Optional;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -37,38 +37,36 @@ public final class BaselineReleaseCompatibility extends AbstractBaselinePlugin {
     @Override
     public void apply(Project project) {
         this.project = project;
-        project.getPluginManager().withPlugin("java", plugin -> {
-            project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
-                try {
-                    configureJavaCompiler(javaCompile);
-                } catch (Throwable throwable) {
-                    project.getLogger().error("BaselineReleaseCompatibility failed to configure task {}",
-                            javaCompile.getName(),
-                            throwable);
-                }
-            });
+
+        // afterEvaluate is necessary so we only configure tasks _after_ users have had an opportunity to set
+        // sourceCompatibility or targetCompatibility
+        project.afterEvaluate(p -> {
+            project.getTasks().withType(JavaCompile.class).configureEach(this::configureJavaCompileTask);
         });
     }
 
-    private void configureJavaCompiler(JavaCompile javaCompile) {
-        JavaVersion sourceCompatibility = JavaVersion.toVersion(javaCompile.getSourceCompatibility());
-        JavaVersion targetCompatibility = JavaVersion.toVersion(javaCompile.getTargetCompatibility());
-        JavaVersion jdkVersion = JavaVersion.current();
+    private void configureJavaCompileTask(JavaCompile javaCompile) {
+        Optional<JavaVersion> taskTarget =
+                Optional.ofNullable(javaCompile.getTargetCompatibility()).map(JavaVersion::toVersion);
 
-        project.getLogger().debug("Versions:  sourceCompatibility: {}, targetCompatibility: {}, JDK: {}",
-                sourceCompatibility,
-                targetCompatibility,
-                jdkVersion);
-
-        project.getLogger().info("Compiling for targetCompatibility {} using JDK {}", targetCompatibility, jdkVersion);
-        if (jdkVersion.compareTo(JavaVersion.VERSION_1_8) > 0
-                && jdkVersion.compareTo(targetCompatibility) > 0) {
-            // Link against JDK 8 APIs per https://openjdk.java.net/jeps/247
-            // see also gradle `jdkLibraryVersion` RFC https://github.com/gradle/gradle/issues/2510
-            List<String> additionalArgs = ImmutableList.of("--release", targetCompatibility.getMajorVersion());
-            javaCompile.getOptions().getCompilerArgs().addAll(additionalArgs);
-            project.getLogger().info("Added compilerArgs: {}, full compilerArgs: {}",
-                    additionalArgs, javaCompile.getOptions().getCompilerArgs());
+        if (!taskTarget.isPresent()) {
+            project.getLogger().info("BaselineReleaseCompatibility is a no-op for {} in {} as no targetCompatibility "
+                    + "is set", javaCompile.getName(), javaCompile.getProject());
+            return;
         }
+
+        JavaVersion target = taskTarget.get();
+        JavaVersion jdkVersion = JavaVersion.toVersion(javaCompile.getToolChain().getVersion());
+
+        project.getLogger().debug("Compiling for target {} using JDK {}", target, jdkVersion);
+        if (supportsReleaseFlag(jdkVersion) && jdkVersion.compareTo(target) > 0) {
+            javaCompile.getOptions().getCompilerArgs()
+                    .addAll(ImmutableList.of("--release", target.getMajorVersion()));
+        }
+    }
+
+    // The --release flag was added in Java 9: https://openjdk.java.net/jeps/247
+    private static boolean supportsReleaseFlag(JavaVersion jdkVersion) {
+        return jdkVersion.compareTo(JavaVersion.VERSION_1_8) > 0;
     }
 }
