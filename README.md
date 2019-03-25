@@ -4,21 +4,21 @@
 
 _Baseline is a family of Gradle plugins for configuring Java projects with sensible defaults for code-style, static analysis, dependency versioning, CircleCI and IntelliJ IDEA/Eclipse integration._
 
-| Plugin                                    | Description            |
-|-------------------------------------------|------------------------|
-| `com.palantir.baseline-idea`              | Configures [Intellij IDEA](https://www.jetbrains.com/idea/) with code style and copyright headers
-| `com.palantir.baseline-eclipse`           | Configures [Eclipse](https://www.eclipse.org/downloads/) with code style and copyright headers
-| `com.palantir.baseline-error-prone`       | Static analysis for your Java code using Google's [error-prone](http://errorprone.info/).
-| `com.palantir.baseline-checkstyle`        | Enforces consistent Java formatting using [checkstyle](http://checkstyle.sourceforge.net/)
-| `com.palantir.baseline-format`            | Formats your java files to comply with checkstyle
-| `com.palantir.baseline-scalastyle`        | Enforces formatting using [scalastyle](http://www.scalastyle.org/)
-| `com.palantir.baseline-class-uniqueness`  | Analyses your classpath to ensure no fully-qualified class is defined more than once.
-| `com.palantir.baseline-circleci`          | [CircleCI](https://circleci.com/) integration using `$CIRCLE_ARTIFACTS` and `$CIRCLE_TEST_REPORTS` dirs
-| `com.palantir.baseline-versions`          | Source dependency versions from a `versions.props` file using [nebula dependency recommender](https://github.com/nebula-plugins/nebula-dependency-recommender-plugin)
-| `com.palantir.baseline-config`            | Config files for the above plugins
-| `com.palantir.baseline-reproducibility`   | Sensible defaults to ensure Jar, Tar and Zip tasks can be reproduced
-| `com.palantir.baseline-exact-dependencies`| Ensures projects explicitly declare all the dependencies they rely on, no more and no less
-| `com.palantir.baseline-jdk-release`       | Ensures projects targetting older JREs only compile against classes and methods available in those JREs.
+| Plugin                                        | Description            |
+|-----------------------------------------------|------------------------|
+| `com.palantir.baseline-idea`                  | Configures [Intellij IDEA](https://www.jetbrains.com/idea/) with code style and copyright headers
+| `com.palantir.baseline-eclipse`               | Configures [Eclipse](https://www.eclipse.org/downloads/) with code style and copyright headers
+| `com.palantir.baseline-error-prone`           | Static analysis for your Java code using Google's [error-prone](http://errorprone.info/).
+| `com.palantir.baseline-checkstyle`            | Enforces consistent Java formatting using [checkstyle](http://checkstyle.sourceforge.net/)
+| `com.palantir.baseline-format`                | Formats your java files to comply with checkstyle
+| `com.palantir.baseline-scalastyle`            | Enforces formatting using [scalastyle](http://www.scalastyle.org/)
+| `com.palantir.baseline-class-uniqueness`      | Analyses your classpath to ensure no fully-qualified class is defined more than once.
+| `com.palantir.baseline-circleci`              | [CircleCI](https://circleci.com/) integration using `$CIRCLE_ARTIFACTS` and `$CIRCLE_TEST_REPORTS` dirs
+| `com.palantir.baseline-versions`              | Source dependency versions from a `versions.props` file using [nebula dependency recommender](https://github.com/nebula-plugins/nebula-dependency-recommender-plugin)
+| `com.palantir.baseline-config`                | Config files for the above plugins
+| `com.palantir.baseline-reproducibility`       | Sensible defaults to ensure Jar, Tar and Zip tasks can be reproduced
+| `com.palantir.baseline-exact-dependencies`    | Ensures projects explicitly declare all the dependencies they rely on, no more and no less
+| `com.palantir.baseline-release-compatibility` | Ensures projects targetting older JREs only compile against classes and methods available in those JREs.
 
 See also the [Baseline Java Style Guide and Best Practises](./docs).
 
@@ -328,6 +328,8 @@ checkImplicitDependencies {
 }
 ```
 
-## com.palantir.baseline-jdk-release
+## com.palantir.baseline-release-compatibility
 
-When the flag is available, this plugin adds the `--release <number>` flag to JavaCompile tasks ([JEP 247](https://openjdk.java.net/jeps/247)), so that published jars will only use methods available in the target JRE.  Relying on `sourceCompatibility = 1.8` and `targetCompatibility = 1.8` is insufficient because you run the risk of using method that have been added in newer JREs, e.g. `Optional#isEmpty`.
+This plugin adds the `--release <number>` flag to JavaCompile tasks (when the compiler [supports it](https://openjdk.java.net/jeps/247)), so that published jars will only use methods available in the target JRE.  Relying on `sourceCompatibility = 1.8` and `targetCompatibility = 1.8` is insufficient because you run the risk of using method that have been added in newer JREs, e.g. `Optional#isEmpty`.
+
+This plugin may become redundant if this functionality is implemented upstream [in Gradle](https://github.com/gradle/gradle/issues/2510).

@@ -18,7 +18,6 @@ package com.palantir.baseline.plugins;
 
 import com.google.common.collect.ImmutableList;
 import java.util.List;
-import java.util.Optional;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -33,7 +32,7 @@ import org.gradle.api.tasks.compile.JavaCompile;
  * See also <a href="https://github.com/gradle/gradle/issues/2510">Gradle JDK release issue</a>.
  * </p>
  */
-public final class BaselineJdkRelease extends AbstractBaselinePlugin {
+public final class BaselineReleaseCompatibility extends AbstractBaselinePlugin {
 
     @Override
     public void apply(Project project) {
@@ -43,7 +42,9 @@ public final class BaselineJdkRelease extends AbstractBaselinePlugin {
                 try {
                     configureJavaCompiler(javaCompile);
                 } catch (Throwable throwable) {
-                    project.getLogger().error("Failed to configure BaselineJdkRelease", throwable);
+                    project.getLogger().error("BaselineReleaseCompatibility failed to configure task {}",
+                            javaCompile.getName(),
+                            throwable);
                 }
             });
         });
@@ -70,5 +71,4 @@ public final class BaselineJdkRelease extends AbstractBaselinePlugin {
                     additionalArgs, javaCompile.getOptions().getCompilerArgs());
         }
     }
-
 }

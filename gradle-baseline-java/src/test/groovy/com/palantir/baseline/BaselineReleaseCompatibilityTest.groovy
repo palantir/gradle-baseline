@@ -19,7 +19,7 @@ package com.palantir.baseline
 import static org.junit.Assert.assertFalse
 import static org.junit.Assert.assertTrue
 
-import com.palantir.baseline.plugins.BaselineJdkRelease
+import com.palantir.baseline.plugins.BaselineReleaseCompatibility
 import org.gradle.api.JavaVersion
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPluginConvention
@@ -27,13 +27,13 @@ import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.testfixtures.ProjectBuilder
 import spock.lang.Specification
 
-class BaselineJdkReleaseTest extends Specification {
+class BaselineReleaseCompatibilityTest extends Specification {
     private Project project
 
     def setup() {
         project = ProjectBuilder.builder().build()
         project.plugins.apply 'java'
-        project.plugins.apply BaselineJdkRelease
+        project.plugins.apply BaselineReleaseCompatibility
         project.getConvention().getPlugin(JavaPluginConvention.class).sourceCompatibility = 7
         project.getConvention().getPlugin(JavaPluginConvention.class).targetCompatibility = 8
         project.evaluate()
@@ -41,7 +41,7 @@ class BaselineJdkReleaseTest extends Specification {
 
     def jdkReleasePluginApplied() {
         expect:
-        assertTrue project.plugins.hasPlugin(BaselineJdkRelease.class)
+        assertTrue project.plugins.hasPlugin(BaselineReleaseCompatibility.class)
     }
 
     def baselineFormatCreatesFormatTask() {
