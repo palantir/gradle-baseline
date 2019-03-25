@@ -35,7 +35,7 @@ class BaselineReleaseCompatibilityIntegrationTest extends AbstractPluginTest {
         }
     '''.stripIndent()
 
-    def invalidJavaFile = '''
+    def useJava9Features = '''
         package test;
         public class Invalid {
             void demo() {
@@ -47,10 +47,21 @@ class BaselineReleaseCompatibilityIntegrationTest extends AbstractPluginTest {
     def 'compileJava fails when features from Java9 are used'() {
         when:
         buildFile << standardBuildFile
-        file('src/main/java/test/Invalid.java').text = invalidJavaFile
+        file('src/main/java/test/Invalid.java').text = useJava9Features
 
         then:
         BuildResult result = with('compileJava').buildAndFail()
         result.task(":compileJava").outcome == TaskOutcome.FAILED
+    }
+
+    def 'compileJava succeeds when sourceCompatibility = 11 and Java9 features are used'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << 'sourceCompatibility = 11'
+        file('src/main/java/test/Invalid.java').text = useJava9Features
+
+        then:
+        BuildResult result = with('compileJava').build()
+        result.task(":compileJava").outcome == TaskOutcome.SUCCESS
     }
 }
