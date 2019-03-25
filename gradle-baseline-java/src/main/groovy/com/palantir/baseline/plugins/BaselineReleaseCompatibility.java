@@ -51,7 +51,7 @@ public final class BaselineReleaseCompatibility extends AbstractBaselinePlugin {
     }
 
     private void configureJavaCompiler(JavaCompile javaCompile) {
-        JavaVersion sourceCompatibility = JavaVersion.toVersion(javaCompile.getTargetCompatibility());
+        JavaVersion sourceCompatibility = JavaVersion.toVersion(javaCompile.getSourceCompatibility());
         JavaVersion targetCompatibility = JavaVersion.toVersion(javaCompile.getTargetCompatibility());
         JavaVersion jdkVersion = JavaVersion.current();
 
