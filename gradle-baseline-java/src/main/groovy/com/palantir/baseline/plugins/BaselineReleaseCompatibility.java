@@ -17,10 +17,14 @@
 package com.palantir.baseline.plugins;
 
 import com.google.common.collect.ImmutableList;
+import java.util.Collections;
 import java.util.Optional;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.compile.JavaCompile;
+import org.gradle.process.CommandLineArgumentProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * <p>
@@ -34,35 +38,49 @@ import org.gradle.api.tasks.compile.JavaCompile;
  */
 public final class BaselineReleaseCompatibility extends AbstractBaselinePlugin {
 
+    private static final Logger log = LoggerFactory.getLogger(BaselineReleaseCompatibility.class);
+
     @Override
     public void apply(Project project) {
         this.project = project;
 
-        // afterEvaluate is necessary so we only configure tasks _after_ users have had an opportunity to set
-        // sourceCompatibility or targetCompatibility
-        project.afterEvaluate(p -> {
-            project.getTasks().withType(JavaCompile.class).configureEach(this::configureJavaCompileTask);
-        });
+        project.getTasks().withType(JavaCompile.class).configureEach(this::configureTask);
     }
 
-    private void configureJavaCompileTask(JavaCompile javaCompile) {
-        Optional<JavaVersion> taskTarget =
-                Optional.ofNullable(javaCompile.getTargetCompatibility()).map(JavaVersion::toVersion);
+    private void configureTask(JavaCompile javaCompile) {
+        javaCompile.getOptions().getCompilerArgumentProviders().add(() -> {
+            JavaVersion jdkVersion = JavaVersion.toVersion(javaCompile.getToolChain().getVersion());
+            if (!supportsReleaseFlag(jdkVersion)) {
+                log.debug(
+                        "BaselineReleaseCompatibility is a no-op for {} in {} as {} doesn't support --release",
+                        javaCompile.getName(),
+                        javaCompile.getProject(),
+                        jdkVersion);
+                return Collections.emptyList();
+            }
 
-        if (!taskTarget.isPresent()) {
-            project.getLogger().info("BaselineReleaseCompatibility is a no-op for {} in {} as no targetCompatibility "
-                    + "is set", javaCompile.getName(), javaCompile.getProject());
-            return;
-        }
+            Optional<JavaVersion> taskTarget =
+                    Optional.ofNullable(javaCompile.getTargetCompatibility()).map(JavaVersion::toVersion);
 
-        JavaVersion target = taskTarget.get();
-        JavaVersion jdkVersion = JavaVersion.toVersion(javaCompile.getToolChain().getVersion());
+            if (!taskTarget.isPresent()) {
+                log.debug(
+                        "BaselineReleaseCompatibility is a no-op for {} in {} as no targetCompatibility is set",
+                        javaCompile.getName(),
+                        javaCompile.getProject());
+                return Collections.emptyList();
+            }
+            JavaVersion target = taskTarget.get();
 
-        project.getLogger().debug("Compiling for target {} using JDK {}", target, jdkVersion);
-        if (supportsReleaseFlag(jdkVersion) && jdkVersion.compareTo(target) > 0) {
-            javaCompile.getOptions().getCompilerArgs()
-                    .addAll(ImmutableList.of("--release", target.getMajorVersion()));
-        }
+            if (jdkVersion.compareTo(target) <= 0) {
+                log.debug(
+                        "BaselineReleaseCompatibility is a no-op for {} in {} as targetCompatibility is higher",
+                        javaCompile.getName(),
+                        javaCompile.getProject());
+                return Collections.emptyList();
+            }
+
+            return ImmutableList.of("--release", target.getMajorVersion());
+        });
     }
 
     // The --release flag was added in Java 9: https://openjdk.java.net/jeps/247
