@@ -48,6 +48,8 @@ public final class BaselineReleaseCompatibility extends AbstractBaselinePlugin {
     }
 
     private void configureTask(JavaCompile javaCompile) {
+        // using a lazy argument provider is crucial because otherwise we'd try to read sourceCompat / targetCompat
+        // before the user has even set it in their build.gradle!
         javaCompile.getOptions().getCompilerArgumentProviders().add(() -> {
             JavaVersion jdkVersion = JavaVersion.toVersion(javaCompile.getToolChain().getVersion());
             if (!supportsReleaseFlag(jdkVersion)) {
