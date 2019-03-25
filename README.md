@@ -18,6 +18,7 @@ _Baseline is a family of Gradle plugins for configuring Java projects with sensi
 | `com.palantir.baseline-config`            | Config files for the above plugins
 | `com.palantir.baseline-reproducibility`   | Sensible defaults to ensure Jar, Tar and Zip tasks can be reproduced
 | `com.palantir.baseline-exact-dependencies`| Ensures projects explicitly declare all the dependencies they rely on, no more and no less
+| `com.palantir.baseline-jdk-release`       | Ensures projects targetting older JREs only compile against classes and methods available in those JREs.
 
 See also the [Baseline Java Style Guide and Best Practises](./docs).
 
@@ -326,3 +327,7 @@ checkImplicitDependencies {
     ignore 'org.slf4j', 'slf4j-api'
 }
 ```
+
+## com.palantir.baseline-jdk-release
+
+When the flag is available, this plugin adds the `--release <number>` flag to JavaCompile tasks ([JEP 247](https://openjdk.java.net/jeps/247)), so that published jars will only use methods available in the target JRE.  Relying on `sourceCompatibility = 1.8` and `targetCompatibility = 1.8` is insufficient because you run the risk of using method that have been added in newer JREs, e.g. `Optional#isEmpty`.
