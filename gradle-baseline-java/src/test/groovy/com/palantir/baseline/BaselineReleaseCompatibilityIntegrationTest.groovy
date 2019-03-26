@@ -16,8 +16,10 @@
 
 package com.palantir.baseline
 
+import org.gradle.api.JavaVersion
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
+import org.junit.Assume
 
 class BaselineReleaseCompatibilityIntegrationTest extends AbstractPluginTest {
 
@@ -55,6 +57,10 @@ class BaselineReleaseCompatibilityIntegrationTest extends AbstractPluginTest {
     }
 
     def 'compileJava succeeds when sourceCompatibility = 11 and Java9 features are used'() {
+        Assume.assumeTrue(
+                "This test can only pass when run from a Java9+ JVM.",
+                JavaVersion.current().isJava9Compatible())
+
         when:
         buildFile << standardBuildFile
         buildFile << 'sourceCompatibility = 11'
