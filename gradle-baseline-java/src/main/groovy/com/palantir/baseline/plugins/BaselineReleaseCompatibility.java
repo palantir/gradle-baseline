@@ -36,17 +36,16 @@ import org.slf4j.LoggerFactory;
  * </p>
  */
 public final class BaselineReleaseCompatibility extends AbstractBaselinePlugin {
-
     private static final Logger log = LoggerFactory.getLogger(BaselineReleaseCompatibility.class);
 
     @Override
     public void apply(Project project) {
         this.project = project;
 
-        project.getTasks().withType(JavaCompile.class).configureEach(this::configureTask);
+        project.getTasks().withType(JavaCompile.class).configureEach(BaselineReleaseCompatibility::configureTask);
     }
 
-    private void configureTask(JavaCompile javaCompile) {
+    private static void configureTask(JavaCompile javaCompile) {
         // using a lazy argument provider is crucial because otherwise we'd try to read sourceCompat / targetCompat
         // before the user has even set it in their build.gradle!
         javaCompile.getOptions().getCompilerArgumentProviders().add(() -> {
@@ -86,6 +85,6 @@ public final class BaselineReleaseCompatibility extends AbstractBaselinePlugin {
 
     // The --release flag was added in Java 9: https://openjdk.java.net/jeps/247
     private static boolean supportsReleaseFlag(JavaVersion jdkVersion) {
-        return jdkVersion.compareTo(JavaVersion.VERSION_1_8) > 0;
+        return jdkVersion.isJava9Compatible();
     }
 }
