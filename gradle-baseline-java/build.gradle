@@ -82,5 +82,9 @@ pluginBundle {
             id = 'com.palantir.baseline-circleci'
             displayName = 'Palantir Baseline CircleCi Plugin'
         }
+        baselineReleaseCompatibility {
+            id = 'com.palantir.baseline-release-compatibility'
+            displayName = 'Palantir Baseline Release Compatibility Plugin'
+        }
     }
 }
