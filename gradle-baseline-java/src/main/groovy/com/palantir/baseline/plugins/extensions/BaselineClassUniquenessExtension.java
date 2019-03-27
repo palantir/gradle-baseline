@@ -16,7 +16,6 @@
 
 package com.palantir.baseline.plugins.extensions;
 
-import java.util.Collections;
 import java.util.List;
 import javax.inject.Inject;
 import org.gradle.api.model.ObjectFactory;
@@ -29,7 +28,6 @@ public class BaselineClassUniquenessExtension {
     @Inject
     public BaselineClassUniquenessExtension(ObjectFactory objectFactory) {
         configurations = objectFactory.listProperty(String.class).empty();
-        configurations.set(Collections.emptyList());
     }
 
     public final Provider<List<String>> getConfigurations() {
