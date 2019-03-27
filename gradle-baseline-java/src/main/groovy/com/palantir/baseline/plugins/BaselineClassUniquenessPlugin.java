@@ -16,7 +16,10 @@
 
 package com.palantir.baseline.plugins;
 
+import com.google.common.collect.ImmutableList;
+import com.palantir.baseline.plugins.extensions.BaselineClassUniquenessExtension;
 import com.palantir.baseline.tasks.CheckClassUniquenessTask;
+import java.util.stream.Collectors;
 import org.gradle.api.Project;
 
 /**
@@ -30,9 +33,18 @@ public class BaselineClassUniquenessPlugin extends AbstractBaselinePlugin {
 
     @Override
     public final void apply(Project project) {
+        BaselineClassUniquenessExtension extension = project.getExtensions()
+                .create("classUniqueness", BaselineClassUniquenessExtension.class);
+
         project.getPlugins().withId("java", plugin -> {
             project.getTasks().create("checkClassUniqueness", CheckClassUniquenessTask.class, task -> {
-                task.setConfiguration(project.getConfigurations().getByName("runtime"));
+                task.setConfigurations(extension.getConfigurations().map(confs -> {
+                    if (confs.isEmpty()) {
+                        return ImmutableList.of(project.getConfigurations().getByName("runtime"));
+                    }
+
+                    return confs.stream().map(project.getConfigurations()::getByName).collect(Collectors.toList());
+                }));
                 project.getTasks().getByName("check").dependsOn(task);
             });
         });

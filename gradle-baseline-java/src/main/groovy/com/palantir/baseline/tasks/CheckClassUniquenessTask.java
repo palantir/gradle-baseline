@@ -23,18 +23,20 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 
 public class CheckClassUniquenessTask extends DefaultTask {
 
-    private Configuration configuration;
+    private Provider<List<Configuration>> configurations;
 
     public CheckClassUniquenessTask() {
         setGroup("Verification");
@@ -42,36 +44,39 @@ public class CheckClassUniquenessTask extends DefaultTask {
     }
 
     @InputFiles
-    public final Configuration getConfiguration() {
-        return configuration;
+    public final Provider<List<Configuration>> getConfigurations() {
+        return configurations;
     }
 
-    public final void setConfiguration(Configuration configuration) {
-        this.configuration = configuration;
+    public final void setConfigurations(Provider<List<Configuration>> configs) {
+        this.configurations = configs;
     }
 
     @TaskAction
     public final void checkForDuplicateClasses() {
-        ClassUniquenessAnalyzer analyzer = new ClassUniquenessAnalyzer(getLogger());
-        analyzer.analyzeConfiguration(getConfiguration());
-        boolean success = analyzer.getDifferingProblemJars().isEmpty();
-        writeResultFile(success);
+        getConfigurations().get().forEach(configuration -> {
+            ClassUniquenessAnalyzer analyzer = new ClassUniquenessAnalyzer(getLogger());
 
-        if (!success) {
-            analyzer.getDifferingProblemJars().forEach(problemJars -> {
-                Set<String> differingClasses = analyzer.getDifferingSharedClassesInProblemJars(problemJars);
-                getLogger().error("{} Identically named classes with differing impls found in {}: {}",
-                        differingClasses.size(), problemJars, differingClasses);
-            });
+            analyzer.analyzeConfiguration(configuration);
+            boolean success = analyzer.getDifferingProblemJars().isEmpty();
+            writeResultFile(success);
 
-            throw new IllegalStateException(String.format(
-                    "'%s' contains multiple copies of identically named classes - "
-                            + "this may cause different runtime behaviour depending on classpath ordering.\n"
-                            + "To resolve this, try excluding one of the following jars:\n\n%s",
-                    configuration.getName(),
-                    formatSummary(analyzer)
-            ));
-        }
+            if (!success) {
+                analyzer.getDifferingProblemJars().forEach(problemJars -> {
+                    Set<String> differingClasses = analyzer.getDifferingSharedClassesInProblemJars(problemJars);
+                    getLogger().error("{} Identically named classes with differing impls found in {}: {}",
+                            differingClasses.size(), problemJars, differingClasses);
+                });
+
+                throw new IllegalStateException(String.format(
+                        "'%s' contains multiple copies of identically named classes - "
+                                + "this may cause different runtime behaviour depending on classpath ordering.\n"
+                                + "To resolve this, try excluding one of the following jars:\n\n%s",
+                        configuration.getName(),
+                        formatSummary(analyzer)
+                ));
+            }
+        });
     }
 
     private static String formatSummary(ClassUniquenessAnalyzer summary) {
@@ -105,7 +110,7 @@ public class CheckClassUniquenessTask extends DefaultTask {
     @OutputFile
     public final File getResultFile() {
         return getProject().getBuildDir().toPath()
-                .resolve(Paths.get("uniqueClassNames", configuration.getName()))
+                .resolve(Paths.get("uniqueClassNames", configurations.get().get(0).getName()))
                 .toFile();
     }
 

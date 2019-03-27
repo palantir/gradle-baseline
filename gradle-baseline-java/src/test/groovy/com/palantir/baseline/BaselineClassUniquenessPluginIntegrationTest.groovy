@@ -64,6 +64,30 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         println result.getOutput()
     }
 
+    def 'detect duplicates in two external jars in non-standard configuration'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << """
+        configurations {
+            myConf
+        }
+        dependencies {
+            myConf group: 'javax.el', name: 'javax.el-api', version: '3.0.0'
+            myConf group: 'javax.servlet.jsp', name: 'jsp-api', version: '2.1'
+        }
+        classUniqueness {
+            configurations = ["myConf"]
+        }
+        """.stripIndent()
+        BuildResult result = with('checkClassUniqueness').buildAndFail()
+
+        then:
+        result.output.contains("26 Identically named classes with differing impls found in [javax.servlet.jsp:jsp-api:2.1, javax.el:javax.el-api:3.0.0]: [javax.")
+        result.getOutput().contains("'myConf' contains multiple copies of identically named classes")
+        result.getOutput().contains("(26 classes)  javax.servlet.jsp:jsp-api:2.1 javax.el:javax.el-api:3.0.0");
+        println result.getOutput()
+    }
+
 
     def 'ignores duplicates when the implementations are identical'() {
         when:
