@@ -52,7 +52,7 @@ public final class BaselineClassUniquenessRule implements Rule {
             List<String> candidates = ImmutableList.of(altName, confName);
 
             Optional<Configuration> configOpt = candidates.stream()
-                    .map(name -> project.getConfigurations().findByName(name))
+                    .map(project.getConfigurations()::findByName)
                     .filter(Objects::nonNull)
                     .findFirst();
 
