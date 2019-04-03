@@ -19,7 +19,8 @@ package com.palantir.baseline.plugins;
 import com.google.common.collect.ImmutableList;
 import com.palantir.baseline.plugins.extensions.BaselineClassUniquenessExtension;
 import com.palantir.baseline.tasks.CheckClassUniquenessTask;
-import java.util.stream.Collectors;
+import java.util.List;
+import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 
 /**
@@ -30,23 +31,28 @@ import org.gradle.api.Project;
  * The task only fails if it finds classes which have the same name but different implementations.
  */
 public class BaselineClassUniquenessPlugin extends AbstractBaselinePlugin {
+    private static final List<String> DEFAULT_CONFIGURATION = ImmutableList.of("runtime");
 
     @Override
     public final void apply(Project project) {
         BaselineClassUniquenessExtension extension = project.getExtensions()
-                .create("classUniqueness", BaselineClassUniquenessExtension.class);
+                .create("classUniqueness", BaselineClassUniquenessExtension.class, project);
 
         project.getPlugins().withId("java", plugin -> {
-            project.getTasks().create("checkClassUniqueness", CheckClassUniquenessTask.class, task -> {
-                task.setConfigurations(extension.getConfigurations().map(confs -> {
-                    if (confs.isEmpty()) {
-                        return ImmutableList.of(project.getConfigurations().getByName("runtime"));
-                    }
+            List<String> configurations = extension.getConfigurations().getOrElse(DEFAULT_CONFIGURATION);
+            if (configurations.isEmpty()) {
+                throw new GradleException("Need to pass at least one configuration to classUniqueness");
+            }
 
-                    return confs.stream().map(project.getConfigurations()::getByName).collect(Collectors.toList());
-                }));
-                project.getTasks().getByName("check").dependsOn(task);
-            });
+            for (String config : configurations) {
+                String taskName =
+                        "check" + config.substring(0, 1).toUpperCase() + config.substring(1) + "ClassUniqueness";
+
+                project.getTasks().create(taskName, CheckClassUniquenessTask.class, task -> {
+                    task.setConfiguration(project.getConfigurations().getByName(config));
+                    project.getTasks().getByName("check").dependsOn(task);
+                });
+            }
         });
     }
 }

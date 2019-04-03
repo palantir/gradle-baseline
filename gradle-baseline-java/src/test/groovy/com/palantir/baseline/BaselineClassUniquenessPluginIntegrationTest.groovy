@@ -43,7 +43,7 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
 
         then:
         def result = with('check', '--stacktrace').build()
-        result.task(':checkClassUniqueness').outcome == TaskOutcome.SUCCESS
+        result.task(':checkRuntimeClassUniqueness').outcome == TaskOutcome.SUCCESS
     }
 
     def 'detect duplicates in two external jars'() {
@@ -55,7 +55,7 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
             compile group: 'javax.servlet.jsp', name: 'jsp-api', version: '2.1'
         }   
         """.stripIndent()
-        BuildResult result = with('checkClassUniqueness').buildAndFail()
+        BuildResult result = with('checkRuntimeClassUniqueness').buildAndFail()
 
         then:
         result.output.contains("26 Identically named classes with differing impls found in [javax.servlet.jsp:jsp-api:2.1, javax.el:javax.el-api:3.0.0]: [javax.")
@@ -79,7 +79,7 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
             configurations = ["myConf"]
         }
         """.stripIndent()
-        BuildResult result = with('checkClassUniqueness').buildAndFail()
+        BuildResult result = with('checkMyConfClassUniqueness').buildAndFail()
 
         then:
         result.output.contains("26 Identically named classes with differing impls found in [javax.servlet.jsp:jsp-api:2.1, javax.el:javax.el-api:3.0.0]: [javax.")
@@ -100,7 +100,7 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         """.stripIndent()
 
         then:
-        with('checkClassUniqueness').build()
+        with('checkRuntimeClassUniqueness').build()
     }
 
     def 'task should be up-to-date when classpath is unchanged'() {
@@ -108,11 +108,11 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         buildFile << standardBuildFile
 
         then:
-        BuildResult result1 = with('checkClassUniqueness').build()
-        result1.task(':checkClassUniqueness').outcome == TaskOutcome.SUCCESS
+        BuildResult result1 = with('checkRuntimeClassUniqueness').build()
+        result1.task(':checkRuntimeClassUniqueness').outcome == TaskOutcome.SUCCESS
 
-        BuildResult result = with('checkClassUniqueness').build()
-        result.task(':checkClassUniqueness').outcome == TaskOutcome.UP_TO_DATE
+        BuildResult result = with('checkRuntimeClassUniqueness').build()
+        result.task(':checkRuntimeClassUniqueness').outcome == TaskOutcome.UP_TO_DATE
     }
 
     def 'passes when no duplicates are present'() {
@@ -126,10 +126,10 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
             compile 'com.netflix.nebula:nebula-test:6.4.2'
         }
         """.stripIndent()
-        BuildResult result = with('checkClassUniqueness', '--info').build()
+        BuildResult result = with('checkRuntimeClassUniqueness', '--info').build()
 
         then:
-        result.task(":checkClassUniqueness").outcome == TaskOutcome.SUCCESS
+        result.task(":checkRuntimeClassUniqueness").outcome == TaskOutcome.SUCCESS
         println result.getOutput()
     }
 
@@ -155,7 +155,7 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         """.stripIndent()
 
         then:
-        BuildResult result = with('checkClassUniqueness').buildAndFail()
+        BuildResult result = with('checkRuntimeClassUniqueness').buildAndFail()
         result.output.contains("26 Identically named classes with differing impls found in [javax.servlet.jsp:jsp-api:2.1, javax.el:javax.el-api:3.0.0]: [javax.")
     }
 
@@ -176,8 +176,8 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         """.stripIndent()
 
         then:
-        BuildResult result = with('checkClassUniqueness', '--info').build()
+        BuildResult result = with('checkRuntimeClassUniqueness', '--info').build()
         println result.getOutput()
-        result.task(":checkClassUniqueness").outcome == TaskOutcome.SUCCESS // ideally should should say failed!
+        result.task(":checkRuntimeClassUniqueness").outcome == TaskOutcome.SUCCESS // ideally should should say failed!
     }
 }

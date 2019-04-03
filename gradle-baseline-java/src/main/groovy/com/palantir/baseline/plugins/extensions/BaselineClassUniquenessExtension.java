@@ -17,17 +17,15 @@
 package com.palantir.baseline.plugins.extensions;
 
 import java.util.List;
-import javax.inject.Inject;
-import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.Project;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Provider;
 
 public class BaselineClassUniquenessExtension {
     private final ListProperty<String> configurations;
 
-    @Inject
-    public BaselineClassUniquenessExtension(ObjectFactory objectFactory) {
-        configurations = objectFactory.listProperty(String.class).empty();
+    public BaselineClassUniquenessExtension(Project project) {
+        configurations = project.getObjects().listProperty(String.class);
     }
 
     public final Provider<List<String>> getConfigurations() {
