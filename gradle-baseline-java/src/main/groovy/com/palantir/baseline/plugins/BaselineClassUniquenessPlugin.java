@@ -29,10 +29,14 @@ import org.gradle.api.Project;
 public class BaselineClassUniquenessPlugin extends AbstractBaselinePlugin {
     @Override
     public final void apply(Project project) {
-        project.getTasks().addRule(new BaselineClassUniquenessRule(project));
+        BaselineClassUniquenessRule rule = new BaselineClassUniquenessRule(project);
+
+        project.getTasks().addRule(rule);
 
         project.getPlugins().withId("java", plugin -> {
-            project.getTasks().getByName("check").dependsOn("checkRuntimeClassUniqueness");
+            rule.apply("checkRuntimeClassUniqueness");
+            project.getTasks().getByName("check")
+                    .dependsOn(project.getTasks().getByName("checkRuntimeClassUniqueness"));
         });
     }
 }
