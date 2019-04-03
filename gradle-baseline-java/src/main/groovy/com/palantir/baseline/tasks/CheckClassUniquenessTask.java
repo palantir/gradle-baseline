@@ -46,15 +46,14 @@ public class CheckClassUniquenessTask extends DefaultTask {
         return configuration;
     }
 
-    public final void setConfiguration(Configuration configs) {
-        this.configuration = configs;
+    public final void setConfiguration(Configuration configuration) {
+        this.configuration = configuration;
     }
 
     @TaskAction
     public final void checkForDuplicateClasses() {
         ClassUniquenessAnalyzer analyzer = new ClassUniquenessAnalyzer(getLogger());
-
-        analyzer.analyzeConfiguration(configuration);
+        analyzer.analyzeConfiguration(getConfiguration());
         boolean success = analyzer.getDifferingProblemJars().isEmpty();
         writeResultFile(success);
 

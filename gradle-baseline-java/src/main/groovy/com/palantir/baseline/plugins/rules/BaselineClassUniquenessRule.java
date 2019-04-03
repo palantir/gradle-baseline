@@ -57,7 +57,7 @@ public final class BaselineClassUniquenessRule implements Rule {
                     .findFirst();
 
             if (configOpt.isPresent()) {
-                project.getTasks().create(taskName, CheckClassUniquenessTask.class, task -> {
+                project.getTasks().register(taskName, CheckClassUniquenessTask.class, task -> {
                     task.setConfiguration(configOpt.get());
                 });
             } else {
