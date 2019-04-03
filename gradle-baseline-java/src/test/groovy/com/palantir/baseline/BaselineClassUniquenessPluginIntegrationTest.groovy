@@ -75,9 +75,6 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
             myConf group: 'javax.el', name: 'javax.el-api', version: '3.0.0'
             myConf group: 'javax.servlet.jsp', name: 'jsp-api', version: '2.1'
         }
-        classUniqueness {
-            configurations = ["myConf"]
-        }
         """.stripIndent()
         BuildResult result = with('checkMyConfClassUniqueness').buildAndFail()
 
