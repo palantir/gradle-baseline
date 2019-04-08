@@ -132,7 +132,9 @@ equivalent version below:
 
 ``` java
 int myMethod(int parameter) {
-    if (notValid(parameter)) return -1;
+    if (notValid(parameter)) {
+        return -1;
+    }
 
     if (something()) {
         return parameter;
