@@ -33,6 +33,7 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
@@ -80,11 +81,19 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
                 .filter(artifact -> !shouldIgnore(artifact))
                 .collect(Collectors.toList());
         if (!usedButUndeclared.isEmpty()) {
-            // TODO(dfox): suggest project(':project-name') when a jar actually comes from this project!
+            String prefix = "        ";
             String suggestion = usedButUndeclared.stream()
-                    .map(artifact -> String.format("        implementation '%s:%s'",
-                            artifact.getModuleVersion().getId().getGroup(),
-                            artifact.getModuleVersion().getId().getName()))
+                    .map(artifact -> {
+                        if (artifact.getId().getComponentIdentifier() instanceof ProjectComponentIdentifier) {
+                            ProjectComponentIdentifier projectId =
+                                    (ProjectComponentIdentifier) artifact.getId().getComponentIdentifier();
+                            return String.format("%simplementation project('%s')", prefix, projectId.getProjectPath());
+                        }
+                        return String.format("%simplementation '%s:%s'",
+                                prefix,
+                                artifact.getModuleVersion().getId().getGroup(),
+                                artifact.getModuleVersion().getId().getName());
+                    })
                     .sorted()
                     .collect(Collectors.joining("\n", "    dependencies {\n", "\n    }"));
 
