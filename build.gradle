@@ -42,6 +42,10 @@ allprojects {
         }
     }
 
+    pluginManager.withPlugin('java') {
+        sourceCompatibility = 1.8
+    }
+
     apply plugin: 'org.inferred.processors'
 
     group = 'com.palantir.baseline'
