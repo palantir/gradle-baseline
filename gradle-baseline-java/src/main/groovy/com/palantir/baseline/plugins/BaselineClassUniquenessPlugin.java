@@ -16,7 +16,7 @@
 
 package com.palantir.baseline.plugins;
 
-import com.palantir.baseline.tasks.CheckClassUniquenessTask;
+import com.palantir.baseline.plugins.rules.BaselineClassUniquenessRule;
 import org.gradle.api.Project;
 
 /**
@@ -27,14 +27,16 @@ import org.gradle.api.Project;
  * The task only fails if it finds classes which have the same name but different implementations.
  */
 public class BaselineClassUniquenessPlugin extends AbstractBaselinePlugin {
-
     @Override
     public final void apply(Project project) {
+        BaselineClassUniquenessRule rule = new BaselineClassUniquenessRule(project);
+
+        project.getTasks().addRule(rule);
+
         project.getPlugins().withId("java", plugin -> {
-            project.getTasks().create("checkClassUniqueness", CheckClassUniquenessTask.class, task -> {
-                task.setConfiguration(project.getConfigurations().getByName("runtime"));
-                project.getTasks().getByName("check").dependsOn(task);
-            });
+            rule.apply("checkRuntimeClassUniqueness");
+            project.getTasks().getByName("check")
+                    .dependsOn(project.getTasks().getByName("checkRuntimeClassUniqueness"));
         });
     }
 }

@@ -176,8 +176,9 @@ in `.baseline/copyright/*.txt` and the RegexpHeader checkstyle configuration in 
 
 
 ## com.palantir.baseline-class-uniqueness
-Run `./gradlew checkClassUniqueness` to scan all jars on the `runtime` classpath for identically named classes.
-This task will run automatically as part of `./gradlew build`.
+Run `./gradlew checkRuntimeClassUniqueness` to scan all jars on the `runtime` classpath for identically named classes.
+This task will run automatically as part of `./gradlew build`. To run the task on other configurations, use the
+`check<Xyz>ClassUniqueness` task for the `xyz` configuration.
 
 If you discover multiple jars on your classpath contain clashing classes, you should ideally try to fix them upstream and then depend on the fixed version.  If this is not feasible, you may be able to tell Gradle to [use a substituted dependency instead](https://docs.gradle.org/current/userguide/customizing_dependency_resolution_behavior.html#sec:module_substitution):
 
