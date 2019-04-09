@@ -63,7 +63,7 @@ gradlePlugin {
         }
         baselineClassUniquenessPlugin {
             id = 'com.palantir.baseline-class-uniqueness'
-            implementationClass = 'com.palantir.baseline.plugins.BaselineClassUniqueness'
+            implementationClass = 'com.palantir.baseline.plugins.BaselineClassUniquenessPlugin'
         }
         baselineCircleCiPlugin {
             id = 'com.palantir.baseline-circleci'
