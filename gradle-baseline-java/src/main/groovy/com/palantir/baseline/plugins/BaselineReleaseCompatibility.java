@@ -22,6 +22,7 @@ import java.util.Optional;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.compile.JavaCompile;
+import org.gradle.process.CommandLineArgumentProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,13 +43,22 @@ public final class BaselineReleaseCompatibility extends AbstractBaselinePlugin {
     public void apply(Project project) {
         this.project = project;
 
-        project.getTasks().withType(JavaCompile.class).configureEach(BaselineReleaseCompatibility::configureTask);
+        project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
+            javaCompile.getOptions().getCompilerArgumentProviders().add(new ReleaseFlagProvider(javaCompile));
+        });
     }
 
-    private static void configureTask(JavaCompile javaCompile) {
-        // using a lazy argument provider is crucial because otherwise we'd try to read sourceCompat / targetCompat
-        // before the user has even set it in their build.gradle!
-        javaCompile.getOptions().getCompilerArgumentProviders().add(() -> {
+    // using a lazy argument provider is crucial because otherwise we'd try to read sourceCompat / targetCompat
+    // before the user has even set it in their build.gradle!
+    private static final class ReleaseFlagProvider implements CommandLineArgumentProvider {
+        private final JavaCompile javaCompile;
+
+        private ReleaseFlagProvider(JavaCompile javaCompile) {
+            this.javaCompile = javaCompile;
+        }
+
+        @Override
+        public Iterable<String> asArguments() {
             JavaVersion jdkVersion = JavaVersion.toVersion(javaCompile.getToolChain().getVersion());
             if (!supportsReleaseFlag(jdkVersion)) {
                 log.debug(
@@ -80,11 +90,11 @@ public final class BaselineReleaseCompatibility extends AbstractBaselinePlugin {
             }
 
             return ImmutableList.of("--release", target.getMajorVersion());
-        });
-    }
+        }
 
-    // The --release flag was added in Java 9: https://openjdk.java.net/jeps/247
-    private static boolean supportsReleaseFlag(JavaVersion jdkVersion) {
-        return jdkVersion.isJava9Compatible();
+        // The --release flag was added in Java 9: https://openjdk.java.net/jeps/247
+        private static boolean supportsReleaseFlag(JavaVersion jdkVersion) {
+            return jdkVersion.isJava9Compatible();
+        }
     }
 }
