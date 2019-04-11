@@ -98,6 +98,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
         public void populateIndexes(Set<ResolvedDependency> declaredDependencies) {
             Set<ResolvedArtifact> allArtifacts = declaredDependencies.stream()
                     .flatMap(dependency -> dependency.getAllModuleArtifacts().stream())
+                    .filter(resolvedArtifact -> resolvedArtifact.getExtension().equals("jar"))
                     .collect(Collectors.toSet());
 
             allArtifacts.forEach(artifact -> {
