@@ -36,7 +36,7 @@ import java.util.regex.Pattern;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
-        summary = "Forbid gradle actions (doFirst, doLast) to be implemented by lambdas.")
+        summary = "Forbid gradle task actions (doFirst, doLast) to be implemented by lambdas.")
 public final class GradleCacheableTaskAction extends BugChecker implements LambdaExpressionTreeMatcher {
 
     private static final long serialVersionUID = 1L;
