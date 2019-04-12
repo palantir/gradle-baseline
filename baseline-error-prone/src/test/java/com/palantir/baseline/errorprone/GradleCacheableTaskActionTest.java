@@ -33,7 +33,7 @@ public class GradleCacheableTaskActionTest {
     }
 
     @Test
-    public void testFailsOnDoFirstLambda() {
+    public void failsOnDoFirstLambda() {
         compilationHelper
                 .addSourceLines(
                         "Foo.java",
@@ -45,6 +45,27 @@ public class GradleCacheableTaskActionTest {
                         "    project.getTasks().register(\"foo\", task -> {",
                         "      // " + errorMsg,
                         "      task.doFirst(t -> System.out.println(\"im a lambda\"));",
+                        "    });",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void allowsDoFirstAnonymousClass() {
+        compilationHelper
+                .addSourceLines(
+                        "Foo.java",
+                        "import org.gradle.api.Task;",
+                        "import org.gradle.api.Action;",
+                        "import org.gradle.api.Project;",
+                        "import org.gradle.api.Plugin;",
+                        "class Foo implements Plugin<Project> {",
+                        "  public final void apply(Project project) {",
+                        "    project.getTasks().register(\"foo\", task -> {",
+                        "      task.doFirst(new Action<Task>() {",
+                        "          public void execute(Task task) {}",
+                        "      });",
                         "    });",
                         "  }",
                         "}")
