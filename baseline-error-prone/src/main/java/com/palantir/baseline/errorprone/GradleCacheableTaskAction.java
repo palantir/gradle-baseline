@@ -32,6 +32,7 @@ import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.LambdaExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.Tree;
+import com.sun.source.tree.Tree.Kind;
 import java.util.regex.Pattern;
 
 @AutoService(BugChecker.class)
@@ -50,12 +51,9 @@ public final class GradleCacheableTaskAction extends BugChecker implements Metho
             .onDescendantOf("org.gradle.api.Task")
             .withNameMatching(Pattern.compile("doFirst|doLast"));
 
-    private static final Matcher<ExpressionTree> IS_LAMBDA_EXPRESSION =
-            (expression, state) -> expression instanceof LambdaExpressionTree;
-
     private static final Matcher<MethodInvocationTree> TASK_ACTION_WITH_LAMBDA = Matchers.allOf(
             TASK_ACTION,
-            Matchers.hasArguments(MatchType.LAST, Matchers.allOf(IS_ACTION, IS_LAMBDA_EXPRESSION)));
+            Matchers.hasArguments(MatchType.LAST, Matchers.allOf(IS_ACTION, Matchers.kindIs(Kind.LAMBDA_EXPRESSION))));
 
     @Override
     public Description matchMethodInvocation(
@@ -63,8 +61,8 @@ public final class GradleCacheableTaskAction extends BugChecker implements Metho
         if (!TASK_ACTION_WITH_LAMBDA.matches(tree, state)) {
             return Description.NO_MATCH;
         }
-        ExpressionTree lastArgument = Iterables.getLast(tree.getArguments());
-        return buildDescription(lastArgument)
+        LambdaExpressionTree lambdaArg = (LambdaExpressionTree) Iterables.getLast(tree.getArguments());
+        return buildDescription(lambdaArg)
                 .setMessage("Gradle task actions are not cacheable when implemented by lambdas")
                 .build();
     }
