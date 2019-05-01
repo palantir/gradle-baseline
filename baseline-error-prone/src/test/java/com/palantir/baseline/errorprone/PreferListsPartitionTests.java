@@ -20,11 +20,11 @@ import com.google.errorprone.BugCheckerRefactoringTestHelper;
 import com.google.errorprone.CompilationTestHelper;
 import org.junit.Test;
 
-public final class DangerousIterablesPartitionUsageTests {
+public final class PreferListsPartitionTests {
 
     @Test
     public void should_not_use_Iterables_partition_for_List() {
-        CompilationTestHelper.newInstance(DangerousIterablesPartitionUsage.class, getClass())
+        CompilationTestHelper.newInstance(PreferListsPartition.class, getClass())
                 .addSourceLines(
                         "Test.java",
                         "import com.google.common.collect.Iterables;",
@@ -40,7 +40,7 @@ public final class DangerousIterablesPartitionUsageTests {
 
     @Test
     public void may_use_Iterables_partition_for_Iterable() {
-        CompilationTestHelper.newInstance(DangerousIterablesPartitionUsage.class, getClass())
+        CompilationTestHelper.newInstance(PreferListsPartition.class, getClass())
                 .addSourceLines(
                         "Test.java",
                         "import com.google.common.collect.Iterables;",
@@ -55,7 +55,7 @@ public final class DangerousIterablesPartitionUsageTests {
 
     @Test
     public void may_use_Iterables_partition_for_Set() {
-        CompilationTestHelper.newInstance(DangerousIterablesPartitionUsage.class, getClass())
+        CompilationTestHelper.newInstance(PreferListsPartition.class, getClass())
                 .addSourceLines(
                         "Test.java",
                         "import com.google.common.collect.Iterables;",
@@ -70,7 +70,7 @@ public final class DangerousIterablesPartitionUsageTests {
 
     @Test
     public void should_use_Lists_partition() {
-        CompilationTestHelper.newInstance(DangerousIterablesPartitionUsage.class, getClass())
+        CompilationTestHelper.newInstance(PreferListsPartition.class, getClass())
                 .addSourceLines(
                         "Test.java",
                         "import com.google.common.collect.Lists;",
@@ -86,7 +86,7 @@ public final class DangerousIterablesPartitionUsageTests {
 
     @Test
     public void auto_fix_Iterables_partition() {
-        BugCheckerRefactoringTestHelper.newInstance(new DangerousIterablesPartitionUsage(), getClass())
+        BugCheckerRefactoringTestHelper.newInstance(new PreferListsPartition(), getClass())
                 .addInputLines(
                         "Test.java",
                         "import com.google.common.collect.Iterables;",

@@ -34,13 +34,14 @@ import java.util.List;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "DangerousIterablesPartitionUsage",
+        name = "PreferListsPartition",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.WARNING,
-        summary = "Disallow usage of Guava's Iterables.partition for performance reasons, "
+        summary = "Prefer Guava's Lists.partition(List, int) instead of Iterables.partition(Iterable, int) when "
+                + "first argument's declared type is a list for performance reasons, "
                 + "cf. https://github.com/palantir/gradle-baseline/issues/621")
-public final class DangerousIterablesPartitionUsage extends BugChecker
+public final class PreferListsPartition extends BugChecker
         implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
