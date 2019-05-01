@@ -16,26 +16,18 @@
 
 package com.palantir.baseline.errorprone;
 
+import com.google.errorprone.BugCheckerRefactoringTestHelper;
 import com.google.errorprone.CompilationTestHelper;
-import org.junit.Before;
 import org.junit.Test;
 
 public final class DangerousIterablesPartitionUsageTests {
 
-    private CompilationTestHelper compilationHelper;
-
-    @Before
-    public void before() {
-        compilationHelper = CompilationTestHelper.newInstance(DangerousIterablesPartitionUsage.class, getClass());
-    }
-
     @Test
-    public void shouldNotUseIterablesPartition() {
-        compilationHelper
+    public void should_not_use_Iterables_partition_for_List() {
+        CompilationTestHelper.newInstance(DangerousIterablesPartitionUsage.class, getClass())
                 .addSourceLines(
                         "Test.java",
                         "import com.google.common.collect.Iterables;",
-                        "import java.lang.Iterable;",
                         "import java.util.List;",
                         "class Test {",
                         "  Iterable<?> f(List<?> list) {",
@@ -47,12 +39,41 @@ public final class DangerousIterablesPartitionUsageTests {
     }
 
     @Test
-    public void shouldUseListsPartition() {
-        compilationHelper
+    public void may_use_Iterables_partition_for_Iterable() {
+        CompilationTestHelper.newInstance(DangerousIterablesPartitionUsage.class, getClass())
+                .addSourceLines(
+                        "Test.java",
+                        "import com.google.common.collect.Iterables;",
+                        "class Test {",
+                        "  Iterable<?> f(Iterable<?> iterable) {",
+                        "    return Iterables.partition(iterable, 10);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+
+    @Test
+    public void may_use_Iterables_partition_for_Set() {
+        CompilationTestHelper.newInstance(DangerousIterablesPartitionUsage.class, getClass())
+                .addSourceLines(
+                        "Test.java",
+                        "import com.google.common.collect.Iterables;",
+                        "import java.util.Set;",
+                        "class Test {",
+                        "  Iterable<?> f(Set<?> set) {",
+                        "    return Iterables.partition(set, 10);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void should_use_Lists_partition() {
+        CompilationTestHelper.newInstance(DangerousIterablesPartitionUsage.class, getClass())
                 .addSourceLines(
                         "Test.java",
                         "import com.google.common.collect.Lists;",
-                        "import java.lang.Iterable;",
                         "import java.util.List;",
                         "class Test {",
                         "  Iterable<?> f(List<?> list) {",
@@ -61,6 +82,31 @@ public final class DangerousIterablesPartitionUsageTests {
                         "}")
                 .expectNoDiagnostics()
                 .doTest();
+    }
+
+    @Test
+    public void auto_fix_Iterables_partition() {
+        BugCheckerRefactoringTestHelper.newInstance(new DangerousIterablesPartitionUsage(), getClass())
+                .addInputLines(
+                        "Test.java",
+                        "import com.google.common.collect.Iterables;",
+                        "import java.util.List;",
+                        "class Test {",
+                        "  Iterable<?> f(List<?> list) {",
+                        "    return Iterables.partition(list, 10);",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.google.common.collect.Iterables;",
+                        "import com.google.common.collect.Lists;",
+                        "import java.util.List;",
+                        "class Test {",
+                        "  Iterable<?> f(List<?> list) {",
+                        "    return Lists.partition(list, 10);",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
 }

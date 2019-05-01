@@ -22,6 +22,7 @@ import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.fixes.SuggestedFix;
+import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
@@ -64,12 +65,12 @@ public final class DangerousIterablesPartitionUsage extends BugChecker
 
             if (LIST_MATCHER.matches(args.get(0), state)) {
                 // Fail on any 'Iterables.partition(List, int) invocation
+                SuggestedFix.Builder fix = SuggestedFix.builder();
+                String qualifiedType = SuggestedFixes.qualifyType(state, fix, "com.google.common.collect.Lists");
+                String method = qualifiedType + ".partition";
                 return buildDescription(tree)
                         .setMessage(ERROR_MESSAGE)
-                        .addFix(SuggestedFix.builder()
-                                .replace(tree, String.format("Lists.partition(%s, %s)", args.get(0), args.get(1)))
-                                .addImport("com.google.common.collect.Lists")
-                                .build())
+                        .addFix(fix.replace(tree.getMethodSelect(), method).build())
                         .build();
             }
         }
