@@ -138,6 +138,7 @@ checks](https://errorprone.info):
 - `Slf4jConstantLogMessage`: Allow only compile-time constant slf4j log message strings.
 - `Slf4jLogsafeArgs`: Allow only com.palantir.logsafe.Arg types as parameter inputs to slf4j log messages. More information on
 Safe Logging can be found at [github.com/palantir/safe-logging](https://github.com/palantir/safe-logging).
+- `PreferCollectionTransform`: Prefer Guava's Lists.transform or Collections2.transform instead of Iterables.transform when first argument's declared type is a List or Collection type for performance reasons.
 - `PreferListsPartition`: Prefer Guava's `Lists.partition(List, int)` instead of `Iterables.partition(Iterable, int)` when first argument's declared type is a list for performance reasons.
 - `PreferSafeLoggableExceptions`: Users should throw `SafeRuntimeException` instead of `RuntimeException` so that messages will not be needlessly redacted when logs are collected:
     ```diff
