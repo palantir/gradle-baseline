@@ -52,8 +52,8 @@ public final class BaselineErrorProne implements Plugin<Project> {
             project.getTasks().withType(JavaCompile.class).configureEach(javaCompile ->
                     ((ExtensionAware) javaCompile.getOptions()).getExtensions()
                             .configure(ErrorProneOptions.class, errorProneOptions -> {
-                                errorProneOptions.setEnabled(true);
-                                errorProneOptions.setDisableWarningsInGeneratedCode(true);
+                                errorProneOptions.isEnabled().set(true);
+                                errorProneOptions.getDisableWarningsInGeneratedCode().set(true);
                                 errorProneOptions.check("EqualsHashCode", CheckSeverity.ERROR);
                                 errorProneOptions.check("EqualsIncompatibleType", CheckSeverity.ERROR);
                                 errorProneOptions.check("StreamResourceLeak", CheckSeverity.ERROR);
