@@ -7,7 +7,6 @@ com.google.guava:guava = 23.6.1-jre
 com.netflix.nebula:nebula-dependency-recommender = 7.5.5
 com.palantir.configurationresolver:gradle-configuration-resolver-plugin = 0.3.0
 com.palantir.safe-logging:* = 1.9.0
-net.ltgt.gradle:gradle-errorprone-plugin = 0.8
 org.apache.maven.shared:maven-dependency-analyzer = 1.11.1
 org.github.ngbinh.scalastyle:gradle-scalastyle-plugin_2.11 = 1.0.1
 org.inferred:freebuilder = 1.14.6
@@ -25,3 +24,7 @@ org.hamcrest:hamcrest-core = 2.1
 org.junit.jupiter:* = 5.4.1
 org.mockito:mockito-core = 2.27.0
 com.fasterxml.jackson.*:* = 2.9.8
+
+# dependency-upgrader:OFF
+# Updating to 0.8 would raise our minimum compatible version to 5.2
+net.ltgt.gradle:gradle-errorprone-plugin = 0.7.1
