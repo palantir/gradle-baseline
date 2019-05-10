@@ -51,6 +51,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
                     addCheckstyle(node)
                     addGit(node)
                     addInspectionProjectProfile(node)
+                    addJavacSettings(node)
                 }
 
                 ideaRootModel.workspace.iws.withXml { provider ->
@@ -190,6 +191,14 @@ class BaselineIdea extends AbstractBaselinePlugin {
                 </profile>
                 <option name="PROJECT_PROFILE" value="Default" />
                 <option name="USE_PROJECT_PROFILE" value="true" />
+            </component>
+            """.stripIndent()))
+    }
+
+    private void addJavacSettings(node) {
+        node.append(new XmlParser().parseText("""
+            <component name="JavacSettings">
+                <option name="PREFER_TARGET_JDK_COMPILER" value="false" />
             </component>
             """.stripIndent()))
     }
