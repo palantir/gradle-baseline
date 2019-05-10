@@ -580,7 +580,6 @@ Map<String, String> map = new HashMap<String, String>(); // Clutter.
 Map<String, String> map = Collections.EMPTY_MAP; // Untyped.
 
 // Good.
-Map<String, String> map = Maps.newHashMap();
 Map<String, String> map = new HashMap<>();
 Map<String, String> map = Collections.emptyMap();
 ```
@@ -593,6 +592,20 @@ ImmutableList.Builder<String> l = new ImmutableList.Builder<>();
 
 // Good.
 ImmutableList.Builder<String> l = ImmutableList.builder();
+```
+
+Guava collection factory methods such as `Maps.newHashMap`,
+`Lists.newArrayList` et al, should however be considered deprecated
+and should not be used.
+
+``` java
+// BAD. Don't do this.
+List<String> list = Lists.newArrayList();
+Map<String, String> map = Maps.newHashMap();
+
+// Good.
+List<String> list = new ArrayList<>();
+Map<String, String> map = new HashMap<>();
 ```
 
 ### Keep Boolean expressions simple
