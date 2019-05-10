@@ -270,6 +270,13 @@ Preconditions.checkArgument(Pattern.matches(PASSWORD_REGEX, password),
 
 See *Effective Java, 2nd Edition, Item 38*
 
+### Prefer explicit `if` and `throw` or `Precondition` over `assert`
+
+An `assert` statement is only executed if the JVM is started with
+`--enableassertions`. This is not the case in production, which means
+that asserts can give a false impression of actually guarding against
+a condition.
+
 ### Be aware of the performance of string concatenation
 
 Calculating
