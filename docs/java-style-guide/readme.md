@@ -328,7 +328,7 @@ Unused or redundant imports should be removed.
 
 Static imports of project-specific methods limit readability as they
 obfuscate method provenance. Static imports are thus discouraged with
-the exception of folklore methods such as Guava `Preconditions`, and
+the exception of folklore methods such as `Collectors`, Guava `Preconditions`, and
 Apache Commons Lang3 `Validate`.
 
 ### Class declaration
