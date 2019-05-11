@@ -664,9 +664,18 @@ static -- have a private, empty, zero-argument constructor.
 
 Use `final` sparingly for variables and parameters as it impacts
 readability. Instead, enforce that parameters are never re-assigned
-through static checks such as Checkstyle. The following examples compile
-but do not pass the Baseline Checkstyle configuration because parameter
-`attempt` is re-assigned.
+through static checks such as Checkstyle.
+
+``` java
+// BAD. Don't do this.
+public PeeringPropertyValidator getValidator(final NPPeerProperty property,
+                                             final PeerPropertyLookup lookup) {
+    return concatenate(getTypeValidator(property), getSpecificValidator(property, lookup));
+}
+```
+
+The following examples compile but do not pass the Baseline Checkstyle configuration
+because parameter `attempt` is re-assigned.
 
 ``` java
 // BAD. Don't do this.
@@ -690,9 +699,10 @@ should probably have chosen a non-recursive implementation to begin with.
 
 ### Avoid redundant modifiers
 
-Redundant modifiers are discouraged, for example: - Methods in
-interfaces are by definition `public` and `abstract`. - Methods of final
-classes are already final.
+Redundant modifiers are discouraged, for example:
+
+- Methods in interfaces are by definition `public` and `abstract`.
+- Methods of final classes are already final.
 
 ### Avoid shadowing
 
@@ -1207,7 +1217,7 @@ public ParsedLine next() {
 
 See *Effective Java, 2nd Edition, Item 16*
 
-### Design for extension
+### Design for extension or prohibit it
 
 Subclasses overriding non-trivial methods are brittle for at least two
 reasons:
@@ -1227,6 +1237,8 @@ each of its non-private, non-static methods
 
 The downside of these constraints is that subclasses are limited in
 their flexibility.
+
+If a subclass is *not* designed for extension, consider marking it as `final`.
 
 **tip**
 
@@ -1383,8 +1395,8 @@ Use checked exceptions sparingly and wisely as they tend to have
 non-local ripple effects and pollute APIs. Checked exceptions
 propagating through multiple levels of API calls are generally a red
 flag. Checked exceptions should only be used to indicate error
-conditions that a caller can and should recover from; otherwise, throw
-an unchecked exception.
+conditions that a caller can not influence or avoid and can/should recover
+from; otherwise, throw an unchecked exception.
 
 Only declare exceptions that make sense for the abstraction. For
 example, a class that has nothing to do with Databases should never
@@ -1487,7 +1499,7 @@ Concurrency in Practice*.
 ### Use higher-level abstracttions
 
 Use Executors, Tasks, and Java Concurrency Utilities; not Threads,
-ThreadGroups, synchronize, wait, notify, etc. If you are on Java8, study
+ThreadGroups, synchronize, wait, notify, etc. If you are on Java 8, study
 and use its concurrency mechanisms such as streams.
 
 **tip**: Don't use low-level concurrency mechanisms since getting those right is
