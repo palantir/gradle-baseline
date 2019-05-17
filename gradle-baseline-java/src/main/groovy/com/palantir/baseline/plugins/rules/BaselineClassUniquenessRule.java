@@ -29,7 +29,7 @@ import org.gradle.api.Rule;
 import org.gradle.api.artifacts.Configuration;
 
 public final class BaselineClassUniquenessRule implements Rule {
-    private static final Pattern TASK_NAME_PATTERN = Pattern.compile("^check(.*)ClassUniqueness$");
+    private static final Pattern TASK_NAME_PATTERN = Pattern.compile("^check(.+)ClassUniqueness$");
     private final Project project;
 
     public BaselineClassUniquenessRule(Project project) {
