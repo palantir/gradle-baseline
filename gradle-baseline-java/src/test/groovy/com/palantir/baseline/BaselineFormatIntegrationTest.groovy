@@ -36,8 +36,18 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
 
     def validJavaFile = '''
     package test;
-    import com.java.tests;
-    public class Test { void test() {} }
+    public class Test { void test() {
+        int x = 1;
+    } }
+    '''.stripIndent()
+
+    def invalidJavaFile = '''
+    package test;
+    public class Test { void test() {
+    
+    
+        int x = 1;
+    } }
     '''.stripIndent()
 
     def 'can apply plugin'() {
@@ -59,16 +69,13 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
     def 'format task fixes styles'() {
         when:
         buildFile << standardBuildFile
-        file('src/main/java/test/Test.java') << validJavaFile
+        file('src/main/java/test/Test.java') << invalidJavaFile
 
         then:
         BuildResult result = with('format').build();
         result.task(":format").outcome == TaskOutcome.SUCCESS
         result.task(":spotlessApply").outcome == TaskOutcome.SUCCESS
-        file('src/main/java/test/Test.java').text == '''
-            package test;
-            public class Test { void test() {} }
-        '''.stripIndent()
+        file('src/main/java/test/Test.java').text == validJavaFile
     }
 
     def 'format task works on new source sets'() {
@@ -77,16 +84,13 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         buildFile << '''
             sourceSets { foo }
         '''.stripIndent()
-        file('src/foo/java/test/Test.java') << validJavaFile
+        file('src/foo/java/test/Test.java') << invalidJavaFile
 
         then:
         BuildResult result = with('format').build()
         result.task(":format").outcome == TaskOutcome.SUCCESS
         result.task(":spotlessApply").outcome == TaskOutcome.SUCCESS
-        file('src/foo/java/test/Test.java').text == '''
-            package test;
-            public class Test { void test() {} }
-        '''.stripIndent()
+        file('src/foo/java/test/Test.java').text == validJavaFile
     }
 
     def 'format task works on other language java sources'() {
@@ -96,16 +100,13 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
             apply plugin: 'groovy'
             sourceSets { foo }
         '''.stripIndent()
-        file('src/foo/groovy/test/Test.java') << validJavaFile
+        file('src/foo/groovy/test/Test.java') << invalidJavaFile
 
         then:
         BuildResult result = with('format').build()
         result.task(":format").outcome == TaskOutcome.SUCCESS
         result.task(":spotlessApply").outcome == TaskOutcome.SUCCESS
-        file('src/foo/groovy/test/Test.java').text == '''
-            package test;
-            public class Test { void test() {} }
-        '''.stripIndent()
+        file('src/foo/groovy/test/Test.java').text == validJavaFile
     }
 
     def 'format ignores generated files'() {

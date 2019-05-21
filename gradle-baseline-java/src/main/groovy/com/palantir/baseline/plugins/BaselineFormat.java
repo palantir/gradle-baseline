@@ -47,6 +47,9 @@ class BaselineFormat extends AbstractBaselinePlugin {
                 java.trimTrailingWhitespace();
                 java.indentWithSpaces(4);
                 java.endWithNewline();
+
+                // No empty lines at start of blocks
+                java.replaceRegex("Block starts with blank lines", "\\) \\{\n+", ") {\n");
             });
 
             // necessary because SpotlessPlugin creates tasks in an afterEvaluate block
