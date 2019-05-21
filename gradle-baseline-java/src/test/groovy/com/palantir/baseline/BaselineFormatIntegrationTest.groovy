@@ -43,6 +43,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
 
     def invalidJavaFile = '''
     package test;
+    import com.java.unused;
     public class Test { void test() {
     
     
