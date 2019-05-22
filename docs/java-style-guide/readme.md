@@ -328,8 +328,13 @@ Unused or redundant imports should be removed.
 
 Static imports of project-specific methods limit readability as they
 obfuscate method provenance. Static imports are thus discouraged with
-the exception of folklore methods such as Guava `Preconditions`, and
-Apache Commons Lang3 `Validate`.
+the exception of the members of the following classes:
+
+- `java.util.Collections`
+- `java.util.stream.Collectors`
+- `com.palantir.logsafe.Preconditions`
+- `com.google.common.base.Preconditions`
+- `org.apache.commons.lang3.Validate`
 
 ### Class declaration
 
