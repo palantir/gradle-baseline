@@ -43,7 +43,6 @@ final class JunitReportCreator {
 
             int failures = 0;
             for (Report.TestCase testCase : report.testCases()) {
-
                 Element testCaseXml = xml.createElement("testcase");
                 testSuiteXml.appendChild(testCaseXml);
                 testCaseXml.setAttribute("id", asId(testCase.name()));
