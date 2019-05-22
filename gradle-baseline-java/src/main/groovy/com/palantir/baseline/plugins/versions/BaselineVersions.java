@@ -75,7 +75,6 @@ public final class BaselineVersions implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
-
         if (project.hasProperty(DISABLE_PROPERTY)) {
             log.info("Not configuring com.palantir.baseline-versions because " + DISABLE_PROPERTY + " was set");
             return;
