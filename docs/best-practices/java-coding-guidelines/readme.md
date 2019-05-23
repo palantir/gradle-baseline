@@ -275,11 +275,8 @@ See *Effective Java, 2nd Edition, Item 38*
 An `assert` statement is only executed if the JVM is started with
 `--enableassertions`. This option is typically used during testing, but not when
 running in production, which means that the semantics will differ between
-test and production environments.
-
-In those cases where alternatives such as `Precondition` incur an unacceptable
-performance overhead, using `assert` may still be better than having no
-runtime checks at all.
+test and production environments. For this reason it's preferable to use
+explicit checks such as `if` and `throw` or `Precondition`.
 
 ### Be aware of the performance of string concatenation
 
