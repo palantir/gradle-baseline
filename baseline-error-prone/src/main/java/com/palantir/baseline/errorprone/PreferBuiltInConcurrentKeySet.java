@@ -35,17 +35,18 @@ import com.sun.source.tree.MethodInvocationTree;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.SUGGESTION,
         summary = "Prefer Java's built-in Concurrent Set implementation over Guava's ConcurrentHashSet, as it does "
-                + "roughly the same thing without relying on Guava")
+                + "the same thing with less indirection and doesn't rely on Guava")
 public final class PreferBuiltInConcurrentKeySet extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final Matcher<ExpressionTree> MATCHER =
             MethodMatchers.staticMethod()
                     .onClass("com.google.common.collect.Sets")
-                    .named("newConcurrentHashSet");
+                    .named("newConcurrentHashSet")
+                    .withParameters();
 
     private static final String ERROR_MESSAGE =
             "Prefer Java's built-in Concurrent Set implementation over Guava's ConcurrentHashSet, as it does "
-                    + "roughly the same thing without relying on Guava";
+                    + "same thing with less indirection and doesn't rely on Guava";
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {

@@ -38,6 +38,20 @@ public class PreferBuiltInConcurrentKeySetTests {
     }
 
     @Test
+    public void ignores_iterables() {
+        CompilationTestHelper.newInstance(PreferBuiltInConcurrentKeySet.class, getClass())
+                .addSourceLines(
+                        "Test.java",
+                        "import com.google.common.collect.Sets;",
+                        "class Test {",
+                        "  void foo() {",
+                        "    Sets.newConcurrentHashSet(com.google.common.collect.ImmutableList.of());",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void auto_fix() {
         BugCheckerRefactoringTestHelper.newInstance(new PreferBuiltInConcurrentKeySet(), getClass())
                 .addInputLines(
