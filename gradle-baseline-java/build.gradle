@@ -1,10 +1,8 @@
 apply plugin: 'groovy'
 apply plugin: 'java-gradle-plugin'
 apply plugin: 'com.gradle.plugin-publish'
-apply plugin: 'nebula.maven-publish'
-apply plugin: 'nebula.source-jar'
-apply from: "${rootDir}/gradle/bintray-publish.gradle"
-apply from: "${rootDir}/gradle/java.gradle"
+apply plugin: 'java-library'
+apply from: "${rootDir}/gradle/publish-jar.gradle"
 
 dependencies {
     compile project(':gradle-junit-reports')
@@ -37,9 +35,44 @@ test {
     environment 'CIRCLE_TEST_REPORTS', "${buildDir}/circle-reports"
 }
 
-jar {
-    manifest {
-        attributes("Implementation-Version" : project.version)
+gradlePlugin {
+    plugins {
+        baselinePlugins {
+            id = 'com.palantir.baseline'
+            implementationClass = 'com.palantir.baseline.plugins.Baseline'
+        }
+        baselineCheckstylePlugin {
+            id = 'com.palantir.baseline-checkstyle'
+            implementationClass = 'com.palantir.baseline.plugins.BaselineCheckstyle'
+        }
+        baselineConfigPlugin {
+            id = 'com.palantir.baseline-config'
+            implementationClass = 'com.palantir.baseline.plugins.BaselineConfig'
+        }
+        baselineExactDependenciesPlugin {
+            id = 'com.palantir.baseline-exact-dependencies'
+            implementationClass = 'com.palantir.baseline.plugins.BaselineExactDependencies'
+        }
+        baselineEclipsePlugin {
+            id = 'com.palantir.baseline-eclipse'
+            implementationClass = 'com.palantir.baseline.plugins.BaselineEclipse'
+        }
+        baselineIdeaPlugin {
+            id = 'com.palantir.baseline-idea'
+            implementationClass = 'com.palantir.baseline.plugins.BaselineIdea'
+        }
+        baselineClassUniquenessPlugin {
+            id = 'com.palantir.baseline-class-uniqueness'
+            implementationClass = 'com.palantir.baseline.plugins.BaselineClassUniquenessPlugin'
+        }
+        baselineCircleCiPlugin {
+            id = 'com.palantir.baseline-circleci'
+            implementationClass = 'com.palantir.baseline.plugins.BaselineCircleCi'
+        }
+        baselineReleaseCompatibility {
+            id = 'com.palantir.baseline-release-compatibility'
+            implementationClass = 'com.palantir.baseline.plugins.BaselineReleaseCompatibility'
+        }
     }
 }
 
@@ -51,40 +84,36 @@ pluginBundle {
 
     plugins {
         baselinePlugins {
-            id = 'com.palantir.baseline'
             displayName = 'Palantir Baseline Plugins'
         }
         baselineCheckstylePlugin {
-            id = 'com.palantir.baseline-checkstyle'
             displayName = 'Palantir Baseline Checkstyle Plugin'
         }
         baselineConfigPlugin {
-            id = 'com.palantir.baseline-config'
             displayName = 'Palantir Baseline Configuration Plugin'
         }
         baselineExactDependenciesPlugin {
-            id = 'com.palantir.baseline-exact-dependencies'
             displayName = 'Palantir Baseline Exact Dependencies Plugin'
         }
         baselineEclipsePlugin {
-            id = 'com.palantir.baseline-eclipse'
             displayName = 'Palantir Baseline Eclipse Plugin'
         }
         baselineIdeaPlugin {
-            id = 'com.palantir.baseline-idea'
             displayName = 'Palantir Baseline IntelliJ Plugin'
         }
         baselineClassUniquenessPlugin {
-            id = 'com.palantir.baseline-class-uniqueness'
             displayName = 'Palantir Baseline Class Uniqueness Plugin'
         }
         baselineCircleCiPlugin {
-            id = 'com.palantir.baseline-circleci'
             displayName = 'Palantir Baseline CircleCi Plugin'
         }
         baselineReleaseCompatibility {
-            id = 'com.palantir.baseline-release-compatibility'
             displayName = 'Palantir Baseline Release Compatibility Plugin'
         }
     }
 }
+
+tasks.publish.dependsOn tasks.publishPlugins
+publishPlugins.onlyIf { versionDetails().isCleanTag }
+project.ext.'gradle.publish.key' = System.env["GRADLE_KEY"]
+project.ext.'gradle.publish.secret' = System.env["GRADLE_SECRET"]
