@@ -6,6 +6,7 @@ apply from: "${rootDir}/gradle/java.gradle"
 dependencies {
     compile 'com.google.errorprone:error_prone_core'
 
+    testCompile 'com.palantir.tokens:auth-tokens'
     testCompile 'com.fasterxml.jackson.core:jackson-annotations'
     testCompile 'com.google.errorprone:error_prone_test_helpers'
     testCompile 'com.palantir.safe-logging:preconditions'

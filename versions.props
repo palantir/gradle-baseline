@@ -24,6 +24,7 @@ org.hamcrest:hamcrest-core = 2.1
 org.junit.jupiter:* = 5.4.1
 org.mockito:mockito-core = 2.28.2
 com.fasterxml.jackson.*:* = 2.9.9
+com.palantir.tokens:auth-tokens = 3.5.2
 
 # dependency-upgrader:OFF
 # Updating to 0.8 would raise our minimum compatible version to 5.2
