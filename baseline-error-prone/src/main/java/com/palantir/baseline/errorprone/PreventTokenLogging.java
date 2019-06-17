@@ -38,7 +38,7 @@ import java.util.regex.Pattern;
         severity = BugPattern.SeverityLevel.ERROR,
         summary = "Authentication token information should never be logged as it poses a security risk. Prevents "
                 + "AuthHeader and BearerToken information from being passed to common logging calls.")
-public class PreventTokenLogging extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
+public final class PreventTokenLogging extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final Matcher<ExpressionTree> METHOD_MATCHER =
             Matchers.anyOf(
