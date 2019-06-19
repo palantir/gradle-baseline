@@ -29,7 +29,8 @@ public final class OptionalOrElseMethodInvocationTests {
     @Before
     public void before() {
         compilationHelper = CompilationTestHelper.newInstance(OptionalOrElseMethodInvocation.class, getClass());
-        refactoringTestHelper = BugCheckerRefactoringTestHelper.newInstance(new OptionalOrElseMethodInvocation(), getClass());
+        refactoringTestHelper = BugCheckerRefactoringTestHelper.newInstance(
+                new OptionalOrElseMethodInvocation(), getClass());
     }
 
     @Test
