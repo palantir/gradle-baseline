@@ -33,12 +33,12 @@ import com.sun.source.tree.Tree;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "OptionalOrElseConstant",
+        name = "OptionalOrElseMethodInvocation",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
-        summary = "Allow passing only compile-time constants to Optional#orElse.")
-public final class OptionalOrElseConstant extends BugChecker implements MethodInvocationTreeMatcher {
+        summary = "Ensure Optional#orElse argument does not invoke a ny methods.")
+public final class OptionalOrElseMethodInvocation extends BugChecker implements MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
 

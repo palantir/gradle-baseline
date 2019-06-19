@@ -21,15 +21,15 @@ import com.google.errorprone.CompilationTestHelper;
 import org.junit.Before;
 import org.junit.Test;
 
-public final class OptionalOrElseConstantTests {
+public final class OptionalOrElseMethodInvocationTests {
 
     private CompilationTestHelper compilationHelper;
     private BugCheckerRefactoringTestHelper refactoringTestHelper;
 
     @Before
     public void before() {
-        compilationHelper = CompilationTestHelper.newInstance(OptionalOrElseConstant.class, getClass());
-        refactoringTestHelper = BugCheckerRefactoringTestHelper.newInstance(new OptionalOrElseConstant(), getClass());
+        compilationHelper = CompilationTestHelper.newInstance(OptionalOrElseMethodInvocation.class, getClass());
+        refactoringTestHelper = BugCheckerRefactoringTestHelper.newInstance(new OptionalOrElseMethodInvocation(), getClass());
     }
 
     @Test
