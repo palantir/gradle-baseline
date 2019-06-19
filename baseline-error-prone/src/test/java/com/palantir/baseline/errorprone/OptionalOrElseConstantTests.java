@@ -74,9 +74,12 @@ public final class OptionalOrElseConstantTests {
                         "import java.util.Optional;",
                         "class Test {",
                         "  private static final String compileTimeConstant = \"constant\";",
-                        "  void f() {",
+                        "  String f() { return \"hello\"; }",
+                        "  void test() {",
                         "    Optional.of(\"hello\").orElse(\"constant\");",
                         "    Optional.of(\"hello\").orElse(compileTimeConstant);",
+                        "    String string = f();",
+                        "    Optional.of(\"hello\").orElse(string);",
                         "  }",
                         "}")
                 .doTest();

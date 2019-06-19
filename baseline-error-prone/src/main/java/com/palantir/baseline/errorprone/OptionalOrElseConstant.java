@@ -23,12 +23,13 @@ import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.bugpatterns.BugChecker.MethodInvocationTreeMatcher;
 import com.google.errorprone.fixes.SuggestedFix;
-import com.google.errorprone.matchers.CompileTimeConstantExpressionMatcher;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
+import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
+import com.sun.source.tree.Tree;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -45,8 +46,8 @@ public final class OptionalOrElseConstant extends BugChecker implements MethodIn
             .onExactClass("java.util.Optional")
             .named("orElse");
 
-    private final Matcher<ExpressionTree> compileTimeConstExpressionMatcher =
-            new CompileTimeConstantExpressionMatcher();
+    private final Matcher<Tree> nonMethodExpressionMatcher =
+            Matchers.contains(ExpressionTree.class, MethodMatchers.anyMethod());
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
@@ -56,7 +57,7 @@ public final class OptionalOrElseConstant extends BugChecker implements MethodIn
 
         ExpressionTree orElseArg = tree.getArguments().get(0);
 
-        if (compileTimeConstExpressionMatcher.matches(orElseArg, state)) {
+        if (!nonMethodExpressionMatcher.matches(orElseArg, state)) {
             return Description.NO_MATCH;
         }
 
