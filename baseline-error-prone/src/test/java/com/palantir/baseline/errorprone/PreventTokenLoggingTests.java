@@ -234,7 +234,7 @@ public class PreventTokenLoggingTests {
         passLogSafe("UnsafeArg.of(name, value);");
     }
 
-    private void passSlf4j(String precondition) {
+    private void passSlf4j(String statement) {
         compilationHelper.addSourceLines(
                 "Test.java",
                 "import org.slf4j.Logger;",
@@ -244,13 +244,13 @@ public class PreventTokenLoggingTests {
                 "class Test {",
                 "  private static final Logger log = LoggerFactory.getLogger(Test.class);",
                 "  void f(AuthHeader authHeader, BearerToken bearerToken, String message, Object arg1, Object arg2) {",
-                "    " + precondition,
+                "    " + statement,
                 "  }",
                 "}")
                 .doTest();
     }
 
-    private void failSlf4j(String precondition) {
+    private void failSlf4j(String statement) {
         compilationHelper.addSourceLines(
                 "Test.java",
                 "import org.slf4j.Logger;",
@@ -261,13 +261,13 @@ public class PreventTokenLoggingTests {
                 "  private static final Logger log = LoggerFactory.getLogger(Test.class);",
                 "  void f(AuthHeader authHeader, BearerToken bearerToken, String message, Object arg1, Object arg2) {",
                 "    // BUG: Diagnostic contains: not allowed to be logged",
-                "    " + precondition,
+                "    " + statement,
                 "  }",
                 "}")
                 .doTest();
     }
 
-    private void passLogSafe(String precondition) {
+    private void passLogSafe(String statement) {
         compilationHelper.addSourceLines(
                 "Test.java",
                 "import com.palantir.logsafe.SafeArg;",
@@ -276,13 +276,13 @@ public class PreventTokenLoggingTests {
                 "import com.palantir.tokens.auth.BearerToken;",
                 "class Test {",
                 "  void f(AuthHeader authHeader, BearerToken bearerToken, String name, Object value) {",
-                "    " + precondition,
+                "    " + statement,
                 "  }",
                 "}")
                 .doTest();
     }
 
-    private void failLogSafe(String precondition) {
+    private void failLogSafe(String statement) {
         compilationHelper.addSourceLines(
                 "Test.java",
                 "import com.palantir.logsafe.SafeArg;",
@@ -292,7 +292,7 @@ public class PreventTokenLoggingTests {
                 "class Test {",
                 "  void f(AuthHeader authHeader, BearerToken bearerToken, String name, Object value) {",
                 "    // BUG: Diagnostic contains: not allowed to be logged",
-                "    " + precondition,
+                "    " + statement,
                 "  }",
                 "}")
                 .doTest();
