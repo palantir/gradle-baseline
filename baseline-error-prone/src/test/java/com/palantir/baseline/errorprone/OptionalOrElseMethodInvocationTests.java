@@ -33,18 +33,26 @@ public final class OptionalOrElseMethodInvocationTests {
                 new OptionalOrElseMethodInvocation(), getClass());
     }
 
-    @Test
-    public void testNonCompileTimeConstantExpression() {
+    private void test(String expr) {
         compilationHelper
                 .addSourceLines(
                         "Test.java",
                         "import java.util.Optional;",
                         "class Test {",
                         "  String f() { return \"hello\"; }",
-                        "  // BUG: Diagnostic contains: non-constant expression",
-                        "  private final String string = Optional.of(\"hello\").orElse(f());",
+                        "  String s = \"world\";",
+                        "  // BUG: Diagnostic contains: invokes a method",
+                        "  private final String string = Optional.of(\"hello\").orElse(" + expr + ");",
                         "}")
                 .doTest();
+    }
+
+    @Test
+    public void testNonCompileTimeConstantExpression() {
+        test("f()");
+        test("s + s");
+        test("\"world\" + s");
+        test("\"world\".substring(1)");
     }
 
     @Test
@@ -81,6 +89,7 @@ public final class OptionalOrElseMethodInvocationTests {
                         "    Optional.of(\"hello\").orElse(compileTimeConstant);",
                         "    String string = f();",
                         "    Optional.of(\"hello\").orElse(string);",
+                        "    Optional.of(\"hello\").orElseGet(() -> f());",
                         "  }",
                         "}")
                 .doTest();

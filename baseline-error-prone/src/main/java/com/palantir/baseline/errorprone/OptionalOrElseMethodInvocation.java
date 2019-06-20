@@ -37,8 +37,7 @@ import com.sun.source.tree.Tree;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
-        summary = "Ensure Optional#orElse argument does not invoke any methods. "
-                + "otherwise replaces with the lazily evaluated Optional#orElseGet")
+        summary = "Expression passed to Optional#orElse invokes a method, use Optional#orElseGet instead")
 public final class OptionalOrElseMethodInvocation extends BugChecker implements MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
@@ -63,7 +62,7 @@ public final class OptionalOrElseMethodInvocation extends BugChecker implements 
         }
 
         return buildDescription(tree)
-                .setMessage("Optional#orElse uses a non-constant expression")
+                .setMessage("Expression passed to Optional#orElse invokes a method")
                 .addFix(SuggestedFix.builder()
                         .postfixWith(tree.getMethodSelect(), "Get")
                         .prefixWith(orElseArg, "() -> ")
