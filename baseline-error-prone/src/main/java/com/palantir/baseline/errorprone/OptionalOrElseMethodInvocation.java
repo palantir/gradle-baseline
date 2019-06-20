@@ -37,7 +37,8 @@ import com.sun.source.tree.Tree;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
-        summary = "Ensure Optional#orElse argument does not invoke a ny methods.")
+        summary = "Ensure Optional#orElse argument does not invoke any methods. "
+                + "otherwise replaces with the lazily evaluated Optional#orElseGet")
 public final class OptionalOrElseMethodInvocation extends BugChecker implements MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
