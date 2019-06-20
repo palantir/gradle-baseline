@@ -27,8 +27,6 @@ import com.google.errorprone.matchers.method.MethodMatchers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.Tree;
-import java.util.List;
-import java.util.regex.Pattern;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -43,13 +41,9 @@ public final class PreventTokenLogging extends BugChecker implements BugChecker.
     private static final Matcher<ExpressionTree> METHOD_MATCHER =
             Matchers.anyOf(
                     MethodMatchers.instanceMethod()
-                            .onExactClass("org.slf4j.Logger")
-                            .withNameMatching(Pattern.compile("trace|debug|info|warn|error")),
+                            .onDescendantOf("org.slf4j.Logger"),
                     MethodMatchers.staticMethod()
-                            .onClass("com.palantir.logsafe.SafeArg")
-                            .named("of"),
-                    MethodMatchers.staticMethod()
-                            .onClass("com.palantir.logsafe.UnsafeArg")
+                            .onClassAny("com.palantir.logsafe.SafeArg", "com.palantir.logsafe.UnsafeArg")
                             .named("of"));
 
     private static final Matcher<Tree> AUTH_MATCHER =
@@ -60,12 +54,7 @@ public final class PreventTokenLogging extends BugChecker implements BugChecker.
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
         if (METHOD_MATCHER.matches(tree, state)) {
-            List<? extends ExpressionTree> args = tree.getArguments();
-            if (args.size() < 2) {
-                return Description.NO_MATCH;
-            }
-
-            for (Tree arg : args.subList(1, args.size())) {
+            for (Tree arg : tree.getArguments()) {
                 if (AUTH_MATCHER.matches(arg, state)) {
                     return buildDescription(arg)
                             .setMessage("Authentication information is not allowed to be logged.")
