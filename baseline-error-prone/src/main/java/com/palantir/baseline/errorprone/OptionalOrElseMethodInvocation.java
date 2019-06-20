@@ -47,7 +47,7 @@ public final class OptionalOrElseMethodInvocation extends BugChecker implements 
             .onExactClass("java.util.Optional")
             .named("orElse");
 
-    private final Matcher<Tree> nonMethodExpressionMatcher =
+    private static final Matcher<Tree> METHOD_INVOCATIONS =
             Matchers.contains(ExpressionTree.class, MethodMatchers.anyMethod());
 
     @Override
@@ -58,7 +58,7 @@ public final class OptionalOrElseMethodInvocation extends BugChecker implements 
 
         ExpressionTree orElseArg = tree.getArguments().get(0);
 
-        if (!nonMethodExpressionMatcher.matches(orElseArg, state)) {
+        if (!METHOD_INVOCATIONS.matches(orElseArg, state)) {
             return Description.NO_MATCH;
         }
 
