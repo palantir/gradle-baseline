@@ -37,7 +37,7 @@ import org.gradle.api.tasks.testing.Test;
 
 public final class BaselineErrorProne implements Plugin<Project> {
 
-    private static final String ERROR_PRONE_JAVAC_VERSION = "9+181-r4173-1";
+    public static final String ERROR_PRONE_JAVAC_VERSION = "9+181-r4173-1";
 
     @Override
     public void apply(Project project) {

@@ -2,6 +2,7 @@ rootProject.name = "gradle-baseline"
 enableFeaturePreview("STABLE_PUBLISHING")
 
 include "baseline-error-prone"
+include "baseline-refaster"
 include "gradle-baseline-java"
 include "gradle-baseline-java-config"
 include "gradle-junit-reports"
