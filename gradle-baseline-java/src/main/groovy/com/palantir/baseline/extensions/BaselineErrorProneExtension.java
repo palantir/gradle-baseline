@@ -31,6 +31,7 @@ public class BaselineErrorProneExtension {
             "PreferSafeLoggingPreconditions",
 
             // Built-in checks
+            "ArrayEquals",
             "MissingOverride");
 
     private final ListProperty<String> patchChecks;
