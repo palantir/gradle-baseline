@@ -16,6 +16,7 @@
 
 package com.palantir.baseline
 
+
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 
@@ -41,7 +42,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         public class Test { void test() {} }
         '''.stripIndent()
 
-    def inValidJavaFile = '''
+    def invalidJavaFile = '''
         package test;
         public class Test {
             void test() {
@@ -83,7 +84,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
     def 'compileJava fails when error-prone finds errors'() {
         when:
         buildFile << standardBuildFile
-        file('src/main/java/test/Test.java') << inValidJavaFile
+        file('src/main/java/test/Test.java') << invalidJavaFile
 
         then:
         BuildResult result = with('compileJava').buildAndFail()
@@ -99,5 +100,29 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         then:
         BuildResult result = with('compileJava').build()
         result.task(":compileJava").outcome == TaskOutcome.SUCCESS
+    }
+
+    def 'compileJava applies patches when error-prone finds errors'() {
+        when:
+        buildFile << standardBuildFile
+        file('src/main/java/test/Test.java') << invalidJavaFile
+
+        then:
+        BuildResult result = with('compileJava', '-PerrorProneApply').build()
+        result.task(":compileJava").outcome == TaskOutcome.SUCCESS
+        file('src/main/java/test/Test.java').text == '''
+        package test;
+        
+        import java.util.Arrays;
+        public class Test {
+            void test() {
+                int[] a = {1, 2, 3};
+                int[] b = {1, 2, 3};
+                if (Arrays.equals(a, b)) {
+                  System.out.println("arrays are equal!");
+                }
+            }
+        }
+        '''.stripIndent()
     }
 }

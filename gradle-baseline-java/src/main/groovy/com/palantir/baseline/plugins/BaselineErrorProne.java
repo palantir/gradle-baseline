@@ -16,8 +16,10 @@
 
 package com.palantir.baseline.plugins;
 
+import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.palantir.baseline.extensions.BaselineErrorProneExtension;
 import java.io.File;
 import java.util.AbstractList;
 import java.util.List;
@@ -37,11 +39,16 @@ import org.gradle.api.tasks.testing.Test;
 
 public final class BaselineErrorProne implements Plugin<Project> {
 
+    public static final String EXTENSION_NAME = "baselineErrorProne";
+
     private static final String ERROR_PRONE_JAVAC_VERSION = "9+181-r4173-1";
+    private static final String PROP_ERROR_PRONE_APPLY = "errorProneApply";
 
     @Override
     public void apply(Project project) {
         project.getPluginManager().withPlugin("java", plugin -> {
+            BaselineErrorProneExtension errorProneExtension = project.getExtensions()
+                    .create(EXTENSION_NAME, BaselineErrorProneExtension.class, project);
             project.getPluginManager().apply(ErrorPronePlugin.class);
             String version = Optional.ofNullable(getClass().getPackage().getImplementationVersion())
                     .orElse("latest.release");
@@ -49,15 +56,26 @@ public final class BaselineErrorProne implements Plugin<Project> {
                     ErrorPronePlugin.CONFIGURATION_NAME,
                     "com.palantir.baseline:baseline-error-prone:" + version);
 
-            project.getTasks().withType(JavaCompile.class).configureEach(javaCompile ->
-                    ((ExtensionAware) javaCompile.getOptions()).getExtensions()
-                            .configure(ErrorProneOptions.class, errorProneOptions -> {
-                                errorProneOptions.setEnabled(true);
-                                errorProneOptions.setDisableWarningsInGeneratedCode(true);
-                                errorProneOptions.check("EqualsHashCode", CheckSeverity.ERROR);
-                                errorProneOptions.check("EqualsIncompatibleType", CheckSeverity.ERROR);
-                                errorProneOptions.check("StreamResourceLeak", CheckSeverity.ERROR);
-                            }));
+            project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
+                ((ExtensionAware) javaCompile.getOptions()).getExtensions()
+                        .configure(ErrorProneOptions.class, errorProneOptions -> {
+                            errorProneOptions.setEnabled(true);
+                            errorProneOptions.setDisableWarningsInGeneratedCode(true);
+                            errorProneOptions.check("EqualsHashCode", CheckSeverity.ERROR);
+                            errorProneOptions.check("EqualsIncompatibleType", CheckSeverity.ERROR);
+                            errorProneOptions.check("StreamResourceLeak", CheckSeverity.ERROR);
+
+                            if (project.hasProperty(PROP_ERROR_PRONE_APPLY)) {
+                                // TODO(gatesn): Is there a way to discover error-prone checks?
+                                // Maybe service-load from a ClassLoader configured with annotation processor path?
+                                // https://github.com/google/error-prone/pull/947
+                                errorProneOptions.getErrorproneArgumentProviders().add(() -> ImmutableList.of(
+                                        "-XepPatchChecks:" + Joiner.on(',')
+                                                .join(errorProneExtension.getPatchChecks().get()),
+                                        "-XepPatchLocation:IN_PLACE"));
+                            }
+                        });
+            });
 
             project.getPluginManager().withPlugin("java-gradle-plugin", appliedPlugin -> {
                 project.getTasks().withType(JavaCompile.class).configureEach(javaCompile ->
