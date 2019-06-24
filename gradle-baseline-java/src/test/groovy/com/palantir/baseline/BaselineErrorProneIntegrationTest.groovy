@@ -108,7 +108,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         file('src/main/java/test/Test.java') << inValidJavaFile
 
         then:
-        BuildResult result = with('compileJava', "-P${BaselineErrorProne.PROP_ERROR_PRONE_APPLY}=true").build()
+        BuildResult result = with('compileJava', "-P${BaselineErrorProne.PROP_ERROR_PRONE_APPLY}").build()
         result.task(":compileJava").outcome == TaskOutcome.SUCCESS
         file('src/main/java/test/Test.java').text == '''
         package test;
