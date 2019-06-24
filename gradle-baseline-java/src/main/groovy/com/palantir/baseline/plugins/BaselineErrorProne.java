@@ -65,7 +65,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
                             errorProneOptions.check("EqualsIncompatibleType", CheckSeverity.ERROR);
                             errorProneOptions.check("StreamResourceLeak", CheckSeverity.ERROR);
 
-                            if (project.getProperties().containsKey(PROP_ERROR_PRONE_APPLY)) {
+                            if (project.hasProperty(PROP_ERROR_PRONE_APPLY)) {
                                 // TODO(gatesn): Is there a way to discover error-prone checks?
                                 // Maybe service-load from a ClassLoader configured with annotation processor path?
                                 // https://github.com/google/error-prone/pull/947
