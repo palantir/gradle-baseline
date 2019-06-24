@@ -28,15 +28,11 @@ import java.util.stream.Collectors;
 import net.ltgt.gradle.errorprone.CheckSeverity;
 import net.ltgt.gradle.errorprone.ErrorProneOptions;
 import net.ltgt.gradle.errorprone.ErrorPronePlugin;
-import org.gradle.api.Action;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.Task;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.plugins.ExtensionAware;
-import org.gradle.api.specs.Spec;
-import org.gradle.api.tasks.Exec;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradle.api.tasks.testing.Test;
@@ -46,9 +42,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
     public static final String EXTENSION_NAME = "baselineErrorProne";
 
     private static final String ERROR_PRONE_JAVAC_VERSION = "9+181-r4173-1";
-    private static final String APPLY_TASK_NAME = "compileApply";
-    private static final String APPLY_TASK_GROUP = "Verification";
-    private static final String APPLY_TASK_DESCRIPTION = "Applies error prone suggested fixes in-place.";
+    private static final String PROP_ERROR_PRONE_APPLY = "errorProneApply";
 
     @Override
     public void apply(Project project) {
@@ -62,15 +56,26 @@ public final class BaselineErrorProne implements Plugin<Project> {
                     ErrorPronePlugin.CONFIGURATION_NAME,
                     "com.palantir.baseline:baseline-error-prone:" + version);
 
-            project.getTasks().withType(JavaCompile.class).configureEach(javaCompile ->
-                    ((ExtensionAware) javaCompile.getOptions()).getExtensions()
-                            .configure(ErrorProneOptions.class, errorProneOptions -> {
-                                errorProneOptions.setEnabled(true);
-                                errorProneOptions.setDisableWarningsInGeneratedCode(true);
-                                errorProneOptions.check("EqualsHashCode", CheckSeverity.ERROR);
-                                errorProneOptions.check("EqualsIncompatibleType", CheckSeverity.ERROR);
-                                errorProneOptions.check("StreamResourceLeak", CheckSeverity.ERROR);
-                            }));
+            project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
+                ((ExtensionAware) javaCompile.getOptions()).getExtensions()
+                        .configure(ErrorProneOptions.class, errorProneOptions -> {
+                            errorProneOptions.setEnabled(true);
+                            errorProneOptions.setDisableWarningsInGeneratedCode(true);
+                            errorProneOptions.check("EqualsHashCode", CheckSeverity.ERROR);
+                            errorProneOptions.check("EqualsIncompatibleType", CheckSeverity.ERROR);
+                            errorProneOptions.check("StreamResourceLeak", CheckSeverity.ERROR);
+
+                            Optional.ofNullable(project.getProperties().get(PROP_ERROR_PRONE_APPLY)).ifPresent(x -> {
+                                // TODO(gatesn): Is there a way to discover error-prone checks?
+                                // Maybe service-load from a ClassLoader configured with annotation processor path?
+                                // https://github.com/google/error-prone/pull/947
+                                errorProneOptions.getErrorproneArgumentProviders().add(() -> ImmutableList.of(
+                                        "-XepPatchChecks:" + Joiner.on(',')
+                                                .join(errorProneExtension.getPatchChecks().get()),
+                                        "-XepPatchLocation:IN_PLACE"));
+                            });
+                        });
+            });
 
             project.getPluginManager().withPlugin("java-gradle-plugin", appliedPlugin -> {
                 project.getTasks().withType(JavaCompile.class).configureEach(javaCompile ->
@@ -104,60 +109,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
                                             .setBootClasspath(new LazyConfigurationList(errorProneFiles)));
                         });
             }
-
-            // Create compile*Apply tasks that apply the errorprone-generated patch files
-            Task applyTask = project.getTasks().create(APPLY_TASK_NAME);
-            List<JavaCompile> compileTasks = ImmutableList.copyOf(
-                    project.getTasks().withType(JavaCompile.class).iterator());
-            compileTasks.forEach(javaCompile -> {
-                File patchFile = project.getBuildDir().toPath()
-                        .resolve("errorprone")
-                        .resolve(javaCompile.getName())
-                        .resolve("error-prone.patch")
-                        .toFile();
-                javaCompile.getOutputs().file(patchFile);
-
-                // TODO(gatesn): How can we flag this on/off? It appears to come with a hefty perf hit
-                javaCompile.doFirst(new Action<Task>() {
-                    @Override
-                    public void execute(Task task) {
-                        project.delete(patchFile);
-                    }
-                });
-                ((ExtensionAware) javaCompile.getOptions()).getExtensions()
-                        .configure(ErrorProneOptions.class, errorProneOptions -> {
-                            // TODO(gatesn): Is there a way to discover error-prone checks?
-                            // Maybe service-load from a ClassLoader configured with annotation processor path?
-                            // https://github.com/google/error-prone/pull/947
-                            errorProneOptions.getErrorproneArgumentProviders().add(() -> ImmutableList.of(
-                                    "-XepPatchChecks:" + Joiner.on(',')
-                                            .join(errorProneExtension.getPatchChecks().get()),
-                                    "-XepPatchLocation:" + patchFile.getParentFile().getAbsolutePath()));
-                        });
-
-                project.getTasks().create(javaCompile.getName() + "Apply", Exec.class, task -> {
-                    task.setGroup(APPLY_TASK_GROUP);
-                    task.setDescription(APPLY_TASK_DESCRIPTION);
-
-                    task.setExecutable("patch");
-                    task.args("-p3", "-u");
-                    task.args("-i", patchFile.getAbsolutePath());
-
-                    task.onlyIf(new Spec<Task>() {
-                        @Override
-                        public boolean isSatisfiedBy(Task task) {
-                            return patchFile.exists();
-                        }
-                    });
-
-                    task.getInputs().file(patchFile);
-                    task.getOutputs().files(javaCompile.getSource());
-                    task.dependsOn(javaCompile);
-
-                    applyTask.dependsOn(task);
-                });
-            });
-
         });
     }
 
