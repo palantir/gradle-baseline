@@ -28,12 +28,14 @@ import java.util.stream.Collectors;
 import net.ltgt.gradle.errorprone.CheckSeverity;
 import net.ltgt.gradle.errorprone.ErrorProneOptions;
 import net.ltgt.gradle.errorprone.ErrorPronePlugin;
+import org.gradle.api.Action;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.plugins.ExtensionAware;
+import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.Exec;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
@@ -116,6 +118,12 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 javaCompile.getOutputs().file(patchFile);
 
                 // TODO(gatesn): How can we flag this on/off? It appears to come with a hefty perf hit
+                javaCompile.doFirst(new Action<Task>() {
+                    @Override
+                    public void execute(Task task) {
+                        project.delete(patchFile);
+                    }
+                });
                 ((ExtensionAware) javaCompile.getOptions()).getExtensions()
                         .configure(ErrorProneOptions.class, errorProneOptions -> {
                             // TODO(gatesn): Is there a way to discover error-prone checks?
@@ -133,8 +141,14 @@ public final class BaselineErrorProne implements Plugin<Project> {
 
                     task.setExecutable("patch");
                     task.args("-p3", "-u");
-                    //task.args("-d", patchFile.getParentFile().getAbsoluteFile());
                     task.args("-i", patchFile.getAbsolutePath());
+
+                    task.onlyIf(new Spec<Task>() {
+                        @Override
+                        public boolean isSatisfiedBy(Task task) {
+                            return patchFile.exists();
+                        }
+                    });
 
                     task.getInputs().file(patchFile);
                     task.getOutputs().files(javaCompile.getSource());

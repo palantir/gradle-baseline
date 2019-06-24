@@ -23,11 +23,15 @@ import org.gradle.api.provider.ListProperty;
 public class BaselineErrorProneExtension {
 
     private static final ImmutableList<String> DEFAULT_PATCH_CHECKS = ImmutableList.of(
+            // Baseline checks
             "PreferBuiltInConcurrentKeySet",
             "PreferCollectionTransform",
             "PreferListsPartition",
             "PreferSafeLoggableExceptions",
-            "PreferSafeLoggingPreconditions");
+            "PreferSafeLoggingPreconditions",
+
+            // Built-in checks
+            "MissingOverride");
 
     private final ListProperty<String> patchChecks;
 
