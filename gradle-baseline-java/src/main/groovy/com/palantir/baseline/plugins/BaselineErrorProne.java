@@ -40,9 +40,9 @@ import org.gradle.api.tasks.testing.Test;
 public final class BaselineErrorProne implements Plugin<Project> {
 
     public static final String EXTENSION_NAME = "baselineErrorProne";
-    public static final String PROP_ERROR_PRONE_APPLY = "errorProneApply";
 
     private static final String ERROR_PRONE_JAVAC_VERSION = "9+181-r4173-1";
+    private static final String PROP_ERROR_PRONE_APPLY = "errorProneApply";
 
     @Override
     public void apply(Project project) {
