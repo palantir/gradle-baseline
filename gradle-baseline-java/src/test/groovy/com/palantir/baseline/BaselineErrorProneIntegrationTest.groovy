@@ -16,7 +16,7 @@
 
 package com.palantir.baseline
 
-import com.palantir.baseline.plugins.BaselineErrorProne
+
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 
@@ -42,7 +42,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         public class Test { void test() {} }
         '''.stripIndent()
 
-    def inValidJavaFile = '''
+    def invalidJavaFile = '''
         package test;
         public class Test {
             void test() {
@@ -84,7 +84,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
     def 'compileJava fails when error-prone finds errors'() {
         when:
         buildFile << standardBuildFile
-        file('src/main/java/test/Test.java') << inValidJavaFile
+        file('src/main/java/test/Test.java') << invalidJavaFile
 
         then:
         BuildResult result = with('compileJava').buildAndFail()
@@ -105,7 +105,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
     def 'compileJava applies patches when error-prone finds errors'() {
         when:
         buildFile << standardBuildFile
-        file('src/main/java/test/Test.java') << inValidJavaFile
+        file('src/main/java/test/Test.java') << invalidJavaFile
 
         then:
         BuildResult result = with('compileJava', '-PerrorProneApply').build()
