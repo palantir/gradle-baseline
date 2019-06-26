@@ -23,6 +23,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -30,7 +31,7 @@ import org.gradle.api.tasks.compile.JavaCompile;
 public class RefasterCompileTask extends JavaCompile {
 
     private final ConfigurableFileCollection refasterSources = getProject().files();
-    private final RegularFileProperty refasterRulesFile = newInputFile();
+    private final Property<File> refasterRulesFile = getProject().getObjects().property(File.class);
 
     public RefasterCompileTask() {
         // Don't care about .class files
@@ -45,7 +46,7 @@ public class RefasterCompileTask extends JavaCompile {
         // Clear out the default error-prone providers
         getOptions().getCompilerArgumentProviders().clear();
         getOptions().setCompilerArgs(ImmutableList.of(
-                "-Xplugin:BaselineRefasterCompiler --out " + refasterRulesFile.get().getAsFile().getAbsolutePath()));
+                "-Xplugin:BaselineRefasterCompiler --out " + refasterRulesFile.get().getAbsolutePath()));
 
         // Extract Java sources
         List<File> javaSources = ImmutableList.copyOf(getRefasterSources()).stream()
@@ -72,7 +73,7 @@ public class RefasterCompileTask extends JavaCompile {
     }
 
     @OutputFile
-    public final RegularFileProperty getRefasterRulesFile() {
+    public final Property<File> getRefasterRulesFile() {
         return refasterRulesFile;
     }
 }

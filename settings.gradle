@@ -2,7 +2,7 @@ rootProject.name = "gradle-baseline"
 enableFeaturePreview("STABLE_PUBLISHING")
 
 include "baseline-error-prone"
-include "baseline-refaster-plugin"
+include "baseline-refaster-javac-plugin"
 include "baseline-refaster-rules"
 include "gradle-baseline-java"
 include "gradle-baseline-java-config"

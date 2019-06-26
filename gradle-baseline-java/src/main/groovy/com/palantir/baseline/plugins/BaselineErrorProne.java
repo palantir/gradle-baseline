@@ -78,10 +78,11 @@ public final class BaselineErrorProne implements Plugin<Project> {
                     "com.palantir.baseline:baseline-error-prone:" + version);
             project.getDependencies().add(
                     "refasterCompiler",
-                    "com.palantir.baseline:baseline-refaster-plugin:" + version);
+                    "com.palantir.baseline:baseline-refaster-javac-plugin:" + version);
 
-            Provider<RegularFile> refasterRulesFile = project.getLayout().getBuildDirectory()
-                    .file("refaster/rules.refaster");
+            Provider<File> refasterRulesFile = project.getLayout().getBuildDirectory()
+                    .file("refaster/rules.refaster")
+                    .map(RegularFile::getAsFile);
 
             Task compileRefaster = project.getTasks().create("compileRefaster", RefasterCompileTask.class, task -> {
                 task.setSource(refasterSources);
