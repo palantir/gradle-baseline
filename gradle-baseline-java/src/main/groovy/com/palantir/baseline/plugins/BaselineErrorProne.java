@@ -20,6 +20,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.palantir.baseline.extensions.BaselineErrorProneExtension;
+import com.palantir.baseline.tasks.RefasterCompileTask;
 import java.io.File;
 import java.util.AbstractList;
 import java.util.List;
@@ -31,18 +32,24 @@ import net.ltgt.gradle.errorprone.ErrorPronePlugin;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.RegularFile;
 import org.gradle.api.plugins.ExtensionAware;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradle.api.tasks.testing.Test;
 
 public final class BaselineErrorProne implements Plugin<Project> {
 
-    public static final String ERROR_PRONE_JAVAC_VERSION = "9+181-r4173-1";
+    public static final String REFASTER_CONFIGURATION = "refaster";
     public static final String EXTENSION_NAME = "baselineErrorProne";
 
+    private static final String ERROR_PRONE_JAVAC_VERSION = "9+181-r4173-1";
     private static final String PROP_ERROR_PRONE_APPLY = "errorProneApply";
+    private static final String PROP_REFASTER_APPLY = "refasterApply";
 
     @Override
     public void apply(Project project) {
@@ -50,11 +57,38 @@ public final class BaselineErrorProne implements Plugin<Project> {
             BaselineErrorProneExtension errorProneExtension = project.getExtensions()
                     .create(EXTENSION_NAME, BaselineErrorProneExtension.class, project);
             project.getPluginManager().apply(ErrorPronePlugin.class);
+
             String version = Optional.ofNullable(getClass().getPackage().getImplementationVersion())
                     .orElse("latest.release");
+
+            Configuration refasterConfiguration = project.getConfigurations().create(REFASTER_CONFIGURATION);
+            Configuration refasterSources = project.getConfigurations()
+                    .create("refasterSources", configuration -> {
+                        configuration.extendsFrom(refasterConfiguration);
+                        configuration.setTransitive(false);
+                    });
+            Configuration refasterCompilerConfiguration = project.getConfigurations()
+                    .create("refasterCompiler", configuration -> configuration.extendsFrom(refasterConfiguration));
+
+            project.getDependencies().add(
+                    REFASTER_CONFIGURATION,
+                    "com.palantir.baseline:baseline-refaster-rules:" + version + ":sources");
             project.getDependencies().add(
                     ErrorPronePlugin.CONFIGURATION_NAME,
                     "com.palantir.baseline:baseline-error-prone:" + version);
+            project.getDependencies().add(
+                    "refasterCompiler",
+                    "com.palantir.baseline:baseline-refaster-plugin:" + version);
+
+            Provider<RegularFile> refasterRulesFile = project.getLayout().getBuildDirectory()
+                    .file("refaster/rules.refaster");
+
+            Task compileRefaster = project.getTasks().create("compileRefaster", RefasterCompileTask.class, task -> {
+                task.setSource(refasterSources);
+                task.getRefasterSources().from(refasterSources);
+                task.setClasspath(refasterCompilerConfiguration);
+                task.getRefasterRulesFile().set(refasterRulesFile);
+            });
 
             project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
                 ((ExtensionAware) javaCompile.getOptions()).getExtensions()
@@ -65,7 +99,19 @@ public final class BaselineErrorProne implements Plugin<Project> {
                             errorProneOptions.check("EqualsIncompatibleType", CheckSeverity.ERROR);
                             errorProneOptions.check("StreamResourceLeak", CheckSeverity.ERROR);
 
-                            if (project.hasProperty(PROP_ERROR_PRONE_APPLY)) {
+                            if (javaCompile.equals(compileRefaster)) {
+                                // Don't apply refaster to itself...
+                                return;
+                            }
+
+                            if (project.hasProperty(PROP_REFASTER_APPLY)) {
+                                javaCompile.dependsOn(compileRefaster);
+                                javaCompile.getOptions().setWarnings(false);
+                                errorProneOptions.getErrorproneArgumentProviders().add(() -> ImmutableList.of(
+                                        "-XepPatchChecks:refaster" + refasterRulesFile.get()
+                                                .getAsFile().getAbsolutePath(),
+                                        "-XepPatchLocation:IN_PLACE"));
+                            } else if (project.hasProperty(PROP_ERROR_PRONE_APPLY)) {
                                 // TODO(gatesn): Is there a way to discover error-prone checks?
                                 // Maybe service-load from a ClassLoader configured with annotation processor path?
                                 // https://github.com/google/error-prone/pull/947
