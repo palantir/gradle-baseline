@@ -23,7 +23,7 @@ import com.sun.source.util.Plugin;
 import com.sun.tools.javac.api.BasicJavacTask;
 import java.nio.file.FileSystems;
 import java.util.Arrays;
-import java.util.Iterator;
+import java.util.List;
 
 /**
  * A compiler plugin based on {@link com.google.errorprone.refaster.RefasterRuleCompiler} that collapses multiple
@@ -38,16 +38,13 @@ public final class BaselineRefasterCompiler implements Plugin {
 
     @Override
     public void init(JavacTask task, String... args) {
-        Iterator<String> argIterator = Arrays.asList(args).iterator();
-        String path = null;
-        while (argIterator.hasNext()) {
-            if (argIterator.next().equals("--out")) {
-                path = argIterator.next();
-                break;
-            }
-        }
-        Preconditions.checkArgument(path != null, "No --out specified");
+        List<String> listArgs = Arrays.asList(args);
+        int outIndex = listArgs.indexOf("--out");
+        Preconditions.checkArgument(outIndex != -1, "No --out specified");
+        Preconditions.checkArgument(listArgs.size() > outIndex, "No value passed for --out");
+        String path = listArgs.get(outIndex + 1);
 
+        Preconditions.checkArgument(task instanceof BasicJavacTask, "JavacTask not instance of BasicJavacTask");
         task.addTaskListener(new BaselineRefasterCompilerAnalyzer(
                 ((BasicJavacTask) task).getContext(), FileSystems.getDefault().getPath(path)));
     }
