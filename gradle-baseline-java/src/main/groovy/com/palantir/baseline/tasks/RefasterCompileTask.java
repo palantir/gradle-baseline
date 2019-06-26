@@ -28,7 +28,7 @@ import org.gradle.api.tasks.compile.JavaCompile;
 public class RefasterCompileTask extends JavaCompile {
 
     private final ConfigurableFileCollection refasterSources = getProject().files();
-    private final RegularFileProperty refasterRulesFile = getProject().getObjects().fileProperty();
+    private final RegularFileProperty refasterRulesFile = newInputFile();
 
     public RefasterCompileTask() {
         // Don't care about .class files
