@@ -23,6 +23,8 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.compile.JavaCompile;
 
 public class RefasterCompileTask extends JavaCompile {
@@ -36,8 +38,6 @@ public class RefasterCompileTask extends JavaCompile {
 
         // Ensure we hit the non-incremental code-path since we override it
         getOptions().setIncremental(false);
-
-        getOutputs().files(refasterRulesFile);
     }
 
     @Override
@@ -66,10 +66,12 @@ public class RefasterCompileTask extends JavaCompile {
         super.compile();
     }
 
+    @InputFiles
     public final ConfigurableFileCollection getRefasterSources() {
         return refasterSources;
     }
 
+    @OutputFile
     public final RegularFileProperty getRefasterRulesFile() {
         return refasterRulesFile;
     }
