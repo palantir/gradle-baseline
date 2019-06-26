@@ -109,8 +109,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
                                 javaCompile.dependsOn(compileRefaster);
                                 javaCompile.getOptions().setWarnings(false);
                                 errorProneOptions.getErrorproneArgumentProviders().add(() -> ImmutableList.of(
-                                        "-XepPatchChecks:refaster:" + refasterRulesFile.get()
-                                                .getAsFile().getAbsolutePath(),
+                                        "-XepPatchChecks:refaster:" + refasterRulesFile.get().getAbsolutePath(),
                                         "-XepPatchLocation:IN_PLACE"));
                             } else if (project.hasProperty(PROP_ERROR_PRONE_APPLY)) {
                                 // TODO(gatesn): Is there a way to discover error-prone checks?
