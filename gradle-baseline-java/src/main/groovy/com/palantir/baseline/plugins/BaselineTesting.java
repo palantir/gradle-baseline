@@ -20,6 +20,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.testing.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,13 +36,15 @@ public final class BaselineTesting implements Plugin<Project> {
             task.jvmArgs("-XX:+HeapDumpOnOutOfMemoryError", "-XX:+CrashOnOutOfMemoryError");
         });
 
-        Configuration configuration = project.getConfigurations().getByName("testRuntimeClasspath");
-        configuration.getAllDependencies()
-                .matching(dep -> dep.getGroup().equals("org.junit.jupiter") && dep.getName().equals("junit-jupiter"))
-                .all(dep -> {
-                    log.info("Detected 'org:junit.jupiter:junit-jupiter', enabling useJUnitPlatform()");
-                    enableJUnit5ForAllTestTasks(project);
-                });
+        project.getPlugins().withType(JavaPlugin.class, p -> {
+            Configuration configuration = project.getConfigurations().getByName("testRuntimeClasspath");
+            configuration.getAllDependencies()
+                    .matching(dep -> dep.getGroup().equals("org.junit.jupiter") && dep.getName().equals("junit-jupiter"))
+                    .all(dep -> {
+                        log.info("Detected 'org:junit.jupiter:junit-jupiter', enabling useJUnitPlatform()");
+                        enableJUnit5ForAllTestTasks(project);
+                    });
+        });
     }
 
     private void enableJUnit5ForAllTestTasks(Project project) {
