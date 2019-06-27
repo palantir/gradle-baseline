@@ -22,7 +22,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
