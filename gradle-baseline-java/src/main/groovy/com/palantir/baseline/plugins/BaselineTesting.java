@@ -35,15 +35,13 @@ public final class BaselineTesting implements Plugin<Project> {
             task.jvmArgs("-XX:+HeapDumpOnOutOfMemoryError", "-XX:+CrashOnOutOfMemoryError");
         });
 
-        project.afterEvaluate(proj -> {
-            Configuration configuration = project.getConfigurations().getByName("testRuntimeClasspath");
-            configuration.getIncoming().getDependencies()
-                    .matching(dep -> dep.getGroup().equals("org.junit.jupiter") && dep.getName().equals("junit-jupiter"))
-                    .all(dep -> {
-                        log.info("Detected 'org:junit.jupiter:junit-jupiter', enabling useJUnitPlatform()");
-                        enableJUnit5ForAllTestTasks(project);
-                    });
-        });
+        Configuration configuration = project.getConfigurations().getByName("testRuntimeClasspath");
+        configuration.getAllDependencies()
+                .matching(dep -> dep.getGroup().equals("org.junit.jupiter") && dep.getName().equals("junit-jupiter"))
+                .all(dep -> {
+                    log.info("Detected 'org:junit.jupiter:junit-jupiter', enabling useJUnitPlatform()");
+                    enableJUnit5ForAllTestTasks(project);
+                });
     }
 
     private void enableJUnit5ForAllTestTasks(Project project) {
@@ -63,6 +61,12 @@ public final class BaselineTesting implements Plugin<Project> {
                 // the factor to be multiplied with the number of available processors/cores to determine the desired
                 // parallelism for the dynamic configuration strategy.
                 task.systemProperty("junit.jupiter.execution.parallel.config.dynamic.factor", "1");
+
+                if (System.getenv().containsKey("CI")) {
+                    task.testLogging(log -> {
+
+                    });
+                }
             });
         }
     }
