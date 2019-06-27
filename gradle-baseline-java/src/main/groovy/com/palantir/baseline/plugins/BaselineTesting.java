@@ -16,16 +16,46 @@
 
 package com.palantir.baseline.plugins;
 
+import java.util.concurrent.atomic.AtomicBoolean;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.testing.Test;
 
 public final class BaselineTesting implements Plugin<Project> {
 
+    private final AtomicBoolean junit5 = new AtomicBoolean(false);
+
     @Override
     public void apply(Project project) {
         project.getTasks().withType(Test.class).all(task -> {
             task.jvmArgs("-XX:+HeapDumpOnOutOfMemoryError", "-XX:+CrashOnOutOfMemoryError");
         });
+
+        project.getConfigurations().getByName("testRuntime").getDependencies()
+                .matching(dep -> dep.getGroup().equals("org.junit.jupiter") && dep.getName().equals("junit-jupiter"))
+                .configureEach(dep -> {
+                    enableJUnit5ForAllTestTasks(project);
+                });
+    }
+
+    private void enableJUnit5ForAllTestTasks(Project project) {
+        if (junit5.compareAndSet(false, true)) {
+            project.getTasks().withType(Test.class).configureEach(task -> {
+                task.useJUnitPlatform();
+
+                task.systemProperty("junit.platform.output.capture.stdout", "true");
+                task.systemProperty("junit.platform.output.capture.stderr", "true");
+
+                // https://junit.org/junit5/docs/snapshot/user-guide/#writing-tests-parallel-execution
+                task.systemProperty("junit.jupiter.execution.parallel.enabled", "true");
+
+                // Computes the desired parallelism based on the number of available processors/cores
+                task.systemProperty("junit.jupiter.execution.parallel.config.strategy", "dynamic");
+
+                // the factor to be multiplied with the number of available processors/cores to determine the desired
+                // parallelism for the dynamic configuration strategy.
+                task.systemProperty("junit.jupiter.execution.parallel.config.dynamic.factor", "1");
+            });
+        }
     }
 }
