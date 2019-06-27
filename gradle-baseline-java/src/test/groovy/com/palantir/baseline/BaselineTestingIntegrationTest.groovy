@@ -25,6 +25,7 @@ class BaselineTestingIntegrationTest extends AbstractPluginTest {
         plugins {
             id 'java'
             id 'com.palantir.baseline-testing'
+            id 'com.palantir.consistent-versions' version '1.9.2'
         }
         
         repositories {
@@ -73,7 +74,7 @@ class BaselineTestingIntegrationTest extends AbstractPluginTest {
         file('src/test/java/test/TestClass5.java') << junit5Test
 
         then:
-        BuildResult result = with('test').build()
+        BuildResult result = with('test', '--write-locks').build()
         result.task(':test').outcome == TaskOutcome.SUCCESS
         new File(projectDir, "build/reports/tests/test/classes/test.TestClass4.html").exists()
         new File(projectDir, "build/reports/tests/test/classes/test.TestClass5.html").exists()

@@ -16,7 +16,6 @@
 
 package com.palantir.baseline.plugins;
 
-import java.util.concurrent.atomic.AtomicBoolean;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.JavaPlugin;
@@ -27,7 +26,6 @@ import org.slf4j.LoggerFactory;
 public final class BaselineTesting implements Plugin<Project> {
 
     private static final Logger log = LoggerFactory.getLogger(BaselineTesting.class);
-    private final AtomicBoolean junit5 = new AtomicBoolean(false);
 
     @Override
     public void apply(Project project) {
@@ -36,35 +34,37 @@ public final class BaselineTesting implements Plugin<Project> {
         });
 
         project.getPlugins().withType(JavaPlugin.class, p -> {
-            project.getConfigurations()
-                    .getByName(JavaPlugin.TEST_RUNTIME_CLASSPATH_CONFIGURATION_NAME)
-                    .getAllDependencies()
-                    .matching(dep -> dep.getGroup().equals("org.junit.jupiter")
-                            && dep.getName().equals("junit-jupiter"))
-                    .all(dep -> {
-                        log.info("Detected 'org:junit.jupiter:junit-jupiter', enabling useJUnitPlatform()");
-                        enableJUnit5ForAllTestTasks(project);
-                    });
+
+            // afterEvaluate necessary because the junit-jupiter dep might be added further down the build.gradle
+            project.afterEvaluate(unused -> {
+                project.getConfigurations()
+                        .getByName(JavaPlugin.TEST_RUNTIME_CLASSPATH_CONFIGURATION_NAME)
+                        .getAllDependencies()
+                        .matching(dep -> dep.getGroup().equals("org.junit.jupiter")
+                                && dep.getName().equals("junit-jupiter"))
+                        .stream()
+                        .findAny()
+                        .ifPresent(ignored -> enableJUnit5ForAllTestTasks(project));
+            });
         });
     }
 
     private void enableJUnit5ForAllTestTasks(Project project) {
-        if (junit5.compareAndSet(false, true)) {
-            project.getTasks().withType(Test.class).configureEach(task -> {
-                task.useJUnitPlatform();
+        log.info("Detected 'org:junit.jupiter:junit-jupiter', enabling useJUnitPlatform()");
+        project.getTasks().withType(Test.class).configureEach(task -> {
+            task.useJUnitPlatform();
 
-                task.systemProperty("junit.platform.output.capture.stdout", "true");
-                task.systemProperty("junit.platform.output.capture.stderr", "true");
+            task.systemProperty("junit.platform.output.capture.stdout", "true");
+            task.systemProperty("junit.platform.output.capture.stderr", "true");
 
-                // https://junit.org/junit5/docs/snapshot/user-guide/#writing-tests-parallel-execution
-                task.systemProperty("junit.jupiter.execution.parallel.enabled", "true");
+            // https://junit.org/junit5/docs/snapshot/user-guide/#writing-tests-parallel-execution
+            task.systemProperty("junit.jupiter.execution.parallel.enabled", "true");
 
-                // Computes the desired parallelism based on the number of available processors/cores
-                task.systemProperty("junit.jupiter.execution.parallel.config.strategy", "dynamic");
+            // Computes the desired parallelism based on the number of available processors/cores
+            task.systemProperty("junit.jupiter.execution.parallel.config.strategy", "dynamic");
 
-                // provide some stdout feedback when tests fail
-                task.testLogging(testLogging -> testLogging.events("failed"));
-            });
-        }
+            // provide some stdout feedback when tests fail
+            task.testLogging(testLogging -> testLogging.events("failed"));
+        });
     }
 }
