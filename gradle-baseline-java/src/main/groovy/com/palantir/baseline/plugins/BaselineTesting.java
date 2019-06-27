@@ -58,15 +58,8 @@ public final class BaselineTesting implements Plugin<Project> {
                 // Computes the desired parallelism based on the number of available processors/cores
                 task.systemProperty("junit.jupiter.execution.parallel.config.strategy", "dynamic");
 
-                // the factor to be multiplied with the number of available processors/cores to determine the desired
-                // parallelism for the dynamic configuration strategy.
-                task.systemProperty("junit.jupiter.execution.parallel.config.dynamic.factor", "1");
-
-                if (System.getenv().containsKey("CI")) {
-                    task.testLogging(log -> {
-
-                    });
-                }
+                // provide some stdout feedback when tests fail
+                task.testLogging(testLogging -> testLogging.events("failed"));
             });
         }
     }

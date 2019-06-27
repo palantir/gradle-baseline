@@ -354,4 +354,6 @@ Configures some sensible defaults:
 
     This ensures that if one of your tests fails with an OutOfMemoryError (OOM), you'll get a large hprof file in the relevant subdirectory which can be analyzed with Eclipse Memory Analyzer Tool, Yourkit profiler, jvisualvm etc.
 
-2. If Gradle detects you use JUnit 5 (i.e. jupiter and friends), it will automatically configure your `Test` tasks to run in parallel by default.  Many other languages take this stance by default, and if some tests rely on static state then you can mark them as non-parallel.
+2. If Gradle detects you use JUnit 5 (i.e. you have a `testImplementation 'org:junit.jupiter:junit-jupiter'` dependency), it will automatically configure your `Test` tasks to run with `useJUnitPlatform()`, and configure all `@Test` methods to run in parallel by default.  Many other languages take this stance by default - if some tests rely on static state then you can mark them as non-parallel.
+
+    See more here: https://junit.org/junit5/docs/current/user-guide/#writing-tests-parallel-execution
