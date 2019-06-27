@@ -8,6 +8,7 @@ dependencies {
     compile project(':gradle-junit-reports')
     compile gradleApi()
     compile 'com.diffplug.spotless:spotless-plugin-gradle'
+    compile 'com.google.errorprone:error_prone_refaster'
     compile 'com.google.guava:guava'
     compile 'com.netflix.nebula:nebula-dependency-recommender'
     compile 'com.palantir.configurationresolver:gradle-configuration-resolver-plugin'
@@ -28,6 +29,8 @@ dependencies {
 
 tasks.test.dependsOn tasks.findByPath(':gradle-baseline-java-config:publishToMavenLocal')
 tasks.test.dependsOn tasks.findByPath(':baseline-error-prone:publishToMavenLocal')
+tasks.test.dependsOn tasks.findByPath(':baseline-refaster-javac-plugin:publishToMavenLocal')
+tasks.test.dependsOn tasks.findByPath(':baseline-refaster-rules:publishToMavenLocal')
 tasks.test.dependsOn tasks.publishToMavenLocal
 
 test {
