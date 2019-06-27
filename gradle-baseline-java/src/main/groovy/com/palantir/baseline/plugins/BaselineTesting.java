@@ -35,12 +35,10 @@ public final class BaselineTesting implements Plugin<Project> {
             task.jvmArgs("-XX:+HeapDumpOnOutOfMemoryError", "-XX:+CrashOnOutOfMemoryError");
         });
 
-
         project.afterEvaluate(proj -> {
-
-            Configuration configuration = project.getConfigurations().getByName("testRuntime");
+            Configuration configuration = project.getConfigurations().getByName("testRuntimeClasspath");
             configuration.getIncoming().getDependencies()
-                    // .matching(dep -> dep.getGroup().equals("org.junit.jupiter") && dep.getName().equals("junit-jupiter"))
+                    .matching(dep -> dep.getGroup().equals("org.junit.jupiter") && dep.getName().equals("junit-jupiter"))
                     .all(dep -> {
                         log.info("Detected 'org:junit.jupiter:junit-jupiter', enabling useJUnitPlatform()");
                         enableJUnit5ForAllTestTasks(project);
