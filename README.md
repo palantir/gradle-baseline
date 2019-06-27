@@ -342,12 +342,16 @@ This plugin may become redundant if this functionality is implemented upstream [
 
 ## com.palantir.baseline-testing
 
-Equivalent to:
+Configures some sensible defaults:
 
-```gradle
-tasks.withType(Test) {
-    jvmArgs '-XX:+HeapDumpOnOutOfMemoryError', '-XX:+CrashOnOutOfMemoryError'
-}
-```
+1. For debugging purposes:
 
-This ensures that if one of your tests fails with an OutOfMemoryError (OOM), you'll get a large hprof file in the relevant subdirectory which can be analyzed with Eclipse Memory Analyzer Tool, Yourkit profiler, jvisualvm etc.
+    ```gradle
+    tasks.withType(Test) {
+        jvmArgs '-XX:+HeapDumpOnOutOfMemoryError', '-XX:+CrashOnOutOfMemoryError'
+    }
+    ```
+
+    This ensures that if one of your tests fails with an OutOfMemoryError (OOM), you'll get a large hprof file in the relevant subdirectory which can be analyzed with Eclipse Memory Analyzer Tool, Yourkit profiler, jvisualvm etc.
+
+2. If Gradle detects you use JUnit 5 (i.e. jupiter and friends), it will automatically configure your `Test` tasks to run in parallel by default.  Many other languages take this stance by default, and if some tests rely on static state then you can mark them as non-parallel.
