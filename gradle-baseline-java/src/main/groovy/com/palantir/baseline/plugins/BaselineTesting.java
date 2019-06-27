@@ -19,7 +19,6 @@ package com.palantir.baseline.plugins;
 import java.util.concurrent.atomic.AtomicBoolean;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.testing.Test;
 import org.slf4j.Logger;
@@ -37,9 +36,11 @@ public final class BaselineTesting implements Plugin<Project> {
         });
 
         project.getPlugins().withType(JavaPlugin.class, p -> {
-            Configuration configuration = project.getConfigurations().getByName("testRuntimeClasspath");
-            configuration.getAllDependencies()
-                    .matching(dep -> dep.getGroup().equals("org.junit.jupiter") && dep.getName().equals("junit-jupiter"))
+            project.getConfigurations()
+                    .getByName(JavaPlugin.TEST_RUNTIME_CLASSPATH_CONFIGURATION_NAME)
+                    .getAllDependencies()
+                    .matching(dep -> dep.getGroup().equals("org.junit.jupiter")
+                            && dep.getName().equals("junit-jupiter"))
                     .all(dep -> {
                         log.info("Detected 'org:junit.jupiter:junit-jupiter', enabling useJUnitPlatform()");
                         enableJUnit5ForAllTestTasks(project);
