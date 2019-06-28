@@ -16,6 +16,7 @@
 
 package com.palantir.baseline.plugins;
 
+import java.util.Objects;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.JavaPlugin;
@@ -40,7 +41,7 @@ public final class BaselineTesting implements Plugin<Project> {
                 project.getConfigurations()
                         .getByName(JavaPlugin.TEST_RUNTIME_CLASSPATH_CONFIGURATION_NAME)
                         .getAllDependencies()
-                        .matching(dep -> dep.getGroup() != null && dep.getGroup().equals("org.junit.jupiter")
+                        .matching(dep -> Objects.equals(dep.getGroup(), "org.junit.jupiter")
                                 && dep.getName().equals("junit-jupiter"))
                         .stream()
                         .findAny()
