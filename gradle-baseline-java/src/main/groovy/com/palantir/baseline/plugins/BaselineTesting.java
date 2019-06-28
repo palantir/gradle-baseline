@@ -40,7 +40,7 @@ public final class BaselineTesting implements Plugin<Project> {
                 project.getConfigurations()
                         .getByName(JavaPlugin.TEST_RUNTIME_CLASSPATH_CONFIGURATION_NAME)
                         .getAllDependencies()
-                        .matching(dep -> dep.getGroup().equals("org.junit.jupiter")
+                        .matching(dep -> dep.getGroup() != null && dep.getGroup().equals("org.junit.jupiter")
                                 && dep.getName().equals("junit-jupiter"))
                         .stream()
                         .findAny()
