@@ -62,11 +62,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
                     .orElse("latest.release");
 
             Configuration refasterConfiguration = project.getConfigurations().create(REFASTER_CONFIGURATION);
-            Configuration refasterSources = project.getConfigurations()
-                    .create("refasterSources", configuration -> {
-                        configuration.extendsFrom(refasterConfiguration);
-                        configuration.setTransitive(false);
-                    });
             Configuration refasterCompilerConfiguration = project.getConfigurations()
                     .create("refasterCompiler", configuration -> configuration.extendsFrom(refasterConfiguration));
 
@@ -85,8 +80,8 @@ public final class BaselineErrorProne implements Plugin<Project> {
                     .map(RegularFile::getAsFile);
 
             Task compileRefaster = project.getTasks().create("compileRefaster", RefasterCompileTask.class, task -> {
-                task.setSource(refasterSources);
-                task.getRefasterSources().from(refasterSources);
+                task.setSource(refasterConfiguration);
+                task.getRefasterSources().set(refasterConfiguration);
                 task.setClasspath(refasterCompilerConfiguration);
                 task.getRefasterRulesFile().set(refasterRulesFile);
             });

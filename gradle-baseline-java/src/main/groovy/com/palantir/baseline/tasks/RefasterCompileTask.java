@@ -21,7 +21,8 @@ import java.io.File;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
@@ -29,7 +30,7 @@ import org.gradle.api.tasks.compile.JavaCompile;
 
 public class RefasterCompileTask extends JavaCompile {
 
-    private final ConfigurableFileCollection refasterSources = getProject().files();
+    private final Property<Configuration> refasterSources = getProject().getObjects().property(Configuration.class);
     private final Property<File> refasterRulesFile = getProject().getObjects().property(File.class);
 
     public RefasterCompileTask() {
@@ -48,7 +49,11 @@ public class RefasterCompileTask extends JavaCompile {
                 "-Xplugin:BaselineRefasterCompiler --out " + refasterRulesFile.get().getAbsolutePath()));
 
         // Extract Java sources
-        List<File> javaSources = ImmutableList.copyOf(getRefasterSources()).stream()
+        List<File> javaSources = getRefasterSources().get().getResolvedConfiguration()
+                .getFirstLevelModuleDependencies()
+                .stream()
+                .flatMap(dep -> dep.getModuleArtifacts().stream())
+                .map(ResolvedArtifact::getFile)
                 .flatMap(file -> {
                     if (file.getName().endsWith(".jar")) {
                         return getProject().zipTree(file).getFiles().stream()
@@ -62,12 +67,16 @@ public class RefasterCompileTask extends JavaCompile {
                 })
                 .collect(Collectors.toList());
 
-        setSource(javaSources);
-        super.compile();
+        if (!javaSources.isEmpty()) {
+            setSource(javaSources);
+            super.compile();
+        } else {
+            setDidWork(false);
+        }
     }
 
     @InputFiles
-    public final ConfigurableFileCollection getRefasterSources() {
+    public final Property<Configuration> getRefasterSources() {
         return refasterSources;
     }
 
