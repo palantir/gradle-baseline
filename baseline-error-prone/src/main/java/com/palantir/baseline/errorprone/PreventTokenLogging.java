@@ -55,7 +55,7 @@ public final class PreventTokenLogging extends BugChecker implements BugChecker.
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
         if (METHOD_MATCHER.matches(tree, state)) {
             for (Tree arg : tree.getArguments()) {
-                if (AUTH_MATCHER.matches(arg, state)) {
+                if (AUTH_MATCHER.matches(arg, state) && arg.getKind() != Tree.Kind.NULL_LITERAL) {
                     return buildDescription(arg)
                             .setMessage("Authentication information is not allowed to be logged.")
                             .build();
