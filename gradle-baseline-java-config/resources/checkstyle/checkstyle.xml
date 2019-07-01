@@ -435,7 +435,7 @@
         </module>
         <module name="CyclomaticComplexity"/> <!-- Java Coding Guidelines: Reduce Cyclomatic Complexity -->
         <module name="DesignForExtension"> <!-- Java Coding Guidelines: Design for extension -->
-            <property name="ignoredAnnotations" value="Test, Before, BeforeEach, After, AfterEach, BeforeClass, BeforeAll, AfterClass, AfterAll"/>
+            <property name="ignoredAnnotations" value="ParameterizedTest, Test, Before, BeforeEach, After, AfterEach, BeforeClass, BeforeAll, AfterClass, AfterAll"/>
         </module>
         <module name="JavadocMethod"> <!-- Java Style Guide: Where Javadoc is used -->
             <property name="scope" value="public"/>
