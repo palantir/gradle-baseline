@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Add refaster rule to migrate away from optional.orElse(supplier.get())
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/679
