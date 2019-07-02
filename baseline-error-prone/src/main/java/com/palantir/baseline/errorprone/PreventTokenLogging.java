@@ -46,15 +46,18 @@ public final class PreventTokenLogging extends BugChecker implements BugChecker.
                             .onClassAny("com.palantir.logsafe.SafeArg", "com.palantir.logsafe.UnsafeArg")
                             .named("of"));
 
-    private static final Matcher<Tree> AUTH_MATCHER =
-            Matchers.anyOf(
-                    Matchers.isSubtypeOf("com.palantir.tokens.auth.AuthHeader"),
-                    Matchers.isSubtypeOf("com.palantir.tokens.auth.BearerToken"));
+    private static final Matcher<ExpressionTree> AUTH_MATCHER =
+            Matchers.allOf(
+                    Matchers.anyOf(
+                            Matchers.isSubtypeOf("com.palantir.tokens.auth.AuthHeader"),
+                            Matchers.isSubtypeOf("com.palantir.tokens.auth.BearerToken")),
+                    Matchers.not(
+                            Matchers.kindIs(Tree.Kind.NULL_LITERAL)));
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
         if (METHOD_MATCHER.matches(tree, state)) {
-            for (Tree arg : tree.getArguments()) {
+            for (ExpressionTree arg : tree.getArguments()) {
                 if (AUTH_MATCHER.matches(arg, state)) {
                     return buildDescription(arg)
                             .setMessage("Authentication information is not allowed to be logged.")

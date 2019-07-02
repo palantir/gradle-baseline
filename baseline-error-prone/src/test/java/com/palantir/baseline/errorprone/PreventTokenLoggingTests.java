@@ -145,6 +145,16 @@ public class PreventTokenLoggingTests {
     }
 
     @Test
+    public void testSlf4jTraceNullMessageNoArgs() {
+        passSlf4j("log.trace(null);");
+    }
+
+    @Test
+    public void testSlf4jTraceNullArg() {
+        passSlf4j("log.trace(message, arg1, null);");
+    }
+
+    @Test
     public void testSlf4jDebug() {
         passSlf4j("log.debug(message, arg1);");
     }
@@ -157,6 +167,16 @@ public class PreventTokenLoggingTests {
     @Test
     public void testSlf4jDebugNoArgs() {
         passSlf4j("log.debug(message);");
+    }
+
+    @Test
+    public void testSlf4jDebugNullMessageNoArgs() {
+        passSlf4j("log.debug(null);");
+    }
+
+    @Test
+    public void testSlf4jDebugNullArg() {
+        passSlf4j("log.debug(message, arg1, null);");
     }
 
     @Test
@@ -175,6 +195,16 @@ public class PreventTokenLoggingTests {
     }
 
     @Test
+    public void testSlf4jInfoNullMessageNoArgs() {
+        passSlf4j("log.info(null);");
+    }
+
+    @Test
+    public void testSlf4jInfoNullArg() {
+        passSlf4j("log.info(message, arg1, null);");
+    }
+
+    @Test
     public void testSlf4jWarn() {
         passSlf4j("log.warn(message, arg1);");
     }
@@ -190,6 +220,16 @@ public class PreventTokenLoggingTests {
     }
 
     @Test
+    public void testSlf4jWarnNullMessageNoArgs() {
+        passSlf4j("log.warn(null);");
+    }
+
+    @Test
+    public void testSlf4jWarnNullArg() {
+        passSlf4j("log.warn(message, arg1, null);");
+    }
+
+    @Test
     public void testSlf4jError() {
         passSlf4j("log.error(message, arg1);");
     }
@@ -202,6 +242,16 @@ public class PreventTokenLoggingTests {
     @Test
     public void testSlf4jErrorNoArgs() {
         passSlf4j("log.error(message);");
+    }
+
+    @Test
+    public void testSlf4jErrorNullMessageNoArgs() {
+        passSlf4j("log.error(null);");
+    }
+
+    @Test
+    public void testSlf4jErrorNullArg() {
+        passSlf4j("log.error(message, arg1, null);");
     }
 
     @Test
@@ -230,8 +280,28 @@ public class PreventTokenLoggingTests {
     }
 
     @Test
+    public void testSafeArgNullName() {
+        passLogSafe("SafeArg.of(null, value);");
+    }
+
+    @Test
+    public void testSafeArgNullValue() {
+        passLogSafe("SafeArg.of(name, null);");
+    }
+
+    @Test
     public void testUnsafeArg() {
         passLogSafe("UnsafeArg.of(name, value);");
+    }
+
+    @Test
+    public void testUnsafeArgNullName() {
+        passLogSafe("UnsafeArg.of(null, value);");
+    }
+
+    @Test
+    public void testUnsafeArgNullValue() {
+        passLogSafe("UnsafeArg.of(name, null);");
     }
 
     private void passSlf4j(String statement) {
