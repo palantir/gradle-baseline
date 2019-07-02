@@ -1,0 +1,15 @@
+type: fix
+fix:
+  description: |-
+    [fix] Prefer short names for Preconditions over fully-qualified names
+
+    ## Before this PR
+    The suggested fixes for safe logging Preconditions would always render the fully-qualified class name.
+
+    ## After this PR
+    The suggested fixes render short names, removing the Guava import, and adding the safe-logging import.
+
+    ## Potential Downsides
+    We don't remove the commons Validate import since there may be other instances of this class being used. However, this is the same behaviour as before so..
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/677
