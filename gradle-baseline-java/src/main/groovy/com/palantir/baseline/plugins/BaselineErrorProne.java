@@ -97,7 +97,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
                             errorProneOptions.check("EqualsIncompatibleType", CheckSeverity.ERROR);
                             errorProneOptions.check("StreamResourceLeak", CheckSeverity.ERROR);
 
-                            if (jdkVersion.isJava12Compatible()) {
+                            if (jdkVersion.compareTo(JavaVersion.toVersion("12.0.1")) >= 0) {
                                 // Errorprone isn't officially compatible with Java12, but in practise everything
                                 // works apart from this one check: https://github.com/google/error-prone/issues/1106
                                 errorProneOptions.check("Finally", CheckSeverity.OFF);
