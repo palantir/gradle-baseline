@@ -87,6 +87,8 @@ public final class BaselineErrorProne implements Plugin<Project> {
             });
 
             project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
+                JavaVersion jdkVersion = JavaVersion.toVersion(javaCompile.getToolChain().getVersion());
+
                 ((ExtensionAware) javaCompile.getOptions()).getExtensions()
                         .configure(ErrorProneOptions.class, errorProneOptions -> {
                             errorProneOptions.setEnabled(true);
@@ -94,6 +96,12 @@ public final class BaselineErrorProne implements Plugin<Project> {
                             errorProneOptions.check("EqualsHashCode", CheckSeverity.ERROR);
                             errorProneOptions.check("EqualsIncompatibleType", CheckSeverity.ERROR);
                             errorProneOptions.check("StreamResourceLeak", CheckSeverity.ERROR);
+
+                            if (jdkVersion.isJava12Compatible()) {
+                                // Errorprone isn't officially compatible with Java12, but in practise everything
+                                // works apart from this one check: https://github.com/google/error-prone/issues/1106
+                                errorProneOptions.check("Finally", CheckSeverity.OFF);
+                            }
 
                             if (javaCompile.equals(compileRefaster)) {
                                 // Don't apply refaster to itself...
