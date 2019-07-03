@@ -1,0 +1,7 @@
+type: fix
+fix:
+  description: Projects can now compile using Java12, because the one errorprone check
+    that breaks (Finally) is now disabled when you use this toolchain. It remains
+    enabled when compiling against earlier JDKs.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/681
