@@ -1,25 +1,6 @@
 type: improvement
 improvement:
   description: |-
-    Disallow dangling parenthesis
-
-    ## Before this PR
-    Generally our style has always been to disallow dangling parenthesis, but nothing applies this rule.
-
-    The aim of this PR, and any style PR, is to increase consistency of coding style and reduce time spent in CR commenting with stylistic nit picks.
-
-    ```java
-    Preconditions.checkArgument(
-        myExpression,
-        "My expression isn't as true as it should be"
-    );
-    ```
-
-    ## After this PR
-    ```java
-    Preconditions.checkArgument(
-        myExpression,
-        "My expression isn't as true as it should be");
-    ```
+    Spotless check for disallowing dangling parenthesis.
   links:
   - https://github.com/palantir/gradle-baseline/pull/687
