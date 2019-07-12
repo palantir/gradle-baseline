@@ -33,7 +33,7 @@ public final class OptionalOrElseMethodInvocationTests {
                 new OptionalOrElseMethodInvocation(), getClass());
     }
 
-    private void test(String expr) {
+    private void testPositive(String expr) {
         compilationHelper
                 .addSourceLines(
                         "Test.java",
@@ -47,12 +47,28 @@ public final class OptionalOrElseMethodInvocationTests {
                 .doTest();
     }
 
+    private void testNegative(String expr) {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import com.google.common.collect.*;",
+                        "import java.util.Collections;",
+                        "import java.util.Optional;",
+                        "class Test {",
+                        "  String f() { return \"hello\"; }",
+                        "  void test() {",
+                        "    Optional.empty().orElse(" + expr + ");",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
     @Test
     public void testNonCompileTimeConstantExpression() {
-        test("f()");
-        test("s + s");
-        test("\"world\" + s");
-        test("\"world\".substring(1)");
+        testPositive("f()");
+        testPositive("s + s");
+        testPositive("\"world\" + s");
+        testPositive("\"world\".substring(1)");
     }
 
     @Test
@@ -76,7 +92,7 @@ public final class OptionalOrElseMethodInvocationTests {
     }
 
     @Test
-    public void negative() {
+    public void testCompileTimeConstantExpression() {
         compilationHelper
                 .addSourceLines(
                         "Test.java",
@@ -95,4 +111,33 @@ public final class OptionalOrElseMethodInvocationTests {
                 .doTest();
     }
 
+    @Test
+    public void testConstantEmptyCollection() {
+        testNegative("Collections.emptyEnumeration()");
+        testNegative("Collections.emptyIterator()");
+        testNegative("Collections.emptyList()");
+        testNegative("Collections.emptyListIterator()");
+        testNegative("Collections.emptyMap()");
+        testNegative("Collections.emptyNavigableMap()");
+        testNegative("Collections.emptyNavigableSet()");
+        testNegative("Collections.emptySet()");
+        testNegative("Collections.emptySortedMap()");
+        testNegative("Collections.emptySortedSet()");
+        testNegative("ImmutableSet.of()");
+        testNegative("ImmutableBiMap.of()");
+        testNegative("ImmutableClassToInstanceMap.of()");
+        testNegative("ImmutableList.of()");
+        testNegative("ImmutableListMultimap.of()");
+        testNegative("ImmutableMap.of()");
+        testNegative("ImmutableMultimap.of()");
+        testNegative("ImmutableMultiset.of()");
+        testNegative("ImmutableRangeMap.of()");
+        testNegative("ImmutableRangeSet.of()");
+        testNegative("ImmutableSet.of()");
+        testNegative("ImmutableSetMultimap.of()");
+        testNegative("ImmutableSortedMap.of()");
+        testNegative("ImmutableSortedMultiset.of()");
+        testNegative("ImmutableSortedSet.of()");
+        testNegative("ImmutableTable.of()");
+    }
 }

@@ -30,6 +30,7 @@ import com.google.errorprone.matchers.method.MethodMatchers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.Tree;
+import java.util.regex.Pattern;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -47,7 +48,18 @@ public final class OptionalOrElseMethodInvocation extends BugChecker implements 
             .named("orElse");
 
     private static final Matcher<Tree> METHOD_INVOCATIONS =
-            Matchers.contains(ExpressionTree.class, MethodMatchers.anyMethod());
+            Matchers.contains(ExpressionTree.class, Matchers.allOf(
+                    MethodMatchers.anyMethod(),
+                    Matchers.not(Matchers.anyOf(
+                            MethodMatchers.staticMethod()
+                                    .onClass("java.util.Collections")
+                                    .withNameMatching(Pattern.compile("empty\\w+"))
+                                    .withParameters(),
+                            MethodMatchers.staticMethod()
+                                    .onClass((type, state) ->
+                                            type.toString().startsWith("com.google.common.collect.Immutable"))
+                                    .named("of")
+                                    .withParameters()))));
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
@@ -69,5 +81,4 @@ public final class OptionalOrElseMethodInvocation extends BugChecker implements 
                         .build())
                 .build();
     }
-
 }
