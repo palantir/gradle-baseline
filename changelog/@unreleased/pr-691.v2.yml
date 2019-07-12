@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Known constant collection values can now be used in optional.orElse(value).
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/691
