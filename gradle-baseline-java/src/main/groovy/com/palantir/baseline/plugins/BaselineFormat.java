@@ -50,6 +50,9 @@ class BaselineFormat extends AbstractBaselinePlugin {
 
                 // No empty lines at start of blocks
                 java.replaceRegex("Block starts with blank lines", "\\) \\{\n+", ") {\n");
+
+                // No dangling parentheses - closing paren must be on the same line as the expression
+                java.replaceRegex("Dangling closing parenthesis", "(\n\\s+)+\\)", ")");
             });
 
             // necessary because SpotlessPlugin creates tasks in an afterEvaluate block
