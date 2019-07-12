@@ -21,6 +21,7 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.plugins.JavaPluginConvention;
+import org.gradle.api.tasks.compile.JavaCompile;
 
 class BaselineFormat extends AbstractBaselinePlugin {
 
@@ -54,7 +55,11 @@ class BaselineFormat extends AbstractBaselinePlugin {
 
             // necessary because SpotlessPlugin creates tasks in an afterEvaluate block
             Task formatTask = project.task("format");
-            project.afterEvaluate(p -> formatTask.dependsOn(project.getTasks().getByName("spotlessApply")));
+            project.afterEvaluate(p -> {
+                Task spotlessApply = project.getTasks().getByName("spotlessApply");
+                formatTask.dependsOn(spotlessApply);
+                project.getTasks().withType(JavaCompile.class).configureEach(spotlessApply::mustRunAfter);
+            });
         });
     }
 }
