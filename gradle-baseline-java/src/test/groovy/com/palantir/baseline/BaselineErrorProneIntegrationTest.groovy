@@ -44,12 +44,14 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
 
     def invalidJavaFile = '''
         package test;
+        import java.util.Optional;
         public class Test {
             void test() {
                 int[] a = {1, 2, 3};
                 int[] b = {1, 2, 3};
                 if (a.equals(b)) {
                   System.out.println("arrays are equal!");
+                  Optional.of("hello").orElse(System.getProperty("world"));
                 }
             }
         }
@@ -114,12 +116,14 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         package test;
         
         import java.util.Arrays;
+        import java.util.Optional;
         public class Test {
             void test() {
                 int[] a = {1, 2, 3};
                 int[] b = {1, 2, 3};
                 if (Arrays.equals(a, b)) {
                   System.out.println("arrays are equal!");
+                  Optional.of("hello").orElseGet(() -> System.getProperty("world"));
                 }
             }
         }

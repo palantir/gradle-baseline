@@ -115,6 +115,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
                                         "-XepPatchChecks:refaster:" + refasterRulesFile.get().getAbsolutePath(),
                                         "-XepPatchLocation:IN_PLACE"));
                             } else if (project.hasProperty(PROP_ERROR_PRONE_APPLY)) {
+                                javaCompile.getOptions().setWarnings(false);
                                 // TODO(gatesn): Is there a way to discover error-prone checks?
                                 // Maybe service-load from a ClassLoader configured with annotation processor path?
                                 // https://github.com/google/error-prone/pull/947
