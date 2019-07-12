@@ -114,7 +114,6 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         result.task(":compileJava").outcome == TaskOutcome.SUCCESS
         file('src/main/java/test/Test.java').text == '''
         package test;
-        
         import java.util.Arrays;
         import java.util.Optional;
         public class Test {
