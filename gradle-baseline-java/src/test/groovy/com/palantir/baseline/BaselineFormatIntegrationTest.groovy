@@ -38,6 +38,11 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
     package test;
     public class Test { void test() {
         int x = 1;
+        System.out.println(
+            "Hello");
+        Optional.of("hello").orElseGet(() -> {
+            return "Hello World";
+        });
     } }
     '''.stripIndent()
 
@@ -48,6 +53,12 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
     
     
         int x = 1;
+        System.out.println(
+            "Hello"
+        );
+        Optional.of("hello").orElseGet(() -> { 
+            return "Hello World";
+        });
     } }
     '''.stripIndent()
 
