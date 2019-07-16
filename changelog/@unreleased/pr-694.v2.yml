@@ -1,0 +1,7 @@
+type: improvement
+improvement:
+  description: |
+    Don't cache test tasks in the build cache by default.
+    It's possible to restore caching by adding `com.palantir.baseline.restore-test-cache = true` to your `gradle.properties`.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/694
