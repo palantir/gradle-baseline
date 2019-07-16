@@ -30,8 +30,11 @@ public final class BaselineTesting implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
-        project.getTasks().withType(Test.class).all(task -> {
+        project.getTasks().withType(Test.class).configureEach(task -> {
             task.jvmArgs("-XX:+HeapDumpOnOutOfMemoryError", "-XX:+CrashOnOutOfMemoryError");
+
+            // Never cache test tasks, until we work out the correct inputs for ETE / integration tests
+            task.getOutputs().cacheIf(t -> false);
         });
 
         project.getPlugins().withType(JavaPlugin.class, p -> {
@@ -47,9 +50,6 @@ public final class BaselineTesting implements Plugin<Project> {
                         .findAny()
                         .ifPresent(ignored -> enableJUnit5ForAllTestTasks(project));
             });
-
-            // Never cache test tasks, until we work out the correct inputs for ETE / integration tests
-            project.getTasks().withType(Test.class).configureEach(test -> test.getOutputs().cacheIf(task -> false));
         });
     }
 
