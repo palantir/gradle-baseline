@@ -47,6 +47,9 @@ public final class BaselineTesting implements Plugin<Project> {
                         .findAny()
                         .ifPresent(ignored -> enableJUnit5ForAllTestTasks(project));
             });
+
+            // Never cache test tasks, until we work out the correct inputs for ETE / integration tests
+            project.getTasks().withType(Test.class).configureEach(test -> test.getOutputs().cacheIf(task -> false));
         });
     }
 
