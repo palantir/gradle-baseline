@@ -26,7 +26,6 @@ import java.nio.charset.StandardCharsets;
  */
 public final class Utf8Length {
 
-
     @BeforeTemplate
     int toUtf8Length(String string) {
         return string.getBytes(StandardCharsets.UTF_8).length;
