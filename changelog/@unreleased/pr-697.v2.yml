@@ -1,0 +1,5 @@
+type: feature
+feature:
+  description: Test helper for refaster checks.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/697
