@@ -6,6 +6,7 @@ import com.sun.source.tree.CompilationUnitTree;
 import com.sun.tools.javac.api.JavacTaskImpl;
 import com.sun.tools.javac.api.JavacTool;
 import com.sun.tools.javac.util.Context;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.Locale;
 import javax.tools.Diagnostic;
@@ -13,7 +14,6 @@ import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
-import sun.nio.cs.StandardCharsets;
 
 class CompilerUtility {
 
