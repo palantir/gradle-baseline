@@ -1,16 +1,13 @@
 package com.palantir.baseline.refaster;
 
-import org.junit.Rule;
 import org.junit.Test;
 
 public class CollectionsIsEmptyTest {
 
-    @Rule
-    public RefasterRule refasterRule = new RefasterRule(CollectionsIsEmpty.class);
-
     @Test
     public void isEmpty() {
-        refasterRule
+        RefasterTestHelper
+                .forRefactoring(CollectionsIsEmpty.class)
                 .withInputLines(
                         "Test",
                         "import java.util.ArrayList;",

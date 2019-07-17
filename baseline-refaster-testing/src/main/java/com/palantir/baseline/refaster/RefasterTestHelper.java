@@ -39,11 +39,15 @@ import java.util.List;
 import javax.tools.JavaFileObject;
 import org.junit.rules.ExternalResource;
 
-public final class RefasterRule extends ExternalResource {
+public final class RefasterTestHelper extends ExternalResource {
 
     private final List<CodeTransformer> transformers;
 
-    public RefasterRule(Class<?> refasterRuleClass) {
+    public static RefasterTestHelper forRefactoring(Class<?> refasterRuleClass) {
+        return new RefasterTestHelper(refasterRuleClass);
+    }
+
+    private RefasterTestHelper(Class<?> refasterRuleClass) {
         Path sourceFile = Paths
                 .get("src/main/java")
                 .resolve(refasterRuleClass.getName().replaceAll("\\.", File.separator) + ".java");
