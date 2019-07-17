@@ -1,7 +1,5 @@
 package com.palantir.baseline.refaster;
 
-import static java.nio.charset.StandardCharsets.UTF_8;
-
 import com.google.common.collect.ImmutableList;
 import com.google.common.io.CharStreams;
 import com.sun.source.tree.CompilationUnitTree;
@@ -15,6 +13,7 @@ import javax.tools.DiagnosticCollector;
 import javax.tools.JavaCompiler;
 import javax.tools.JavaFileObject;
 import javax.tools.StandardJavaFileManager;
+import sun.nio.cs.StandardCharsets;
 
 class CompilerUtility {
 
@@ -24,7 +23,7 @@ class CompilerUtility {
         JavaCompiler compiler = JavacTool.create();
         DiagnosticCollector<JavaFileObject> diagnosticsCollector = new DiagnosticCollector<>();
         StandardJavaFileManager fileManager =
-                compiler.getStandardFileManager(diagnosticsCollector, Locale.ENGLISH, UTF_8);
+                compiler.getStandardFileManager(diagnosticsCollector, Locale.ENGLISH, StandardCharsets.UTF_8);
 
         JavacTaskImpl task = (JavacTaskImpl) compiler.getTask(
                 CharStreams.nullWriter(),

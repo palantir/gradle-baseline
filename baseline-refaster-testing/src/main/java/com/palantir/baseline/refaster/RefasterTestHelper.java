@@ -16,8 +16,6 @@
 
 package com.palantir.baseline.refaster;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.CodeTransformer;
@@ -37,6 +35,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
 import javax.tools.JavaFileObject;
+import org.assertj.core.api.Assertions;
 import org.junit.rules.ExternalResource;
 
 public final class RefasterTestHelper extends ExternalResource {
@@ -76,7 +75,7 @@ public final class RefasterTestHelper extends ExternalResource {
 
         public void hasOutputLines(String... lines) {
             CompilerUtility.CompilerResult result = CompilerUtility.compile(input);
-            assertThat(result.diagnostics()).isEmpty();
+            Assertions.assertThat(result.diagnostics()).isEmpty();
 
             JCTree.JCCompilationUnit tree = result.compilationUnits().stream()
                     .filter(compilationUnitTree -> compilationUnitTree instanceof JCTree.JCCompilationUnit)
@@ -90,7 +89,7 @@ public final class RefasterTestHelper extends ExternalResource {
             SourceFile inputSourceFile = sourceFile(input);
             diff.applyDifferences(inputSourceFile);
 
-            assertThat(inputSourceFile.getSourceText()).isEqualTo(Joiner.on('\n').join(lines));
+            Assertions.assertThat(inputSourceFile.getSourceText()).isEqualTo(Joiner.on('\n').join(lines));
         }
     }
 
