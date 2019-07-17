@@ -63,7 +63,7 @@ public final class RefasterTestHelper extends ExternalResource {
         return new RefactoringTestInput(transformers, JavaFileObjects.forSourceLines(fullyQualifiedName, lines));
     }
 
-    public class RefactoringTestInput {
+    public final class RefactoringTestInput {
 
         private List<CodeTransformer> transformers;
         private JavaFileObject input;
@@ -105,7 +105,7 @@ public final class RefasterTestHelper extends ExternalResource {
         CompilerUtility.CompilerResult result = CompilerUtility.compile(object);
         ClassTree classTree = result.compilationUnits().stream()
                 .flatMap(compilationUnitTree -> compilationUnitTree.getTypeDecls().stream())
-                .filter(tree -> (tree instanceof ClassTree))
+                .filter(tree -> tree instanceof ClassTree)
                 .map(tree -> (ClassTree) tree)
                 .findFirst()
                 .orElseThrow(() -> new IllegalArgumentException("No class found in Refaster rule"));
