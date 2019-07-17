@@ -5,8 +5,9 @@ apply from: "${rootDir}/gradle/publish-jar.gradle"
 
 dependencies {
     compile 'com.google.errorprone:error_prone_refaster'
+    compile 'com.google.errorprone:error_prone_test_helpers'
 
-    testCompile 'junit:junit'
-    testCompile 'org.assertj:assertj-core'
-    testCompile project(':baseline-refaster-testing')
+    compile 'com.google.guava:guava'
+    compile 'junit:junit'
+    compile 'org.assertj:assertj-core'
 }

@@ -4,6 +4,7 @@ enableFeaturePreview("STABLE_PUBLISHING")
 include "baseline-error-prone"
 include "baseline-refaster-javac-plugin"
 include "baseline-refaster-rules"
+include "baseline-refaster-testing"
 include "gradle-baseline-java"
 include "gradle-baseline-java-config"
 include "gradle-junit-reports"
