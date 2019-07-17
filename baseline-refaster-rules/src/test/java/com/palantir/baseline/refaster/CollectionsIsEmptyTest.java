@@ -5,7 +5,7 @@ import org.junit.Test;
 public class CollectionsIsEmptyTest {
 
     @Test
-    public void isEmpty() {
+    public void test() {
         RefasterTestHelper
                 .forRefactoring(CollectionsIsEmpty.class)
                 .withInputLines(

@@ -64,7 +64,7 @@ public final class RefasterTestHelper extends ExternalResource {
         return new RefactoringTestInput(transformers, JavaFileObjects.forSourceLines(fullyQualifiedName, lines));
     }
 
-    class RefactoringTestInput {
+    public class RefactoringTestInput {
 
         private List<CodeTransformer> transformers;
         private JavaFileObject input;
