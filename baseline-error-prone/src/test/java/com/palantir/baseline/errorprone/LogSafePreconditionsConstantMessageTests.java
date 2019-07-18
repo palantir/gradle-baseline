@@ -47,7 +47,5 @@ public final class LogSafePreconditionsConstantMessageTests extends Precondition
         failLogSafe(diagnostic,
                 "Preconditions.checkState(param != \"string\", String.format(\"constant %s\", param));");
         failLogSafe(diagnostic, "Preconditions.checkNotNull(param, String.format(\"constant %s\", param));");
-
-        failLogSafe(diagnostic, "Preconditions.checkNotNull(param, \"constant\");");
     }
 }

@@ -45,7 +45,5 @@ public final class PreconditionsConstantMessageTests extends PreconditionsTests 
                 "Preconditions.checkArgument(param != \"string\", String.format(\"constant %s\", param));");
         failGuava(diagnostic, "Preconditions.checkState(param != \"string\", String.format(\"constant %s\", param));");
         failGuava(diagnostic, "Preconditions.checkNotNull(param, String.format(\"constant %s\", param));");
-
-        failGuava(diagnostic, "Preconditions.checkNotNull(param, \"constant\");");
     }
 }

@@ -49,7 +49,5 @@ public final class LogSafePreconditionsMessageFormatTests extends PreconditionsT
                 + " UnsafeArg.of(\"char1\", 'a'), UnsafeArg.of(\"char2\", 'b'));");
         failLogSafe(diagnostic, "Preconditions.checkNotNull(param, \"message %s %s\","
                 + " UnsafeArg.of(\"char1\", 'a'), UnsafeArg.of(\"char2\", 'b'));");
-
-        failLogSafe(diagnostic, "Preconditions.checkNotNull(param, \"message\");");
     }
 }
