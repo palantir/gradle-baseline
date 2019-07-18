@@ -102,6 +102,6 @@ class BaselineTestingIntegrationTest extends AbstractPluginTest {
         then:
         BuildResult result = with('integrationTest', '--write-locks').build()
         result.task(':integrationTest').outcome == TaskOutcome.SUCCESS
-        new File(projectDir, "build/reports/tests/test/classes/test.TestClass5.html").exists()
+        new File(projectDir, "build/reports/tests/integrationTest/classes/test.TestClass5.html").exists()
     }
 }
