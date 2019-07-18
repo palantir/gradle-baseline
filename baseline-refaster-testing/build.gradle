@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-apply plugin: 'nebula.maven-publish'
-apply plugin: 'nebula.source-jar'
 apply plugin: 'java-library'
 apply from: "${rootDir}/gradle/publish-jar.gradle"
 
