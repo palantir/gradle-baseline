@@ -33,30 +33,116 @@ public final class OptionalOrElseMethodInvocationTests {
                 new OptionalOrElseMethodInvocation(), getClass());
     }
 
-    private void test(String expr) {
+    @Test
+    public void testMethodInvocation() {
         compilationHelper
                 .addSourceLines(
                         "Test.java",
                         "import java.util.Optional;",
                         "class Test {",
                         "  String f() { return \"hello\"; }",
-                        "  String s = \"world\";",
                         "  // BUG: Diagnostic contains: invokes a method",
-                        "  private final String string = Optional.of(\"hello\").orElse(" + expr + ");",
+                        "  private final String string = Optional.of(\"hello\").orElse(f());",
                         "}")
                 .doTest();
     }
 
     @Test
-    public void testNonCompileTimeConstantExpression() {
-        test("f()");
-        test("s + s");
-        test("\"world\" + s");
-        test("\"world\".substring(1)");
+    public void testContainsMethodInvocation() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.Optional;",
+                        "class Test {",
+                        "  String f() { return \"hello\"; }",
+                        "  // BUG: Diagnostic contains: invokes a method",
+                        "  private final String string = Optional.of(\"hello\").orElse(\"world\" + f());",
+                        "}")
+                .doTest();
     }
 
     @Test
-    public void testNonCompileTimeConstantExpression_replacement() {
+    public void testConstructor() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.Optional;",
+                        "class Test {",
+                        "  // BUG: Diagnostic contains: invokes a method",
+                        "  private final String string = Optional.of(\"hello\").orElse(new String());",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testContainsConstructor() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.Optional;",
+                        "class Test {",
+                        "  // BUG: Diagnostic contains: invokes a method",
+                        "  private final String string = Optional.of(\"hello\").orElse(\"world\" + new String());",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testLiteral() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.Optional;",
+                        "class Test {",
+                        "  private final String string = Optional.of(\"hello\").orElse(\"constant\");",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testConstant() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.Optional;",
+                        "class Test {",
+                        "  private static final String constant = \"constant\";",
+                        "  private final String string = Optional.of(\"hello\").orElse(constant);",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testVariable() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.Optional;",
+                        "class Test {",
+                        "  String f() { return \"hello\"; }",
+                        "  void test() {",
+                        "    String variable = f();",
+                        "    Optional.of(\"hello\").orElse(variable);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testOrElseGet() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.Optional;",
+                        "class Test {",
+                        "  String f() { return \"hello\"; }",
+                        "  private final String string = Optional.of(\"hello\").orElseGet(() -> f());",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testReplacement() {
         refactoringTestHelper
                 .addInputLines(
                         "Test.java",
@@ -74,25 +160,4 @@ public final class OptionalOrElseMethodInvocationTests {
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
-
-    @Test
-    public void negative() {
-        compilationHelper
-                .addSourceLines(
-                        "Test.java",
-                        "import java.util.Optional;",
-                        "class Test {",
-                        "  private static final String compileTimeConstant = \"constant\";",
-                        "  String f() { return \"hello\"; }",
-                        "  void test() {",
-                        "    Optional.of(\"hello\").orElse(\"constant\");",
-                        "    Optional.of(\"hello\").orElse(compileTimeConstant);",
-                        "    String string = f();",
-                        "    Optional.of(\"hello\").orElse(string);",
-                        "    Optional.of(\"hello\").orElseGet(() -> f());",
-                        "  }",
-                        "}")
-                .doTest();
-    }
-
 }

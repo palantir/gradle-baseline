@@ -22,6 +22,8 @@ import org.junit.Test;
 
 public final class LogSafePreconditionsConstantMessageTests extends PreconditionsTests {
 
+    private static final String DIAGNOSTIC = "non-constant message";
+
     private CompilationTestHelper compilationHelper;
 
     @Before
@@ -35,17 +37,34 @@ public final class LogSafePreconditionsConstantMessageTests extends Precondition
     }
 
     @Test
-    public void positive() throws Exception {
-        String diagnostic = "non-constant message";
+    public void testCheckArgument_stringConcatenate() {
+        failLogSafe(DIAGNOSTIC, "Preconditions.checkArgument(param != \"string\", \"constant\" + param);");
+    }
 
-        failLogSafe(diagnostic, "Preconditions.checkArgument(param != \"string\", \"constant\" + param);");
-        failLogSafe(diagnostic, "Preconditions.checkState(param != \"string\", \"constant\" + param);");
-        failLogSafe(diagnostic, "Preconditions.checkNotNull(param, \"constant\" + param);");
-
-        failLogSafe(diagnostic,
+    @Test
+    public void testCheckArgument_stringFormat() {
+        failLogSafe(DIAGNOSTIC,
                 "Preconditions.checkArgument(param != \"string\", String.format(\"constant %s\", param));");
-        failLogSafe(diagnostic,
+    }
+
+    @Test
+    public void testCheckState_stringConcatenate() {
+        failLogSafe(DIAGNOSTIC, "Preconditions.checkState(param != \"string\", \"constant\" + param);");
+    }
+
+    @Test
+    public void testCheckState_stringFormat() {
+        failLogSafe(DIAGNOSTIC,
                 "Preconditions.checkState(param != \"string\", String.format(\"constant %s\", param));");
-        failLogSafe(diagnostic, "Preconditions.checkNotNull(param, String.format(\"constant %s\", param));");
+    }
+
+    @Test
+    public void testCheckNotNull_stringConcatenate() {
+        failLogSafe(DIAGNOSTIC, "Preconditions.checkNotNull(param, \"constant\" + param);");
+    }
+
+    @Test
+    public void testCheckNotNull_stringFormat() {
+        failLogSafe(DIAGNOSTIC, "Preconditions.checkNotNull(param, String.format(\"constant %s\", param));");
     }
 }

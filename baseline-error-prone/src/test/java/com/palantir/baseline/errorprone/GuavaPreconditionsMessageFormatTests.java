@@ -21,6 +21,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 public final class GuavaPreconditionsMessageFormatTests extends PreconditionsTests {
+
+    private static final String DIAGNOSTIC = "Use printf-style formatting";
+
     private CompilationTestHelper compilationHelper;
 
     @Before
@@ -34,14 +37,32 @@ public final class GuavaPreconditionsMessageFormatTests extends PreconditionsTes
     }
 
     @Test
-    public void positive() throws Exception {
-        String diagnostic = "Use printf-style formatting";
-        failGuava(diagnostic, "Preconditions.checkArgument(param != \"string\", \"message {}\", 123L);");
-        failGuava(diagnostic, "Preconditions.checkState(param != \"string\", \"message {}\", 123L);");
-        failGuava(diagnostic, "Preconditions.checkNotNull(param, \"message {}\", 123L);");
+    public void testCheckArgument() {
+        failGuava(DIAGNOSTIC, "Preconditions.checkArgument(param != \"string\", \"message {}\", 123L);");
+    }
 
-        failGuava(diagnostic, "Preconditions.checkArgument(param != \"string\", \"message {} {}\", 'a', 'b');");
-        failGuava(diagnostic, "Preconditions.checkState(param != \"string\", \"message {} {}\", 'a', 'b');");
-        failGuava(diagnostic, "Preconditions.checkNotNull(param, \"message {} {}\", 'a', 'b');");
+    @Test
+    public void testCheckArgument_multipleArgs() {
+        failGuava(DIAGNOSTIC, "Preconditions.checkArgument(param != \"string\", \"message {} {}\", 'a', 'b');");
+    }
+
+    @Test
+    public void testCheckState() {
+        failGuava(DIAGNOSTIC, "Preconditions.checkState(param != \"string\", \"message {}\", 123L);");
+    }
+
+    @Test
+    public void testCheckState_multipleArgs() {
+        failGuava(DIAGNOSTIC, "Preconditions.checkState(param != \"string\", \"message {} {}\", 'a', 'b');");
+    }
+
+    @Test
+    public void testCheckNotNull() {
+        failGuava(DIAGNOSTIC, "Preconditions.checkNotNull(param, \"message {}\", 123L);");
+    }
+
+    @Test
+    public void testCheckNotNull_multipleArgs() {
+        failGuava(DIAGNOSTIC, "Preconditions.checkNotNull(param, \"message {} {}\", 'a', 'b');");
     }
 }

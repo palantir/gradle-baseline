@@ -34,10 +34,22 @@ public class CatchBlockLogExceptionTest {
     }
 
     @Test
-    public void testLogException() {
+    public void testLogIllegalArgumentException() {
         test(IllegalArgumentException.class, "log.info(\"hello\", e);", Optional.empty());
+    }
+
+    @Test
+    public void testLogRuntimeException() {
         test(RuntimeException.class, "log.info(\"hello\", e);", Optional.empty());
+    }
+
+    @Test
+    public void testLogException() {
         test(Exception.class, "log.info(\"hello\", e);", Optional.empty());
+    }
+
+    @Test
+    public void testLogThrowable() {
         test(Throwable.class, "log.info(\"hello\", e);", Optional.empty());
     }
 

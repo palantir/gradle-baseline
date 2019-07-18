@@ -21,6 +21,9 @@ import org.junit.Before;
 import org.junit.Test;
 
 public final class LogSafePreconditionsMessageFormatTests extends PreconditionsTests {
+
+    private static final String DIAGNOSTIC = "Do not use printf-style formatting";
+
     private CompilationTestHelper compilationHelper;
 
     @Before
@@ -34,20 +37,38 @@ public final class LogSafePreconditionsMessageFormatTests extends PreconditionsT
     }
 
     @Test
-    public void positive() throws Exception {
-        String diagnostic = "Do not use printf-style formatting";
-        failLogSafe(diagnostic, "Preconditions.checkArgument(param != \"string\", \"message %s\","
+    public void testCheckArgument() {
+        failLogSafe(DIAGNOSTIC, "Preconditions.checkArgument(param != \"string\", \"message %s\","
                 + " UnsafeArg.of(\"long\", 123L));");
-        failLogSafe(diagnostic, "Preconditions.checkState(param != \"string\", \"message %s\","
-                + " UnsafeArg.of(\"long\", 123L));");
-        failLogSafe(diagnostic, "Preconditions.checkNotNull(param, \"message %s\","
-                + " UnsafeArg.of(\"long\", 123L));");
+    }
 
-        failLogSafe(diagnostic, "Preconditions.checkArgument(param != \"string\", \"message %s %s\","
+    @Test
+    public void testCheckArgument_multipleArgs() {
+        failLogSafe(DIAGNOSTIC, "Preconditions.checkArgument(param != \"string\", \"message %s %s\","
                 + " UnsafeArg.of(\"char1\", 'a'), UnsafeArg.of(\"char2\", 'b'));");
-        failLogSafe(diagnostic, "Preconditions.checkState(param != \"string\", \"message %s %s\","
+    }
+
+    @Test
+    public void testCheckState() {
+        failLogSafe(DIAGNOSTIC, "Preconditions.checkState(param != \"string\", \"message %s\","
+                + " UnsafeArg.of(\"long\", 123L));");
+    }
+
+    @Test
+    public void testCheckState_multipleArgs() {
+        failLogSafe(DIAGNOSTIC, "Preconditions.checkState(param != \"string\", \"message %s %s\","
                 + " UnsafeArg.of(\"char1\", 'a'), UnsafeArg.of(\"char2\", 'b'));");
-        failLogSafe(diagnostic, "Preconditions.checkNotNull(param, \"message %s %s\","
+    }
+
+    @Test
+    public void testCheckNotNull() {
+        failLogSafe(DIAGNOSTIC, "Preconditions.checkNotNull(param, \"message %s\","
+                + " UnsafeArg.of(\"long\", 123L));");
+    }
+
+    @Test
+    public void testCheckNotNull_multipleArgs() {
+        failLogSafe(DIAGNOSTIC, "Preconditions.checkNotNull(param, \"message %s %s\","
                 + " UnsafeArg.of(\"char1\", 'a'), UnsafeArg.of(\"char2\", 'b'));");
     }
 }
