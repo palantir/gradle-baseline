@@ -1,0 +1,5 @@
+type: feature
+feature:
+  description: OptionalOrElseMethodInvocation now checks for constructor invocations.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/702
