@@ -43,5 +43,7 @@ public final class GuavaPreconditionsMessageFormatTests extends PreconditionsTes
         failGuava(diagnostic, "Preconditions.checkArgument(param != \"string\", \"message {} {}\", 'a', 'b');");
         failGuava(diagnostic, "Preconditions.checkState(param != \"string\", \"message {} {}\", 'a', 'b');");
         failGuava(diagnostic, "Preconditions.checkNotNull(param, \"message {} {}\", 'a', 'b');");
+
+        failGuava(diagnostic, "Preconditions.checkNotNull(param, \"message\");");
     }
 }

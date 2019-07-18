@@ -35,6 +35,8 @@ public final class DangerousJsonTypeInfoUsageTests {
         positive("JsonTypeInfo.Id.MINIMAL_CLASS");
         positive("com.fasterxml.jackson.annotation.JsonTypeInfo.Id.CLASS");
         positive("com.fasterxml.jackson.annotation.JsonTypeInfo.Id.MINIMAL_CLASS");
+
+        positive("JsonTypeInfo.Id.NONE");
     }
 
     @Test

@@ -53,6 +53,8 @@ public final class OptionalOrElseMethodInvocationTests {
         test("s + s");
         test("\"world\" + s");
         test("\"world\".substring(1)");
+
+        test("\"constant\"");
     }
 
     @Test

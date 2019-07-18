@@ -49,6 +49,8 @@ public class CatchBlockLogExceptionTest {
     @Test
     public void testNoLogException() {
         test(RuntimeException.class, "log.info(\"hello\");", Optional.of(errorMsg));
+
+        test(RuntimeException.class, "log.info(\"hello\", e);", Optional.of(errorMsg));
     }
 
     @Test
