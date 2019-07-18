@@ -36,9 +36,8 @@ import java.nio.file.Paths;
 import java.util.List;
 import javax.tools.JavaFileObject;
 import org.assertj.core.api.Assertions;
-import org.junit.rules.ExternalResource;
 
-public final class RefasterTestHelper extends ExternalResource {
+public final class RefasterTestHelper {
 
     private final List<CodeTransformer> transformers;
 
@@ -46,6 +45,9 @@ public final class RefasterTestHelper extends ExternalResource {
         return new RefasterTestHelper(refasterRuleClass);
     }
 
+    /**
+     * The source code of the given refaster rule should exist in {@code src/main/java}.
+     */
     private RefasterTestHelper(Class<?> refasterRuleClass) {
         Path sourceFile = Paths
                 .get("src/main/java")
