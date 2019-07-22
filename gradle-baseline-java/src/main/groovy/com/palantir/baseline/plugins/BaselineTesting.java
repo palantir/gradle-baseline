@@ -51,7 +51,6 @@ public final class BaselineTesting implements Plugin<Project> {
                         .getSourceSets()
                         .matching(ss -> hasCompileDependenciesMatching(proj, ss, this::isJunitJupiter))
                         .forEach(ss -> {
-                            log.info("Detected 'org:junit.jupiter:junit-jupiter', enabling useJUnitPlatform()");
                             String testTaskName = ss.getTaskName(null, "test");
                             Test testTask = (Test) proj.getTasks().findByName(testTaskName);
                             if (testTask == null) {
@@ -63,6 +62,8 @@ public final class BaselineTesting implements Plugin<Project> {
                                     return;
                                 }
                             }
+                            log.info("Detected 'org:junit.jupiter:junit-jupiter', enabling useJUnitPlatform() on {}",
+                                    testTask.getName());
                             enableJunit5ForTestTask(testTask);
                         });
             });
