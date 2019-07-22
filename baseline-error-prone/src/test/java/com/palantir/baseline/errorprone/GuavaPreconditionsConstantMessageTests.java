@@ -20,7 +20,9 @@ import com.google.errorprone.CompilationTestHelper;
 import org.junit.Before;
 import org.junit.Test;
 
-public final class PreconditionsConstantMessageTests extends PreconditionsTests {
+public final class GuavaPreconditionsConstantMessageTests extends PreconditionsTests {
+
+    private static final String DIAGNOSTIC = "non-constant message";
 
     private CompilationTestHelper compilationHelper;
 
@@ -35,15 +37,34 @@ public final class PreconditionsConstantMessageTests extends PreconditionsTests 
     }
 
     @Test
-    public void positive() throws Exception {
-        String diagnostic = "non-constant message";
-        failGuava(diagnostic, "Preconditions.checkArgument(param != \"string\", \"constant\" + param);");
-        failGuava(diagnostic, "Preconditions.checkState(param != \"string\", \"constant\" + param);");
-        failGuava(diagnostic, "Preconditions.checkNotNull(param, \"constant\" + param);");
+    public void testCheckArgument_stringConcatenate() {
+        failGuava(DIAGNOSTIC, "Preconditions.checkArgument(param != \"string\", \"constant\" + param);");
+    }
 
-        failGuava(diagnostic,
+    @Test
+    public void testCheckArgument_stringFormat() {
+        failGuava(DIAGNOSTIC,
                 "Preconditions.checkArgument(param != \"string\", String.format(\"constant %s\", param));");
-        failGuava(diagnostic, "Preconditions.checkState(param != \"string\", String.format(\"constant %s\", param));");
-        failGuava(diagnostic, "Preconditions.checkNotNull(param, String.format(\"constant %s\", param));");
+    }
+
+    @Test
+    public void testCheckState_stringConcatenate() {
+        failGuava(DIAGNOSTIC, "Preconditions.checkState(param != \"string\", \"constant\" + param);");
+    }
+
+    @Test
+    public void testCheckState_stringFormat() {
+        failGuava(DIAGNOSTIC,
+                "Preconditions.checkState(param != \"string\", String.format(\"constant %s\", param));");
+    }
+
+    @Test
+    public void testCheckNotNull_stringConcatenate() {
+        failGuava(DIAGNOSTIC, "Preconditions.checkNotNull(param, \"constant\" + param);");
+    }
+
+    @Test
+    public void testCheckNotNull_stringFormat() {
+        failGuava(DIAGNOSTIC, "Preconditions.checkNotNull(param, String.format(\"constant %s\", param));");
     }
 }

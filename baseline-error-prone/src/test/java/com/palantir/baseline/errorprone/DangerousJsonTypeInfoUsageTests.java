@@ -30,24 +30,56 @@ public final class DangerousJsonTypeInfoUsageTests {
     }
 
     @Test
-    public void testMustNotUseClassVariants() throws Exception {
+    public void testClass() {
         positive("JsonTypeInfo.Id.CLASS");
-        positive("JsonTypeInfo.Id.MINIMAL_CLASS");
+    }
+
+    @Test
+    public void testClass_fullyQualified() {
         positive("com.fasterxml.jackson.annotation.JsonTypeInfo.Id.CLASS");
+    }
+
+    @Test
+    public void testMinimalClass() {
+        positive("JsonTypeInfo.Id.MINIMAL_CLASS");
+    }
+
+    @Test
+    public void testMinimalClass_fullyQualified() {
         positive("com.fasterxml.jackson.annotation.JsonTypeInfo.Id.MINIMAL_CLASS");
     }
 
     @Test
-    public void testMayUseNoneNameCustomVariants() throws Exception {
+    public void testNone() {
         negative("JsonTypeInfo.Id.NONE");
-        negative("JsonTypeInfo.Id.NAME");
-        negative("JsonTypeInfo.Id.CUSTOM");
+    }
+
+    @Test
+    public void testNone_fullyQualified() {
         negative("com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NONE");
+    }
+
+    @Test
+    public void testName() {
+        negative("JsonTypeInfo.Id.NAME");
+    }
+
+    @Test
+    public void testName_fullyQualified() {
         negative("com.fasterxml.jackson.annotation.JsonTypeInfo.Id.NAME");
+    }
+
+    @Test
+    public void testCustom() {
+        negative("JsonTypeInfo.Id.CUSTOM");
+    }
+
+    @Test
+    public void testCustom_fullyQualified() {
         negative("com.fasterxml.jackson.annotation.JsonTypeInfo.Id.CUSTOM");
     }
 
-    private void positive(String variant) throws Exception {
+    private void positive(String variant) {
         compilationHelper.addSourceLines(
                 "Bean.java",
                 "import com.fasterxml.jackson.annotation.JsonTypeInfo;",
@@ -57,7 +89,7 @@ public final class DangerousJsonTypeInfoUsageTests {
         ).doTest();
     }
 
-    private void negative(String variant) throws Exception {
+    private void negative(String variant) {
         compilationHelper.addSourceLines(
                 "Bean.java",
                 "import com.fasterxml.jackson.annotation.JsonTypeInfo;",
