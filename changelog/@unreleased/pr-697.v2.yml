@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: The severity of PreferSafeLoggableExceptions and PreferSafeLoggingPreconditions is now WARNING.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/704
