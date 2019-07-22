@@ -16,7 +16,6 @@
 
 package com.palantir.baseline
 
-
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 
@@ -78,5 +77,31 @@ class BaselineTestingIntegrationTest extends AbstractPluginTest {
         result.task(':test').outcome == TaskOutcome.SUCCESS
         new File(projectDir, "build/reports/tests/test/classes/test.TestClass4.html").exists()
         new File(projectDir, "build/reports/tests/test/classes/test.TestClass5.html").exists()
+    }
+
+    def 'runs integration tests with junit5'() {
+        when:
+        buildFile << '''
+        plugins {
+            id 'org.unbroken-dome.test-sets' version '2.1.1'
+        }
+        '''.stripIndent()
+        buildFile << standardBuildFile
+        buildFile << '''
+
+        testSets {
+            integrationTest
+        }
+        
+        dependencies {
+            integrationTestImplementation "org.junit.jupiter:junit-jupiter:5.4.2"
+        }
+        '''.stripIndent()
+        file('src/integrationTest/java/test/TestClass5.java') << junit5Test
+
+        then:
+        BuildResult result = with('integrationTest', '--write-locks').build()
+        result.task(':integrationTest').outcome == TaskOutcome.SUCCESS
+        new File(projectDir, "build/reports/tests/integrationTest/classes/test.TestClass5.html").exists()
     }
 }
