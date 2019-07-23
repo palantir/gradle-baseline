@@ -17,6 +17,7 @@
 package com.palantir.baseline.plugins;
 
 import com.diffplug.gradle.spotless.SpotlessExtension;
+import java.nio.file.Paths;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -46,14 +47,12 @@ class BaselineFormat extends AbstractBaselinePlugin {
                 // use empty string to specify one group for all non-static imports
                 java.importOrder("");
                 java.trimTrailingWhitespace();
-                java.indentWithSpaces(4);
-                java.endWithNewline();
+
+                java.eclipse().configFile(
+                        project.file(Paths.get(getConfigDir(), "spotless/eclipse.xml").toString()));
 
                 // No empty lines at start of blocks
                 java.replaceRegex("Block starts with blank lines", "\\) \\{\n+", ") {\n");
-
-                // No dangling parentheses - closing paren must be on the same line as the expression
-                java.replaceRegex("Dangling closing parenthesis", "(\n\\s+)+\\)", ")");
             });
 
             // necessary because SpotlessPlugin creates tasks in an afterEvaluate block
@@ -65,4 +64,5 @@ class BaselineFormat extends AbstractBaselinePlugin {
             });
         });
     }
+
 }

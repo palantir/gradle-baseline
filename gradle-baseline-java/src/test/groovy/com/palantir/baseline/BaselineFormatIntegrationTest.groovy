@@ -16,10 +16,17 @@
 
 package com.palantir.baseline
 
+import org.apache.commons.io.FileUtils
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 
 class BaselineFormatIntegrationTest extends AbstractPluginTest {
+
+    def setup() {
+        FileUtils.copyDirectory(
+                new File("../gradle-baseline-java-config/resources"),
+                new File(projectDir, ".baseline"))
+    }
 
     def standardBuildFile = '''
         plugins {
@@ -36,14 +43,17 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
 
     def validJavaFile = '''
     package test;
-    public class Test { void test() {
-        int x = 1;
-        System.out.println(
-            "Hello");
-        Optional.of("hello").orElseGet(() -> {
-            return "Hello World";
-        });
-    } }
+
+    public class Test {
+        void test() {
+            int x = 1;
+            System.out.println(
+                    "Hello");
+            Optional.of("hello").orElseGet(() -> {
+                return "Hello World";
+            });
+        }
+    }
     '''.stripIndent()
 
     def invalidJavaFile = '''
