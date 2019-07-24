@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Use the Eclipse formatter in Spotless
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/707
