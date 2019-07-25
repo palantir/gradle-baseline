@@ -129,6 +129,21 @@ public final class OptionalOrElseMethodInvocationTests {
     }
 
     @Test
+    public void testMethodReference() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.Optional;",
+                        "import java.util.function.Supplier;",
+                        "class Test {",
+                        "  String f() { return \"hello\"; }",
+                        "  private final Optional<Supplier<String>> optionalSupplier = Optional.of(() -> \"hello\");",
+                        "  private final Supplier<String> supplier = optionalSupplier.orElse(this::f);",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testOrElseGet() {
         compilationHelper
                 .addSourceLines(
