@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: OptionalOrElseMethodInvocation now allows method references in orElse.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/709

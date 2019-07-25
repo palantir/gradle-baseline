@@ -29,6 +29,7 @@ import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
+import com.sun.source.tree.Tree.Kind;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -45,13 +46,9 @@ public final class OptionalOrElseMethodInvocation extends BugChecker implements 
             .onExactClass("java.util.Optional")
             .named("orElse");
 
-    private static final Matcher<ExpressionTree> METHOD_OR_CONSTRUCTOR = Matchers.anyOf(
-            MethodMatchers.anyMethod(),
-            MethodMatchers.constructor());
-
     private static final Matcher<ExpressionTree> METHOD_INVOCATIONS = Matchers.anyOf(
-            METHOD_OR_CONSTRUCTOR,
-            Matchers.contains(ExpressionTree.class, METHOD_OR_CONSTRUCTOR));
+            MethodInvocationMatcher.INSTANCE,
+            Matchers.contains(ExpressionTree.class, MethodInvocationMatcher.INSTANCE));
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
@@ -74,4 +71,15 @@ public final class OptionalOrElseMethodInvocation extends BugChecker implements 
                 .build();
     }
 
+    private enum MethodInvocationMatcher implements Matcher<ExpressionTree> {
+
+        INSTANCE;
+
+        @Override
+        public boolean matches(ExpressionTree tree, VisitorState state) {
+            Kind kind = tree.getKind();
+            return kind == Kind.NEW_CLASS
+                    || kind == Kind.METHOD_INVOCATION;
+        }
+    }
 }
