@@ -29,6 +29,7 @@ import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
+import com.sun.source.tree.Tree.Kind;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -76,15 +77,9 @@ public final class OptionalOrElseMethodInvocation extends BugChecker implements 
 
         @Override
         public boolean matches(ExpressionTree tree, VisitorState state) {
-            switch (tree.getKind()) {
-                case NEW_CLASS:
-                case METHOD_INVOCATION:
-                    return true;
-                default:
-                    break;
-            }
-
-            return false;
+            Kind kind = tree.getKind();
+            return kind == Kind.NEW_CLASS
+                    || kind == Kind.METHOD_INVOCATION;
         }
     }
 }
