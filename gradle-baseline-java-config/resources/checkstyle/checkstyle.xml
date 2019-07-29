@@ -88,7 +88,8 @@
                 java.util.stream.Collectors.*,
                 com.palantir.logsafe.Preconditions.*,
                 com.google.common.base.Preconditions.*,
-                org.apache.commons.lang3.Validate.*"/>
+                org.apache.commons.lang3.Validate.*",
+                "org.apache.spark.sql.functions.*"/>
         </module>
         <module name="ClassTypeParameterName"> <!-- Java Style Guide: Type variable names -->
             <property name="format" value="(^[A-Z][0-9]?)$|([A-Z][a-zA-Z0-9]*[T]$)"/>
