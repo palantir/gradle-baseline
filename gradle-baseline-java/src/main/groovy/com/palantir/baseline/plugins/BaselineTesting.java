@@ -25,6 +25,8 @@ import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.testing.Test;
+import org.gradle.api.tasks.testing.TestFrameworkOptions;
+import org.gradle.api.tasks.testing.junitplatform.JUnitPlatformOptions;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -86,7 +88,10 @@ public final class BaselineTesting implements Plugin<Project> {
     }
 
     private void enableJunit5ForTestTask(Test task) {
-        task.useJUnitPlatform();
+        TestFrameworkOptions options = task.getOptions();
+        if (!(options instanceof JUnitPlatformOptions)) {
+            task.useJUnitPlatform();
+        }
 
         task.systemProperty("junit.platform.output.capture.stdout", "true");
         task.systemProperty("junit.platform.output.capture.stderr", "true");
