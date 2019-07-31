@@ -74,6 +74,10 @@ class BaselineConfig extends AbstractBaselinePlugin {
                 copySpec.into(BaselineConfig.this.getConfigDir());
                 copySpec.exclude("**/scalastyle_config.xml");
                 copySpec.setIncludeEmptyDirs(false);
+
+                if (!BaselineFormat.eclipseFormattingEnabled(task.getProject())) {
+                    copySpec.exclude("**/spotless/eclipse.xml");
+                }
             });
             if (rootProject
                     .getAllprojects()

@@ -17,6 +17,9 @@
 package com.palantir.baseline.plugins;
 
 import com.diffplug.gradle.spotless.SpotlessExtension;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -25,9 +28,15 @@ import org.gradle.api.tasks.compile.JavaCompile;
 
 class BaselineFormat extends AbstractBaselinePlugin {
 
+    // TODO(dfox): remove this feature flag when we've refined the eclipse.xml sufficiently
+    private static final String ECLIPSE_FORMATTING = "com.palantir.baseline-format.eclipse";
+
     @Override
     public void apply(Project project) {
         this.project = project;
+
+        Path eclipseXml = Paths.get(getConfigDir(), "spotless/eclipse.xml");
+
         project.getPluginManager().withPlugin("java", plugin -> {
             project.getPluginManager().apply("com.diffplug.gradle.spotless");
 
@@ -46,23 +55,26 @@ class BaselineFormat extends AbstractBaselinePlugin {
                 // use empty string to specify one group for all non-static imports
                 java.importOrder("");
                 java.trimTrailingWhitespace();
-                java.indentWithSpaces(4);
-                java.endWithNewline();
 
-                // No empty lines at start of blocks
-                java.replaceRegex("Block starts with blank lines", "\\) \\{\n+", ") {\n");
-
-                // No dangling parentheses - closing paren must be on the same line as the expression
-                java.replaceRegex("Dangling closing parenthesis", "(\n\\s+)+\\)", ")");
+                if (eclipseFormattingEnabled(project)) {
+                    java.eclipse().configFile(project.file(eclipseXml.toString()));
+                }
             });
 
             // necessary because SpotlessPlugin creates tasks in an afterEvaluate block
             Task formatTask = project.task("format");
+            if (eclipseFormattingEnabled(project) && !Files.exists(eclipseXml)) {
+                formatTask.dependsOn(project.getTasks().findByPath(":baselineUpdateConfig"));
+            }
             project.afterEvaluate(p -> {
                 Task spotlessApply = project.getTasks().getByName("spotlessApply");
                 formatTask.dependsOn(spotlessApply);
                 project.getTasks().withType(JavaCompile.class).configureEach(spotlessApply::mustRunAfter);
             });
         });
+    }
+
+    static boolean eclipseFormattingEnabled(Project project) {
+        return project.hasProperty(ECLIPSE_FORMATTING);
     }
 }

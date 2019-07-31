@@ -299,10 +299,14 @@ spotless {
         importOrder ''
         trimTrailingWhitespace
         indentWithSpaces 4
-        endWithNewline
+
+        // only enabled if you run `./gradlew format -Pcom.palantir.baseline-format.eclipse`
+        eclipse().configFile "$rootDir/.baseline/eclipse.xml"
     }
 }
 ```
+
+We chose the Eclipse formatter because it can be run from the command line and from both IDEs (IntelliJ using the [Eclipse Code Formatter](https://plugins.jetbrains.com/plugin/6546-eclipse-code-formatter) plugin).
 
 ## com.palantir.baseline-reproducibility
 

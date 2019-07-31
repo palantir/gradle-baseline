@@ -28,6 +28,11 @@ class BaselineFormatTest extends Specification {
 
     def setup() {
         project = ProjectBuilder.builder().build()
+        project.buildscript {
+            repositories {
+                mavenCentral()
+            }
+        }
         project.plugins.apply 'java'
         project.plugins.apply BaselineFormat
         project.evaluate()

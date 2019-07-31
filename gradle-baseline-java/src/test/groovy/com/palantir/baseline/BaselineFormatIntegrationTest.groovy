@@ -16,10 +16,17 @@
 
 package com.palantir.baseline
 
+import org.apache.commons.io.FileUtils
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 
 class BaselineFormatIntegrationTest extends AbstractPluginTest {
+
+    def setup() {
+        FileUtils.copyDirectory(
+                new File("../gradle-baseline-java-config/resources"),
+                new File(projectDir, ".baseline"))
+    }
 
     def standardBuildFile = '''
         plugins {
@@ -36,23 +43,23 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
 
     def validJavaFile = '''
     package test;
-    public class Test { void test() {
-        int x = 1;
-        System.out.println(
-            "Hello");
-        Optional.of("hello").orElseGet(() -> {
-            return "Hello World";
-        });
-    } }
+
+    public class Test {
+        void test() {
+            int x = 1;
+            System.out.println(
+                    "Hello");
+            Optional.of("hello").orElseGet(() -> {
+                return "Hello World";
+            });
+        }
+    }
     '''.stripIndent()
 
     def invalidJavaFile = '''
     package test;
     import com.java.unused;
-    public class Test { void test() {
-    
-    
-        int x = 1;
+    public class Test { void test() {int x = 1;
         System.out.println(
             "Hello"
         );
@@ -84,7 +91,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         file('src/main/java/test/Test.java') << invalidJavaFile
 
         then:
-        BuildResult result = with('format').build();
+        BuildResult result = with('format', '-Pcom.palantir.baseline-format.eclipse').build();
         result.task(":format").outcome == TaskOutcome.SUCCESS
         result.task(":spotlessApply").outcome == TaskOutcome.SUCCESS
         file('src/main/java/test/Test.java').text == validJavaFile
@@ -99,7 +106,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         file('src/foo/java/test/Test.java') << invalidJavaFile
 
         then:
-        BuildResult result = with('format').build()
+        BuildResult result = with('format', '-Pcom.palantir.baseline-format.eclipse').build()
         result.task(":format").outcome == TaskOutcome.SUCCESS
         result.task(":spotlessApply").outcome == TaskOutcome.SUCCESS
         file('src/foo/java/test/Test.java').text == validJavaFile
@@ -115,7 +122,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         file('src/foo/groovy/test/Test.java') << invalidJavaFile
 
         then:
-        BuildResult result = with('format').build()
+        BuildResult result = with('format', '-Pcom.palantir.baseline-format.eclipse').build()
         result.task(":format").outcome == TaskOutcome.SUCCESS
         result.task(":spotlessApply").outcome == TaskOutcome.SUCCESS
         file('src/foo/groovy/test/Test.java').text == validJavaFile

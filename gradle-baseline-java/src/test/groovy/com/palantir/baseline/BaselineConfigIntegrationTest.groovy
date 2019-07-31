@@ -22,7 +22,7 @@ import org.gradle.testkit.runner.TaskOutcome
  * This test relies on running ./gradlew :gradle-baseline-java-config:publishToMavenLocal.
  */
 class BaselineConfigIntegrationTest extends AbstractPluginTest {
-    def projectVersion = "git describe --tags --first-parent --dirty=.dirty".execute().text.trim()
+    def projectVersion = "git describe --tags --first-parent --dirty=.dirty --abbrev=7".execute().text.trim()
     def standardBuildFile = """
         plugins {
             id 'com.palantir.baseline-config'
@@ -45,8 +45,10 @@ class BaselineConfigIntegrationTest extends AbstractPluginTest {
         """.stripIndent()
 
         then:
-        with('--stacktrace', '--info', 'baselineUpdateConfig').build()
-        directory('.baseline').list().toList().toSet() == ['checkstyle', 'copyright', 'eclipse', 'idea'].toSet()
+        with('--stacktrace', '--info', 'baselineUpdateConfig', '-Pcom.palantir.baseline-format.eclipse').build()
+        directory('.baseline').list().toList().toSet() == [
+                'checkstyle', 'copyright', 'eclipse', 'idea', 'spotless'
+        ].toSet()
         directory('project').list().toList().isEmpty()
     }
 
@@ -65,7 +67,9 @@ class BaselineConfigIntegrationTest extends AbstractPluginTest {
 
         then:
         with('--stacktrace', '--info', 'baselineUpdateConfig').build()
-        directory('.baseline').list().toList().toSet() == ['checkstyle', 'copyright', 'eclipse', 'idea'].toSet()
+        directory('.baseline').list().toList().toSet() == [
+                'checkstyle', 'copyright', 'eclipse', 'idea'
+        ].toSet()
         directory('project').list().toList().toSet() == ['scalastyle_config.xml'].toSet()
     }
 
