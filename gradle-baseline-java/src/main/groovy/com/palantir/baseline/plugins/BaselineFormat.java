@@ -17,6 +17,8 @@
 package com.palantir.baseline.plugins;
 
 import com.diffplug.gradle.spotless.SpotlessExtension;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -32,6 +34,9 @@ class BaselineFormat extends AbstractBaselinePlugin {
     @Override
     public void apply(Project project) {
         this.project = project;
+
+        Path eclipseXml = Paths.get(getConfigDir(), "spotless/eclipse.xml");
+
         project.getPluginManager().withPlugin("java", plugin -> {
             project.getPluginManager().apply("com.diffplug.gradle.spotless");
 
@@ -52,13 +57,15 @@ class BaselineFormat extends AbstractBaselinePlugin {
                 java.trimTrailingWhitespace();
 
                 if (eclipseFormattingEnabled(project)) {
-                    java.eclipse().configFile(
-                            project.file(Paths.get(getConfigDir(), "spotless/eclipse.xml").toString()));
+                    java.eclipse().configFile(project.file(eclipseXml.toString()));
                 }
             });
 
             // necessary because SpotlessPlugin creates tasks in an afterEvaluate block
             Task formatTask = project.task("format");
+            if (eclipseFormattingEnabled(project) && !Files.exists(eclipseXml)) {
+                formatTask.dependsOn(project.getTasks().findByPath(":baselineUpdateConfig"));
+            }
             project.afterEvaluate(p -> {
                 Task spotlessApply = project.getTasks().getByName("spotlessApply");
                 formatTask.dependsOn(spotlessApply);
@@ -67,7 +74,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
         });
     }
 
-    public static boolean eclipseFormattingEnabled(Project project) {
+    static boolean eclipseFormattingEnabled(Project project) {
         return project.hasProperty(ECLIPSE_FORMATTING);
     }
 }
