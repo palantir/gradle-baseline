@@ -27,7 +27,7 @@ import org.gradle.api.tasks.compile.JavaCompile;
 class BaselineFormat extends AbstractBaselinePlugin {
 
     // TODO(dfox): remove this feature flag when we've refined the eclipse.xml sufficiently
-    private static final String ECLIPSE_FORMATTING = "com.palantir.baseline-versions.eclipse-formatting";
+    private static final String ECLIPSE_FORMATTING = "com.palantir.baseline-format.eclipse";
 
     @Override
     public void apply(Project project) {
@@ -51,7 +51,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
                 java.importOrder("");
                 java.trimTrailingWhitespace();
 
-                if (project.hasProperty(ECLIPSE_FORMATTING)) {
+                if (eclipseFormattingEnabled(project)) {
                     java.eclipse().configFile(
                             project.file(Paths.get(getConfigDir(), "spotless/eclipse.xml").toString()));
                 }
@@ -67,4 +67,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
         });
     }
 
+    public static boolean eclipseFormattingEnabled(Project project) {
+        return project.hasProperty(ECLIPSE_FORMATTING);
+    }
 }

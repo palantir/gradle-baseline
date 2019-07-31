@@ -299,7 +299,7 @@ spotless {
         trimTrailingWhitespace
         indentWithSpaces 4
 
-        // only enabled if you use `-Dcom.palantir.baseline-format.eclipse-formatting`
+        // only enabled if you run `./gradlew format -Pcom.palantir.baseline-format.eclipse`
         eclipse().configFile "$rootDir/.baseline/eclipse.xml"
     }
 }
