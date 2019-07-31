@@ -27,6 +27,7 @@ import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.util.ASTHelpers;
+import com.palantir.logsafe.exceptions.SafeIllegalStateException;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.NewClassTree;
 import java.io.IOException;
@@ -98,6 +99,6 @@ public final class PreferSafeLoggableExceptions extends BugChecker implements Bu
                                 .build())
                         .build())
                 .findAny()
-                .orElseThrow(() -> new IllegalStateException("Expected to match a known replaceable exception type"));
+                .orElseThrow(() -> new SafeIllegalStateException("Expected to match a known replaceable exception type"));
     }
 }

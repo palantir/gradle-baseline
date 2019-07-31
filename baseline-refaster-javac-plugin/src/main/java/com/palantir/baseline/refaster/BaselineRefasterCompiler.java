@@ -17,7 +17,6 @@
 package com.palantir.baseline.refaster;
 
 import com.google.auto.service.AutoService;
-import com.google.common.base.Preconditions;
 import com.sun.source.util.JavacTask;
 import com.sun.source.util.Plugin;
 import com.sun.tools.javac.api.BasicJavacTask;
@@ -40,11 +39,11 @@ public final class BaselineRefasterCompiler implements Plugin {
     public void init(JavacTask task, String... args) {
         List<String> listArgs = Arrays.asList(args);
         int outIndex = listArgs.indexOf("--out");
-        Preconditions.checkArgument(outIndex != -1, "No --out specified");
-        Preconditions.checkArgument(listArgs.size() > outIndex, "No value passed for --out");
+        com.palantir.logsafe.Preconditions.checkArgument(outIndex != -1, "No --out specified");
+        com.palantir.logsafe.Preconditions.checkArgument(listArgs.size() > outIndex, "No value passed for --out");
         String path = listArgs.get(outIndex + 1);
 
-        Preconditions.checkArgument(task instanceof BasicJavacTask, "JavacTask not instance of BasicJavacTask");
+        com.palantir.logsafe.Preconditions.checkArgument(task instanceof BasicJavacTask, "JavacTask not instance of BasicJavacTask");
         task.addTaskListener(new BaselineRefasterCompilerAnalyzer(
                 ((BasicJavacTask) task).getContext(), FileSystems.getDefault().getPath(path)));
     }
