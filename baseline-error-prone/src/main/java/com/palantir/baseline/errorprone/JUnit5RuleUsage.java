@@ -30,10 +30,10 @@ import com.sun.tools.javac.code.Symbol;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "Junit5RuleUsage",
+        name = "JUnit5RuleUsage",
         severity = BugPattern.SeverityLevel.ERROR,
         summary = "Using Rule/ClassRules in Junit5 tests results in the rules silently not executing")
-public final class Junit5RuleUsage extends BugChecker implements BugChecker.ClassTreeMatcher {
+public final class JUnit5RuleUsage extends BugChecker implements BugChecker.ClassTreeMatcher {
     private static final String JUNIT4_RULE = "org.junit.Rule";
     private static final String JUNIT4_CLASS_RULE = "org.junit.ClassRule";
     private static final String JUNIT5_TEST_ANNOTATION = "org.junit.jupiter.api.Test";

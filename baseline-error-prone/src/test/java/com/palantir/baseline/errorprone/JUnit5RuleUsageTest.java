@@ -20,13 +20,13 @@ import com.google.errorprone.CompilationTestHelper;
 import org.junit.Before;
 import org.junit.Test;
 
-public class Junit5RuleUsageTest {
+public class JUnit5RuleUsageTest {
 
     private CompilationTestHelper compilationHelper;
 
     @Before
     public void before() {
-        compilationHelper = CompilationTestHelper.newInstance(Junit5RuleUsage.class, getClass());
+        compilationHelper = CompilationTestHelper.newInstance(JUnit5RuleUsage.class, getClass());
     }
 
     @Test
