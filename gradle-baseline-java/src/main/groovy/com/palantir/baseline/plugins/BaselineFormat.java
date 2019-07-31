@@ -50,9 +50,6 @@ class BaselineFormat extends AbstractBaselinePlugin {
 
                 java.eclipse().configFile(
                         project.file(Paths.get(getConfigDir(), "spotless/eclipse.xml").toString()));
-
-                // No empty lines at start of blocks
-                java.replaceRegex("Block starts with blank lines", "\\) \\{\n+", ") {\n");
             });
 
             // necessary because SpotlessPlugin creates tasks in an afterEvaluate block
