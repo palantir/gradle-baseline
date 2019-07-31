@@ -26,6 +26,9 @@ import org.gradle.api.tasks.compile.JavaCompile;
 
 class BaselineFormat extends AbstractBaselinePlugin {
 
+    // TODO(dfox): remove this feature flag when we've refined the eclipse.xml sufficiently
+    private static final String ECLIPSE_FORMATTING = "com.palantir.baseline-versions.eclipse-formatting";
+
     @Override
     public void apply(Project project) {
         this.project = project;
@@ -48,8 +51,10 @@ class BaselineFormat extends AbstractBaselinePlugin {
                 java.importOrder("");
                 java.trimTrailingWhitespace();
 
-                java.eclipse().configFile(
-                        project.file(Paths.get(getConfigDir(), "spotless/eclipse.xml").toString()));
+                if (project.hasProperty(ECLIPSE_FORMATTING)) {
+                    java.eclipse().configFile(
+                            project.file(Paths.get(getConfigDir(), "spotless/eclipse.xml").toString()));
+                }
             });
 
             // necessary because SpotlessPlugin creates tasks in an afterEvaluate block
