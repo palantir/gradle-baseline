@@ -45,7 +45,7 @@ class BaselineConfigIntegrationTest extends AbstractPluginTest {
         """.stripIndent()
 
         then:
-        with('--stacktrace', '--info', 'baselineUpdateConfig').build()
+        with('--stacktrace', '--info', 'baselineUpdateConfig', '-Pcom.palantir.baseline-format.eclipse').build()
         directory('.baseline').list().toList().toSet() == [
                 'checkstyle', 'copyright', 'eclipse', 'idea', 'spotless'
         ].toSet()
@@ -68,7 +68,7 @@ class BaselineConfigIntegrationTest extends AbstractPluginTest {
         then:
         with('--stacktrace', '--info', 'baselineUpdateConfig').build()
         directory('.baseline').list().toList().toSet() == [
-                'checkstyle', 'copyright', 'eclipse', 'idea', 'spotless'
+                'checkstyle', 'copyright', 'eclipse', 'idea'
         ].toSet()
         directory('project').list().toList().toSet() == ['scalastyle_config.xml'].toSet()
     }

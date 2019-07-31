@@ -59,10 +59,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
     def invalidJavaFile = '''
     package test;
     import com.java.unused;
-    public class Test { void test() {
-    
-    
-        int x = 1;
+    public class Test { void test() {int x = 1;
         System.out.println(
             "Hello"
         );
@@ -94,7 +91,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         file('src/main/java/test/Test.java') << invalidJavaFile
 
         then:
-        BuildResult result = with('format').build();
+        BuildResult result = with('format', '-Pcom.palantir.baseline-format.eclipse').build();
         result.task(":format").outcome == TaskOutcome.SUCCESS
         result.task(":spotlessApply").outcome == TaskOutcome.SUCCESS
         file('src/main/java/test/Test.java').text == validJavaFile
@@ -109,7 +106,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         file('src/foo/java/test/Test.java') << invalidJavaFile
 
         then:
-        BuildResult result = with('format').build()
+        BuildResult result = with('format', '-Pcom.palantir.baseline-format.eclipse').build()
         result.task(":format").outcome == TaskOutcome.SUCCESS
         result.task(":spotlessApply").outcome == TaskOutcome.SUCCESS
         file('src/foo/java/test/Test.java').text == validJavaFile
@@ -125,7 +122,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         file('src/foo/groovy/test/Test.java') << invalidJavaFile
 
         then:
-        BuildResult result = with('format').build()
+        BuildResult result = with('format', '-Pcom.palantir.baseline-format.eclipse').build()
         result.task(":format").outcome == TaskOutcome.SUCCESS
         result.task(":spotlessApply").outcome == TaskOutcome.SUCCESS
         file('src/foo/groovy/test/Test.java').text == validJavaFile
