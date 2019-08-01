@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: Correctly set dependency between spotlessApply and baselineUpdateConfig
+    to prevent a race
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/724
