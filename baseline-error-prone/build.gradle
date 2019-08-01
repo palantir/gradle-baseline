@@ -16,6 +16,7 @@ dependencies {
     testCompile 'commons-lang:commons-lang'
     testCompile 'org.junit.jupiter:junit-jupiter-api'
     testCompile gradleApi()
+    testRuntimeOnly 'org.junit.jupiter:junit-jupiter-migrationsupport'
 
     annotationProcessor 'com.google.auto.service:auto-service'
     compileOnly 'com.google.auto.service:auto-service'
