@@ -60,6 +60,22 @@ public class JUnit5RuleUsageTest {
     }
 
     @Test
+    public void test_rule_migration_support() {
+        compilationHelper.addSourceLines(
+                "TestCase.java",
+                "import org.junit.Rule;",
+                "import org.junit.jupiter.api.Test;",
+                "import org.junit.jupiter.migrationsupport.rules.EnableRuleMigrationSupport;",
+                "@EnableRuleMigrationSupport",
+                "class TestCase {",
+                "@Rule public static int foo = 1;",
+                "@Test",
+                "public void test() { }",
+                "}")
+                .doTest();
+    }
+
+    @Test
     public void test_rule_with_junit4() {
         compilationHelper.addSourceLines(
                 "TestCase.java",

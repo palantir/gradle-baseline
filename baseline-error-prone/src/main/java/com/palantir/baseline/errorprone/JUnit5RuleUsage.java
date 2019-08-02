@@ -37,16 +37,20 @@ public final class JUnit5RuleUsage extends BugChecker implements BugChecker.Clas
     private static final String JUNIT4_RULE = "org.junit.Rule";
     private static final String JUNIT4_CLASS_RULE = "org.junit.ClassRule";
     private static final String JUNIT5_TEST_ANNOTATION = "org.junit.jupiter.api.Test";
+    private static final String RULE_MIGRATION_SUPPORT =
+            "org.junit.jupiter.migrationsupport.rules.EnableRuleMigrationSupport";
 
+    private static final Matcher<ClassTree> hasMigrationSupport = Matchers.hasAnnotation(RULE_MIGRATION_SUPPORT);
     private static final Matcher<ClassTree> hasJunit5TestCases =
             Matchers.hasMethod(Matchers.hasAnnotationOnAnyOverriddenMethod(JUNIT5_TEST_ANNOTATION));
-
     private static final Matcher<ClassTree> hasJunit4Rules = hasVariable(
             Matchers.anyOf(hasAnnotationOnVariable(JUNIT4_CLASS_RULE), hasAnnotationOnVariable(JUNIT4_RULE)));
 
     @Override
     public Description matchClass(ClassTree tree, VisitorState state) {
-        if (hasJunit5TestCases.matches(tree, state) && hasJunit4Rules.matches(tree, state)) {
+        if (!hasMigrationSupport.matches(tree, state)
+                && hasJunit5TestCases.matches(tree, state)
+                && hasJunit4Rules.matches(tree, state)) {
             return buildDescription(tree)
                     .setMessage("Do not use Rule/ClassRule with junit-jupiter")
                     .build();
