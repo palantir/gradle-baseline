@@ -17,6 +17,7 @@
 package com.palantir.baseline
 
 import com.palantir.baseline.plugins.BaselineIdea
+import org.eclipse.jgit.transport.URIish
 import org.gradle.api.Project
 import org.gradle.testfixtures.ProjectBuilder
 import spock.lang.Specification
@@ -36,4 +37,17 @@ class BaselineIdeaTest extends Specification {
         expect:
         project.plugins.hasPlugin(BaselineIdea.class)
     }
+
+    def testGitHubUriExtraction(String remote, String project) {
+        expect:
+        assert BaselineIdea.gitHubProjectFromRemote(new URIish(remote)) == project
+
+        where:
+        remote | project
+        "git@github.com:palantir/gradle-baseline.git" | "https://github.com/palantir/gradle-baseline"
+        "git@github.my.company:palantir/gradle-baseline.git" | "https://github.my.company/palantir/gradle-baseline"
+        "https://github.com/palantir/gradle-baseline.git" | "https://github.com/palantir/gradle-baseline"
+        "https://github.my.company/palantir/gradle-baseline.git" | "https://github.my.company/palantir/gradle-baseline"
+    }
+
 }
