@@ -20,6 +20,8 @@ import groovy.transform.CompileStatic
 import groovy.xml.XmlUtil
 import java.nio.file.Files
 import java.nio.file.Paths
+import org.eclipse.jgit.api.Git
+import org.eclipse.jgit.transport.URIish
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -52,6 +54,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
                     addGit(node)
                     addInspectionProjectProfile(node)
                     addJavacSettings(node)
+                    addGitHubIssueNavigation(node)
                 }
 
                 ideaRootModel.workspace.iws.withXml { provider ->
@@ -201,6 +204,46 @@ class BaselineIdea extends AbstractBaselinePlugin {
                 <option name="PREFER_TARGET_JDK_COMPILER" value="false" />
             </component>
             """.stripIndent()))
+    }
+
+    private void addGitHubIssueNavigation(node) {
+        maybeGitHubUri().ifPresent { githubUri ->
+            node.append(new XmlParser().parseText("""
+             <component name="IssueNavigationConfiguration">
+               <option name="links">
+                 <list>
+                   <IssueNavigationLink>
+                     <option name="issueRegexp" value="TODO.*\\#([0-9]+)" />
+                     <option name="linkRegexp" value="${githubUri}/issues/\$1" />
+                   </IssueNavigationLink>
+                 </list>
+               </option>
+             </component>
+            """.stripIndent()))
+        }
+    }
+
+    private Optional<String> maybeGitHubUri() {
+        try {
+            Git git = Git.open(project.projectDir);
+            return git.remoteList().call().stream()
+                    .flatMap { remoteConfig -> remoteConfig.getURIs().stream() }
+                    .map { uri -> gitHubProjectFromRemote(uri) }
+                    .filter { uri -> uri.contains("github") }
+                    .findFirst()
+        } catch (Exception e) {
+            project.logger.info("Failed to detect Git remotes", e)
+            return Optional.empty()
+        }
+    }
+
+    /**
+     * Naiive conversion from ssh git remote to a Github project uri
+     */
+    static String gitHubProjectFromRemote(URIish uri) {
+        def path = uri.path.endsWith('.git') ? uri.path.substring(0, uri.path.length() - 4) : uri.path
+        path = path.startsWith('/') ? path.substring(1) : path
+        return "https://${uri.host}/${path}"
     }
 
     /**
