@@ -38,12 +38,12 @@ class BaselineIdeaTest extends Specification {
         project.plugins.hasPlugin(BaselineIdea.class)
     }
 
-    def testGitHubUriExtraction(String remote, String project) {
+    def testGitHubUriExtraction(String remoteUri, String projectUri) {
         expect:
-        assert BaselineIdea.gitHubProjectFromRemote(new URIish(remote)) == project
+        assert BaselineIdea.gitHubProjectFromRemote(new URIish(remoteUri)) == projectUri
 
         where:
-        remote | project
+        remoteUri | projectUri
         "git@github.com:palantir/gradle-baseline.git" | "https://github.com/palantir/gradle-baseline"
         "git@github.my.company:palantir/gradle-baseline.git" | "https://github.my.company/palantir/gradle-baseline"
         "https://github.com/palantir/gradle-baseline.git" | "https://github.com/palantir/gradle-baseline"
