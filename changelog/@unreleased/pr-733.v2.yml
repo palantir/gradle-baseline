@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: print out suggestion for module dependencies inclusion in useful format
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/733

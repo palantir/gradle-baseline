@@ -19,6 +19,8 @@ package com.palantir.baseline
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 
+import java.nio.file.Files
+
 class BaselineExactDependenciesTest extends AbstractPluginTest {
 
     def standardBuildFile = '''
@@ -98,5 +100,91 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         result.task(':classes').getOutcome() == TaskOutcome.SUCCESS
         result.task(':checkImplicitDependencies').getOutcome() == TaskOutcome.FAILED
         result.output.contains("Found 1 implicit dependencies")
+    }
+
+    def 'checkImplicitDependencies succeeds when cross-project dependencies properly declared'() {
+        when:
+        setupMultiProject()
+
+        then:
+        BuildResult result = with(':sub-project-with-deps:checkImplicitDependencies', '--stacktrace').withDebug(true).build()
+        result.task(':sub-project-with-deps:classes').getOutcome() == TaskOutcome.SUCCESS
+        result.task(':sub-project-with-deps:checkImplicitDependencies').getOutcome() == TaskOutcome.SUCCESS
+
+    }
+
+    def 'checkImplicitDependencies fails on transitive project dependency'() {
+        when:
+        setupMultiProject()
+
+        then:
+        BuildResult result = with('checkImplicitDependencies', '--stacktrace').withDebug(true).buildAndFail()
+        result.task(':classes').getOutcome() == TaskOutcome.SUCCESS
+        result.task(':checkImplicitDependencies').getOutcome() == TaskOutcome.FAILED
+        result.output.contains("Found 1 implicit dependencies")
+        result.output.contains("implementation project(':sub-project-no-deps')")
+    }
+
+    /**
+     * Sets up a multi-module project with 2 sub projects.  The root project has a transitive dependency on sub-project-no-deps
+     * and so checkImplicitDependencies should fail on it.
+     */
+    private void setupMultiProject() {
+        buildFile << standardBuildFile
+        buildFile << """
+        allprojects {
+            apply plugin: 'java'
+            apply plugin: 'com.palantir.baseline-exact-dependencies'
+        }
+        dependencies {
+            compile project(':sub-project-with-deps')
+        }
+        """.stripIndent()
+
+        def subProjects = multiProject.create(["sub-project-no-deps", "sub-project-with-deps"])
+
+        //properly declare dependency between two sub-projects
+        subProjects['sub-project-with-deps'].buildGradle << '''
+            dependencies {
+                compile project(':sub-project-no-deps')
+            }
+        '''.stripIndent()
+
+        //sub-project-no-deps has no dependencies
+        def directory = subProjects['sub-project-no-deps'].directory
+        File myClass1 = new File(directory, "src/main/java/com/p1/TestClassNoDeps.java")
+        Files.createDirectories(myClass1.toPath().getParent())
+        myClass1 << "package com.p1; public class TestClassNoDeps {}"
+
+        //write a second class to be referenced in a different place
+        myClass1 = new File(directory, "src/main/java/com/p1/TestClassNoDeps2.java")
+        myClass1 << "package com.p1; public class TestClassNoDeps2 {}"
+
+        //write class in sub-project-with-deps that uses TestClassNoDeps
+        File myClass2 = new File(subProjects['sub-project-with-deps'].directory, "src/main/java/com/p2/TestClassWithDeps.java")
+        Files.createDirectories(myClass2.toPath().getParent())
+        myClass2 << '''
+        package com.p2;
+        import com.p1.TestClassNoDeps;
+        public class TestClassWithDeps {
+            void foo() {
+                System.out.println (new TestClassNoDeps());
+            }
+        }
+        '''.stripIndent()
+
+        //Create source file in root project that uses TestClassNoDeps2
+        File myRootClass = new File(projectDir, "src/main/java/com/p0/RootTestClassWithDeps.java")
+        Files.createDirectories(myRootClass.toPath().getParent())
+        myRootClass << '''
+        package com.p2;
+        import com.p1.TestClassNoDeps2;
+        public class RootTestClassWithDeps {
+            void foo() {
+                System.out.println (new TestClassNoDeps2());
+            }
+        }
+        '''.stripIndent()
+
     }
 }
