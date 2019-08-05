@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: add flag to not fail if implicit deps are found.  This is so the task can be used in workflow where
+    its outputs are used by subsequent tasks.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/734

@@ -35,6 +35,7 @@ import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
@@ -48,15 +49,19 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
     private final ListProperty<Configuration> dependenciesConfigurations;
     private final Property<FileCollection> sourceClasses;
     private final SetProperty<String> ignore;
+    private final Property<Boolean> failIfImplicitDependencies;
 
     public CheckImplicitDependenciesTask() {
         setGroup("Verification");
         setDescription("Ensures all dependencies are explicitly declared, not just transitively provided");
-        dependenciesConfigurations = getProject().getObjects().listProperty(Configuration.class);
+        final ObjectFactory factory = getProject().getObjects();
+        dependenciesConfigurations = factory.listProperty(Configuration.class);
         dependenciesConfigurations.set(Collections.emptyList());
-        sourceClasses = getProject().getObjects().property(FileCollection.class);
-        ignore = getProject().getObjects().setProperty(String.class);
+        sourceClasses = factory.property(FileCollection.class);
+        ignore = factory.setProperty(String.class);
         ignore.set(Collections.emptySet());
+        failIfImplicitDependencies = factory.property(Boolean.class);
+        failIfImplicitDependencies.set(true);
     }
 
     @TaskAction
@@ -86,12 +91,18 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
                     .sorted()
                     .collect(Collectors.joining("\n", "    dependencies {\n", "\n    }"));
 
-            throw new GradleException(
-                    String.format("Found %d implicit dependencies - consider adding the following explicit "
+            final String message = String.format(
+                    "Found %d implicit dependencies - consider adding the following explicit "
                             + "dependencies to '%s', or avoid using classes from these jars:\n%s",
                     usedButUndeclared.size(),
                     buildFile(),
-                    suggestion));
+                    suggestion);
+
+            if (failIfImplicitDependencies.get()) {
+                throw new GradleException(message);
+            } else {
+                getLogger().info(message);
+            }
         }
     }
 
@@ -161,5 +172,14 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
     @Input
     public final Provider<Set<String>> getIgnored() {
         return ignore;
+    }
+
+    @Input
+    public final Property<Boolean> getFailIfImplicitDependencies() {
+        return failIfImplicitDependencies;
+    }
+
+    public final void failIfImplicitDependencies(boolean fail) {
+        this.failIfImplicitDependencies.set(fail);
     }
 }

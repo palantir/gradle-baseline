@@ -16,10 +16,9 @@
 
 package com.palantir.baseline
 
+import java.nio.file.Files
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
-
-import java.nio.file.Files
 
 class BaselineExactDependenciesTest extends AbstractPluginTest {
 
@@ -102,6 +101,22 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         result.output.contains("Found 1 implicit dependencies")
     }
 
+    def 'checkImplicitDependencies does not fail if failIfImplicitDependencies is set to false'() {
+        when:
+        setupMultiProject()
+        buildFile << """
+            checkImplicitDependencies {
+                failIfImplicitDependencies false
+            }
+        """.stripIndent()
+
+        then:
+        BuildResult result = with('checkImplicitDependencies', '--stacktrace').withDebug(true).buildAndFail()
+        //handy to check for this because then get full output string in test output if it fails
+        !result.output.contains("GradleScriptException")
+        result.task(':checkImplicitDependencies').getOutcome() == TaskOutcome.SUCCESS
+    }
+
     def 'checkImplicitDependencies succeeds when cross-project dependencies properly declared'() {
         when:
         setupMultiProject()
@@ -113,7 +128,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
 
     }
 
-    def 'checkImplicitDependencies fails on transitive project dependency'() {
+    def 'checkImplicitDependencies fails on implicit project dependency'() {
         when:
         setupMultiProject()
 
@@ -185,6 +200,5 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
             }
         }
         '''.stripIndent()
-
     }
 }
