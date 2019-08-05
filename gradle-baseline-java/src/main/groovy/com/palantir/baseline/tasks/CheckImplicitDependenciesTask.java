@@ -81,7 +81,6 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
                 .filter(artifact -> !shouldIgnore(artifact))
                 .collect(Collectors.toList());
         if (!usedButUndeclared.isEmpty()) {
-
             String suggestion = usedButUndeclared.stream()
                     .map(artifact -> getSuggestionString(artifact))
                     .sorted()
@@ -97,17 +96,17 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
     }
 
     private String getSuggestionString(ResolvedArtifact artifact) {
-        String artifactNameString = isProjectArtifact(artifact) ?
-            String.format("project('%s')", ((ProjectComponentIdentifier)artifact.getId().getComponentIdentifier()).getProjectPath()) :
-            String.format("'%s:%s'", artifact.getModuleVersion().getId().getGroup(), artifact.getModuleVersion().getId().getName());
+        String artifactNameString = isProjectArtifact(artifact)
+                ? String.format("project('%s')",
+                        ((ProjectComponentIdentifier) artifact.getId().getComponentIdentifier()).getProjectPath())
+                : String.format("'%s:%s'",
+                        artifact.getModuleVersion().getId().getGroup(), artifact.getModuleVersion().getId().getName());
         return String.format("        implementation %s", artifactNameString);
     }
 
     /**
      * Return true if the resolved artifact is derived from a project in the current build rather than an
      * external jar.
-     * @param artifact
-     * @return
      */
     private boolean isProjectArtifact(ResolvedArtifact artifact) {
         return artifact.getId().getComponentIdentifier() instanceof ProjectComponentIdentifier;
