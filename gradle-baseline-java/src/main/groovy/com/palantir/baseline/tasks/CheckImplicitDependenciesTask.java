@@ -93,16 +93,9 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
     }
 
     private String getSuggestionString(ResolvedArtifact artifact) {
-        String artifactNameString;
-        if (isProjectArtifact(artifact)) {
-            artifactNameString = String.format("project('%s')",
-                    ((ProjectComponentIdentifier)artifact.getId().getComponentIdentifier()).getProjectPath());
-        }
-        else {
-            artifactNameString = String.format("'%s:%s'",
-                    artifact.getModuleVersion().getId().getGroup(),
-                    artifact.getModuleVersion().getId().getName());
-        }
+        String artifactNameString = isProjectArtifact(artifact) ?
+            String.format("project('%s')", ((ProjectComponentIdentifier)artifact.getId().getComponentIdentifier()).getProjectPath()) :
+            String.format("'%s:%s'", artifact.getModuleVersion().getId().getGroup(), artifact.getModuleVersion().getId().getName());
         return String.format("        implementation %s", artifactNameString);
     }
 
