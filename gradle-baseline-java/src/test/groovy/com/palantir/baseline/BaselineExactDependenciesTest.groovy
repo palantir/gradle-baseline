@@ -109,7 +109,6 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         BuildResult result = with(':sub-project-with-deps:checkImplicitDependencies', '--stacktrace').withDebug(true).build()
         result.task(':sub-project-with-deps:classes').getOutcome() == TaskOutcome.SUCCESS
         result.task(':sub-project-with-deps:checkImplicitDependencies').getOutcome() == TaskOutcome.SUCCESS
-
     }
 
     def 'checkImplicitDependencies fails on transitive project dependency'() {
@@ -131,6 +130,28 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         then:
         BuildResult result = with(':sub-project-with-deps:checkImplicitDependencies', ':sub-project-no-deps:checkImplicitDependencies', '--stacktrace').withDebug(true).build()
         result.task(':sub-project-no-deps:checkImplicitDependencies').getOutcome() == TaskOutcome.SUCCESS
+    }
+
+    def 'implicitDependenciesAnalyzer can be used from other task'() {
+        when:
+        setupMultiProject()
+        buildFile << """
+                task('printDeps', dependsOn:classes) {
+                    doLast {
+                        def a = new com.palantir.baseline.tasks.ImplicitDependenciesAnalyzer(project, [configurations.compileClasspath], sourceSets.main.output.classesDirs, [] as Set)
+                        def implicitDependencies = a.findImplicitDependencies()
+                        println 'Num deps: ' + implicitDependencies.size();
+                        implicitDependencies.each {println 'DEP: ' + it}
+                    }
+                }
+        """.stripIndent()
+
+        then:
+        BuildResult result = with('printDeps', '--stacktrace').withDebug(true).build()
+        //handy to check for this because then get full output string in test output if it fails
+        !result.output.contains("GradleScriptException")
+        result.task(':printDeps').getOutcome() == TaskOutcome.SUCCESS
+        result.output.contains("DEP: ")
     }
 
     /**
