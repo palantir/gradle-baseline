@@ -71,6 +71,7 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
                 .map(BaselineExactDependencies.INDEXES::classToDependency)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
+                .filter(x -> !isArtifactFromCurrentProject(x))
                 .collect(Collectors.toSet());
         Set<ResolvedArtifact> declaredArtifacts = declaredDependencies.stream()
                 .flatMap(dependency -> dependency.getModuleArtifacts().stream())
@@ -111,6 +112,19 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
     private boolean isProjectArtifact(ResolvedArtifact artifact) {
         return artifact.getId().getComponentIdentifier() instanceof ProjectComponentIdentifier;
     }
+
+    /**
+     * Return true if the resolved artifact is derived from a project in the current build rather than an
+     * external jar.
+     */
+    private boolean isArtifactFromCurrentProject(ResolvedArtifact artifact) {
+        if (!isProjectArtifact(artifact)) {
+            return false;
+        }
+        return ((ProjectComponentIdentifier) artifact.getId().getComponentIdentifier()).getProjectPath()
+                .equals(getProject().getPath());
+    }
+
 
     /** All classes which are mentioned in this project's source code. */
     private Set<String> referencedClasses() {
