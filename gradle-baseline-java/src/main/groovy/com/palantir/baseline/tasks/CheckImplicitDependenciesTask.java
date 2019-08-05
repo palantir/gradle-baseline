@@ -19,20 +19,13 @@ package com.palantir.baseline.tasks;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Streams;
 import com.palantir.baseline.plugins.BaselineExactDependencies;
-import java.nio.file.Path;
-import java.util.Collections;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
@@ -41,6 +34,10 @@ import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.TaskAction;
+
+import java.nio.file.Path;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class CheckImplicitDependenciesTask extends DefaultTask {
 
@@ -80,11 +77,9 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
                 .filter(artifact -> !shouldIgnore(artifact))
                 .collect(Collectors.toList());
         if (!usedButUndeclared.isEmpty()) {
-            // TODO(dfox): suggest project(':project-name') when a jar actually comes from this project!
+
             String suggestion = usedButUndeclared.stream()
-                    .map(artifact -> String.format("        implementation '%s:%s'",
-                            artifact.getModuleVersion().getId().getGroup(),
-                            artifact.getModuleVersion().getId().getName()))
+                    .map(artifact -> getSuggestionString(artifact))
                     .sorted()
                     .collect(Collectors.joining("\n", "    dependencies {\n", "\n    }"));
 
@@ -95,6 +90,30 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
                     buildFile(),
                     suggestion));
         }
+    }
+
+    private String getSuggestionString(ResolvedArtifact artifact) {
+        String artifactNameString;
+        if (isProjectArtifact(artifact)) {
+            artifactNameString = String.format("project('%s')",
+                    ((ProjectComponentIdentifier)artifact.getId().getComponentIdentifier()).getProjectPath());
+        }
+        else {
+            artifactNameString = String.format("'%s:%s'",
+                    artifact.getModuleVersion().getId().getGroup(),
+                    artifact.getModuleVersion().getId().getName());
+        }
+        return String.format("        implementation %s", artifactNameString);
+    }
+
+    /**
+     * Return true if the resolved artifact is derived from a project in the current build rather than an
+     * external jar.
+     * @param artifact
+     * @return
+     */
+    private boolean isProjectArtifact(ResolvedArtifact artifact) {
+        return artifact.getId().getComponentIdentifier() instanceof ProjectComponentIdentifier;
     }
 
     /** All classes which are mentioned in this project's source code. */
