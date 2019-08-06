@@ -12,9 +12,8 @@ The Internet provides a wealth of material on code reviews:
 [humanized reviews](http://www.processimpact.com/articles/humanizing_reviews.html),
 [reasons for doing code reviews in the first place](https://smartbear.com/learn/code-review/why-review-code/),
 [best practices](https://smartbear.com/learn/code-review/best-practices-for-peer-code-review/),
-[more best practices](https://www.atlassian.com/agile/software-development/code-reviews),
-[statistics on code review effectiveness for catching bugs](https://blog.codinghorror.com/code-reviews-just-do-it/),
-and [examples of code reviews gone wrong](https://www.fogbugz.com/blog/9-effective-code-review-tips/).
+[more best practices](https://www.atlassian.com/agile/software-development/code-reviews) and
+[statistics on code review effectiveness for catching bugs](https://blog.codinghorror.com/code-reviews-just-do-it/).
 Oh, and of course there are
 [books](https://books.google.com/books/about/Peer_Reviews_in_Software.html?id=d7BQAAAAMAAJ),
 too. Long story short, this document presents Palantir's take on code reviews.
