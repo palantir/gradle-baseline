@@ -160,6 +160,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `GradleCacheableTaskAction`: Gradle plugins should not call `Task.doFirst` or `Task.doLast` with a lambda, as that is not cacheable. See [gradle/gradle#5510](https://github.com/gradle/gradle/issues/5510) for more details.
 - `PreferBuiltInConcurrentKeySet`: Discourage relying on Guava's `com.google.common.collect.Sets.newConcurrentHashSet()`, when Java's `java.util.concurrent.ConcurrentHashMap.newKeySet()` serves the same purpose.
 - `JUnit5RuleUsage`: Prevent accidental usage of `org.junit.Rule`/`org.junit.ClassRule` within Junit5 tests
+- `DangerousCompletableFutureUsage`: Disallow CompletableFuture asynchronous operations without an Executor.
 
 ## com.palantir.baseline-checkstyle
 Checkstyle rules can be suppressed on a per-line or per-block basis. (It is good practice to first consider formatting
