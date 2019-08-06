@@ -88,16 +88,16 @@ public final class DangerousCompletableFutureUsage
     }
 
     private static boolean isCompletionStageAsyncMethodWithoutExecutor(MethodInvocationTree tree, VisitorState state) {
-        if (COMPLETION_STAGE_ASYNC_INVOCATION.matches(tree, state)) {
-            Symbol.MethodSymbol symbol = ASTHelpers.getSymbol(tree);
-            // Should only happen if there are errors in the AST
-            if (symbol != null) {
-                List<Type> parameterTypes = symbol.type.getParameterTypes();
-                Type lastParameterType = parameterTypes.get(parameterTypes.size() - 1);
-                return !ASTHelpers.isSameType(
-                        lastParameterType, state.getTypeFromString(Executor.class.getName()), state);
-            }
+        if (!COMPLETION_STAGE_ASYNC_INVOCATION.matches(tree, state)) {
+            return false;
         }
-        return false;
+        Symbol.MethodSymbol symbol = ASTHelpers.getSymbol(tree);
+        if (symbol == null) {
+            // Errors in the AST, allow the build to continue and provide a more helpful compile error.
+            return false;
+        }
+        List<Type> parameterTypes = symbol.type.getParameterTypes();
+        Type lastParameterType = parameterTypes.get(parameterTypes.size() - 1);
+        return !ASTHelpers.isSameType(lastParameterType, state.getTypeFromString(Executor.class.getName()), state);
     }
 }
