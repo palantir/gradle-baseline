@@ -1,6 +1,6 @@
 type: fix
 fix:
-  description: detect if dependency is actually the current project
+  description: "The `checkImplicitDependencies` task will no longer suggest a fix of the current project."
   links:
   - https://github.com/palantir/gradle-baseline/pull/736
   - https://github.com/palantir/gradle-baseline/issues/567
