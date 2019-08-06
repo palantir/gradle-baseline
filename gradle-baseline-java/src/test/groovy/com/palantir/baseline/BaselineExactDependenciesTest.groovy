@@ -16,10 +16,9 @@
 
 package com.palantir.baseline
 
+import java.nio.file.Files
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
-
-import java.nio.file.Files
 
 class BaselineExactDependenciesTest extends AbstractPluginTest {
 
@@ -123,6 +122,15 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         result.task(':checkImplicitDependencies').getOutcome() == TaskOutcome.FAILED
         result.output.contains("Found 1 implicit dependencies")
         result.output.contains("implementation project(':sub-project-no-deps')")
+    }
+
+    def 'checkImplicitDependencies should not report circular dependency on current project'() {
+        when:
+        setupMultiProject()
+
+        then:
+        BuildResult result = with(':sub-project-with-deps:checkImplicitDependencies', ':sub-project-no-deps:checkImplicitDependencies', '--stacktrace').withDebug(true).build()
+        result.task(':sub-project-no-deps:checkImplicitDependencies').getOutcome() == TaskOutcome.SUCCESS
     }
 
     /**
