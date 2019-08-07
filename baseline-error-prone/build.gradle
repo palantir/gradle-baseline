@@ -5,6 +5,7 @@ apply from: "${rootDir}/gradle/publish-jar.gradle"
 
 dependencies {
     compile 'com.google.errorprone:error_prone_core'
+    implementation 'com.palantir.safe-logging:preconditions'
 
     testCompile 'com.palantir.tokens:auth-tokens'
     testCompile 'com.fasterxml.jackson.core:jackson-annotations'
