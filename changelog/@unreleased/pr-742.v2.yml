@@ -1,0 +1,9 @@
+type: fix
+fix:
+  description: "Enable applying refaster rules for repos with -Xlint:deprecation\n\n##
+    Before this PR\nIf a repository configures -Werror or -Xlint:deprecation, then
+    the refaster refactoring can fail before its had a chance to refactor the code
+    away from the deprecated method.\n \n## After this PR\nWe disable these checks
+    when applying the refaster refactorings such that the refactoring is applied."
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/742
