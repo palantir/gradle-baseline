@@ -4,6 +4,7 @@ apply from: "${rootDir}/gradle/publish-jar.gradle"
 dependencies {
   compile gradleApi()
   compile 'com.google.guava:guava'
+  implementation 'com.palantir.safe-logging:preconditions'
 
   annotationProcessor 'org.inferred:freebuilder'
   compileOnly 'org.inferred:freebuilder'
