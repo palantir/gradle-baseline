@@ -9,7 +9,7 @@ buildscript {
         classpath 'com.gradle.publish:plugin-publish-plugin:0.10.0'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
         classpath 'com.netflix.nebula:nebula-publishing-plugin:13.1.0'
-        classpath 'com.palantir.baseline:gradle-baseline-java:0.65.0'
+        classpath 'com.palantir.baseline:gradle-baseline-java:1.10.0'
     }
 }
 
@@ -51,5 +51,17 @@ allprojects {
     group = 'com.palantir.baseline'
     version System.env.CIRCLE_TAG ?: gitVersion()
     description = 'A Gradle plugin for applying Baseline-recommended build and IDE settings'
+
+    // All projects here are to be used inside gradle, so safe-logging is not necessary
+    pluginManager.withPlugin 'com.palantir.baseline-error-prone', {
+        pluginManager.withPlugin 'java', {
+            tasks.withType(JavaCompile) {
+                options.errorprone.errorproneArgs += [
+                        '-Xep:PreferSafeLoggingPreconditions:OFF',
+                        '-Xep:PreferSafeLoggableExceptions:OFF',
+                ]
+            }
+        }
+    }
 }
 
