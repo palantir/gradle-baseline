@@ -22,9 +22,10 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 public class OptionalOrElseSupplier<T> {
+    @SuppressWarnings("OptionalOrElseMethodInvocation")
     @BeforeTemplate
     final T eagerOrElse(Optional<T> optional, Supplier<T> supplier) {
-        return optional.orElseGet(() -> supplier.get());
+        return optional.orElse(supplier.get());
     }
 
     @AfterTemplate
