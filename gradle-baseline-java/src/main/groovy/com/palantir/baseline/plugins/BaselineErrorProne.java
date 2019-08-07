@@ -110,14 +110,17 @@ public final class BaselineErrorProne implements Plugin<Project> {
 
                             if (project.hasProperty(PROP_REFASTER_APPLY)) {
                                 javaCompile.dependsOn(compileRefaster);
-                                javaCompile.getOptions().setWarnings(false);
+                                disableWerrorAndDeprecationCompilerChecks(javaCompile);
+                                project.getLogger().error("ARGs: {}", javaCompile.getOptions().getAllCompilerArgs());
+
                                 errorProneOptions.getErrorproneArgumentProviders().add(() -> ImmutableList.of(
                                         "-XepPatchChecks:refaster:" + refasterRulesFile.get().getAbsolutePath(),
                                         "-XepPatchLocation:IN_PLACE"));
                                 // Don't attempt to cache since it won't capture the source files that might be modified
                                 javaCompile.getOutputs().cacheIf(t -> false);
                             } else if (project.hasProperty(PROP_ERROR_PRONE_APPLY)) {
-                                javaCompile.getOptions().setWarnings(false);
+                                disableWerrorAndDeprecationCompilerChecks(javaCompile);
+
                                 // TODO(gatesn): Is there a way to discover error-prone checks?
                                 // Maybe service-load from a ClassLoader configured with annotation processor path?
                                 // https://github.com/google/error-prone/pull/947
@@ -164,6 +167,15 @@ public final class BaselineErrorProne implements Plugin<Project> {
                         });
             }
         });
+    }
+
+    private void disableWerrorAndDeprecationCompilerChecks(JavaCompile javaCompile) {
+        javaCompile.getOptions().setWarnings(false);
+        javaCompile.getOptions().setDeprecation(false);
+        javaCompile.getOptions().setCompilerArgs(javaCompile.getOptions().getCompilerArgs().stream()
+                .filter(arg -> !arg.toLowerCase().equals("-xlintdeprecation"))
+                .filter(arg -> !arg.toLowerCase().equals("-werror"))
+                .collect(Collectors.toList()));
     }
 
     private static final class LazyConfigurationList extends AbstractList<File> {

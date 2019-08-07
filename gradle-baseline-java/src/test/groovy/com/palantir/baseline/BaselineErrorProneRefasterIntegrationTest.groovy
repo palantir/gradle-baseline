@@ -35,6 +35,9 @@ class BaselineErrorProneRefasterIntegrationTest extends AbstractPluginTest {
             mavenLocal()
             jcenter()
         }
+        tasks.withType(JavaCompile) {
+            options.compilerArgs += ['-Werror', '-Xlint:deprecation']
+        }
     '''.stripIndent()
 
     def 'compileJava with refaster fixes CollectionsIsEmpty'() {
@@ -106,6 +109,33 @@ class BaselineErrorProneRefasterIntegrationTest extends AbstractPluginTest {
         import com.google.common.base.Utf8;
         import java.nio.charset.StandardCharsets;
         public class Test {
+            int i = Utf8.encodedLength("hello world");
+        }
+        '''.stripIndent()
+    }
+
+    def 'compileJava with refaster fixes Utf8Length with deprecated method'() {
+        when:
+        buildFile << standardBuildFile
+        file('src/main/java/test/Test.java') << '''
+        package test;
+        import com.google.common.base.CharMatcher;
+        import java.nio.charset.StandardCharsets;
+        public class Test {
+            CharMatcher matcher = CharMatcher.digit();  // Would normally fail with -Xlint:deprecation
+            int i = "hello world".getBytes(StandardCharsets.UTF_8).length;
+        }
+        '''.stripIndent()
+
+        then:
+        BuildResult result = with('compileJava', '-i', '-PrefasterApply').build()
+        result.task(":compileJava").outcome == TaskOutcome.SUCCESS
+        file('src/main/java/test/Test.java').text == '''
+        package test;
+        import com.google.common.base.CharMatcher;
+        import com.google.common.base.Utf8;
+        public class Test {
+            CharMatcher matcher = CharMatcher.digit();  // Would normally fail with -Xlint:deprecation
             int i = Utf8.encodedLength("hello world");
         }
         '''.stripIndent()
