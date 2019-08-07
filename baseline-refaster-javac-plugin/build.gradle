@@ -11,5 +11,8 @@ dependencies {
 }
 
 tasks.withType(JavaCompile) {
-    options.errorprone.errorproneArgs += '-Xep:PreferSafeLoggingPreconditions:OFF'
+    options.errorprone.errorproneArgs += [
+            '-Xep:PreferSafeLoggingPreconditions:OFF',
+            '-Xep:PreferSafeLoggableExceptions:OFF',
+    ]
 }
