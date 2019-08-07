@@ -9,10 +9,3 @@ dependencies {
     annotationProcessor 'com.google.auto.service:auto-service'
     compileOnly 'com.google.auto.service:auto-service'
 }
-
-tasks.withType(JavaCompile) {
-    options.errorprone.errorproneArgs += [
-            '-Xep:PreferSafeLoggingPreconditions:OFF',
-            '-Xep:PreferSafeLoggableExceptions:OFF',
-    ]
-}
