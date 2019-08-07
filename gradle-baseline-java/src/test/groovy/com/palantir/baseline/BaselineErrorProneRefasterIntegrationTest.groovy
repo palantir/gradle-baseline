@@ -134,6 +134,7 @@ class BaselineErrorProneRefasterIntegrationTest extends AbstractPluginTest {
         package test;
         import com.google.common.base.CharMatcher;
         import com.google.common.base.Utf8;
+        import java.nio.charset.StandardCharsets;
         public class Test {
             CharMatcher matcher = CharMatcher.digit();  // Would normally fail with -Xlint:deprecation
             int i = Utf8.encodedLength("hello world");

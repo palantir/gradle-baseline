@@ -108,31 +108,48 @@ public final class BaselineErrorProne implements Plugin<Project> {
                                 return;
                             }
 
-                            if (project.hasProperty(PROP_REFASTER_APPLY)) {
-                                javaCompile.dependsOn(compileRefaster);
-                                disableWerrorAndDeprecationCompilerChecks(javaCompile);
-                                project.getLogger().error("ARGs: {}", javaCompile.getOptions().getAllCompilerArgs());
-
-                                errorProneOptions.getErrorproneArgumentProviders().add(() -> ImmutableList.of(
-                                        "-XepPatchChecks:refaster:" + refasterRulesFile.get().getAbsolutePath(),
-                                        "-XepPatchLocation:IN_PLACE"));
+                            if (isRefactoring(project)) {
                                 // Don't attempt to cache since it won't capture the source files that might be modified
                                 javaCompile.getOutputs().cacheIf(t -> false);
-                            } else if (project.hasProperty(PROP_ERROR_PRONE_APPLY)) {
-                                disableWerrorAndDeprecationCompilerChecks(javaCompile);
 
-                                // TODO(gatesn): Is there a way to discover error-prone checks?
-                                // Maybe service-load from a ClassLoader configured with annotation processor path?
-                                // https://github.com/google/error-prone/pull/947
-                                errorProneOptions.getErrorproneArgumentProviders().add(() -> ImmutableList.of(
-                                        "-XepPatchChecks:" + Joiner.on(',')
-                                                .join(errorProneExtension.getPatchChecks().get()),
-                                        "-XepPatchLocation:IN_PLACE"));
-                                // Don't attempt to cache since it won't capture the source files that might be modified
-                                javaCompile.getOutputs().cacheIf(t -> false);
+                                if (isRefasterRefactoring(project)) {
+                                    javaCompile.dependsOn(compileRefaster);
+                                    errorProneOptions.getErrorproneArgumentProviders().add(() -> ImmutableList.of(
+                                            "-XepPatchChecks:refaster:" + refasterRulesFile.get().getAbsolutePath(),
+                                            "-XepPatchLocation:IN_PLACE"));
+                                }
+
+                                if (isErrorProneRefactoring(project)) {
+                                    // TODO(gatesn): Is there a way to discover error-prone checks?
+                                    // Maybe service-load from a ClassLoader configured with annotation processor path?
+                                    // https://github.com/google/error-prone/pull/947
+                                    errorProneOptions.getErrorproneArgumentProviders().add(() -> ImmutableList.of(
+                                            "-XepPatchChecks:" + Joiner.on(',')
+                                                    .join(errorProneExtension.getPatchChecks().get()),
+                                            "-XepPatchLocation:IN_PLACE"));
+                                }
                             }
                         });
             });
+
+            // To allow refactoring of deprecated methods, even when -Xlint:deprecation is specified, we need to remove
+            // these compiler flags after all configuration has happened.
+            project.afterEvaluate(unused -> project.getTasks().withType(JavaCompile.class)
+                    .configureEach(javaCompile -> {
+                        if (javaCompile.equals(compileRefaster)) {
+                            return;
+                        }
+                        if (isRefactoring(project)) {
+                            javaCompile.getOptions().setWarnings(false);
+                            javaCompile.getOptions().setDeprecation(false);
+                            javaCompile.getOptions().setCompilerArgs(javaCompile.getOptions().getCompilerArgs()
+                                    .stream()
+                                    .filter(arg -> !arg.equals("-Werror"))
+                                    .filter(arg -> !arg.equals("-deprecation"))
+                                    .filter(arg -> !arg.equals("-Xlint:deprecation"))
+                                    .collect(Collectors.toList()));
+                        }
+                    }));
 
             project.getPluginManager().withPlugin("java-gradle-plugin", appliedPlugin -> {
                 project.getTasks().withType(JavaCompile.class).configureEach(javaCompile ->
@@ -169,13 +186,16 @@ public final class BaselineErrorProne implements Plugin<Project> {
         });
     }
 
-    private void disableWerrorAndDeprecationCompilerChecks(JavaCompile javaCompile) {
-        javaCompile.getOptions().setWarnings(false);
-        javaCompile.getOptions().setDeprecation(false);
-        javaCompile.getOptions().setCompilerArgs(javaCompile.getOptions().getCompilerArgs().stream()
-                .filter(arg -> !arg.toLowerCase().equals("-xlintdeprecation"))
-                .filter(arg -> !arg.toLowerCase().equals("-werror"))
-                .collect(Collectors.toList()));
+    private boolean isRefactoring(Project project) {
+        return isRefasterRefactoring(project) || isErrorProneRefactoring(project);
+    }
+
+    private boolean isRefasterRefactoring(Project project) {
+        return project.hasProperty(PROP_REFASTER_APPLY);
+    }
+
+    private boolean isErrorProneRefactoring(Project project) {
+        return project.hasProperty(PROP_ERROR_PRONE_APPLY);
     }
 
     private static final class LazyConfigurationList extends AbstractList<File> {
