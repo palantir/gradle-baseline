@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Code formatting has been modified to improve alignment and detection of variable scopes at a glance.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/746
