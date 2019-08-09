@@ -98,7 +98,6 @@ public final class PreferSafeLoggableExceptions extends BugChecker implements Bu
                                 .build())
                         .build())
                 .findAny()
-                .orElseThrow(
-                        () -> new IllegalStateException("Expected to match a known replaceable exception type"));
+                .orElseThrow(() -> new IllegalStateException("Expected to match a known replaceable exception type"));
     }
 }
