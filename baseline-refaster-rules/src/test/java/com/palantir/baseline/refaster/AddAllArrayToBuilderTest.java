@@ -16,12 +16,17 @@
 
 package com.palantir.baseline.refaster;
 
+import static org.assertj.core.api.Assumptions.assumeThat;
+
 import org.junit.Test;
 
 public class AddAllArrayToBuilderTest {
 
     @Test
     public void testAddAllArray() {
+        // Refaster checks ExpressionPatterns against the JCExpression AST node, this isn't use the same after Java 8
+        assumeThat(System.getProperty("java.specification.version")).isEqualTo("1.8");
+
         RefasterTestHelper.forRefactoring(AddAllArrayToBuilder.class)
                 .withInputLines("Test",
                         "import com.google.common.collect.ImmutableList;",
