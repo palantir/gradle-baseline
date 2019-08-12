@@ -33,7 +33,10 @@ public class BaselineErrorProneExtension {
 
             // Built-in checks
             "ArrayEquals",
-            "MissingOverride");
+            "MissingOverride",
+            "MutableConstantField",
+            "UnusedMethod",
+            "UnusedVariable");
 
     private final ListProperty<String> patchChecks;
 
