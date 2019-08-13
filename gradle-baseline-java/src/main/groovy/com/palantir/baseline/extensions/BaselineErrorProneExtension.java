@@ -34,7 +34,6 @@ public class BaselineErrorProneExtension {
             // Built-in checks
             "ArrayEquals",
             "MissingOverride",
-            "MutableConstantField",
             "UnusedMethod",
             "UnusedVariable");
 
