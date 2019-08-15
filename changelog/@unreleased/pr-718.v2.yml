@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: The `baseline-idea` plugin now generates configuration more closely aligned with Gradle defaults.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/718

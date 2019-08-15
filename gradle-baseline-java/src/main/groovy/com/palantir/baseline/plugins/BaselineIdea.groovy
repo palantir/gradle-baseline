@@ -64,7 +64,6 @@ class BaselineIdea extends AbstractBaselinePlugin {
             }
 
             // Configure Idea module
-            addJdkVersion(ideaModuleModel)
             markResourcesDirs(ideaModuleModel)
             moveProjectReferencesToEnd(ideaModuleModel)
         }
@@ -269,29 +268,6 @@ class BaselineIdea extends AbstractBaselinePlugin {
         }
 
         return base.appendNode(name, attributes + defaults)
-    }
-
-    /**
-     * Configures JDK and Java language level of the given IdeaModel according to the sourceCompatibility property.
-     */
-    private void addJdkVersion(IdeaModel ideaModel) {
-        def compileJavaTask = (JavaCompile) project.tasks.findByName('compileJava')
-        if (compileJavaTask) {
-            def javaVersion = compileJavaTask.sourceCompatibility
-            def jdkVersion = 'JDK_' + javaVersion.replaceAll('\\.', '_')
-            project.logger.debug("BaselineIdea: Configuring IDEA Module for Java version: " + javaVersion)
-
-            if (ideaModel.project != null) {
-                ideaModel.project.languageLevel = javaVersion
-            }
-
-            ideaModel.module.jdkName = javaVersion
-            ideaModel.module.iml.withXml {
-                it.asNode().component.find { it.@name == 'NewModuleRootManager' }.@LANGUAGE_LEVEL = jdkVersion
-            }
-        } else {
-            project.logger.debug("BaselineIdea: No Java version found in sourceCompatibility property.")
-        }
     }
 
     /**
