@@ -29,6 +29,7 @@ import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.tools.javac.code.Type;
+import java.util.stream.Stream;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -40,7 +41,7 @@ public final class NonComparableStreamSort extends BugChecker implements BugChec
 
     private static final Matcher<ExpressionTree> SORTED_CALL_ON_JAVA_STREAM_MATCHER =
             MethodMatchers.instanceMethod()
-                    .onDescendantOf("java.util.stream.Stream")
+                    .onDescendantOf(Stream.class.getName())
                     .named("sorted")
                     .withParameters();
 
@@ -49,7 +50,6 @@ public final class NonComparableStreamSort extends BugChecker implements BugChec
         if (!SORTED_CALL_ON_JAVA_STREAM_MATCHER.matches(tree, state)) {
             return Description.NO_MATCH;
         }
-
         Type returnType = ASTHelpers.getReturnType(tree);
         if (returnType == null || returnType.getTypeArguments().size() != 1) {
             return Description.NO_MATCH;
