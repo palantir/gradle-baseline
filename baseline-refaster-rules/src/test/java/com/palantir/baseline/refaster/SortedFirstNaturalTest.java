@@ -35,6 +35,7 @@ public class SortedFirstNaturalTest {
                         "}")
                 .hasOutputLines(
                         "import java.util.*;",
+                        "import java.util.Comparator;",
                         "import java.util.stream.Stream;",
                         "public class Test {",
                         "  Optional<Integer> i = Arrays.asList(5, -10, 7, -18, 23).stream()"
