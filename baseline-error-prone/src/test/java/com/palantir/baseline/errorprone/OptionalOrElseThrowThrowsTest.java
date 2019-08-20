@@ -69,12 +69,51 @@ public class OptionalOrElseThrowThrowsTest {
     }
 
     @Test
-    public void testThrows_block() {
+    public void testOptional_throws_block() {
         compilationHelper.addSourceLines(
                 "Test.java",
                 "import java.util.Optional;",
                 "class Test {",
                 "  public <T> T foo(Optional<T> optional) {",
+                "    // BUG: Diagnostic contains: orElseThrow argument must return an exception, not throw one",
+                "    return optional.orElseThrow(() -> { throw new RuntimeException(\"not present\"); });",
+                "  }",
+                "}").doTest();
+    }
+
+    @Test
+    public void testOptionalInt_throws_block() {
+        compilationHelper.addSourceLines(
+                "Test.java",
+                "import java.util.OptionalInt;",
+                "class Test {",
+                "  public int foo(OptionalInt optional) {",
+                "    // BUG: Diagnostic contains: orElseThrow argument must return an exception, not throw one",
+                "    return optional.orElseThrow(() -> { throw new RuntimeException(\"not present\"); });",
+                "  }",
+                "}").doTest();
+    }
+
+    @Test
+    public void testOptionalDouble_throws_block() {
+        compilationHelper.addSourceLines(
+                "Test.java",
+                "import java.util.OptionalDouble;",
+                "class Test {",
+                "  public double foo(OptionalDouble optional) {",
+                "    // BUG: Diagnostic contains: orElseThrow argument must return an exception, not throw one",
+                "    return optional.orElseThrow(() -> { throw new RuntimeException(\"not present\"); });",
+                "  }",
+                "}").doTest();
+    }
+
+    @Test
+    public void testOptionalLong_throws_block() {
+        compilationHelper.addSourceLines(
+                "Test.java",
+                "import java.util.OptionalLong;",
+                "class Test {",
+                "  public long foo(OptionalLong optional) {",
                 "    // BUG: Diagnostic contains: orElseThrow argument must return an exception, not throw one",
                 "    return optional.orElseThrow(() -> { throw new RuntimeException(\"not present\"); });",
                 "  }",

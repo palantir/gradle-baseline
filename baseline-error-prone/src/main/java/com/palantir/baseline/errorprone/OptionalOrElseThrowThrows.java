@@ -17,6 +17,7 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
@@ -24,6 +25,7 @@ import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
+import com.google.errorprone.predicates.TypePredicates;
 import com.sun.source.tree.BlockTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.LambdaExpressionTree;
@@ -33,6 +35,9 @@ import com.sun.source.tree.ThrowTree;
 import com.sun.source.tree.TreeVisitor;
 import com.sun.source.util.SimpleTreeVisitor;
 import java.util.Optional;
+import java.util.OptionalDouble;
+import java.util.OptionalInt;
+import java.util.OptionalLong;
 import java.util.function.Supplier;
 
 @AutoService(BugChecker.class)
@@ -45,7 +50,12 @@ import java.util.function.Supplier;
 public final class OptionalOrElseThrowThrows extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final Matcher<ExpressionTree> OR_ELSE_THROW_METHOD = MethodMatchers.instanceMethod()
-            .onExactClass(Optional.class.getName())
+            .onClass(TypePredicates.isExactTypeAny(ImmutableList.of(
+                    Optional.class.getName(),
+                    OptionalDouble.class.getName(),
+                    OptionalInt.class.getName(),
+                    OptionalLong.class.getName()
+            )))
             .named("orElseThrow")
             .withParameters(Supplier.class.getName());
 
