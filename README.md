@@ -163,6 +163,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `DangerousCompletableFutureUsage`: Disallow CompletableFuture asynchronous operations without an Executor.
 - `NonComparableStreamSort`: Stream.sorted() should only be called on streams of Comparable types.
 - `DangerousStringInternUsage`: Disallow String.intern() invocations in favor of more predictable, scalable alternatives.
+- `OptionalOrElseThrowThrows`: Optional.orElseThrow argument must return an exception, not throw one.
 
 ## com.palantir.baseline-checkstyle
 Checkstyle rules can be suppressed on a per-line or per-block basis. (It is good practice to first consider formatting
