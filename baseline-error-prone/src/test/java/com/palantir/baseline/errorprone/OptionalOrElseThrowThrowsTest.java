@@ -19,7 +19,6 @@ package com.palantir.baseline.errorprone;
 import com.google.errorprone.CompilationTestHelper;
 import org.junit.Before;
 import org.junit.Test;
-import java.util.Optional;
 
 public class OptionalOrElseThrowThrowsTest {
 
@@ -34,7 +33,7 @@ public class OptionalOrElseThrowThrowsTest {
     public void testMethodReference() {
         compilationHelper.addSourceLines(
                 "Test.java",
-                "import " + Optional.class.getName() + ';',
+                "import java.util.Optional;",
                 "class Test {",
                 "  public <T> T foo(Optional<T> optional) {",
                 "    return optional.orElseThrow(this::getThrowable);",
@@ -49,7 +48,7 @@ public class OptionalOrElseThrowThrowsTest {
     public void testReturns_block() {
         compilationHelper.addSourceLines(
                 "Test.java",
-                "import " + Optional.class.getName() + ';',
+                "import java.util.Optional;",
                 "class Test {",
                 "  public <T> T foo(Optional<T> optional) {",
                 "    return optional.orElseThrow(() -> { return new RuntimeException(\"not present\"); });",
@@ -61,7 +60,7 @@ public class OptionalOrElseThrowThrowsTest {
     public void testReturns_lambda() {
         compilationHelper.addSourceLines(
                 "Test.java",
-                "import " + Optional.class.getName() + ';',
+                "import java.util.Optional;",
                 "class Test {",
                 "  public <T> T foo(Optional<T> optional) {",
                 "    return optional.orElseThrow(() -> new RuntimeException(\"not present\"));",
@@ -73,7 +72,7 @@ public class OptionalOrElseThrowThrowsTest {
     public void testThrows_block() {
         compilationHelper.addSourceLines(
                 "Test.java",
-                "import " + Optional.class.getName() + ';',
+                "import java.util.Optional;",
                 "class Test {",
                 "  public <T> T foo(Optional<T> optional) {",
                 "    // BUG: Diagnostic contains: orElseThrow argument must return an exception, not throw one",
