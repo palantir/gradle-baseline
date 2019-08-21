@@ -35,7 +35,7 @@ import java.util.regex.Pattern;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
-        summary = "logsafe Preconditions.checkX() methods should not have print-f style formatting.")
+        summary = "logsafe Preconditions.checkX() methods should not have print-f or slf4j style formatting.")
 public final class LogSafePreconditionsMessageFormat extends PreconditionsMessageFormat {
 
     private static final long serialVersionUID = 1L;
@@ -50,11 +50,20 @@ public final class LogSafePreconditionsMessageFormat extends PreconditionsMessag
 
     @Override
     protected Description matchMessageFormat(MethodInvocationTree tree, String message, VisitorState state) {
-        if (!message.contains("%s")) {
-            return Description.NO_MATCH;
+        if (message.contains("%s")) {
+            return buildDescription(tree)
+                    .setMessage("Do not use printf-style formatting in logsafe Preconditions. "
+                            + "Logsafe exceptions provide a simple message and key-value pairs of arguments, "
+                            + "no interpolation is performed.")
+                    .build();
         }
-
-        return buildDescription(tree).setMessage(
-                "Do not use printf-style formatting in logsafe Preconditions.").build();
+        if (message.contains("{}")) {
+            return buildDescription(tree)
+                    .setMessage("Do not use slf4j-style formatting in logsafe Preconditions. "
+                            + "Logsafe exceptions provide a simple message and key-value pairs of arguments, "
+                            + "no interpolation is performed.")
+                    .build();
+        }
+        return Description.NO_MATCH;
     }
 }
