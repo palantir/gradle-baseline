@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Error Prone LambdaMethodReference check
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/763
