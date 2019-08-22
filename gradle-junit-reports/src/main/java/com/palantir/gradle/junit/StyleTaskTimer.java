@@ -19,7 +19,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import org.gradle.api.Task;
 import org.gradle.api.plugins.quality.Checkstyle;
-import org.gradle.api.plugins.quality.FindBugs;
 import org.gradle.api.tasks.TaskState;
 import org.gradle.api.tasks.compile.JavaCompile;
 
@@ -55,6 +54,6 @@ public final class StyleTaskTimer implements TaskTimer {
     }
 
     public static boolean isStyleTask(Task task) {
-        return task instanceof Checkstyle || task instanceof FindBugs || task instanceof JavaCompile;
+        return task instanceof Checkstyle || task instanceof JavaCompile;
     }
 }
