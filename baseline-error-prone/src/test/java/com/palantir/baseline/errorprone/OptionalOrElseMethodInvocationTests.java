@@ -175,4 +175,32 @@ public final class OptionalOrElseMethodInvocationTests {
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
+
+    @Test
+    public void testComplexReplacement() {
+        refactoringTestHelper
+                .addInputLines(
+                        "Test.java",
+                        "import java.util.Optional;",
+                        "class Test {",
+                        "  String f(Optional<String> input, String defaultValue) {",
+                        "    if (defaultValue == null) {",
+                        "        defaultValue = \"default\";",
+                        "    }",
+                        "    return input.orElse(defaultValue.toLowerCase());",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import java.util.Optional;",
+                        "class Test {",
+                        "  String f(Optional<String> input, String defaultValue) {",
+                        "    if (defaultValue == null) {",
+                        "        defaultValue = \"default\";",
+                        "    }",
+                        "    return input.orElseGet(() -> defaultValue.toLowerCase());",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
 }
