@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: baseline-circleci no longer integrates with the (deprecated) FindBugs
+    plugin, as a pre-requisite for Gradle 6.0 compatibility.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/766
