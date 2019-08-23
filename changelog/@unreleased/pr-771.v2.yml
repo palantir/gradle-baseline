@@ -1,5 +1,5 @@
-type: improvement
-improvement:
+type: fix
+fix:
   description: LambdaMethodReference avoids suggestions for non-static methods
   links:
   - https://github.com/palantir/gradle-baseline/pull/771
