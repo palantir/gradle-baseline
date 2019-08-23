@@ -91,25 +91,31 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
                 || !methodInvocation.getTypeArguments().isEmpty()) {
             return Description.NO_MATCH;
         }
+        Symbol.MethodSymbol methodSymbol = ASTHelpers.getSymbol(methodInvocation);
+        if (methodSymbol == null) {
+            // Should only ever occur if there are errors in the AST, allow the compiler to fail later
+            return Description.NO_MATCH;
+        }
+        if (!methodSymbol.isStatic()) {
+            // Only support static invocations for the time being to avoid erroneously
+            // rewriting '() -> foo()' to 'ClassName::foo' instead of 'this::foo'
+            // or suggesting '() -> foo.doWork().bar()' should be rewritten to 'foo.doWork()::bar',
+            // which executes 'doWork' eagerly, even when the supplier is not used.
+            return Description.NO_MATCH;
+        }
         return buildDescription(root)
                 .setMessage(MESSAGE)
-                .addFix(buildFix(methodInvocation, root, state))
+                .addFix(buildFix(methodSymbol, root, state))
                 .build();
     }
 
     private static Optional<SuggestedFix> buildFix(
-            MethodInvocationTree invocation,
+            Symbol.MethodSymbol symbol,
             LambdaExpressionTree root,
             VisitorState state) {
-        return Optional.ofNullable(ASTHelpers.getSymbol(invocation))
-                // Only support static invocations for the time being to avoid erroneously
-                // rewriting '() -> foo()' to 'ClassName::foo' instead of 'this::foo'
-                .filter(Symbol::isStatic)
-                .flatMap(symbol -> {
-                    SuggestedFix.Builder builder = SuggestedFix.builder();
-                    return toMethodReference(SuggestedFixes.qualifyType(state, builder, symbol))
-                            .map(qualified -> builder.replace(root, qualified).build());
-                });
+        SuggestedFix.Builder builder = SuggestedFix.builder();
+        return toMethodReference(SuggestedFixes.qualifyType(state, builder, symbol))
+                .map(qualified -> builder.replace(root, qualified).build());
     }
 
     private static Optional<String> toMethodReference(String qualifiedMethodName) {
