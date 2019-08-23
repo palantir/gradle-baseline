@@ -1,4 +1,4 @@
-com.diffplug.spotless:spotless-plugin-gradle = 3.14.0
+com.diffplug.spotless:spotless-plugin-gradle = 3.24.2
 com.google.auto.service:auto-service = 1.0-rc4
 com.google.errorprone:error_prone_annotations = 2.3.3
 com.google.errorprone:error_prone_core = 2.3.3
@@ -12,6 +12,7 @@ org.apache.maven.shared:maven-dependency-analyzer = 1.11.1
 org.github.ngbinh.scalastyle:gradle-scalastyle-plugin_2.11 = 1.0.1
 org.inferred:freebuilder = 1.14.6
 org.slf4j:slf4j-api = 1.7.25
+org.eclipse.jgit:org.eclipse.jgit = 5.3.2.201906051522-r
 
 # test deps
 com.netflix.nebula:nebula-test = 7.2.5

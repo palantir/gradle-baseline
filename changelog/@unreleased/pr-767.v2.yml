@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: The `TypeParameterUnusedInFormals` errorprone check is disabled when
+    compiling on Java 13, to workaround an error-prone bug.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/767
