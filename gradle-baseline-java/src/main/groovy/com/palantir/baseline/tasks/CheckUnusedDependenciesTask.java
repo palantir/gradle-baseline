@@ -74,6 +74,8 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
                 .collect(Collectors.toSet());
         Set<ResolvedArtifact> declaredArtifacts = declaredDependencies.stream()
                 .flatMap(dependency -> dependency.getModuleArtifacts().stream())
+                .filter(dependency -> BaselineExactDependencies.VALID_ARTIFACT_EXTENSIONS
+                        .contains(dependency.getExtension()))
                 .collect(Collectors.toSet());
 
         List<ResolvedArtifact> declaredButUnused = Sets.difference(declaredArtifacts, necessaryArtifacts).stream()
@@ -93,6 +95,8 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
                 ResolvedDependency dependency = BaselineExactDependencies.INDEXES
                         .artifactsFromDependency(resolvedArtifact);
                 Set<ResolvedArtifact> didYouMean = dependency.getAllModuleArtifacts().stream()
+                        .filter(artifact -> BaselineExactDependencies.VALID_ARTIFACT_EXTENSIONS
+                                .contains(artifact.getExtension()))
                         .flatMap(BaselineExactDependencies.INDEXES::classesFromArtifact)
                         .filter(referencedClasses()::contains)
                         .map(BaselineExactDependencies.INDEXES::classToDependency)
