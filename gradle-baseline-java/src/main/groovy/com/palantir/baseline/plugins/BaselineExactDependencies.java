@@ -17,6 +17,7 @@
 package com.palantir.baseline.plugins;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.palantir.baseline.tasks.CheckImplicitDependenciesTask;
 import com.palantir.baseline.tasks.CheckUnusedDependenciesTask;
 import java.io.File;
@@ -50,6 +51,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     // All applications of this plugin share a single static 'Indexes' instance, because the classes
     // contained in a particular jar are immutable.
     public static final Indexes INDEXES = new Indexes();
+    public static final ImmutableSet<String> VALID_ARTIFACT_EXTENSIONS = ImmutableSet.of("jar", "");
 
     @Override
     public void apply(Project project) {
@@ -98,6 +100,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
         public void populateIndexes(Set<ResolvedDependency> declaredDependencies) {
             Set<ResolvedArtifact> allArtifacts = declaredDependencies.stream()
                     .flatMap(dependency -> dependency.getAllModuleArtifacts().stream())
+                    .filter(dependency -> VALID_ARTIFACT_EXTENSIONS.contains(dependency.getExtension()))
                     .collect(Collectors.toSet());
 
             allArtifacts.forEach(artifact -> {
@@ -111,10 +114,8 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                 }
             });
 
-            declaredDependencies.stream().forEach(dependency -> {
-                Set<ResolvedArtifact> artifacts = dependency.getModuleArtifacts();
-                artifacts.forEach(artifact -> artifactsFromDependency.put(artifact, dependency));
-            });
+            declaredDependencies.forEach(dependency -> dependency.getModuleArtifacts()
+                    .forEach(artifact -> artifactsFromDependency.put(artifact, dependency)));
         }
 
         /** Given a class, what dependency brought it in. */
