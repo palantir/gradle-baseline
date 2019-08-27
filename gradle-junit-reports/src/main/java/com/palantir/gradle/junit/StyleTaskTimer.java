@@ -15,6 +15,7 @@
  */
 package com.palantir.gradle.junit;
 
+import com.palantir.logsafe.exceptions.SafeIllegalArgumentException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.gradle.api.Task;
@@ -34,7 +35,7 @@ public final class StyleTaskTimer implements TaskTimer {
         }
         Long taskTimeNanos = taskTimeNanosByTask.get(styleTask);
         if (taskTimeNanos == null) {
-            throw new IllegalArgumentException("no time available for task");
+            throw new SafeIllegalArgumentException("no time available for task");
         }
         return taskTimeNanos;
     }
