@@ -24,6 +24,7 @@ import com.google.errorprone.apply.ImportOrganizer;
 import com.google.errorprone.apply.SourceFile;
 import com.google.errorprone.refaster.RefasterRuleBuilderScanner;
 import com.google.testing.compile.JavaFileObjects;
+import com.palantir.logsafe.exceptions.SafeIllegalArgumentException;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.util.TreePath;
 import com.sun.tools.javac.tree.JCTree;
@@ -83,7 +84,7 @@ public final class RefasterTestHelper {
                     .filter(compilationUnitTree -> compilationUnitTree instanceof JCTree.JCCompilationUnit)
                     .map(compilationUnitTree -> (JCTree.JCCompilationUnit) compilationUnitTree)
                     .findFirst()
-                    .orElseThrow(() -> new IllegalArgumentException("Failed to compile input lines"));
+                    .orElseThrow(() -> new SafeIllegalArgumentException("Failed to compile input lines"));
 
             DescriptionBasedDiff diff = DescriptionBasedDiff.create(tree, ImportOrganizer.STATIC_FIRST_ORGANIZER);
             transformers.forEach(transformer -> transformer.apply(new TreePath(tree), result.context(), diff));
@@ -110,7 +111,7 @@ public final class RefasterTestHelper {
                 .filter(tree -> tree instanceof ClassTree)
                 .map(tree -> (ClassTree) tree)
                 .findFirst()
-                .orElseThrow(() -> new IllegalArgumentException("No class found in Refaster rule"));
+                .orElseThrow(() -> new SafeIllegalArgumentException("No class found in Refaster rule"));
 
         return ImmutableList.copyOf(RefasterRuleBuilderScanner.extractRules(classTree, result.context()));
     }
