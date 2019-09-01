@@ -63,8 +63,7 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
 
     @TaskAction
     public final void checkUnusedDependencies() {
-        List<Configuration> configurations = dependenciesConfigurations.get();
-        Set<ResolvedDependency> declaredDependencies = configurations.stream()
+        Set<ResolvedDependency> declaredDependencies = dependenciesConfigurations.get().stream()
                 .map(Configuration::getResolvedConfiguration)
                 .flatMap(resolved -> resolved.getFirstLevelModuleDependencies().stream())
                 .collect(Collectors.toSet());
@@ -86,7 +85,9 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
 
         Set<ResolvedArtifact> possiblyUnused = Sets.difference(declaredArtifacts, necessaryArtifacts);
         getLogger().debug("Possibly unused dependencies: {}",
-                possiblyUnused.stream().map(BaselineExactDependencies::asString).collect(Collectors.toList()));
+                possiblyUnused.stream()
+                        .map(BaselineExactDependencies::asString)
+                        .collect(Collectors.toList()));
         List<ResolvedArtifact> declaredButUnused = possiblyUnused.stream()
                 .filter(artifact -> !shouldIgnore(artifact))
                 .sorted(Comparator.comparing(artifact -> artifact.getId().getDisplayName()))
@@ -97,7 +98,7 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
             sb.append(String.format("Found %s dependencies unused during compilation, please delete them from '%s' or "
                     + "choose one of the suggested fixes:\n", declaredButUnused.size(), buildFile()));
             for (ResolvedArtifact resolvedArtifact : declaredButUnused) {
-                sb.append('\t').append(BaselineExactDependencies.asString(resolvedArtifact)).append('\n');
+                sb.append('\t').append(asString(resolvedArtifact)).append('\n');
 
                 // Suggest fixes by looking at all transitive classes, filtering the ones we have declarations on,
                 // and mapping the remaining ones back to the jars they came from.
@@ -117,7 +118,7 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
                 if (!didYouMean.isEmpty()) {
                     sb.append("\t\tDid you mean:\n");
                     didYouMean.forEach(transitive -> sb.append("\t\t\timplementation '")
-                            .append(BaselineExactDependencies.asString(transitive))
+                            .append(asString(transitive))
                             .append("\' \n"));
                 }
             }
@@ -158,7 +159,11 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
     }
 
     private boolean shouldIgnore(ResolvedArtifact artifact) {
-        return ignore.get().contains(BaselineExactDependencies.asString(artifact));
+        return ignore.get().contains(asString(artifact));
+    }
+
+    private static String asString(ResolvedArtifact artifact) {
+        return BaselineExactDependencies.asString(artifact);
     }
 
     @Input
