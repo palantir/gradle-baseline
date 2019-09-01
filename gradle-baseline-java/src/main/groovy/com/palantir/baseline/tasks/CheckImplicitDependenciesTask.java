@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
@@ -43,6 +42,7 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.TaskAction;
 
+@SuppressWarnings("jol")
 public class CheckImplicitDependenciesTask extends DefaultTask {
 
     private final ListProperty<Configuration> dependenciesConfigurations;
@@ -138,12 +138,7 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
     }
 
     private boolean shouldIgnore(ResolvedArtifact artifact) {
-        return ignore.get().contains(asString(artifact));
-    }
-
-    private static String asString(ResolvedArtifact artifact) {
-        ModuleVersionIdentifier id = artifact.getModuleVersion().getId();
-        return id.getGroup() + ":" + id.getName();
+        return ignore.get().contains(BaselineExactDependencies.asString(artifact));
     }
 
     @Input

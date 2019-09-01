@@ -36,6 +36,7 @@ import org.apache.maven.shared.dependency.analyzer.asm.ASMDependencyAnalyzer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.plugins.JavaPlugin;
@@ -62,11 +63,17 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                     .getByName(SourceSet.MAIN_SOURCE_SET_NAME);
             Configuration compileClasspath = project.getConfigurations()
                     .getByName(JavaPlugin.COMPILE_CLASSPATH_CONFIGURATION_NAME);
+            Configuration compileOnlyClasspath = project.getConfigurations()
+                    .getByName(JavaPlugin.COMPILE_ONLY_CONFIGURATION_NAME);
+            Configuration annotationProcessorClasspath = project.getConfigurations()
+                    .getByName(JavaPlugin.ANNOTATION_PROCESSOR_CONFIGURATION_NAME);
 
             project.getTasks().create("checkUnusedDependencies", CheckUnusedDependenciesTask.class, task -> {
                 task.dependsOn(JavaPlugin.CLASSES_TASK_NAME);
                 task.setSourceClasses(mainSourceSet.getOutput().getClassesDirs());
                 task.dependenciesConfiguration(compileClasspath);
+                task.compileOnlyConfiguration(compileOnlyClasspath);
+                task.annotationProcessorConfiguration(annotationProcessorClasspath);
 
                 // this is liberally applied to ease the Java8 -> 11 transition
                 task.ignore("javax.annotation", "javax.annotation-api");
@@ -89,6 +96,14 @@ public final class BaselineExactDependencies implements Plugin<Project> {
         } catch (IOException e) {
             throw new RuntimeException("Unable to analyze " + classFile, e);
         }
+    }
+
+    public static String asString(ResolvedArtifact artifact) {
+        return asString(artifact.getModuleVersion().getId());
+    }
+
+    public static String asString(ModuleVersionIdentifier id) {
+        return id.getGroup() + ":" + id.getName();
     }
 
     @ThreadSafe

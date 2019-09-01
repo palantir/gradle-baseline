@@ -27,6 +27,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.artifacts.Configuration;
@@ -34,6 +35,7 @@ import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
@@ -45,6 +47,8 @@ import org.gradle.api.tasks.TaskAction;
 public class CheckUnusedDependenciesTask extends DefaultTask {
 
     private final ListProperty<Configuration> dependenciesConfigurations;
+    private final ListProperty<Configuration> compileOnlyDependenciesConfigurations;
+    private final ListProperty<Configuration> annotationProcessorDependenciesConfigurations;
     private final Property<FileCollection> sourceClasses;
     private final SetProperty<String> ignore;
 
@@ -53,6 +57,10 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
         setDescription("Ensures no extraneous dependencies are declared");
         dependenciesConfigurations = getProject().getObjects().listProperty(Configuration.class);
         dependenciesConfigurations.set(Collections.emptyList());
+        compileOnlyDependenciesConfigurations = getProject().getObjects().listProperty(Configuration.class);
+        compileOnlyDependenciesConfigurations.set(Collections.emptyList());
+        annotationProcessorDependenciesConfigurations = getProject().getObjects().listProperty(Configuration.class);
+        annotationProcessorDependenciesConfigurations.set(Collections.emptyList());
         sourceClasses = getProject().getObjects().property(FileCollection.class);
         ignore = getProject().getObjects().setProperty(String.class);
         ignore.set(Collections.emptySet());
@@ -60,7 +68,8 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
 
     @TaskAction
     public final void checkUnusedDependencies() {
-        Set<ResolvedDependency> declaredDependencies = dependenciesConfigurations.get().stream()
+        List<Configuration> configurations = dependenciesConfigurations.get();
+        Set<ResolvedDependency> declaredDependencies = configurations.stream()
                 .map(Configuration::getResolvedConfiguration)
                 .flatMap(resolved -> resolved.getFirstLevelModuleDependencies().stream())
                 .collect(Collectors.toSet());
@@ -78,7 +87,12 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
                         .contains(dependency.getExtension()))
                 .collect(Collectors.toSet());
 
-        List<ResolvedArtifact> declaredButUnused = Sets.difference(declaredArtifacts, necessaryArtifacts).stream()
+        excludeIgnoredDependencies();
+
+        Set<ResolvedArtifact> possiblyUnused = Sets.difference(declaredArtifacts, necessaryArtifacts);
+        getLogger().debug("Possibly unused dependencies: {}",
+                possiblyUnused.stream().map(BaselineExactDependencies::asString).collect(Collectors.toList()));
+        List<ResolvedArtifact> declaredButUnused = possiblyUnused.stream()
                 .filter(artifact -> !shouldIgnore(artifact))
                 .sorted(Comparator.comparing(artifact -> artifact.getId().getDisplayName()))
                 .collect(Collectors.toList());
@@ -88,7 +102,7 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
             sb.append(String.format("Found %s dependencies unused during compilation, please delete them from '%s' or "
                     + "choose one of the suggested fixes:\n", declaredButUnused.size(), buildFile()));
             for (ResolvedArtifact resolvedArtifact : declaredButUnused) {
-                sb.append('\t').append(asString(resolvedArtifact)).append('\n');
+                sb.append('\t').append(BaselineExactDependencies.asString(resolvedArtifact)).append('\n');
 
                 // Suggest fixes by looking at all transitive classes, filtering the ones we have declarations on,
                 // and mapping the remaining ones back to the jars they came from.
@@ -108,12 +122,33 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
                 if (!didYouMean.isEmpty()) {
                     sb.append("\t\tDid you mean:\n");
                     didYouMean.forEach(transitive -> sb.append("\t\t\timplementation '")
-                            .append(asString(transitive))
+                            .append(BaselineExactDependencies.asString(transitive))
                             .append("\' \n"));
                 }
             }
             throw new GradleException(sb.toString());
         }
+    }
+
+    private void excludeIgnoredDependencies() {
+        Stream.concat(
+                compileOnlyDependenciesConfigurations.get().stream(),
+                annotationProcessorDependenciesConfigurations.get().stream())
+                .forEach(config -> {
+                    if (JavaPlugin.COMPILE_ONLY_CONFIGURATION_NAME.equals(config.getName())) {
+                        config.getResolvedConfiguration().getFirstLevelModuleDependencies().forEach(dependency -> {
+                            ignoreDependency(config, dependency.getModule().getId());
+                            dependency.getModuleArtifacts().forEach(artifact ->
+                                    ignoreDependency(config, artifact.getModuleVersion().getId()));
+                        });
+                    }
+                });
+    }
+
+    private void ignoreDependency(Configuration config, ModuleVersionIdentifier id) {
+        String dependencyId = BaselineExactDependencies.asString(id);
+        getLogger().info("Ignoring {} dependency: '{}'", config.getName(), dependencyId);
+        ignore.add(dependencyId);
     }
 
     /** All classes which are mentioned in this project's source code. */
@@ -128,12 +163,7 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
     }
 
     private boolean shouldIgnore(ResolvedArtifact artifact) {
-        return ignore.get().contains(asString(artifact));
-    }
-
-    private static String asString(ResolvedArtifact artifact) {
-        ModuleVersionIdentifier id = artifact.getModuleVersion().getId();
-        return id.getGroup() + ":" + id.getName();
+        return ignore.get().contains(BaselineExactDependencies.asString(artifact));
     }
 
     @Input
@@ -143,6 +173,24 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
 
     public final void dependenciesConfiguration(Configuration dependenciesConfiguration) {
         this.dependenciesConfigurations.add(Objects.requireNonNull(dependenciesConfiguration));
+    }
+
+    @Input
+    public final Provider<List<Configuration>> getCompileOnlyDependenciesConfigurations() {
+        return compileOnlyDependenciesConfigurations;
+    }
+
+    public final void compileOnlyConfiguration(Configuration dependenciesConfiguration) {
+        this.compileOnlyDependenciesConfigurations.add(Objects.requireNonNull(dependenciesConfiguration));
+    }
+
+    @Input
+    public final Provider<List<Configuration>> getAnnotationProcessorDependenciesConfigurations() {
+        return annotationProcessorDependenciesConfigurations;
+    }
+
+    public final void annotationProcessorConfiguration(Configuration dependenciesConfiguration) {
+        this.annotationProcessorDependenciesConfigurations.add(Objects.requireNonNull(dependenciesConfiguration));
     }
 
     @InputFiles
