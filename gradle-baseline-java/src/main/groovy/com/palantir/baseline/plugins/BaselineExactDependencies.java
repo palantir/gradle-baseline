@@ -72,8 +72,8 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                 task.dependsOn(JavaPlugin.CLASSES_TASK_NAME);
                 task.setSourceClasses(mainSourceSet.getOutput().getClassesDirs());
                 task.dependenciesConfiguration(compileClasspath);
-                task.compileOnlyConfiguration(compileOnlyClasspath);
-                task.annotationProcessorConfiguration(annotationProcessorClasspath);
+                task.sourceOnlyConfiguration(compileOnlyClasspath);
+                task.sourceOnlyConfiguration(annotationProcessorClasspath);
 
                 // this is liberally applied to ease the Java8 -> 11 transition
                 task.ignore("javax.annotation", "javax.annotation-api");
