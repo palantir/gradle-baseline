@@ -15,6 +15,8 @@ dependencies {
     compile 'net.ltgt.gradle:gradle-errorprone-plugin'
     compile 'org.apache.maven.shared:maven-dependency-analyzer'
     compile 'org.github.ngbinh.scalastyle:gradle-scalastyle-plugin_2.11'
+
+    implementation project(':baseline-error-prone')
     implementation 'org.eclipse.jgit:org.eclipse.jgit'
 
     testCompile gradleTestKit()
