@@ -1,0 +1,15 @@
+type: improvement
+improvement:
+  description: |-
+    Setting the following will promote all upstream & baseline provided
+    error-prone checks to error, enable compiler lint checks (`-Werror`,
+    `-Xlint:deprecation`, `-Xlint:unchecked`), and also promote all compiler
+    warnings to error.
+
+    ```
+    plugins.withId('com.palantir.baseline-error-prone', {
+        ext.'com.palantir.baseline-error-prone.strict' = true
+    })
+    ```
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/784
