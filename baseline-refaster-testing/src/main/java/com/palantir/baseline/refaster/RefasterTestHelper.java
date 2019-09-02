@@ -37,6 +37,7 @@ import java.util.List;
 import javax.tools.JavaFileObject;
 import org.assertj.core.api.Assertions;
 
+@SuppressWarnings("PreferSafeLoggableExceptions")
 public final class RefasterTestHelper {
 
     private final List<CodeTransformer> transformers;
@@ -65,7 +66,7 @@ public final class RefasterTestHelper {
         return new RefactoringTestInput(transformers, JavaFileObjects.forSourceLines(fullyQualifiedName, lines));
     }
 
-    public final class RefactoringTestInput {
+    public static final class RefactoringTestInput {
 
         private List<CodeTransformer> transformers;
         private JavaFileObject input;

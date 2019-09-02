@@ -28,6 +28,7 @@ public final class StyleTaskTimer implements TaskTimer {
     private long lastStartTime;
 
     @Override
+    @SuppressWarnings("PreferSafeLoggableExceptions")
     public long getTaskTimeNanos(Task styleTask) {
         if (!isStyleTask(styleTask)) {
             throw new ClassCastException("not a style task");
