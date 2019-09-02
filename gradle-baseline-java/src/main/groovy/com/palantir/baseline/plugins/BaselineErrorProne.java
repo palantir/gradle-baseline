@@ -233,7 +233,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
         });
     }
 
-    private Action<ErrorProneOptions> configureErrorProne(
+    private static Action<ErrorProneOptions> configureErrorProne(
             Project project,
             JavaCompile javaCompile,
             JavaVersion jdkVersion,
@@ -303,20 +303,24 @@ public final class BaselineErrorProne implements Plugin<Project> {
         };
     }
 
-    private boolean isRefactoring(Project project) {
+    private static boolean isRefactoring(Project project) {
         return isRefasterRefactoring(project) || isErrorProneRefactoring(project);
     }
 
-    private boolean isRefasterRefactoring(Project project) {
+    private static boolean isRefasterRefactoring(Project project) {
         return project.hasProperty(PROP_REFASTER_APPLY);
     }
 
-    private boolean isErrorProneRefactoring(Project project) {
+    private static boolean isErrorProneRefactoring(Project project) {
         return project.hasProperty(PROP_ERROR_PRONE_APPLY);
     }
 
-    private boolean isStrict(Project project) {
-        return project.hasProperty(PROP_STRICT) && Boolean.TRUE.equals(project.property(PROP_STRICT));
+    private static boolean isStrict(Project project) {
+        return project.hasProperty(PROP_STRICT) && isTrue(project.property(PROP_STRICT));
+    }
+
+    private static boolean isTrue(Object property) {
+        return Boolean.TRUE.equals(property) || "true".equalsIgnoreCase(String.valueOf(property));
     }
 
     private static Set<String> strictModeChecksToPromote() {
