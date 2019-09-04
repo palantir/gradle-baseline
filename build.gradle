@@ -45,6 +45,9 @@ allprojects {
 
     pluginManager.withPlugin('java') {
         sourceCompatibility = 1.8
+        tasks.withType(JavaCompile) {
+            options.compilerArgs += ['-Werror', '-Xlint:deprecation']
+        }
     }
 
     apply plugin: 'org.inferred.processors'
