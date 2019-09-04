@@ -43,6 +43,6 @@ class BaselineIntegrationTest extends AbstractPluginTest {
         with().withArguments('-s').withGradleVersion(gradleVersion).build()
 
         where:
-        gradleVersion << ['5.0']
+        gradleVersion << ['5.0', '6.0-20190904072820+0000']
     }
 }
