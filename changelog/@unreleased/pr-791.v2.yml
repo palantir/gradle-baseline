@@ -1,0 +1,8 @@
+type: improvement
+improvement:
+  description: Compile with `-Werror` and `-Xlint:deprecation` to catch deprecations
+    when they're introduced instead of when they become compilation error. This allows
+    us to future proof early before regular users are hit with those issues in their
+    projects
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/791
