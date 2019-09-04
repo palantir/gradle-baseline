@@ -48,9 +48,6 @@ public final class CheckstyleReportHandler extends ReportHandler<Checkstyle> {
                         .message(attributes.getValue("message"))
                         .build());
                 break;
-
-            default:
-                break;
         }
     }
 

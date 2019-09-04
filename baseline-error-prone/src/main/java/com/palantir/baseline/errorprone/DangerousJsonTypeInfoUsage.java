@@ -50,7 +50,7 @@ public final class DangerousJsonTypeInfoUsage extends BugChecker implements BugC
                     )));
 
     private static Matcher<ExpressionTree> treeEqualsStringMatcher(String value) {
-        return (expressionTree, state) -> expressionTree.toString().equals(value);
+        return (expressionTree, state) -> state.getSourceForNode(expressionTree).equals(value);
     }
 
     @Override

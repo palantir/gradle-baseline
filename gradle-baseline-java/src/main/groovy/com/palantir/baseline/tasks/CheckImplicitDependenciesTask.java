@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
@@ -138,12 +137,7 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
     }
 
     private boolean shouldIgnore(ResolvedArtifact artifact) {
-        return ignore.get().contains(asString(artifact));
-    }
-
-    private static String asString(ResolvedArtifact artifact) {
-        ModuleVersionIdentifier id = artifact.getModuleVersion().getId();
-        return id.getGroup() + ":" + id.getName();
+        return ignore.get().contains(BaselineExactDependencies.asString(artifact));
     }
 
     @Input

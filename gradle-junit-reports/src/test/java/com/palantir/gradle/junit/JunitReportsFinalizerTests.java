@@ -104,7 +104,7 @@ public class JunitReportsFinalizerTests {
         String modifiedReportXml = originalReportXml.replace(
                 ROOT.toString(), projectDir.getRoot().getCanonicalPath());
         File modifiedReportFile = projectDir.newFile();
-        Files.write(modifiedReportXml, modifiedReportFile, StandardCharsets.UTF_8);
+        Files.write(modifiedReportXml.getBytes(StandardCharsets.UTF_8), modifiedReportFile);
 
         xmlReport.setDestination(modifiedReportFile);
         return checkstyle;
