@@ -29,7 +29,7 @@ See also the [Baseline Java Style Guide and Best Practises](./docs).
 
 
 ## Usage
-The baseline set of plugins requires at least Gradle 4.10.0.
+The baseline set of plugins requires at least Gradle 5.0.
 
 It is recommended to add `apply plugin: 'com.palantir.baseline'` to your root project's build.gradle.  Individual plugins will be automatically applied to appropriate subprojects.
 
