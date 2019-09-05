@@ -8,14 +8,14 @@ buildscript {
     dependencies {
         classpath 'com.gradle.publish:plugin-publish-plugin:0.10.0'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
-        classpath 'com.netflix.nebula:nebula-publishing-plugin:13.2.0'
+        classpath 'com.netflix.nebula:nebula-publishing-plugin:13.3.0'
         classpath 'com.netflix.nebula:gradle-info-plugin:5.0.3'
         classpath 'com.palantir.baseline:gradle-baseline-java:1.17.2'
     }
 }
 
 plugins {
-    id 'com.palantir.git-version' version '0.11.0'
+    id 'com.palantir.git-version' version '0.12.2'
     id 'org.inferred.processors' version '3.1.0'
 }
 
