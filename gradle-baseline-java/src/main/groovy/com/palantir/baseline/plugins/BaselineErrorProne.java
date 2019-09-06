@@ -140,19 +140,8 @@ public final class BaselineErrorProne implements Plugin<Project> {
                                     // https://github.com/google/error-prone/pull/947
                                     errorProneOptions.getErrorproneArgumentProviders().add(() -> {
                                         // Don't apply checks that have been explicitly disabled
-                                        Stream<String> errorProneChecks = errorProneExtension
-                                                .getPatchChecks()
-                                                .get()
-                                                .stream()
-                                                .filter(check -> {
-                                                    if (checkExplicitlyDisabled(errorProneOptions, check)) {
-                                                        log.info("Task {}: not applying errorprone check {} because it "
-                                                                + "has severity OFF in errorProneOptions",
-                                                                javaCompile.getPath(), check);
-                                                        return false;
-                                                    }
-                                                    return true;
-                                                });
+                                        Stream<String> errorProneChecks = getNotDisabledErrorproneChecks(
+                                                errorProneExtension, javaCompile, errorProneOptions);
                                         return ImmutableList.of(
                                                 "-XepPatchChecks:" + Joiner.on(',').join(errorProneChecks.iterator()),
                                                 "-XepPatchLocation:IN_PLACE");
@@ -214,6 +203,22 @@ public final class BaselineErrorProne implements Plugin<Project> {
                                             .setBootClasspath(new LazyConfigurationList(errorProneFiles)));
                         });
             }
+        });
+    }
+
+    private static Stream<String> getNotDisabledErrorproneChecks(
+            BaselineErrorProneExtension errorProneExtension,
+            JavaCompile javaCompile,
+            ErrorProneOptions errorProneOptions) {
+        return errorProneExtension.getPatchChecks().get().stream().filter(check -> {
+            if (checkExplicitlyDisabled(errorProneOptions, check)) {
+                log.info(
+                        "Task {}: not applying errorprone check {} because it has severity OFF in errorProneOptions",
+                        javaCompile.getPath(),
+                        check);
+                return false;
+            }
+            return true;
         });
     }
 
