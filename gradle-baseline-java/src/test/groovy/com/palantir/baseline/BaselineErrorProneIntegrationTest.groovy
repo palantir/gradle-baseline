@@ -144,7 +144,6 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
                 """.stripIndent(),
         ]
 
-        when:
         buildFile << standardBuildFile
         buildFile << """
             tasks.withType(JavaCompile) {
@@ -154,7 +153,8 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
                 implementation 'org.slf4j:slf4j-api:1.7.25'
             }
         """.stripIndent()
-        file('src/main/java/test/Test.java') << '''
+
+        def correctJavaFile = '''
         package test;
         import org.slf4j.LoggerFactory;
         import org.slf4j.Logger;
@@ -165,21 +165,12 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
             }
         }
         '''.stripIndent()
+        file('src/main/java/test/Test.java') << correctJavaFile
 
-        then:
+        expect:
         BuildResult result = with('compileJava', '-PerrorProneApply').build()
         result.task(":compileJava").outcome == TaskOutcome.SUCCESS
-        file('src/main/java/test/Test.java').text == '''
-        package test;
-        import org.slf4j.LoggerFactory;
-        import org.slf4j.Logger;
-        public class Test {
-            void test() {
-                Logger log = LoggerFactory.getLogger("foo");
-                log.info("Hi there {}", "non safe arg");
-            }
-        }
-        '''.stripIndent()
+        file('src/main/java/test/Test.java').text == correctJavaFile
 
         where:
         checkConfigurationMethod << CheckConfigurationMethod.values()
