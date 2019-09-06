@@ -130,14 +130,14 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         '''.stripIndent()
     }
 
-    enum TurnOffMethod { ARG, DSL }
+    enum CheckConfigurationMethod { ARG, DSL }
 
     @Unroll
-    def 'compileJava does not apply patches for error-prone checks that were turned OFF via #turnOffMethod'() {
+    def 'compileJava does not apply patches for error-prone checks that were turned OFF via #checkConfigurationMethod'() {
         def checkName = "Slf4jLogsafeArgs"
         def turnOffCheck = [
-                (TurnOffMethod.ARG): "options.errorprone.errorproneArgs += ['-Xep:$checkName:OFF']",
-                (TurnOffMethod.DSL): """
+                (CheckConfigurationMethod.ARG): "options.errorprone.errorproneArgs += ['-Xep:$checkName:OFF']",
+                (CheckConfigurationMethod.DSL): """
                     options.errorprone {
                         check '$checkName', net.ltgt.gradle.errorprone.CheckSeverity.OFF
                     }                    
@@ -148,7 +148,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         buildFile << standardBuildFile
         buildFile << """
             tasks.withType(JavaCompile) {
-                ${turnOffCheck[turnOffMethod]}
+                ${turnOffCheck[checkConfigurationMethod]}
             }
             dependencies {
                 implementation 'org.slf4j:slf4j-api:1.7.25'
@@ -182,6 +182,6 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         '''.stripIndent()
 
         where:
-        turnOffMethod << TurnOffMethod.values()
+        checkConfigurationMethod << CheckConfigurationMethod.values()
     }
 }
