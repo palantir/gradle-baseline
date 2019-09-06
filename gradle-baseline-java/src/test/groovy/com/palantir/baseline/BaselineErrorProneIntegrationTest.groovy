@@ -128,4 +128,68 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         }
         '''.stripIndent()
     }
+
+    def 'compileJava does not apply patches for error-prone checks that were turned OFF'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << """
+            tasks.withType(Java) {
+                ${turnOffCheck}
+            }
+        """.stripIndent()
+        file('src/main/java/test/Test.java') << '''
+        package test;
+        import java.util.Optional;
+        import org.slf4j.LoggerFactory;
+        import org.slf4j.Logger;
+        public class Test {
+            void test() {
+                int[] a = {1, 2, 3};
+                int[] b = {1, 2, 3};
+                if (a.equals(b)) {
+                  System.out.println("arrays are equal!");
+                  Optional.of("hello").orElse(System.getProperty("world"));
+                  
+                }
+                Logger log = LoggerFactory.getLogger("foo");
+                log.info("Hi there {}", "non safe arg");
+            }
+        }
+        '''.stripIndent()
+
+        then:
+        BuildResult result = with('compileJava', '-PerrorProneApply').build()
+        result.task(":compileJava").outcome == TaskOutcome.SUCCESS
+        file('src/main/java/test/Test.java').text == '''
+        package test;
+        import java.util.Arrays;
+        import java.util.Optional;
+        import org.slf4j.LoggerFactory;
+        import org.slf4j.Logger;
+        public class Test {
+            void test() {
+                int[] a = {1, 2, 3};
+                int[] b = {1, 2, 3};
+                if (Arrays.equals(a, b)) {
+                  System.out.println("arrays are equal!");
+                  Optional.of("hello").orElseGet(() -> System.getProperty("world"));
+                }
+                Logger log = LoggerFactory.getLogger("foo");
+                log.info("Hi there {}", "non safe arg");
+            }
+        }
+        '''.stripIndent()
+
+        where:
+        turnOffCheck << [
+                // via arg
+                "options.errorprone.errorproneArgs += ['-Xep:Slf4jLogsafeArgs:OFF']",
+                // via DSL
+                """
+                options.errorprone {
+                    check('Slf4jLogsafeArgs', CheckSeverity.OFF)
+                }                    
+                """.stripIndent(),
+        ]
+    }
 }
