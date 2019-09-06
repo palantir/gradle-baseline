@@ -16,16 +16,12 @@
 
 package com.palantir.baseline.plugins;
 
-import com.palantir.baseline.tasks.CheckClassUniquenessTask;
+import com.palantir.baseline.plugins.rules.BaselineClassUniquenessRule;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.plugins.JavaPlugin;
-import org.gradle.api.tasks.TaskProvider;
-import org.gradle.util.GUtil;
 
 /**
  * This plugin is similar to https://github.com/nebula-plugins/gradle-lint-plugin/wiki/Duplicate-Classes-Rule
- * but goes one step further and actually hashes any identically named class files to figure out if they're
+ * but goes one step further and actually hashes any identically named classfiles to figure out if they're
  * <i>completely</i> identical (and therefore safely interchangeable).
  *
  * The task only fails if it finds classes which have the same name but different implementations.
@@ -33,19 +29,14 @@ import org.gradle.util.GUtil;
 public class BaselineClassUniquenessPlugin extends AbstractBaselinePlugin {
     @Override
     public final void apply(Project project) {
-        project.getPlugins().withId("java", plugin -> {
-            Configuration runtimeClasspath =
-                    project.getConfigurations().getByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME);
-            TaskProvider<CheckClassUniquenessTask> checkRuntimeClasspathTask = project
-                    .getTasks()
-                    .register(taskNameForConfiguration(runtimeClasspath), CheckClassUniquenessTask.class, task -> {
-                        task.setConfiguration(runtimeClasspath);
-                    });
-            project.getTasks().getByName("check").dependsOn(checkRuntimeClasspathTask);
-        });
-    }
+        BaselineClassUniquenessRule rule = new BaselineClassUniquenessRule(project);
 
-    private static String taskNameForConfiguration(Configuration configuration) {
-        return GUtil.toLowerCamelCase("check " + configuration.getName() + " classUniqueness");
+        project.getTasks().addRule(rule);
+
+        project.getPlugins().withId("java", plugin -> {
+            rule.apply("checkRuntimeClassUniqueness");
+            project.getTasks().getByName("check")
+                    .dependsOn(project.getTasks().getByName("checkRuntimeClassUniqueness"));
+        });
     }
 }
