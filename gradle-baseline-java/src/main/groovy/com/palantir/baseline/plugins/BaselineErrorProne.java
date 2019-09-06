@@ -146,7 +146,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
                                                 .stream()
                                                 .filter(check -> {
                                                     if (checkExplicitlyDisabled(errorProneOptions, check)) {
-                                                        log.warn("Task {}: not applying errorprone check {} because it "
+                                                        log.info("Task {}: not applying errorprone check {} because it "
                                                                 + "has severity OFF in errorProneOptions",
                                                                 javaCompile.getPath(), check);
                                                         return false;
