@@ -19,6 +19,7 @@ package com.palantir.baseline
 
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
+import spock.lang.Unroll
 
 /**
  * This test depends on ./gradlew :baseline-error-prone:publishToMavenLocal
@@ -129,12 +130,28 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         '''.stripIndent()
     }
 
-    def 'compileJava does not apply patches for error-prone checks that were turned OFF'() {
+    enum TurnOffMethod { ARG, DSL }
+
+    @Unroll
+    def 'compileJava does not apply patches for error-prone checks that were turned OFF via #turnOffMethod'() {
+        def checkName = "Slf4jLogsafeArgs"
+        def turnOffCheck = [
+                (TurnOffMethod.ARG): "options.errorprone.errorproneArgs += ['-Xep:$checkName:OFF']",
+                (TurnOffMethod.DSL): """
+                    options.errorprone {
+                        check '$checkName', net.ltgt.gradle.errorprone.CheckSeverity.OFF
+                    }                    
+                """.stripIndent(),
+        ]
+
         when:
         buildFile << standardBuildFile
         buildFile << """
             tasks.withType(JavaCompile) {
-                ${turnOffCheck}
+                ${turnOffCheck[turnOffMethod]}
+            }
+            dependencies {
+                implementation 'org.slf4j:slf4j-api:1.7.25'
             }
         """.stripIndent()
         file('src/main/java/test/Test.java') << '''
@@ -165,15 +182,6 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         '''.stripIndent()
 
         where:
-        turnOffCheck << [
-                // via arg
-                "options.errorprone.errorproneArgs += ['-Xep:Slf4jLogsafeArgs:OFF']",
-                // via DSL
-                """
-                options.errorprone {
-                    check('Slf4jLogsafeArgs', CheckSeverity.OFF)
-                }                    
-                """.stripIndent(),
-        ]
+        turnOffMethod << TurnOffMethod.values()
     }
 }

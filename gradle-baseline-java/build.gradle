@@ -23,7 +23,6 @@ dependencies {
     testCompile 'junit:junit'
     testCompile 'net.lingala.zip4j:zip4j'
     testCompile 'org.assertj:assertj-core'
-    testRuntimeOnly 'org.slf4j:slf4j-api'
 
     annotationProcessor 'org.inferred:freebuilder'
     compileOnly 'org.inferred:freebuilder'
