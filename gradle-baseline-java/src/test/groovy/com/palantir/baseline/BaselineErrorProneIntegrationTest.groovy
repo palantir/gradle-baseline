@@ -133,24 +133,16 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         when:
         buildFile << standardBuildFile
         buildFile << """
-            tasks.withType(Java) {
+            tasks.withType(JavaCompile) {
                 ${turnOffCheck}
             }
         """.stripIndent()
         file('src/main/java/test/Test.java') << '''
         package test;
-        import java.util.Optional;
         import org.slf4j.LoggerFactory;
         import org.slf4j.Logger;
         public class Test {
             void test() {
-                int[] a = {1, 2, 3};
-                int[] b = {1, 2, 3};
-                if (a.equals(b)) {
-                  System.out.println("arrays are equal!");
-                  Optional.of("hello").orElse(System.getProperty("world"));
-                  
-                }
                 Logger log = LoggerFactory.getLogger("foo");
                 log.info("Hi there {}", "non safe arg");
             }
@@ -162,18 +154,10 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         result.task(":compileJava").outcome == TaskOutcome.SUCCESS
         file('src/main/java/test/Test.java').text == '''
         package test;
-        import java.util.Arrays;
-        import java.util.Optional;
         import org.slf4j.LoggerFactory;
         import org.slf4j.Logger;
         public class Test {
             void test() {
-                int[] a = {1, 2, 3};
-                int[] b = {1, 2, 3};
-                if (Arrays.equals(a, b)) {
-                  System.out.println("arrays are equal!");
-                  Optional.of("hello").orElseGet(() -> System.getProperty("world"));
-                }
                 Logger log = LoggerFactory.getLogger("foo");
                 log.info("Hi there {}", "non safe arg");
             }
