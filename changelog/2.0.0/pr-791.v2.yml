@@ -1,0 +1,5 @@
+type: break
+break:
+  description: Add gradle 6.0-20190904072820+0000 compatibiltiy. This raises minimum required version of gradle for plugins from this repo to 5.0. Additionally add '-Werror' and '-Xlint:deprecation' so we can detect compatiblilty issues early
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/791

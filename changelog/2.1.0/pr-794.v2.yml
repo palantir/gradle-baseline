@@ -1,0 +1,6 @@
+type: feature
+feature:
+  description: Automatically configure the [Intellij Eclipse format plugin](https://plugins.jetbrains.com/plugin/6546-eclipse-code-formatter)
+    to use the eclipse formatter
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/794

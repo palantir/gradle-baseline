@@ -19,6 +19,7 @@ package com.palantir.baseline.plugins
 import groovy.transform.CompileStatic
 import groovy.xml.XmlUtil
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.transport.URIish
@@ -27,7 +28,6 @@ import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.FileTreeElement
 import org.gradle.api.specs.Spec
-import org.gradle.api.tasks.compile.JavaCompile
 import org.gradle.plugins.ide.idea.GenerateIdeaModule
 import org.gradle.plugins.ide.idea.GenerateIdeaProject
 import org.gradle.plugins.ide.idea.GenerateIdeaWorkspace
@@ -51,6 +51,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
                     addCodeStyle(node)
                     addCopyright(node)
                     addCheckstyle(node)
+                    addEclipseFormat(node)
                     addGit(node)
                     addInspectionProjectProfile(node)
                     addJavacSettings(node)
@@ -136,6 +137,41 @@ class BaselineIdea extends AbstractBaselinePlugin {
         copyrightManager.@default = lastFileName
     }
 
+    private void addEclipseFormat(node) {
+        def baselineFormat = project.plugins.findPlugin(BaselineFormat)
+        if (baselineFormat == null) {
+            project.logger.debug "Baseline: Skipping IDEA eclipse format configuration since baseline-format not applied"
+            return
+        }
+
+        if (!BaselineFormat.eclipseFormattingEnabled(project)) {
+            project.logger.debug "Baseline: Not configuring EclipseCodeFormatter because com.palantir.baseline-format.eclipse is not enabled in gradle.properties"
+            return;
+        }
+
+        Path formatterConfig = BaselineFormat.eclipseConfigFile(project)
+        if (!Files.exists(formatterConfig)) {
+            project.logger.warn "Please run ./gradlew baselineUpdateConfig to create eclipse formatter config: " + formatterConfig
+            return
+        }
+
+        project.logger.debug "Baseline: Configuring EclipseCodeFormatter plugin for Idea"
+        node.append(new XmlParser().parseText("""
+             <component name="EclipseCodeFormatterProjectSettings">
+                <option name="projectSpecificProfile">
+                  <ProjectSpecificProfile>
+                    <option name="formatter" value="ECLIPSE" />
+                    <option name="importOrder" value="" />
+                    <option name="pathToConfigFileJava" value="\$PROJECT_DIR\$/.baseline/spotless/eclipse.xml" />
+                    <option name="selectedJavaProfile" value="PalantirStyle" />
+                  </ProjectSpecificProfile>
+                </option>
+              </component>
+            """))
+        def externalDependencies = matchOrCreateChild(node, 'component', [name: 'ExternalDependencies'])
+        matchOrCreateChild(externalDependencies, 'plugin', [id: 'EclipseCodeFormatter'])
+    }
+
     private void addCheckstyle(node) {
         def checkstyle = project.plugins.findPlugin(BaselineCheckstyle)
         if (checkstyle == null) {
@@ -161,7 +197,6 @@ class BaselineIdea extends AbstractBaselinePlugin {
               </option>
             </component>
             """.stripIndent()))
-
         def externalDependencies = matchOrCreateChild(node, 'component', [name: 'ExternalDependencies'])
         matchOrCreateChild(externalDependencies, 'plugin', [id: 'CheckStyle-IDEA'])
     }

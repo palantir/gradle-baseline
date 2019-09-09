@@ -37,6 +37,7 @@ public final class BaselineRefasterCompiler implements Plugin {
     }
 
     @Override
+    @SuppressWarnings("PreferSafeLoggingPreconditions")
     public void init(JavacTask task, String... args) {
         List<String> listArgs = Arrays.asList(args);
         int outIndex = listArgs.indexOf("--out");

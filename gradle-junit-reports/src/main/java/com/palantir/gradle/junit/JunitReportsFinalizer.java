@@ -60,8 +60,8 @@ public class JunitReportsFinalizer extends DefaultTask {
     private Task styleTask;
     private TaskTimer taskTimer;
     private FailuresSupplier failuresSupplier;
-    private final RegularFileProperty targetFile = getProject().getLayout().fileProperty();
-    private final DirectoryProperty reportDir = getProject().getLayout().directoryProperty();
+    private final RegularFileProperty targetFile = getProject().getObjects().fileProperty();
+    private final DirectoryProperty reportDir = getProject().getObjects().directoryProperty();
 
     @Inject
     public JunitReportsFinalizer() { }
