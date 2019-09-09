@@ -16,6 +16,8 @@
 
 package com.palantir.baseline
 
+import com.google.common.io.Resources
+import java.nio.charset.Charset
 import org.apache.commons.io.FileUtils
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
@@ -152,4 +154,17 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         BuildResult result = with('spotlessJavaCheck').build()
         result.task(":spotlessJava").outcome == TaskOutcome.SUCCESS
     }
+
+    def 'format ignores blank lines in block or javadoc comment'() {
+        when:
+        buildFile << standardBuildFile
+        def javaFileContents = Resources.toString(Resources.getResource(this.class, "blank-lines-in-comments.java"), Charset.defaultCharset())
+        file('src/main/java/test/Test.java').text = javaFileContents
+
+        then:
+        BuildResult result = with('spotlessJavaCheck').build()
+        result.task(":spotlessJava").outcome == TaskOutcome.SUCCESS
+        file('src/main/java/test/Test.java').text == javaFileContents
+    }
+
 }
