@@ -155,16 +155,21 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         result.task(":spotlessJava").outcome == TaskOutcome.SUCCESS
     }
 
-    def 'format ignores blank lines in block or javadoc comment'() {
+    def 'format trims blank lines in block or javadoc comment'() {
         when:
         buildFile << standardBuildFile
-        def javaFileContents = Resources.toString(Resources.getResource(this.class, "blank-lines-in-comments.java"), Charset.defaultCharset())
+        def javaFileContents = resourceAsString("blank-lines-in-comments.java")
         file('src/main/java/test/Test.java').text = javaFileContents
 
         then:
-        BuildResult result = with('spotlessJavaCheck').build()
-        result.task(":spotlessJava").outcome == TaskOutcome.SUCCESS
-        file('src/main/java/test/Test.java').text == javaFileContents
+        BuildResult result = with('format').build()
+        result.task(":spotlessJavaApply").outcome == TaskOutcome.SUCCESS
+        def javaFileContentsFixed = resourceAsString("blank-lines-in-comments-fixed.java")
+        file('src/main/java/test/Test.java').text == javaFileContentsFixed
+    }
+
+    private String resourceAsString(String fileName) {
+        Resources.toString(Resources.getResource(this.class, fileName), Charset.defaultCharset())
     }
 
 }
