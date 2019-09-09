@@ -16,7 +16,6 @@
 
 package com.palantir.baseline.plugins;
 
-import com.google.common.base.Preconditions;
 import com.palantir.baseline.plugins.versions.BaselineVersions;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -34,8 +33,6 @@ public final class Baseline implements Plugin<Project> {
                     "com.palantir.baseline should be applied to the root project only, not '{}'",
                     project.getName());
         }
-        Preconditions.checkState(!project.getName().equals(project.getProjectDir().getName()),
-                "Root project name must specified in settings.gradle");
 
         rootProject.getPluginManager().apply(BaselineConfig.class);
         rootProject.getPluginManager().apply(BaselineCircleCi.class);

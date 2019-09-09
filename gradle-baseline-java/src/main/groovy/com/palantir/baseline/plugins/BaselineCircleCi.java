@@ -16,6 +16,7 @@
 
 package com.palantir.baseline.plugins;
 
+import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.palantir.configurationresolver.ConfigurationResolverPlugin;
 import com.palantir.gradle.junit.JunitReportsExtension;
@@ -46,6 +47,11 @@ public final class BaselineCircleCi implements Plugin<Project> {
 
         configurePluginsForReports(project);
         configurePluginsForArtifacts(project);
+
+        Preconditions.checkState(
+                !project.getName().equals("project"),
+                "Please specify rootProject.name in your settings.gradle, otherwise CircleCI's"
+                        + "checkout dir ('project') will be used instead.");
     }
 
     private void configurePluginsForArtifacts(Project project) {
