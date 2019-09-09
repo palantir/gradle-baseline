@@ -19,7 +19,6 @@ package com.palantir.baseline.plugins;
 import com.diffplug.gradle.spotless.SpotlessExtension;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -35,10 +34,9 @@ class BaselineFormat extends AbstractBaselinePlugin {
     public void apply(Project project) {
         this.project = project;
 
-        Path eclipseXml = Paths.get(getConfigDir(), "spotless/eclipse.xml");
-
         project.getPluginManager().withPlugin("java", plugin -> {
             project.getPluginManager().apply("com.diffplug.gradle.spotless");
+            Path eclipseXml = eclipseConfigFile(project);
 
             project.getExtensions().getByType(SpotlessExtension.class).java(java -> {
                 // Configure a lazy FileCollection then pass it as the target
@@ -77,5 +75,9 @@ class BaselineFormat extends AbstractBaselinePlugin {
 
     static boolean eclipseFormattingEnabled(Project project) {
         return project.hasProperty(ECLIPSE_FORMATTING);
+    }
+
+    static Path eclipseConfigFile(Project project) {
+        return project.getRootDir().toPath().resolve(".baseline/spotless/eclipse.xml");
     }
 }
