@@ -157,7 +157,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
               </component>
             """))
         def externalDependencies = matchOrCreateChild(node, 'component', [name: 'ExternalDependencies'])
-        matchOrCreateChild(externalDependencies, 'plugin', [id: 'EclipseCodeFormatterProjectSettings'])
+        matchOrCreateChild(externalDependencies, 'plugin', [id: 'EclipseCodeFormatter'])
     }
 
     private void addCheckstyle(node) {
@@ -185,6 +185,8 @@ class BaselineIdea extends AbstractBaselinePlugin {
               </option>
             </component>
             """.stripIndent()))
+        def externalDependencies = matchOrCreateChild(node, 'component', [name: 'ExternalDependencies'])
+        matchOrCreateChild(externalDependencies, 'plugin', [id: 'CheckStyle-IDEA'])
     }
 
     /**
