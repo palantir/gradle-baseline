@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Remove JGit dependency
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/798
