@@ -65,7 +65,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
                 Task spotlessJava = project.getTasks().getByName("spotlessJava");
                 Task spotlessApply = project.getTasks().getByName("spotlessApply");
                 if (eclipseFormattingEnabled(project) && !Files.exists(eclipseXml)) {
-                    spotlessJava.dependsOn(project.getTasks().findByPath(":baselineUpdateConfig"));
+                    spotlessJava.dependsOn(":baselineUpdateConfig");
                 }
                 formatTask.dependsOn(spotlessApply);
                 project.getTasks().withType(JavaCompile.class).configureEach(spotlessJava::mustRunAfter);
