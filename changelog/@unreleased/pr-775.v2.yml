@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: baseline-circleci now validates that the rootProject.name isn't the
+    CircleCI default (`project`) as can interfere with publishing.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/775
