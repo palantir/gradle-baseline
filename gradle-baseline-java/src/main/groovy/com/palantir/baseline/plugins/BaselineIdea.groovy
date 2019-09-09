@@ -137,13 +137,12 @@ class BaselineIdea extends AbstractBaselinePlugin {
     }
 
     private void addEclipseFormat(node) {
-        def checkstyle = project.plugins.findPlugin(BaselineFormat)
-        if (checkstyle == null) {
+        def baselineFormat = project.plugins.findPlugin(BaselineFormat)
+        if (baselineFormat == null) {
             project.logger.debug "Baseline: Skipping IDEA eclipse format configuration since baseline-format not applied"
             return
         }
-        project.logger.debug "Baseline: Configuring Eclipse format for Idea"
-        def checkstyleFile = "LOCAL_FILE:\$PROJECT_DIR\$/.baseline/checkstyle/checkstyle.xml"
+        project.logger.debug "Baseline: Configuring EclipseCodeFormatter plugin for Idea"
         node.append(new XmlParser().parseText("""
              <component name="EclipseCodeFormatterProjectSettings">
                 <option name="projectSpecificProfile">
