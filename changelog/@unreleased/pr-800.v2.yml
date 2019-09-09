@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: 'Don''t add whitespace to blank lines inside comments. Fixes #799'
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/800
