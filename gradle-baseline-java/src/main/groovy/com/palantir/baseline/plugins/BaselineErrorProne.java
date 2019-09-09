@@ -24,8 +24,10 @@ import com.palantir.baseline.tasks.RefasterCompileTask;
 import java.io.File;
 import java.util.AbstractList;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import net.ltgt.gradle.errorprone.CheckSeverity;
 import net.ltgt.gradle.errorprone.ErrorProneOptions;
 import net.ltgt.gradle.errorprone.ErrorPronePlugin;
@@ -36,6 +38,8 @@ import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFile;
+import org.gradle.api.logging.Logger;
+import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.ExtensionAware;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -43,6 +47,7 @@ import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradle.api.tasks.testing.Test;
 
 public final class BaselineErrorProne implements Plugin<Project> {
+    private static final Logger log = Logging.getLogger(BaselineErrorProne.class);
 
     public static final String REFASTER_CONFIGURATION = "refaster";
     public static final String EXTENSION_NAME = "baselineErrorProne";
@@ -51,6 +56,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
     private static final String PROP_ERROR_PRONE_APPLY = "errorProneApply";
     private static final String PROP_REFASTER_APPLY = "refasterApply";
 
+    @SuppressWarnings("UnstableApiUsage")
     @Override
     public void apply(Project project) {
         project.getPluginManager().withPlugin("java", plugin -> {
@@ -132,10 +138,14 @@ public final class BaselineErrorProne implements Plugin<Project> {
                                     // TODO(gatesn): Is there a way to discover error-prone checks?
                                     // Maybe service-load from a ClassLoader configured with annotation processor path?
                                     // https://github.com/google/error-prone/pull/947
-                                    errorProneOptions.getErrorproneArgumentProviders().add(() -> ImmutableList.of(
-                                            "-XepPatchChecks:" + Joiner.on(',')
-                                                    .join(errorProneExtension.getPatchChecks().get()),
-                                            "-XepPatchLocation:IN_PLACE"));
+                                    errorProneOptions.getErrorproneArgumentProviders().add(() -> {
+                                        // Don't apply checks that have been explicitly disabled
+                                        Stream<String> errorProneChecks = getNotDisabledErrorproneChecks(
+                                                errorProneExtension, javaCompile, errorProneOptions);
+                                        return ImmutableList.of(
+                                                "-XepPatchChecks:" + Joiner.on(',').join(errorProneChecks.iterator()),
+                                                "-XepPatchLocation:IN_PLACE");
+                                    });
                                 }
                             }
                         });
@@ -196,6 +206,22 @@ public final class BaselineErrorProne implements Plugin<Project> {
         });
     }
 
+    private static Stream<String> getNotDisabledErrorproneChecks(
+            BaselineErrorProneExtension errorProneExtension,
+            JavaCompile javaCompile,
+            ErrorProneOptions errorProneOptions) {
+        return errorProneExtension.getPatchChecks().get().stream().filter(check -> {
+            if (checkExplicitlyDisabled(errorProneOptions, check)) {
+                log.info(
+                        "Task {}: not applying errorprone check {} because it has severity OFF in errorProneOptions",
+                        javaCompile.getPath(),
+                        check);
+                return false;
+            }
+            return true;
+        });
+    }
+
     private boolean isRefactoring(Project project) {
         return isRefasterRefactoring(project) || isErrorProneRefactoring(project);
     }
@@ -206,6 +232,12 @@ public final class BaselineErrorProne implements Plugin<Project> {
 
     private boolean isErrorProneRefactoring(Project project) {
         return project.hasProperty(PROP_ERROR_PRONE_APPLY);
+    }
+
+    private static boolean checkExplicitlyDisabled(ErrorProneOptions errorProneOptions, String check) {
+        Map<String, CheckSeverity> checks = errorProneOptions.getChecks();
+        return checks.get(check) == CheckSeverity.OFF
+                || errorProneOptions.getErrorproneArgs().contains(String.format("-Xep:%s:OFF", check));
     }
 
     private static final class LazyConfigurationList extends AbstractList<File> {

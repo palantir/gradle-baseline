@@ -19,6 +19,7 @@ package com.palantir.baseline
 
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
+import spock.lang.Unroll
 
 /**
  * This test depends on ./gradlew :baseline-error-prone:publishToMavenLocal
@@ -127,5 +128,51 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
             }
         }
         '''.stripIndent()
+    }
+
+    enum CheckConfigurationMethod { ARG, DSL }
+
+    @Unroll
+    def 'compileJava does not apply patches for error-prone checks that were turned OFF via #checkConfigurationMethod'() {
+        def checkName = "Slf4jLogsafeArgs"
+        def turnOffCheck = [
+                (CheckConfigurationMethod.ARG): "options.errorprone.errorproneArgs += ['-Xep:$checkName:OFF']",
+                (CheckConfigurationMethod.DSL): """
+                    options.errorprone {
+                        check '$checkName', net.ltgt.gradle.errorprone.CheckSeverity.OFF
+                    }                    
+                """.stripIndent(),
+        ]
+
+        buildFile << standardBuildFile
+        buildFile << """
+            tasks.withType(JavaCompile) {
+                ${turnOffCheck[checkConfigurationMethod]}
+            }
+            dependencies {
+                implementation 'org.slf4j:slf4j-api:1.7.25'
+            }
+        """.stripIndent()
+
+        def correctJavaFile = '''
+        package test;
+        import org.slf4j.LoggerFactory;
+        import org.slf4j.Logger;
+        public class Test {
+            void test() {
+                Logger log = LoggerFactory.getLogger("foo");
+                log.info("Hi there {}", "non safe arg");
+            }
+        }
+        '''.stripIndent()
+        file('src/main/java/test/Test.java') << correctJavaFile
+
+        expect:
+        BuildResult result = with('compileJava', '-PerrorProneApply').build()
+        result.task(":compileJava").outcome == TaskOutcome.SUCCESS
+        file('src/main/java/test/Test.java').text == correctJavaFile
+
+        where:
+        checkConfigurationMethod << CheckConfigurationMethod.values()
     }
 }
