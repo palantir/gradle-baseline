@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: Stop applying error prone patches for checks that have been turned
+    off.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/793
