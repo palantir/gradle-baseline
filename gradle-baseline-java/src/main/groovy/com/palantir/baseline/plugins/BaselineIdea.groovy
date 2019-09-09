@@ -19,6 +19,7 @@ package com.palantir.baseline.plugins
 import groovy.transform.CompileStatic
 import groovy.xml.XmlUtil
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
 import org.eclipse.jgit.api.Git
 import org.eclipse.jgit.transport.URIish
@@ -145,6 +146,12 @@ class BaselineIdea extends AbstractBaselinePlugin {
 
         if (!BaselineFormat.eclipseFormattingEnabled(project)) {
             project.logger.debug "Baseline: Not configuring EclipseCodeFormatter because com.palantir.baseline-format.eclipse is not enabled in gradle.properties"
+            return;
+        }
+
+        Path formatterConfig = BaselineFormat.eclipseConfigFile(project)
+        if (!Files.exists(formatterConfig)) {
+            project.logger.warn "Please run ./gradlew baselineUpdateConfig to create eclipse formatter config: " + formatterConfig
             return
         }
 
