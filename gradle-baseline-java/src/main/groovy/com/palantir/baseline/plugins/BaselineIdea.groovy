@@ -142,6 +142,12 @@ class BaselineIdea extends AbstractBaselinePlugin {
             project.logger.debug "Baseline: Skipping IDEA eclipse format configuration since baseline-format not applied"
             return
         }
+
+        if (!BaselineFormat.eclipseFormattingEnabled(project)) {
+            project.logger.debug "Baseline: Not configuring EclipseCodeFormatter because com.palantir.baseline-format.eclipse is not enabled in gradle.properties"
+            return
+        }
+
         project.logger.debug "Baseline: Configuring EclipseCodeFormatter plugin for Idea"
         node.append(new XmlParser().parseText("""
              <component name="EclipseCodeFormatterProjectSettings">
