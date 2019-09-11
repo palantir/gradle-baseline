@@ -16,13 +16,12 @@
 
 package com.palantir.baseline
 
-
 import java.nio.file.Files
 import java.nio.file.Path
 import org.apache.commons.io.FileUtils
 import org.apache.commons.io.filefilter.NameFileFilter
 import org.apache.commons.io.filefilter.NotFileFilter
-import org.apache.commons.io.filefilter.TrueFileFilter
+import org.apache.commons.io.filefilter.SuffixFileFilter
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 
@@ -77,7 +76,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         def excludedDirectories = ["build", ".gradle", ".baseline"]
         def files = FileUtils.listFiles(
                 outputDir,
-                TrueFileFilter.INSTANCE,
+                new SuffixFileFilter(".java"),
                 new NotFileFilter(new NameFileFilter(excludedDirectories)))
 
         for (File file : files) {
