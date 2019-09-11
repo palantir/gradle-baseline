@@ -35,6 +35,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         repositories {
             mavenLocal()
             jcenter()
+            maven { url  "http://palantir.bintray.com/releases" }
         }
     '''.stripIndent()
 
