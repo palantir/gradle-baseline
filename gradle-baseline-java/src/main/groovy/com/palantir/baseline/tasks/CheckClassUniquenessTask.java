@@ -31,6 +31,8 @@ import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 
 @CacheableTask
@@ -44,6 +46,7 @@ public class CheckClassUniquenessTask extends DefaultTask {
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public final Configuration getConfiguration() {
         return configuration;
     }
