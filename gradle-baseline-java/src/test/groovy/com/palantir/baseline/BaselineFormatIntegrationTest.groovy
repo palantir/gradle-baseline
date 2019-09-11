@@ -48,6 +48,33 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         }
     '''.stripIndent()
 
+    def validJavaFile = '''
+    package test;
+    public class Test {
+        void test() {
+            int x = 1;
+            System.out.println(
+                    "Hello");
+            Optional.of("hello").orElseGet(() -> {
+                return "Hello World";
+            });
+        }
+    }
+    '''.stripIndent()
+
+    def invalidJavaFile = '''
+    package test;
+    import com.java.unused;
+    public class Test { void test() {int x = 1;
+        System.out.println(
+            "Hello"
+        );
+        Optional.of("hello").orElseGet(() -> { 
+            return "Hello World";
+        });
+    } }
+    '''.stripIndent()
+
 
     def 'can apply plugin'() {
         when:
@@ -61,15 +88,24 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         def inputDir = new File("src/test/resources/com/palantir/baseline/formatter-in")
         def expectedDir = new File("src/test/resources/com/palantir/baseline/formatter-expected")
 
-        FileUtils.copyDirectory(inputDir, projectDir)
+        def testedDir = new File(projectDir, "src/main/java")
+        FileUtils.copyDirectory(inputDir, testedDir)
+
+        buildFile << """
+            plugins {
+                id 'java'
+                id 'com.palantir.baseline-format'
+            }
+        """.stripIndent()
+        file('gradle.properties') << "com.palantir.baseline-format.eclipse=true\n"
 
         when:
-        BuildResult result = with('format').build()
-        result.task(":java:format").outcome == TaskOutcome.SUCCESS
-        result.task(":java:spotlessApply").outcome == TaskOutcome.SUCCESS
+        BuildResult result = with(':format').build()
+        result.task(":format").outcome == TaskOutcome.SUCCESS
+        result.task(":spotlessApply").outcome == TaskOutcome.SUCCESS
 
         then:
-        assertThatFilesAreTheSame(projectDir, expectedDir)
+        assertThatFilesAreTheSame(testedDir, expectedDir)
     }
 
     private static void assertThatFilesAreTheSame(File outputDir, File expectedDir) throws IOException {
@@ -99,5 +135,61 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
 
         then:
         with('format', '--stacktrace').buildAndFail()
+    }
+
+    def 'format task works on new source sets'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << '''
+            sourceSets { foo }
+        '''.stripIndent()
+        file('src/foo/java/test/Test.java') << invalidJavaFile
+
+        then:
+        BuildResult result = with('format', '-Pcom.palantir.baseline-format.eclipse').build()
+        result.task(":format").outcome == TaskOutcome.SUCCESS
+        result.task(":spotlessApply").outcome == TaskOutcome.SUCCESS
+        file('src/foo/java/test/Test.java').text == validJavaFile
+    }
+
+    def 'format task works on other language java sources'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << '''
+            apply plugin: 'groovy'
+            sourceSets { foo }
+        '''.stripIndent()
+        file('src/foo/groovy/test/Test.java') << invalidJavaFile
+
+        then:
+        BuildResult result = with('format', '-Pcom.palantir.baseline-format.eclipse').build()
+        result.task(":format").outcome == TaskOutcome.SUCCESS
+        result.task(":spotlessApply").outcome == TaskOutcome.SUCCESS
+        file('src/foo/groovy/test/Test.java').text == validJavaFile
+    }
+
+    def 'format ignores generated files'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << '''
+            sourceSets {
+                main {
+                    java { srcDir 'src/generated/java' }
+                }
+            }
+            
+            // ensure file is in the source set
+            sourceSets.main.allJava.filter { it.name == "Test.java" }.singleFile
+        '''.stripIndent()
+        def javaFileContents = '''
+            package test;
+            import java.lang.Void;
+            public class Test { Void test() {} }
+        '''.stripIndent()
+        file('src/generated/java/test/Test.java') << javaFileContents
+
+        then:
+        BuildResult result = with('spotlessJavaCheck').build()
+        result.task(":spotlessJava").outcome == TaskOutcome.SUCCESS
     }
 }
