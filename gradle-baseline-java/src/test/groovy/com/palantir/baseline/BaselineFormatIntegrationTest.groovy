@@ -16,11 +16,16 @@
 
 package com.palantir.baseline
 
-import com.google.common.io.Resources
-import java.nio.charset.Charset
+import java.nio.file.Files
+import java.nio.file.Path
 import org.apache.commons.io.FileUtils
+import org.apache.commons.io.filefilter.NameFileFilter
+import org.apache.commons.io.filefilter.NotFileFilter
+import org.apache.commons.io.filefilter.SuffixFileFilter
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
+
+import static org.assertj.core.api.Assertions.assertThat
 
 class BaselineFormatIntegrationTest extends AbstractPluginTest {
 
@@ -45,7 +50,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
 
     def validJavaFile = '''
     package test;
-
+    
     public class Test {
         void test() {
             int x = 1;
@@ -71,6 +76,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
     } }
     '''.stripIndent()
 
+
     def 'can apply plugin'() {
         when:
         buildFile << standardBuildFile
@@ -79,24 +85,57 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         with('format', '--stacktrace').build()
     }
 
+    def 'eclipse formatter integration test'() {
+        def inputDir = new File("src/test/resources/com/palantir/baseline/formatter-in")
+        def expectedDir = new File("src/test/resources/com/palantir/baseline/formatter-expected")
+
+        def testedDir = new File(projectDir, "src/main/java")
+        FileUtils.copyDirectory(inputDir, testedDir)
+
+        buildFile << """
+            plugins {
+                id 'java'
+                id 'com.palantir.baseline-format'
+            }
+        """.stripIndent()
+        file('gradle.properties') << "com.palantir.baseline-format.eclipse=true\n"
+
+        when:
+        BuildResult result = with(':format').build()
+        result.task(":format").outcome == TaskOutcome.SUCCESS
+        result.task(":spotlessApply").outcome == TaskOutcome.SUCCESS
+
+        then:
+        assertThatFilesAreTheSame(testedDir, expectedDir)
+    }
+
+    private static void assertThatFilesAreTheSame(File outputDir, File expectedDir) throws IOException {
+        def excludedDirectories = ["build", ".gradle", ".baseline"]
+        def files = FileUtils.listFiles(
+                outputDir,
+                new SuffixFileFilter(".java"),
+                new NotFileFilter(new NameFileFilter(excludedDirectories)))
+
+        for (File file : files) {
+            // The files are created inside the `projectDir`
+            def path = file.toPath()
+            Path relativized = outputDir.toPath().relativize(path)
+            Path expectedFile = expectedDir.toPath().resolve(relativized)
+            if (Boolean.valueOf(System.getProperty("recreate", "false"))) {
+                Files.createDirectories(expectedFile.getParent())
+                Files.deleteIfExists(expectedFile)
+                Files.copy(path, expectedFile)
+            }
+            assertThat(path).hasSameContentAs(expectedFile)
+        }
+    }
+
     def 'cannot run format task when java plugin is missing'() {
         when:
         buildFile << noJavaBuildFile
 
         then:
         with('format', '--stacktrace').buildAndFail()
-    }
-
-    def 'format task fixes styles'() {
-        when:
-        buildFile << standardBuildFile
-        file('src/main/java/test/Test.java') << invalidJavaFile
-
-        then:
-        BuildResult result = with('format', '-Pcom.palantir.baseline-format.eclipse').build();
-        result.task(":format").outcome == TaskOutcome.SUCCESS
-        result.task(":spotlessApply").outcome == TaskOutcome.SUCCESS
-        file('src/main/java/test/Test.java').text == validJavaFile
     }
 
     def 'format task works on new source sets'() {
@@ -154,23 +193,4 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         BuildResult result = with('spotlessJavaCheck').build()
         result.task(":spotlessJava").outcome == TaskOutcome.SUCCESS
     }
-
-    def 'eclipse format trims blank lines in block or javadoc comment'() {
-        when:
-        buildFile << standardBuildFile
-        file('gradle.properties') << """
-            com.palantir.baseline-format.eclipse=true
-        """.stripIndent()
-        file('src/main/java/test/Test.java').text = resourceAsString("blank-lines-in-comments.java")
-
-        then:
-        BuildResult result = with('format').build()
-        result.task(":spotlessJavaApply").outcome == TaskOutcome.SUCCESS
-        file('src/main/java/test/Test.java').text == resourceAsString("blank-lines-in-comments-fixed.java")
-    }
-
-    private String resourceAsString(String fileName) {
-        Resources.toString(Resources.getResource(this.class, fileName), Charset.defaultCharset())
-    }
-
 }
