@@ -29,7 +29,7 @@ class BaselineErrorProneRefasterIntegrationTest extends AbstractPluginTest {
         plugins {
             id 'java'
             id 'com.palantir.baseline-error-prone'
-            id 'org.inferred.processors' version '1.3.0'
+            id 'org.inferred.processors' version '3.1.0'
         }
         repositories {
             mavenLocal()
@@ -78,7 +78,7 @@ class BaselineErrorProneRefasterIntegrationTest extends AbstractPluginTest {
         '''.stripIndent()
 
         then:
-        BuildResult result = with('compileJava', '-i', '-PrefasterApply').build()
+        BuildResult result = with('compileJava', '-i', '-PrefasterApply', '-s').build()
         result.task(":compileJava").outcome == TaskOutcome.SUCCESS
         file('src/main/java/test/Test.java').text == '''
         package test;

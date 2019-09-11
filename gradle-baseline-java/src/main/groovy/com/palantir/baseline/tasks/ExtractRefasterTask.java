@@ -16,40 +16,34 @@
 
 package com.palantir.baseline.tasks;
 
-import com.google.common.collect.ImmutableList;
-import java.io.File;
-import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.gradle.api.DefaultTask;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ResolvedArtifact;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.compile.JavaCompile;
+import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.TaskAction;
 
-public class RefasterCompileTask extends JavaCompile {
-
+public class ExtractRefasterTask extends DefaultTask {
     private final Property<Configuration> refasterSources = getProject().getObjects().property(Configuration.class);
-    private final Property<File> refasterRulesFile = getProject().getObjects().property(File.class);
+    private final DirectoryProperty outputDir = getProject().getObjects().directoryProperty();
 
-    public RefasterCompileTask() {
-        // Don't care about .class files
-        setDestinationDir(getTemporaryDir());
-
-        // Ensure we hit the non-incremental code-path since we override it
-        getOptions().setIncremental(false);
+    @InputFiles
+    public final Property<Configuration> getRefasterSources() {
+        return refasterSources;
     }
 
-    @Override
-    protected final void compile() {
-        // Clear out the default error-prone providers
-        getOptions().getCompilerArgumentProviders().clear();
-        getOptions().setCompilerArgs(ImmutableList.of(
-                "-Xplugin:BaselineRefasterCompiler --out " + refasterRulesFile.get().getAbsolutePath()));
+    @OutputDirectory
+    public final DirectoryProperty getOutputDir() {
+        return outputDir;
+    }
 
+    @TaskAction
+    public final void extract() {
         // Extract Java sources
-        List<File> javaSources = getRefasterSources().get().getResolvedConfiguration()
+        getRefasterSources().get().getResolvedConfiguration()
                 .getFirstLevelModuleDependencies()
                 .stream()
                 .flatMap(dep -> dep.getModuleArtifacts().stream())
@@ -65,23 +59,11 @@ public class RefasterCompileTask extends JavaCompile {
                         return Stream.empty();
                     }
                 })
-                .collect(Collectors.toList());
-
-        if (!javaSources.isEmpty()) {
-            setSource(javaSources);
-            super.compile();
-        } else {
-            setDidWork(false);
-        }
-    }
-
-    @InputFiles
-    public final Property<Configuration> getRefasterSources() {
-        return refasterSources;
-    }
-
-    @OutputFile
-    public final Property<File> getRefasterRulesFile() {
-        return refasterRulesFile;
+                .forEach(file -> {
+                    getProject().copy(copySpec -> {
+                        copySpec.from(file);
+                        copySpec.into(outputDir);
+                    });
+                });
     }
 }
