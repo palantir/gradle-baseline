@@ -16,6 +16,8 @@
 
 package com.palantir.baseline
 
+import com.google.common.io.Resources
+import java.nio.charset.Charset
 import org.apache.commons.io.FileUtils
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
@@ -152,4 +154,23 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         BuildResult result = with('spotlessJavaCheck').build()
         result.task(":spotlessJava").outcome == TaskOutcome.SUCCESS
     }
+
+    def 'eclipse format trims blank lines in block or javadoc comment'() {
+        when:
+        buildFile << standardBuildFile
+        file('gradle.properties') << """
+            com.palantir.baseline-format.eclipse=true
+        """.stripIndent()
+        file('src/main/java/test/Test.java').text = resourceAsString("blank-lines-in-comments.java")
+
+        then:
+        BuildResult result = with('format').build()
+        result.task(":spotlessJavaApply").outcome == TaskOutcome.SUCCESS
+        file('src/main/java/test/Test.java').text == resourceAsString("blank-lines-in-comments-fixed.java")
+    }
+
+    private String resourceAsString(String fileName) {
+        Resources.toString(Resources.getResource(this.class, fileName), Charset.defaultCharset())
+    }
+
 }
