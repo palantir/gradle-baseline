@@ -74,7 +74,11 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
     }
 
     private static void assertThatFilesAreTheSame(File outputDir, File expectedDir) throws IOException {
-        def files = FileUtils.listFiles(outputDir, TrueFileFilter.INSTANCE, new NotFileFilter(new NameFileFilter(["build", ".gradle"])))
+        def excludedDirectories = ["build", ".gradle", ".baseline"]
+        def files = FileUtils.listFiles(
+                outputDir,
+                TrueFileFilter.INSTANCE,
+                new NotFileFilter(new NameFileFilter(excludedDirectories)))
 
         for (File file : files) {
             // The files are created inside the `projectDir`
