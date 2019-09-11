@@ -79,7 +79,7 @@ class BaselineErrorProneRefasterIntegrationTest extends AbstractPluginTest {
         '''.stripIndent()
 
         then:
-        BuildResult result = with('compileJava', '-i', '-PrefasterApply', '-s').build()
+        BuildResult result = with('compileJava', '-i', '-PrefasterApply').build()
         result.task(":compileJava").outcome == TaskOutcome.SUCCESS
         file('src/main/java/test/Test.java').text == '''
         package test;

@@ -56,7 +56,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
     private static final String PROP_ERROR_PRONE_APPLY = "errorProneApply";
     private static final String PROP_REFASTER_APPLY = "refasterApply";
 
-    @SuppressWarnings({"UnstableApiUsage", "MethodLength"})
+    @SuppressWarnings("UnstableApiUsage")
     @Override
     public void apply(Project project) {
         project.getPluginManager().withPlugin("java", plugin -> {
