@@ -50,6 +50,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
 
     def validJavaFile = '''
     package test;
+    
     public class Test {
         void test() {
             int x = 1;
