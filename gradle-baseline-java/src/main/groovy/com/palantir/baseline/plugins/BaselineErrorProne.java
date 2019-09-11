@@ -20,7 +20,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.palantir.baseline.extensions.BaselineErrorProneExtension;
-import com.palantir.baseline.tasks.ExtractRefasterTask;
+import com.palantir.baseline.tasks.RefasterCompileTask;
 import java.io.File;
 import java.util.AbstractList;
 import java.util.List;
@@ -34,6 +34,7 @@ import net.ltgt.gradle.errorprone.ErrorPronePlugin;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFile;
@@ -41,7 +42,6 @@ import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.ExtensionAware;
 import org.gradle.api.provider.Provider;
-import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradle.api.tasks.testing.Test;
@@ -85,28 +85,12 @@ public final class BaselineErrorProne implements Plugin<Project> {
                     .file("refaster/rules.refaster")
                     .map(RegularFile::getAsFile);
 
-            TaskProvider<ExtractRefasterTask> extractRefaster = project.getTasks().register(
-                    "extractRefaster", ExtractRefasterTask.class, task -> {
-                        task.getRefasterSources().set(refasterConfiguration);
-                        task.getOutputDir().set(project.getLayout().getBuildDirectory().dir("refaster"));
-                    });
-
-            TaskProvider<JavaCompile> compileRefaster = project.getTasks().register(
-                    "compileRefaster", JavaCompile.class, task -> {
-                        // Don't care about .class files
-                        task.setDestinationDir(task.getTemporaryDir());
-                        task.setSource(extractRefaster.map(ExtractRefasterTask::getOutputDir));
-                        task.setClasspath(refasterConfiguration);
-
-                        task.doFirst(t -> {
-                            // Clear out the default error-prone providers
-                            task.getOptions().getCompilerArgumentProviders().clear();
-                            task.getOptions().setCompilerArgs(ImmutableList.of(
-                                    "-Xplugin:BaselineRefasterCompiler --out "
-                                            + refasterRulesFile.get().getAbsolutePath()));
-                            task.getOutputs().file(refasterRulesFile);
-                        });
-                    });
+            Task compileRefaster = project.getTasks().create("compileRefaster", RefasterCompileTask.class, task -> {
+                task.setSource(refasterConfiguration);
+                task.getRefasterSources().set(refasterConfiguration);
+                task.setClasspath(refasterCompilerConfiguration);
+                task.getRefasterRulesFile().set(refasterRulesFile);
+            });
 
             project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
                 JavaVersion jdkVersion = JavaVersion.toVersion(javaCompile.getToolChain().getVersion());
@@ -134,7 +118,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
                                 errorProneOptions.check("TypeParameterUnusedInFormals", CheckSeverity.OFF);
                             }
 
-                            if (javaCompile.equals(compileRefaster.get())) {
+                            if (javaCompile.equals(compileRefaster)) {
                                 // Don't apply refaster to itself...
                                 return;
                             }

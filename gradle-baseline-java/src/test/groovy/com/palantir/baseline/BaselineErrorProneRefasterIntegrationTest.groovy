@@ -34,6 +34,7 @@ class BaselineErrorProneRefasterIntegrationTest extends AbstractPluginTest {
         repositories {
             mavenLocal()
             jcenter()
+            maven { url  "http://palantir.bintray.com/releases" }
         }
         tasks.withType(JavaCompile) {
             options.compilerArgs += ['-Werror', '-Xlint:deprecation']
