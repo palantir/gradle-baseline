@@ -2,10 +2,13 @@ package test;
 
 public class Test {
     /**
-    Docstring.
+     Docstring that looks like a list:
 
-    with blank line.
-    */
+     1. hey
+     2. there
+
+     with blank line.
+     */
     Void test() {
         /*
         Normal comment
