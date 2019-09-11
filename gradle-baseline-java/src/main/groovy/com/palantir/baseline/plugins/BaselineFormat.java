@@ -52,11 +52,12 @@ class BaselineFormat extends AbstractBaselinePlugin {
                 java.removeUnusedImports();
                 // use empty string to specify one group for all non-static imports
                 java.importOrder("");
-                java.trimTrailingWhitespace();
 
                 if (eclipseFormattingEnabled(project)) {
                     java.eclipse().configFile(project.file(eclipseXml.toString()));
                 }
+
+                java.trimTrailingWhitespace();
             });
 
             // necessary because SpotlessPlugin creates tasks in an afterEvaluate block
