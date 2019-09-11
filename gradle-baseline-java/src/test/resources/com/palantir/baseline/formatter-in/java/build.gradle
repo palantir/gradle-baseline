@@ -1,0 +1,13 @@
+plugins {
+    id 'java'
+    id 'groovy'
+    id 'com.palantir.baseline-format'
+}
+
+sourceSets {
+    foo
+    // Emulate conjure generated destination
+    main {
+        java { srcDir 'src/generated/java' }
+    }
+}

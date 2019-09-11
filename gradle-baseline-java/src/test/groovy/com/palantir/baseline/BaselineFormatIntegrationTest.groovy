@@ -16,11 +16,17 @@
 
 package com.palantir.baseline
 
-import com.google.common.io.Resources
-import java.nio.charset.Charset
+
+import java.nio.file.Files
+import java.nio.file.Path
 import org.apache.commons.io.FileUtils
+import org.apache.commons.io.filefilter.NameFileFilter
+import org.apache.commons.io.filefilter.NotFileFilter
+import org.apache.commons.io.filefilter.TrueFileFilter
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
+
+import static org.assertj.core.api.Assertions.assertThat
 
 class BaselineFormatIntegrationTest extends AbstractPluginTest {
 
@@ -43,33 +49,6 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         }
     '''.stripIndent()
 
-    def validJavaFile = '''
-    package test;
-
-    public class Test {
-        void test() {
-            int x = 1;
-            System.out.println(
-                    "Hello");
-            Optional.of("hello").orElseGet(() -> {
-                return "Hello World";
-            });
-        }
-    }
-    '''.stripIndent()
-
-    def invalidJavaFile = '''
-    package test;
-    import com.java.unused;
-    public class Test { void test() {int x = 1;
-        System.out.println(
-            "Hello"
-        );
-        Optional.of("hello").orElseGet(() -> { 
-            return "Hello World";
-        });
-    } }
-    '''.stripIndent()
 
     def 'can apply plugin'() {
         when:
@@ -79,6 +58,38 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         with('format', '--stacktrace').build()
     }
 
+    def 'eclipse formatter integration test'() {
+        def inputDir = new File("src/test/resources/com/palantir/baseline/formatter-in")
+        def expectedDir = new File("src/test/resources/com/palantir/baseline/formatter-expected")
+
+        FileUtils.copyDirectory(inputDir, projectDir)
+
+        when:
+        BuildResult result = with('format').build()
+        result.task(":java:format").outcome == TaskOutcome.SUCCESS
+        result.task(":java:spotlessApply").outcome == TaskOutcome.SUCCESS
+
+        then:
+        assertThatFilesAreTheSame(projectDir, expectedDir)
+    }
+
+    private static void assertThatFilesAreTheSame(File outputDir, File expectedDir) throws IOException {
+        def files = FileUtils.listFiles(outputDir, TrueFileFilter.INSTANCE, new NotFileFilter(new NameFileFilter(["build", ".gradle"])))
+
+        for (File file : files) {
+            // The files are created inside the `projectDir`
+            def path = file.toPath()
+            Path relativized = outputDir.toPath().relativize(path)
+            Path expectedFile = expectedDir.toPath().resolve(relativized)
+            if (Boolean.valueOf(System.getProperty("recreate", "false"))) {
+                Files.createDirectories(expectedFile.getParent())
+                Files.deleteIfExists(expectedFile)
+                Files.copy(path, expectedFile)
+            }
+            assertThat(path).hasSameContentAs(expectedFile)
+        }
+    }
+
     def 'cannot run format task when java plugin is missing'() {
         when:
         buildFile << noJavaBuildFile
@@ -86,91 +97,4 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         then:
         with('format', '--stacktrace').buildAndFail()
     }
-
-    def 'format task fixes styles'() {
-        when:
-        buildFile << standardBuildFile
-        file('src/main/java/test/Test.java') << invalidJavaFile
-
-        then:
-        BuildResult result = with('format', '-Pcom.palantir.baseline-format.eclipse').build();
-        result.task(":format").outcome == TaskOutcome.SUCCESS
-        result.task(":spotlessApply").outcome == TaskOutcome.SUCCESS
-        file('src/main/java/test/Test.java').text == validJavaFile
-    }
-
-    def 'format task works on new source sets'() {
-        when:
-        buildFile << standardBuildFile
-        buildFile << '''
-            sourceSets { foo }
-        '''.stripIndent()
-        file('src/foo/java/test/Test.java') << invalidJavaFile
-
-        then:
-        BuildResult result = with('format', '-Pcom.palantir.baseline-format.eclipse').build()
-        result.task(":format").outcome == TaskOutcome.SUCCESS
-        result.task(":spotlessApply").outcome == TaskOutcome.SUCCESS
-        file('src/foo/java/test/Test.java').text == validJavaFile
-    }
-
-    def 'format task works on other language java sources'() {
-        when:
-        buildFile << standardBuildFile
-        buildFile << '''
-            apply plugin: 'groovy'
-            sourceSets { foo }
-        '''.stripIndent()
-        file('src/foo/groovy/test/Test.java') << invalidJavaFile
-
-        then:
-        BuildResult result = with('format', '-Pcom.palantir.baseline-format.eclipse').build()
-        result.task(":format").outcome == TaskOutcome.SUCCESS
-        result.task(":spotlessApply").outcome == TaskOutcome.SUCCESS
-        file('src/foo/groovy/test/Test.java').text == validJavaFile
-    }
-
-    def 'format ignores generated files'() {
-        when:
-        buildFile << standardBuildFile
-        buildFile << '''
-            sourceSets {
-                main {
-                    java { srcDir 'src/generated/java' }
-                }
-            }
-            
-            // ensure file is in the source set
-            sourceSets.main.allJava.filter { it.name == "Test.java" }.singleFile
-        '''.stripIndent()
-        def javaFileContents = '''
-            package test;
-            import java.lang.Void;
-            public class Test { Void test() {} }
-        '''.stripIndent()
-        file('src/generated/java/test/Test.java') << javaFileContents
-
-        then:
-        BuildResult result = with('spotlessJavaCheck').build()
-        result.task(":spotlessJava").outcome == TaskOutcome.SUCCESS
-    }
-
-    def 'eclipse format trims blank lines in block or javadoc comment'() {
-        when:
-        buildFile << standardBuildFile
-        file('gradle.properties') << """
-            com.palantir.baseline-format.eclipse=true
-        """.stripIndent()
-        file('src/main/java/test/Test.java').text = resourceAsString("blank-lines-in-comments.java")
-
-        then:
-        BuildResult result = with('format').build()
-        result.task(":spotlessJavaApply").outcome == TaskOutcome.SUCCESS
-        file('src/main/java/test/Test.java').text == resourceAsString("blank-lines-in-comments-fixed.java")
-    }
-
-    private String resourceAsString(String fileName) {
-        Resources.toString(Resources.getResource(this.class, fileName), Charset.defaultCharset())
-    }
-
 }
