@@ -97,17 +97,17 @@ import javax.lang.model.element.Name;
 
 /**
  * Copy from {@Link UnusedVariable } except we consider all parameter for unused analysis.
- * We removed the `onlyCheckForReassignments` filter
+ * We modified the `onlyCheckForReassignments` filter to exclude abstract methods
  * */
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "UnusedParameter",
-        altNames = {"unused", "UnusedParameters"},
+        name = "StrictUnusedVariable",
+        altNames = {"unused", "StrictUnusedVariable"},
         summary = "Unused.",
         providesFix = REQUIRES_HUMAN_ATTENTION,
         severity = ERROR,
         documentSuppression = false)
-public final class UnusedParameter extends BugChecker implements BugChecker.CompilationUnitTreeMatcher {
+public final class StrictUnusedVariable extends BugChecker implements BugChecker.CompilationUnitTreeMatcher {
     private static final String EXEMPT_PREFIX = "unused";
 
     /**

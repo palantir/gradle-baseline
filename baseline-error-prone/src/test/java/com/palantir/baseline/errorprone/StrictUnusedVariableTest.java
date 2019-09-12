@@ -20,13 +20,13 @@ import com.google.errorprone.CompilationTestHelper;
 import org.junit.Before;
 import org.junit.Test;
 
-public class UnusedParameterTest {
+public class StrictUnusedVariableTest {
 
     private CompilationTestHelper compilationHelper;
 
     @Before
     public void before() {
-        compilationHelper = CompilationTestHelper.newInstance(UnusedParameter.class, getClass());
+        compilationHelper = CompilationTestHelper.newInstance(StrictUnusedVariable.class, getClass());
     }
 
     @Test
