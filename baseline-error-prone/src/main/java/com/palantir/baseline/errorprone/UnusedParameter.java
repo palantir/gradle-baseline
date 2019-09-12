@@ -14,8 +14,6 @@
  * limitations under the License.
  */
 
-// CHECKSTYLE:OFF
-
 package com.palantir.baseline.errorprone;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
