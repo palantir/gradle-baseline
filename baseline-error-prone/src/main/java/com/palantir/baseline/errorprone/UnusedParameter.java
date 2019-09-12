@@ -17,13 +17,13 @@
 package com.palantir.baseline.errorprone;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
+import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.Iterables.getLast;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.errorprone.BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION;
 import static com.google.errorprone.BugPattern.SeverityLevel.ERROR;
-import static com.google.errorprone.BugPattern.SeverityLevel.WARNING;
 import static com.google.errorprone.util.ASTHelpers.*;
 import static com.google.errorprone.util.SideEffectAnalysis.hasSideEffect;
 import static com.sun.source.tree.Tree.Kind.*;
@@ -40,7 +40,6 @@ import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimaps;
 import com.google.common.collect.Sets;
 import com.google.errorprone.BugPattern;
-import com.google.errorprone.ErrorProneFlags;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.fixes.SuggestedFix;
@@ -106,7 +105,7 @@ import javax.lang.model.element.Name;
         altNames = {"unused", "UnusedParameters"},
         summary = "Unused.",
         providesFix = REQUIRES_HUMAN_ATTENTION,
-        severity = WARNING,
+        severity = ERROR,
         documentSuppression = false)
 public final class UnusedParameter extends BugChecker implements BugChecker.CompilationUnitTreeMatcher {
     private static final String EXEMPT_PREFIX = "unused";
@@ -147,17 +146,6 @@ public final class UnusedParameter extends BugChecker implements BugChecker.Comp
     private static final ImmutableSet<String> LOGGER_TYPE_NAME = ImmutableSet.of("GoogleLogger");
 
     private static final ImmutableSet<String> LOGGER_VAR_NAME = ImmutableSet.of("logger");
-    private final boolean reportInjectedFields;
-
-    public UnusedParameter(ErrorProneFlags flags) {
-        ImmutableSet.Builder<String> methodAnnotationsExemptingParameters =
-                ImmutableSet.<String>builder()
-                        .add("org.robolectric.annotation.Implementation");
-        flags
-                .getList("Unused:methodAnnotationsExemptingParameters")
-                .ifPresent(methodAnnotationsExemptingParameters::addAll);
-        this.reportInjectedFields = flags.getBoolean("Unused:ReportInjectedFields").orElse(false);
-    }
 
     @Override
     public Description matchCompilationUnit(CompilationUnitTree tree, VisitorState state) {
@@ -173,6 +161,9 @@ public final class UnusedParameter extends BugChecker implements BugChecker.Comp
         // Map of symbols to variable declarations. Initially this is a map of all of the local variable
         // and fields. As we go we remove those variables which are used.
         Map<Symbol, TreePath> unusedElements = variableFinder.unusedElements;
+
+        // Whether a symbol should only be checked for reassignments (e.g. public methods' parameters).
+        Set<Symbol> onlyCheckForReassignments = variableFinder.onlyCheckForReassignments;
 
         // Map of symbols to their usage sites. In this map we also include the definition site in
         // addition to all the trees where symbol is used. This map is designed to keep the usage sites
@@ -210,6 +201,10 @@ public final class UnusedParameter extends BugChecker implements BugChecker.Comp
             }
             SuggestedFix makeFirstAssignmentDeclaration =
                     makeAssignmentDeclaration(unusedSymbol, specs, allUsageSites, state);
+            // Don't complain if this is a public method and we only overwrote it once.
+            if (onlyCheckForReassignments.contains(unusedSymbol) && specs.size() <= 1) {
+                continue;
+            }
             Tree unused = specs.iterator().next().variableTree().getLeaf();
             Symbol.VarSymbol symbol = (Symbol.VarSymbol) unusedSymbol;
             ImmutableList<SuggestedFix> fixes;
@@ -519,6 +514,8 @@ public final class UnusedParameter extends BugChecker implements BugChecker.Comp
     private class VariableFinder extends TreePathScanner<Void, Void> {
         private final Map<Symbol, TreePath> unusedElements = new HashMap<>();
 
+        private final Set<Symbol> onlyCheckForReassignments = new HashSet<>();
+
         private final ListMultimap<Symbol, TreePath> usageSites = ArrayListMultimap.create();
 
         private final VisitorState state;
@@ -566,6 +563,9 @@ public final class UnusedParameter extends BugChecker implements BugChecker.Comp
                         return null;
                     }
                     unusedElements.put(symbol, getCurrentPath());
+                    if (!isParameterSubjectToAnalysis(symbol)) {
+                        onlyCheckForReassignments.add(symbol);
+                    }
                     break;
                 default:
                     break;
@@ -579,11 +579,6 @@ public final class UnusedParameter extends BugChecker implements BugChecker.Comp
         }
 
         private boolean isFieldEligibleForChecking(VariableTree variableTree, Symbol.VarSymbol symbol) {
-            if (reportInjectedFields
-                    && variableTree.getModifiers().getFlags().isEmpty()
-                    && ASTHelpers.hasDirectAnnotationWithSimpleName(variableTree, "Inject")) {
-                return true;
-            }
             return variableTree.getModifiers().getFlags().contains(Modifier.PRIVATE)
                     && !SPECIAL_FIELDS.contains(symbol.getSimpleName().toString())
                     && !isLoggerField(variableTree);
@@ -593,6 +588,14 @@ public final class UnusedParameter extends BugChecker implements BugChecker.Comp
             return variableTree.getModifiers().getFlags().containsAll(LOGGER_REQUIRED_MODIFIERS)
                     && LOGGER_TYPE_NAME.contains(variableTree.getType().toString())
                     && LOGGER_VAR_NAME.contains(variableTree.getName().toString());
+        }
+
+        /** Returns whether {@code sym} can be removed without updating call sites in other files. */
+        private boolean isParameterSubjectToAnalysis(Symbol sym) {
+            checkArgument(sym.getKind() == ElementKind.PARAMETER);
+            Symbol enclosingMethod = sym.owner;
+
+            return !enclosingMethod.getModifiers().contains(Modifier.ABSTRACT);
         }
 
         @Override

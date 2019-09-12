@@ -30,26 +30,41 @@ public class UnusedParameterTest {
     }
 
     @Test
-    public void great() {
+    public void handles_interface() {
         compilationHelper.addSourceLines(
                 "Test.java",
                 "import java.util.Optional;",
-                "class Test {",
+                "interface Test {",
+                "  void method(String param);",
                 "  // BUG: Diagnostic contains: Unused",
-                "  private static void foo(String buggy) {",
-                "  }",
+                "  default void defaultMethod(String param) { }",
                 "}").doTest();
     }
 
     @Test
-    public void ohno() {
+    public void handles_abstract_classes() {
+        compilationHelper.addSourceLines(
+                "Test.java",
+                "import java.util.Optional;",
+                "abstract class Test {",
+                "  abstract void method(String param);",
+                "  // BUG: Diagnostic contains: Unused",
+                "  void defaultMethod(String param) { }",
+                "  // BUG: Diagnostic contains: Unused",
+                "  private void privateMethod(String param) { }",
+                "}").doTest();
+    }
+
+    @Test
+    public void handles_classes() {
         compilationHelper.addSourceLines(
                 "Test.java",
                 "import java.util.Optional;",
                 "class Test {",
                 "  // BUG: Diagnostic contains: Unused",
-                "  public static void foo(String buggy) {",
-                "  }",
+                "  private static void privateMethod(String buggy) { }",
+                "  // BUG: Diagnostic contains: Unused",
+                "  public static void publicMethod(String buggy) { }",
                 "}").doTest();
     }
 
