@@ -62,10 +62,25 @@ public class UnusedParameterTest {
                 "import java.util.Optional;",
                 "class Test {",
                 "  // BUG: Diagnostic contains: Unused",
+                "   Test(String foo) { }",
+                "  // BUG: Diagnostic contains: Unused",
                 "  private static void privateMethod(String buggy) { }",
                 "  // BUG: Diagnostic contains: Unused",
                 "  public static void publicMethod(String buggy) { }",
                 "}").doTest();
     }
 
+    @Test
+    public void handles_enums() {
+        compilationHelper.addSourceLines(
+                "Test.java",
+                "import java.util.Optional;",
+                "enum Test {",
+                "  INSTANCE;",
+                "  // BUG: Diagnostic contains: Unused",
+                "  private static void privateMethod(String buggy) { }",
+                "  // BUG: Diagnostic contains: Unused",
+                "  public static void publicMethod(String buggy) { }",
+                "}").doTest();
+    }
 }
