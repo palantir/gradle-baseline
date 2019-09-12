@@ -17,8 +17,6 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.errorprone.CompilationTestHelper;
-import com.google.errorprone.bugpatterns.UnusedVariable;
-import org.checkerframework.framework.qual.Unused;
 import org.junit.Before;
 import org.junit.Test;
 
