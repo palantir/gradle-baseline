@@ -591,6 +591,7 @@ public final class UnusedParameter extends BugChecker implements BugChecker.Comp
         }
 
         /** Returns whether {@code sym} can be removed without updating call sites in other files. */
+        @SuppressWarnings("PreferSafeLoggingPreconditions")
         private boolean isParameterSubjectToAnalysis(Symbol sym) {
             checkArgument(sym.getKind() == ElementKind.PARAMETER);
             Symbol enclosingMethod = sym.owner;
