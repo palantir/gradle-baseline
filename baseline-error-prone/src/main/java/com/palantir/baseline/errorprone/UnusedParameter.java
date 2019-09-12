@@ -1,3 +1,5 @@
+// CHECKSTYLE:OFF
+
 /*
  * (c) Copyright 2019 Palantir Technologies Inc. All rights reserved.
  *
@@ -17,7 +19,6 @@
 package com.palantir.baseline.errorprone;
 
 import static com.google.common.base.MoreObjects.firstNonNull;
-import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Strings.nullToEmpty;
 import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.Iterables.getLast;
@@ -123,8 +124,6 @@ public final class UnusedParameter extends BugChecker implements BugChecker.Comp
                     "org.openqa.selenium.support.FindBy",
                     "org.openqa.selenium.support.FindBys");
 
-    private final ImmutableSet<String> methodAnnotationsExemptingParameters;
-
     /** The set of types exempting a type that is extending or implementing them. */
     private static final ImmutableSet<String> EXEMPTING_SUPER_TYPES =
             ImmutableSet.of(
@@ -155,7 +154,6 @@ public final class UnusedParameter extends BugChecker implements BugChecker.Comp
         flags
                 .getList("Unused:methodAnnotationsExemptingParameters")
                 .ifPresent(methodAnnotationsExemptingParameters::addAll);
-        this.methodAnnotationsExemptingParameters = methodAnnotationsExemptingParameters.build();
         this.reportInjectedFields = flags.getBoolean("Unused:ReportInjectedFields").orElse(false);
     }
 
@@ -593,21 +591,6 @@ public final class UnusedParameter extends BugChecker implements BugChecker.Comp
             return variableTree.getModifiers().getFlags().containsAll(LOGGER_REQUIRED_MODIFIERS)
                     && LOGGER_TYPE_NAME.contains(variableTree.getType().toString())
                     && LOGGER_VAR_NAME.contains(variableTree.getName().toString());
-        }
-
-        /** Returns whether {@code sym} can be removed without updating call sites in other files. */
-        private boolean isParameterSubjectToAnalysis(Symbol sym) {
-            checkArgument(sym.getKind() == ElementKind.PARAMETER);
-            Symbol enclosingMethod = sym.owner;
-
-            for (String annotationName : methodAnnotationsExemptingParameters) {
-                if (ASTHelpers.hasAnnotation(enclosingMethod, annotationName, state)) {
-                    return false;
-                }
-            }
-
-
-            return enclosingMethod.getModifiers().contains(Modifier.PRIVATE);
         }
 
         @Override
