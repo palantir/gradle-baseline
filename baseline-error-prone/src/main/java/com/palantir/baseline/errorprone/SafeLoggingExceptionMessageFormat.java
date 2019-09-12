@@ -65,12 +65,17 @@ public final class SafeLoggingExceptionMessageFormat extends BugChecker implemen
             return Description.NO_MATCH;
         }
 
-        String message;
-        try {
-            message = (String) ((LiteralTree) messageArg).getValue();
-        } catch (ClassCastException exception) {
+        if (!(messageArg instanceof LiteralTree)) {
             return Description.NO_MATCH;
         }
+        LiteralTree literalTreeMessageArg = (LiteralTree) messageArg;
+
+        Object value = literalTreeMessageArg.getValue();
+
+        if (!(value instanceof String)) {
+            return Description.NO_MATCH;
+        }
+        String message = (String) value;
 
         if (message.contains("{}")) {
             return buildDescription(tree)
