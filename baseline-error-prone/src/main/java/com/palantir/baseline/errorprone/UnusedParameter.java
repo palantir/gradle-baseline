@@ -24,15 +24,9 @@ import static com.google.common.collect.Iterables.getLast;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.errorprone.BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION;
 import static com.google.errorprone.BugPattern.SeverityLevel.ERROR;
-import static com.google.errorprone.util.ASTHelpers.findSuperMethodInType;
-import static com.google.errorprone.util.ASTHelpers.getSymbol;
-import static com.google.errorprone.util.ASTHelpers.getType;
-import static com.google.errorprone.util.ASTHelpers.isSubtype;
+import static com.google.errorprone.util.ASTHelpers.*;
 import static com.google.errorprone.util.SideEffectAnalysis.hasSideEffect;
-import static com.sun.source.tree.Tree.Kind.POSTFIX_DECREMENT;
-import static com.sun.source.tree.Tree.Kind.POSTFIX_INCREMENT;
-import static com.sun.source.tree.Tree.Kind.PREFIX_DECREMENT;
-import static com.sun.source.tree.Tree.Kind.PREFIX_INCREMENT;
+import static com.sun.source.tree.Tree.Kind.*;
 
 import com.google.auto.service.AutoService;
 import com.google.common.base.Ascii;
@@ -180,9 +174,6 @@ public final class UnusedParameter extends BugChecker implements BugChecker.Comp
         // and fields. As we go we remove those variables which are used.
         Map<Symbol, TreePath> unusedElements = variableFinder.unusedElements;
 
-        // Whether a symbol should only be checked for reassignments (e.g. public methods' parameters).
-        Set<Symbol> onlyCheckForReassignments = variableFinder.onlyCheckForReassignments;
-
         // Map of symbols to their usage sites. In this map we also include the definition site in
         // addition to all the trees where symbol is used. This map is designed to keep the usage sites
         // of variables (parameters, fields, locals).
@@ -219,15 +210,10 @@ public final class UnusedParameter extends BugChecker implements BugChecker.Comp
             }
             SuggestedFix makeFirstAssignmentDeclaration =
                     makeAssignmentDeclaration(unusedSymbol, specs, allUsageSites, state);
-            // Don't complain if this is a public method and we only overwrote it once.
-            if (onlyCheckForReassignments.contains(unusedSymbol) && specs.size() <= 1) {
-                continue;
-            }
             Tree unused = specs.iterator().next().variableTree().getLeaf();
             Symbol.VarSymbol symbol = (Symbol.VarSymbol) unusedSymbol;
             ImmutableList<SuggestedFix> fixes;
             if (symbol.getKind() == ElementKind.PARAMETER
-                    && !onlyCheckForReassignments.contains(unusedSymbol)
                     && !isEverUsed.contains(unusedSymbol)) {
                 fixes = buildUnusedParameterFixes(symbol, allUsageSites, state);
             } else {
@@ -533,8 +519,6 @@ public final class UnusedParameter extends BugChecker implements BugChecker.Comp
     private class VariableFinder extends TreePathScanner<Void, Void> {
         private final Map<Symbol, TreePath> unusedElements = new HashMap<>();
 
-        private final Set<Symbol> onlyCheckForReassignments = new HashSet<>();
-
         private final ListMultimap<Symbol, TreePath> usageSites = ArrayListMultimap.create();
 
         private final VisitorState state;
@@ -582,9 +566,6 @@ public final class UnusedParameter extends BugChecker implements BugChecker.Comp
                         return null;
                     }
                     unusedElements.put(symbol, getCurrentPath());
-                    if (!isParameterSubjectToAnalysis(symbol)) {
-                        onlyCheckForReassignments.add(symbol);
-                    }
                     break;
                 default:
                     break;
