@@ -28,7 +28,7 @@ public class UnusedParameterTest {
 
     @Before
     public void before() {
-        compilationHelper = CompilationTestHelper.newInstance(UnusedVariable.class, getClass());
+        compilationHelper = CompilationTestHelper.newInstance(UnusedParameter.class, getClass());
     }
 
     @Test
