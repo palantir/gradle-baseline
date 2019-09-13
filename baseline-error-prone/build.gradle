@@ -21,3 +21,10 @@ dependencies {
     annotationProcessor 'com.google.auto.service:auto-service'
     compileOnly 'com.google.auto.service:auto-service'
 }
+
+// This is necessary to prevent the errorprone plugin from using this very project's output directory
+def originalGroup = project.group
+group = originalGroup + '-internal'
+publishing.publications.nebula {
+    groupId = originalGroup
+}
