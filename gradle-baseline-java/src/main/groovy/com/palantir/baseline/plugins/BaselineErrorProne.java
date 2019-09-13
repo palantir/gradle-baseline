@@ -23,6 +23,7 @@ import com.palantir.baseline.extensions.BaselineErrorProneExtension;
 import com.palantir.baseline.tasks.RefasterCompileTask;
 import java.io.File;
 import java.util.AbstractList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -64,7 +65,10 @@ public final class BaselineErrorProne implements Plugin<Project> {
             project.getPluginManager().apply(ErrorPronePlugin.class);
 
             String version = Optional.ofNullable(getClass().getPackage().getImplementationVersion())
-                    .orElse("latest.release");
+                    .orElseGet(() -> {
+                        log.warn("Baseline is using 'latest.release' - beware this compromises build reproducibility");
+                        return "latest.release";
+                    });
 
             Configuration refasterConfiguration = project.getConfigurations().create("refaster", conf -> {
                 conf.defaultDependencies(deps -> {
@@ -130,9 +134,14 @@ public final class BaselineErrorProne implements Plugin<Project> {
 
                                 if (isRefasterRefactoring(project)) {
                                     javaCompile.dependsOn(compileRefaster);
-                                    errorProneOptions.getErrorproneArgumentProviders().add(() -> ImmutableList.of(
-                                            "-XepPatchChecks:refaster:" + refasterRulesFile.get().getAbsolutePath(),
-                                            "-XepPatchLocation:IN_PLACE"));
+                                    errorProneOptions.getErrorproneArgumentProviders().add(() -> {
+                                        String file = refasterRulesFile.get().getAbsolutePath();
+                                        return new File(file).exists()
+                                                ? ImmutableList.of(
+                                                "-XepPatchChecks:refaster:" + file,
+                                                "-XepPatchLocation:IN_PLACE")
+                                                : Collections.emptyList();
+                                    });
                                 }
 
                                 if (isErrorProneRefactoring(project)) {

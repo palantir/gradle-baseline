@@ -21,3 +21,11 @@ dependencies {
     annotationProcessor 'com.google.auto.service:auto-service'
     compileOnly 'com.google.auto.service:auto-service'
 }
+
+tasks.withType(JavaCompile) {
+    // this may look weird, but it's necessary. Try running: `./gradlew :baseline-error-prone:dependencies --configuration annotationProcessor`
+    // any you'll see it substitutes the real published version with our local project:
+    //
+    //   com.palantir.baseline:baseline-error-prone:2.3.0 -> project :baseline-error-prone (*)
+    options.errorprone.enabled = false
+}
