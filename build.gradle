@@ -1,3 +1,5 @@
+import net.ltgt.gradle.errorprone.CheckSeverity
+
 buildscript {
     repositories {
         jcenter()
@@ -48,8 +50,10 @@ allprojects {
         tasks.withType(JavaCompile) {
             options.compilerArgs += ['-Werror', '-Xlint:deprecation']
             options.errorprone {
-                disable("Slf4jLogsafeArgs", "PreferSafeLoggableExceptions",
-                        "PreferSafeLoggingPreconditions", "PreconditionsConstantMessage")
+                check("Slf4jLogsafeArgs", CheckSeverity.OFF)
+                check("PreferSafeLoggableExceptions", CheckSeverity.OFF)
+                check("PreferSafeLoggingPreconditions", CheckSeverity.OFF)
+                check("PreconditionsConstantMessage", CheckSeverity.OFF)
             }
         }
     }
