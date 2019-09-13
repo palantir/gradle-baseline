@@ -6,6 +6,6 @@
 <!-- IMPORTANT ECLIPSE NOTE: If you change this file, you must restart Eclipse
  for your changes to take effect in its Checkstyle integration. -->
 <suppressions>
-    <!-- Generated code should not be subjected to checkstyle. -->
-    <suppress files=".*UnusedParameter.java" checks="." />
+    <!-- Do not lint class which is mostly copied -->
+    <suppress files=".*StrictUnusedVariable.java" checks="." />
 </suppressions>

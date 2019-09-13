@@ -38,7 +38,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.ListMultimap;
 import com.google.common.collect.Multimaps;
-import com.google.common.collect.Sets;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
@@ -97,7 +96,7 @@ import javax.lang.model.element.Name;
 
 /**
  * Copy from {@Link UnusedVariable } except we consider all parameter for unused analysis.
- * We modified the `onlyCheckForReassignments` filter to exclude abstract methods
+ * We modified the `onlyCheckForReassignments` filter to exclude abstract methods, to check loggers
  * */
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -126,9 +125,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                     "org.openqa.selenium.support.FindBys");
 
     /** The set of types exempting a type that is extending or implementing them. */
-    private static final ImmutableSet<String> EXEMPTING_SUPER_TYPES =
-            ImmutableSet.of(
-            );
+    private static final ImmutableSet<String> EXEMPTING_SUPER_TYPES = ImmutableSet.of();
 
     /** The set of types exempting a field of type extending them. */
     private static final ImmutableSet<String> EXEMPTING_FIELD_SUPER_TYPES =
@@ -139,13 +136,6 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                     "serialVersionUID",
                     // TAG fields are used by convention in Android apps.
                     "TAG");
-
-    private static final ImmutableSet<Modifier> LOGGER_REQUIRED_MODIFIERS =
-            Sets.immutableEnumSet(Modifier.PRIVATE, Modifier.STATIC, Modifier.FINAL);
-
-    private static final ImmutableSet<String> LOGGER_TYPE_NAME = ImmutableSet.of("GoogleLogger");
-
-    private static final ImmutableSet<String> LOGGER_VAR_NAME = ImmutableSet.of("logger");
 
     @Override
     public Description matchCompilationUnit(CompilationUnitTree tree, VisitorState state) {
@@ -580,14 +570,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
 
         private boolean isFieldEligibleForChecking(VariableTree variableTree, Symbol.VarSymbol symbol) {
             return variableTree.getModifiers().getFlags().contains(Modifier.PRIVATE)
-                    && !SPECIAL_FIELDS.contains(symbol.getSimpleName().toString())
-                    && !isLoggerField(variableTree);
-        }
-
-        private boolean isLoggerField(VariableTree variableTree) {
-            return variableTree.getModifiers().getFlags().containsAll(LOGGER_REQUIRED_MODIFIERS)
-                    && LOGGER_TYPE_NAME.contains(variableTree.getType().toString())
-                    && LOGGER_VAR_NAME.contains(variableTree.getName().toString());
+                    && !SPECIAL_FIELDS.contains(symbol.getSimpleName().toString());
         }
 
         /** Returns whether {@code sym} can be removed without updating call sites in other files. */
