@@ -2,7 +2,7 @@
  * one
  *
  * <ol>
- *   <li>two
+ * <li>two
  * </ol>
  *
  * <p>
@@ -10,17 +10,17 @@
  */
 class T {
 
-  /**
-   * One
-   *
-   * <ul>
-   *   <li>a
-   *       <ul>
-   *         <li>b
-   *         <li>c
-   *       </ul>
-   *   <li>e
-   * </ul>
-   */
-  int x;
+    /**
+     * One
+     *
+     * <ul>
+     * <li>a
+     *     <ul>
+     *     <li>b
+     *     <li>c
+     *     </ul>
+     * <li>e
+     * </ul>
+     */
+    int x;
 }

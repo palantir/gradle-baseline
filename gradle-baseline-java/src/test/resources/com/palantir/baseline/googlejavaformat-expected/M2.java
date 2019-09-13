@@ -1,1 +1,2 @@
-open module com.google.m {}
+open module com.google.m {
+}

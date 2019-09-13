@@ -1,16 +1,21 @@
 /**
  * Base class for {@link Foo}.
  *
- * <p>The subclass should implement {@link #bar()}, with the implementation returning a new instance
- * of the foo relevant to that baz.
+ * <p>The subclass should implement {@link #bar()}, with the implementation returning a
+ * new instance of the foo relevant to that baz.
  *
- * <p>Example: <code>
+ * Example:
+ * <code>
  *   @Override
  *   protected Foo bar() {
  *     return new Foo();
  *   }
- * </code> The subclass should call {@link #get()} to get the foo object, and should not cache it in
- * the subclass. Example: <code>
+ * </code>
+ *
+ * The subclass should call {@link #get()} to get the foo object,
+ * and should not cache it in the subclass.
+ * Example:
+ * <code>
  *   @Annotation("something")
  *   public void thing() {
  *   }
@@ -19,21 +24,22 @@
  * @param <T> concrete subclass
  */
 class Test {
-  /**
-   * Field
-   *
-   * <p>Example:
-   *
-   * <pre><code>
-   *   @Annotation("something")
-   *   public void thing() {
-   *   }
-   * </code></pre>
-   *
-   * @param asd
-   */
-  int x() {}
+    /**
+     * Field
+     *
+     * Example:
+     * <pre><code>
+     *   @Annotation("something")
+     *   public void thing() {
+     *   }
+     * </code></pre>
+     *
+     * @param asd
+     */
+    int x() {}
 
-  /** Inline <code>foo</code>. */
-  int y() {}
+    /**
+     * Inline <code>foo</code>.
+     */
+    int y() {}
 }

@@ -1,6 +1,7 @@
 class Dummy {
-  /** */
-  private static void method() {
-    MISSING();
-  }
+    /**
+    */
+    private static void method() {
+        MISSING();
+    }
 }
