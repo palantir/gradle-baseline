@@ -102,6 +102,7 @@ import javax.lang.model.element.Name;
 @BugPattern(
         name = "StrictUnusedVariable",
         altNames = {"unused", "StrictUnusedVariable"},
+        link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         summary = "Unused.",
         providesFix = REQUIRES_HUMAN_ATTENTION,
         severity = WARNING,
