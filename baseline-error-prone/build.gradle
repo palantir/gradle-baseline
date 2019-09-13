@@ -27,3 +27,10 @@ tasks.withType(JavaCompile) {
         check("StrictUnusedVariable", CheckSeverity.OFF)
     }
 }
+
+// This is necessary to prevent the errorprone plugin from using this very project's output directory
+def originalGroup = project.group
+group = originalGroup + '-internal'
+publishing.publications.nebula {
+    groupId = originalGroup
+}
