@@ -35,6 +35,7 @@ public final class XmlReportFailuresSupplier implements FailuresSupplier {
             // Ensure any necessary output is enabled
         task.doFirst(new Action<Task>() {
             @Override
+            @SuppressWarnings("StrictUnusedVariable")
             public void execute(Task ignored) {
                 reportHandler.configureTask(task);
             }
