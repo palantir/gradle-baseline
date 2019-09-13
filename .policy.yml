@@ -9,6 +9,7 @@ policy:
       - fixing excavator
       - excavator only touched baseline, circle, gradle files, godel files, docker-compose-rule config or versions.props
       - excavator only touched package.json and lock files
+      - excavator only touched config files
   disapproval:
     requires:
       organizations: [ "palantir" ]
@@ -74,6 +75,17 @@ approval_rules:
           - "^godel/config/godel.properties$"
           - "^versions.props$"
           - "^versions.lock$"
+
+  - name: excavator only touched config files
+    requires:
+      count: 0
+    if:
+      has_author_in:
+        users: [ "svc-excavator-bot" ]
+      only_changed_files:
+        paths:
+          - "^\\..*.yml$"
+          - "^\\.github/.*$"
 
   - name: excavator only touched package.json and lock files
     requires:
