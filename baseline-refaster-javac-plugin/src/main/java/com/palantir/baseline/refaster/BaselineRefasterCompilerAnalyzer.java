@@ -52,6 +52,7 @@ public final class BaselineRefasterCompilerAnalyzer implements TaskListener {
     }
 
     @Override
+    @SuppressWarnings("StrictUnusedVariable")
     public void started(TaskEvent taskEvent) {}
 
     @Override
