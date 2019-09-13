@@ -49,7 +49,6 @@ import org.gradle.api.tasks.testing.Test;
 public final class BaselineErrorProne implements Plugin<Project> {
     private static final Logger log = Logging.getLogger(BaselineErrorProne.class);
 
-    public static final String REFASTER_CONFIGURATION = "refaster";
     public static final String EXTENSION_NAME = "baselineErrorProne";
 
     private static final String ERROR_PRONE_JAVAC_VERSION = "9+181-r4173-1";
@@ -67,13 +66,15 @@ public final class BaselineErrorProne implements Plugin<Project> {
             String version = Optional.ofNullable(getClass().getPackage().getImplementationVersion())
                     .orElse("latest.release");
 
-            Configuration refasterConfiguration = project.getConfigurations().create(REFASTER_CONFIGURATION);
+            Configuration refasterConfiguration = project.getConfigurations().create("refaster", conf -> {
+                conf.defaultDependencies(deps -> {
+                    deps.add(project.getDependencies().create(
+                            "com.palantir.baseline:baseline-refaster-rules:" + version + ":sources"));
+                });
+            });
             Configuration refasterCompilerConfiguration = project.getConfigurations()
                     .create("refasterCompiler", configuration -> configuration.extendsFrom(refasterConfiguration));
 
-            project.getDependencies().add(
-                    REFASTER_CONFIGURATION,
-                    "com.palantir.baseline:baseline-refaster-rules:" + version + ":sources");
             project.getDependencies().add(
                     ErrorPronePlugin.CONFIGURATION_NAME,
                     "com.palantir.baseline:baseline-error-prone:" + version);
