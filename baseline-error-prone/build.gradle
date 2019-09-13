@@ -21,3 +21,9 @@ dependencies {
     annotationProcessor 'com.google.auto.service:auto-service'
     compileOnly 'com.google.auto.service:auto-service'
 }
+
+tasks.withType(JavaCompile) {
+    options.errorprone {
+        check("StrictUnusedVariable", CheckSeverity.OFF)
+    }
+}

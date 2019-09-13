@@ -47,9 +47,6 @@ allprojects {
         sourceCompatibility = 1.8
         tasks.withType(JavaCompile) {
             options.compilerArgs += ['-Werror', '-Xlint:deprecation']
-            options.errorprone {
-                check("StrictUnusedVariable", CheckSeverity.OFF)
-            }
         }
     }
 
