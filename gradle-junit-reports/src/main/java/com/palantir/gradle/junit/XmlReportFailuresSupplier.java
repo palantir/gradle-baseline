@@ -55,7 +55,11 @@ public final class XmlReportFailuresSupplier implements FailuresSupplier {
     @Override
     public List<Failure> getFailures() throws IOException {
         File sourceReport = reporting.getReports().findByName("xml").getDestination();
-        return XmlUtils.parseXml(reportHandler, new FileInputStream(sourceReport)).failures();
+        try {
+            return XmlUtils.parseXml(reportHandler, new FileInputStream(sourceReport)).failures();
+        } catch (Exception e) {
+            throw new RuntimeException(String.format("Failed to parse failures XML: %s", sourceReport), e);
+        }
     }
 
     @Override
