@@ -72,7 +72,6 @@ public class BaselineErrorProneExtension {
         return Boolean.TRUE.equals(isStrict.get());
     }
 
-    @Option(option = "strict", description = "Whether to apply strict compilation checks")
     public final void strict(boolean shouldEnableStrict) {
         this.isStrict.set(shouldEnableStrict);
     }
