@@ -1,0 +1,7 @@
+type: improvement
+improvement:
+  description: A new `StrictUnusedVariable` check will catch any unused arguments
+    (e.g. AuthHeaders) to public methods.  error-prone's built-in `UnusedVariable`
+    would only apply to private methods or local fields.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/819
