@@ -1,3 +1,5 @@
+import net.ltgt.gradle.errorprone.CheckSeverity
+
 apply plugin: 'nebula.maven-publish'
 apply plugin: 'nebula.source-jar'
 apply plugin: 'java-library'
@@ -20,4 +22,17 @@ dependencies {
 
     annotationProcessor 'com.google.auto.service:auto-service'
     compileOnly 'com.google.auto.service:auto-service'
+}
+
+tasks.withType(JavaCompile) {
+    options.errorprone {
+        check("StrictUnusedVariable", CheckSeverity.OFF)
+    }
+}
+
+// This is necessary to prevent the errorprone plugin from using this very project's output directory
+def originalGroup = project.group
+group = originalGroup + '-internal'
+publishing.publications.nebula {
+    groupId = originalGroup
 }

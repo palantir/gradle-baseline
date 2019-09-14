@@ -76,6 +76,7 @@ public final class JavacFailuresSupplier implements FailuresSupplier {
     }
 
     @Override
+    @SuppressWarnings("StrictUnusedVariable")
     public RuntimeException handleInternalFailure(Path reportDir, RuntimeException ex) {
         return ex;
     }
