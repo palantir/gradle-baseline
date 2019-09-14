@@ -33,6 +33,7 @@ public final class CheckstyleReportHandler extends ReportHandler<Checkstyle> {
     }
 
     @Override
+    @SuppressWarnings("StrictUnusedVariable")
     public void startElement(String uri, String localName, String qName, Attributes attributes) {
         switch (qName) {
             case "file":
