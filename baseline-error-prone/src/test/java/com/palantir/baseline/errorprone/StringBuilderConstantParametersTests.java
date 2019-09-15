@@ -236,6 +236,30 @@ public class StringBuilderConstantParametersTests {
     }
 
     @Test
+    public void suggestedFixHandlesTernary() {
+        BugCheckerRefactoringTestHelper.newInstance(new StringBuilderConstantParameters(), getClass())
+                .addInputLines(
+                        "Test.java",
+                        "class Test {",
+                        "   String f(Object obj) {",
+                        "       return new StringBuilder()",
+                        "           .append(\"a\")",
+                        "           .append(obj == null ? \"nil\" : obj)",
+                        "           .append(\"b\")",
+                        "           .toString();",
+                        "   }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "class Test {",
+                        "   String f(Object obj) {",
+                        "       return \"a\" + (obj == null ? \"nil\" : obj) + \"b\";",
+                        "   }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
     public void negativeDynamicStringBuilder() {
         compilationHelper.addSourceLines(
                 "Test.java",

@@ -29,6 +29,7 @@ import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
+import com.sun.source.tree.ConditionalExpressionTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.MethodInvocationTree;
@@ -82,11 +83,20 @@ public final class StringBuilderConstantParameters
         return buildDescription(tree)
                 .setMessage(MESSAGE)
                 .addFix(SuggestedFix.builder()
-                        .replace(tree, Streams.concat(
-                                prefixStream,
-                                arguments.stream().map(state::getSourceForNode)).collect(Collectors.joining(" + ")))
+                        .replace(tree, Streams.concat(prefixStream, arguments.stream()
+                                .map(node -> getArgumentSourceString(state, node)))
+                                .collect(Collectors.joining(" + ")))
                         .build())
                 .build();
+    }
+
+    private static String getArgumentSourceString(VisitorState state, ExpressionTree tree) {
+        String originalSource = state.getSourceForNode(tree);
+        // Ternary expressions must be parenthesized to avoid leaking into preceding or following expressions.
+        if (tree instanceof ConditionalExpressionTree) {
+            return '(' + originalSource + ')';
+        }
+        return originalSource;
     }
 
     /**
