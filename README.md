@@ -166,6 +166,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `OptionalOrElseThrowThrows`: Optional.orElseThrow argument must return an exception, not throw one.
 - `LambdaMethodReference`: Lambda should use a method reference.
 - `SafeLoggingExceptionMessageFormat`: SafeLoggable exceptions do not interpolate parameters.
+- `StringBuilderConstantParameters`: StringBuilder with a constant number of parameters should be replaced by simple concatenation.
 
 ## com.palantir.baseline-checkstyle
 Checkstyle rules can be suppressed on a per-line or per-block basis. (It is good practice to first consider formatting
