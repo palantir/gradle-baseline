@@ -36,7 +36,6 @@ import com.sun.source.tree.NewClassTree;
 import com.sun.source.util.SimpleTreeVisitor;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -85,7 +84,7 @@ public final class StringBuilderConstantParameters
                 .addFix(SuggestedFix.builder()
                         .replace(tree, Streams.concat(
                                 prefixStream,
-                                arguments.stream().map(Objects::toString)).collect(Collectors.joining(" + ")))
+                                arguments.stream().map(state::getSourceForNode)).collect(Collectors.joining(" + ")))
                         .build())
                 .build();
     }
