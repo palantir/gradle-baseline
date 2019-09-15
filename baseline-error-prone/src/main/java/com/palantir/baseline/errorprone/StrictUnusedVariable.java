@@ -112,7 +112,7 @@ import javax.lang.model.element.Name;
         severity = WARNING,
         documentSuppression = false)
 public final class StrictUnusedVariable extends BugChecker implements BugChecker.CompilationUnitTreeMatcher {
-    private static final String EXEMPT_PREFIX = "unused";
+    private static final ImmutableSet<String> EXEMPT_PREFIXES = ImmutableSet.of("unused", "_");
 
     /**
      * The set of annotation full names which exempt annotated element from being reported as unused.
@@ -203,8 +203,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             Tree unused = specs.iterator().next().variableTree().getLeaf();
             Symbol.VarSymbol symbol = (Symbol.VarSymbol) unusedSymbol;
             ImmutableList<SuggestedFix> fixes;
-            if (symbol.getKind() == ElementKind.PARAMETER
-                    && !isEverUsed.contains(unusedSymbol)) {
+            if (symbol.getKind() == ElementKind.PARAMETER && !isEverUsed.contains(unusedSymbol)) {
                 fixes = buildUnusedParameterFixes(symbol, allUsageSites, state);
             } else {
                 fixes = buildUnusedVarFixes(symbol, allUsageSites, state);
@@ -421,61 +420,96 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
     private static ImmutableList<SuggestedFix> buildUnusedParameterFixes(
             Symbol varSymbol, List<TreePath> usagePaths, VisitorState state) {
         Symbol.MethodSymbol methodSymbol = (Symbol.MethodSymbol) varSymbol.owner;
+        boolean isPrivateMethod = methodSymbol.getModifiers().contains(Modifier.PRIVATE);
         int index = methodSymbol.params.indexOf(varSymbol);
         SuggestedFix.Builder fix = SuggestedFix.builder();
         for (TreePath path : usagePaths) {
             fix.delete(path.getLeaf());
         }
-        new TreePathScanner<Void, Void>() {
-            @Override
-            public Void visitMethodInvocation(MethodInvocationTree tree, Void unused) {
-                if (getSymbol(tree).equals(methodSymbol)) {
-                    removeByIndex(tree.getArguments());
-                }
-                return super.visitMethodInvocation(tree, null);
-            }
 
-            @Override
-            public Void visitMethod(MethodTree tree, Void unused) {
-                if (getSymbol(tree).equals(methodSymbol)) {
-                    removeByIndex(tree.getParameters());
+        // Remove parameter if the method is private since we can automatically fix all invocation sites
+        // Otherwise add `_` prefix to the variable name
+        if (isPrivateMethod) {
+            new TreePathScanner<Void, Void>() {
+                @Override
+                public Void visitMethodInvocation(MethodInvocationTree tree, Void unused) {
+                    if (getSymbol(tree).equals(methodSymbol)) {
+                        removeByIndex(tree.getArguments());
+                    }
+                    return super.visitMethodInvocation(tree, null);
                 }
-                return super.visitMethod(tree, null);
-            }
 
-            private void removeByIndex(List<? extends Tree> trees) {
-                if (index >= trees.size()) {
-                    // possible when removing a varargs parameter with no corresponding formal parameters
-                    return;
+                @Override
+                public Void visitMethod(MethodTree tree, Void unused) {
+                    if (getSymbol(tree).equals(methodSymbol)) {
+                        removeByIndex(tree.getParameters());
+                    }
+                    return super.visitMethod(tree, null);
                 }
-                if (trees.size() == 1) {
-                    Tree tree = getOnlyElement(trees);
-                    if (((JCTree) tree).getStartPosition() == -1 || state.getEndPosition(tree) == -1) {
+
+                private void removeByIndex(List<? extends Tree> trees) {
+                    if (index >= trees.size()) {
+                        // possible when removing a varargs parameter with no corresponding formal parameters
+                        return;
+                    }
+                    if (trees.size() == 1) {
+                        Tree tree = getOnlyElement(trees);
+                        if (((JCTree) tree).getStartPosition() == -1 || state.getEndPosition(tree) == -1) {
+                            // TODO(b/118437729): handle bogus source positions in enum declarations
+                            return;
+                        }
+                        fix.delete(tree);
+                        return;
+                    }
+                    int startPos;
+                    int endPos;
+                    if (index >= 1) {
+                        startPos = state.getEndPosition(trees.get(index - 1));
+                        endPos = state.getEndPosition(trees.get(index));
+                    } else {
+                        startPos = ((JCTree) trees.get(index)).getStartPosition();
+                        endPos = ((JCTree) trees.get(index + 1)).getStartPosition();
+                    }
+                    if (index == methodSymbol.params().size() - 1 && methodSymbol.isVarArgs()) {
+                        endPos = state.getEndPosition(getLast(trees));
+                    }
+                    if (startPos == Position.NOPOS || endPos == Position.NOPOS) {
                         // TODO(b/118437729): handle bogus source positions in enum declarations
                         return;
                     }
-                    fix.delete(tree);
-                    return;
+                    fix.replace(startPos, endPos, "");
                 }
-                int startPos;
-                int endPos;
-                if (index >= 1) {
-                    startPos = state.getEndPosition(trees.get(index - 1));
-                    endPos = state.getEndPosition(trees.get(index));
-                } else {
-                    startPos = ((JCTree) trees.get(index)).getStartPosition();
-                    endPos = ((JCTree) trees.get(index + 1)).getStartPosition();
+            }.scan(state.getPath().getCompilationUnit(), null);
+        } else {
+            new TreePathScanner<Void, Void>() {
+                @Override
+                public Void visitMethod(MethodTree methodTree, Void unused) {
+                    if (getSymbol(methodTree).equals(methodSymbol)) {
+                        renameByIndex(methodTree.getParameters());
+                    }
+                    return super.visitMethod(methodTree, null);
                 }
-                if (index == methodSymbol.params().size() - 1 && methodSymbol.isVarArgs()) {
-                    endPos = state.getEndPosition(getLast(trees));
+
+                private void renameByIndex(List<? extends VariableTree> trees) {
+                    if (index >= trees.size()) {
+                        // possible when removing a varargs parameter with no corresponding formal parameters
+                        return;
+                    }
+
+                    VariableTree tree = trees.get(index);
+                    int startPos = state.getEndPosition(tree.getType()) + 1;
+                    int endPos = state.getEndPosition(trees.get(index));
+                    if (index == methodSymbol.params().size() - 1 && methodSymbol.isVarArgs()) {
+                        endPos = state.getEndPosition(getLast(trees));
+                    }
+                    if (startPos == Position.NOPOS || endPos == Position.NOPOS) {
+                        // TODO(b/118437729): handle bogus source positions in enum declarations
+                        return;
+                    }
+                    fix.replace(startPos, endPos, "_" + tree.getName());
                 }
-                if (startPos == Position.NOPOS || endPos == Position.NOPOS) {
-                    // TODO(b/118437729): handle bogus source positions in enum declarations
-                    return;
-                }
-                fix.replace(startPos, endPos, "");
-            }
-        }.scan(state.getPath().getCompilationUnit(), null);
+            }.scan(state.getPath().getCompilationUnit(), null);
+        }
         return ImmutableList.of(fix.build());
     }
 
@@ -504,7 +538,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
     }
 
     private static boolean exemptedByName(Name name) {
-        return Ascii.toLowerCase(name.toString()).startsWith(EXEMPT_PREFIX);
+        return EXEMPT_PREFIXES.stream().anyMatch(prefix -> Ascii.toLowerCase(name.toString()).startsWith(prefix));
     }
 
     private class VariableFinder extends TreePathScanner<Void, Void> {

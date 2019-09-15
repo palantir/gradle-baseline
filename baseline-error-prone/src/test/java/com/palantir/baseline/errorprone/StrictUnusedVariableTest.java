@@ -16,6 +16,7 @@
 
 package com.palantir.baseline.errorprone;
 
+import com.google.errorprone.BugCheckerRefactoringTestHelper;
 import com.google.errorprone.CompilationTestHelper;
 import org.junit.Before;
 import org.junit.Test;
@@ -23,10 +24,13 @@ import org.junit.Test;
 public class StrictUnusedVariableTest {
 
     private CompilationTestHelper compilationHelper;
+    private BugCheckerRefactoringTestHelper refactoringTestHelper;
 
     @Before
     public void before() {
         compilationHelper = CompilationTestHelper.newInstance(StrictUnusedVariable.class, getClass());
+        refactoringTestHelper = BugCheckerRefactoringTestHelper.newInstance(
+                new StrictUnusedVariable(), getClass());
     }
 
     @Test
@@ -82,5 +86,25 @@ public class StrictUnusedVariableTest {
                 "  // BUG: Diagnostic contains: Unused",
                 "  public static void publicMethod(String buggy) { }",
                 "}").doTest();
+    }
+
+    @Test
+    public void renames_unused_param() {
+        refactoringTestHelper
+                .addInputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  private void privateMethod(String value) { }",
+                        "  public void publicMethod(String value, String value2) { }",
+                        "  public void varArgs(String value, String... value2) { }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  private void privateMethod() { }",
+                        "  public void publicMethod(String _value, String _value2) { }",
+                        "  public void varArgs(String _value, String... _value2) { }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 }
