@@ -1,0 +1,7 @@
+type: improvement
+improvement:
+  description: '`StrictUnusedVariable` now ignores variables prefixed with `_` and
+    the suggested fix will rename all unused parameters in public methods instead
+    of removing them'
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/833
