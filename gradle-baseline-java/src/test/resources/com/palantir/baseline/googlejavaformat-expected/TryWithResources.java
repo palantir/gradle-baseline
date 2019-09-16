@@ -8,9 +8,8 @@ class TryWtihResources {
         try (@A
         final @B C c = c();) {}
 
-        try (
-                final BufferedWriter writer =
-                        new BufferedWriter(new OutputStreamWriter(testFile, Charset.defaultCharset()))) {
+        try (final BufferedWriter writer =
+                new BufferedWriter(new OutputStreamWriter(testFile, Charset.defaultCharset()))) {
             writer.append("tom cruise\n").append("avatar\n");
             writer.flush();
         }
