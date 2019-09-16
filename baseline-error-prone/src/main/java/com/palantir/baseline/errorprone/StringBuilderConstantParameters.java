@@ -29,6 +29,7 @@ import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
+import com.sun.source.tree.BinaryTree;
 import com.sun.source.tree.ConditionalExpressionTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MemberSelectTree;
@@ -93,7 +94,7 @@ public final class StringBuilderConstantParameters
     private static String getArgumentSourceString(VisitorState state, ExpressionTree tree) {
         String originalSource = state.getSourceForNode(tree);
         // Ternary expressions must be parenthesized to avoid leaking into preceding or following expressions.
-        if (tree instanceof ConditionalExpressionTree) {
+        if (tree instanceof ConditionalExpressionTree || tree instanceof BinaryTree) {
             return '(' + originalSource + ')';
         }
         return originalSource;

@@ -260,6 +260,30 @@ public class StringBuilderConstantParametersTests {
     }
 
     @Test
+    public void suggestedFixHandlesAddition() {
+        BugCheckerRefactoringTestHelper.newInstance(new StringBuilderConstantParameters(), getClass())
+                .addInputLines(
+                        "Test.java",
+                        "class Test {",
+                        "   String f(int param0, int param1) {",
+                        "       return new StringBuilder()",
+                        "           .append(\"a\")",
+                        "           .append(param0 + param1)",
+                        "           .append(\"b\")",
+                        "           .toString();",
+                        "   }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "class Test {",
+                        "   String f(int param0, int param1) {",
+                        "       return \"a\" + (param0 + param1) + \"b\";",
+                        "   }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
     public void negativeDynamicStringBuilder() {
         compilationHelper.addSourceLines(
                 "Test.java",
