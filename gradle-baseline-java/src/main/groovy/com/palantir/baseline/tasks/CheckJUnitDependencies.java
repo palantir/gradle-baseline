@@ -36,7 +36,7 @@ public class CheckJUnitDependencies extends DefaultTask {
     }
 
     @TaskAction
-    public void validateDependencies() {
+    public final void validateDependencies() {
         getProject().getConvention()
                 .getPlugin(JavaPluginConvention.class)
                 .getSourceSets()
