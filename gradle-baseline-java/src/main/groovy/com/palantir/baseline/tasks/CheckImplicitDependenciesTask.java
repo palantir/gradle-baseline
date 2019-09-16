@@ -60,7 +60,8 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
 
     @TaskAction
     public final void checkImplicitDependencies() {
-        Set<ResolvedDependency> declaredDependencies = dependenciesConfigurations.get().stream()
+        Set<ResolvedDependency> declaredDependencies = dependenciesConfigurations.get()
+                .stream()
                 .map(Configuration::getResolvedConfiguration)
                 .flatMap(resolved -> resolved.getFirstLevelModuleDependencies().stream())
                 .collect(Collectors.toSet());
@@ -76,7 +77,8 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
                 .flatMap(dependency -> dependency.getModuleArtifacts().stream())
                 .collect(Collectors.toSet());
 
-        List<ResolvedArtifact> usedButUndeclared = Sets.difference(necessaryArtifacts, declaredArtifacts).stream()
+        List<ResolvedArtifact> usedButUndeclared = Sets.difference(necessaryArtifacts, declaredArtifacts)
+                .stream()
                 .sorted(Comparator.comparing(artifact -> artifact.getId().getDisplayName()))
                 .filter(artifact -> !shouldIgnore(artifact))
                 .collect(Collectors.toList());
@@ -89,9 +91,9 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
             throw new GradleException(
                     String.format("Found %d implicit dependencies - consider adding the following explicit "
                             + "dependencies to '%s', or avoid using classes from these jars:\n%s",
-                    usedButUndeclared.size(),
-                    buildFile(),
-                    suggestion));
+                            usedButUndeclared.size(),
+                            buildFile(),
+                            suggestion));
         }
     }
 
@@ -100,7 +102,8 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
                 ? String.format("project('%s')",
                         ((ProjectComponentIdentifier) artifact.getId().getComponentIdentifier()).getProjectPath())
                 : String.format("'%s:%s'",
-                        artifact.getModuleVersion().getId().getGroup(), artifact.getModuleVersion().getId().getName());
+                        artifact.getModuleVersion().getId().getGroup(),
+                        artifact.getModuleVersion().getId().getName());
         return String.format("        implementation %s", artifactNameString);
     }
 
@@ -123,7 +126,6 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
         return ((ProjectComponentIdentifier) artifact.getId().getComponentIdentifier()).getProjectPath()
                 .equals(getProject().getPath());
     }
-
 
     /** All classes which are mentioned in this project's source code. */
     private Set<String> referencedClasses() {

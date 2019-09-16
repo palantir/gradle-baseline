@@ -38,7 +38,6 @@ public class DangerousStringInternUsageTest {
                 "       // BUG: Diagnostic contains: Should not use String.intern().",
                 "       return getClass().getName().intern();",
                 "   }",
-                "}"
-        ).doTest();
+                "}").doTest();
     }
 }

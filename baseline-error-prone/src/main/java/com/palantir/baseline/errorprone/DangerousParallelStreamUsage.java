@@ -38,7 +38,9 @@ public final class DangerousParallelStreamUsage extends BugChecker implements Bu
             + "blob/1.9.1/src/main/java/com/palantir/common/streams/MoreStreams.java#L53";
     private static final String ERROR_MESSAGE = "Should not use .parallel() on a Java stream. "
             + "Doing so has very subtle and potentially severe performance implications, so in general you're better "
-            + "off using " + MORE_STREAMS_URL + " which allows you to provide your own executor service and "
+            + "off using "
+            + MORE_STREAMS_URL
+            + " which allows you to provide your own executor service and "
             + "specify the desired parallelism (i.e. the max number of concurrent tasks that will be submitted).\n"
             + "On the contrary the implementation of Java parallel streams uses a globally shared ForkJoinPool and "
             + "does not allow you to provide your own pool. Fork/join pools implement work-stealing, where any thread "

@@ -39,8 +39,7 @@ public final class DangerousParallelStreamUsageTest {
                 "       // BUG: Diagnostic contains: Should not use .parallel() on a Java stream.",
                 "       list.stream().parallel();",
                 "   }",
-                "}"
-        ).doTest();
+                "}").doTest();
     }
 
     @SuppressWarnings("MethodLength")
@@ -246,7 +245,6 @@ public final class DangerousParallelStreamUsageTest {
                 "       // BUG: Diagnostic contains: Should not use .parallel() on a Java stream.",
                 "       fooStream.parallel(POOL_FOR_THIS_CLASS);",
                 "   }",
-                "}"
-        ).doTest();
+                "}").doTest();
     }
 }

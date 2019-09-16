@@ -61,8 +61,8 @@ public final class Slf4jConstantLogMessage extends BugChecker implements MethodI
                 ASTHelpers.getType(tree.getArguments().get(0)),
                 state.getTypeFromString("org.slf4j.Marker"),
                 state)
-                ? args.get(1)
-                : args.get(0);
+                        ? args.get(1)
+                        : args.get(0);
 
         if (compileTimeConstExpressionMatcher.matches(messageArg, state)) {
             return Description.NO_MATCH;

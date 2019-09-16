@@ -68,7 +68,8 @@ public final class ClassUniquenessAnalyzer {
                 return;
             }
 
-            try (FileInputStream fileInputStream = new FileInputStream(file);
+            try (
+                    FileInputStream fileInputStream = new FileInputStream(file);
                     JarInputStream jarInputStream = new JarInputStream(fileInputStream)) {
                 JarEntry entry;
                 while ((entry = jarInputStream.getNextJarEntry()) != null) {
@@ -101,19 +102,23 @@ public final class ClassUniquenessAnalyzer {
         });
 
         // discard all the classes that only come from one jar - these are completely safe!
-        classToJars.entrySet().stream()
+        classToJars.entrySet()
+                .stream()
                 .filter(entry -> entry.getValue().size() > 1)
                 .forEach(entry -> multiMapPut(jarsToClasses, entry.getValue(), entry.getKey()));
 
         // figure out which classes have differing hashes
-        tempClassToHashCodes.entrySet().stream()
+        tempClassToHashCodes.entrySet()
+                .stream()
                 .filter(entry -> entry.getValue().size() > 1)
-                .forEach(entry ->
-                        entry.getValue().forEach(value -> multiMapPut(classToHashCodes, entry.getKey(), value)));
+                .forEach(entry -> entry.getValue()
+                        .forEach(value -> multiMapPut(classToHashCodes, entry.getKey(), value)));
 
         Instant after = Instant.now();
         log.info("Checked {} classes from {} dependencies for uniqueness ({}ms)",
-                classToJars.size(), dependencies.size(), Duration.between(before, after).toMillis());
+                classToJars.size(),
+                dependencies.size(),
+                Duration.between(before, after).toMillis());
     }
 
     /**

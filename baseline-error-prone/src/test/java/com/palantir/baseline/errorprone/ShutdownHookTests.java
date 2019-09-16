@@ -42,8 +42,7 @@ public class ShutdownHookTests {
                 "// " + errorMsg,
                 "    Runtime.getRuntime().removeShutdownHook(new Thread());",
                 "  }",
-                "}"
-        ).doTest();
+                "}").doTest();
     }
 
     @Test
@@ -55,8 +54,7 @@ public class ShutdownHookTests {
                 "// " + errorMsg,
                 "    Runtime.getRuntime().addShutdownHook(new Thread());",
                 "  }",
-                "}"
-        ).doTest();
+                "}").doTest();
     }
 
     @Test
@@ -68,7 +66,6 @@ public class ShutdownHookTests {
                 "// ",
                 "    Runtime.getRuntime().availableProcessors();",
                 "  }",
-                "}"
-        ).doTest();
+                "}").doTest();
     }
 }

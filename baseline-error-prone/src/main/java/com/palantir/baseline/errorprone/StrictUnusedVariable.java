@@ -168,8 +168,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
         // appropriate fixes for them.
         ListMultimap<Symbol, TreePath> usageSites = variableFinder.usageSites;
 
-        FilterUsedVariables
-                filterUsedVariables = new FilterUsedVariables(unusedElements, usageSites);
+        FilterUsedVariables filterUsedVariables = new FilterUsedVariables(unusedElements, usageSites);
         filterUsedVariables.scan(state.getPath(), null);
 
         // Keeps track of whether a symbol was _ever_ used (between reassignments).
@@ -220,11 +219,10 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                             .addAllFixes(
                                     fixes.stream()
                                             .map(
-                                                    f ->
-                                                            SuggestedFix.builder()
-                                                                    .merge(makeFirstAssignmentDeclaration)
-                                                                    .merge(f)
-                                                                    .build())
+                                                    f -> SuggestedFix.builder()
+                                                            .merge(makeFirstAssignmentDeclaration)
+                                                            .merge(f)
+                                                            .build())
                                             .collect(toImmutableList()))
                             .build());
         }
@@ -255,7 +253,8 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             return SuggestedFix.builder().build();
         }
         return SuggestedFix.prefixWith(
-                reassignment.get(), state.getSourceForNode(removedVariableTree.get().getType()) + " ");
+                reassignment.get(),
+                state.getSourceForNode(removedVariableTree.get().getType()) + " ");
     }
 
     @SuppressWarnings("SwitchStatementDefaultCase")
@@ -330,7 +329,9 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
     }
 
     private static ImmutableList<SuggestedFix> buildUnusedVarFixes(
-            Symbol varSymbol, List<TreePath> usagePaths, VisitorState state) {
+            Symbol varSymbol,
+            List<TreePath> usagePaths,
+            VisitorState state) {
         // Don't suggest a fix for fields annotated @Inject: we can warn on them, but they *could* be
         // used outside the class.
         if (ASTHelpers.hasDirectAnnotationWithSimpleName(varSymbol, "Inject")) {
@@ -355,7 +356,8 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                         String newContent =
                                 String.format(
                                         "%s{ %s; }",
-                                        varSymbol.isStatic() ? "static " : "", state.getSourceForNode(initializer));
+                                        varSymbol.isStatic() ? "static " : "",
+                                        state.getSourceForNode(initializer));
                         fix.merge(SuggestedFixes.replaceIncludingComments(usagePath, newContent, state));
                         removeSideEffectsFix.replace(statement, "");
                     } else {
@@ -371,7 +373,8 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                     String newContent =
                             String.format(
                                     "%s%s unused",
-                                    modifiers.isEmpty() ? "" : (modifiers + " "), variableTree.getType());
+                                    modifiers.isEmpty() ? "" : (modifiers + " "),
+                                    variableTree.getType());
                     // The new content for the second fix should be identical to the content for the first
                     // fix in this case because we can't just remove the enhanced for loop variable.
                     fix.replace(variableTree, newContent);
@@ -403,7 +406,9 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                     if (hasSideEffect(((AssignmentTree) tree).getExpression())) {
                         encounteredSideEffects = true;
                         fix.replace(
-                                tree.getStartPosition(), ((JCTree.JCAssign) tree).getExpression().getStartPosition(), "");
+                                tree.getStartPosition(),
+                                ((JCTree.JCAssign) tree).getExpression().getStartPosition(),
+                                "");
                         removeSideEffectsFix.replace(statement, "");
                         continue;
                     }
@@ -419,7 +424,9 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
     }
 
     private static ImmutableList<SuggestedFix> buildUnusedParameterFixes(
-            Symbol varSymbol, List<TreePath> usagePaths, VisitorState state) {
+            Symbol varSymbol,
+            List<TreePath> usagePaths,
+            VisitorState state) {
         Symbol.MethodSymbol methodSymbol = (Symbol.MethodSymbol) varSymbol.owner;
         int index = methodSymbol.params.indexOf(varSymbol);
         SuggestedFix.Builder fix = SuggestedFix.builder();
@@ -491,7 +498,8 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
      * exemptingAnnotations}.
      */
     private static boolean exemptedByAnnotation(
-            List<? extends AnnotationTree> annotations, VisitorState unused) {
+            List<? extends AnnotationTree> annotations,
+            VisitorState unused) {
         for (AnnotationTree annotation : annotations) {
             if (((JCTree.JCAnnotation) annotation).type != null) {
                 Symbol.TypeSymbol tsym = ((JCTree.JCAnnotation) annotation).type.tsym;
@@ -649,7 +657,8 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
         private final ImmutableMap<Symbol, TreePath> declarationSites;
 
         private FilterUsedVariables(
-                Map<Symbol, TreePath> unusedElements, ListMultimap<Symbol, TreePath> usageSites) {
+                Map<Symbol, TreePath> unusedElements,
+                ListMultimap<Symbol, TreePath> usageSites) {
             this.unusedElements = unusedElements;
             this.usageSites = usageSites;
             this.declarationSites = ImmutableMap.copyOf(unusedElements);
@@ -852,9 +861,9 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             // Then it is possible that this is not a real usage of 'i'.
             if (isInExpressionStatementTree()
                     && (tree.getKind() == POSTFIX_DECREMENT
-                    || tree.getKind() == POSTFIX_INCREMENT
-                    || tree.getKind() == PREFIX_DECREMENT
-                    || tree.getKind() == PREFIX_INCREMENT)) {
+                            || tree.getKind() == POSTFIX_INCREMENT
+                            || tree.getKind() == PREFIX_DECREMENT
+                            || tree.getKind() == PREFIX_INCREMENT)) {
                 leftHandSideAssignment = true;
                 scan(tree.getExpression(), null);
                 leftHandSideAssignment = false;

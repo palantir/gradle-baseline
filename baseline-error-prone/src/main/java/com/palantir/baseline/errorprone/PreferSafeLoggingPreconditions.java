@@ -63,10 +63,14 @@ public final class PreferSafeLoggingPreconditions extends BugChecker implements 
                             .withNameMatching(Pattern.compile("isTrue|notNull|validState")));
 
     private static final ImmutableMap<String, String> TRANSLATIONS_TO_LOGSAFE_PRECONDITIONS_METHODS = ImmutableMap.of(
-            "requireNonNull", "checkNotNull", // java.util.Objects.requireNotNull
-            "isTrue", "checkArgument", // org.apache.commons.lang3.Validate.isTrue
-            "notNull", "checkNotNull", // org.apache.commons.lang3.Validate.notNull
-            "validState", "checkState"); // org.apache.commons.lang3.Validate.validState
+            "requireNonNull",
+            "checkNotNull", // java.util.Objects.requireNotNull
+            "isTrue",
+            "checkArgument", // org.apache.commons.lang3.Validate.isTrue
+            "notNull",
+            "checkNotNull", // org.apache.commons.lang3.Validate.notNull
+            "validState",
+            "checkState"); // org.apache.commons.lang3.Validate.validState
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {

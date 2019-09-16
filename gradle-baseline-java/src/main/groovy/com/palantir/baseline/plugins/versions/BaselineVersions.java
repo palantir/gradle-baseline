@@ -103,10 +103,16 @@ public final class BaselineVersions implements Plugin<Project> {
                 extension.propertiesFile(ImmutableMap.of("file", project.file("versions.props")));
             }
         } else {
-            TaskProvider<CheckBomConflictTask> checkBomConflict = project.getTasks().register(
-                    "checkBomConflict", CheckBomConflictTask.class, task -> task.setPropsFile(rootVersionsPropsFile));
-            TaskProvider<CheckNoUnusedPinTask> checkNoUnusedPin = project.getTasks().register(
-                    "checkNoUnusedPin", CheckNoUnusedPinTask.class, task -> task.setPropsFile(rootVersionsPropsFile));
+            TaskProvider<CheckBomConflictTask> checkBomConflict = project.getTasks()
+                    .register(
+                            "checkBomConflict",
+                            CheckBomConflictTask.class,
+                            task -> task.setPropsFile(rootVersionsPropsFile));
+            TaskProvider<CheckNoUnusedPinTask> checkNoUnusedPin = project.getTasks()
+                    .register(
+                            "checkNoUnusedPin",
+                            CheckNoUnusedPinTask.class,
+                            task -> task.setPropsFile(rootVersionsPropsFile));
 
             project.getTasks().register("checkVersionsProps", CheckVersionsPropsTask.class, task -> {
                 task.dependsOn(checkBomConflict, checkNoUnusedPin);
@@ -137,14 +143,16 @@ public final class BaselineVersions implements Plugin<Project> {
     }
 
     static Set<String> getAllProjectsResolvedModuleIdentifiers(Project project) {
-        return project.getRootProject().getAllprojects()
+        return project.getRootProject()
+                .getAllprojects()
                 .stream()
                 .flatMap(project2 -> getResolvedModuleIdentifiers(project2).stream())
                 .collect(Collectors.toSet());
     }
 
     static Set<String> getResolvedModuleIdentifiers(Project project) {
-        return project.getConfigurations().stream()
+        return project.getConfigurations()
+                .stream()
                 .filter(Configuration::isCanBeResolved)
                 .flatMap(configuration -> {
                     try {

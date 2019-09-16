@@ -39,8 +39,10 @@ class BaselineConfig extends AbstractBaselinePlugin {
 
         // users can still override this default dependency, it just reduces boilerplate
         Optional<String> version = Optional.ofNullable(getClass().getPackage().getImplementationVersion());
-        configuration.defaultDependencies(d -> d.add(rootProject.getDependencies().create(String.format(
-                "com.palantir.baseline:gradle-baseline-java-config%s@zip", version.map(v -> ":" + v).orElse("")))));
+        configuration.defaultDependencies(d -> d.add(rootProject.getDependencies()
+                .create(String.format(
+                        "com.palantir.baseline:gradle-baseline-java-config%s@zip",
+                        version.map(v -> ":" + v).orElse("")))));
 
         // Create task for generating configuration.
         rootProject.getTasks().register("baselineUpdateConfig", task -> {
@@ -66,7 +68,8 @@ class BaselineConfig extends AbstractBaselinePlugin {
         public void execute(Task task) {
             if (configuration.getFiles().size() != 1) {
                 throw new IllegalArgumentException("Expected to find exactly one config dependency in the "
-                        + "'baseline' configuration, found: " + configuration.getFiles());
+                        + "'baseline' configuration, found: "
+                        + configuration.getFiles());
             }
 
             rootProject.copy(copySpec -> {

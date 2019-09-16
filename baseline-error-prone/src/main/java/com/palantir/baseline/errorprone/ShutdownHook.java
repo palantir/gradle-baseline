@@ -48,7 +48,8 @@ public final class ShutdownHook extends BugChecker implements BugChecker.MethodI
 
     @Override
     public Description matchMethodInvocation(
-            MethodInvocationTree tree, VisitorState state) {
+            MethodInvocationTree tree,
+            VisitorState state) {
         if (!shutdownHookMethods.matches(tree, state)) {
             return Description.NO_MATCH;
         }

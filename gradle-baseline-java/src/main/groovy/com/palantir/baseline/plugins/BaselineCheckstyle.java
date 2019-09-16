@@ -49,13 +49,16 @@ public final class BaselineCheckstyle extends AbstractBaselinePlugin {
             // We use the "JavadocMethod" module in our Checkstyle configuration, making
             // Java 8+ new doclint compiler feature redundant.
             if (javaConvention.getSourceCompatibility().isJava8Compatible()) {
-                project.getTasks().withType(Javadoc.class, javadoc ->
-                        javadoc.options(javadocOptions -> ((StandardJavadocDocletOptions) javadocOptions)
-                                .addStringOption("Xdoclint:none", "-quiet")));
+                project.getTasks()
+                        .withType(Javadoc.class,
+                                javadoc -> javadoc
+                                        .options(javadocOptions -> ((StandardJavadocDocletOptions) javadocOptions)
+                                                .addStringOption("Xdoclint:none", "-quiet")));
             }
         });
 
-        project.getExtensions().getByType(CheckstyleExtension.class)
+        project.getExtensions()
+                .getByType(CheckstyleExtension.class)
                 .setConfigDir(this.project.file(Paths.get(getConfigDir(), "checkstyle").toString()));
         project.getPluginManager().withPlugin("eclipse", plugin -> {
             EclipseProject eclipseProject = project.getExtensions().getByType(EclipseModel.class).getProject();

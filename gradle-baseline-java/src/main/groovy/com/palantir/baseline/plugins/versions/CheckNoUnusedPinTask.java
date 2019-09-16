@@ -108,12 +108,15 @@ public class CheckNoUnusedPinTask extends DefaultTask {
         }
 
         if (shouldFix.get()) {
-            getProject().getLogger().lifecycle("Removing unused pins from versions.props:\n"
-                    + unusedForces.stream()
-                    .map(name -> String.format(" - '%s'", name))
-                    .collect(Collectors.joining("\n")));
+            getProject().getLogger()
+                    .lifecycle("Removing unused pins from versions.props:\n"
+                            + unusedForces.stream()
+                                    .map(name -> String.format(" - '%s'", name))
+                                    .collect(Collectors.joining("\n")));
             VersionsProps.writeVersionsProps(
-                    parsedVersionsProps, unusedForces.stream(), getPropsFile().get().getAsFile());
+                    parsedVersionsProps,
+                    unusedForces.stream(),
+                    getPropsFile().get().getAsFile());
             return;
         }
 

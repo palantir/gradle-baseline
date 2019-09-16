@@ -71,17 +71,21 @@ public final class BaselineErrorProne implements Plugin<Project> {
             Configuration refasterCompilerConfiguration = project.getConfigurations()
                     .create("refasterCompiler", configuration -> configuration.extendsFrom(refasterConfiguration));
 
-            project.getDependencies().add(
-                    REFASTER_CONFIGURATION,
-                    "com.palantir.baseline:baseline-refaster-rules:" + version + ":sources");
-            project.getDependencies().add(
-                    ErrorPronePlugin.CONFIGURATION_NAME,
-                    "com.palantir.baseline:baseline-error-prone:" + version);
-            project.getDependencies().add(
-                    "refasterCompiler",
-                    "com.palantir.baseline:baseline-refaster-javac-plugin:" + version);
+            project.getDependencies()
+                    .add(
+                            REFASTER_CONFIGURATION,
+                            "com.palantir.baseline:baseline-refaster-rules:" + version + ":sources");
+            project.getDependencies()
+                    .add(
+                            ErrorPronePlugin.CONFIGURATION_NAME,
+                            "com.palantir.baseline:baseline-error-prone:" + version);
+            project.getDependencies()
+                    .add(
+                            "refasterCompiler",
+                            "com.palantir.baseline:baseline-refaster-javac-plugin:" + version);
 
-            Provider<File> refasterRulesFile = project.getLayout().getBuildDirectory()
+            Provider<File> refasterRulesFile = project.getLayout()
+                    .getBuildDirectory()
                     .file("refaster/rules.refaster")
                     .map(RegularFile::getAsFile);
 
@@ -129,9 +133,11 @@ public final class BaselineErrorProne implements Plugin<Project> {
 
                                 if (isRefasterRefactoring(project)) {
                                     javaCompile.dependsOn(compileRefaster);
-                                    errorProneOptions.getErrorproneArgumentProviders().add(() -> ImmutableList.of(
-                                            "-XepPatchChecks:refaster:" + refasterRulesFile.get().getAbsolutePath(),
-                                            "-XepPatchLocation:IN_PLACE"));
+                                    errorProneOptions.getErrorproneArgumentProviders()
+                                            .add(() -> ImmutableList.of(
+                                                    "-XepPatchChecks:refaster:"
+                                                            + refasterRulesFile.get().getAbsolutePath(),
+                                                    "-XepPatchLocation:IN_PLACE"));
                                 }
 
                                 if (isErrorProneRefactoring(project)) {
@@ -141,7 +147,9 @@ public final class BaselineErrorProne implements Plugin<Project> {
                                     errorProneOptions.getErrorproneArgumentProviders().add(() -> {
                                         // Don't apply checks that have been explicitly disabled
                                         Stream<String> errorProneChecks = getNotDisabledErrorproneChecks(
-                                                errorProneExtension, javaCompile, errorProneOptions);
+                                                errorProneExtension,
+                                                javaCompile,
+                                                errorProneOptions);
                                         return ImmutableList.of(
                                                 "-XepPatchChecks:" + Joiner.on(',').join(errorProneChecks.iterator()),
                                                 "-XepPatchLocation:IN_PLACE");
@@ -153,7 +161,8 @@ public final class BaselineErrorProne implements Plugin<Project> {
 
             // To allow refactoring of deprecated methods, even when -Xlint:deprecation is specified, we need to remove
             // these compiler flags after all configuration has happened.
-            project.afterEvaluate(unused -> project.getTasks().withType(JavaCompile.class)
+            project.afterEvaluate(unused -> project.getTasks()
+                    .withType(JavaCompile.class)
                     .configureEach(javaCompile -> {
                         if (javaCompile.equals(compileRefaster)) {
                             return;
@@ -161,18 +170,21 @@ public final class BaselineErrorProne implements Plugin<Project> {
                         if (isRefactoring(project)) {
                             javaCompile.getOptions().setWarnings(false);
                             javaCompile.getOptions().setDeprecation(false);
-                            javaCompile.getOptions().setCompilerArgs(javaCompile.getOptions().getCompilerArgs()
-                                    .stream()
-                                    .filter(arg -> !arg.equals("-Werror"))
-                                    .filter(arg -> !arg.equals("-deprecation"))
-                                    .filter(arg -> !arg.equals("-Xlint:deprecation"))
-                                    .collect(Collectors.toList()));
+                            javaCompile.getOptions()
+                                    .setCompilerArgs(javaCompile.getOptions()
+                                            .getCompilerArgs()
+                                            .stream()
+                                            .filter(arg -> !arg.equals("-Werror"))
+                                            .filter(arg -> !arg.equals("-deprecation"))
+                                            .filter(arg -> !arg.equals("-Xlint:deprecation"))
+                                            .collect(Collectors.toList()));
                         }
                     }));
 
             project.getPluginManager().withPlugin("java-gradle-plugin", appliedPlugin -> {
-                project.getTasks().withType(JavaCompile.class).configureEach(javaCompile ->
-                        ((ExtensionAware) javaCompile.getOptions()).getExtensions()
+                project.getTasks()
+                        .withType(JavaCompile.class)
+                        .configureEach(javaCompile -> ((ExtensionAware) javaCompile.getOptions()).getExtensions()
                                 .configure(ErrorProneOptions.class, errorProneOptions -> {
                                     errorProneOptions.check("Slf4jLogsafeArgs", CheckSeverity.OFF);
                                     errorProneOptions.check("PreferSafeLoggableExceptions", CheckSeverity.OFF);
@@ -185,8 +197,9 @@ public final class BaselineErrorProne implements Plugin<Project> {
             // compilation or code analysis. ErrorProneJavacPluginPlugin handles JavaCompile cases via errorproneJavac
             // configuration and we do similar thing for Test and Javadoc type tasks
             if (!JavaVersion.current().isJava9Compatible()) {
-                project.getDependencies().add(ErrorPronePlugin.JAVAC_CONFIGURATION_NAME,
-                        "com.google.errorprone:javac:" + ERROR_PRONE_JAVAC_VERSION);
+                project.getDependencies()
+                        .add(ErrorPronePlugin.JAVAC_CONFIGURATION_NAME,
+                                "com.google.errorprone:javac:" + ERROR_PRONE_JAVAC_VERSION);
                 project.getConfigurations()
                         .named(ErrorPronePlugin.JAVAC_CONFIGURATION_NAME)
                         .configure(conf -> {
@@ -196,9 +209,11 @@ public final class BaselineErrorProne implements Plugin<Project> {
                                     .map(File::new)
                                     .collect(Collectors.toList());
                             FileCollection errorProneFiles = conf.plus(project.files(bootstrapClasspath));
-                            project.getTasks().withType(Test.class)
+                            project.getTasks()
+                                    .withType(Test.class)
                                     .configureEach(test -> test.setBootstrapClasspath(errorProneFiles));
-                            project.getTasks().withType(Javadoc.class)
+                            project.getTasks()
+                                    .withType(Javadoc.class)
                                     .configureEach(javadoc -> javadoc.getOptions()
                                             .setBootClasspath(new LazyConfigurationList(errorProneFiles)));
                         });

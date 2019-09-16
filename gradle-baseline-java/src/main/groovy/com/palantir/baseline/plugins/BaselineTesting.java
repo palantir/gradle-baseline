@@ -45,31 +45,34 @@ public final class BaselineTesting implements Plugin<Project> {
             }
         });
 
-        project.getPlugins().withType(JavaPlugin.class, unused -> {
-            // afterEvaluate necessary because the junit-jupiter dep might be added further down the build.gradle
-            project.afterEvaluate(proj -> {
-                proj.getConvention()
-                        .getPlugin(JavaPluginConvention.class)
-                        .getSourceSets()
-                        .matching(ss -> hasCompileDependenciesMatching(proj, ss, this::isJunitJupiter))
-                        .forEach(ss -> {
-                            String testTaskName = ss.getTaskName(null, "test");
-                            Test testTask = (Test) proj.getTasks().findByName(testTaskName);
-                            if (testTask == null) {
-                                // Fall back to the source set name, since that is what gradle-testsets-plugin does
-                                testTask = (Test) proj.getTasks().findByName(ss.getName());
-                                if (testTask == null) {
-                                    log.warn(
-                                            "Detected 'org:junit.jupiter:junit-jupiter', but unable to find test task");
-                                    return;
-                                }
-                            }
-                            log.info("Detected 'org:junit.jupiter:junit-jupiter', enabling useJUnitPlatform() on {}",
-                                    testTask.getName());
-                            enableJunit5ForTestTask(testTask);
+        project.getPlugins()
+                .withType(JavaPlugin.class,
+                        unused -> {
+                            // afterEvaluate necessary because the junit-jupiter dep might be added further down the build.gradle
+                            project.afterEvaluate(proj -> {
+                                proj.getConvention()
+                                        .getPlugin(JavaPluginConvention.class)
+                                        .getSourceSets()
+                                        .matching(ss -> hasCompileDependenciesMatching(proj, ss, this::isJunitJupiter))
+                                        .forEach(ss -> {
+                                            String testTaskName = ss.getTaskName(null, "test");
+                                            Test testTask = (Test) proj.getTasks().findByName(testTaskName);
+                                            if (testTask == null) {
+                                                // Fall back to the source set name, since that is what gradle-testsets-plugin does
+                                                testTask = (Test) proj.getTasks().findByName(ss.getName());
+                                                if (testTask == null) {
+                                                    log.warn(
+                                                            "Detected 'org:junit.jupiter:junit-jupiter', but unable to find test task");
+                                                    return;
+                                                }
+                                            }
+                                            log.info(
+                                                    "Detected 'org:junit.jupiter:junit-jupiter', enabling useJUnitPlatform() on {}",
+                                                    testTask.getName());
+                                            enableJunit5ForTestTask(testTask);
+                                        });
+                            });
                         });
-            });
-        });
     }
 
     private boolean hasCompileDependenciesMatching(Project project, SourceSet sourceSet, Spec<Dependency> spec) {

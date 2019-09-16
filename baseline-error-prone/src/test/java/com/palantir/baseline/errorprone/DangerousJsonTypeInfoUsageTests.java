@@ -85,8 +85,7 @@ public final class DangerousJsonTypeInfoUsageTests {
                 "import com.fasterxml.jackson.annotation.JsonTypeInfo;",
                 "// BUG: Diagnostic contains: Must not use Jackson @JsonTypeInfo annotation",
                 "@JsonTypeInfo(use = " + variant + ")",
-                "class Bean {}"
-        ).doTest();
+                "class Bean {}").doTest();
     }
 
     private void negative(String variant) {
@@ -94,7 +93,6 @@ public final class DangerousJsonTypeInfoUsageTests {
                 "Bean.java",
                 "import com.fasterxml.jackson.annotation.JsonTypeInfo;",
                 "@JsonTypeInfo(use = " + variant + ")",
-                "class Bean {}"
-        ).doTest();
+                "class Bean {}").doTest();
     }
 }

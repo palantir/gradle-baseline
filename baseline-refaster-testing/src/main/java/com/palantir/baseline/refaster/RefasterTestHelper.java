@@ -80,7 +80,8 @@ public final class RefasterTestHelper {
             CompilerUtility.CompilerResult result = CompilerUtility.compile(input);
             Assertions.assertThat(result.diagnostics()).isEmpty();
 
-            JCTree.JCCompilationUnit tree = result.compilationUnits().stream()
+            JCTree.JCCompilationUnit tree = result.compilationUnits()
+                    .stream()
                     .filter(compilationUnitTree -> compilationUnitTree instanceof JCTree.JCCompilationUnit)
                     .map(compilationUnitTree -> (JCTree.JCCompilationUnit) compilationUnitTree)
                     .findFirst()
@@ -106,7 +107,8 @@ public final class RefasterTestHelper {
 
     private List<CodeTransformer> extractRefasterRules(JavaFileObject object) {
         CompilerUtility.CompilerResult result = CompilerUtility.compile(object);
-        ClassTree classTree = result.compilationUnits().stream()
+        ClassTree classTree = result.compilationUnits()
+                .stream()
                 .flatMap(compilationUnitTree -> compilationUnitTree.getTypeDecls().stream())
                 .filter(tree -> tree instanceof ClassTree)
                 .map(tree -> (ClassTree) tree)

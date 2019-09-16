@@ -41,8 +41,7 @@ public class NonComparableStreamSortTests {
                 "       // BUG: Stream.sorted() should only be called on streams of Comparable types.",
                 "       list.stream().sorted();",
                 "   }",
-                "}"
-        ).doTest();
+                "}").doTest();
     }
 
     @Test
@@ -56,7 +55,6 @@ public class NonComparableStreamSortTests {
                 "       List<String> list = new ArrayList<>();",
                 "       list.stream().sorted();",
                 "   }",
-                "}"
-        ).doTest();
+                "}").doTest();
     }
 }

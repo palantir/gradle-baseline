@@ -50,8 +50,9 @@ public class JunitReportsFinalizer extends DefaultTask {
         finalizer.setStyleTask(task);
         finalizer.setTaskTimer(timer);
         finalizer.setFailuresSupplier(failuresSupplier);
-        finalizer.getTargetFile().set(reportDir
-                .map(dir -> dir.file(task.getProject().getName() + "-" + task.getName() + ".xml")));
+        finalizer.getTargetFile()
+                .set(reportDir
+                        .map(dir -> dir.file(task.getProject().getName() + "-" + task.getName() + ".xml")));
         finalizer.getReportDir().set(reportDir);
 
         task.finalizedBy(finalizer);
@@ -64,7 +65,7 @@ public class JunitReportsFinalizer extends DefaultTask {
     private final DirectoryProperty reportDir = getProject().getObjects().directoryProperty();
 
     @Inject
-    public JunitReportsFinalizer() { }
+    public JunitReportsFinalizer() {}
 
     public final Task getStyleTask() {
         return styleTask;
@@ -112,7 +113,11 @@ public class JunitReportsFinalizer extends DefaultTask {
             long taskTimeNanos = taskTimer.getTaskTimeNanos(styleTask);
 
             Document report = JunitReportCreator.reportToXml(FailuresReportGenerator.failuresReport(
-                    rootDir, projectName, styleTask.getName(), taskTimeNanos, failures));
+                    rootDir,
+                    projectName,
+                    styleTask.getName(),
+                    taskTimeNanos,
+                    failures));
 
             File target = targetFile.getAsFile().get();
             Files.createDirectories(target.getParentFile().toPath());

@@ -52,7 +52,6 @@ public abstract class PreconditionsTests {
                 .doTest();
     }
 
-
     @Test
     public final void validGuava() throws Exception {
         compilationHelper().addSourceLines(

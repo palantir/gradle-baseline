@@ -86,7 +86,9 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
     }
 
     private Description checkMethodInvocation(
-            MethodInvocationTree methodInvocation, LambdaExpressionTree root, VisitorState state) {
+            MethodInvocationTree methodInvocation,
+            LambdaExpressionTree root,
+            VisitorState state) {
         if (!methodInvocation.getArguments().isEmpty()
                 || !methodInvocation.getTypeArguments().isEmpty()) {
             return Description.NO_MATCH;
@@ -122,7 +124,8 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
         int index = qualifiedMethodName.lastIndexOf('.');
         if (index > 0) {
             return Optional.of(qualifiedMethodName.substring(0, index)
-                    + "::" + qualifiedMethodName.substring(index + 1));
+                    + "::"
+                    + qualifiedMethodName.substring(index + 1));
         }
         return Optional.empty();
     }

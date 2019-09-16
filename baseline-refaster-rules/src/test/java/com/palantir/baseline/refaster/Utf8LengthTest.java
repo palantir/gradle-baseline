@@ -26,7 +26,7 @@ public class Utf8LengthTest {
                 .forRefactoring(Utf8Length.class)
                 .withInputLines(
                         "Test",
-                         "import java.nio.charset.StandardCharsets;",
+                        "import java.nio.charset.StandardCharsets;",
                         "public class Test {",
                         "  int i = \"hello world\".getBytes(StandardCharsets.UTF_8).length;",
                         "}")

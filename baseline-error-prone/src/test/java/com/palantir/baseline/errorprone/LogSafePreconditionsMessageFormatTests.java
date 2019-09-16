@@ -39,73 +39,85 @@ public final class LogSafePreconditionsMessageFormatTests extends PreconditionsT
 
     @Test
     public void testCheckArgument_printf() {
-        failLogSafe(PRINTF_DIAGNOSTIC, "Preconditions.checkArgument(param != \"string\", \"message %s\","
-                + " UnsafeArg.of(\"long\", 123L));");
+        failLogSafe(PRINTF_DIAGNOSTIC,
+                "Preconditions.checkArgument(param != \"string\", \"message %s\","
+                        + " UnsafeArg.of(\"long\", 123L));");
     }
 
     @Test
     public void testCheckArgument_multipleArgs_printf() {
-        failLogSafe(PRINTF_DIAGNOSTIC, "Preconditions.checkArgument(param != \"string\", \"message %s %s\","
-                + " UnsafeArg.of(\"char1\", 'a'), UnsafeArg.of(\"char2\", 'b'));");
+        failLogSafe(PRINTF_DIAGNOSTIC,
+                "Preconditions.checkArgument(param != \"string\", \"message %s %s\","
+                        + " UnsafeArg.of(\"char1\", 'a'), UnsafeArg.of(\"char2\", 'b'));");
     }
 
     @Test
     public void testCheckState_printf() {
-        failLogSafe(PRINTF_DIAGNOSTIC, "Preconditions.checkState(param != \"string\", \"message %s\","
-                + " UnsafeArg.of(\"long\", 123L));");
+        failLogSafe(PRINTF_DIAGNOSTIC,
+                "Preconditions.checkState(param != \"string\", \"message %s\","
+                        + " UnsafeArg.of(\"long\", 123L));");
     }
 
     @Test
     public void testCheckState_multipleArgs_printf() {
-        failLogSafe(PRINTF_DIAGNOSTIC, "Preconditions.checkState(param != \"string\", \"message %s %s\","
-                + " UnsafeArg.of(\"char1\", 'a'), UnsafeArg.of(\"char2\", 'b'));");
+        failLogSafe(PRINTF_DIAGNOSTIC,
+                "Preconditions.checkState(param != \"string\", \"message %s %s\","
+                        + " UnsafeArg.of(\"char1\", 'a'), UnsafeArg.of(\"char2\", 'b'));");
     }
 
     @Test
     public void testCheckNotNull_printf() {
-        failLogSafe(PRINTF_DIAGNOSTIC, "Preconditions.checkNotNull(param, \"message %s\","
-                + " UnsafeArg.of(\"long\", 123L));");
+        failLogSafe(PRINTF_DIAGNOSTIC,
+                "Preconditions.checkNotNull(param, \"message %s\","
+                        + " UnsafeArg.of(\"long\", 123L));");
     }
 
     @Test
     public void testCheckNotNull_multipleArgs_printf() {
-        failLogSafe(PRINTF_DIAGNOSTIC, "Preconditions.checkNotNull(param, \"message %s %s\","
-                + " UnsafeArg.of(\"char1\", 'a'), UnsafeArg.of(\"char2\", 'b'));");
+        failLogSafe(PRINTF_DIAGNOSTIC,
+                "Preconditions.checkNotNull(param, \"message %s %s\","
+                        + " UnsafeArg.of(\"char1\", 'a'), UnsafeArg.of(\"char2\", 'b'));");
     }
 
     @Test
     public void testCheckArgument_slf4j() {
-        failLogSafe(SLF4J_DIAGNOSTIC, "Preconditions.checkArgument(param != \"string\", \"message {}\","
-                + " UnsafeArg.of(\"long\", 123L));");
+        failLogSafe(SLF4J_DIAGNOSTIC,
+                "Preconditions.checkArgument(param != \"string\", \"message {}\","
+                        + " UnsafeArg.of(\"long\", 123L));");
     }
 
     @Test
     public void testCheckArgument_multipleArgs_slf4j() {
-        failLogSafe(SLF4J_DIAGNOSTIC, "Preconditions.checkArgument(param != \"string\", \"message {} {}\","
-                + " UnsafeArg.of(\"char1\", 'a'), UnsafeArg.of(\"char2\", 'b'));");
+        failLogSafe(SLF4J_DIAGNOSTIC,
+                "Preconditions.checkArgument(param != \"string\", \"message {} {}\","
+                        + " UnsafeArg.of(\"char1\", 'a'), UnsafeArg.of(\"char2\", 'b'));");
     }
 
     @Test
     public void testCheckState_slf4j() {
-        failLogSafe(SLF4J_DIAGNOSTIC, "Preconditions.checkState(param != \"string\", \"message {}\","
-                + " UnsafeArg.of(\"long\", 123L));");
+        failLogSafe(SLF4J_DIAGNOSTIC,
+                "Preconditions.checkState(param != \"string\", \"message {}\","
+                        + " UnsafeArg.of(\"long\", 123L));");
     }
 
     @Test
     public void testCheckState_multipleArgs_slf4j() {
-        failLogSafe(SLF4J_DIAGNOSTIC, "Preconditions.checkState(param != \"string\", \"message {} {}\","
-                + " UnsafeArg.of(\"char1\", 'a'), UnsafeArg.of(\"char2\", 'b'));");
+        failLogSafe(SLF4J_DIAGNOSTIC,
+                "Preconditions.checkState(param != \"string\", \"message {} {}\","
+                        + " UnsafeArg.of(\"char1\", 'a'), UnsafeArg.of(\"char2\", 'b'));");
     }
 
     @Test
     public void testCheckNotNull_slf4j() {
-        failLogSafe(SLF4J_DIAGNOSTIC, "Preconditions.checkNotNull(param, \"message {}\","
-                + " UnsafeArg.of(\"long\", 123L));");
+        failLogSafe(SLF4J_DIAGNOSTIC,
+                "Preconditions.checkNotNull(param, \"message {}\","
+                        + " UnsafeArg.of(\"long\", 123L));");
     }
 
     @Test
     public void testCheckNotNull_multipleArgs_slf4j() {
-        failLogSafe(SLF4J_DIAGNOSTIC, "Preconditions.checkNotNull(param, \"message {} {}\","
-                + " UnsafeArg.of(\"char1\", 'a'), UnsafeArg.of(\"char2\", 'b'));");
+        failLogSafe(SLF4J_DIAGNOSTIC,
+                "Preconditions.checkNotNull(param, \"message {} {}\","
+                        + " UnsafeArg.of(\"char1\", 'a'), UnsafeArg.of(\"char2\", 'b'));");
     }
 }

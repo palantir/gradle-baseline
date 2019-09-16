@@ -49,12 +49,14 @@ public final class VersionsProps {
         List<VersionForce> forces();
 
         VersionsProps.ParsedVersionsProps.Builder toBuilder();
-        class Builder extends VersionsProps_ParsedVersionsProps_Builder { }
+
+        class Builder extends VersionsProps_ParsedVersionsProps_Builder {}
     }
 
     @FreeBuilder
     public interface VersionForce {
         String name();
+
         String version();
 
         static VersionForce of(String name, String version) {
@@ -62,7 +64,8 @@ public final class VersionsProps {
         }
 
         VersionsProps.VersionForce.Builder toBuilder();
-        class Builder extends VersionsProps_VersionForce_Builder { }
+
+        class Builder extends VersionsProps_VersionForce_Builder {}
     }
 
     public static ParsedVersionsProps readVersionsProps(File propsFile) {
@@ -116,13 +119,17 @@ public final class VersionsProps {
      * {@link ParsedVersionsProps#namesToLocationMap}.
      */
     public static void writeVersionsProps(
-            ParsedVersionsProps parsedVersionsProps, Stream<String> forcesToRemove, File propsFile) {
+            ParsedVersionsProps parsedVersionsProps,
+            Stream<String> forcesToRemove,
+            File propsFile) {
         List<String> lines = parsedVersionsProps.lines();
         Set<Integer> indicesToSkip = forcesToRemove
                 .map(parsedVersionsProps.namesToLocationMap()::get)
                 .map(Preconditions::checkNotNull)
                 .collect(Collectors.toSet());
-        try (BufferedWriter writer0 = Files.newBufferedWriter(propsFile.toPath(), StandardOpenOption.TRUNCATE_EXISTING);
+        try (
+                BufferedWriter writer0 =
+                        Files.newBufferedWriter(propsFile.toPath(), StandardOpenOption.TRUNCATE_EXISTING);
                 PrintWriter writer = new PrintWriter(writer0)) {
             for (int index = 0; index < lines.size(); index++) {
                 if (!indicesToSkip.contains(index)) {
@@ -133,6 +140,5 @@ public final class VersionsProps {
             throw new RuntimeException(e);
         }
     }
-
 
 }

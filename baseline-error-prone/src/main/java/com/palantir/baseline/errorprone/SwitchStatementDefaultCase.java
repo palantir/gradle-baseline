@@ -48,7 +48,8 @@ public final class SwitchStatementDefaultCase extends BugChecker implements BugC
     }
 
     private boolean hasDefaultCase(SwitchTree tree) {
-        return tree.getCases().stream()
+        return tree.getCases()
+                .stream()
                 .map(CaseTree::getExpression)
                 .anyMatch(Objects::isNull);
     }

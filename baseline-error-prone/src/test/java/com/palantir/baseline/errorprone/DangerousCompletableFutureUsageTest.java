@@ -37,8 +37,7 @@ public final class DangerousCompletableFutureUsageTest {
                 "       // BUG: Diagnostic contains: Should not use CompletableFuture methods without specifying",
                 "       CompletableFuture.supplyAsync(() -> 1L);",
                 "   }",
-                "}"
-        ).doTest();
+                "}").doTest();
     }
 
     @Test
@@ -51,8 +50,7 @@ public final class DangerousCompletableFutureUsageTest {
                 "   public static final void main(String[] args) {",
                 "       CompletableFuture.supplyAsync(() -> 1L, Executors.newCachedThreadPool());",
                 "   }",
-                "}"
-        ).doTest();
+                "}").doTest();
     }
 
     @Test
@@ -65,8 +63,7 @@ public final class DangerousCompletableFutureUsageTest {
                 "       // BUG: Diagnostic contains: Should not use CompletableFuture methods without specifying",
                 "       CompletableFuture.runAsync(() -> {});",
                 "   }",
-                "}"
-        ).doTest();
+                "}").doTest();
     }
 
     @Test
@@ -79,8 +76,7 @@ public final class DangerousCompletableFutureUsageTest {
                 "   public static final void main(String[] args) {",
                 "       CompletableFuture.runAsync(() -> {}, Executors.newCachedThreadPool());",
                 "   }",
-                "}"
-        ).doTest();
+                "}").doTest();
     }
 
     @Test
@@ -94,8 +90,7 @@ public final class DangerousCompletableFutureUsageTest {
                 "       // BUG: Diagnostic contains: Should not use CompletableFuture methods without specifying",
                 "       future.thenApplyAsync(i -> i);",
                 "   }",
-                "}"
-        ).doTest();
+                "}").doTest();
     }
 
     @Test
@@ -108,8 +103,7 @@ public final class DangerousCompletableFutureUsageTest {
                 "   public static final void main(String[] args) {",
                 "       CompletableFuture.completedFuture(1).thenApplyAsync(i -> i, Executors.newCachedThreadPool());",
                 "   }",
-                "}"
-        ).doTest();
+                "}").doTest();
     }
 
     @Test
@@ -124,8 +118,7 @@ public final class DangerousCompletableFutureUsageTest {
                 "       // BUG: Diagnostic contains: Should not use CompletableFuture methods without specifying",
                 "       futureOne.applyToEitherAsync(futureTwo, i -> i);",
                 "   }",
-                "}"
-        ).doTest();
+                "}").doTest();
     }
 
     @Test
@@ -140,7 +133,6 @@ public final class DangerousCompletableFutureUsageTest {
                 "       CompletableFuture<Integer> futureTwo = CompletableFuture.completedFuture(2);",
                 "       futureOne.applyToEitherAsync(futureTwo, i -> i, Executors.newCachedThreadPool());",
                 "   }",
-                "}"
-        ).doTest();
+                "}").doTest();
     }
 }

@@ -49,14 +49,17 @@ public class RefasterCompileTask extends JavaCompile {
                 "-Xplugin:BaselineRefasterCompiler --out " + refasterRulesFile.get().getAbsolutePath()));
 
         // Extract Java sources
-        List<File> javaSources = getRefasterSources().get().getResolvedConfiguration()
+        List<File> javaSources = getRefasterSources().get()
+                .getResolvedConfiguration()
                 .getFirstLevelModuleDependencies()
                 .stream()
                 .flatMap(dep -> dep.getModuleArtifacts().stream())
                 .map(ResolvedArtifact::getFile)
                 .flatMap(file -> {
                     if (file.getName().endsWith(".jar")) {
-                        return getProject().zipTree(file).getFiles().stream()
+                        return getProject().zipTree(file)
+                                .getFiles()
+                                .stream()
                                 .filter(zipFile -> zipFile.getName().endsWith(".java"));
                     } else if (file.getName().endsWith(".java")) {
                         return Stream.of(file);

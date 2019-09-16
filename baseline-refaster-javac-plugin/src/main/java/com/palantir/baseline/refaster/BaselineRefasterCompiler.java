@@ -47,6 +47,7 @@ public final class BaselineRefasterCompiler implements Plugin {
 
         Preconditions.checkArgument(task instanceof BasicJavacTask, "JavacTask not instance of BasicJavacTask");
         task.addTaskListener(new BaselineRefasterCompilerAnalyzer(
-                ((BasicJavacTask) task).getContext(), FileSystems.getDefault().getPath(path)));
+                ((BasicJavacTask) task).getContext(),
+                FileSystems.getDefault().getPath(path)));
     }
 }

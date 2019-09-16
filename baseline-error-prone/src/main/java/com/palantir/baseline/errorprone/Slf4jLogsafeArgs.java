@@ -67,7 +67,8 @@ public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocati
         ImmutableList.Builder<Integer> badArgsBuilder = ImmutableList.builder();
         for (int i = startArg; i <= endArg; i++) {
             if (!ASTHelpers.isCastable(ASTHelpers.getType(allArgs.get(i)),
-                    state.getTypeFromString("com.palantir.logsafe.Arg"), state)) {
+                    state.getTypeFromString("com.palantir.logsafe.Arg"),
+                    state)) {
                 badArgsBuilder.add(i);
             }
         }

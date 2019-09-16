@@ -23,7 +23,7 @@ import java.util.regex.Pattern;
 
 public final class FailuresReportGenerator {
 
-    private FailuresReportGenerator() { }
+    private FailuresReportGenerator() {}
 
     private static final Pattern JAVA_FILE_RX = Pattern.compile(".*src/\\w+/java/(.*)\\.java");
 
@@ -47,10 +47,17 @@ public final class FailuresReportGenerator {
                     .failure(new Report.Failure.Builder()
                             .message(failure.file().getName() + ":" + failure.line() + ": " + failure.message())
                             .details(
-                                    failure.severity() + ": " + failure.message() + failure.details() + "\n"
+                                    failure.severity() + ": "
+                                            + failure.message()
+                                            + failure.details()
+                                            + "\n"
                                             + (failure.source().isEmpty() ? "" : "Category: " + failure.source() + "\n")
-                                            + "File: " + relativise(rootDir, failure) + "\n"
-                                            + "Line: " + failure.line() + "\n")
+                                            + "File: "
+                                            + relativise(rootDir, failure)
+                                            + "\n"
+                                            + "Line: "
+                                            + failure.line()
+                                            + "\n")
                             .build())
                     .build();
             report.addTestCases(testCase);

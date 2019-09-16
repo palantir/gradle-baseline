@@ -51,10 +51,13 @@ public final class CatchBlockLogException extends BugChecker implements BugCheck
             Matchers.toType(ExpressionTree.class, logMethod));
 
     private static final Matcher<ExpressionTree> logException = Matchers.methodInvocation(
-            logMethod, ChildMultiMatcher.MatchType.LAST, Matchers.isSubtypeOf(Throwable.class));
+            logMethod,
+            ChildMultiMatcher.MatchType.LAST,
+            Matchers.isSubtypeOf(Throwable.class));
 
     private static final Matcher<Tree> containslogException = Matchers.contains(Matchers.toType(
-            ExpressionTree.class, logException));
+            ExpressionTree.class,
+            logException));
 
     @Override
     public Description matchCatch(CatchTree tree, VisitorState state) {

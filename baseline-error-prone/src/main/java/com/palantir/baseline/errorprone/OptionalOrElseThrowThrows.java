@@ -54,8 +54,7 @@ public final class OptionalOrElseThrowThrows extends BugChecker implements BugCh
                     Optional.class.getName(),
                     OptionalDouble.class.getName(),
                     OptionalInt.class.getName(),
-                    OptionalLong.class.getName()
-            )))
+                    OptionalLong.class.getName())))
             .named("orElseThrow")
             .withParameters(Supplier.class.getName());
 

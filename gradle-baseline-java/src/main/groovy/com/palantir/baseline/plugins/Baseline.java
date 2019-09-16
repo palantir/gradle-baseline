@@ -29,9 +29,10 @@ public final class Baseline implements Plugin<Project> {
     public void apply(Project project) {
         Project rootProject = project.getRootProject();
         if (!project.equals(rootProject)) {
-            project.getLogger().warn(
-                    "com.palantir.baseline should be applied to the root project only, not '{}'",
-                    project.getName());
+            project.getLogger()
+                    .warn(
+                            "com.palantir.baseline should be applied to the root project only, not '{}'",
+                            project.getName());
         }
 
         rootProject.getPluginManager().apply(BaselineConfig.class);

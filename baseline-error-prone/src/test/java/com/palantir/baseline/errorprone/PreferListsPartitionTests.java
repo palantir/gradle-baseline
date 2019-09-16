@@ -52,7 +52,6 @@ public final class PreferListsPartitionTests {
                 .doTest();
     }
 
-
     @Test
     public void may_use_Iterables_partition_for_Set() {
         CompilationTestHelper.newInstance(PreferListsPartition.class, getClass())
