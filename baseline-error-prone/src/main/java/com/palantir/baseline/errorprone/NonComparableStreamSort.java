@@ -34,6 +34,8 @@ import java.util.stream.Stream;
 @AutoService(BugChecker.class)
 @BugPattern(
         name = "NonComparableStreamSort",
+        link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
+        linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
         summary = "Stream.sorted() should only be called on streams of Comparable types.")
 public final class NonComparableStreamSort extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {

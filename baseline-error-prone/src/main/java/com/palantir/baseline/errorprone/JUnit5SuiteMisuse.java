@@ -30,8 +30,6 @@ import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.tree.JCTree;
-import java.lang.reflect.Array;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
@@ -40,6 +38,8 @@ import java.util.Set;
 @AutoService(BugChecker.class)
 @BugPattern(
         name = "JUnit5SuiteMisuse",
+        link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
+        linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.ERROR,
         summary = "Referencing JUnit5 tests from JUnit4 Suites will silently not work")
 public final class JUnit5SuiteMisuse extends BugChecker implements BugChecker.ClassTreeMatcher, BugChecker.AnnotationTreeMatcher {

@@ -33,6 +33,8 @@ import java.util.regex.Pattern;
 @AutoService(BugChecker.class)
 @BugPattern(
         name = "PreconditionsConstantMessage",
+        link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
+        linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
         summary = "Allow only constant messages to Preconditions.checkX() methods")
 public final class PreconditionsConstantMessage extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {

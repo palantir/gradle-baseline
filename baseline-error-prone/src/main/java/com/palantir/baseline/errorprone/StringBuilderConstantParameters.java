@@ -45,6 +45,8 @@ import java.util.stream.Stream;
 @AutoService(BugChecker.class)
 @BugPattern(
         name = "StringBuilderConstantParameters",
+        link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
+        linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.WARNING,
         summary = "StringBuilder with a constant number of parameters should be replaced by simple concatenation")
 public final class StringBuilderConstantParameters
