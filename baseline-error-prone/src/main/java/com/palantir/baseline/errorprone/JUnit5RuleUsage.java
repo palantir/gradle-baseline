@@ -41,7 +41,7 @@ public final class JUnit5RuleUsage extends BugChecker implements BugChecker.Clas
             "org.junit.jupiter.migrationsupport.rules.EnableRuleMigrationSupport";
 
     private static final Matcher<ClassTree> hasMigrationSupport = Matchers.hasAnnotation(RULE_MIGRATION_SUPPORT);
-    private static final Matcher<ClassTree> hasJunit5TestCases =
+    static final Matcher<ClassTree> hasJunit5TestCases =
             Matchers.hasMethod(Matchers.hasAnnotationOnAnyOverriddenMethod(JUNIT5_TEST_ANNOTATION));
     private static final Matcher<ClassTree> hasJunit4Rules = hasVariable(
             Matchers.anyOf(hasAnnotationOnVariable(JUNIT4_CLASS_RULE), hasAnnotationOnVariable(JUNIT4_RULE)));
