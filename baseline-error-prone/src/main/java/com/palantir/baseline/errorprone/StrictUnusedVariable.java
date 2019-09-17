@@ -35,6 +35,7 @@ import static com.sun.source.tree.Tree.Kind.PREFIX_INCREMENT;
 
 import com.google.auto.service.AutoService;
 import com.google.common.base.Ascii;
+import com.google.common.base.CaseFormat;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
@@ -153,6 +154,8 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
         VariableFinder variableFinder = new VariableFinder(state);
         variableFinder.scan(state.getPath(), null);
 
+        checkUsedVariables(state, variableFinder);
+
         // Map of symbols to variable declarations. Initially this is a map of all of the local variable
         // and fields. As we go we remove those variables which are used.
         Map<Symbol, TreePath> unusedElements = variableFinder.unusedElements;
@@ -228,6 +231,73 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                             .build());
         }
         return Description.NO_MATCH;
+    }
+
+    private void checkUsedVariables(VisitorState state, VariableFinder variableFinder) {
+        VariableUsage variableUsage = new VariableUsage();
+        variableUsage.scan(state.getPath(), null);
+        variableFinder.exemptedVariables.entrySet().forEach(entry -> {
+            List<TreePath> usageSites = variableUsage.usageSites.get(entry.getKey());
+            if (usageSites.size() <= 1) {
+                return;
+            }
+            state.reportMatch(
+                    buildDescription(entry.getValue())
+                            .setMessage(String.format(
+                                    "The %s '%s' is read but has 'StrictUnusedVariable' " +
+                                            "suppressed because of its name.",
+                                    describeVariable((Symbol.VarSymbol) entry.getKey()),
+                                    entry.getKey().name))
+                                    .addFix(constructUsedVariableSuggestedFix(usageSites, state))
+                            .build());
+
+        });
+    }
+
+    private static SuggestedFix constructUsedVariableSuggestedFix(List<TreePath> usagePaths, VisitorState state) {
+        SuggestedFix.Builder fix = SuggestedFix.builder();
+        for (TreePath usagePath : usagePaths) {
+            if (usagePath.getLeaf() instanceof VariableTree) {
+                VariableTree variableTree = (VariableTree) usagePath.getLeaf();
+                int startPos = state.getEndPosition(variableTree.getType()) + 1;
+                int endPos = state.getEndPosition(variableTree);
+
+                // Ignore the initializer if there is one
+                if (variableTree.getInitializer() != null) {
+                    endPos = startPos + variableTree.getName().toString().length();
+                }
+                if (startPos == Position.NOPOS || endPos == Position.NOPOS) {
+                    // TODO(b/118437729): handle bogus source positions in enum declarations
+                    continue;
+                }
+
+                renameVariable(startPos, endPos, variableTree.getName().toString(), fix);
+            } else if (usagePath.getLeaf() instanceof IdentifierTree) {
+                JCTree.JCIdent identifierTree = (JCTree.JCIdent) usagePath.getLeaf();
+                int startPos = identifierTree.getStartPosition();
+                int endPos = state.getEndPosition(identifierTree);
+                if (startPos == Position.NOPOS || endPos == Position.NOPOS) {
+                    // TODO(b/118437729): handle bogus source positions in enum declarations
+                    continue;
+                }
+
+                renameVariable(startPos, endPos, identifierTree.getName().toString(), fix);
+            }
+        }
+        return fix.build();
+    }
+
+    private static void renameVariable(int startPos, int endPos, String name, SuggestedFix.Builder fix) {
+        EXEMPT_PREFIXES.stream()
+                .filter(name::startsWith)
+                .findFirst()
+                .ifPresent(prefix -> fix.replace(
+                        startPos,
+                        endPos,
+                        prefix.length() == name.length()
+                                // Fall back to a generic variable name if the prefix is the entire variable name
+                                ? "value"
+                                : CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, name.substring(prefix.length()))));
     }
 
     private static SuggestedFix makeAssignmentDeclaration(
@@ -548,6 +618,8 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
 
         private final ListMultimap<Symbol, TreePath> usageSites = ArrayListMultimap.create();
 
+        private final Map<Symbol, VariableTree> exemptedVariables = new HashMap<>();
+
         private final VisitorState state;
 
         private VariableFinder(VisitorState state) {
@@ -557,14 +629,15 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
         @Override
         @SuppressWarnings("SwitchStatementDefaultCase")
         public Void visitVariable(VariableTree variableTree, Void unused) {
-            if (exemptedByName(variableTree.getName())) {
-                return null;
-            }
             if (isSuppressed(variableTree)) {
                 return null;
             }
             Symbol.VarSymbol symbol = getSymbol(variableTree);
             if (symbol == null) {
+                return null;
+            }
+            if (exemptedByName(variableTree.getName())) {
+                exemptedVariables.put(symbol, variableTree);
                 return null;
             }
             if (symbol.getKind() == ElementKind.FIELD
@@ -913,6 +986,28 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             super.visitMethodInvocation(tree, null);
             inMethodCall--;
             return null;
+        }
+    }
+
+    static class VariableUsage extends TreePathScanner<Void, Void> {
+        public final ListMultimap<Symbol, TreePath> usageSites = ArrayListMultimap.create();
+
+        @Override
+        public Void visitVariable(VariableTree tree, Void unused) {
+            usageSites.put(getSymbol(tree), getCurrentPath());
+            return super.visitVariable(tree, null);
+        }
+
+        @Override
+        public Void visitIdentifier(IdentifierTree tree, Void unused) {
+            usageSites.put(getSymbol(tree), getCurrentPath());
+            return super.visitIdentifier(tree, null);
+        }
+
+        @Override
+        public Void visitMemberSelect(MemberSelectTree memberSelectTree, Void unused) {
+            usageSites.put(getSymbol(memberSelectTree), getCurrentPath());
+            return super.visitMemberSelect(memberSelectTree, null);
         }
     }
 

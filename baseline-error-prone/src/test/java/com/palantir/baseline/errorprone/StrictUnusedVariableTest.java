@@ -17,6 +17,7 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.errorprone.BugCheckerRefactoringTestHelper;
+import com.google.errorprone.BugCheckerRefactoringTestHelper.TestMode;
 import com.google.errorprone.CompilationTestHelper;
 import org.junit.Before;
 import org.junit.Test;
@@ -105,6 +106,52 @@ public class StrictUnusedVariableTest {
                         "  public void publicMethod(String _value, String _value2) { }",
                         "  public void varArgs(String _value, String... _value2) { }",
                         "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+                .doTest(TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    public void fails_suppressed_but_used_variables() {
+        compilationHelper.addSourceLines(
+                "Test.java",
+                "class Test {",
+                "  // BUG: Diagnostic contains: Unused",
+                "  private static final String _field = \"\";",
+                "  // BUG: Diagnostic contains: Unused",
+                "  public static void privateMethod(String _value) {",
+                "    System.out.println(_value);",
+                "  // BUG: Diagnostic contains: Unused",
+                "    String _bar = \"bar\";",
+                "    System.out.println(_bar);",
+                "    System.out.println(_field);",
+                "  }",
+                "}").doTest();
+    }
+
+    @Test
+    public void fixes_suppressed_but_used_variables() {
+        refactoringTestHelper
+                .addInputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  private static int _field = 1;",
+                        "  public static void privateMethod(int _value, int unusedValue2) {",
+                        "    int _value3 = 1;",
+                        "    _value3 = 2;",
+                        "    System.out.println(_value);",
+                        "    System.out.println(unusedValue2 + _value3 + _field);",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  private static int field = 1;",
+                        "  public static void privateMethod(int value, int value2) {",
+                        "    int value3 = 1;",
+                        "    value3 = 2;",
+                        "    System.out.println(value);",
+                        "    System.out.println(value2 + value3 + field);",
+                        "  }",
+                        "}"
+                ).doTest(TestMode.TEXT_MATCH);
     }
 }
