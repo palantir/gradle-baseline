@@ -20,6 +20,7 @@ import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
 
 import com.google.auto.service.AutoService;
+import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
@@ -61,128 +62,132 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
     private static final String ASSERTJ_ASSERTIONS = "org.assertj.core.api.Assertions";
     private static final String ASSERT_THAT = "assertThat";
     private static final String ASSERTJ_ASSERT_THAT = ASSERTJ_ASSERTIONS + '.' + ASSERT_THAT;
+    private static final ImmutableSet<String> LEGACY_ASSERT_CLASSES = ImmutableSet.of(
+            "org.junit.Assert",
+            "junit.framework.TestCase",
+            "junit.framework.Assert");
 
     private static final Matcher<ExpressionTree> ASSERT_TRUE =
             MethodMatchers.staticMethod()
-                    .onClass("org.junit.Assert")
+                    .onClassAny(LEGACY_ASSERT_CLASSES)
                     .named("assertTrue")
                     .withParameters(boolean.class.getName());
 
     private static final Matcher<ExpressionTree> ASSERT_TRUE_DESCRIPTION =
             MethodMatchers.staticMethod()
-                    .onClass("org.junit.Assert")
+                    .onClassAny(LEGACY_ASSERT_CLASSES)
                     .named("assertTrue")
                     .withParameters(String.class.getName(), boolean.class.getName());
 
     private static final Matcher<ExpressionTree> ASSERT_FALSE =
             MethodMatchers.staticMethod()
-                    .onClass("org.junit.Assert")
+                    .onClassAny(LEGACY_ASSERT_CLASSES)
                     .named("assertFalse")
                     .withParameters(boolean.class.getName());
 
     private static final Matcher<ExpressionTree> ASSERT_FALSE_DESCRIPTION =
             MethodMatchers.staticMethod()
-                    .onClass("org.junit.Assert")
+                    .onClassAny(LEGACY_ASSERT_CLASSES)
                     .named("assertFalse")
                     .withParameters(String.class.getName(), boolean.class.getName());
 
     private static final Matcher<ExpressionTree> ASSERT_NULL =
             MethodMatchers.staticMethod()
-                    .onClass("org.junit.Assert")
+                    .onClassAny(LEGACY_ASSERT_CLASSES)
                     .named("assertNull")
                     .withParameters(Object.class.getName());
 
     private static final Matcher<ExpressionTree> ASSERT_NULL_DESCRIPTION =
             MethodMatchers.staticMethod()
-                    .onClass("org.junit.Assert")
+                    .onClassAny(LEGACY_ASSERT_CLASSES)
                     .named("assertNull")
                     .withParameters(String.class.getName(), Object.class.getName());
 
     private static final Matcher<ExpressionTree> ASSERT_NOT_NULL =
             MethodMatchers.staticMethod()
-                    .onClass("org.junit.Assert")
+                    .onClassAny(LEGACY_ASSERT_CLASSES)
                     .named("assertNotNull")
                     .withParameters(Object.class.getName());
 
     private static final Matcher<ExpressionTree> ASSERT_NOT_NULL_DESCRIPTION =
             MethodMatchers.staticMethod()
-                    .onClass("org.junit.Assert")
+                    .onClassAny(LEGACY_ASSERT_CLASSES)
                     .named("assertNotNull")
                     .withParameters(String.class.getName(), Object.class.getName());
 
     private static final Matcher<ExpressionTree> ASSERT_SAME =
             MethodMatchers.staticMethod()
-                    .onClass("org.junit.Assert")
+                    .onClassAny(LEGACY_ASSERT_CLASSES)
                     .named("assertSame")
                     .withParameters(Object.class.getName(), Object.class.getName());
 
     private static final Matcher<ExpressionTree> ASSERT_SAME_DESCRIPTION =
             MethodMatchers.staticMethod()
-                    .onClass("org.junit.Assert")
+                    .onClassAny(LEGACY_ASSERT_CLASSES)
                     .named("assertSame")
                     .withParameters(String.class.getName(), Object.class.getName(), Object.class.getName());
 
     private static final Matcher<ExpressionTree> ASSERT_NOT_SAME =
             MethodMatchers.staticMethod()
-                    .onClass("org.junit.Assert")
+                    .onClassAny(LEGACY_ASSERT_CLASSES)
                     .named("assertNotSame")
                     .withParameters(Object.class.getName(), Object.class.getName());
 
     private static final Matcher<ExpressionTree> ASSERT_NOT_SAME_DESCRIPTION =
             MethodMatchers.staticMethod()
-                    .onClass("org.junit.Assert")
+                    .onClassAny(LEGACY_ASSERT_CLASSES)
                     .named("assertNotSame")
                     .withParameters(String.class.getName(), Object.class.getName(), Object.class.getName());
 
     private static final Matcher<ExpressionTree> FAIL =
             MethodMatchers.staticMethod()
-                    .onClass("org.junit.Assert")
+                    .onClassAny(LEGACY_ASSERT_CLASSES)
                     .named("fail")
                     .withParameters();
 
     private static final Matcher<ExpressionTree> FAIL_DESCRIPTION =
             MethodMatchers.staticMethod()
-                    .onClass("org.junit.Assert")
+                    .onClassAny(LEGACY_ASSERT_CLASSES)
                     .named("fail")
                     .withParameters(String.class.getName());
 
     private static final Matcher<ExpressionTree> ASSERT_EQUALS_FLOATING = Matchers.anyOf(
             MethodMatchers.staticMethod()
-                    .onClass("org.junit.Assert")
+                    .onClassAny(LEGACY_ASSERT_CLASSES)
                     .named("assertEquals")
                     .withParameters("double", "double", "double"),
             MethodMatchers.staticMethod()
-                    .onClass("org.junit.Assert")
+                    .onClassAny(LEGACY_ASSERT_CLASSES)
                     .named("assertEquals")
                     .withParameters("float", "float", "float"));
 
     private static final Matcher<ExpressionTree> ASSERT_EQUALS_FLOATING_DESCRIPTION = Matchers.anyOf(
             MethodMatchers.staticMethod()
-                    .onClass("org.junit.Assert")
+                    .onClassAny(LEGACY_ASSERT_CLASSES)
                     .named("assertEquals")
                     .withParameters(String.class.getName(), "double", "double", "double"),
             MethodMatchers.staticMethod()
-                    .onClass("org.junit.Assert")
+                    .onClassAny(LEGACY_ASSERT_CLASSES)
                     .named("assertEquals")
                     .withParameters(String.class.getName(), "float", "float", "float"));
 
     private static final Matcher<ExpressionTree> ASSERT_NOT_EQUALS_FLOATING = Matchers.anyOf(
             MethodMatchers.staticMethod()
-                    .onClass("org.junit.Assert")
+                    .onClassAny(LEGACY_ASSERT_CLASSES)
                     .named("assertNotEquals")
                     .withParameters("double", "double", "double"),
             MethodMatchers.staticMethod()
-                    .onClass("org.junit.Assert")
+                    .onClassAny(LEGACY_ASSERT_CLASSES)
                     .named("assertNotEquals")
                     .withParameters("float", "float", "float"));
 
     private static final Matcher<ExpressionTree> ASSERT_NOT_EQUALS_FLOATING_DESCRIPTION = Matchers.anyOf(
             MethodMatchers.staticMethod()
-                    .onClass("org.junit.Assert")
+                    .onClassAny(LEGACY_ASSERT_CLASSES)
                     .named("assertNotEquals")
                     .withParameters(String.class.getName(), "double", "double", "double"),
             MethodMatchers.staticMethod()
-                    .onClass("org.junit.Assert")
+                    .onClassAny(LEGACY_ASSERT_CLASSES)
                     .named("assertNotEquals")
                     .withParameters(String.class.getName(), "float", "float", "float"));
 
@@ -190,12 +195,12 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
     // Order is important, more specific (e.g. floating point) checks must execute first.
     private static final Matcher<ExpressionTree> ASSERT_EQUALS_CATCHALL =
             MethodMatchers.staticMethod()
-                    .onClass("org.junit.Assert")
+                    .onClassAny(LEGACY_ASSERT_CLASSES)
                     .namedAnyOf("assertEquals", "assertArrayEquals");
 
     private static final Matcher<ExpressionTree> ASSERT_NOT_EQUALS_CATCHALL =
             MethodMatchers.staticMethod()
-                    .onClass("org.junit.Assert")
+                    .onClassAny(LEGACY_ASSERT_CLASSES)
                     // There is no Assert.assertArrayNotEquals
                     .named("assertNotEquals");
 

@@ -639,6 +639,52 @@ public class PreferAssertjTests {
     }
 
     @Test
+    public void fix_assertEqualsString_testcase() {
+        test()
+                .addInputLines(
+                        "Test.java",
+                        "import static junit.framework.TestCase.assertEquals;",
+                        "class Test {",
+                        "  void foo(String value) {",
+                        "    assertEquals(\"1\", value);",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import static junit.framework.TestCase.assertEquals;",
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "class Test {",
+                        "  void foo(String value) {",
+                        "    assertThat(value).isEqualTo(\"1\");",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    public void fix_assertEqualsString_frameworkAssert() {
+        test()
+                .addInputLines(
+                        "Test.java",
+                        "import static junit.framework.Assert.assertEquals;",
+                        "class Test {",
+                        "  void foo(String value) {",
+                        "    assertEquals(\"1\", value);",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import static junit.framework.Assert.assertEquals;",
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "class Test {",
+                        "  void foo(String value) {",
+                        "    assertThat(value).isEqualTo(\"1\");",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
     public void fix_assertEqualsIntDescription() {
         test()
                 .addInputLines(
