@@ -30,6 +30,8 @@ import com.sun.source.tree.MethodInvocationTree;
 @AutoService(BugChecker.class)
 @BugPattern(
         name = "DangerousParallelStreamUsage",
+        link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
+        linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.WARNING,
         summary = "Discourage usage of .parallel() in Java streams.")
 public final class DangerousParallelStreamUsage extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
