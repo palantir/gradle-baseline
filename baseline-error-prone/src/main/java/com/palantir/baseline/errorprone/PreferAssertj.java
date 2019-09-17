@@ -57,8 +57,6 @@ import java.util.function.BiConsumer;
         summary = "Prefer AssertJ fluent assertions")
 public final class PreferAssertj extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
-    private static final String MESSAGE = "Prefer AssertJ fluent assertions";
-
     private static final String ASSERTJ_ASSERTIONS = "org.assertj.core.api.Assertions";
     private static final String ASSERT_THAT = "assertThat";
     private static final String ASSERTJ_ASSERT_THAT = ASSERTJ_ASSERTIONS + '.' + ASSERT_THAT;
@@ -267,7 +265,6 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
         }
         if (FAIL_DESCRIPTION.matches(tree, state) || FAIL.matches(tree, state)) {
             return buildDescription(tree)
-                    .setMessage(MESSAGE)
                     .addFix(SuggestedFix.builder()
                             .removeStaticImport("org.junit.Assert.fail")
                             .addStaticImport(ASSERTJ_ASSERTIONS + ".fail")
@@ -321,9 +318,7 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
             } else {
                 // Does not fix assertArrayEquals(double[], double[], double)
                 // or assertArrayEquals(float[], float[], float)
-                return buildDescription(tree)
-                        .setMessage(MESSAGE)
-                        .build();
+                return describeMatch(tree);
             }
         }
         if (ASSERT_NOT_EQUALS_CATCHALL.matches(tree, state)) {
@@ -342,9 +337,7 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
                                 + argSource(tree, state, 1) + ")"));
             } else {
                 // I'm not aware of anything that should hit this.
-                return buildDescription(tree)
-                        .setMessage(MESSAGE)
-                        .build();
+                return describeMatch(tree);
             }
         }
         return Description.NO_MATCH;
@@ -369,7 +362,6 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
         }
         assertThat.accept(qualified, fix);
         return buildDescription(tree)
-                .setMessage(MESSAGE)
                 .addFix(fix.build())
                 .build();
     }
