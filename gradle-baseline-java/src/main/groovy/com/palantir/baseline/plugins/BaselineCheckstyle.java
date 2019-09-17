@@ -17,10 +17,8 @@
 package com.palantir.baseline.plugins;
 
 import java.nio.file.Paths;
-import java.util.stream.Stream;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.JavaPluginConvention;
-import org.gradle.api.plugins.quality.Checkstyle;
 import org.gradle.api.plugins.quality.CheckstyleExtension;
 import org.gradle.api.plugins.quality.CheckstylePlugin;
 import org.gradle.api.tasks.javadoc.Javadoc;
@@ -55,20 +53,6 @@ public final class BaselineCheckstyle extends AbstractBaselinePlugin {
                         javadoc.options(javadocOptions -> ((StandardJavadocDocletOptions) javadocOptions)
                                 .addStringOption("Xdoclint:none", "-quiet")));
             }
-            project.getTasks().withType(Checkstyle.class, checkstyle -> {
-                // Make checkstyle include files in src/main/resources and src/test/resources, e.g.,
-                // for whitespace checks.
-                javaConvention.getSourceSets()
-                        .forEach(sourceSet -> sourceSet.getResources().getSrcDirs()
-                                .forEach(resourceDir -> checkstyle.source(resourceDir.toString())));
-                // These sources are only checked by gradle, NOT by Eclipse.
-                Stream.of("checks", "manifests", "scripts", "templates").forEach(checkstyle::source);
-                // Make sure java files are still included. This should match list in etc/eclipse-template/.checkstyle.
-                // Currently not enforced, but could be eventually.
-                Stream.of(
-                        "java", "cfg", "coffee", "erb", "groovy", "handlebars", "json", "less", "pl", "pp", "sh", "xml")
-                        .forEach(extension -> checkstyle.include("**/*." + extension));
-            });
         });
 
         project.getExtensions().getByType(CheckstyleExtension.class)

@@ -48,6 +48,7 @@ public final class StyleTaskTimer implements TaskTimer {
     }
 
     @Override
+    @SuppressWarnings("StrictUnusedVariable")
     public void afterExecute(Task task, TaskState taskState) {
         if (isStyleTask(task)) {
             taskTimeNanosByTask.put(task, System.nanoTime() - lastStartTime);

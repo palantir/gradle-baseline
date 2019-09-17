@@ -1,3 +1,5 @@
+import net.ltgt.gradle.errorprone.CheckSeverity
+
 buildscript {
     repositories {
         jcenter()
@@ -8,9 +10,9 @@ buildscript {
     dependencies {
         classpath 'com.gradle.publish:plugin-publish-plugin:0.10.0'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
-        classpath 'com.netflix.nebula:nebula-publishing-plugin:13.4.1'
+        classpath 'com.netflix.nebula:nebula-publishing-plugin:13.5.0'
         classpath 'com.netflix.nebula:gradle-info-plugin:5.0.3'
-        classpath 'com.palantir.baseline:gradle-baseline-java:2.3.0'
+        classpath 'com.palantir.baseline:gradle-baseline-java:2.5.0'
     }
 }
 
@@ -47,6 +49,12 @@ allprojects {
         sourceCompatibility = 1.8
         tasks.withType(JavaCompile) {
             options.compilerArgs += ['-Werror', '-Xlint:deprecation']
+            options.errorprone {
+                check("Slf4jLogsafeArgs", CheckSeverity.OFF)
+                check("PreferSafeLoggableExceptions", CheckSeverity.OFF)
+                check("PreferSafeLoggingPreconditions", CheckSeverity.OFF)
+                check("PreconditionsConstantMessage", CheckSeverity.OFF)
+            }
         }
     }
 
