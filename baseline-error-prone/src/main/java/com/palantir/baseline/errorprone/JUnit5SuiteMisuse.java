@@ -42,11 +42,13 @@ import java.util.Set;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.ERROR,
         summary = "Referencing JUnit5 tests from JUnit4 Suites will silently not work")
-public final class JUnit5SuiteMisuse extends BugChecker implements BugChecker.ClassTreeMatcher, BugChecker.AnnotationTreeMatcher {
+public final class JUnit5SuiteMisuse extends BugChecker
+        implements BugChecker.ClassTreeMatcher, BugChecker.AnnotationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
 
-    // we remember classes and validate them later because error-prone doesn't let us arbitrarily explore other classes.
+    // We remember classes and validate them later because error-prone doesn't let us arbitrarily explore classes we
+    // discover when reading the @SuiteClasses annotation.
     private static final Set<Type.ClassType> knownJUnit5TestClasses = new HashSet<>();
     private static final Set<Type.ClassType> referencedBySuites = new HashSet<>();
 
@@ -90,6 +92,10 @@ public final class JUnit5SuiteMisuse extends BugChecker implements BugChecker.Cl
 
     private static List<JCTree.JCFieldAccess> getReferencedClasses(AnnotationTree tree, VisitorState state) {
         ExpressionTree value = AnnotationMatcherUtils.getArgument(tree, "value");
+
+        if (value == null) {
+            return Collections.emptyList();
+        }
 
         if (value instanceof JCTree.JCFieldAccess) {
             return Collections.singletonList((JCTree.JCFieldAccess) value);

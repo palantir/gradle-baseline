@@ -32,6 +32,7 @@ import com.sun.tools.javac.code.Symbol;
 @BugPattern(
         name = "JUnit5RuleUsage",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
+        linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.ERROR,
         summary = "Using Rule/ClassRules in Junit5 tests results in the rules silently not executing")
 public final class JUnit5RuleUsage extends BugChecker implements BugChecker.ClassTreeMatcher {
