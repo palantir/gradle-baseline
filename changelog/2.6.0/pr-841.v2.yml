@@ -1,0 +1,9 @@
+type: improvement
+improvement:
+  description: Added a new ErrorProne check `PreferAssertj` to assist migration to AssertJ from
+    legacy test frameworks. It may be necessary to add a dependency on `org.assertj:assertj-core`
+    in modules which do not already depend on AssertJ. If there's a technical reason that AssertJ
+    cannot be used, `PreferAssertj` may be explicitly disabled to prevent future upgrades from
+    attempting to re-run the migration.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/841
