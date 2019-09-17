@@ -345,12 +345,10 @@ public class PreferAssertjTests {
                         "}")
                 .addOutputLines(
                         "Test.java",
-                        "import static org.junit.Assert.fail;",
-                        "",
-                        "import org.assertj.core.api.Assertions;",
+                        "import static org.assertj.core.api.Assertions.fail;",
                         "class Test {",
                         "  void foo() {",
-                        "    Assertions.fail(\"fail\");",
+                        "    fail(\"fail\");",
                         "  }",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
@@ -369,12 +367,10 @@ public class PreferAssertjTests {
                         "}")
                 .addOutputLines(
                         "Test.java",
-                        "import static org.junit.Assert.fail;",
-                        "",
-                        "import org.assertj.core.api.Assertions;",
+                        "import static org.assertj.core.api.Assertions.fail;",
                         "class Test {",
                         "  void foo() {",
-                        "    Assertions.fail(\"desc\");",
+                        "    fail(\"desc\");",
                         "  }",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);

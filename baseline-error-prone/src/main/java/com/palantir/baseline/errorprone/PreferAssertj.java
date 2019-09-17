@@ -60,6 +60,7 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
 
     private static final String ASSERTJ_ASSERTIONS = "org.assertj.core.api.Assertions";
     private static final String ASSERT_THAT = "assertThat";
+    private static final String ASSERTJ_ASSERT_THAT = ASSERTJ_ASSERTIONS + '.' + ASSERT_THAT;
 
     private static final Matcher<ExpressionTree> ASSERT_TRUE =
             MethodMatchers.staticMethod()
@@ -259,13 +260,18 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
                             + ").describedAs(" + argSource(tree, state, 0) + ").isNotSameAs("
                             + argSource(tree, state, 1) + ")"));
         }
-        if (FAIL.matches(tree, state)) {
-            return withQualified(ASSERTJ_ASSERTIONS, "fail", tree, state, (fail, fix) ->
-                    fix.replace(tree, fail + "(\"fail\")"));
-        }
-        if (FAIL_DESCRIPTION.matches(tree, state)) {
-            return withQualified(ASSERTJ_ASSERTIONS, "fail", tree, state, (fail, fix) ->
-                    fix.replace(tree, fail + "(" + argSource(tree, state, 0) + ")"));
+        if (FAIL_DESCRIPTION.matches(tree, state) || FAIL.matches(tree, state)) {
+            return buildDescription(tree)
+                    .setMessage(MESSAGE)
+                    .addFix(SuggestedFix.builder()
+                            .removeStaticImport("org.junit.Assert.fail")
+                            .addStaticImport(ASSERTJ_ASSERTIONS + ".fail")
+                            .replace(tree, "fail(" + (tree.getArguments().isEmpty()
+                                    ? "\"fail\""
+                                    : argSource(tree, state, 0)) + ")")
+                            .build())
+                    .build();
+
         }
         if (ASSERT_EQUALS_FLOATING.matches(tree, state)) {
             return withAssertThat(tree, state, (assertThat, fix) -> fix
@@ -347,32 +353,23 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
             MethodInvocationTree tree,
             VisitorState state,
             BiConsumer<String, SuggestedFix.Builder> assertThat) {
-        return withQualified(ASSERTJ_ASSERTIONS, ASSERT_THAT, tree, state, assertThat);
-    }
-
-    private Description withQualified(
-            String fullyQualifiedClass,
-            String functionName,
-            MethodInvocationTree tree,
-            VisitorState state,
-            BiConsumer<String, SuggestedFix.Builder> qualifiedConsumer) {
         SuggestedFix.Builder fix = SuggestedFix.builder();
         String qualified;
-        String fullyQualifiedFunction = fullyQualifiedClass + '.' + functionName;
-        if (useStaticAssertjImport(fullyQualifiedClass, functionName, state)) {
+        String fullyQualifiedFunction = ASSERTJ_ASSERT_THAT;
+        if (useStaticAssertjImport(state)) {
             fix.addStaticImport(fullyQualifiedFunction);
-            qualified = functionName;
+            qualified = ASSERT_THAT;
         } else {
             qualified = SuggestedFixes.qualifyType(state, fix, fullyQualifiedFunction);
         }
-        qualifiedConsumer.accept(qualified, fix);
+        assertThat.accept(qualified, fix);
         return buildDescription(tree)
                 .setMessage(MESSAGE)
                 .addFix(fix.build())
                 .build();
     }
 
-    private static boolean useStaticAssertjImport(String fullyQualifiedClass, String functionName, VisitorState state) {
+    private static boolean useStaticAssertjImport(VisitorState state) {
         for (ImportTree importTree : state.getPath().getCompilationUnit().getImports()) {
             if (!importTree.isStatic()) {
                 continue;
@@ -382,13 +379,13 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
                 continue;
             }
             MemberSelectTree memberSelectTree = (MemberSelectTree) identifier;
-            if (!memberSelectTree.getIdentifier().contentEquals(functionName)) {
+            if (!memberSelectTree.getIdentifier().contentEquals(ASSERT_THAT)) {
                 continue;
             }
             // if an 'assertThat' is already imported, and it's not AssertJ, use a qualified name
             return ASTHelpers.isSameType(
                     ASTHelpers.getType(memberSelectTree.getExpression()),
-                    state.getTypeFromString(fullyQualifiedClass),
+                    state.getTypeFromString(ASSERTJ_ASSERTIONS),
                     state);
         }
         // If we did not encounter an assertThat static import, we can import and use it.
