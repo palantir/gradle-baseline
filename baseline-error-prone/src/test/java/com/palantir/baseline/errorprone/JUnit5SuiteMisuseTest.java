@@ -70,6 +70,24 @@ public class JUnit5SuiteMisuseTest {
     }
 
     @Test
+    public void single_junit4_reference_passes_different_order() {
+        compilationHelper.addSourceLines(
+                "Container.java",
+                "import org.junit.runner.RunWith;",
+                "import org.junit.runners.Suite;",
+                "class Container {",
+                "  public static class FooTest {",
+                "    @org.junit.Test public void my_test() {}",
+                "  }",
+                "",
+                "  @RunWith(Suite.class)",
+                "  @Suite.SuiteClasses(FooTest.class)",
+                "  public static class MySuite {}",
+                "}")
+                .doTest();
+    }
+
+    @Test
     public void multiple_junit5_references_fail() {
         compilationHelper.addSourceLines(
                 "Container.java",
@@ -94,6 +112,29 @@ public class JUnit5SuiteMisuseTest {
     }
 
     @Test
+    public void multiple_junit5_references_fail_different_order() {
+        compilationHelper.addSourceLines(
+                "Container.java",
+                "import org.junit.runner.RunWith;",
+                "import org.junit.runners.Suite;",
+                "class Container {",
+                "  public static class FooTest {",
+                "    @org.junit.jupiter.api.Test public void my_test() {}",
+                "  }",
+                "",
+                "  public static class BarTest {",
+                "    @org.junit.jupiter.api.Test public void my_test() {}",
+                "  }",
+                "",
+                "  @RunWith(Suite.class)",
+                "  // BUG: Diagnostic contains: JUnit5SuiteMisuse",
+                "  @Suite.SuiteClasses({FooTest.class, BarTest.class})",
+                "  public static class MySuite {}",
+                "}")
+                .doTest();
+    }
+
+    @Test
     public void single_junit5_reference_fails() {
         compilationHelper.addSourceLines(
                 "Container.java",
@@ -108,6 +149,25 @@ public class JUnit5SuiteMisuseTest {
                 "  public static class FooTest {",
                 "    @org.junit.jupiter.api.Test public void my_test() {}",
                 "  }",
+                "}")
+                .doTest();
+    }
+
+    @Test
+    public void single_junit5_reference_fails_different_order() {
+        compilationHelper.addSourceLines(
+                "Container.java",
+                "import org.junit.runner.RunWith;",
+                "import org.junit.runners.Suite;",
+                "class Container {",
+                "  public static class FooTest {",
+                "    @org.junit.jupiter.api.Test public void my_test() {}",
+                "  }",
+                "",
+                "  @RunWith(Suite.class)",
+                "  // BUG: Diagnostic contains: JUnit5SuiteMisuse",
+                "  @Suite.SuiteClasses(FooTest.class)",
+                "  public static class MySuite {}",
                 "}")
                 .doTest();
     }

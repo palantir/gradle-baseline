@@ -40,11 +40,12 @@ import java.util.Set;
 @BugPattern(
         name = "JUnit5SuiteMisuse",
         severity = BugPattern.SeverityLevel.ERROR,
-        summary = "Mixing JUnit5 tests with JUnit4 Suites will silently not work")
+        summary = "Referencing JUnit5 tests from JUnit4 Suites will silently not work")
 public final class JUnit5SuiteMisuse extends BugChecker implements BugChecker.ClassTreeMatcher, BugChecker.AnnotationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
 
+    // we remember classes and validate them later because error-prone doesn't let us arbitrarily explore other classes.
     private static final Set<Type.ClassType> knownJUnit5TestClasses = new HashSet<>();
     private static final Set<Type.ClassType> referencedBySuites = new HashSet<>();
 
@@ -55,7 +56,7 @@ public final class JUnit5SuiteMisuse extends BugChecker implements BugChecker.Cl
         }
 
         Type.ClassType type = ASTHelpers.getType(tree);
-        knownJUnit5TestClasses.add(type); // we accumulate these so that visiting suiteclasses can be useful
+        knownJUnit5TestClasses.add(type); // accumulate these so we can check them when visiting suiteclasses
 
         if (referencedBySuites.contains(type)) {
             return buildDescription(tree)
