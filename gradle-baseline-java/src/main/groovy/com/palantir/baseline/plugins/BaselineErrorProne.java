@@ -35,7 +35,6 @@ import net.ltgt.gradle.errorprone.ErrorPronePlugin;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFile;
@@ -54,25 +53,19 @@ public final class BaselineErrorProne implements Plugin<Project> {
     private static final String PROP_ERROR_PRONE_APPLY = "errorProneApply";
     private static final String PROP_REFASTER_APPLY = "refasterApply";
 
-    private Project project;
-    private BaselineErrorProneExtension errorProneExtension;
-    private Task compileRefaster;
-    private Provider<File> refasterRulesFile;
-
     @Override
-    public void apply(Project proj) {
-        proj.getPluginManager().withPlugin("java", plugin -> {
-            applyToJavaProject(proj);
+    public void apply(Project project) {
+        project.getPluginManager().withPlugin("java", unused -> {
+            applyToJavaProject(project);
         });
     }
 
-    private void applyToJavaProject(Project proj) {
-        this.project = proj;
-        errorProneExtension = project.getExtensions()
+    private static void applyToJavaProject(Project project) {
+        BaselineErrorProneExtension errorProneExtension = project.getExtensions()
                 .create(EXTENSION_NAME, BaselineErrorProneExtension.class, project);
         project.getPluginManager().apply(ErrorPronePlugin.class);
 
-        String version = Optional.ofNullable(getClass().getPackage().getImplementationVersion())
+        String version = Optional.ofNullable(BaselineErrorProne.class.getPackage().getImplementationVersion())
                 .orElseGet(() -> {
                     log.warn("Baseline is using 'latest.release' - beware this compromises build reproducibility");
                     return "latest.release";
@@ -94,21 +87,28 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 "refasterCompiler",
                 "com.palantir.baseline:baseline-refaster-javac-plugin:" + version);
 
-        refasterRulesFile = project.getLayout().getBuildDirectory()
+        Provider<File> refasterRulesFile = project.getLayout().getBuildDirectory()
                 .file("refaster/rules.refaster")
                 .map(RegularFile::getAsFile);
 
-        compileRefaster = project.getTasks().create("compileRefaster", RefasterCompileTask.class, task -> {
-            task.setSource(refasterConfiguration);
-            task.getRefasterSources().set(refasterConfiguration);
-            task.setClasspath(refasterCompilerConfiguration);
-            task.getRefasterRulesFile().set(refasterRulesFile);
-        });
+        RefasterCompileTask compileRefaster =
+                project.getTasks().create("compileRefaster", RefasterCompileTask.class, task -> {
+                    task.setSource(refasterConfiguration);
+                    task.getRefasterSources().set(refasterConfiguration);
+                    task.setClasspath(refasterCompilerConfiguration);
+                    task.getRefasterRulesFile().set(refasterRulesFile);
+                });
 
         project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
             ((ExtensionAware) javaCompile.getOptions()).getExtensions()
                     .configure(ErrorProneOptions.class, errorProneOptions -> {
-                        configureErrorProneOptions(javaCompile, errorProneOptions);
+                        configureErrorProneOptions(
+                                project,
+                                refasterRulesFile,
+                                compileRefaster,
+                                errorProneExtension,
+                                javaCompile,
+                                errorProneOptions);
                     });
         });
 
@@ -167,7 +167,13 @@ public final class BaselineErrorProne implements Plugin<Project> {
     }
 
     @SuppressWarnings("UnstableApiUsage")
-    private void configureErrorProneOptions(JavaCompile javaCompile, ErrorProneOptions errorProneOptions) {
+    private static void configureErrorProneOptions(
+            Project project,
+            Provider<File> refasterRulesFile,
+            RefasterCompileTask compileRefaster,
+            BaselineErrorProneExtension errorProneExtension,
+            JavaCompile javaCompile,
+            ErrorProneOptions errorProneOptions) {
         JavaVersion jdkVersion = JavaVersion.toVersion(javaCompile.getToolChain().getVersion());
 
         errorProneOptions.setEnabled(true);
@@ -218,7 +224,8 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 // https://github.com/google/error-prone/pull/947
                 errorProneOptions.getErrorproneArgumentProviders().add(() -> {
                     // Don't apply checks that have been explicitly disabled
-                    Stream<String> errorProneChecks = getNotDisabledErrorproneChecks(javaCompile, errorProneOptions);
+                    Stream<String> errorProneChecks = getNotDisabledErrorproneChecks(
+                            errorProneExtension, javaCompile, errorProneOptions);
                     return ImmutableList.of(
                             "-XepPatchChecks:" + Joiner.on(',').join(errorProneChecks.iterator()),
                             "-XepPatchLocation:IN_PLACE");
@@ -227,7 +234,8 @@ public final class BaselineErrorProne implements Plugin<Project> {
         }
     }
 
-    private Stream<String> getNotDisabledErrorproneChecks(
+    private static Stream<String> getNotDisabledErrorproneChecks(
+            BaselineErrorProneExtension errorProneExtension,
             JavaCompile javaCompile,
             ErrorProneOptions errorProneOptions) {
         return errorProneExtension.getPatchChecks().get().stream().filter(check -> {
