@@ -168,6 +168,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `SafeLoggingExceptionMessageFormat`: SafeLoggable exceptions do not interpolate parameters.
 - `StrictUnusedVariable`: Functions shouldn't have unused parameters.
 - `StringBuilderConstantParameters`: StringBuilder with a constant number of parameters should be replaced by simple concatenation.
+- `JUnit5SuiteMisuse`: When migrating from JUnit4 -> JUnit5, classes annotated with `@RunWith(Suite.class)` are dangerous because if they reference any JUnit5 test classes, these tests will silently not run!
 
 ## com.palantir.baseline-checkstyle
 Checkstyle rules can be suppressed on a per-line or per-block basis. (It is good practice to first consider formatting
