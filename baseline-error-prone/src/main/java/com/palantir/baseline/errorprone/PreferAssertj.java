@@ -44,9 +44,6 @@ import java.util.function.BiConsumer;
  * existing assertions to AssertJ without losing any information. It's an explicit non-goal to take advantage
  * of better assertions provided by AssertJ, because those should be implemented in such a way to improve poor
  * uses of AssertJ as well, which may run after the suggested fixes provided by this checker.
- *
- * Remaining work: This doesn't handle Assert.assertThat(value, matcher). We should be able to handle common
- * cases relatively easily.
  */
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -57,10 +54,8 @@ import java.util.function.BiConsumer;
         summary = "Prefer AssertJ fluent assertions")
 public final class PreferAssertj extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
-    private static final String ASSERTJ_ASSERTIONS = "org.assertj.core.api.Assertions";
-    private static final String ASSERT_THAT = "assertThat";
-    private static final String ASSERTJ_ASSERT_THAT = ASSERTJ_ASSERTIONS + '.' + ASSERT_THAT;
     private static final ImmutableSet<String> LEGACY_ASSERT_CLASSES = ImmutableSet.of(
+            "org.hamcrest.MatcherAssert",
             "org.junit.Assert",
             "junit.framework.TestCase",
             "junit.framework.Assert");
@@ -74,7 +69,10 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
     private static final Matcher<ExpressionTree> ASSERT_TRUE_DESCRIPTION =
             MethodMatchers.staticMethod()
                     .onClassAny(LEGACY_ASSERT_CLASSES)
-                    .named("assertTrue")
+                    .namedAnyOf(
+                            "assertTrue",
+                            // org.hamcrest.MatcherAssert.assertThat(String,boolean) is an assertTrue
+                            "assertThat")
                     .withParameters(String.class.getName(), boolean.class.getName());
 
     private static final Matcher<ExpressionTree> ASSERT_FALSE =
@@ -189,6 +187,16 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
                     .named("assertNotEquals")
                     .withParameters(String.class.getName(), "float", "float", "float"));
 
+    private static final Matcher<ExpressionTree> ASSERT_THAT = MethodMatchers.staticMethod()
+            .onClassAny(LEGACY_ASSERT_CLASSES)
+            .named("assertThat")
+            .withParameters(Object.class.getName(), "org.hamcrest.Matcher");
+
+    private static final Matcher<ExpressionTree> ASSERT_THAT_DESCRIPTION = MethodMatchers.staticMethod()
+            .onClassAny(LEGACY_ASSERT_CLASSES)
+            .named("assertThat")
+            .withParameters(String.class.getName(), Object.class.getName(), "org.hamcrest.Matcher");
+
     // Does not match specific patterns, this handles all overloads of both assertEquals and assertArrayEquals.
     // Order is important, more specific (e.g. floating point) checks must execute first.
     private static final Matcher<ExpressionTree> ASSERT_EQUALS_CATCHALL =
@@ -203,7 +211,7 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
                     .named("assertNotEquals");
 
     @Override
-    @SuppressWarnings("CyclomaticComplexity")
+    @SuppressWarnings({"CyclomaticComplexity", "MethodLength"})
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
         if (ASSERT_TRUE.matches(tree, state)) {
             return withAssertThat(tree, state, (assertThat, fix) ->
@@ -267,7 +275,7 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
             return buildDescription(tree)
                     .addFix(SuggestedFix.builder()
                             .removeStaticImport("org.junit.Assert.fail")
-                            .addStaticImport(ASSERTJ_ASSERTIONS + ".fail")
+                            .addStaticImport("org.assertj.core.api.Assertions.fail")
                             .replace(tree, "fail(" + (tree.getArguments().isEmpty()
                                     ? "\"fail\""
                                     : argSource(tree, state, 0)) + ")")
@@ -300,6 +308,20 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
                     .replace(tree, assertThat + "(" + argSource(tree, state, 2)
                             + ").describedAs(" + argSource(tree, state, 0) + ").isNotCloseTo("
                             + argSource(tree, state, 1) + ", within(" + argSource(tree, state, 3) + "))"));
+        }
+        if (ASSERT_THAT.matches(tree, state)) {
+            return withAssertThat(tree, state, (assertThat, fix) ->
+                    fix.replace(tree, assertThat + "(" + argSource(tree, state, 0) + ").is(new "
+                            + SuggestedFixes.qualifyType(state, fix, "org.assertj.core.api.HamcrestCondition")
+                            + "<>("
+                            + argSource(tree, state, 1) + "))"));
+        }
+        if (ASSERT_THAT_DESCRIPTION.matches(tree, state)) {
+            return withAssertThat(tree, state, (assertThat, fix) ->
+                    fix.replace(tree, assertThat + "(" + argSource(tree, state, 1)
+                            + ").describedAs(" + argSource(tree, state, 0) + ").is(new "
+                            + SuggestedFixes.qualifyType(state, fix, "org.assertj.core.api.HamcrestCondition")
+                            + "<>(" + argSource(tree, state, 2) + "))"));
         }
         if (ASSERT_EQUALS_CATCHALL.matches(tree, state)) {
             int parameters = tree.getArguments().size();
@@ -353,12 +375,13 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
             BiConsumer<String, SuggestedFix.Builder> assertThat) {
         SuggestedFix.Builder fix = SuggestedFix.builder();
         String qualified;
-        String fullyQualifiedFunction = ASSERTJ_ASSERT_THAT;
         if (useStaticAssertjImport(state)) {
-            fix.addStaticImport(fullyQualifiedFunction);
-            qualified = ASSERT_THAT;
+            fix.removeStaticImport("org.junit.Assert.assertThat")
+                    .removeStaticImport("org.hamcrest.MatcherAssert.assertThat")
+                    .addStaticImport("org.assertj.core.api.Assertions.assertThat");
+            qualified = "assertThat";
         } else {
-            qualified = SuggestedFixes.qualifyType(state, fix, fullyQualifiedFunction);
+            qualified = SuggestedFixes.qualifyType(state, fix, "org.assertj.core.api.Assertions.assertThat");
         }
         assertThat.accept(qualified, fix);
         return buildDescription(tree)
@@ -376,17 +399,26 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
                 continue;
             }
             MemberSelectTree memberSelectTree = (MemberSelectTree) identifier;
-            if (!memberSelectTree.getIdentifier().contentEquals(ASSERT_THAT)) {
+            if (!memberSelectTree.getIdentifier().contentEquals("assertThat")) {
                 continue;
             }
-            // if an 'assertThat' is already imported, and it's not AssertJ, use a qualified name
-            return ASTHelpers.isSameType(
-                    ASTHelpers.getType(memberSelectTree.getExpression()),
-                    state.getTypeFromString(ASSERTJ_ASSERTIONS),
-                    state);
+            // if an 'assertThat' is already imported, and it's neither assertj nor org.junit.assert, use
+            // the qualified name.
+            return isExpressionSameType(state, memberSelectTree, "org.assertj.core.api.Assertions")
+                    // if an 'assertThat' is already imported, and it's from (known) legacy Assert,
+                    // we remove the static import and add assertj.
+                    || isExpressionSameType(state, memberSelectTree, "org.junit.Assert")
+                    || isExpressionSameType(state, memberSelectTree, "org.hamcrest.MatcherAssert");
         }
         // If we did not encounter an assertThat static import, we can import and use it.
         return true;
+    }
+
+    private static boolean isExpressionSameType(VisitorState state, MemberSelectTree memberSelectTree, String type) {
+        return ASTHelpers.isSameType(
+                ASTHelpers.getType(memberSelectTree.getExpression()),
+                state.getTypeFromString(type),
+                state);
     }
 
     private static String argSource(MethodInvocationTree invocation, VisitorState state, int index) {
