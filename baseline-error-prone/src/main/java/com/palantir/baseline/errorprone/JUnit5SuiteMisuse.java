@@ -63,7 +63,7 @@ public final class JUnit5SuiteMisuse extends BugChecker
 
         if (referencedBySuites.contains(type)) {
             return buildDescription(tree)
-                    .setMessage("Class uses JUnit5 tests but is referenced by a JUnit4 SuiteClasses")
+                    .setMessage("Class uses JUnit5 tests but is referenced by a JUnit4 SuiteClasses annotation")
                     .build();
         }
 
@@ -76,8 +76,8 @@ public final class JUnit5SuiteMisuse extends BugChecker
             return Description.NO_MATCH;
         }
 
-        for (JCTree.JCFieldAccess field : getReferencedClasses(tree, state)) {
-            Type.ClassType classType = (Type.ClassType) field.selected.type;
+        for (Type referencedClass : getReferencedClasses(tree, state)) {
+            Type.ClassType classType = (Type.ClassType) referencedClass;
             referencedBySuites.add(classType);
 
             if (knownJUnit5TestClasses.contains(classType)) {
@@ -90,7 +90,7 @@ public final class JUnit5SuiteMisuse extends BugChecker
         return Description.NO_MATCH;
     }
 
-    private static List<JCTree.JCFieldAccess> getReferencedClasses(AnnotationTree tree, VisitorState state) {
+    private static List<Type> getReferencedClasses(AnnotationTree tree, VisitorState state) {
         ExpressionTree value = AnnotationMatcherUtils.getArgument(tree, "value");
 
         if (value == null) {
@@ -98,13 +98,13 @@ public final class JUnit5SuiteMisuse extends BugChecker
         }
 
         if (value instanceof JCTree.JCFieldAccess) {
-            return Collections.singletonList((JCTree.JCFieldAccess) value);
+            return Collections.singletonList(((JCTree.JCFieldAccess) value).selected.type);
         }
 
         if (value instanceof JCTree.JCNewArray) {
-            ImmutableList.Builder<JCTree.JCFieldAccess> list = ImmutableList.builder();
+            ImmutableList.Builder<Type> list = ImmutableList.builder();
             for (JCTree.JCExpression elem : ((JCTree.JCNewArray) value).elems) {
-                list.add((JCTree.JCFieldAccess) elem);
+                list.add(((JCTree.JCFieldAccess) elem).selected.type);
             }
             return list.build();
         }
