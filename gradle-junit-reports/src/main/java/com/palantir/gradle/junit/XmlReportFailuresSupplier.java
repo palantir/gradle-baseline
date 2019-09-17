@@ -35,6 +35,7 @@ public final class XmlReportFailuresSupplier implements FailuresSupplier {
             // Ensure any necessary output is enabled
         task.doFirst(new Action<Task>() {
             @Override
+            @SuppressWarnings("StrictUnusedVariable")
             public void execute(Task ignored) {
                 reportHandler.configureTask(task);
             }
@@ -55,7 +56,11 @@ public final class XmlReportFailuresSupplier implements FailuresSupplier {
     @Override
     public List<Failure> getFailures() throws IOException {
         File sourceReport = reporting.getReports().findByName("xml").getDestination();
-        return XmlUtils.parseXml(reportHandler, new FileInputStream(sourceReport)).failures();
+        try {
+            return XmlUtils.parseXml(reportHandler, new FileInputStream(sourceReport)).failures();
+        } catch (Exception e) {
+            throw new RuntimeException(String.format("Failed to parse failures XML: %s", sourceReport), e);
+        }
     }
 
     @Override

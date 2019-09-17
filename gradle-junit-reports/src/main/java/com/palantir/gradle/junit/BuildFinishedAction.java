@@ -40,6 +40,7 @@ public final class BuildFinishedAction implements Action<BuildResult> {
     }
 
     @Override
+    @SuppressWarnings("StrictUnusedVariable")
     public void execute(BuildResult result) {
         Report report = new Report.Builder()
                 .name("gradle")

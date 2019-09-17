@@ -109,12 +109,38 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         assertThatFilesAreTheSame(testedDir, expectedDir)
     }
 
+    def 'eclipse formatter googlejavaformat test cases'() {
+        def excludedFiles = [
+                "B19996259.java", // this causes an OOM
+        ]
+
+        def inputDir = new File("src/test/resources/com/palantir/baseline/googlejavaformat-in")
+        def expectedDir = new File("src/test/resources/com/palantir/baseline/googlejavaformat-expected")
+
+        def testedDir = new File(projectDir, "src/main/java")
+        FileUtils.copyDirectory(inputDir, testedDir, new NotFileFilter(new NameFileFilter(excludedFiles)))
+
+        buildFile << """
+            plugins {
+                id 'java'
+                id 'com.palantir.baseline-format'
+            }
+        """.stripIndent()
+        file('gradle.properties') << """
+            com.palantir.baseline-format.eclipse=true
+        """.stripIndent()
+
+        when:
+        BuildResult result = with(':format').build()
+        result.task(":format").outcome == TaskOutcome.SUCCESS
+        result.task(":spotlessApply").outcome == TaskOutcome.SUCCESS
+
+        then:
+        assertThatFilesAreTheSame(testedDir, expectedDir)
+    }
+
     private static void assertThatFilesAreTheSame(File outputDir, File expectedDir) throws IOException {
-        def excludedDirectories = ["build", ".gradle", ".baseline"]
-        def files = FileUtils.listFiles(
-                outputDir,
-                new SuffixFileFilter(".java"),
-                new NotFileFilter(new NameFileFilter(excludedDirectories)))
+        Collection<File> files = listJavaFilesRecursively(outputDir)
 
         for (File file : files) {
             // The files are created inside the `projectDir`
@@ -128,6 +154,14 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
             }
             assertThat(path).hasSameContentAs(expectedFile)
         }
+    }
+
+    private static Collection<File> listJavaFilesRecursively(File dir) {
+        def excludedDirectories = ["build", ".gradle", ".baseline"]
+        return FileUtils.listFiles(
+                dir,
+                new SuffixFileFilter(".java"),
+                new NotFileFilter(new NameFileFilter(excludedDirectories)))
     }
 
     def 'cannot run format task when java plugin is missing'() {

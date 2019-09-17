@@ -24,9 +24,14 @@ import static com.google.common.collect.Iterables.getLast;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.errorprone.BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION;
 import static com.google.errorprone.BugPattern.SeverityLevel.WARNING;
-import static com.google.errorprone.util.ASTHelpers.*;
+import static com.google.errorprone.util.ASTHelpers.getSymbol;
+import static com.google.errorprone.util.ASTHelpers.getType;
+import static com.google.errorprone.util.ASTHelpers.isSubtype;
 import static com.google.errorprone.util.SideEffectAnalysis.hasSideEffect;
-import static com.sun.source.tree.Tree.Kind.*;
+import static com.sun.source.tree.Tree.Kind.POSTFIX_DECREMENT;
+import static com.sun.source.tree.Tree.Kind.POSTFIX_INCREMENT;
+import static com.sun.source.tree.Tree.Kind.PREFIX_DECREMENT;
+import static com.sun.source.tree.Tree.Kind.PREFIX_INCREMENT;
 
 import com.google.auto.service.AutoService;
 import com.google.common.base.Ascii;
@@ -102,6 +107,8 @@ import javax.lang.model.element.Name;
 @BugPattern(
         name = "StrictUnusedVariable",
         altNames = {"unused", "StrictUnusedVariable"},
+        link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
+        linkType = BugPattern.LinkType.CUSTOM,
         summary = "Unused.",
         providesFix = REQUIRES_HUMAN_ATTENTION,
         severity = WARNING,
@@ -253,6 +260,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                 reassignment.get(), state.getSourceForNode(removedVariableTree.get().getType()) + " ");
     }
 
+    @SuppressWarnings("SwitchStatementDefaultCase")
     private static String describeVariable(Symbol.VarSymbol symbol) {
         switch (symbol.getKind()) {
             case FIELD:
@@ -515,6 +523,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
         }
 
         @Override
+        @SuppressWarnings("SwitchStatementDefaultCase")
         public Void visitVariable(VariableTree variableTree, Void unused) {
             if (exemptedByName(variableTree.getName())) {
                 return null;

@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Add link to StrictUnusedVariable that directs users to baseline repo.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/829

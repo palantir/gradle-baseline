@@ -30,7 +30,8 @@ public final class BuildFailureListener implements TaskExecutionListener {
     private final List<Report.TestCase> testCases = new ArrayList<>();
 
     @Override
-    public void beforeExecute(Task task) { }
+    @SuppressWarnings("StrictUnusedVariable")
+    public void beforeExecute(Task task) {}
 
     @Override
     public synchronized void afterExecute(Task task, TaskState state) {

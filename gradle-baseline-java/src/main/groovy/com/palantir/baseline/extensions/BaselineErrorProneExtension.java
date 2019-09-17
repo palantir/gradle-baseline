@@ -31,6 +31,7 @@ public class BaselineErrorProneExtension {
             "PreferListsPartition",
             "PreferSafeLoggableExceptions",
             "PreferSafeLoggingPreconditions",
+            "StringBuilderConstantParameters",
 
             // Built-in checks
             "ArrayEquals",
