@@ -17,6 +17,7 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
+import com.google.common.collect.ImmutableList;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
@@ -73,7 +74,7 @@ public final class JUnit5SuiteMisuse extends BugChecker implements BugChecker.Cl
             return Description.NO_MATCH;
         }
 
-        for (JCTree.JCFieldAccess field : getReferencedClasses(tree)) {
+        for (JCTree.JCFieldAccess field : getReferencedClasses(tree, state)) {
             Type.ClassType classType = (Type.ClassType) field.selected.type;
             referencedBySuites.add(classType);
 
@@ -87,22 +88,24 @@ public final class JUnit5SuiteMisuse extends BugChecker implements BugChecker.Cl
         return Description.NO_MATCH;
     }
 
-    private static List<JCTree.JCFieldAccess> getReferencedClasses(AnnotationTree tree) {
-        final ExpressionTree value = AnnotationMatcherUtils.getArgument(tree, "value");
+    private static List<JCTree.JCFieldAccess> getReferencedClasses(AnnotationTree tree, VisitorState state) {
+        ExpressionTree value = AnnotationMatcherUtils.getArgument(tree, "value");
 
         if (value instanceof JCTree.JCFieldAccess) {
             return Collections.singletonList((JCTree.JCFieldAccess) value);
         }
 
         if (value instanceof JCTree.JCNewArray) {
-            List<JCTree.JCFieldAccess> fields = new ArrayList<>();
+            ImmutableList.Builder<JCTree.JCFieldAccess> list = ImmutableList.builder();
             for (JCTree.JCExpression elem : ((JCTree.JCNewArray) value).elems) {
-                fields.add((JCTree.JCFieldAccess) elem);
+                list.add((JCTree.JCFieldAccess) elem);
             }
-            return fields;
+            return list.build();
         }
 
-        throw new UnsupportedOperationException(
-                "Unable to get referenced classes for " + tree.toString() + " of type " + value.getClass());
+        throw new UnsupportedOperationException(String.format(
+                "Unable to get referenced classes for %s of type %s",
+                state.getSourceForNode(tree),
+                value.getClass()));
     }
 }
