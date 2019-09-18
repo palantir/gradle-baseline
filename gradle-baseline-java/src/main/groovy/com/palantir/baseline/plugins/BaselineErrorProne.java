@@ -178,6 +178,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
 
         errorProneOptions.setEnabled(true);
         errorProneOptions.setDisableWarningsInGeneratedCode(true);
+        errorProneOptions.setExcludedPaths(project.getBuildDir().getAbsolutePath() + "/.*");
         errorProneOptions.check("EqualsHashCode", CheckSeverity.ERROR);
         errorProneOptions.check("EqualsIncompatibleType", CheckSeverity.ERROR);
         errorProneOptions.check("StreamResourceLeak", CheckSeverity.ERROR);
