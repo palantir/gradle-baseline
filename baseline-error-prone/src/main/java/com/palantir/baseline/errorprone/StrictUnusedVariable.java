@@ -23,7 +23,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.Iterables.getLast;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.errorprone.BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION;
-import static com.google.errorprone.BugPattern.SeverityLevel.WARNING;
+import static com.google.errorprone.BugPattern.SeverityLevel.ERROR;
 import static com.google.errorprone.util.ASTHelpers.getSymbol;
 import static com.google.errorprone.util.ASTHelpers.getType;
 import static com.google.errorprone.util.ASTHelpers.isSubtype;
@@ -112,7 +112,7 @@ import javax.lang.model.element.Name;
         linkType = BugPattern.LinkType.CUSTOM,
         summary = "Unused.",
         providesFix = REQUIRES_HUMAN_ATTENTION,
-        severity = WARNING,
+        severity = ERROR,
         documentSuppression = false)
 public final class StrictUnusedVariable extends BugChecker implements BugChecker.CompilationUnitTreeMatcher {
     private static final ImmutableSet<String> EXEMPT_PREFIXES = ImmutableSet.of("unused", "_");
