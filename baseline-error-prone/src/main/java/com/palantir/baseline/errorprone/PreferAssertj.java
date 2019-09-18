@@ -289,40 +289,48 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
         if (ASSERT_EQUALS_FLOATING.matches(tree, state)) {
             return withAssertThat(tree, state, (assertThat, fix) -> fix
                     .addStaticImport("org.assertj.core.api.Assertions.within")
-                    .replace(tree, assertThat + "(" + argSource(tree, state, 1)
-                            + (isConstantZero(tree.getArguments().get(2))
-                                    ? ").isEqualTo(" + argSource(tree, state, 0) + ')'
-                                    : (").isCloseTo(" + argSource(tree, state, 0)
-                            + ", within(" + argSource(tree, state, 2) + "))"))));
+                    .replace(tree, String.format("%s(%s)%s",
+                            assertThat,
+                            argSource(tree, state, 1),
+                            isConstantZero(tree.getArguments().get(2))
+                                    ? String.format(".isEqualTo(%s)", argSource(tree, state, 0))
+                                    : String.format(".isCloseTo(%s, within(%s))",
+                                    argSource(tree, state, 0), argSource(tree, state, 2)))));
         }
         if (ASSERT_EQUALS_FLOATING_DESCRIPTION.matches(tree, state)) {
             return withAssertThat(tree, state, (assertThat, fix) -> fix
                     .addStaticImport("org.assertj.core.api.Assertions.within")
-                    .replace(tree, assertThat + "(" + argSource(tree, state, 2)
-                            + ").describedAs(" + argSource(tree, state, 0)
-                            + (isConstantZero(tree.getArguments().get(3))
-                            ? ").isEqualTo(" + argSource(tree, state, 1) + ')'
-                            : (").isCloseTo(" + argSource(tree, state, 1)
-                            + ", within(" + argSource(tree, state, 3) + "))"))));
+                    .replace(tree, String.format("%s(%s).describedAs(%s)%s",
+                            assertThat,
+                            argSource(tree, state, 2),
+                            argSource(tree, state, 0),
+                            isConstantZero(tree.getArguments().get(3))
+                                    ? String.format(".isEqualTo(%s)", argSource(tree, state, 1))
+                                    : String.format(".isCloseTo(%s, within(%s))",
+                                    argSource(tree, state, 1), argSource(tree, state, 3)))));
         }
         if (ASSERT_NOT_EQUALS_FLOATING.matches(tree, state)) {
             return withAssertThat(tree, state, (assertThat, fix) -> fix
                     .addStaticImport("org.assertj.core.api.Assertions.within")
-                    .replace(tree, assertThat + "(" + argSource(tree, state, 1)
-                            + (isConstantZero(tree.getArguments().get(2))
-                            ? ").isNotEqualTo(" + argSource(tree, state, 0) + ')'
-                            : ").isNotCloseTo(" + argSource(tree, state, 0)
-                            + ", within(" + argSource(tree, state, 2) + "))")));
+                    .replace(tree, String.format("%s(%s)%s",
+                            assertThat,
+                            argSource(tree, state, 1),
+                            isConstantZero(tree.getArguments().get(2))
+                                    ? String.format(".isNotEqualTo(%s)", argSource(tree, state, 0))
+                                    : String.format(".isNotCloseTo(%s, within(%s))",
+                                    argSource(tree, state, 0), argSource(tree, state, 2)))));
         }
         if (ASSERT_NOT_EQUALS_FLOATING_DESCRIPTION.matches(tree, state)) {
             return withAssertThat(tree, state, (assertThat, fix) -> fix
                     .addStaticImport("org.assertj.core.api.Assertions.within")
-                    .replace(tree, assertThat + "(" + argSource(tree, state, 2)
-                            + ").describedAs(" + argSource(tree, state, 0)
-                            + (isConstantZero(tree.getArguments().get(3))
-                            ? ").isNotEqualTo(" + argSource(tree, state, 1) + ')'
-                            : ").isNotCloseTo(" + argSource(tree, state, 1)
-                            + ", within(" + argSource(tree, state, 3) + "))")));
+                    .replace(tree, String.format("%s(%s).describedAs(%s)%s",
+                            assertThat,
+                            argSource(tree, state, 2),
+                            argSource(tree, state, 0),
+                            isConstantZero(tree.getArguments().get(3))
+                                    ? String.format(".isNotEqualTo(%s)", argSource(tree, state, 1))
+                                    : String.format(".isNotCloseTo(%s, within(%s))",
+                                    argSource(tree, state, 1), argSource(tree, state, 3)))));
         }
         if (ASSERT_THAT.matches(tree, state)) {
             Optional<String> replacement = tree.getArguments().get(1)
