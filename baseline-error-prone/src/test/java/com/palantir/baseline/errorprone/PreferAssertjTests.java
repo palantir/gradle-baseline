@@ -422,14 +422,26 @@ public class PreferAssertjTests {
     }
 
     @Test
-    public void fix_assertEqualsFloat() {
+    public void fix_assertEqualsFloating() {
         test()
                 .addInputLines(
                         "Test.java",
                         "import static org.junit.Assert.assertEquals;",
+                        "import static org.junit.Assert.assertNotEquals;",
                         "class Test {",
-                        "  void foo(float value) {",
-                        "    assertEquals(.1f, value, .01f);",
+                        "  void foo(float fl, double db) {",
+                        "    assertEquals(.1f, fl, .01f);",
+                        "    assertEquals(\"desc\", .1f, fl, .01f);",
+                        "    assertEquals(.1D, db, .01D);",
+                        "    assertEquals(\"desc\", .1D, db, .01D);",
+                        "    assertEquals(\"desc\", .1D, db, 0);",
+                        "    assertEquals(.1D, db, 0D);",
+                        "    assertNotEquals(.1f, fl, .01f);",
+                        "    assertNotEquals(\"desc\", .1f, fl, .01f);",
+                        "    assertNotEquals(.1D, db, .01D);",
+                        "    assertNotEquals(\"desc\", .1D, db, .01D);",
+                        "    assertNotEquals(\"desc\", .1D, db, 0.0);",
+                        "    assertNotEquals(.1D, db, 0D);",
                         "  }",
                         "}")
                 .addOutputLines(
@@ -437,177 +449,21 @@ public class PreferAssertjTests {
                         "import static org.assertj.core.api.Assertions.assertThat;",
                         "import static org.assertj.core.api.Assertions.within;",
                         "import static org.junit.Assert.assertEquals;",
-                        "class Test {",
-                        "  void foo(float value) {",
-                        "    assertThat(value).isCloseTo(.1f, within(.01f));",
-                        "  }",
-                        "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
-    }
-
-    @Test
-    public void fix_assertEqualsFloatDescription() {
-        test()
-                .addInputLines(
-                        "Test.java",
-                        "import static org.junit.Assert.assertEquals;",
-                        "class Test {",
-                        "  void foo(float value) {",
-                        "    assertEquals(\"desc\", .1f, value, .01f);",
-                        "  }",
-                        "}")
-                .addOutputLines(
-                        "Test.java",
-                        "import static org.assertj.core.api.Assertions.assertThat;",
-                        "import static org.assertj.core.api.Assertions.within;",
-                        "import static org.junit.Assert.assertEquals;",
-                        "class Test {",
-                        "  void foo(float value) {",
-                        "    assertThat(value).describedAs(\"desc\").isCloseTo(.1f, within(.01f));",
-                        "  }",
-                        "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
-    }
-
-    @Test
-    public void fix_assertEqualsDouble() {
-        test()
-                .addInputLines(
-                        "Test.java",
-                        "import static org.junit.Assert.assertEquals;",
-                        "class Test {",
-                        "  void foo(double value) {",
-                        "    assertEquals(.1D, value, .01D);",
-                        "  }",
-                        "}")
-                .addOutputLines(
-                        "Test.java",
-                        "import static org.assertj.core.api.Assertions.assertThat;",
-                        "import static org.assertj.core.api.Assertions.within;",
-                        "import static org.junit.Assert.assertEquals;",
-                        "class Test {",
-                        "  void foo(double value) {",
-                        "    assertThat(value).isCloseTo(.1D, within(.01D));",
-                        "  }",
-                        "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
-    }
-
-    @Test
-    public void fix_assertEqualsDoubleDescription() {
-        test()
-                .addInputLines(
-                        "Test.java",
-                        "import static org.junit.Assert.assertEquals;",
-                        "class Test {",
-                        "  void foo(double value) {",
-                        "    assertEquals(\"desc\", .1D, value, .01D);",
-                        "  }",
-                        "}")
-                .addOutputLines(
-                        "Test.java",
-                        "import static org.assertj.core.api.Assertions.assertThat;",
-                        "import static org.assertj.core.api.Assertions.within;",
-                        "import static org.junit.Assert.assertEquals;",
-                        "class Test {",
-                        "  void foo(double value) {",
-                        "    assertThat(value).describedAs(\"desc\").isCloseTo(.1D, within(.01D));",
-                        "  }",
-                        "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
-    }
-
-    @Test
-    public void fix_assertNotEqualsFloat() {
-        test()
-                .addInputLines(
-                        "Test.java",
                         "import static org.junit.Assert.assertNotEquals;",
                         "class Test {",
-                        "  void foo(float value) {",
-                        "    assertNotEquals(.1f, value, .01f);",
-                        "  }",
-                        "}")
-                .addOutputLines(
-                        "Test.java",
-                        "import static org.assertj.core.api.Assertions.assertThat;",
-                        "import static org.assertj.core.api.Assertions.within;",
-                        "import static org.junit.Assert.assertNotEquals;",
-                        "class Test {",
-                        "  void foo(float value) {",
-                        "    assertThat(value).isNotCloseTo(.1f, within(.01f));",
-                        "  }",
-                        "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
-    }
-
-    @Test
-    public void fix_assertNotEqualsFloatDescription() {
-        test()
-                .addInputLines(
-                        "Test.java",
-                        "import static org.junit.Assert.assertNotEquals;",
-                        "class Test {",
-                        "  void foo(float value) {",
-                        "    assertNotEquals(\"desc\", .1f, value, .01f);",
-                        "  }",
-                        "}")
-                .addOutputLines(
-                        "Test.java",
-                        "import static org.assertj.core.api.Assertions.assertThat;",
-                        "import static org.assertj.core.api.Assertions.within;",
-                        "import static org.junit.Assert.assertNotEquals;",
-                        "class Test {",
-                        "  void foo(float value) {",
-                        "    assertThat(value).describedAs(\"desc\").isNotCloseTo(.1f, within(.01f));",
-                        "  }",
-                        "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
-    }
-
-    @Test
-    public void fix_assertNotEqualsDouble() {
-        test()
-                .addInputLines(
-                        "Test.java",
-                        "import static org.junit.Assert.assertNotEquals;",
-                        "class Test {",
-                        "  void foo(double value) {",
-                        "    assertNotEquals(.1D, value, .01D);",
-                        "  }",
-                        "}")
-                .addOutputLines(
-                        "Test.java",
-                        "import static org.assertj.core.api.Assertions.assertThat;",
-                        "import static org.assertj.core.api.Assertions.within;",
-                        "import static org.junit.Assert.assertNotEquals;",
-                        "class Test {",
-                        "  void foo(double value) {",
-                        "    assertThat(value).isNotCloseTo(.1D, within(.01D));",
-                        "  }",
-                        "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
-    }
-
-    @Test
-    public void fix_assertNotEqualsDoubleDescription() {
-        test()
-                .addInputLines(
-                        "Test.java",
-                        "import static org.junit.Assert.assertNotEquals;",
-                        "class Test {",
-                        "  void foo(double value) {",
-                        "    assertNotEquals(\"desc\", .1D, value, .01D);",
-                        "  }",
-                        "}")
-                .addOutputLines(
-                        "Test.java",
-                        "import static org.assertj.core.api.Assertions.assertThat;",
-                        "import static org.assertj.core.api.Assertions.within;",
-                        "import static org.junit.Assert.assertNotEquals;",
-                        "class Test {",
-                        "  void foo(double value) {",
-                        "    assertThat(value).describedAs(\"desc\").isNotCloseTo(.1D, within(.01D));",
+                        "  void foo(float fl, double db) {",
+                        "    assertThat(fl).isCloseTo(.1f, within(.01f));",
+                        "    assertThat(fl).describedAs(\"desc\").isCloseTo(.1f, within(.01f));",
+                        "    assertThat(db).isCloseTo(.1D, within(.01D));",
+                        "    assertThat(db).describedAs(\"desc\").isCloseTo(.1D, within(.01D));",
+                        "    assertThat(db).describedAs(\"desc\").isEqualTo(.1D);",
+                        "    assertThat(db).isEqualTo(.1D);",
+                        "    assertThat(fl).isNotCloseTo(.1f, within(.01f));",
+                        "    assertThat(fl).describedAs(\"desc\").isNotCloseTo(.1f, within(.01f));",
+                        "    assertThat(db).isNotCloseTo(.1D, within(.01D));",
+                        "    assertThat(db).describedAs(\"desc\").isNotCloseTo(.1D, within(.01D));",
+                        "    assertThat(db).describedAs(\"desc\").isNotEqualTo(.1D);",
+                        "    assertThat(db).isNotEqualTo(.1D);",
                         "  }",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
