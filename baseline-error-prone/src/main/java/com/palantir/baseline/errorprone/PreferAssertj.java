@@ -30,6 +30,8 @@ import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
+import com.google.errorprone.predicates.TypePredicate;
+import com.google.errorprone.predicates.TypePredicates;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.ImportTree;
@@ -37,6 +39,7 @@ import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.SimpleTreeVisitor;
+import com.sun.tools.javac.code.Type;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
@@ -468,93 +471,112 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
 
         private static final HamcrestVisitor NEGATED = new HamcrestVisitor(true);
 
-        private static final ImmutableSet<String> MATCHERS = ImmutableSet.of(
-                "org.hamcrest.Matchers",
-                "org.hamcrest.CoreMatchers",
-                "org.hamcrest.core.IsIterableContaining");
+        private static final TypePredicate MATCHERS = new TypePredicate() {
+
+            private final TypePredicate matcherPredicate = TypePredicates.isDescendantOf("org.hamcrest.Matcher");
+            private final TypePredicate[] predicates = new TypePredicate[] {
+                    TypePredicates.isExactType("org.hamcrest.Matchers"),
+                    TypePredicates.isExactType("org.hamcrest.CoreMatchers"),
+                    // Allows uses of direct imports to be migrated as well,
+                    // e.g. 'org.hamcrest.core.Is.is'.
+                    (TypePredicate) (type, state) -> matcherPredicate.apply(type, state)
+                            // Limit to Hamcrest packages to avoid interaction with non-standard library code
+                            && type.toString().startsWith("org.hamcrest.")
+            };
+
+            @Override
+            public boolean apply(Type type, VisitorState state) {
+                for (TypePredicate predicate : predicates) {
+                    if (predicate.apply(type, state)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+        };
 
         private static final Matcher<ExpressionTree> IS_MATCHER = MethodMatchers.staticMethod()
-                .onClassAny(MATCHERS)
+                .onClass(MATCHERS)
                 .named("is")
                 .withParameters("org.hamcrest.Matcher");
 
         private static final Matcher<ExpressionTree> NOT_MATCHER = MethodMatchers.staticMethod()
-                .onClassAny(MATCHERS)
+                .onClass(MATCHERS)
                 .named("not")
                 .withParameters("org.hamcrest.Matcher");
 
         private static final Matcher<ExpressionTree> EQUALS = MethodMatchers.staticMethod()
-                .onClassAny(MATCHERS)
+                .onClass(MATCHERS)
                 .namedAnyOf("is", "equalTo", "equalToObject")
                 .withParameters(Object.class.getName());
 
         private static final Matcher<ExpressionTree> INSTANCE_OF = MethodMatchers.staticMethod()
-                .onClassAny(MATCHERS)
+                .onClass(MATCHERS)
                 .namedAnyOf("isA", "instanceOf")
                 .withParameters("java.lang.Class");
 
         private static final Matcher<ExpressionTree> NULL = Matchers.anyOf(
                 MethodMatchers.staticMethod()
-                        .onClassAny(MATCHERS)
+                        .onClass(MATCHERS)
                         .named("nullValue")
                         .withParameters(),
                 MethodMatchers.staticMethod()
-                        .onClassAny(MATCHERS)
+                        .onClass(MATCHERS)
                         .named("nullValue")
                         .withParameters("java.lang.Class"));
 
         private static final Matcher<ExpressionTree> NOT_NULL = Matchers.anyOf(
                 MethodMatchers.staticMethod()
-                        .onClassAny(MATCHERS)
+                        .onClass(MATCHERS)
                         .named("notNullValue")
                         .withParameters(),
                 MethodMatchers.staticMethod()
-                        .onClassAny(MATCHERS)
+                        .onClass(MATCHERS)
                         .named("notNullValue")
                         .withParameters("java.lang.Class"));
 
         private static final Matcher<ExpressionTree> CONTAINS = Matchers.anyOf(
                 MethodMatchers.staticMethod()
-                        .onClassAny(MATCHERS)
+                        .onClass(MATCHERS)
                         .namedAnyOf("hasItem", "hasItemInArray")
                         .withParameters(Object.class.getName()),
                 MethodMatchers.staticMethod()
-                        .onClassAny(MATCHERS)
+                        .onClass(MATCHERS)
                         .named("containsString")
                         .withParameters(String.class.getName()));
 
         // Note: cannot match array/vararg arguments
         private static final Matcher<ExpressionTree> HAS_ITEMS = MethodMatchers.staticMethod()
-                .onClassAny(MATCHERS)
+                .onClass(MATCHERS)
                 .namedAnyOf("hasItems", "arrayContainingInAnyOrder");
 
         private static final Matcher<ExpressionTree> IS_EMPTY = Matchers.anyOf(
                 MethodMatchers.staticMethod()
-                        .onClassAny(MATCHERS)
+                        .onClass(MATCHERS)
                         .namedAnyOf("empty", "emptyIterable", "emptyArray", "anEmptyMap")
                         .withParameters(),
                 MethodMatchers.staticMethod()
-                        .onClassAny(MATCHERS)
+                        .onClass(MATCHERS)
                         .namedAnyOf("emptyCollectionOf", "emptyIterableOf")
                         .withParameters(Class.class.getName()));
 
         private static final Matcher<ExpressionTree> HAS_SIZE = MethodMatchers.staticMethod()
-                .onClassAny(MATCHERS)
+                .onClass(MATCHERS)
                 .namedAnyOf("hasSize", "aMapWithSize", "arrayWithSize", "iterableWithSize")
                 .withParameters(int.class.getName());
 
         private static final Matcher<ExpressionTree> SAME_INSTANCE = MethodMatchers.staticMethod()
-                .onClassAny(MATCHERS)
+                .onClass(MATCHERS)
                 .namedAnyOf("sameInstance", "theInstance")
                 .withParameters(Object.class.getName());
 
         private static final Matcher<ExpressionTree> STARTS_WITH = MethodMatchers.staticMethod()
-                .onClassAny(MATCHERS)
+                .onClass(MATCHERS)
                 .namedAnyOf("startsWith")
                 .withParameters(String.class.getName());
 
         private static final Matcher<ExpressionTree> ENDS_WITH = MethodMatchers.staticMethod()
-                .onClassAny(MATCHERS)
+                .onClass(MATCHERS)
                 .namedAnyOf("endsWith")
                 .withParameters(String.class.getName());
 

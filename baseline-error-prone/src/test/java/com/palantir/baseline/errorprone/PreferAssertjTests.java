@@ -1211,6 +1211,40 @@ public class PreferAssertjTests {
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
+    @Test
+    public void fix_assertThat_wrongImport() {
+        test()
+                .addInputLines(
+                        "Test.java",
+                        "import static org.hamcrest.MatcherAssert.assertThat;",
+                        "import static org.hamcrest.core.Is.is;",
+                        "import static org.hamcrest.core.IsEqual.equalTo;",
+                        "import static org.hamcrest.core.IsNot.not;",
+                        "class Test {",
+                        "  void foo(String value) {",
+                        "    assertThat(value, is(\"str\"));",
+                        "    assertThat(value, equalTo(\"str\"));",
+                        "    assertThat(value, not(is(\"str\")));",
+                        "    assertThat(value, not(equalTo(\"str\")));",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import static org.hamcrest.core.Is.is;",
+                        "import static org.hamcrest.core.IsEqual.equalTo;",
+                        "import static org.hamcrest.core.IsNot.not;",
+                        "class Test {",
+                        "  void foo(String value) {",
+                        "    assertThat(value).isEqualTo(\"str\");",
+                        "    assertThat(value).isEqualTo(\"str\");",
+                        "    assertThat(value).isNotEqualTo(\"str\");",
+                        "    assertThat(value).isNotEqualTo(\"str\");",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
     private BugCheckerRefactoringTestHelper test() {
         return BugCheckerRefactoringTestHelper.newInstance(new PreferAssertj(), getClass());
     }
