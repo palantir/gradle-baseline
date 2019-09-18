@@ -90,6 +90,24 @@ public class StrictUnusedVariableTest {
     }
 
     @Test
+    public void renames_previous_suppression() {
+        refactoringTestHelper
+                .addInputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  public void publicMethod(String unusedValue, String unusedValue2) { }",
+                        "  public void varArgs(String unusedValue, String... unusedValue2) { }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  public void publicMethod(String _value, String _value2) { }",
+                        "  public void varArgs(String _value, String... _value2) { }",
+                        "}")
+                .doTest(TestMode.TEXT_MATCH);
+    }
+
+    @Test
     public void renames_unused_param() {
         refactoringTestHelper
                 .addInputLines(
@@ -134,11 +152,11 @@ public class StrictUnusedVariableTest {
                         "Test.java",
                         "class Test {",
                         "  private static int _field = 1;",
-                        "  public static void privateMethod(int _value, int unusedValue2) {",
+                        "  public static void privateMethod(int _value, int _value2) {",
                         "    int _value3 = 1;",
                         "    _value3 = 2;",
                         "    System.out.println(_value);",
-                        "    System.out.println(unusedValue2 + _value3 + _field);",
+                        "    System.out.println(_value2 + _value3 + _field);",
                         "  }",
                         "}")
                 .addOutputLines(
