@@ -23,7 +23,7 @@ import com.google.errorprone.refaster.annotation.BeforeTemplate;
 import java.util.Collection;
 import java.util.Optional;
 
-public final class AssertjCollectionHasSize<T> {
+public final class AssertjCollectionHasSizeExactly<T> {
 
     @BeforeTemplate
     void bad1(Collection<T> things, int size) {
