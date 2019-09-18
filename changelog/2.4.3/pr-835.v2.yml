@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: Long try-with-resources statements are now aligned such that the first
+    assignment stays on the first line.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/835
