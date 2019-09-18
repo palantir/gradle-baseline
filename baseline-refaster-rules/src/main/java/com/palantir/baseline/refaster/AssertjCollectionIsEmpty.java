@@ -34,26 +34,31 @@ public final class AssertjCollectionIsEmpty<T> {
 
     @BeforeTemplate
     void bad2(Collection<T> things) {
-        assertThat(things.size()).isEqualTo(0);
+        assertThat(things.isEmpty()).isTrue();
     }
 
     @BeforeTemplate
     void bad3(Collection<T> things) {
-        assertThat(things).isEqualTo(Collections.emptyList());
+        assertThat(things.size() == 0).isTrue();
     }
 
     @BeforeTemplate
     void bad4(Collection<T> things) {
-        assertThat(things).isEqualTo(Collections.emptySet());
+        assertThat(things).isEqualTo(Collections.emptyList());
     }
 
     @BeforeTemplate
     void bad5(Collection<T> things) {
-        assertThat(things).isEqualTo(ImmutableList.of());
+        assertThat(things).isEqualTo(Collections.emptySet());
     }
 
     @BeforeTemplate
     void bad6(Collection<T> things) {
+        assertThat(things).isEqualTo(ImmutableList.of());
+    }
+
+    @BeforeTemplate
+    void bad7(Collection<T> things) {
         assertThat(things).isEqualTo(ImmutableSet.of());
     }
 
