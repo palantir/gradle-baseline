@@ -33,6 +33,7 @@ public final class AssertjFileContent<T> {
     }
 
     @BeforeTemplate
+    @SuppressWarnings("deprecation") // we're migrating people off a deprecated method
     void before2(File file, String expected) throws IOException {
         assertThat(Files.toString(file, StandardCharsets.UTF_8)).isEqualTo(expected);
     }
