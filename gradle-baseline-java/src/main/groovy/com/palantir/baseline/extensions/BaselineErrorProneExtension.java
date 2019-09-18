@@ -32,6 +32,7 @@ public class BaselineErrorProneExtension {
             "PreferListsPartition",
             "PreferSafeLoggableExceptions",
             "PreferSafeLoggingPreconditions",
+            "StrictUnusedVariable",
             "StringBuilderConstantParameters",
 
             // Built-in checks
