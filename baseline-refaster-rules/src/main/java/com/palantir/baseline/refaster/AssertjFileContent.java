@@ -24,7 +24,6 @@ import com.google.errorprone.refaster.annotation.BeforeTemplate;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
-import java.util.Optional;
 
 public final class AssertjFileContent<T> {
 
