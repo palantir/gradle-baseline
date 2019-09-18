@@ -62,6 +62,11 @@ public final class AssertjCollectionIsEmpty<T> {
         assertThat(things).isEqualTo(ImmutableSet.of());
     }
 
+    @BeforeTemplate
+    void bad8(Collection<T> things) {
+        assertThat(things).hasSize(0);
+    }
+
     @AfterTemplate
     void after(Collection<T> things) {
         assertThat(things).isEmpty();
