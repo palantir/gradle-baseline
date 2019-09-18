@@ -18,9 +18,12 @@ package com.palantir.baseline.refaster;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.refaster.annotation.AfterTemplate;
 import com.google.errorprone.refaster.annotation.BeforeTemplate;
 import java.util.Collection;
+import java.util.Collections;
 
 public final class AssertjCollectionIsEmpty<T> {
 
@@ -32,6 +35,26 @@ public final class AssertjCollectionIsEmpty<T> {
     @BeforeTemplate
     void bad2(Collection<T> things) {
         assertThat(things.size()).isEqualTo(0);
+    }
+
+    @BeforeTemplate
+    void bad3(Collection<T> things) {
+        assertThat(things).isEqualTo(Collections.emptyList());
+    }
+
+    @BeforeTemplate
+    void bad4(Collection<T> things) {
+        assertThat(things).isEqualTo(Collections.emptySet());
+    }
+
+    @BeforeTemplate
+    void bad5(Collection<T> things) {
+        assertThat(things).isEqualTo(ImmutableList.of());
+    }
+
+    @BeforeTemplate
+    void bad6(Collection<T> things) {
+        assertThat(things).isEqualTo(ImmutableSet.of());
     }
 
     @AfterTemplate
