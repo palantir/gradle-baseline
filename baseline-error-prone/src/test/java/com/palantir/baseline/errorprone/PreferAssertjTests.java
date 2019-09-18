@@ -159,11 +159,10 @@ public class PreferAssertjTests {
                         "Test.java",
                         "import static org.assertj.core.api.Assertions.assertThat;",
                         "",
-                        "import org.assertj.core.api.HamcrestCondition;",
                         "import org.junit.Assert;",
                         "class Test {",
                         "  void foo(boolean b) {",
-                        "    assertThat(true).is(new HamcrestCondition<>(org.hamcrest.CoreMatchers.equalTo(false)));",
+                        "    assertThat(true).isEqualTo(false);",
                         "    assertThat(b).isFalse();",
                         "  }",
                         "}")
@@ -962,11 +961,9 @@ public class PreferAssertjTests {
                         "Test.java",
                         "import static org.assertj.core.api.Assertions.assertThat;",
                         "import static org.hamcrest.Matchers.is;",
-                        "",
-                        "import org.assertj.core.api.HamcrestCondition;",
                         "class Test {",
                         "  void foo(int value) {",
-                        "    assertThat(value).is(new HamcrestCondition<>(is(1)));",
+                        "    assertThat(value).isEqualTo(1);",
                         "  }",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
@@ -988,63 +985,335 @@ public class PreferAssertjTests {
                         "Test.java",
                         "import static org.assertj.core.api.Assertions.assertThat;",
                         "import static org.hamcrest.Matchers.is;",
-                        "",
-                        "import org.assertj.core.api.HamcrestCondition;",
                         "class Test {",
                         "  void foo(int value) {",
-                        "    assertThat(value).describedAs(\"desc\").is(new HamcrestCondition<>(is(1)));",
+                        "    assertThat(value).describedAs(\"desc\").isEqualTo(1);",
                         "  }",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
     @Test
-    public void fix_matcherAssertThatString() {
+    public void fix_matcherAssertThatString_startsWith() {
         test()
                 .addInputLines(
                         "Test.java",
                         "import static org.hamcrest.MatcherAssert.assertThat;",
-                        "import static org.hamcrest.Matchers.is;",
+                        "import static org.hamcrest.Matchers.startsWith;",
+                        "class Test {",
+                        "  void foo(String value) {",
+                        "    assertThat(value, startsWith(\"str\"));",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import static org.hamcrest.Matchers.startsWith;",
+                        "",
+                        "import org.assertj.core.api.HamcrestCondition;",
+                        "class Test {",
+                        "  void foo(String value) {",
+                        "    assertThat(value).is(new HamcrestCondition<>(startsWith(\"str\")));",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    public void fix_assertThat_instanceOf() {
+        test()
+                .addInputLines(
+                        "Test.java",
+                        "import static org.hamcrest.MatcherAssert.assertThat;",
+                        "import static org.hamcrest.Matchers.*;",
+                        "class Test {",
+                        "  void foo(String value) {",
+                        "    assertThat(value, instanceOf(String.class));",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import static org.hamcrest.Matchers.*;",
+                        "class Test {",
+                        "  void foo(String value) {",
+                        "    assertThat(value).isInstanceOf(String.class);",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    public void fix_assertThat_is_instanceOf() {
+        test()
+                .addInputLines(
+                        "Test.java",
+                        "import static org.hamcrest.MatcherAssert.assertThat;",
+                        "import static org.hamcrest.Matchers.*;",
+                        "class Test {",
+                        "  void foo(String value) {",
+                        "    assertThat(value, is(instanceOf(String.class)));",
+                        "    assertThat(value, instanceOf(String.class));",
+                        "    assertThat(value, is(not(instanceOf(String.class))));",
+                        "    assertThat(value, not(instanceOf(String.class)));",
+                        "    assertThat(\"desc\", value, is(instanceOf(String.class)));",
+                        "    assertThat(\"desc\", value, instanceOf(String.class));",
+                        "    assertThat(\"desc\", value, is(not(instanceOf(String.class))));",
+                        "    assertThat(\"desc\", value, not(instanceOf(String.class)));",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import static org.hamcrest.Matchers.*;",
+                        "class Test {",
+                        "  void foo(String value) {",
+                        "    assertThat(value).isInstanceOf(String.class);",
+                        "    assertThat(value).isInstanceOf(String.class);",
+                        "    assertThat(value).isNotInstanceOf(String.class);",
+                        "    assertThat(value).isNotInstanceOf(String.class);",
+                        "    assertThat(value).describedAs(\"desc\").isInstanceOf(String.class);",
+                        "    assertThat(value).describedAs(\"desc\").isInstanceOf(String.class);",
+                        "    assertThat(value).describedAs(\"desc\").isNotInstanceOf(String.class);",
+                        "    assertThat(value).describedAs(\"desc\").isNotInstanceOf(String.class);",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    public void fix_assertThat_equality() {
+        test()
+                .addInputLines(
+                        "Test.java",
+                        "import static org.hamcrest.MatcherAssert.assertThat;",
+                        "import static org.hamcrest.Matchers.*;",
                         "class Test {",
                         "  void foo(String value) {",
                         "    assertThat(value, is(\"str\"));",
+                        "    assertThat(value, equalTo(\"str\"));",
+                        "    assertThat(value, is(equalTo(\"str\")));",
+                        "    assertThat(value, org.hamcrest.CoreMatchers.equalToObject(\"str\"));",
+                        "    assertThat(value, not(not(equalTo(\"str\"))));",
+                        "    assertThat(value, not(is(\"str\")));",
+                        "    assertThat(value, not(equalTo(\"str\")));",
+                        "    assertThat(value, is(not(equalTo(\"str\"))));",
+                        "    assertThat(value, not(org.hamcrest.CoreMatchers.equalToObject(\"str\")));",
+                        "    assertThat(value, not(not(not(equalTo(\"str\")))));",
+                        "    assertThat(\"desc\", value, not(not(not(equalTo(\"str\")))));",
                         "  }",
                         "}")
                 .addOutputLines(
                         "Test.java",
                         "import static org.assertj.core.api.Assertions.assertThat;",
-                        "import static org.hamcrest.Matchers.is;",
-                        "",
-                        "import org.assertj.core.api.HamcrestCondition;",
+                        "import static org.hamcrest.Matchers.*;",
                         "class Test {",
                         "  void foo(String value) {",
-                        "    assertThat(value).is(new HamcrestCondition<>(is(\"str\")));",
+                        "    assertThat(value).isEqualTo(\"str\");",
+                        "    assertThat(value).isEqualTo(\"str\");",
+                        "    assertThat(value).isEqualTo(\"str\");",
+                        "    assertThat(value).isEqualTo(\"str\");",
+                        "    assertThat(value).isEqualTo(\"str\");",
+                        "    assertThat(value).isNotEqualTo(\"str\");",
+                        "    assertThat(value).isNotEqualTo(\"str\");",
+                        "    assertThat(value).isNotEqualTo(\"str\");",
+                        "    assertThat(value).isNotEqualTo(\"str\");",
+                        "    assertThat(value).isNotEqualTo(\"str\");",
+                        "    assertThat(value).describedAs(\"desc\").isNotEqualTo(\"str\");",
                         "  }",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
     @Test
-    public void fix_matcherAssertThatStringDescription() {
+    public void fix_assertThat_nullness() {
         test()
                 .addInputLines(
                         "Test.java",
                         "import static org.hamcrest.MatcherAssert.assertThat;",
-                        "import static org.hamcrest.Matchers.is;",
+                        "import static org.hamcrest.Matchers.*;",
                         "class Test {",
                         "  void foo(String value) {",
-                        "    assertThat(\"desc\", value, is(\"str\"));",
+                        "    assertThat(value, is(not(is(notNullValue(String.class)))));",
+                        "    assertThat(value, is(not(is(nullValue(String.class)))));",
+                        "    assertThat(value, is(nullValue(String.class)));",
+                        "    assertThat(value, nullValue());",
+                        "    assertThat(value, is(notNullValue(String.class)));",
+                        "    assertThat(value, notNullValue());",
+                        "    assertThat(\"desc\", value, is(not(is(notNullValue(String.class)))));",
+                        "    assertThat(\"desc\", value, is(not(is(nullValue(String.class)))));",
+                        "    assertThat(\"desc\", value, is(nullValue(String.class)));",
+                        "    assertThat(\"desc\", value, nullValue());",
+                        "    assertThat(\"desc\", value, is(notNullValue(String.class)));",
+                        "    assertThat(\"desc\", value, notNullValue());",
                         "  }",
                         "}")
                 .addOutputLines(
                         "Test.java",
                         "import static org.assertj.core.api.Assertions.assertThat;",
-                        "import static org.hamcrest.Matchers.is;",
-                        "",
-                        "import org.assertj.core.api.HamcrestCondition;",
+                        "import static org.hamcrest.Matchers.*;",
                         "class Test {",
                         "  void foo(String value) {",
-                        "    assertThat(value).describedAs(\"desc\").is(new HamcrestCondition<>(is(\"str\")));",
+                        "    assertThat(value).isNull();",
+                        "    assertThat(value).isNotNull();",
+                        "    assertThat(value).isNull();",
+                        "    assertThat(value).isNull();",
+                        "    assertThat(value).isNotNull();",
+                        "    assertThat(value).isNotNull();",
+                        "    assertThat(value).describedAs(\"desc\").isNull();",
+                        "    assertThat(value).describedAs(\"desc\").isNotNull();",
+                        "    assertThat(value).describedAs(\"desc\").isNull();",
+                        "    assertThat(value).describedAs(\"desc\").isNull();",
+                        "    assertThat(value).describedAs(\"desc\").isNotNull();",
+                        "    assertThat(value).describedAs(\"desc\").isNotNull();",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    public void fix_assertThat_contains() {
+        test()
+                .addInputLines(
+                        "Test.java",
+                        "import static org.hamcrest.MatcherAssert.assertThat;",
+                        "import static org.hamcrest.Matchers.*;",
+                        "class Test {",
+                        "  void foo(Iterable<String> value, String[] arrayValue) {",
+                        "    assertThat(value, hasItem(\"str\"));",
+                        "    assertThat(arrayValue, hasItemInArray(\"str\"));",
+                        "    assertThat(value, hasItems(\"one\", \"two\"));",
+                        "    assertThat(arrayValue, arrayContainingInAnyOrder(\"one\", \"two\"));",
+                        "    assertThat(value, not(hasItem(\"str\")));",
+                        "    assertThat(arrayValue, not(hasItemInArray(\"str\")));",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import static org.hamcrest.Matchers.*;",
+                        "class Test {",
+                        "  void foo(Iterable<String> value, String[] arrayValue) {",
+                        "    assertThat(value).contains(\"str\");",
+                        "    assertThat(arrayValue).contains(\"str\");",
+                        "    assertThat(value).contains(\"one\", \"two\");",
+                        "    assertThat(arrayValue).contains(\"one\", \"two\");",
+                        "    assertThat(value).doesNotContain(\"str\");",
+                        "    assertThat(arrayValue).doesNotContain(\"str\");",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    public void fix_assertThat_empty() {
+        test()
+                .addInputLines(
+                        "Test.java",
+                        "import static org.hamcrest.MatcherAssert.assertThat;",
+                        "import static org.hamcrest.Matchers.*;",
+                        "",
+                        "import java.util.*;",
+                        "class Test {",
+                        "  void foo(Iterable<String> it, String[] ar, List<String> li) {",
+                        "    assertThat(li, empty());",
+                        "    assertThat(li, emptyIterable());",
+                        "    assertThat(li, emptyCollectionOf(String.class));",
+                        "    assertThat(it, emptyIterable());",
+                        "    assertThat(it, emptyIterableOf(String.class));",
+                        "    assertThat(ar, emptyArray());",
+                        "    assertThat(li, is(not(empty())));",
+                        "    assertThat(li, not(emptyIterable()));",
+                        "    assertThat(li, not(emptyCollectionOf(String.class)));",
+                        "    assertThat(it, not(emptyIterable()));",
+                        "    assertThat(it, not(emptyIterableOf(String.class)));",
+                        "    assertThat(ar, not(emptyArray()));",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import static org.hamcrest.Matchers.*;",
+                        "",
+                        "import java.util.*;",
+                        "class Test {",
+                        "  void foo(Iterable<String> it, String[] ar, List<String> li) {",
+                        "    assertThat(li).isEmpty();",
+                        "    assertThat(li).isEmpty();",
+                        "    assertThat(li).isEmpty();",
+                        "    assertThat(it).isEmpty();",
+                        "    assertThat(it).isEmpty();",
+                        "    assertThat(ar).isEmpty();",
+                        "    assertThat(li).isNotEmpty();",
+                        "    assertThat(li).isNotEmpty();",
+                        "    assertThat(li).isNotEmpty();",
+                        "    assertThat(it).isNotEmpty();",
+                        "    assertThat(it).isNotEmpty();",
+                        "    assertThat(ar).isNotEmpty();",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    public void fix_assertThat_size() {
+        test()
+                .addInputLines(
+                        "Test.java",
+                        "import static org.hamcrest.MatcherAssert.assertThat;",
+                        "import static org.hamcrest.Matchers.*;",
+                        "",
+                        "import java.util.*;",
+                        "class Test {",
+                        "  void foo(Iterable<String> it, String[] ar, List<String> li) {",
+                        "    assertThat(li, hasSize(3));",
+                        "    assertThat(li, iterableWithSize(3));",
+                        "    assertThat(it, iterableWithSize(3));",
+                        "    assertThat(ar, arrayWithSize(3));",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import static org.hamcrest.Matchers.*;",
+                        "",
+                        "import java.util.*;",
+                        "class Test {",
+                        "  void foo(Iterable<String> it, String[] ar, List<String> li) {",
+                        "    assertThat(li).hasSize(3);",
+                        "    assertThat(li).hasSize(3);",
+                        "    assertThat(it).hasSize(3);",
+                        "    assertThat(ar).hasSize(3);",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    public void fix_assertThat_same() {
+        test()
+                .addInputLines(
+                        "Test.java",
+                        "import static org.hamcrest.MatcherAssert.assertThat;",
+                        "import static org.hamcrest.Matchers.*;",
+                        "class Test {",
+                        "  void foo(Object a, Object b) {",
+                        "    assertThat(a, theInstance(b));",
+                        "    assertThat(a, sameInstance(b));",
+                        "    assertThat(a, is(not(theInstance(b))));",
+                        "    assertThat(a, not(sameInstance(b)));",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import static org.hamcrest.Matchers.*;",
+                        "class Test {",
+                        "  void foo(Object a, Object b) {",
+                        "    assertThat(a).isSameAs(b);",
+                        "    assertThat(a).isSameAs(b);",
+                        "    assertThat(a).isNotSameAs(b);",
+                        "    assertThat(a).isNotSameAs(b);",
                         "  }",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);

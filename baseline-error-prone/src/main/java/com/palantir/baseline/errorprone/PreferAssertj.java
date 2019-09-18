@@ -36,8 +36,11 @@ import com.sun.source.tree.ImportTree;
 import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.Tree;
+import com.sun.source.util.SimpleTreeVisitor;
 import java.util.List;
+import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.stream.Collectors;
 
 /**
  * {@link PreferAssertj} provides an automated path from legacy test libraries to AssertJ. Our goal is to migrate
@@ -310,18 +313,25 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
                             + argSource(tree, state, 1) + ", within(" + argSource(tree, state, 3) + "))"));
         }
         if (ASSERT_THAT.matches(tree, state)) {
+            Optional<String> replacement = tree.getArguments().get(1)
+                    .accept(HamcrestVisitor.INSTANCE, state);
             return withAssertThat(tree, state, (assertThat, fix) ->
-                    fix.replace(tree, assertThat + "(" + argSource(tree, state, 0) + ").is(new "
+                    fix.replace(tree, assertThat + "(" + argSource(tree, state, 0) + ")"
+                            + replacement.orElseGet(() ->
+                            ".is(new "
                             + SuggestedFixes.qualifyType(state, fix, "org.assertj.core.api.HamcrestCondition")
                             + "<>("
-                            + argSource(tree, state, 1) + "))"));
+                            + argSource(tree, state, 1) + "))")));
         }
         if (ASSERT_THAT_DESCRIPTION.matches(tree, state)) {
+            Optional<String> replacement = tree.getArguments().get(2)
+                    .accept(HamcrestVisitor.INSTANCE, state);
             return withAssertThat(tree, state, (assertThat, fix) ->
                     fix.replace(tree, assertThat + "(" + argSource(tree, state, 1)
-                            + ").describedAs(" + argSource(tree, state, 0) + ").is(new "
+                            + ").describedAs(" + argSource(tree, state, 0) + ")"
+                            + replacement.orElseGet(() -> ".is(new "
                             + SuggestedFixes.qualifyType(state, fix, "org.assertj.core.api.HamcrestCondition")
-                            + "<>(" + argSource(tree, state, 2) + "))"));
+                            + "<>(" + argSource(tree, state, 2) + "))")));
         }
         if (ASSERT_EQUALS_CATCHALL.matches(tree, state)) {
             int parameters = tree.getArguments().size();
@@ -426,5 +436,148 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
         List<? extends ExpressionTree> arguments = checkNotNull(invocation, "MethodInvocationTree").getArguments();
         checkArgument(index < arguments.size(), "Index is out of bounds");
         return checkNotNull(state.getSourceForNode(arguments.get(index)), "Failed to find argument source");
+    }
+
+    private static final class HamcrestVisitor extends SimpleTreeVisitor<Optional<String>, VisitorState> {
+        private static final HamcrestVisitor INSTANCE = new HamcrestVisitor(false);
+
+        private static final HamcrestVisitor NEGATED = new HamcrestVisitor(true);
+
+        private static final ImmutableSet<String> MATCHERS = ImmutableSet.of(
+                "org.hamcrest.Matchers",
+                "org.hamcrest.CoreMatchers",
+                "org.hamcrest.core.IsIterableContaining");
+
+        private static final Matcher<ExpressionTree> IS_MATCHER = MethodMatchers.staticMethod()
+                .onClassAny(MATCHERS)
+                .named("is")
+                .withParameters("org.hamcrest.Matcher");
+
+        private static final Matcher<ExpressionTree> NOT_MATCHER = MethodMatchers.staticMethod()
+                .onClassAny(MATCHERS)
+                .named("not")
+                .withParameters("org.hamcrest.Matcher");
+
+        private static final Matcher<ExpressionTree> EQUALS = MethodMatchers.staticMethod()
+                .onClassAny(MATCHERS)
+                .namedAnyOf("is", "equalTo", "equalToObject")
+                .withParameters(Object.class.getName());
+
+        private static final Matcher<ExpressionTree> INSTANCE_OF = MethodMatchers.staticMethod()
+                .onClassAny(MATCHERS)
+                .namedAnyOf("isA", "instanceOf")
+                .withParameters("java.lang.Class");
+
+        private static final Matcher<ExpressionTree> NULL = Matchers.anyOf(
+                MethodMatchers.staticMethod()
+                        .onClassAny(MATCHERS)
+                        .named("nullValue")
+                        .withParameters(),
+                MethodMatchers.staticMethod()
+                        .onClassAny(MATCHERS)
+                        .named("nullValue")
+                        .withParameters("java.lang.Class"));
+
+        private static final Matcher<ExpressionTree> NOT_NULL = Matchers.anyOf(
+                MethodMatchers.staticMethod()
+                        .onClassAny(MATCHERS)
+                        .named("notNullValue")
+                        .withParameters(),
+                MethodMatchers.staticMethod()
+                        .onClassAny(MATCHERS)
+                        .named("notNullValue")
+                        .withParameters("java.lang.Class"));
+
+        private static final Matcher<ExpressionTree> HAS_ITEM = MethodMatchers.staticMethod()
+                .onClassAny(MATCHERS)
+                .namedAnyOf("hasItem", "hasItemInArray")
+                .withParameters(Object.class.getName());
+
+        // Note: cannot match array/vararg arguments
+        private static final Matcher<ExpressionTree> HAS_ITEMS = MethodMatchers.staticMethod()
+                .onClassAny(MATCHERS)
+                .namedAnyOf("hasItems", "arrayContainingInAnyOrder");
+
+        private static final Matcher<ExpressionTree> IS_EMPTY = Matchers.anyOf(
+                MethodMatchers.staticMethod()
+                        .onClassAny(MATCHERS)
+                        .namedAnyOf("empty", "emptyIterable", "emptyArray", "anEmptyMap")
+                        .withParameters(),
+                MethodMatchers.staticMethod()
+                        .onClassAny(MATCHERS)
+                        .namedAnyOf("emptyCollectionOf", "emptyIterableOf")
+                        .withParameters(Class.class.getName()));
+
+        private static final Matcher<ExpressionTree> HAS_SIZE = MethodMatchers.staticMethod()
+                .onClassAny(MATCHERS)
+                .namedAnyOf("hasSize", "aMapWithSize", "arrayWithSize", "iterableWithSize")
+                .withParameters(int.class.getName());
+
+        private static final Matcher<ExpressionTree> SAME_INSTANCE = MethodMatchers.staticMethod()
+                .onClassAny(MATCHERS)
+                .namedAnyOf("sameInstance", "theInstance")
+                .withParameters(Object.class.getName());
+
+        private final boolean negated;
+
+        private HamcrestVisitor(boolean negated) {
+            super(Optional.empty());
+            this.negated = negated;
+        }
+
+        @Override
+        @SuppressWarnings("CyclomaticComplexity")
+        public Optional<String> visitMethodInvocation(MethodInvocationTree node, VisitorState state) {
+            // is(Matcher) is for readability, fall through to the next matcher
+            if (IS_MATCHER.matches(node, state)) {
+                return node.getArguments().get(0).accept(this, state);
+            }
+            if (NOT_MATCHER.matches(node, state)) {
+                return node.getArguments().get(0).accept(this.negated ? INSTANCE : NEGATED, state);
+            }
+            if (EQUALS.matches(node, state)) {
+                return Optional.of((negated ? ".isNotEqualTo(" : ".isEqualTo(")
+                        + argSource(node, state, 0) + ")");
+            }
+            if (INSTANCE_OF.matches(node, state)) {
+                return Optional.of((negated ? ".isNotInstanceOf(" : ".isInstanceOf(")
+                        + argSource(node, state, 0) + ")");
+            }
+            if (NULL.matches(node, state)) {
+                return Optional.of(negated ? ".isNotNull()" : ".isNull()");
+            }
+            if (NOT_NULL.matches(node, state)) {
+                return Optional.of(negated ? ".isNull()" : ".isNotNull()");
+            }
+            if (HAS_ITEM.matches(node, state)) {
+                return Optional.of((negated ? ".doesNotContain(" : ".contains(") + argSource(node, state, 0) + ')');
+            }
+            if (IS_EMPTY.matches(node, state)) {
+                return Optional.of(negated ? ".isNotEmpty()" : ".isEmpty()");
+            }
+            if (SAME_INSTANCE.matches(node, state)) {
+                return Optional.of((negated ? ".isNotSameAs(" : ".isSameAs(") + argSource(node, state, 0) + ')');
+            }
+            if (HAS_SIZE.matches(node, state)) {
+                if (negated) {
+                    // No top level method for negated size assertions
+                    return Optional.empty();
+                }
+
+                return Optional.of(".hasSize(" + argSource(node, state, 0) + ')');
+            }
+            if (HAS_ITEMS.matches(node, state)
+                    && checkNotNull(ASTHelpers.getSymbol(node), "symbol").isVarArgs()) {
+                if (negated) {
+                    // this negates to 'doesNotContainAll' which doesn't exist. AssertJ doesNotContain
+                    // evaluates as 'does not contain any'.
+                    return Optional.empty();
+                }
+                return Optional.of(".contains(" + node.getArguments().stream()
+                        .map(state::getSourceForNode)
+                        .collect(Collectors.joining(", ")) + ')');
+            }
+            return Optional.empty();
+        }
     }
 }
