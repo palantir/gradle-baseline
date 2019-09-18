@@ -1,5 +1,5 @@
-type: improvement
-improvement:
+type: fix
+fix:
   description: PreferAssertj provides better replacements fixes
   links:
   - https://github.com/palantir/gradle-baseline/pull/850
