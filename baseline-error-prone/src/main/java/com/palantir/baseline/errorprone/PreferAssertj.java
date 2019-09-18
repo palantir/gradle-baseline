@@ -513,10 +513,15 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
                         .named("notNullValue")
                         .withParameters("java.lang.Class"));
 
-        private static final Matcher<ExpressionTree> HAS_ITEM = MethodMatchers.staticMethod()
-                .onClassAny(MATCHERS)
-                .namedAnyOf("hasItem", "hasItemInArray")
-                .withParameters(Object.class.getName());
+        private static final Matcher<ExpressionTree> CONTAINS = Matchers.anyOf(
+                MethodMatchers.staticMethod()
+                        .onClassAny(MATCHERS)
+                        .namedAnyOf("hasItem", "hasItemInArray")
+                        .withParameters(Object.class.getName()),
+                MethodMatchers.staticMethod()
+                        .onClassAny(MATCHERS)
+                        .named("containsString")
+                        .withParameters(String.class.getName()));
 
         // Note: cannot match array/vararg arguments
         private static final Matcher<ExpressionTree> HAS_ITEMS = MethodMatchers.staticMethod()
@@ -542,6 +547,16 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
                 .onClassAny(MATCHERS)
                 .namedAnyOf("sameInstance", "theInstance")
                 .withParameters(Object.class.getName());
+
+        private static final Matcher<ExpressionTree> STARTS_WITH = MethodMatchers.staticMethod()
+                .onClassAny(MATCHERS)
+                .namedAnyOf("startsWith")
+                .withParameters(String.class.getName());
+
+        private static final Matcher<ExpressionTree> ENDS_WITH = MethodMatchers.staticMethod()
+                .onClassAny(MATCHERS)
+                .namedAnyOf("endsWith")
+                .withParameters(String.class.getName());
 
         private final boolean negated;
 
@@ -574,7 +589,7 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
             if (NOT_NULL.matches(node, state)) {
                 return Optional.of(negated ? ".isNull()" : ".isNotNull()");
             }
-            if (HAS_ITEM.matches(node, state)) {
+            if (CONTAINS.matches(node, state)) {
                 return Optional.of((negated ? ".doesNotContain(" : ".contains(") + argSource(node, state, 0) + ')');
             }
             if (IS_EMPTY.matches(node, state)) {
@@ -582,6 +597,12 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
             }
             if (SAME_INSTANCE.matches(node, state)) {
                 return Optional.of((negated ? ".isNotSameAs(" : ".isSameAs(") + argSource(node, state, 0) + ')');
+            }
+            if (STARTS_WITH.matches(node, state)) {
+                return Optional.of((negated ? ".doesNotStartWith(" : ".startsWith(") + argSource(node, state, 0) + ')');
+            }
+            if (ENDS_WITH.matches(node, state)) {
+                return Optional.of((negated ? ".doesNotEndWith(" : ".endsWith(") + argSource(node, state, 0) + ')');
             }
             if (HAS_SIZE.matches(node, state)) {
                 if (negated) {

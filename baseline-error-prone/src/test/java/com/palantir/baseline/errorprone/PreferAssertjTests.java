@@ -855,21 +855,21 @@ public class PreferAssertjTests {
                 .addInputLines(
                         "Test.java",
                         "import static org.hamcrest.MatcherAssert.assertThat;",
-                        "import static org.hamcrest.Matchers.startsWith;",
+                        "import static org.hamcrest.Matchers.hasToString;",
                         "class Test {",
                         "  void foo(String value) {",
-                        "    assertThat(value, startsWith(\"str\"));",
+                        "    assertThat(value, hasToString(\"str\"));",
                         "  }",
                         "}")
                 .addOutputLines(
                         "Test.java",
                         "import static org.assertj.core.api.Assertions.assertThat;",
-                        "import static org.hamcrest.Matchers.startsWith;",
+                        "import static org.hamcrest.Matchers.hasToString;",
                         "",
                         "import org.assertj.core.api.HamcrestCondition;",
                         "class Test {",
                         "  void foo(String value) {",
-                        "    assertThat(value).is(new HamcrestCondition<>(startsWith(\"str\")));",
+                        "    assertThat(value).is(new HamcrestCondition<>(hasToString(\"str\")));",
                         "  }",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
@@ -1042,6 +1042,7 @@ public class PreferAssertjTests {
                         "    assertThat(arrayValue, arrayContainingInAnyOrder(\"one\", \"two\"));",
                         "    assertThat(value, not(hasItem(\"str\")));",
                         "    assertThat(arrayValue, not(hasItemInArray(\"str\")));",
+                        "    assertThat(arrayValue[0], containsString(\"str\"));",
                         "  }",
                         "}")
                 .addOutputLines(
@@ -1056,6 +1057,7 @@ public class PreferAssertjTests {
                         "    assertThat(arrayValue).contains(\"one\", \"two\");",
                         "    assertThat(value).doesNotContain(\"str\");",
                         "    assertThat(arrayValue).doesNotContain(\"str\");",
+                        "    assertThat(arrayValue[0]).contains(\"str\");",
                         "  }",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
@@ -1170,6 +1172,40 @@ public class PreferAssertjTests {
                         "    assertThat(a).isSameAs(b);",
                         "    assertThat(a).isNotSameAs(b);",
                         "    assertThat(a).isNotSameAs(b);",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    public void fix_assertThat_strings() {
+        test()
+                .addInputLines(
+                        "Test.java",
+                        "import static org.hamcrest.MatcherAssert.assertThat;",
+                        "import static org.hamcrest.Matchers.*;",
+                        "class Test {",
+                        "  void foo(String value) {",
+                        "    assertThat(value, containsString(\"str\"));",
+                        "    assertThat(value, not(containsString(\"str\")));",
+                        "    assertThat(value, startsWith(\"str\"));",
+                        "    assertThat(value, not(startsWith(\"str\")));",
+                        "    assertThat(value, endsWith(\"str\"));",
+                        "    assertThat(value, not(endsWith(\"str\")));",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import static org.hamcrest.Matchers.*;",
+                        "class Test {",
+                        "  void foo(String value) {",
+                        "    assertThat(value).contains(\"str\");",
+                        "    assertThat(value).doesNotContain(\"str\");",
+                        "    assertThat(value).startsWith(\"str\");",
+                        "    assertThat(value).doesNotStartWith(\"str\");",
+                        "    assertThat(value).endsWith(\"str\");",
+                        "    assertThat(value).doesNotEndWith(\"str\");",
                         "  }",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
