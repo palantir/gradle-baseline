@@ -141,4 +141,28 @@ class BaselineErrorProneRefasterIntegrationTest extends AbstractPluginTest {
         }
         '''.stripIndent()
     }
+
+    def 'refaster configuration can be overridden'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << '''
+        dependencies {
+            // this isn't actually a refaster jar, just want to make sure the baseline ones don't run!
+            refaster 'org.codehaus.cargo:empty-jar:1.7.7'
+        }
+        '''
+        file('src/main/java/test/Test.java') << '''
+        package test;
+        import java.nio.charset.StandardCharsets;
+        public class Test {
+            int i = "hello world".getBytes(StandardCharsets.UTF_8).length;
+        }
+        '''.stripIndent()
+
+        then:
+        BuildResult result = with('compileJava', '-i', '-PrefasterApply').build()
+        result.task(":compileJava").outcome == TaskOutcome.SUCCESS
+        // this signifies that the baked-in baseline refaster ruels were *not* applied
+        file('src/main/java/test/Test.java').text.contains 'int i = "hello world".getBytes(StandardCharsets.UTF_8).length;'
+    }
 }

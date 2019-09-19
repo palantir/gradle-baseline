@@ -167,6 +167,9 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `LambdaMethodReference`: Lambda should use a method reference.
 - `SafeLoggingExceptionMessageFormat`: SafeLoggable exceptions do not interpolate parameters.
 - `StrictUnusedVariable`: Functions shouldn't have unused parameters.
+- `StringBuilderConstantParameters`: StringBuilder with a constant number of parameters should be replaced by simple concatenation.
+- `JUnit5SuiteMisuse`: When migrating from JUnit4 -> JUnit5, classes annotated with `@RunWith(Suite.class)` are dangerous because if they reference any JUnit5 test classes, these tests will silently not run!
+- `PreferAssertj`: Prefer AssertJ fluent assertions.
 
 ## com.palantir.baseline-checkstyle
 Checkstyle rules can be suppressed on a per-line or per-block basis. (It is good practice to first consider formatting
@@ -314,6 +317,8 @@ spotless {
 ```
 
 We chose the Eclipse formatter because it can be run from the command line and from both IDEs (IntelliJ using the [Eclipse Code Formatter](https://plugins.jetbrains.com/plugin/6546-eclipse-code-formatter) plugin).
+
+To iterate on the eclipse.xml formatter config, you can import it into an instance of Eclipse, edit it through the preferences UI and then export it, or you can manually tune individual values by referring to the master list of [DefaultCodeFormatterConstants](https://github.com/eclipse/eclipse.jdt.core/blob/6a8cee1126829229d648db4ae0e5a6b70a5d4f13/org.eclipse.jdt.core/formatter/org/eclipse/jdt/core/formatter/DefaultCodeFormatterConstants.java) and [DefaultCodeFormatterOptions](https://github.com/eclipse/eclipse.jdt.core/blob/6a8cee1126829229d648db4ae0e5a6b70a5d4f13/org.eclipse.jdt.core/formatter/org/eclipse/jdt/internal/formatter/DefaultCodeFormatterOptions.java#L41-L95). Running `./gradlew :gradle-baseline-java:test -Drecreate=true` should update all the checked-in snapshot test cases.
 
 ## com.palantir.baseline-reproducibility
 

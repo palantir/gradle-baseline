@@ -23,7 +23,7 @@ import static com.google.common.collect.ImmutableList.toImmutableList;
 import static com.google.common.collect.Iterables.getLast;
 import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.errorprone.BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION;
-import static com.google.errorprone.BugPattern.SeverityLevel.WARNING;
+import static com.google.errorprone.BugPattern.SeverityLevel.ERROR;
 import static com.google.errorprone.util.ASTHelpers.getSymbol;
 import static com.google.errorprone.util.ASTHelpers.getType;
 import static com.google.errorprone.util.ASTHelpers.isSubtype;
@@ -35,6 +35,7 @@ import static com.sun.source.tree.Tree.Kind.PREFIX_INCREMENT;
 
 import com.google.auto.service.AutoService;
 import com.google.common.base.Ascii;
+import com.google.common.base.CaseFormat;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
@@ -111,10 +112,10 @@ import javax.lang.model.element.Name;
         linkType = BugPattern.LinkType.CUSTOM,
         summary = "Unused.",
         providesFix = REQUIRES_HUMAN_ATTENTION,
-        severity = WARNING,
+        severity = ERROR,
         documentSuppression = false)
 public final class StrictUnusedVariable extends BugChecker implements BugChecker.CompilationUnitTreeMatcher {
-    private static final String EXEMPT_PREFIX = "unused";
+    private static final ImmutableSet<String> EXEMPT_PREFIXES = ImmutableSet.of("_");
 
     /**
      * The set of annotation full names which exempt annotated element from being reported as unused.
@@ -154,6 +155,8 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
 
         VariableFinder variableFinder = new VariableFinder(state);
         variableFinder.scan(state.getPath(), null);
+
+        checkUsedVariables(state, variableFinder);
 
         // Map of symbols to variable declarations. Initially this is a map of all of the local variable
         // and fields. As we go we remove those variables which are used.
@@ -205,8 +208,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             Tree unused = specs.iterator().next().variableTree().getLeaf();
             Symbol.VarSymbol symbol = (Symbol.VarSymbol) unusedSymbol;
             ImmutableList<SuggestedFix> fixes;
-            if (symbol.getKind() == ElementKind.PARAMETER
-                    && !isEverUsed.contains(unusedSymbol)) {
+            if (symbol.getKind() == ElementKind.PARAMETER && !isEverUsed.contains(unusedSymbol)) {
                 fixes = buildUnusedParameterFixes(symbol, allUsageSites, state);
             } else {
                 fixes = buildUnusedVarFixes(symbol, allUsageSites, state);
@@ -231,6 +233,73 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                             .build());
         }
         return Description.NO_MATCH;
+    }
+
+    private void checkUsedVariables(VisitorState state, VariableFinder variableFinder) {
+        VariableUsage variableUsage = new VariableUsage();
+        variableUsage.scan(state.getPath(), null);
+        variableFinder.exemptedVariables.entrySet().forEach(entry -> {
+            List<TreePath> usageSites = variableUsage.usageSites.get(entry.getKey());
+            if (usageSites.size() <= 1) {
+                return;
+            }
+            state.reportMatch(
+                    buildDescription(entry.getValue())
+                            .setMessage(String.format(
+                                    "The %s '%s' is read but has 'StrictUnusedVariable' " +
+                                            "suppressed because of its name.",
+                                    describeVariable((Symbol.VarSymbol) entry.getKey()),
+                                    entry.getKey().name))
+                                    .addFix(constructUsedVariableSuggestedFix(usageSites, state))
+                            .build());
+
+        });
+    }
+
+    private static SuggestedFix constructUsedVariableSuggestedFix(List<TreePath> usagePaths, VisitorState state) {
+        SuggestedFix.Builder fix = SuggestedFix.builder();
+        for (TreePath usagePath : usagePaths) {
+            if (usagePath.getLeaf() instanceof VariableTree) {
+                VariableTree variableTree = (VariableTree) usagePath.getLeaf();
+                int startPos = state.getEndPosition(variableTree.getType()) + 1;
+                int endPos = state.getEndPosition(variableTree);
+
+                // Ignore the initializer if there is one
+                if (variableTree.getInitializer() != null) {
+                    endPos = startPos + variableTree.getName().toString().length();
+                }
+                if (startPos == Position.NOPOS || endPos == Position.NOPOS) {
+                    // TODO(b/118437729): handle bogus source positions in enum declarations
+                    continue;
+                }
+
+                renameVariable(startPos, endPos, variableTree.getName().toString(), fix);
+            } else if (usagePath.getLeaf() instanceof IdentifierTree) {
+                JCTree.JCIdent identifierTree = (JCTree.JCIdent) usagePath.getLeaf();
+                int startPos = identifierTree.getStartPosition();
+                int endPos = state.getEndPosition(identifierTree);
+                if (startPos == Position.NOPOS || endPos == Position.NOPOS) {
+                    // TODO(b/118437729): handle bogus source positions in enum declarations
+                    continue;
+                }
+
+                renameVariable(startPos, endPos, identifierTree.getName().toString(), fix);
+            }
+        }
+        return fix.build();
+    }
+
+    private static void renameVariable(int startPos, int endPos, String name, SuggestedFix.Builder fix) {
+        EXEMPT_PREFIXES.stream()
+                .filter(name::startsWith)
+                .findFirst()
+                .ifPresent(prefix -> fix.replace(
+                        startPos,
+                        endPos,
+                        prefix.length() == name.length()
+                                // Fall back to a generic variable name if the prefix is the entire variable name
+                                ? "value"
+                                : CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, name.substring(prefix.length()))));
     }
 
     private static SuggestedFix makeAssignmentDeclaration(
@@ -423,61 +492,102 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
     private static ImmutableList<SuggestedFix> buildUnusedParameterFixes(
             Symbol varSymbol, List<TreePath> usagePaths, VisitorState state) {
         Symbol.MethodSymbol methodSymbol = (Symbol.MethodSymbol) varSymbol.owner;
+        boolean isPrivateMethod = methodSymbol.getModifiers().contains(Modifier.PRIVATE);
         int index = methodSymbol.params.indexOf(varSymbol);
         SuggestedFix.Builder fix = SuggestedFix.builder();
         for (TreePath path : usagePaths) {
             fix.delete(path.getLeaf());
         }
-        new TreePathScanner<Void, Void>() {
-            @Override
-            public Void visitMethodInvocation(MethodInvocationTree tree, Void unused) {
-                if (getSymbol(tree).equals(methodSymbol)) {
-                    removeByIndex(tree.getArguments());
-                }
-                return super.visitMethodInvocation(tree, null);
-            }
 
-            @Override
-            public Void visitMethod(MethodTree tree, Void unused) {
-                if (getSymbol(tree).equals(methodSymbol)) {
-                    removeByIndex(tree.getParameters());
+        // Remove parameter if the method is private since we can automatically fix all invocation sites
+        // Otherwise add `_` prefix to the variable name
+        if (isPrivateMethod) {
+            new TreePathScanner<Void, Void>() {
+                @Override
+                public Void visitMethodInvocation(MethodInvocationTree tree, Void unused) {
+                    if (getSymbol(tree).equals(methodSymbol)) {
+                        removeByIndex(tree.getArguments());
+                    }
+                    return super.visitMethodInvocation(tree, null);
                 }
-                return super.visitMethod(tree, null);
-            }
 
-            private void removeByIndex(List<? extends Tree> trees) {
-                if (index >= trees.size()) {
-                    // possible when removing a varargs parameter with no corresponding formal parameters
-                    return;
+                @Override
+                public Void visitMethod(MethodTree tree, Void unused) {
+                    if (getSymbol(tree).equals(methodSymbol)) {
+                        removeByIndex(tree.getParameters());
+                    }
+                    return super.visitMethod(tree, null);
                 }
-                if (trees.size() == 1) {
-                    Tree tree = getOnlyElement(trees);
-                    if (((JCTree) tree).getStartPosition() == -1 || state.getEndPosition(tree) == -1) {
+
+                private void removeByIndex(List<? extends Tree> trees) {
+                    if (index >= trees.size()) {
+                        // possible when removing a varargs parameter with no corresponding formal parameters
+                        return;
+                    }
+                    if (trees.size() == 1) {
+                        Tree tree = getOnlyElement(trees);
+                        if (((JCTree) tree).getStartPosition() == -1 || state.getEndPosition(tree) == -1) {
+                            // TODO(b/118437729): handle bogus source positions in enum declarations
+                            return;
+                        }
+                        fix.delete(tree);
+                        return;
+                    }
+                    int startPos;
+                    int endPos;
+                    if (index >= 1) {
+                        startPos = state.getEndPosition(trees.get(index - 1));
+                        endPos = state.getEndPosition(trees.get(index));
+                    } else {
+                        startPos = ((JCTree) trees.get(index)).getStartPosition();
+                        endPos = ((JCTree) trees.get(index + 1)).getStartPosition();
+                    }
+                    if (index == methodSymbol.params().size() - 1 && methodSymbol.isVarArgs()) {
+                        endPos = state.getEndPosition(getLast(trees));
+                    }
+                    if (startPos == Position.NOPOS || endPos == Position.NOPOS) {
                         // TODO(b/118437729): handle bogus source positions in enum declarations
                         return;
                     }
-                    fix.delete(tree);
-                    return;
+                    fix.replace(startPos, endPos, "");
                 }
-                int startPos;
-                int endPos;
-                if (index >= 1) {
-                    startPos = state.getEndPosition(trees.get(index - 1));
-                    endPos = state.getEndPosition(trees.get(index));
-                } else {
-                    startPos = ((JCTree) trees.get(index)).getStartPosition();
-                    endPos = ((JCTree) trees.get(index + 1)).getStartPosition();
+            }.scan(state.getPath().getCompilationUnit(), null);
+        } else {
+            new TreePathScanner<Void, Void>() {
+                @Override
+                public Void visitMethod(MethodTree methodTree, Void unused) {
+                    if (getSymbol(methodTree).equals(methodSymbol)) {
+                        renameByIndex(methodTree.getParameters());
+                    }
+                    return super.visitMethod(methodTree, null);
                 }
-                if (index == methodSymbol.params().size() - 1 && methodSymbol.isVarArgs()) {
-                    endPos = state.getEndPosition(getLast(trees));
+
+                private void renameByIndex(List<? extends VariableTree> trees) {
+                    if (index >= trees.size()) {
+                        // possible when removing a varargs parameter with no corresponding formal parameters
+                        return;
+                    }
+
+                    VariableTree tree = trees.get(index);
+                    int startPos = state.getEndPosition(tree.getType()) + 1;
+                    int endPos = state.getEndPosition(trees.get(index));
+                    if (index == methodSymbol.params().size() - 1 && methodSymbol.isVarArgs()) {
+                        endPos = state.getEndPosition(getLast(trees));
+                    }
+                    if (startPos == Position.NOPOS || endPos == Position.NOPOS) {
+                        // TODO(b/118437729): handle bogus source positions in enum declarations
+                        return;
+                    }
+                    if (tree.getName().toString().startsWith("unused")) {
+                        fix.replace(startPos, endPos, "_"  +
+                                CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL,
+                                        tree.getName().toString().substring("unused".length())));
+                    } else {
+                        fix.replace(startPos, endPos, "_" + tree.getName());
+                    }
                 }
-                if (startPos == Position.NOPOS || endPos == Position.NOPOS) {
-                    // TODO(b/118437729): handle bogus source positions in enum declarations
-                    return;
-                }
-                fix.replace(startPos, endPos, "");
-            }
-        }.scan(state.getPath().getCompilationUnit(), null);
+            }.scan(state.getPath().getCompilationUnit(), null);
+        }
         return ImmutableList.of(fix.build());
     }
 
@@ -506,7 +616,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
     }
 
     private static boolean exemptedByName(Name name) {
-        return Ascii.toLowerCase(name.toString()).startsWith(EXEMPT_PREFIX);
+        return EXEMPT_PREFIXES.stream().anyMatch(prefix -> Ascii.toLowerCase(name.toString()).startsWith(prefix));
     }
 
     private class VariableFinder extends TreePathScanner<Void, Void> {
@@ -515,6 +625,8 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
         private final Set<Symbol> onlyCheckForReassignments = new HashSet<>();
 
         private final ListMultimap<Symbol, TreePath> usageSites = ArrayListMultimap.create();
+
+        private final Map<Symbol, VariableTree> exemptedVariables = new HashMap<>();
 
         private final VisitorState state;
 
@@ -525,14 +637,15 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
         @Override
         @SuppressWarnings("SwitchStatementDefaultCase")
         public Void visitVariable(VariableTree variableTree, Void unused) {
-            if (exemptedByName(variableTree.getName())) {
-                return null;
-            }
             if (isSuppressed(variableTree)) {
                 return null;
             }
             Symbol.VarSymbol symbol = getSymbol(variableTree);
             if (symbol == null) {
+                return null;
+            }
+            if (exemptedByName(variableTree.getName())) {
+                exemptedVariables.put(symbol, variableTree);
                 return null;
             }
             if (symbol.getKind() == ElementKind.FIELD
@@ -881,6 +994,28 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             super.visitMethodInvocation(tree, null);
             inMethodCall--;
             return null;
+        }
+    }
+
+    static class VariableUsage extends TreePathScanner<Void, Void> {
+        public final ListMultimap<Symbol, TreePath> usageSites = ArrayListMultimap.create();
+
+        @Override
+        public Void visitVariable(VariableTree tree, Void unused) {
+            usageSites.put(getSymbol(tree), getCurrentPath());
+            return super.visitVariable(tree, null);
+        }
+
+        @Override
+        public Void visitIdentifier(IdentifierTree tree, Void unused) {
+            usageSites.put(getSymbol(tree), getCurrentPath());
+            return super.visitIdentifier(tree, null);
+        }
+
+        @Override
+        public Void visitMemberSelect(MemberSelectTree memberSelectTree, Void unused) {
+            usageSites.put(getSymbol(memberSelectTree), getCurrentPath());
+            return super.visitMemberSelect(memberSelectTree, null);
         }
     }
 

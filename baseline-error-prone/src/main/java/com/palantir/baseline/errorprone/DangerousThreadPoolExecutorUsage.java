@@ -19,6 +19,8 @@ import java.util.concurrent.ThreadPoolExecutor;
 @AutoService(BugChecker.class)
 @BugPattern(
         name = "DangerousThreadPoolExecutorUsage",
+        link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
+        linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
         summary = "Disallow direct ThreadPoolExecutor usages.")
 public final class DangerousThreadPoolExecutorUsage extends BugChecker implements BugChecker.NewClassTreeMatcher {
