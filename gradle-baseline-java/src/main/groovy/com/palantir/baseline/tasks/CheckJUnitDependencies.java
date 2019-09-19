@@ -18,8 +18,12 @@ package com.palantir.baseline.tasks;
 
 import com.google.common.base.Preconditions;
 import com.palantir.baseline.plugins.BaselineTesting;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.stream.Stream;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
@@ -65,20 +69,25 @@ public class CheckJUnitDependencies extends DefaultTask {
         // not run!
         if (sourceSetMentionsJUnit4(ss)) {
             if (BaselineTesting.useJUnitPlatformEnabled(task)) {
-                Preconditions.checkState(junitJupiterIsPresent,
-                        "Some tests still use JUnit4, but Gradle has been set to use JUnit Platform."
+                Preconditions.checkState(
+                        junitJupiterIsPresent,
+                        "Tests may be silently not running! Some tests still use JUnit4, but Gradle has "
+                                + "been set to use JUnit Platform. "
                                 + "To ensure your old JUnit4 tests still run, please add the following:\n\n"
                                 + "    runtimeOnly 'org.junit.jupiter:junit-jupiter'\n\n"
                                 + "Otherwise they will silently not run.");
 
                 boolean vintageEngineExists = hasRuntimeDepMatching(ss, BaselineTesting::isVintageEngine);
-                Preconditions.checkState(vintageEngineExists,
-                        "Some tests still use JUnit4, but Gradle has been set to use JUnit Platform."
+                Preconditions.checkState(
+                        vintageEngineExists,
+                        "Tests may be silently not running! Some tests still use JUnit4, but Gradle has "
+                                + "been set to use JUnit Platform. "
                                 + "To ensure your old JUnit4 tests still run, please add the following:\n\n"
                                 + "    runtimeOnly 'org.junit.vintage:junit-vintage-engine'\n\n"
                                 + "Otherwise they will silently not run.");
             } else {
-                Preconditions.checkState(!junitJupiterIsPresent,
+                Preconditions.checkState(
+                        !junitJupiterIsPresent,
                         "Please remove 'org.junit.jupiter:junit-jupiter' from runtimeClasspath "
                                 + "because tests use JUnit4 and useJUnitPlatform() is not enabled.");
 
@@ -90,12 +99,12 @@ public class CheckJUnitDependencies extends DefaultTask {
         // org.junit.jupiter.api.Test annotation, but as JUnit4 knows nothing about these, they'll silently not run
         // unless the user has wired up the dependency correctly.
         if (sourceSetMentionsJUnit5Api(ss)) {
-            if (BaselineTesting.useJUnitPlatformEnabled(task)) {
-                Preconditions.checkState(BaselineTesting.useJUnitPlatformEnabled(task), "TODO");
-                Preconditions.checkState(junitJupiterIsPresent, "TODO");
-            } else {
-                throw new GradleException("TODO");
-            }
+            Preconditions.checkState(
+                    BaselineTesting.useJUnitPlatformEnabled(task),
+                    "Some tests mention JUnit5, but the '" + task.getName() + "' task does not have "
+                            + "useJUnitPlatform() enabled. This means tests may be silently not running! Please "
+                            + "add the following:\n\n"
+                            + "    implementation 'org.junit.jupiter:jupiter-engine'\n");
         }
 
         // sourcesets might also contain Spock classes, but we don't have any special validation for these.
@@ -111,13 +120,28 @@ public class CheckJUnitDependencies extends DefaultTask {
                 .anyMatch(component -> spec.test(component.getModuleVersion()));
     }
 
-    private static boolean sourceSetMentionsJUnit4(SourceSet ss) {
-        // TODO(dfox): implement this
-        return false;
+    private boolean sourceSetMentionsJUnit4(SourceSet ss) {
+        return !ss.getAllSource()
+                .filter(file -> fileContainsSubstring(file, l ->
+                        l.contains("org.junit.Test")
+                                || l.contains("org.junit.runner")
+                                || l.contains("org.junit.ClassRule")))
+                .isEmpty();
     }
 
-    private static boolean sourceSetMentionsJUnit5Api(SourceSet ss) {
-        // TODO(dfox): implement this
-        return false;
+    private boolean sourceSetMentionsJUnit5Api(SourceSet ss) {
+        return !ss.getAllSource()
+                .filter(file -> fileContainsSubstring(file, l -> l.contains("org.junit.jupiter.api.")))
+                .isEmpty();
+    }
+
+    private boolean fileContainsSubstring(File file, Predicate<String> substring) {
+        try (Stream<String> lines = Files.lines(file.toPath())) {
+            boolean hit = lines.anyMatch(substring::test);
+            getProject().getLogger().lifecycle("[{}] {}", hit ? "hit" : "miss", file);
+            return hit;
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to check file " + file, e);
+        }
     }
 }
