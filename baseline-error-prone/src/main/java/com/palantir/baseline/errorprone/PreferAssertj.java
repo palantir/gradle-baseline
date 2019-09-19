@@ -18,9 +18,11 @@ package com.palantir.baseline.errorprone;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.base.Preconditions.checkNotNull;
+import static com.google.common.base.Preconditions.checkState;
 
 import com.google.auto.service.AutoService;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
@@ -39,6 +41,7 @@ import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.SimpleTreeVisitor;
+import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
 import java.util.List;
 import java.util.Optional;
@@ -548,7 +551,15 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
         // Note: cannot match array/vararg arguments
         private static final Matcher<ExpressionTree> HAS_ITEMS = MethodMatchers.staticMethod()
                 .onClass(MATCHERS)
-                .namedAnyOf("hasItems", "arrayContainingInAnyOrder");
+                .named("hasItems");
+
+        private static final Matcher<ExpressionTree> CONTAINS_EXACTLY_ANY_ORDER = MethodMatchers.staticMethod()
+                .onClass(MATCHERS)
+                .namedAnyOf("arrayContainingInAnyOrder", "containsInAnyOrder");
+
+        private static final Matcher<ExpressionTree> CONTAINS_EXACTLY_ORDERED = MethodMatchers.staticMethod()
+                .onClass(MATCHERS)
+                .named("contains");
 
         private static final Matcher<ExpressionTree> IS_EMPTY = Matchers.anyOf(
                 MethodMatchers.staticMethod()
@@ -634,8 +645,7 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
 
                 return Optional.of(".hasSize(" + argSource(node, state, 0) + ')');
             }
-            if (HAS_ITEMS.matches(node, state)
-                    && checkNotNull(ASTHelpers.getSymbol(node), "symbol").isVarArgs()) {
+            if (HAS_ITEMS.matches(node, state) && isObjectVarArgs(node, state)) {
                 if (negated) {
                     // this negates to 'doesNotContainAll' which doesn't exist. AssertJ doesNotContain
                     // evaluates as 'does not contain any'.
@@ -645,7 +655,39 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
                         .map(state::getSourceForNode)
                         .collect(Collectors.joining(", ")) + ')');
             }
+            if (CONTAINS_EXACTLY_ANY_ORDER.matches(node, state) && isObjectVarArgs(node, state)) {
+                if (negated) {
+                    // this negates to 'doesNotContainExactlyInAnyOrder' which doesn't exist.
+                    return Optional.empty();
+                }
+                return Optional.of(".containsExactlyInAnyOrder(" + node.getArguments().stream()
+                        .map(state::getSourceForNode)
+                        .collect(Collectors.joining(", ")) + ')');
+            }
+            if (CONTAINS_EXACTLY_ORDERED.matches(node, state) && isObjectVarArgs(node, state)) {
+                if (negated) {
+                    // this negates to 'doesNotContainExactly' which doesn't exist.
+                    return Optional.empty();
+                }
+                return Optional.of(".containsExactly(" + node.getArguments().stream()
+                        .map(state::getSourceForNode)
+                        .collect(Collectors.joining(", ")) + ')');
+            }
             return Optional.empty();
         }
+    }
+
+    private static boolean isObjectVarArgs(MethodInvocationTree tree, VisitorState state) {
+        Symbol.MethodSymbol methodSymbol = checkNotNull(ASTHelpers.getSymbol(tree), "symbol");
+        if (!methodSymbol.isVarArgs()) {
+            return false;
+        }
+        Symbol.VarSymbol varSymbol = Iterables.getLast(methodSymbol.getParameters());
+        checkState(varSymbol.type instanceof Type.ArrayType, "Expected an array as last argument of a vararg method");
+        Type.ArrayType arrayType = (Type.ArrayType) varSymbol.type;
+        return ASTHelpers.isSameType(
+                arrayType.getComponentType(),
+                state.getTypeFromString(Object.class.getName()),
+                state);
     }
 }
