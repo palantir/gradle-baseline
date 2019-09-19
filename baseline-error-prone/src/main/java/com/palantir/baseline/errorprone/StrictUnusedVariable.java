@@ -144,6 +144,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                     "serialVersionUID",
                     // TAG fields are used by convention in Android apps.
                     "TAG");
+    private static final String UNUSED = "unused";
 
     @Override
     public Description matchCompilationUnit(CompilationUnitTree tree, VisitorState state) {
@@ -578,10 +579,12 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                         // TODO(b/118437729): handle bogus source positions in enum declarations
                         return;
                     }
-                    if (tree.getName().toString().startsWith("unused")) {
-                        fix.replace(startPos, endPos, "_"  +
-                                CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL,
-                                        tree.getName().toString().substring("unused".length())));
+                    String name = tree.getName().toString();
+                    if (name.startsWith(UNUSED)) {
+                        fix.replace(startPos, endPos, "_"  + (name.equals(UNUSED)
+                                        ? "value"
+                                        : CaseFormat.UPPER_CAMEL.to(
+                                                CaseFormat.LOWER_CAMEL, name.substring(UNUSED.length()))));
                     } else {
                         fix.replace(startPos, endPos, "_" + tree.getName());
                     }
