@@ -41,12 +41,18 @@ public class CheckJUnitDependencies extends DefaultTask {
                 .getPlugin(JavaPluginConvention.class)
                 .getSourceSets()
                 .forEach(ss -> {
+                    if (ss.getName().equals("main")) {
+                        return;
+                    }
+
                     Optional<Test> maybeTestTask = BaselineTesting.getTestTaskForSourceSet(getProject(), ss);
                     if (!maybeTestTask.isPresent()) {
                         return;
                     }
                     Test task = maybeTestTask.get();
 
+                    getProject().getLogger().lifecycle("Analyzing source set {} with task {}",
+                            ss.getName(), task.getName());
                     validateSourceSet(ss, task);
                 });
     }

@@ -21,6 +21,7 @@ import java.util.Objects;
 import java.util.Optional;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.plugins.JavaPlugin;
@@ -81,7 +82,15 @@ public final class BaselineTesting implements Plugin<Project> {
 
     public static Optional<Test> getTestTaskForSourceSet(Project proj, SourceSet ss) {
         String testTaskName = ss.getTaskName(null, "test");
-        return Optional.ofNullable((Test) proj.getTasks().findByName(testTaskName));
+
+        Test task1 = (Test) proj.getTasks().findByName(testTaskName);
+        if (task1 != null) {
+            return Optional.of(task1);
+        }
+
+        // unbroken dome does this
+        Test task2 = (Test) proj.getTasks().findByName(ss.getName());
+        return Optional.ofNullable(task2);
     }
 
     private static boolean hasCompileDependenciesMatching(Project project, SourceSet sourceSet, Spec<Dependency> spec) {
