@@ -115,7 +115,7 @@ import javax.lang.model.element.Name;
         severity = WARNING,
         documentSuppression = false)
 public final class StrictUnusedVariable extends BugChecker implements BugChecker.CompilationUnitTreeMatcher {
-    private static final ImmutableSet<String> EXEMPT_PREFIXES = ImmutableSet.of("unused", "_");
+    private static final ImmutableSet<String> EXEMPT_PREFIXES = ImmutableSet.of("_");
 
     /**
      * The set of annotation full names which exempt annotated element from being reported as unused.
@@ -578,7 +578,13 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                         // TODO(b/118437729): handle bogus source positions in enum declarations
                         return;
                     }
-                    fix.replace(startPos, endPos, "_" + tree.getName());
+                    if (tree.getName().toString().startsWith("unused")) {
+                        fix.replace(startPos, endPos, "_"  +
+                                CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL,
+                                        tree.getName().toString().substring("unused".length())));
+                    } else {
+                        fix.replace(startPos, endPos, "_" + tree.getName());
+                    }
                 }
             }.scan(state.getPath().getCompilationUnit(), null);
         }
