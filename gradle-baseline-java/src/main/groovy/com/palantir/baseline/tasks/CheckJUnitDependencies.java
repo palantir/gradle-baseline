@@ -66,22 +66,35 @@ public class CheckJUnitDependencies extends DefaultTask {
         boolean junitJupiterIsPresent = hasDep(
                 ss.getRuntimeClasspathConfigurationName(), CheckJUnitDependencies::isJunitJupiter);
 
+        // If some testing library happens to provide the junit-jupiter-api, then users might start using the
+        // org.junit.jupiter.api.Test annotation, but as JUnit4 knows nothing about these, they'll silently not run
+        // unless the user has wired up the dependency correctly.
+        if (sourceSetMentionsJUnit5Api(ss)) {
+            String implementation = ss.getImplementationConfigurationName();
+            Preconditions.checkState(
+                    BaselineTesting.useJUnitPlatformEnabled(task),
+                    "Some tests mention JUnit5, but the '" + task.getName() + "' task does not have "
+                            + "useJUnitPlatform() enabled. This means tests may be silently not running! Please "
+                            + "add the following:\n\n"
+                            + "    " + implementation + " 'org.junit.jupiter:junit-jupiter'\n");
+        }
+
         // When doing an incremental migration to JUnit5, a project may have some JUnit4 and some JUnit5 tests at the
         // same time. It's crucial that they have the vintage engine set up correctly, otherwise tests may silently
         // not run!
         if (sourceSetMentionsJUnit4(ss)) {
             if (BaselineTesting.useJUnitPlatformEnabled(task)) { // people might manually enable this
+                String testRuntimeOnly = ss.getRuntimeConfigurationName() + "Only";
                 Preconditions.checkState(
                         junitJupiterIsPresent,
                         "Tests may be silently not running! Some tests still use JUnit4, but Gradle has "
                                 + "been set to use JUnit Platform. "
                                 + "To ensure your old JUnit4 tests still run, please add the following:\n\n"
-                                + "    runtimeOnly 'org.junit.jupiter:junit-jupiter'\n\n"
+                                + "    " + testRuntimeOnly + " 'org.junit.jupiter:junit-jupiter'\n\n"
                                 + "Otherwise they will silently not run.");
 
                 boolean vintageEngineExists = hasDep(
                         ss.getRuntimeClasspathConfigurationName(), CheckJUnitDependencies::isVintageEngine);
-                String testRuntimeOnly = ss.getRuntimeConfigurationName() + "Only";
                 Preconditions.checkState(
                         vintageEngineExists,
                         "Tests may be silently not running! Some tests still use JUnit4, but Gradle has "
@@ -104,18 +117,6 @@ public class CheckJUnitDependencies extends DefaultTask {
                     "Extraneous dependency on JUnit4 (no test mentions JUnit4 classes). Please exclude "
                             + "this from compilation to ensure developers don't accidentally re-introduce it, e.g.\n\n"
                             + "    configurations." + compileClasspath + ".exclude module: 'junit'\n\n");
-        }
-
-        // If some testing library happens to provide the junit-jupiter-api, then users might start using the
-        // org.junit.jupiter.api.Test annotation, but as JUnit4 knows nothing about these, they'll silently not run
-        // unless the user has wired up the dependency correctly.
-        if (sourceSetMentionsJUnit5Api(ss)) {
-            Preconditions.checkState(
-                    BaselineTesting.useJUnitPlatformEnabled(task),
-                    "Some tests mention JUnit5, but the '" + task.getName() + "' task does not have "
-                            + "useJUnitPlatform() enabled. This means tests may be silently not running! Please "
-                            + "add the following:\n\n"
-                            + "    implementation 'org.junit.jupiter:junit-jupiter'\n");
         }
 
         // sourcesets might also contain Spock classes, but we don't have any special validation for these.
