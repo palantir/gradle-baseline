@@ -63,7 +63,8 @@ public class CheckJUnitDependencies extends DefaultTask {
     }
 
     private void validateSourceSet(SourceSet ss, Test task) {
-        boolean junitJupiterIsPresent = hasRuntimeDepMatching(ss, CheckJUnitDependencies::isJunitJupiter);
+        boolean junitJupiterIsPresent = hasDep(
+                ss.getRuntimeClasspathConfigurationName(), CheckJUnitDependencies::isJunitJupiter);
 
         // When doing an incremental migration to JUnit5, a project may have some JUnit4 and some JUnit5 tests at the
         // same time. It's crucial that they have the vintage engine set up correctly, otherwise tests may silently
@@ -78,7 +79,8 @@ public class CheckJUnitDependencies extends DefaultTask {
                                 + "    runtimeOnly 'org.junit.jupiter:junit-jupiter'\n\n"
                                 + "Otherwise they will silently not run.");
 
-                boolean vintageEngineExists = hasRuntimeDepMatching(ss, CheckJUnitDependencies::isVintageEngine);
+                boolean vintageEngineExists = hasDep(
+                        ss.getRuntimeClasspathConfigurationName(), CheckJUnitDependencies::isVintageEngine);
                 String testRuntimeOnly = ss.getRuntimeConfigurationName() + "Only";
                 Preconditions.checkState(
                         vintageEngineExists,
@@ -94,6 +96,14 @@ public class CheckJUnitDependencies extends DefaultTask {
                                 + "'org.junit.jupiter:junit-jupiter' dependency "
                                 + "because tests use JUnit4 and useJUnitPlatform() is not enabled.");
             }
+        } else {
+            String compileClasspath = ss.getCompileClasspathConfigurationName();
+            boolean compilingAgainstOldJunit = hasDep(compileClasspath, CheckJUnitDependencies::isJunit4);
+            Preconditions.checkState(
+                    !compilingAgainstOldJunit,
+                    "Extraneous dependency on JUnit4 (no test mentions JUnit4 classes). Please exclude "
+                            + "this from compilation to ensure developers don't accidentally re-introduce it, e.g.\n\n"
+                            + "    configurations." + compileClasspath + ".exclude module: 'junit'\n\n");
         }
 
         // If some testing library happens to provide the junit-jupiter-api, then users might start using the
@@ -111,9 +121,9 @@ public class CheckJUnitDependencies extends DefaultTask {
         // sourcesets might also contain Spock classes, but we don't have any special validation for these.
     }
 
-    private boolean hasRuntimeDepMatching(SourceSet ss, Predicate<ModuleVersionIdentifier> spec) {
+    private boolean hasDep(String configurationName, Predicate<ModuleVersionIdentifier> spec) {
         return getProject().getConfigurations()
-                .getByName(ss.getRuntimeClasspathConfigurationName())
+                .getByName(configurationName)
                 .getIncoming()
                 .getResolutionResult()
                 .getAllComponents()
@@ -152,5 +162,9 @@ public class CheckJUnitDependencies extends DefaultTask {
 
     private static boolean isVintageEngine(ModuleVersionIdentifier dep) {
         return "org.junit.vintage".equals(dep.getGroup()) && "junit-vintage-engine".equals(dep.getName());
+    }
+
+    private static boolean isJunit4(ModuleVersionIdentifier dep) {
+        return "junit".equals(dep.getGroup()) && "junit".equals(dep.getName());
     }
 }
