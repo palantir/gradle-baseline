@@ -21,9 +21,7 @@ import java.util.Objects;
 import java.util.Optional;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.Task;
 import org.gradle.api.artifacts.Dependency;
-import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.specs.Spec;
@@ -103,11 +101,7 @@ public final class BaselineTesting implements Plugin<Project> {
                 .isPresent();
     }
 
-    public static boolean isJunitJupiter(Dependency dep) {
-        return Objects.equals(dep.getGroup(), "org.junit.jupiter") && dep.getName().equals("junit-jupiter");
-    }
-
-    public static boolean isJunitJupiter(ModuleVersionIdentifier dep) {
+    private static boolean isJunitJupiter(Dependency dep) {
         return Objects.equals(dep.getGroup(), "org.junit.jupiter") && dep.getName().equals("junit-jupiter");
     }
 
@@ -131,9 +125,5 @@ public final class BaselineTesting implements Plugin<Project> {
 
     public static boolean useJUnitPlatformEnabled(Test task) {
         return task.getOptions() instanceof JUnitPlatformOptions;
-    }
-
-    public static boolean isVintageEngine(ModuleVersionIdentifier dep) {
-        return "org.junit.vintage".equals(dep.getGroup()) && "junit-vintage-engine".equals(dep.getName());
     }
 }

@@ -25,7 +25,6 @@ import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 import org.gradle.api.DefaultTask;
-import org.gradle.api.GradleException;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
@@ -51,18 +50,20 @@ public class CheckJUnitDependencies extends DefaultTask {
 
                     Optional<Test> maybeTestTask = BaselineTesting.getTestTaskForSourceSet(getProject(), ss);
                     if (!maybeTestTask.isPresent()) {
+                        // source set doesn't have a test task, e.g. 'schema'
                         return;
                     }
                     Test task = maybeTestTask.get();
 
-                    getProject().getLogger().lifecycle("Analyzing source set {} with task {}",
+                    getProject().getLogger().info(
+                            "Analyzing source set {} with task {}",
                             ss.getName(), task.getName());
                     validateSourceSet(ss, task);
                 });
     }
 
     private void validateSourceSet(SourceSet ss, Test task) {
-        boolean junitJupiterIsPresent = hasRuntimeDepMatching(ss, BaselineTesting::isJunitJupiter);
+        boolean junitJupiterIsPresent = hasRuntimeDepMatching(ss, CheckJUnitDependencies::isJunitJupiter);
 
         // When doing an incremental migration to JUnit5, a project may have some JUnit4 and some JUnit5 tests at the
         // same time. It's crucial that they have the vintage engine set up correctly, otherwise tests may silently
@@ -77,21 +78,21 @@ public class CheckJUnitDependencies extends DefaultTask {
                                 + "    runtimeOnly 'org.junit.jupiter:junit-jupiter'\n\n"
                                 + "Otherwise they will silently not run.");
 
-                boolean vintageEngineExists = hasRuntimeDepMatching(ss, BaselineTesting::isVintageEngine);
+                boolean vintageEngineExists = hasRuntimeDepMatching(ss, CheckJUnitDependencies::isVintageEngine);
+                String testRuntimeOnly = ss.getRuntimeConfigurationName() + "Only";
                 Preconditions.checkState(
                         vintageEngineExists,
                         "Tests may be silently not running! Some tests still use JUnit4, but Gradle has "
                                 + "been set to use JUnit Platform. "
                                 + "To ensure your old JUnit4 tests still run, please add the following:\n\n"
-                                + "    runtimeOnly 'org.junit.vintage:junit-vintage-engine'\n\n"
+                                + "    " + testRuntimeOnly + " 'org.junit.vintage:junit-vintage-engine'\n\n"
                                 + "Otherwise they will silently not run.");
             } else {
                 Preconditions.checkState(
                         !junitJupiterIsPresent,
-                        "Please remove 'org.junit.jupiter:junit-jupiter' from runtimeClasspath "
+                        "Tests may be silently not running! Please remove "
+                                + "'org.junit.jupiter:junit-jupiter' dependency "
                                 + "because tests use JUnit4 and useJUnitPlatform() is not enabled.");
-
-                // we're confident they have 'junit:junit' on the classpath already in order to compile
             }
         }
 
@@ -104,7 +105,7 @@ public class CheckJUnitDependencies extends DefaultTask {
                     "Some tests mention JUnit5, but the '" + task.getName() + "' task does not have "
                             + "useJUnitPlatform() enabled. This means tests may be silently not running! Please "
                             + "add the following:\n\n"
-                            + "    implementation 'org.junit.jupiter:jupiter-engine'\n");
+                            + "    implementation 'org.junit.jupiter:junit-jupiter'\n");
         }
 
         // sourcesets might also contain Spock classes, but we don't have any special validation for these.
@@ -138,10 +139,18 @@ public class CheckJUnitDependencies extends DefaultTask {
     private boolean fileContainsSubstring(File file, Predicate<String> substring) {
         try (Stream<String> lines = Files.lines(file.toPath())) {
             boolean hit = lines.anyMatch(substring::test);
-            getProject().getLogger().lifecycle("[{}] {}", hit ? "hit" : "miss", file);
+            getProject().getLogger().debug("[{}] {}", hit ? "hit" : "miss", file);
             return hit;
         } catch (IOException e) {
             throw new RuntimeException("Unable to check file " + file, e);
         }
+    }
+
+    private static boolean isJunitJupiter(ModuleVersionIdentifier dep) {
+        return "org.junit.jupiter".equals(dep.getGroup()) && "junit-jupiter".equals(dep.getName());
+    }
+
+    private static boolean isVintageEngine(ModuleVersionIdentifier dep) {
+        return "org.junit.vintage".equals(dep.getGroup()) && "junit-vintage-engine".equals(dep.getName());
     }
 }
