@@ -172,4 +172,22 @@ public class StrictUnusedVariableTest {
                         "}"
                 ).doTest(TestMode.TEXT_MATCH);
     }
+
+    @Test
+    public void fixes_previously_suppressed_variables() {
+        refactoringTestHelper
+                .addInputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  public static void privateMethod(int unused) {",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  public static void privateMethod(int _value) {",
+                        "  }",
+                        "}"
+                ).doTest(TestMode.TEXT_MATCH);
+    }
 }
