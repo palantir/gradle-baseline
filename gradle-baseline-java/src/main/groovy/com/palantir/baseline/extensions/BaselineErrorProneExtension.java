@@ -26,7 +26,6 @@ public class BaselineErrorProneExtension {
             // Baseline checks
             "LambdaMethodReference",
             "OptionalOrElseMethodInvocation",
-            "PreferAssertj",
             "PreferBuiltInConcurrentKeySet",
             "PreferCollectionTransform",
             "PreferListsPartition",
