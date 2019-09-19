@@ -104,4 +104,63 @@ class BaselineTestingIntegrationTest extends AbstractPluginTest {
         result.task(':integrationTest').outcome == TaskOutcome.SUCCESS
         new File(projectDir, "build/reports/tests/integrationTest/classes/test.TestClass5.html").exists()
     }
+
+    def 'checkJUnitDependencies ensures mixture of junit4 and 5 tests => legacy must be present'() {
+        when:
+        buildFile << '''
+        plugins {
+            id 'org.unbroken-dome.test-sets' version '2.1.1'
+        }
+        '''.stripIndent()
+        buildFile << standardBuildFile
+        buildFile << '''
+        testSets {
+            integrationTest
+        }
+
+        dependencies {
+            integrationTestImplementation "org.junit.jupiter:junit-jupiter:5.4.2"
+        }
+        '''.stripIndent()
+        file('src/integrationTest/java/test/TestClass2.java') << junit4Test
+        file('src/integrationTest/java/test/TestClass5.java') << junit5Test
+
+        then:
+        BuildResult result = with('checkJUnitDependencies', '--write-locks').buildAndFail()
+        result.output.contains 'Some tests still use JUnit4, but Gradle has been set to use JUnit Platform'
+    }
+
+    def 'checkJUnitDependencies ensures mixture of junit4 and 5 tests => new must be present'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << '''
+        dependencies {
+            testCompile "junit:junit:4.12"
+        }
+        '''.stripIndent()
+        file('src/test/java/test/TestClass2.java') << junit4Test
+        file('src/test/java/test/TestClass5.java') << junit5Test
+
+        then:
+        BuildResult result = with('checkJUnitDependencies', '--write-locks').buildAndFail()
+        result.output.contains 'Some tests mention JUnit5, but the \'test\' task does not have useJUnitPlatform() enabled'
+    }
+
+    def 'checkJUnitDependencies detects extraneous old junit'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << '''
+        dependencies {
+            testCompile "junit:junit:4.12"
+        }
+        test {
+          useJUnitPlatform()
+        }
+        '''.stripIndent()
+        file('src/test/java/test/TestClass5.java') << junit5Test
+
+        then:
+        BuildResult result = with('checkJUnitDependencies', '--write-locks').buildAndFail()
+        result.output.contains 'Extraneous dependency on JUnit4 (no test mentions JUnit4 classes)'
+    }
 }

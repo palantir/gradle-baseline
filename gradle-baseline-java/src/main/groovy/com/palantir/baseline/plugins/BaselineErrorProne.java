@@ -153,7 +153,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
 
             // To allow refactoring of deprecated methods, even when -Xlint:deprecation is specified, we need to remove
             // these compiler flags after all configuration has happened.
-            project.afterEvaluate(unused -> project.getTasks().withType(JavaCompile.class)
+            project.afterEvaluate(unusedProject -> project.getTasks().withType(JavaCompile.class)
                     .configureEach(javaCompile -> {
                         if (javaCompile.equals(compileRefaster)) {
                             return;

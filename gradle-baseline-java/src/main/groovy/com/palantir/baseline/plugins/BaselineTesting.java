@@ -47,7 +47,7 @@ public final class BaselineTesting implements Plugin<Project> {
             }
         });
 
-        project.getPlugins().withType(JavaPlugin.class, unused -> {
+        project.getPlugins().withType(JavaPlugin.class, unusedPlugin -> {
             // afterEvaluate necessary because the junit-jupiter dep might be added further down the build.gradle
             project.afterEvaluate(proj -> {
                 proj.getConvention()
@@ -57,13 +57,8 @@ public final class BaselineTesting implements Plugin<Project> {
                         .forEach(ss -> {
                             Optional<Test> maybeTestTask = getTestTaskForSourceSet(proj, ss);
                             if (!maybeTestTask.isPresent()) {
-                                // Fall back to the source set name, since that is what gradle-testsets-plugin does
-                                maybeTestTask = Optional.ofNullable((Test) proj.getTasks().findByName(ss.getName()));
-                                if (!maybeTestTask.isPresent()) {
-                                    log.warn(
-                                            "Detected 'org:junit.jupiter:junit-jupiter', but unable to find test task");
-                                    return;
-                                }
+                                log.warn("Detected 'org:junit.jupiter:junit-jupiter', but unable to find test task");
+                                return;
                             }
                             log.info("Detected 'org:junit.jupiter:junit-jupiter', enabling useJUnitPlatform() on {}",
                                     maybeTestTask.get().getName());

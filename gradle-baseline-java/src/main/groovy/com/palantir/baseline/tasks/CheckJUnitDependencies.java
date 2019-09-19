@@ -70,7 +70,7 @@ public class CheckJUnitDependencies extends DefaultTask {
         // same time. It's crucial that they have the vintage engine set up correctly, otherwise tests may silently
         // not run!
         if (sourceSetMentionsJUnit4(ss)) {
-            if (BaselineTesting.useJUnitPlatformEnabled(task)) {
+            if (BaselineTesting.useJUnitPlatformEnabled(task)) { // people might manually enable this
                 Preconditions.checkState(
                         junitJupiterIsPresent,
                         "Tests may be silently not running! Some tests still use JUnit4, but Gradle has "
