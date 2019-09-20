@@ -24,14 +24,20 @@ import org.junit.Test;
 public class PreferAssertjTests {
 
     @Test
-    public void fix_assertFalse() {
+    public void fix_booleanAsserts() {
         test()
                 .addInputLines(
                         "Test.java",
+                        "import static org.hamcrest.MatcherAssert.assertThat;",
+                        "",
                         "import org.junit.Assert;",
                         "class Test {",
                         "  void foo(boolean b) {",
                         "    Assert.assertFalse(b);",
+                        "    Assert.assertFalse(\"desc\", b);",
+                        "    Assert.assertTrue(b);",
+                        "    Assert.assertTrue(\"desc\", b);",
+                        "    assertThat(\"desc\", b);",
                         "  }",
                         "}")
                 .addOutputLines(
@@ -42,99 +48,9 @@ public class PreferAssertjTests {
                         "class Test {",
                         "  void foo(boolean b) {",
                         "    assertThat(b).isFalse();",
-                        "  }",
-                        "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
-    }
-
-    @Test
-    public void fix_assertFalseDescription() {
-        test()
-                .addInputLines(
-                        "Test.java",
-                        "import org.junit.Assert;",
-                        "class Test {",
-                        "  void foo(boolean b) {",
-                        "    Assert.assertFalse(\"desc\", b);",
-                        "  }",
-                        "}")
-                .addOutputLines(
-                        "Test.java",
-                        "import static org.assertj.core.api.Assertions.assertThat;",
-                        "",
-                        "import org.junit.Assert;",
-                        "class Test {",
-                        "  void foo(boolean b) {",
                         "    assertThat(b).describedAs(\"desc\").isFalse();",
-                        "  }",
-                        "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
-    }
-
-    @Test
-    public void fix_assertTrue() {
-        test()
-                .addInputLines(
-                        "Test.java",
-                        "import org.junit.Assert;",
-                        "class Test {",
-                        "  void foo(boolean b) {",
-                        "    Assert.assertTrue(b);",
-                        "  }",
-                        "}")
-                .addOutputLines(
-                        "Test.java",
-                        "import static org.assertj.core.api.Assertions.assertThat;",
-                        "",
-                        "import org.junit.Assert;",
-                        "class Test {",
-                        "  void foo(boolean b) {",
                         "    assertThat(b).isTrue();",
-                        "  }",
-                        "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
-    }
-
-    @Test
-    public void fix_assertTrueDescription() {
-        test()
-                .addInputLines(
-                        "Test.java",
-                        "import org.junit.Assert;",
-                        "class Test {",
-                        "  void foo(boolean b) {",
-                        "    Assert.assertTrue(\"desc\", b);",
-                        "  }",
-                        "}")
-                .addOutputLines(
-                        "Test.java",
-                        "import static org.assertj.core.api.Assertions.assertThat;",
-                        "",
-                        "import org.junit.Assert;",
-                        "class Test {",
-                        "  void foo(boolean b) {",
                         "    assertThat(b).describedAs(\"desc\").isTrue();",
-                        "  }",
-                        "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
-    }
-
-    @Test
-    public void fix_assertThat_matcherAssert() {
-        test()
-                .addInputLines(
-                        "Test.java",
-                        "import static org.hamcrest.MatcherAssert.assertThat;",
-                        "class Test {",
-                        "  void foo(boolean b) {",
-                        "    assertThat(\"desc\", b);",
-                        "  }",
-                        "}")
-                .addOutputLines(
-                        "Test.java",
-                        "import static org.assertj.core.api.Assertions.assertThat;",
-                        "class Test {",
-                        "  void foo(boolean b) {",
                         "    assertThat(b).describedAs(\"desc\").isTrue();",
                         "  }",
                         "}")
@@ -175,77 +91,12 @@ public class PreferAssertjTests {
                 .addInputLines(
                         "Test.java",
                         "import static org.junit.Assert.assertNull;",
+                        "import static org.junit.Assert.assertNotNull;",
                         "class Test {",
                         "  void foo(String s) {",
                         "    assertNull(s);",
-                        "  }",
-                        "}")
-                .addOutputLines(
-                        "Test.java",
-                        "import static org.assertj.core.api.Assertions.assertThat;",
-                        "import static org.junit.Assert.assertNull;",
-                        "class Test {",
-                        "  void foo(String s) {",
-                        "    assertThat(s).isNull();",
-                        "  }",
-                        "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
-    }
-
-    @Test
-    public void fix_assertNullDescription() {
-        test()
-                .addInputLines(
-                        "Test.java",
-                        "import static org.junit.Assert.assertNull;",
-                        "class Test {",
-                        "  void foo(String s) {",
                         "    assertNull(\"desc\", s);",
-                        "  }",
-                        "}")
-                .addOutputLines(
-                        "Test.java",
-                        "import static org.assertj.core.api.Assertions.assertThat;",
-                        "import static org.junit.Assert.assertNull;",
-                        "class Test {",
-                        "  void foo(String s) {",
-                        "    assertThat(s).describedAs(\"desc\").isNull();",
-                        "  }",
-                        "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
-    }
-
-    @Test
-    public void fix_assertNotNull() {
-        test()
-                .addInputLines(
-                        "Test.java",
-                        "import static org.junit.Assert.assertNotNull;",
-                        "class Test {",
-                        "  void foo(String s) {",
                         "    assertNotNull(s);",
-                        "  }",
-                        "}")
-                .addOutputLines(
-                        "Test.java",
-                        "import static org.assertj.core.api.Assertions.assertThat;",
-                        "import static org.junit.Assert.assertNotNull;",
-                        "class Test {",
-                        "  void foo(String s) {",
-                        "    assertThat(s).isNotNull();",
-                        "  }",
-                        "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
-    }
-
-    @Test
-    public void fix_assertNotNullDescription() {
-        test()
-                .addInputLines(
-                        "Test.java",
-                        "import static org.junit.Assert.assertNotNull;",
-                        "class Test {",
-                        "  void foo(String s) {",
                         "    assertNotNull(\"desc\", s);",
                         "  }",
                         "}")
@@ -253,8 +104,12 @@ public class PreferAssertjTests {
                         "Test.java",
                         "import static org.assertj.core.api.Assertions.assertThat;",
                         "import static org.junit.Assert.assertNotNull;",
+                        "import static org.junit.Assert.assertNull;",
                         "class Test {",
                         "  void foo(String s) {",
+                        "    assertThat(s).isNull();",
+                        "    assertThat(s).describedAs(\"desc\").isNull();",
+                        "    assertThat(s).isNotNull();",
                         "    assertThat(s).describedAs(\"desc\").isNotNull();",
                         "  }",
                         "}")
@@ -267,77 +122,12 @@ public class PreferAssertjTests {
                 .addInputLines(
                         "Test.java",
                         "import static org.junit.Assert.assertSame;",
-                        "class Test {",
-                        "  void foo(String a, String b) {",
-                        "    assertSame(a, b);",
-                        "  }",
-                        "}")
-                .addOutputLines(
-                        "Test.java",
-                        "import static org.assertj.core.api.Assertions.assertThat;",
-                        "import static org.junit.Assert.assertSame;",
-                        "class Test {",
-                        "  void foo(String a, String b) {",
-                        "    assertThat(b).isSameAs(a);",
-                        "  }",
-                        "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
-    }
-
-    @Test
-    public void fix_assertSameDescription() {
-        test()
-                .addInputLines(
-                        "Test.java",
-                        "import static org.junit.Assert.assertSame;",
-                        "class Test {",
-                        "  void foo(String a, String b) {",
-                        "    assertSame(\"desc\", a, b);",
-                        "  }",
-                        "}")
-                .addOutputLines(
-                        "Test.java",
-                        "import static org.assertj.core.api.Assertions.assertThat;",
-                        "import static org.junit.Assert.assertSame;",
-                        "class Test {",
-                        "  void foo(String a, String b) {",
-                        "    assertThat(b).describedAs(\"desc\").isSameAs(a);",
-                        "  }",
-                        "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
-    }
-
-    @Test
-    public void fix_assertNotSame() {
-        test()
-                .addInputLines(
-                        "Test.java",
-                        "import static org.junit.Assert.assertSame;",
-                        "class Test {",
-                        "  void foo(String a, String b) {",
-                        "    assertSame(a, b);",
-                        "  }",
-                        "}")
-                .addOutputLines(
-                        "Test.java",
-                        "import static org.assertj.core.api.Assertions.assertThat;",
-                        "import static org.junit.Assert.assertSame;",
-                        "class Test {",
-                        "  void foo(String a, String b) {",
-                        "    assertThat(b).isSameAs(a);",
-                        "  }",
-                        "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
-    }
-
-    @Test
-    public void fix_assertNotSameDescription() {
-        test()
-                .addInputLines(
-                        "Test.java",
                         "import static org.junit.Assert.assertNotSame;",
                         "class Test {",
                         "  void foo(String a, String b) {",
+                        "    assertSame(a, b);",
+                        "    assertSame(\"desc\", a, b);",
+                        "    assertNotSame(a, b);",
                         "    assertNotSame(\"desc\", a, b);",
                         "  }",
                         "}")
@@ -345,8 +135,12 @@ public class PreferAssertjTests {
                         "Test.java",
                         "import static org.assertj.core.api.Assertions.assertThat;",
                         "import static org.junit.Assert.assertNotSame;",
+                        "import static org.junit.Assert.assertSame;",
                         "class Test {",
                         "  void foo(String a, String b) {",
+                        "    assertThat(b).isSameAs(a);",
+                        "    assertThat(b).describedAs(\"desc\").isSameAs(a);",
+                        "    assertThat(b).isNotSameAs(a);",
                         "    assertThat(b).describedAs(\"desc\").isNotSameAs(a);",
                         "  }",
                         "}")
@@ -359,52 +153,12 @@ public class PreferAssertjTests {
                 .addInputLines(
                         "Test.java",
                         "import static org.junit.Assert.fail;",
-                        "class Test {",
-                        "  void foo() {",
-                        "    fail();",
-                        "  }",
-                        "}")
-                .addOutputLines(
-                        "Test.java",
-                        "import static org.assertj.core.api.Assertions.fail;",
-                        "class Test {",
-                        "  void foo() {",
-                        "    fail(\"fail\");",
-                        "  }",
-                        "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
-    }
-
-    @Test
-    public void fix_failDescription() {
-        test()
-                .addInputLines(
-                        "Test.java",
-                        "import static org.junit.Assert.fail;",
-                        "class Test {",
-                        "  void foo() {",
-                        "    fail(\"desc\");",
-                        "  }",
-                        "}")
-                .addOutputLines(
-                        "Test.java",
-                        "import static org.assertj.core.api.Assertions.fail;",
-                        "class Test {",
-                        "  void foo() {",
-                        "    fail(\"desc\");",
-                        "  }",
-                        "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
-    }
-
-    @Test
-    public void fix_failDescriptionNonStaticImport() {
-        test()
-                .addInputLines(
-                        "Test.java",
+                        "",
                         "import org.junit.Assert;",
                         "class Test {",
                         "  void foo() {",
+                        "    fail();",
+                        "    fail(\"desc\");",
                         "    Assert.fail(\"desc\");",
                         "  }",
                         "}")
@@ -415,6 +169,8 @@ public class PreferAssertjTests {
                         "import org.junit.Assert;",
                         "class Test {",
                         "  void foo() {",
+                        "    fail(\"fail\");",
+                        "    fail(\"desc\");",
                         "    fail(\"desc\");",
                         "  }",
                         "}")
@@ -498,18 +254,26 @@ public class PreferAssertjTests {
                 .addInputLines(
                         "Test.java",
                         "import static org.junit.Assert.assertEquals;",
+                        "import static org.junit.Assert.assertNotEquals;",
                         "class Test {",
                         "  void foo(String value) {",
                         "    assertEquals(\"1\", value);",
+                        "    assertEquals(\"desc\", \"1\", value);",
+                        "    assertNotEquals(\"1\", value);",
+                        "    assertNotEquals(\"desc\", \"1\", value);",
                         "  }",
                         "}")
                 .addOutputLines(
                         "Test.java",
                         "import static org.assertj.core.api.Assertions.assertThat;",
                         "import static org.junit.Assert.assertEquals;",
+                        "import static org.junit.Assert.assertNotEquals;",
                         "class Test {",
                         "  void foo(String value) {",
                         "    assertThat(value).isEqualTo(\"1\");",
+                        "    assertThat(value).describedAs(\"desc\").isEqualTo(\"1\");",
+                        "    assertThat(value).isNotEqualTo(\"1\");",
+                        "    assertThat(value).describedAs(\"desc\").isNotEqualTo(\"1\");",
                         "  }",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
@@ -579,29 +343,6 @@ public class PreferAssertjTests {
                         "class Test {",
                         "  void foo(int value) {",
                         "    assertThat(value).describedAs(\"desc\").isEqualTo(1);",
-                        "  }",
-                        "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
-    }
-
-    @Test
-    public void fix_assertEqualsStringDescription() {
-        test()
-                .addInputLines(
-                        "Test.java",
-                        "import static org.junit.Assert.assertEquals;",
-                        "class Test {",
-                        "  void foo(String value) {",
-                        "    assertEquals(\"desc\", \"1\", value);",
-                        "  }",
-                        "}")
-                .addOutputLines(
-                        "Test.java",
-                        "import static org.assertj.core.api.Assertions.assertThat;",
-                        "import static org.junit.Assert.assertEquals;",
-                        "class Test {",
-                        "  void foo(String value) {",
-                        "    assertThat(value).describedAs(\"desc\").isEqualTo(\"1\");",
                         "  }",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
@@ -718,51 +459,6 @@ public class PreferAssertjTests {
                         "class Test {",
                         "  void foo(int value) {",
                         "    assertNotEquals(1, value);",
-                        "  }",
-                        "}")
-                .addOutputLines(
-                        "Test.java",
-                        "import static org.assertj.core.api.Assertions.assertThat;",
-                        "import static org.junit.Assert.assertNotEquals;",
-                        "class Test {",
-                        "  void foo(int value) {",
-                        "    assertThat(value).isNotEqualTo(1);",
-                        "  }",
-                        "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
-    }
-
-    @Test
-    public void fix_assertNotEqualsString() {
-        test()
-                .addInputLines(
-                        "Test.java",
-                        "import static org.junit.Assert.assertNotEquals;",
-                        "class Test {",
-                        "  void foo(String value) {",
-                        "    assertNotEquals(\"1\", value);",
-                        "  }",
-                        "}")
-                .addOutputLines(
-                        "Test.java",
-                        "import static org.assertj.core.api.Assertions.assertThat;",
-                        "import static org.junit.Assert.assertNotEquals;",
-                        "class Test {",
-                        "  void foo(String value) {",
-                        "    assertThat(value).isNotEqualTo(\"1\");",
-                        "  }",
-                        "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
-    }
-
-    @Test
-    public void fix_assertNotEqualsIntDescription() {
-        test()
-                .addInputLines(
-                        "Test.java",
-                        "import static org.junit.Assert.assertNotEquals;",
-                        "class Test {",
-                        "  void foo(int value) {",
                         "    assertNotEquals(\"desc\", 1, value);",
                         "  }",
                         "}")
@@ -772,30 +468,8 @@ public class PreferAssertjTests {
                         "import static org.junit.Assert.assertNotEquals;",
                         "class Test {",
                         "  void foo(int value) {",
+                        "    assertThat(value).isNotEqualTo(1);",
                         "    assertThat(value).describedAs(\"desc\").isNotEqualTo(1);",
-                        "  }",
-                        "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
-    }
-
-    @Test
-    public void fix_assertNotEqualsStringDescription() {
-        test()
-                .addInputLines(
-                        "Test.java",
-                        "import static org.junit.Assert.assertNotEquals;",
-                        "class Test {",
-                        "  void foo(String value) {",
-                        "    assertNotEquals(\"desc\", \"1\", value);",
-                        "  }",
-                        "}")
-                .addOutputLines(
-                        "Test.java",
-                        "import static org.assertj.core.api.Assertions.assertThat;",
-                        "import static org.junit.Assert.assertNotEquals;",
-                        "class Test {",
-                        "  void foo(String value) {",
-                        "    assertThat(value).describedAs(\"desc\").isNotEqualTo(\"1\");",
                         "  }",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
@@ -811,29 +485,6 @@ public class PreferAssertjTests {
                         "class Test {",
                         "  void foo(int value) {",
                         "    assertThat(value, is(1));",
-                        "  }",
-                        "}")
-                .addOutputLines(
-                        "Test.java",
-                        "import static org.assertj.core.api.Assertions.assertThat;",
-                        "import static org.hamcrest.Matchers.is;",
-                        "class Test {",
-                        "  void foo(int value) {",
-                        "    assertThat(value).isEqualTo(1);",
-                        "  }",
-                        "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
-    }
-
-    @Test
-    public void fix_assertThatIntDescription() {
-        test()
-                .addInputLines(
-                        "Test.java",
-                        "import static org.junit.Assert.assertThat;",
-                        "import static org.hamcrest.Matchers.is;",
-                        "class Test {",
-                        "  void foo(int value) {",
                         "    assertThat(\"desc\", value, is(1));",
                         "  }",
                         "}")
@@ -843,6 +494,7 @@ public class PreferAssertjTests {
                         "import static org.hamcrest.Matchers.is;",
                         "class Test {",
                         "  void foo(int value) {",
+                        "    assertThat(value).isEqualTo(1);",
                         "    assertThat(value).describedAs(\"desc\").isEqualTo(1);",
                         "  }",
                         "}")
@@ -850,12 +502,12 @@ public class PreferAssertjTests {
     }
 
     @Test
-    public void fix_matcherAssertThatString_startsWith() {
+    public void fix_matcherAssertThatString_fallback() {
         test()
                 .addInputLines(
                         "Test.java",
                         "import static org.hamcrest.MatcherAssert.assertThat;",
-                        "import static org.hamcrest.Matchers.hasToString;",
+                        "import static org.hamcrest.Matchers.*;",
                         "class Test {",
                         "  void foo(String value) {",
                         "    assertThat(value, hasToString(\"str\"));",
@@ -864,36 +516,12 @@ public class PreferAssertjTests {
                 .addOutputLines(
                         "Test.java",
                         "import static org.assertj.core.api.Assertions.assertThat;",
-                        "import static org.hamcrest.Matchers.hasToString;",
+                        "import static org.hamcrest.Matchers.*;",
                         "",
                         "import org.assertj.core.api.HamcrestCondition;",
                         "class Test {",
                         "  void foo(String value) {",
                         "    assertThat(value).is(new HamcrestCondition<>(hasToString(\"str\")));",
-                        "  }",
-                        "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
-    }
-
-    @Test
-    public void fix_assertThat_instanceOf() {
-        test()
-                .addInputLines(
-                        "Test.java",
-                        "import static org.hamcrest.MatcherAssert.assertThat;",
-                        "import static org.hamcrest.Matchers.*;",
-                        "class Test {",
-                        "  void foo(String value) {",
-                        "    assertThat(value, instanceOf(String.class));",
-                        "  }",
-                        "}")
-                .addOutputLines(
-                        "Test.java",
-                        "import static org.assertj.core.api.Assertions.assertThat;",
-                        "import static org.hamcrest.Matchers.*;",
-                        "class Test {",
-                        "  void foo(String value) {",
-                        "    assertThat(value).isInstanceOf(String.class);",
                         "  }",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
