@@ -223,61 +223,51 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
     @SuppressWarnings({"CyclomaticComplexity", "MethodLength"})
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
         if (ASSERT_TRUE.matches(tree, state)) {
-            return withAssertThat(tree, state, (assertThat, fix) ->
-                    fix.replace(tree, assertThat + "(" + argSource(tree, state, 0) + ").isTrue()"));
+            return withAssertThat(tree, state, 0, (assertThat, fix) -> fix.replace(tree, assertThat + ".isTrue()"));
         }
         if (ASSERT_TRUE_DESCRIPTION.matches(tree, state)) {
-            return withAssertThat(tree, state, (assertThat, fix) ->
-                    fix.replace(tree, assertThat + "(" + argSource(tree, state, 1)
-                            + ").describedAs(" + argSource(tree, state, 0) + ").isTrue()"));
+            return withAssertThat(tree, state, 1, (assertThat, fix) ->
+                    fix.replace(tree, assertThat + ".describedAs(" + argSource(tree, state, 0) + ").isTrue()"));
         }
         if (ASSERT_FALSE.matches(tree, state)) {
-            return withAssertThat(tree, state, (assertThat, fix) ->
-                    fix.replace(tree, assertThat + "(" + argSource(tree, state, 0) + ").isFalse()"));
+            return withAssertThat(tree, state, 0, (assertThat, fix) -> fix.replace(tree, assertThat + ".isFalse()"));
         }
         if (ASSERT_FALSE_DESCRIPTION.matches(tree, state)) {
-            return withAssertThat(tree, state, (assertThat, fix) ->
-                    fix.replace(tree, assertThat + "(" + argSource(tree, state, 1)
-                            + ").describedAs(" + argSource(tree, state, 0) + ").isFalse()"));
+            return withAssertThat(tree, state, 1, (assertThat, fix) ->
+                    fix.replace(tree, assertThat + ".describedAs(" + argSource(tree, state, 0) + ").isFalse()"));
         }
         if (ASSERT_NULL.matches(tree, state)) {
-            return withAssertThat(tree, state, (assertThat, fix) ->
-                    fix.replace(tree, assertThat + "(" + argSource(tree, state, 0) + ").isNull()"));
+            return withAssertThat(tree, state, 0, (assertThat, fix) -> fix.replace(tree, assertThat+ ".isNull()"));
         }
         if (ASSERT_NULL_DESCRIPTION.matches(tree, state)) {
-            return withAssertThat(tree, state, (assertThat, fix) ->
-                    fix.replace(tree, assertThat + "(" + argSource(tree, state, 1)
-                            + ").describedAs(" + argSource(tree, state, 0) + ").isNull()"));
+            return withAssertThat(tree, state, 1, (assertThat, fix) ->
+                    fix.replace(tree, assertThat + ".describedAs(" + argSource(tree, state, 0) + ").isNull()"));
         }
         if (ASSERT_NOT_NULL.matches(tree, state)) {
-            return withAssertThat(tree, state, (assertThat, fix) ->
-                    fix.replace(tree, assertThat + "(" + argSource(tree, state, 0) + ").isNotNull()"));
+            return withAssertThat(tree, state, 0, (assertThat, fix) -> fix.replace(tree, assertThat + ".isNotNull()"));
         }
         if (ASSERT_NOT_NULL_DESCRIPTION.matches(tree, state)) {
-            return withAssertThat(tree, state, (assertThat, fix) ->
-                    fix.replace(tree, assertThat + "(" + argSource(tree, state, 1)
-                            + ").describedAs(" + argSource(tree, state, 0) + ").isNotNull()"));
+            return withAssertThat(tree, state, 1, (assertThat, fix) ->
+                    fix.replace(tree, assertThat + ".describedAs(" + argSource(tree, state, 0) + ").isNotNull()"));
         }
         if (ASSERT_SAME.matches(tree, state)) {
-            return withAssertThat(tree, state, (assertThat, fix) ->
-                    fix.replace(tree, assertThat + "(" + argSource(tree, state, 1)
-                            + ").isSameAs(" + argSource(tree, state, 0) + ")"));
+            return withAssertThat(tree, state, 1, (assertThat, fix) ->
+                    fix.replace(tree, assertThat + ".isSameAs(" + argSource(tree, state, 0) + ")"));
         }
         if (ASSERT_SAME_DESCRIPTION.matches(tree, state)) {
-            return withAssertThat(tree, state, (assertThat, fix) ->
-                    fix.replace(tree, assertThat + "(" + argSource(tree, state, 2)
-                            + ").describedAs(" + argSource(tree, state, 0) + ").isSameAs("
+            return withAssertThat(tree, state, 2, (assertThat, fix) ->
+                    fix.replace(tree, assertThat
+                            + ".describedAs(" + argSource(tree, state, 0) + ").isSameAs("
                             + argSource(tree, state, 1) + ")"));
         }
         if (ASSERT_NOT_SAME.matches(tree, state)) {
-            return withAssertThat(tree, state, (assertThat, fix) ->
-                    fix.replace(tree, assertThat + "(" + argSource(tree, state, 1)
-                            + ").isNotSameAs(" + argSource(tree, state, 0) + ")"));
+            return withAssertThat(tree, state, 1, (assertThat, fix) ->
+                    fix.replace(tree, assertThat + ".isNotSameAs(" + argSource(tree, state, 0) + ")"));
         }
         if (ASSERT_NOT_SAME_DESCRIPTION.matches(tree, state)) {
-            return withAssertThat(tree, state, (assertThat, fix) ->
-                    fix.replace(tree, assertThat + "(" + argSource(tree, state, 2)
-                            + ").describedAs(" + argSource(tree, state, 0) + ").isNotSameAs("
+            return withAssertThat(tree, state, 2, (assertThat, fix) ->
+                    fix.replace(tree, assertThat
+                            + ".describedAs(" + argSource(tree, state, 0) + ").isNotSameAs("
                             + argSource(tree, state, 1) + ")"));
         }
         if (FAIL_DESCRIPTION.matches(tree, state) || FAIL.matches(tree, state)) {
@@ -293,22 +283,20 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
 
         }
         if (ASSERT_EQUALS_FLOATING.matches(tree, state)) {
-            return withAssertThat(tree, state, (assertThat, fix) -> fix
+            return withAssertThat(tree, state, 1, (assertThat, fix) -> fix
                     .addStaticImport("org.assertj.core.api.Assertions.within")
-                    .replace(tree, String.format("%s(%s)%s",
+                    .replace(tree, String.format("%s%s",
                             assertThat,
-                            argSource(tree, state, 1),
                             isConstantZero(tree.getArguments().get(2))
                                     ? String.format(".isEqualTo(%s)", argSource(tree, state, 0))
                                     : String.format(".isCloseTo(%s, within(%s))",
                                     argSource(tree, state, 0), argSource(tree, state, 2)))));
         }
         if (ASSERT_EQUALS_FLOATING_DESCRIPTION.matches(tree, state)) {
-            return withAssertThat(tree, state, (assertThat, fix) -> fix
+            return withAssertThat(tree, state, 2, (assertThat, fix) -> fix
                     .addStaticImport("org.assertj.core.api.Assertions.within")
-                    .replace(tree, String.format("%s(%s).describedAs(%s)%s",
+                    .replace(tree, String.format("%s.describedAs(%s)%s",
                             assertThat,
-                            argSource(tree, state, 2),
                             argSource(tree, state, 0),
                             isConstantZero(tree.getArguments().get(3))
                                     ? String.format(".isEqualTo(%s)", argSource(tree, state, 1))
@@ -316,22 +304,20 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
                                     argSource(tree, state, 1), argSource(tree, state, 3)))));
         }
         if (ASSERT_NOT_EQUALS_FLOATING.matches(tree, state)) {
-            return withAssertThat(tree, state, (assertThat, fix) -> fix
+            return withAssertThat(tree, state, 1, (assertThat, fix) -> fix
                     .addStaticImport("org.assertj.core.api.Assertions.within")
-                    .replace(tree, String.format("%s(%s)%s",
+                    .replace(tree, String.format("%s%s",
                             assertThat,
-                            argSource(tree, state, 1),
                             isConstantZero(tree.getArguments().get(2))
                                     ? String.format(".isNotEqualTo(%s)", argSource(tree, state, 0))
                                     : String.format(".isNotCloseTo(%s, within(%s))",
                                     argSource(tree, state, 0), argSource(tree, state, 2)))));
         }
         if (ASSERT_NOT_EQUALS_FLOATING_DESCRIPTION.matches(tree, state)) {
-            return withAssertThat(tree, state, (assertThat, fix) -> fix
+            return withAssertThat(tree, state, 2, (assertThat, fix) -> fix
                     .addStaticImport("org.assertj.core.api.Assertions.within")
-                    .replace(tree, String.format("%s(%s).describedAs(%s)%s",
+                    .replace(tree, String.format("%s.describedAs(%s)%s",
                             assertThat,
-                            argSource(tree, state, 2),
                             argSource(tree, state, 0),
                             isConstantZero(tree.getArguments().get(3))
                                     ? String.format(".isNotEqualTo(%s)", argSource(tree, state, 1))
@@ -341,8 +327,8 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
         if (ASSERT_THAT.matches(tree, state)) {
             Optional<String> replacement = tree.getArguments().get(1)
                     .accept(HamcrestVisitor.INSTANCE, state);
-            return withAssertThat(tree, state, (assertThat, fix) ->
-                    fix.replace(tree, assertThat + "(" + argSource(tree, state, 0) + ")"
+            return withAssertThat(tree, state, 0, (assertThat, fix) ->
+                    fix.replace(tree, assertThat
                             + replacement.orElseGet(() ->
                             ".is(new "
                             + SuggestedFixes.qualifyType(state, fix, "org.assertj.core.api.HamcrestCondition")
@@ -352,9 +338,9 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
         if (ASSERT_THAT_DESCRIPTION.matches(tree, state)) {
             Optional<String> replacement = tree.getArguments().get(2)
                     .accept(HamcrestVisitor.INSTANCE, state);
-            return withAssertThat(tree, state, (assertThat, fix) ->
-                    fix.replace(tree, assertThat + "(" + argSource(tree, state, 1)
-                            + ").describedAs(" + argSource(tree, state, 0) + ")"
+            return withAssertThat(tree, state, 1, (assertThat, fix) ->
+                    fix.replace(tree, assertThat
+                            + ".describedAs(" + argSource(tree, state, 0) + ")"
                             + replacement.orElseGet(() -> ".is(new "
                             + SuggestedFixes.qualifyType(state, fix, "org.assertj.core.api.HamcrestCondition")
                             + "<>(" + argSource(tree, state, 2) + "))")));
@@ -362,16 +348,16 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
         if (ASSERT_EQUALS_CATCHALL.matches(tree, state)) {
             int parameters = tree.getArguments().size();
             if (parameters == 2) {
-                return withAssertThat(tree, state, (assertThat, fix) ->
-                        fix.replace(tree, assertThat + "(" + argSource(tree, state, 1)
-                                + ").isEqualTo(" + argSource(tree, state, 0) + ")"));
+                return withAssertThat(tree, state, 1, (assertThat, fix) ->
+                        fix.replace(tree, assertThat
+                                + ".isEqualTo(" + argSource(tree, state, 0) + ")"));
             } else if (parameters == 3 && ASTHelpers.isSameType(
                     ASTHelpers.getType(tree.getArguments().get(0)),
                     state.getTypeFromString(String.class.getName()),
                     state)) {
-                return withAssertThat(tree, state, (assertThat, fix) ->
-                        fix.replace(tree, assertThat + "(" + argSource(tree, state, 2)
-                                + ").describedAs(" + argSource(tree, state, 0) + ").isEqualTo("
+                return withAssertThat(tree, state, 2, (assertThat, fix) ->
+                        fix.replace(tree, assertThat
+                                + ".describedAs(" + argSource(tree, state, 0) + ").isEqualTo("
                                 + argSource(tree, state, 1) + ")"));
             } else {
                 // Does not fix assertArrayEquals(double[], double[], double)
@@ -382,16 +368,16 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
         if (ASSERT_NOT_EQUALS_CATCHALL.matches(tree, state)) {
             int parameters = tree.getArguments().size();
             if (parameters == 2) {
-                return withAssertThat(tree, state, (assertThat, fix) ->
-                        fix.replace(tree, assertThat + "(" + argSource(tree, state, 1)
-                                + ").isNotEqualTo(" + argSource(tree, state, 0) + ")"));
+                return withAssertThat(tree, state, 1, (assertThat, fix) ->
+                        fix.replace(tree, assertThat
+                                + ".isNotEqualTo(" + argSource(tree, state, 0) + ")"));
             } else if (parameters == 3 && ASTHelpers.isSameType(
                     ASTHelpers.getType(tree.getArguments().get(0)),
                     state.getTypeFromString(String.class.getName()),
                     state)) {
-                return withAssertThat(tree, state, (assertThat, fix) ->
-                        fix.replace(tree, assertThat + "(" + argSource(tree, state, 2)
-                                + ").describedAs(" + argSource(tree, state, 0) + ").isNotEqualTo("
+                return withAssertThat(tree, state, 2, (assertThat, fix) ->
+                        fix.replace(tree, assertThat
+                                + ".describedAs(" + argSource(tree, state, 0) + ").isNotEqualTo("
                                 + argSource(tree, state, 1) + ")"));
             } else {
                 // I'm not aware of anything that should hit this.
@@ -408,6 +394,7 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
     private Description withAssertThat(
             MethodInvocationTree tree,
             VisitorState state,
+            int actualIndex,
             BiConsumer<String, SuggestedFix.Builder> assertThat) {
         SuggestedFix.Builder fix = SuggestedFix.builder();
         String qualified;
@@ -419,10 +406,30 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
         } else {
             qualified = SuggestedFixes.qualifyType(state, fix, "org.assertj.core.api.Assertions.assertThat");
         }
-        assertThat.accept(qualified, fix);
+
+        String actualArgumentString = argSource(tree, state, actualIndex);
+        ExpressionTree actualArgument = tree.getArguments().get(actualIndex);
+        if (isIterableMap(actualArgument, state)) {
+            actualArgumentString = String.format("(%s<?, ?>) %s",
+                    SuggestedFixes.qualifyType(state, fix, "java.util.Map"),
+                    actualArgumentString);
+        }
+        assertThat.accept(qualified + '(' + actualArgumentString + ')', fix);
         return buildDescription(tree)
                 .addFix(fix.build())
                 .build();
+    }
+
+    private static boolean isIterableMap(ExpressionTree value, VisitorState state) {
+        return isSubtype(value, "java.lang.Iterable", state)
+                && isSubtype(value, "java.util.Map", state);
+    }
+
+    private static boolean isSubtype(ExpressionTree value, String castableTo, VisitorState state) {
+        return ASTHelpers.isSubtype(
+                ASTHelpers.getType(value),
+                state.getTypeFromString(castableTo),
+                state);
     }
 
     private static boolean useStaticAssertjImport(VisitorState state) {

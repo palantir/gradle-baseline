@@ -1249,6 +1249,50 @@ public class PreferAssertjTests {
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
+    @Test
+    public void fix_assert_iterableMap() {
+        // Iterable Maps result in ambiguous assertThat references
+        // to to both assertThat(Iterable) and assertThat(Map)
+        test()
+                .addInputLines(
+                        "Test.java",
+                        "import static org.hamcrest.MatcherAssert.assertThat;",
+                        "import static org.hamcrest.Matchers.*;",
+                        "import static org.junit.Assert.assertEquals;",
+                        "import static org.junit.Assert.assertNull;",
+                        "",
+                        "import java.util.Map;",
+                        "class Test {",
+                        "  interface IMap<K, V> extends Map<K, V>, Iterable<Map.Entry<K, V>> {}",
+                        "  <K, V> void foo(IMap<K, V> expected, IMap<K, V> actual) {",
+                        "    assertThat(actual, equalTo(expected));",
+                        "    assertEquals(expected, actual);",
+                        "    assertEquals(\"desc\", expected, actual);",
+                        "    assertNull(actual);",
+                        "    assertNull(\"desc\", actual);",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import static org.hamcrest.Matchers.*;",
+                        "import static org.junit.Assert.assertEquals;",
+                        "import static org.junit.Assert.assertNull;",
+                        "",
+                        "import java.util.Map;",
+                        "class Test {",
+                        "  interface IMap<K, V> extends Map<K, V>, Iterable<Map.Entry<K, V>> {}",
+                        "  <K, V> void foo(IMap<K, V> expected, IMap<K, V> actual) {",
+                        "    assertThat((Map<?, ?>) actual).isEqualTo(expected);",
+                        "    assertThat((Map<?, ?>) actual).isEqualTo(expected);",
+                        "    assertThat((Map<?, ?>) actual).describedAs(\"desc\").isEqualTo(expected);",
+                        "    assertThat((Map<?, ?>) actual).isNull();",
+                        "    assertThat((Map<?, ?>) actual).describedAs(\"desc\").isNull();",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
     private BugCheckerRefactoringTestHelper test() {
         return BugCheckerRefactoringTestHelper.newInstance(new PreferAssertj(), getClass());
     }
