@@ -146,6 +146,30 @@ public class StrictUnusedVariableTest {
     }
 
     @Test
+    public void side_effects_are_preserved() {
+        refactoringTestHelper
+                .addInputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  private static int _field = 1;",
+                        "  public static void privateMethod() {",
+                        "    Object foo = someMethod();",
+                        "  }",
+                        "  private static Object someMethod() { return null; }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  private static int _field = 1;",
+                        "  public static void privateMethod() {",
+                        "    someMethod();",
+                        "  }",
+                        "  private static Object someMethod() { return null; }",
+                        "}")
+                .doTest(TestMode.TEXT_MATCH);
+    }
+
+    @Test
     public void fixes_suppressed_but_used_variables() {
         refactoringTestHelper
                 .addInputLines(
