@@ -198,6 +198,12 @@ public class PreferAssertjTests {
                         "    assertNotEquals(\"desc\", .1D, db, .01D);",
                         "    assertNotEquals(\"desc\", .1D, db, 0.0);",
                         "    assertNotEquals(.1D, db, 0D);",
+                        "    assertEquals(1D, db, 1);",
+                        "    assertEquals(1, db, 1D);",
+                        "    assertEquals(1D, db, 1f);",
+                        "    assertNotEquals(\"desc\", 1f, db, 1D);",
+                        "    assertEquals(1f, fl, 1);",
+                        "    assertNotEquals(1, fl, 1f);",
                         "  }",
                         "}")
                 .addOutputLines(
@@ -220,6 +226,12 @@ public class PreferAssertjTests {
                         "    assertThat(db).describedAs(\"desc\").isNotCloseTo(.1D, within(.01D));",
                         "    assertThat(db).describedAs(\"desc\").isNotEqualTo(.1D);",
                         "    assertThat(db).isNotEqualTo(.1D);",
+                        "    assertThat(db).isCloseTo(1D, within((double) 1));",
+                        "    assertThat(db).isCloseTo((double) 1, within(1D));",
+                        "    assertThat(db).isCloseTo(1D, within((double) 1f));",
+                        "    assertThat(db).describedAs(\"desc\").isNotCloseTo((double) 1f, within(1D));",
+                        "    assertThat(fl).isCloseTo(1f, within((float) 1));",
+                        "    assertThat(fl).isNotCloseTo((float) 1, within(1f));",
                         "  }",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);

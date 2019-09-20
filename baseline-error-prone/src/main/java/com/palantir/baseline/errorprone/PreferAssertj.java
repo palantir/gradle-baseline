@@ -47,6 +47,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
+import javax.lang.model.type.TypeKind;
 
 /**
  * {@link PreferAssertj} provides an automated path from legacy test libraries to AssertJ. Our goal is to migrate
@@ -469,11 +470,24 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
                 state);
     }
 
-    private static String argSource(MethodInvocationTree invocation, VisitorState state, int index) {
+    private static String argSource(
+            MethodInvocationTree invocation,
+            VisitorState state,
+            int index) {
         checkArgument(index >= 0, "Index must be non-negative");
         List<? extends ExpressionTree> arguments = checkNotNull(invocation, "MethodInvocationTree").getArguments();
         checkArgument(index < arguments.size(), "Index is out of bounds");
-        return checkNotNull(state.getSourceForNode(arguments.get(index)), "Failed to find argument source");
+        ExpressionTree argument = arguments.get(index);
+        Symbol.VarSymbol symbol = checkNotNull(ASTHelpers.getSymbol(invocation), "symbol").getParameters().get(index);
+        String argumentSource = checkNotNull(state.getSourceForNode(argument), "Failed to find argument source");
+        if (symbol.type.isPrimitive()
+                // Limit to only float and double because assertEquals for ints uses assertEquals(long, long),
+                // we don't want to cast everything to long unnecessarily.
+                && (symbol.type.getKind() == TypeKind.FLOAT || symbol.type.getKind() == TypeKind.DOUBLE)
+                && !ASTHelpers.isSameType(symbol.type, ASTHelpers.getType(argument), state)) {
+            return String.format("(%s) %s", symbol.type.toString(), argumentSource);
+        }
+        return argumentSource;
     }
 
     private static final class HamcrestVisitor extends SimpleTreeVisitor<Optional<String>, VisitorState> {
