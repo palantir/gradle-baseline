@@ -160,14 +160,13 @@ public class StrictUnusedVariableTest {
                 .addOutputLines(
                         "Test.java",
                         "class Test {",
-                        "  private static int field = 1;",
+                        "  private static int _field = 1;",
                         "  public static void privateMethod() {",
                         "    someMethod();",
                         "  }",
                         "  private static Object someMethod() { return null; }",
-                        "  }",
-                        "}"
-                ).doTest(TestMode.TEXT_MATCH);
+                        "}")
+                .doTest(TestMode.TEXT_MATCH);
     }
 
     @Test
