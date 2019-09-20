@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Avoid ambiguity in assertions on iterable maps
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/874

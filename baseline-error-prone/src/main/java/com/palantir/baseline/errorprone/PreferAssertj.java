@@ -237,7 +237,7 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
                     fix.replace(tree, assertThat + ".describedAs(" + argSource(tree, state, 0) + ").isFalse()"));
         }
         if (ASSERT_NULL.matches(tree, state)) {
-            return withAssertThat(tree, state, 0, (assertThat, fix) -> fix.replace(tree, assertThat+ ".isNull()"));
+            return withAssertThat(tree, state, 0, (assertThat, fix) -> fix.replace(tree, assertThat + ".isNull()"));
         }
         if (ASSERT_NULL_DESCRIPTION.matches(tree, state)) {
             return withAssertThat(tree, state, 1, (assertThat, fix) ->
