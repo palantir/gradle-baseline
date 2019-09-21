@@ -70,6 +70,11 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
             "junit.framework.TestCase",
             "junit.framework.Assert");
 
+    // Must match everything otherwise matched by this check, used to avoid
+    // additional checks for each method invocation.
+    private static final Matcher<ExpressionTree> FAST_CHECK = MethodMatchers.staticMethod()
+            .onClassAny(LEGACY_ASSERT_CLASSES);
+
     private static final Matcher<ExpressionTree> ASSERT_TRUE =
             MethodMatchers.staticMethod()
                     .onClassAny(LEGACY_ASSERT_CLASSES)
@@ -223,6 +228,11 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
     @Override
     @SuppressWarnings({"CyclomaticComplexity", "MethodLength"})
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
+        // We check a lot of methods, the fast check allows us to quickly rule out most invocations
+        // without individually checking each of the more specific patterns.
+        if (!FAST_CHECK.matches(tree, state)) {
+            return Description.NO_MATCH;
+        }
         if (ASSERT_TRUE.matches(tree, state)) {
             return withAssertThat(tree, state, 0, (assertThat, fix) -> fix.replace(tree, assertThat + ".isTrue()"));
         }
