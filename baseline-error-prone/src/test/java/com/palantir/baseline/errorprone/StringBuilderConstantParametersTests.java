@@ -196,6 +196,49 @@ public class StringBuilderConstantParametersTests {
     }
 
     @Test
+    public void shouldWarnWhenCommentsArePresent() {
+        compilationHelper.addSourceLines(
+                "Test.java",
+                "class Test {",
+                "   String f() {",
+                "       return new StringBuilder()",
+                "           .append(\"foo\") // comment",
+                "           .append(\"bar\")",
+                "           // BUG: Diagnostic contains: StringBuilder with a constant number of parameters",
+                "           .toString();",
+                "   }",
+                "}"
+        ).doTest();
+    }
+
+    @Test
+    public void doesNotRemoveComments() {
+        BugCheckerRefactoringTestHelper.newInstance(new StringBuilderConstantParameters(), getClass())
+                .addInputLines(
+                        "Test.java",
+                        "class Test {",
+                        "   String f() {",
+                        // Fails validation, but the tool prefers not to remove existing comments
+                        "       return new StringBuilder()",
+                        "           .append(\"foo\") // comment",
+                        "           .append(\"bar\")",
+                        "           .toString();",
+                        "   }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "class Test {",
+                        "   String f() {",
+                        "       return new StringBuilder()",
+                        "           .append(\"foo\") // comment",
+                        "           .append(\"bar\")",
+                        "           .toString();",
+                        "   }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
     public void shouldWarnOnNoParams_fix() {
         BugCheckerRefactoringTestHelper.newInstance(new StringBuilderConstantParameters(), getClass())
                 .addInputLines(

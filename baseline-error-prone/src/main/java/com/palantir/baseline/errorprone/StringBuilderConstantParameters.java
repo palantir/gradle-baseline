@@ -75,6 +75,12 @@ public final class StringBuilderConstantParameters
         if (!result.isPresent()) {
             return Description.NO_MATCH;
         }
+        // Avoid rewriting code that removes comments.
+        if (ASTHelpers.containsComments(tree, state)) {
+            return buildDescription(tree)
+                    .setMessage(MESSAGE)
+                    .build();
+        }
         List<ExpressionTree> arguments = result.get();
         Stream<String> prefixStream = arguments.stream().findFirst()
                 .map(ASTHelpers::getType)
