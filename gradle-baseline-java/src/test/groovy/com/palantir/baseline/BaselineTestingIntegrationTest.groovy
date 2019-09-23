@@ -145,22 +145,4 @@ class BaselineTestingIntegrationTest extends AbstractPluginTest {
         BuildResult result = with('checkJUnitDependencies', '--write-locks').buildAndFail()
         result.output.contains 'Some tests mention JUnit5, but the \'test\' task does not have useJUnitPlatform() enabled'
     }
-
-    def 'checkJUnitDependencies detects extraneous old junit'() {
-        when:
-        buildFile << standardBuildFile
-        buildFile << '''
-        dependencies {
-            testCompile "junit:junit:4.12"
-        }
-        test {
-          useJUnitPlatform()
-        }
-        '''.stripIndent()
-        file('src/test/java/test/TestClass5.java') << junit5Test
-
-        then:
-        BuildResult result = with('checkJUnitDependencies', '--write-locks').buildAndFail()
-        result.output.contains 'Extraneous dependency on JUnit4 (no test mentions JUnit4 classes)'
-    }
 }
