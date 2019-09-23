@@ -20,8 +20,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.errorprone.refaster.ImportPolicy;
 import com.google.errorprone.refaster.annotation.AfterTemplate;
 import com.google.errorprone.refaster.annotation.BeforeTemplate;
+import com.google.errorprone.refaster.annotation.UseImportPolicy;
 import java.util.Collection;
 import java.util.Collections;
 
@@ -39,36 +41,42 @@ public final class AssertjCollectionIsEmpty<T> {
 
     @BeforeTemplate
     void bad3(Collection<T> things) {
-        assertThat(things.size() == 0).isTrue();
+        assertThat(things.size()).isZero();
     }
 
     @BeforeTemplate
-    void bad4(Collection<T> things) {
+    void bad4(Iterable<T> things) {
         assertThat(things).isEqualTo(Collections.emptyList());
     }
 
     @BeforeTemplate
-    void bad5(Collection<T> things) {
+    void bad5(Iterable<T> things) {
         assertThat(things).isEqualTo(Collections.emptySet());
     }
 
     @BeforeTemplate
-    void bad6(Collection<T> things) {
+    void bad6(Iterable<T> things) {
         assertThat(things).isEqualTo(ImmutableList.of());
     }
 
     @BeforeTemplate
-    void bad7(Collection<T> things) {
+    void bad7(Iterable<T> things) {
         assertThat(things).isEqualTo(ImmutableSet.of());
     }
 
     @BeforeTemplate
-    void bad8(Collection<T> things) {
+    void bad8(Iterable<T> things) {
         assertThat(things).hasSize(0);
     }
 
+    @BeforeTemplate
+    void bad9(Collection<T> things) {
+        assertThat(things.size()).isEqualTo(0);
+    }
+
     @AfterTemplate
-    void after(Collection<T> things) {
+    @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
+    void after(Iterable<T> things) {
         assertThat(things).isEmpty();
     }
 }
