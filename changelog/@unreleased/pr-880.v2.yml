@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Allow junit4 dependencies to exist without junit4 tests
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/880
