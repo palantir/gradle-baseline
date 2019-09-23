@@ -109,16 +109,7 @@ public class CheckJUnitDependencies extends DefaultTask {
                                 + "'org.junit.jupiter:junit-jupiter' dependency "
                                 + "because tests use JUnit4 and useJUnitPlatform() is not enabled.");
             }
-        } else {
-            String compileClasspath = ss.getCompileClasspathConfigurationName();
-            boolean compilingAgainstOldJunit = hasDep(compileClasspath, CheckJUnitDependencies::isJunit4);
-            Preconditions.checkState(
-                    !compilingAgainstOldJunit,
-                    "Extraneous dependency on JUnit4 (no test mentions JUnit4 classes). Please exclude "
-                            + "this from compilation to ensure developers don't accidentally re-introduce it, e.g.\n\n"
-                            + "    configurations." + compileClasspath + ".exclude module: 'junit'\n\n");
         }
-
         // sourcesets might also contain Spock classes, but we don't have any special validation for these.
     }
 
