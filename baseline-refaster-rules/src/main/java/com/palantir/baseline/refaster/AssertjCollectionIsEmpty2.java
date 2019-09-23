@@ -16,39 +16,34 @@
 
 package com.palantir.baseline.refaster;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
-import com.google.errorprone.refaster.ImportPolicy;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
+import com.google.errorprone.refaster.Refaster;
 import com.google.errorprone.refaster.annotation.AfterTemplate;
 import com.google.errorprone.refaster.annotation.BeforeTemplate;
-import com.google.errorprone.refaster.annotation.UseImportPolicy;
-import java.util.Collection;
+import java.util.Collections;
+import org.assertj.core.api.AbstractAssert;
+import org.assertj.core.api.AbstractIterableAssert;
 
-public final class AssertjCollectionIsEmpty<T> {
+public final class AssertjCollectionIsEmpty2<A extends AbstractIterableAssert<A, I, T, E>,
+        I extends Iterable<? extends T>, T, E extends AbstractAssert<E, T>> {
 
     @BeforeTemplate
-    void bad1(Collection<T> things) {
-        assertThat(things.size() == 0).isTrue();
+    void before1(A in) {
+        in.hasSize(0);
     }
 
     @BeforeTemplate
-    void bad2(Collection<T> things) {
-        assertThat(things.isEmpty()).isTrue();
-    }
-
-    @BeforeTemplate
-    void bad3(Collection<T> things) {
-        assertThat(things.size()).isZero();
-    }
-
-    @BeforeTemplate
-    void bad4(Collection<T> things) {
-        assertThat(things.size()).isEqualTo(0);
+    void before2(A in) {
+        in.isEqualTo(Refaster.anyOf(
+                ImmutableList.of(),
+                ImmutableSet.of(),
+                Collections.emptySet(),
+                Collections.emptyList()));
     }
 
     @AfterTemplate
-    @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
-    void after(Iterable<T> things) {
-        assertThat(things).isEmpty();
+    void after(A in) {
+        in.isEmpty();
     }
 }

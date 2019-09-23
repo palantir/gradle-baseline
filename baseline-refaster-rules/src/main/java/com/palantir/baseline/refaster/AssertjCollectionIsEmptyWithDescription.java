@@ -18,14 +18,11 @@ package com.palantir.baseline.refaster;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.refaster.ImportPolicy;
 import com.google.errorprone.refaster.annotation.AfterTemplate;
 import com.google.errorprone.refaster.annotation.BeforeTemplate;
 import com.google.errorprone.refaster.annotation.UseImportPolicy;
 import java.util.Collection;
-import java.util.Collections;
 
 public final class AssertjCollectionIsEmptyWithDescription<T> {
 
@@ -45,32 +42,7 @@ public final class AssertjCollectionIsEmptyWithDescription<T> {
     }
 
     @BeforeTemplate
-    void bad4(Iterable<T> things, String description) {
-        assertThat(things).describedAs(description).isEqualTo(Collections.emptyList());
-    }
-
-    @BeforeTemplate
-    void bad5(Iterable<T> things, String description) {
-        assertThat(things).describedAs(description).isEqualTo(Collections.emptySet());
-    }
-
-    @BeforeTemplate
-    void bad6(Iterable<T> things, String description) {
-        assertThat(things).describedAs(description).isEqualTo(ImmutableList.of());
-    }
-
-    @BeforeTemplate
-    void bad7(Iterable<T> things, String description) {
-        assertThat(things).describedAs(description).isEqualTo(ImmutableSet.of());
-    }
-
-    @BeforeTemplate
-    void bad8(Iterable<T> things, String description) {
-        assertThat(things).describedAs(description).hasSize(0);
-    }
-
-    @BeforeTemplate
-    void bad9(Collection<T> things, String description) {
+    void bad4(Collection<T> things, String description) {
         assertThat(things.size()).describedAs(description).isEqualTo(0);
     }
 

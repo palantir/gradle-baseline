@@ -78,4 +78,41 @@ public class AssertjCollectionIsEmptyTest {
                         "}");
     }
 
+    @Test
+    public void test2() {
+        RefasterTestHelper
+                .forRefactoring(AssertjCollectionIsEmpty2.class)
+                .withInputLines(
+                        "Test",
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import com.google.common.collect.ImmutableList;",
+                        "import java.util.Collections;",
+                        "import java.util.List;",
+                        "public class Test {",
+                        "  void f(List<String> in) {",
+                        "    assertThat(in).hasSize(0);",
+                        "    assertThat(in).isEqualTo(ImmutableList.of());",
+                        "    assertThat(in).isEqualTo(Collections.emptyList());",
+                        "    assertThat(in).describedAs(\"desc\").hasSize(0);",
+                        "    assertThat(in).describedAs(\"desc\").isEqualTo(ImmutableList.of());",
+                        "    assertThat(in).describedAs(\"desc\").isEqualTo(Collections.emptyList());",
+                        "  }",
+                        "}")
+                .hasOutputLines(
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import com.google.common.collect.ImmutableList;",
+                        "import java.util.Collections;",
+                        "import java.util.List;",
+                        "public class Test {",
+                        "  void f(List<String> in) {",
+                        "    assertThat(in).isEmpty();",
+                        "    assertThat(in).isEmpty();",
+                        "    assertThat(in).isEmpty();",
+                        "    assertThat(in).describedAs(\"desc\").isEmpty();",
+                        "    assertThat(in).describedAs(\"desc\").isEmpty();",
+                        "    assertThat(in).describedAs(\"desc\").isEmpty();",
+                        "  }",
+                        "}");
+    }
+
 }
