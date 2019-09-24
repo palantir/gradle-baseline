@@ -20,19 +20,19 @@ import com.google.errorprone.refaster.ImportPolicy;
 import com.google.errorprone.refaster.annotation.AfterTemplate;
 import com.google.errorprone.refaster.annotation.BeforeTemplate;
 import com.google.errorprone.refaster.annotation.UseImportPolicy;
-import java.util.List;
+import java.util.Collection;
 import org.assertj.core.api.IterableAssert;
 
-public final class AssertjCollectionHasSameSizeAs<T,U> {
+public final class AssertjCollectionHasSameSizeAs<T, U> {
 
     @BeforeTemplate
-    IterableAssert<T> before(IterableAssert<T> assertInProgress, List<U> expected) {
+    IterableAssert<T> before(IterableAssert<T> assertInProgress, Collection<U> expected) {
         return assertInProgress.hasSize(expected.size());
     }
 
     @AfterTemplate
     @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
-    IterableAssert<T> after(IterableAssert<T> assertInProgress, List<U> expected) {
+    IterableAssert<T> after(IterableAssert<T> assertInProgress, Collection<U> expected) {
         return assertInProgress.hasSameSizeAs(expected);
     }
 }
