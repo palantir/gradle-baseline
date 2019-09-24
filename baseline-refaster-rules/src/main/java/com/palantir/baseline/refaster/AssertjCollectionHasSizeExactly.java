@@ -18,8 +18,10 @@ package com.palantir.baseline.refaster;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.google.errorprone.refaster.ImportPolicy;
 import com.google.errorprone.refaster.annotation.AfterTemplate;
 import com.google.errorprone.refaster.annotation.BeforeTemplate;
+import com.google.errorprone.refaster.annotation.UseImportPolicy;
 import java.util.Collection;
 
 public final class AssertjCollectionHasSizeExactly<T> {
@@ -35,6 +37,7 @@ public final class AssertjCollectionHasSizeExactly<T> {
     }
 
     @AfterTemplate
+    @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
     void after(Collection<T> things, int size) {
         assertThat(things).hasSize(size);
     }
