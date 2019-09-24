@@ -180,6 +180,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
         errorProneOptions.setDisableWarningsInGeneratedCode(true);
         errorProneOptions.setExcludedPaths(
                 String.format("%s/(build|src/generated.*)/.*", project.getProjectDir().getPath()));
+        errorProneOptions.check("UnusedVariable", CheckSeverity.OFF);
         errorProneOptions.check("EqualsHashCode", CheckSeverity.ERROR);
         errorProneOptions.check("EqualsIncompatibleType", CheckSeverity.ERROR);
         errorProneOptions.check("StreamResourceLeak", CheckSeverity.ERROR);
