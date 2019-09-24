@@ -87,7 +87,9 @@ public final class RefasterTestHelper {
                     .orElseThrow(() -> new IllegalArgumentException("Failed to compile input lines"));
 
             DescriptionBasedDiff diff = DescriptionBasedDiff.create(tree, ImportOrganizer.STATIC_FIRST_ORGANIZER);
-            transformers.forEach(transformer -> transformer.apply(new TreePath(tree), result.context(), diff));
+            for (CodeTransformer transformer : transformers) {
+                transformer.apply(new TreePath(tree), result.context(), diff);
+            }
 
             SourceFile inputSourceFile = sourceFile(input);
             diff.applyDifferences(inputSourceFile);
