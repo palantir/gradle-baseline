@@ -1,0 +1,11 @@
+type: fix
+fix:
+  description: |-
+    Treat MalformedInputException as binary files that are not necessary to
+    scan for old JUnit dependencies.
+
+    Rethrow any non-IOExeception (such as UncheckedIOException wrapping
+    MalformedInputException) with more useful error message indicating a
+    file could not be scanned (e.g. ).
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/886
