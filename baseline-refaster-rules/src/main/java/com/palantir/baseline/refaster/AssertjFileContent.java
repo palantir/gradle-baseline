@@ -19,8 +19,11 @@ package com.palantir.baseline.refaster;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.common.io.Files;
+import com.google.errorprone.refaster.ImportPolicy;
 import com.google.errorprone.refaster.annotation.AfterTemplate;
 import com.google.errorprone.refaster.annotation.BeforeTemplate;
+import com.google.errorprone.refaster.annotation.UseImportPolicy;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -39,6 +42,7 @@ public final class AssertjFileContent<T> {
     }
 
     @AfterTemplate
+    @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
     void after(File file, String expected) {
         assertThat(file).hasContent(expected);
     }
