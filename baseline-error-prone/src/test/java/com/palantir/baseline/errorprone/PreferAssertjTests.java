@@ -415,18 +415,6 @@ public class PreferAssertjTests {
                 "  void f(double[] param) {",
                 "    // BUG: Diagnostic contains: Prefer AssertJ",
                 "    assertArrayEquals(param, new double[] { 1D }, .1D);",
-                "  }",
-                "}")
-                .doTest();
-    }
-
-    @Test
-    public void fails_assertArrayEqualsDeltaDescription_double() {
-        CompilationTestHelper.newInstance(PreferAssertj.class, getClass()).addSourceLines(
-                "Test.java",
-                "import static org.junit.Assert.assertArrayEquals;",
-                "class Test {",
-                "  void f(double[] param) {",
                 "    // BUG: Diagnostic contains: Prefer AssertJ",
                 "    assertArrayEquals(\"desc\", param, new double[] { 1D }, .1D);",
                 "  }",
@@ -443,23 +431,49 @@ public class PreferAssertjTests {
                 "  void f(float[] param) {",
                 "    // BUG: Diagnostic contains: Prefer AssertJ",
                 "    assertArrayEquals(param, new float[] { 1f }, .1f);",
+                "    // BUG: Diagnostic contains: Prefer AssertJ",
+                "    assertArrayEquals(\"desc\", param, new float[] { 1f }, .1f);",
                 "  }",
                 "}")
                 .doTest();
     }
 
     @Test
-    public void fails_assertArrayEqualsDeltaDescription_float() {
-        CompilationTestHelper.newInstance(PreferAssertj.class, getClass()).addSourceLines(
-                "Test.java",
-                "import static org.junit.Assert.assertArrayEquals;",
-                "class Test {",
-                "  void f(float[] param) {",
-                "    // BUG: Diagnostic contains: Prefer AssertJ",
-                "    assertArrayEquals(\"desc\", param, new float[] { 1f }, .1f);",
-                "  }",
-                "}")
-                .doTest();
+    public void fix_assertArrayEqualsDelta() {
+        test()
+                .addInputLines(
+                        "Test.java",
+                        "import static org.junit.Assert.assertArrayEquals;",
+                        "class Test {",
+                        "  void foo(float[] floatArray, double[] doubleArray) {",
+                        "    assertArrayEquals(\"desc\", new float[] { 1f }, floatArray, 0);",
+                        "    assertArrayEquals(new float[] { 1f }, floatArray, 0);",
+                        "    assertArrayEquals(\"desc\", new double[] { 1D }, doubleArray, 0);",
+                        "    assertArrayEquals(new double[] { 1D }, doubleArray, 0);",
+                        // nonzero delta doesn't have a migration path
+                        "    assertArrayEquals(\"desc\", new float[] { 1f }, floatArray, .1f);",
+                        "    assertArrayEquals(\"desc\", new double[] { 1D }, doubleArray, .1D);",
+                        "    assertArrayEquals(new float[] { 1f }, floatArray, .1f);",
+                        "    assertArrayEquals(new double[] { 1D }, doubleArray, .1D);",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import static org.junit.Assert.assertArrayEquals;",
+                        "class Test {",
+                        "  void foo(float[] floatArray, double[] doubleArray) {",
+                        "    assertThat(floatArray).describedAs(\"desc\").isEqualTo(new float[] { 1f });",
+                        "    assertThat(floatArray).isEqualTo(new float[] { 1f });",
+                        "    assertThat(doubleArray).describedAs(\"desc\").isEqualTo(new double[] { 1D });",
+                        "    assertThat(doubleArray).isEqualTo(new double[] { 1D });",
+                        "    assertArrayEquals(\"desc\", new float[] { 1f }, floatArray, .1f);",
+                        "    assertArrayEquals(\"desc\", new double[] { 1D }, doubleArray, .1D);",
+                        "    assertArrayEquals(new float[] { 1f }, floatArray, .1f);",
+                        "    assertArrayEquals(new double[] { 1D }, doubleArray, .1D);",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
     @Test
