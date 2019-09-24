@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: checkJunitDependencies only checks Java source
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/885
