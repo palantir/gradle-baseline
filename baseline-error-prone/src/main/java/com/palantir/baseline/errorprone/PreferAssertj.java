@@ -219,6 +219,11 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
                     .onClassAny(LEGACY_ASSERT_CLASSES)
                     .namedAnyOf("assertEquals", "assertArrayEquals");
 
+    private static final Matcher<ExpressionTree> ASSERT_ARRAY_EQUALS_CATCHALL =
+            MethodMatchers.staticMethod()
+                    .onClassAny(LEGACY_ASSERT_CLASSES)
+                    .named("assertArrayEquals");
+
     private static final Matcher<ExpressionTree> ASSERT_NOT_EQUALS_CATCHALL =
             MethodMatchers.staticMethod()
                     .onClassAny(LEGACY_ASSERT_CLASSES)
@@ -363,9 +368,18 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
                         fix.replace(tree, assertThat
                                 + ".isEqualTo(" + argSource(tree, state, 0) + ")"));
             } else if (parameters == 3 && ASTHelpers.isSameType(
-                    ASTHelpers.getType(tree.getArguments().get(0)),
+                    getParameterType(tree, 0),
                     state.getTypeFromString(String.class.getName()),
                     state)) {
+                return withAssertThat(tree, state, 2, (assertThat, fix) ->
+                        fix.replace(tree, assertThat
+                                + ".describedAs(" + argSource(tree, state, 0) + ").isEqualTo("
+                                + argSource(tree, state, 1) + ")"));
+            } else if (parameters == 3 && isFloatingPointArrayEqualsWithZeroDelta(tree, state)) {
+                return withAssertThat(tree, state, 1, (assertThat, fix) ->
+                        fix.replace(tree, assertThat
+                                + ".isEqualTo(" + argSource(tree, state, 0) + ")"));
+            } else if (parameters == 4 && isFloatingPointArrayEqualsWithZeroDelta(tree, state)) {
                 return withAssertThat(tree, state, 2, (assertThat, fix) ->
                         fix.replace(tree, assertThat
                                 + ".describedAs(" + argSource(tree, state, 0) + ").isEqualTo("
@@ -720,5 +734,27 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
                 arrayType.getComponentType(),
                 state.getTypeFromString(Object.class.getName()),
                 state);
+    }
+
+    private static Type getParameterType(MethodInvocationTree tree, int parameterIndex) {
+        Symbol.MethodSymbol methodSymbol = checkNotNull(ASTHelpers.getSymbol(tree), "symbol");
+        List<Symbol.VarSymbol> parameters = methodSymbol.getParameters();
+        checkArgument(parameterIndex >= 0, "index must be greater than zero, was %s", parameterIndex);
+        checkArgument(parameterIndex < parameters.size(),
+                "index '%s' is out of bounds for collection %s", parameterIndex, parameters);
+        return methodSymbol.getParameters().get(parameterIndex).type;
+    }
+
+    private static boolean isFloatingPointArrayEqualsWithZeroDelta(MethodInvocationTree tree, VisitorState state) {
+        if (!ASSERT_ARRAY_EQUALS_CATCHALL.matches(tree, state)) {
+            return false;
+        }
+        int parameters = tree.getArguments().size();
+        Type floatType = state.getTypeFromString("float");
+        Type doubleType = state.getTypeFromString("double");
+        int deltaParameterIndex = parameters - 1;
+        return (ASTHelpers.isSameType(getParameterType(tree, deltaParameterIndex), floatType, state)
+                || ASTHelpers.isSameType(getParameterType(tree, deltaParameterIndex), doubleType, state))
+                && isConstantZero(tree.getArguments().get(deltaParameterIndex));
     }
 }
