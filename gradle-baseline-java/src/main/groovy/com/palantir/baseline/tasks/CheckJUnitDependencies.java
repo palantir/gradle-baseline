@@ -17,10 +17,12 @@
 package com.palantir.baseline.tasks;
 
 import com.google.common.base.Preconditions;
+import com.google.common.base.Throwables;
 import com.palantir.baseline.plugins.BaselineTesting;
 import java.io.File;
-import java.io.IOException;
+import java.nio.charset.MalformedInputException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -149,13 +151,22 @@ public class CheckJUnitDependencies extends DefaultTask {
     }
 
     private boolean fileContainsSubstring(File file, Predicate<String> substring) {
-        try (Stream<String> lines = Files.lines(file.toPath())) {
+        Path path = file.toPath();
+        try (Stream<String> lines = Files.lines(path)) {
             boolean hit = lines.anyMatch(substring::test);
             getProject().getLogger().debug("[{}] {}", hit ? "hit" : "miss", file);
             return hit;
-        } catch (IOException e) {
-            throw new RuntimeException("Unable to check file " + file, e);
+        } catch (Exception e) {
+            if (isCausedByBinaryFile(e)) {
+                getLogger().warn("Unable to check binary file {} due to {}", path, e.getMessage());
+                return false;
+            }
+            throw new RuntimeException("Unable to check file " + path, e);
         }
+    }
+
+    private static boolean isCausedByBinaryFile(Exception exception) {
+        return Throwables.getCausalChain(exception).stream().anyMatch(MalformedInputException.class::isInstance);
     }
 
     private static boolean isJunitJupiter(ModuleVersionIdentifier dep) {
