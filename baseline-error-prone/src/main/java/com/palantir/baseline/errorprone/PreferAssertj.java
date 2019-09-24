@@ -740,7 +740,8 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
         Symbol.MethodSymbol methodSymbol = checkNotNull(ASTHelpers.getSymbol(tree), "symbol");
         List<Symbol.VarSymbol> parameters = methodSymbol.getParameters();
         checkArgument(parameterIndex >= 0, "index must be greater than zero, was %s", parameterIndex);
-        checkArgument(parameterIndex < parameters.size(), "index '%s' is out of bounds for collection %s", parameterIndex, parameters);
+        checkArgument(parameterIndex < parameters.size(),
+                "index '%s' is out of bounds for collection %s", parameterIndex, parameters);
         return methodSymbol.getParameters().get(parameterIndex).type;
     }
 
