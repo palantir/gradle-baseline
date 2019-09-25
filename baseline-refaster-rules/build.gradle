@@ -10,3 +10,6 @@ dependencies {
     testCompile 'junit:junit'
     testCompile project(':baseline-refaster-testing')
 }
+
+tasks.compileRefaster.enabled = false
+tasks.compileJava.onlyIf { project.properties.refasterApply == null }
