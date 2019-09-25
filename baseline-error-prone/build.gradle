@@ -8,6 +8,7 @@ apply from: "${rootDir}/gradle/publish-jar.gradle"
 dependencies {
     compile 'com.google.errorprone:error_prone_core'
 
+    testCompile gradleApi()
     testCompile 'com.palantir.tokens:auth-tokens'
     testCompile 'com.fasterxml.jackson.core:jackson-annotations'
     testCompile 'com.google.errorprone:error_prone_test_helpers'
@@ -17,14 +18,15 @@ dependencies {
     testCompile 'org.apache.commons:commons-lang3'
     testCompile 'commons-lang:commons-lang'
     testCompile 'org.assertj:assertj-core'
-    testCompile 'org.junit.jupiter:junit-jupiter-api'
-    testCompile gradleApi()
+    testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-migrationsupport'
 
     annotationProcessor 'com.google.auto.service:auto-service'
     compileOnly 'com.google.auto.service:auto-service'
 }
 
+// Incorrectly identifies tests as junit4 usage
+tasks.checkJUnitDependencies.enabled = false
 tasks.withType(JavaCompile) {
     options.errorprone {
         check("StrictUnusedVariable", CheckSeverity.OFF)
