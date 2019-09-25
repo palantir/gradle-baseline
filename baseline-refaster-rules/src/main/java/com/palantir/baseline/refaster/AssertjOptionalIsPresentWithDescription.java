@@ -22,23 +22,18 @@ import com.google.errorprone.refaster.ImportPolicy;
 import com.google.errorprone.refaster.annotation.AfterTemplate;
 import com.google.errorprone.refaster.annotation.BeforeTemplate;
 import com.google.errorprone.refaster.annotation.UseImportPolicy;
-import java.util.Collection;
+import java.util.Optional;
 
-public final class AssertjCollectionHasSizeGreaterThan<T> {
-
-    @BeforeTemplate
-    void before1(Collection<T> things, int size) {
-        assertThat(things.size() > size).isTrue();
-    }
+public final class AssertjOptionalIsPresentWithDescription<T> {
 
     @BeforeTemplate
-    void before2(Collection<T> things, int size) {
-        assertThat(things.size()).isGreaterThan(size);
+    void before(Optional<T> thing, String description) {
+        assertThat(thing.isPresent()).describedAs(description).isTrue();
     }
 
     @AfterTemplate
     @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
-    void after(Collection<T> things, int size) {
-        assertThat(things).hasSizeGreaterThan(size);
+    void after(Optional<T> thing, String description) {
+        assertThat(thing).describedAs(description).isPresent();
     }
 }
