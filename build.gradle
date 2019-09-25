@@ -12,7 +12,7 @@ buildscript {
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
         classpath 'com.netflix.nebula:nebula-publishing-plugin:13.6.1'
         classpath 'com.netflix.nebula:gradle-info-plugin:5.1.0'
-        classpath 'com.palantir.baseline:gradle-baseline-java:2.9.2'
+        classpath 'com.palantir.baseline:gradle-baseline-java:2.12.0'
     }
 }
 
