@@ -24,21 +24,21 @@ import com.google.errorprone.refaster.annotation.BeforeTemplate;
 import com.google.errorprone.refaster.annotation.UseImportPolicy;
 import java.util.Collection;
 
-public final class AssertjCollectionHasSizeGreaterThan<T> {
+public final class AssertjCollectionHasSizeGreaterThanWithDescription<T> {
 
     @BeforeTemplate
-    void before1(Collection<T> things, int size) {
-        assertThat(things.size() > size).isTrue();
+    void before1(Collection<T> things, int size, String description) {
+        assertThat(things.size() > size).describedAs(description).isTrue();
     }
 
     @BeforeTemplate
-    void before2(Collection<T> things, int size) {
-        assertThat(things.size()).isGreaterThan(size);
+    void before2(Collection<T> things, int size, String description) {
+        assertThat(things.size()).describedAs(description).isGreaterThan(size);
     }
 
     @AfterTemplate
     @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
-    void after(Collection<T> things, int size) {
-        assertThat(things).hasSizeGreaterThan(size);
+    void after(Collection<T> things, int size, String description) {
+        assertThat(things).describedAs(description).hasSizeGreaterThan(size);
     }
 }

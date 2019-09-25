@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: AssertJ refaster migrations support string descriptions
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/891

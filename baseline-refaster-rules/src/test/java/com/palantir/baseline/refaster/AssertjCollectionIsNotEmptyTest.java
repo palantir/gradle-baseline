@@ -18,22 +18,22 @@ package com.palantir.baseline.refaster;
 
 import org.junit.Test;
 
-public class AssertjCollectionIsEmptyTest {
+public class AssertjCollectionIsNotEmptyTest {
 
     @Test
     public void simple() {
         RefasterTestHelper
-                .forRefactoring(AssertjCollectionIsEmpty.class)
+                .forRefactoring(AssertjCollectionIsNotEmpty.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",
                         "import java.util.List;",
                         "public class Test {",
                         "  void f(List<String> in) {",
-                        "    assertThat(in.size() == 0).isTrue();",
-                        "    assertThat(in.isEmpty()).isTrue();",
-                        "    assertThat(in.size()).isEqualTo(0);",
-                        "    assertThat(in.size()).isZero();",
+                        "    assertThat(in.size() != 0).isTrue();",
+                        "    assertThat(in.size() == 0).isFalse();",
+                        "    assertThat(in.isEmpty()).isFalse();",
+                        "    assertThat(!in.isEmpty()).isTrue();",
                         "  }",
                         "}")
                 .hasOutputLines(
@@ -41,10 +41,10 @@ public class AssertjCollectionIsEmptyTest {
                         "import java.util.List;",
                         "public class Test {",
                         "  void f(List<String> in) {",
-                        "    assertThat(in).isEmpty();",
-                        "    assertThat(in).isEmpty();",
-                        "    assertThat(in).isEmpty();",
-                        "    assertThat(in).isEmpty();",
+                        "    assertThat(in).isNotEmpty();",
+                        "    assertThat(in).isNotEmpty();",
+                        "    assertThat(in).isNotEmpty();",
+                        "    assertThat(in).isNotEmpty();",
                         "  }",
                         "}");
     }
@@ -52,17 +52,17 @@ public class AssertjCollectionIsEmptyTest {
     @Test
     public void description() {
         RefasterTestHelper
-                .forRefactoring(AssertjCollectionIsEmptyWithDescription.class)
+                .forRefactoring(AssertjCollectionIsNotEmptyWithDescription.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",
                         "import java.util.List;",
                         "public class Test {",
                         "  void f(List<String> in) {",
-                        "    assertThat(in.size() == 0).describedAs(\"desc\").isTrue();",
-                        "    assertThat(in.isEmpty()).describedAs(\"desc\").isTrue();",
-                        "    assertThat(in.size()).describedAs(\"desc\").isEqualTo(0);",
-                        "    assertThat(in.size()).describedAs(\"desc\").isZero();",
+                        "    assertThat(in.size() != 0).describedAs(\"desc\").isTrue();",
+                        "    assertThat(in.size() == 0).describedAs(\"desc\").isFalse();",
+                        "    assertThat(in.isEmpty()).describedAs(\"desc\").isFalse();",
+                        "    assertThat(!in.isEmpty()).describedAs(\"desc\").isTrue();",
                         "  }",
                         "}")
                 .hasOutputLines(
@@ -70,10 +70,10 @@ public class AssertjCollectionIsEmptyTest {
                         "import java.util.List;",
                         "public class Test {",
                         "  void f(List<String> in) {",
-                        "    assertThat(in).describedAs(\"desc\").isEmpty();",
-                        "    assertThat(in).describedAs(\"desc\").isEmpty();",
-                        "    assertThat(in).describedAs(\"desc\").isEmpty();",
-                        "    assertThat(in).describedAs(\"desc\").isEmpty();",
+                        "    assertThat(in).describedAs(\"desc\").isNotEmpty();",
+                        "    assertThat(in).describedAs(\"desc\").isNotEmpty();",
+                        "    assertThat(in).describedAs(\"desc\").isNotEmpty();",
+                        "    assertThat(in).describedAs(\"desc\").isNotEmpty();",
                         "  }",
                         "}");
     }
