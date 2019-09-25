@@ -42,7 +42,10 @@ final class TestCheckUtils {
     }
 
     private static final Matcher<ClassTree> hasJUnit5TestCases =
-            Matchers.hasMethod(Matchers.hasAnnotationOnAnyOverriddenMethod("org.junit.jupiter.api.Test"));
+            Matchers.hasMethod(Matchers.anyOf(
+                    Matchers.hasAnnotationOnAnyOverriddenMethod("org.junit.jupiter.api.Test"),
+                    Matchers.hasAnnotationOnAnyOverriddenMethod("org.junit.jupiter.api.TestTemplate")));
+
     private static final Matcher<ClassTree> hasTestCases = Matchers
             .anyOf(JUnitMatchers.hasJUnit4TestCases, hasJUnit5TestCases);
 }
