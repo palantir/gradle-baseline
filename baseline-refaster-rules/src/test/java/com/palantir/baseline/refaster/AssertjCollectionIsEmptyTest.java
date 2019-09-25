@@ -16,6 +16,8 @@
 
 package com.palantir.baseline.refaster;
 
+import static org.assertj.core.api.Assumptions.assumeThat;
+
 import org.junit.Test;
 
 public class AssertjCollectionIsEmptyTest {
@@ -71,6 +73,46 @@ public class AssertjCollectionIsEmptyTest {
                         "public class Test {",
                         "  void f(List<String> in) {",
                         "    assertThat(in).describedAs(\"desc\").isEmpty();",
+                        "    assertThat(in).describedAs(\"desc\").isEmpty();",
+                        "    assertThat(in).describedAs(\"desc\").isEmpty();",
+                        "    assertThat(in).describedAs(\"desc\").isEmpty();",
+                        "  }",
+                        "}");
+    }
+
+    @Test
+    public void test2() {
+        assumeThat(System.getProperty("java.specification.version"))
+                .describedAs("Refaster does not currently support fluent refactors on java 11")
+                .isEqualTo("1.8");
+        RefasterTestHelper
+                .forRefactoring(AssertjCollectionIsEmpty2.class)
+                .withInputLines(
+                        "Test",
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import com.google.common.collect.ImmutableList;",
+                        "import java.util.Collections;",
+                        "import java.util.List;",
+                        "public class Test {",
+                        "  void f(List<String> in) {",
+                        "    assertThat(in).hasSize(0);",
+                        "    assertThat(in).isEqualTo(ImmutableList.of());",
+                        "    assertThat(in).isEqualTo(Collections.emptyList());",
+                        "    assertThat(in).describedAs(\"desc\").hasSize(0);",
+                        "    assertThat(in).describedAs(\"desc\").isEqualTo(ImmutableList.of());",
+                        "    assertThat(in).describedAs(\"desc\").isEqualTo(Collections.emptyList());",
+                        "  }",
+                        "}")
+                .hasOutputLines(
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import com.google.common.collect.ImmutableList;",
+                        "import java.util.Collections;",
+                        "import java.util.List;",
+                        "public class Test {",
+                        "  void f(List<String> in) {",
+                        "    assertThat(in).isEmpty();",
+                        "    assertThat(in).isEmpty();",
+                        "    assertThat(in).isEmpty();",
                         "    assertThat(in).describedAs(\"desc\").isEmpty();",
                         "    assertThat(in).describedAs(\"desc\").isEmpty();",
                         "    assertThat(in).describedAs(\"desc\").isEmpty();",
