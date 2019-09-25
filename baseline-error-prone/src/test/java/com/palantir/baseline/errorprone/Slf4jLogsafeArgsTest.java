@@ -18,8 +18,8 @@ package com.palantir.baseline.errorprone;
 
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.CompilationTestHelper;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public final class Slf4jLogsafeArgsTest {
 
@@ -27,7 +27,7 @@ public final class Slf4jLogsafeArgsTest {
 
     private CompilationTestHelper compilationHelper;
 
-    @Before
+    @BeforeEach
     public void before() {
         compilationHelper = CompilationTestHelper.newInstance(Slf4jLogsafeArgs.class, getClass());
     }

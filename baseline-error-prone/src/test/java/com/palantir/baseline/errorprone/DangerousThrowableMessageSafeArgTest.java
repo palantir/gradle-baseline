@@ -19,14 +19,14 @@ package com.palantir.baseline.errorprone;
 import com.google.errorprone.CompilationTestHelper;
 import com.palantir.logsafe.SafeArg;
 import com.palantir.logsafe.exceptions.SafeIllegalArgumentException;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public final class DangerousThrowableMessageSafeArgTest {
 
     private CompilationTestHelper compilationHelper;
 
-    @Before
+    @BeforeEach
     public void before() {
         compilationHelper = CompilationTestHelper.newInstance(DangerousThrowableMessageSafeArg.class, getClass());
     }

@@ -17,8 +17,8 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.errorprone.CompilationTestHelper;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public final class GuavaPreconditionsConstantMessageTests extends PreconditionsTests {
 
@@ -26,7 +26,7 @@ public final class GuavaPreconditionsConstantMessageTests extends PreconditionsT
 
     private CompilationTestHelper compilationHelper;
 
-    @Before
+    @BeforeEach
     public void before() {
         compilationHelper = CompilationTestHelper.newInstance(PreconditionsConstantMessage.class, getClass());
     }

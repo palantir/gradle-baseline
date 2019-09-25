@@ -21,14 +21,14 @@ import com.google.errorprone.BugCheckerRefactoringTestHelper;
 import com.google.errorprone.CompilationTestHelper;
 import java.util.List;
 import java.util.Optional;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
 
 public class LambdaMethodReferenceTest {
 
     private CompilationTestHelper compilationHelper;
 
-    @Before
+    @BeforeEach
     public void before() {
         compilationHelper = CompilationTestHelper.newInstance(LambdaMethodReference.class, getClass());
     }

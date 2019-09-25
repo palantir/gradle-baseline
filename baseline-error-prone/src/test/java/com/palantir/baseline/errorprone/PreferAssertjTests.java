@@ -18,7 +18,7 @@ package com.palantir.baseline.errorprone;
 
 import com.google.errorprone.BugCheckerRefactoringTestHelper;
 import com.google.errorprone.CompilationTestHelper;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 @SuppressWarnings("RegexpSinglelineJava") // Testing against assertions that aren't allowed
 public class PreferAssertjTests {
