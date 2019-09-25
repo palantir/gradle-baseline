@@ -19,7 +19,10 @@ package com.palantir.baseline.errorprone;
 import com.google.errorprone.CompilationTestHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
+@Execution(ExecutionMode.CONCURRENT)
 public final class LogSafePreconditionsMessageFormatTests extends PreconditionsTests {
 
     private static final String PRINTF_DIAGNOSTIC = "Do not use printf-style formatting";

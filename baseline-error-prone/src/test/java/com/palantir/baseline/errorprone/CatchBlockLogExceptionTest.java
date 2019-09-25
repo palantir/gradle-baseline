@@ -20,7 +20,10 @@ import com.google.errorprone.CompilationTestHelper;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
+@Execution(ExecutionMode.CONCURRENT)
 public class CatchBlockLogExceptionTest {
 
     private static final String errorMsg = "BUG: Diagnostic contains: "
