@@ -21,14 +21,13 @@ import java.io.File;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.gradle.api.Action;
-import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.compile.JavaCompile;
+import org.gradle.work.InputChanges;
 
 public class RefasterCompileTask extends JavaCompile {
 
@@ -44,8 +43,8 @@ public class RefasterCompileTask extends JavaCompile {
     }
 
     @Override
-    protected void compile() {
-        // Clear out the default error-prone providers
+    protected void compile(InputChanges inputs) {
+            // Clear out the default error-prone providers
         getOptions().getCompilerArgumentProviders().clear();
         getOptions().setCompilerArgs(ImmutableList.of(
                 "-Xplugin:BaselineRefasterCompiler --out " + refasterRulesFile.get().getAbsolutePath()));
@@ -71,7 +70,7 @@ public class RefasterCompileTask extends JavaCompile {
 
         if (!javaSources.isEmpty()) {
             setSource(javaSources);
-            super.compile();
+            super.compile(inputs);
         } else {
             setDidWork(false);
             onlyIf(t -> false);

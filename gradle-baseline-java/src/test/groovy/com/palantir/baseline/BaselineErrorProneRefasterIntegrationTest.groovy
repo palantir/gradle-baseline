@@ -34,6 +34,8 @@ class BaselineErrorProneRefasterIntegrationTest extends AbstractPluginTest {
         repositories {
             mavenLocal()
             jcenter()
+            // TODO(forozco): figure out why pTML no longer works
+            maven { url  "http://palantir.bintray.com/releases" }
         }
         tasks.withType(JavaCompile) {
             options.compilerArgs += ['-Werror', '-Xlint:deprecation']
@@ -52,7 +54,7 @@ class BaselineErrorProneRefasterIntegrationTest extends AbstractPluginTest {
         '''.stripIndent()
 
         then:
-        BuildResult result = with('compileJava', '-i', '-PrefasterApply', '-s').build()
+        BuildResult result = with('compileJava', '-i', '-PrefasterApply').build()
         result.task(":compileJava").outcome == TaskOutcome.SUCCESS
         file('build/refaster/rules.refaster').exists()
         file('src/main/java/test/Test.java').text == '''
