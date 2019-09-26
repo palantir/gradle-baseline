@@ -17,6 +17,7 @@
 package com.palantir.baseline.plugins;
 
 import com.diffplug.gradle.spotless.SpotlessExtension;
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import org.gradle.api.Project;
@@ -29,6 +30,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
 
     // TODO(dfox): remove this feature flag when we've refined the eclipse.xml sufficiently
     private static final String ECLIPSE_FORMATTING = "com.palantir.baseline-format.eclipse";
+    private static final String GENERATED_MARKER = File.separator + "generated";
 
     @Override
     public void apply(Project project) {
@@ -46,7 +48,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
                         .getPlugin(JavaPluginConvention.class)
                         .getSourceSets()
                         .all(sourceSet -> allJavaFiles.from(
-                                sourceSet.getAllJava().filter(file -> !file.toString().contains("/generated"))));
+                                sourceSet.getAllJava().filter(file -> !file.toString().contains(GENERATED_MARKER))));
 
                 java.target(allJavaFiles);
                 java.removeUnusedImports();
