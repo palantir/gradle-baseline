@@ -43,8 +43,8 @@ public class CompileRefasterTask extends JavaCompile {
     }
 
     @Override
-    protected void compile(InputChanges inputs) {
-            // Clear out the default error-prone providers
+    protected final void compile(InputChanges inputs) {
+        // Clear out the default error-prone providers
         getOptions().getCompilerArgumentProviders().clear();
         getOptions().setCompilerArgs(ImmutableList.of(
                 "-Xplugin:BaselineRefasterCompiler --out " + refasterRulesFile.get().getAbsolutePath()));
