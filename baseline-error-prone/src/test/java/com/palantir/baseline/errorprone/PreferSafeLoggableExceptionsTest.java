@@ -138,9 +138,14 @@ public class PreferSafeLoggableExceptionsTest {
         compilationHelper.addSourceLines(
                 "FooTest.java",
                 "import org.junit.jupiter.api.Test;",
+                "import org.junit.jupiter.api.TestTemplate;",
                 "class FooTest {",
                 "  @Test",
                 "  public void run_junit5_test() {",
+                "    throw new IllegalStateException(\"constant\");",
+                "  }",
+                "  @TestTemplate",
+                "  public void junit5_test_template() {",
                 "    throw new IllegalStateException(\"constant\");",
                 "  }",
                 "}").doTest();
