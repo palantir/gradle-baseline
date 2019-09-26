@@ -30,6 +30,8 @@ import com.sun.source.tree.MethodInvocationTree;
 @AutoService(BugChecker.class)
 @BugPattern(
         name = "DangerousStringInternUsage",
+        link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
+        linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.WARNING,
         summary = "Disallow String.intern() invocations.")
 public final class DangerousStringInternUsage extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {

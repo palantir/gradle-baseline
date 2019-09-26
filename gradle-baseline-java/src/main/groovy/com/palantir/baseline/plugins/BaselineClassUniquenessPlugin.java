@@ -34,9 +34,10 @@ public class BaselineClassUniquenessPlugin extends AbstractBaselinePlugin {
         project.getTasks().addRule(rule);
 
         project.getPlugins().withId("java", plugin -> {
-            rule.apply("checkRuntimeClassUniqueness");
+            String checkRuntimeClasspathTask = "checkRuntimeClasspathClassUniqueness";
+            rule.apply(checkRuntimeClasspathTask);
             project.getTasks().getByName("check")
-                    .dependsOn(project.getTasks().getByName("checkRuntimeClassUniqueness"));
+                    .dependsOn(project.getTasks().getByName(checkRuntimeClasspathTask));
         });
     }
 }

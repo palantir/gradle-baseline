@@ -52,11 +52,12 @@ class BaselineFormat extends AbstractBaselinePlugin {
                 java.removeUnusedImports();
                 // use empty string to specify one group for all non-static imports
                 java.importOrder("");
-                java.trimTrailingWhitespace();
 
                 if (eclipseFormattingEnabled(project)) {
                     java.eclipse().configFile(project.file(eclipseXml.toString()));
                 }
+
+                java.trimTrailingWhitespace();
             });
 
             // necessary because SpotlessPlugin creates tasks in an afterEvaluate block
@@ -65,7 +66,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
                 Task spotlessJava = project.getTasks().getByName("spotlessJava");
                 Task spotlessApply = project.getTasks().getByName("spotlessApply");
                 if (eclipseFormattingEnabled(project) && !Files.exists(eclipseXml)) {
-                    spotlessJava.dependsOn(project.getTasks().findByPath(":baselineUpdateConfig"));
+                    spotlessJava.dependsOn(":baselineUpdateConfig");
                 }
                 formatTask.dependsOn(spotlessApply);
                 project.getTasks().withType(JavaCompile.class).configureEach(spotlessJava::mustRunAfter);

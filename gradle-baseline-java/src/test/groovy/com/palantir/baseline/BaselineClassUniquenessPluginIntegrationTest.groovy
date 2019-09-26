@@ -43,7 +43,7 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
 
         then:
         def result = with('check', '--stacktrace').build()
-        result.task(':checkRuntimeClassUniqueness').outcome == TaskOutcome.SUCCESS
+        result.task(':checkRuntimeClasspathClassUniqueness').outcome == TaskOutcome.SUCCESS
     }
 
     def 'detect duplicates in two external jars'() {
@@ -55,11 +55,11 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
             compile group: 'javax.servlet.jsp', name: 'jsp-api', version: '2.1'
         }   
         """.stripIndent()
-        BuildResult result = with('checkRuntimeClassUniqueness').buildAndFail()
+        BuildResult result = with('checkRuntimeClasspathClassUniqueness').buildAndFail()
 
         then:
         result.output.contains("26 Identically named classes with differing impls found in [javax.servlet.jsp:jsp-api:2.1, javax.el:javax.el-api:3.0.0]: [javax.")
-        result.getOutput().contains("'runtime' contains multiple copies of identically named classes")
+        result.getOutput().contains("'runtimeClasspath' contains multiple copies of identically named classes")
         result.getOutput().contains("(26 classes)  javax.servlet.jsp:jsp-api:2.1 javax.el:javax.el-api:3.0.0");
         println result.getOutput()
     }
@@ -75,6 +75,8 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
             myConf group: 'javax.el', name: 'javax.el-api', version: '3.0.0'
             myConf group: 'javax.servlet.jsp', name: 'jsp-api', version: '2.1'
         }
+        
+        
         """.stripIndent()
         BuildResult result = with('checkMyConfClassUniqueness').buildAndFail()
 
@@ -97,7 +99,7 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         """.stripIndent()
 
         then:
-        with('checkRuntimeClassUniqueness').build()
+        with('checkRuntimeClasspathClassUniqueness').build()
     }
 
     def 'task should be up-to-date when classpath is unchanged'() {
@@ -105,11 +107,11 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         buildFile << standardBuildFile
 
         then:
-        BuildResult result1 = with('checkRuntimeClassUniqueness').build()
-        result1.task(':checkRuntimeClassUniqueness').outcome == TaskOutcome.SUCCESS
+        BuildResult result1 = with('checkRuntimeClasspathClassUniqueness').build()
+        result1.task(':checkRuntimeClasspathClassUniqueness').outcome == TaskOutcome.SUCCESS
 
-        BuildResult result = with('checkRuntimeClassUniqueness').build()
-        result.task(':checkRuntimeClassUniqueness').outcome == TaskOutcome.UP_TO_DATE
+        BuildResult result = with('checkRuntimeClasspathClassUniqueness').build()
+        result.task(':checkRuntimeClasspathClassUniqueness').outcome == TaskOutcome.UP_TO_DATE
     }
 
     def 'passes when no duplicates are present'() {
@@ -123,10 +125,10 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
             compile 'com.netflix.nebula:nebula-test:6.4.2'
         }
         """.stripIndent()
-        BuildResult result = with('checkRuntimeClassUniqueness', '--info').build()
+        BuildResult result = with('checkRuntimeClasspathClassUniqueness', '--info').build()
 
         then:
-        result.task(":checkRuntimeClassUniqueness").outcome == TaskOutcome.SUCCESS
+        result.task(":checkRuntimeClasspathClassUniqueness").outcome == TaskOutcome.SUCCESS
         println result.getOutput()
     }
 
@@ -152,7 +154,7 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         """.stripIndent()
 
         then:
-        BuildResult result = with('checkRuntimeClassUniqueness').buildAndFail()
+        BuildResult result = with('checkRuntimeClasspathClassUniqueness').buildAndFail()
         result.output.contains("26 Identically named classes with differing impls found in [javax.servlet.jsp:jsp-api:2.1, javax.el:javax.el-api:3.0.0]: [javax.")
     }
 
@@ -173,8 +175,8 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         """.stripIndent()
 
         then:
-        BuildResult result = with('checkRuntimeClassUniqueness', '--info').build()
+        BuildResult result = with('checkRuntimeClasspathClassUniqueness', '--info').build()
         println result.getOutput()
-        result.task(":checkRuntimeClassUniqueness").outcome == TaskOutcome.SUCCESS // ideally should should say failed!
+        result.task(":checkRuntimeClasspathClassUniqueness").outcome == TaskOutcome.SUCCESS // ideally should should say failed!
     }
 }

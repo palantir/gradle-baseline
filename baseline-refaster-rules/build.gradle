@@ -4,8 +4,13 @@ apply plugin: 'java-library'
 apply from: "${rootDir}/gradle/publish-jar.gradle"
 
 dependencies {
-    compile 'com.google.errorprone:error_prone_refaster'
+    implementation 'com.google.errorprone:error_prone_refaster'
+    implementation 'org.assertj:assertj-core'
 
     testCompile 'junit:junit'
     testCompile project(':baseline-refaster-testing')
 }
+
+// Do not apply refaster rules
+tasks.compileRefaster.enabled = false
+tasks.compileJava.onlyIf { project.properties.refasterApply == null }

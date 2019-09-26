@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Message format checks use instanceof rather than catching
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/821

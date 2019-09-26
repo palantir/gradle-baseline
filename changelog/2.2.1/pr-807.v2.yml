@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Eclipse formatter now aligns multicatch so that it passes checkstyle.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/807

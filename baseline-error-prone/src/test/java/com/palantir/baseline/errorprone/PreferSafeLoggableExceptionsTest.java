@@ -18,14 +18,17 @@ package com.palantir.baseline.errorprone;
 
 import com.google.errorprone.BugCheckerRefactoringTestHelper;
 import com.google.errorprone.CompilationTestHelper;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
+@Execution(ExecutionMode.CONCURRENT)
 public class PreferSafeLoggableExceptionsTest {
 
     private CompilationTestHelper compilationHelper;
 
-    @Before
+    @BeforeEach
     public void before() {
         compilationHelper = CompilationTestHelper.newInstance(PreferSafeLoggableExceptions.class, getClass());
     }
@@ -135,9 +138,14 @@ public class PreferSafeLoggableExceptionsTest {
         compilationHelper.addSourceLines(
                 "FooTest.java",
                 "import org.junit.jupiter.api.Test;",
+                "import org.junit.jupiter.api.TestTemplate;",
                 "class FooTest {",
                 "  @Test",
                 "  public void run_junit5_test() {",
+                "    throw new IllegalStateException(\"constant\");",
+                "  }",
+                "  @TestTemplate",
+                "  public void junit5_test_template() {",
                 "    throw new IllegalStateException(\"constant\");",
                 "  }",
                 "}").doTest();
