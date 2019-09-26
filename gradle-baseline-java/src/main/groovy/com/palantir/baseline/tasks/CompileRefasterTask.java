@@ -29,12 +29,12 @@ import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.work.InputChanges;
 
-public class RefasterCompileTask extends JavaCompile {
+public class CompileRefasterTask extends JavaCompile {
 
     private final Property<Configuration> refasterSources = getProject().getObjects().property(Configuration.class);
     private final Property<File> refasterRulesFile = getProject().getObjects().property(File.class);
 
-    public RefasterCompileTask() {
+    public CompileRefasterTask() {
         // Don't care about .class files
         setDestinationDir(getTemporaryDir());
 
@@ -73,7 +73,6 @@ public class RefasterCompileTask extends JavaCompile {
             super.compile(inputs);
         } else {
             setDidWork(false);
-            onlyIf(t -> false);
         }
     }
 

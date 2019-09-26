@@ -19,7 +19,6 @@ package com.palantir.baseline
 
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
-
 /**
  * This test depends on ./gradlew :baseline-error-prone:publishToMavenLocal
  */
@@ -120,6 +119,11 @@ class BaselineErrorProneRefasterIntegrationTest extends AbstractPluginTest {
     def 'compileJava with refaster fixes Utf8Length with deprecated method'() {
         when:
         buildFile << standardBuildFile
+        buildFile << '''
+            dependencies {
+                compile 'com.google.guava:guava:27.1-jre'
+            }
+        '''
         file('src/main/java/test/Test.java') << '''
         package test;
         import com.google.common.base.CharMatcher;

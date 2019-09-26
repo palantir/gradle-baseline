@@ -35,6 +35,8 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         repositories {
             mavenLocal()
             jcenter()
+            // TODO(forozco): figure out why pTML no longer works
+            maven { url  "http://palantir.bintray.com/releases" }
         }
     '''.stripIndent()
 
