@@ -93,6 +93,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
 
         RefasterCompileTask compileRefaster =
                 project.getTasks().create("compileRefaster", RefasterCompileTask.class, task -> {
+                    task.setClasspath(refasterConfiguration);
                     task.setSource(refasterConfiguration);
                     task.getRefasterSources().set(refasterConfiguration);
                     task.setClasspath(refasterCompilerConfiguration);

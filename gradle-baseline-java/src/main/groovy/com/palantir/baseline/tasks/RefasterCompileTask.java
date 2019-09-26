@@ -41,42 +41,43 @@ public class RefasterCompileTask extends JavaCompile {
 
         // Ensure we hit the non-incremental code-path since we override it
         getOptions().setIncremental(false);
-        doFirst(new Action<Task>() {
-            @Override
-            public void execute(Task task) {
-                // Clear out the default error-prone providers
-                getOptions().getCompilerArgumentProviders().clear();
-                getOptions().setCompilerArgs(ImmutableList.of(
-                        "-Xplugin:BaselineRefasterCompiler --out " + refasterRulesFile.get().getAbsolutePath()));
-
-                // Extract Java sources
-                List<File> javaSources = getRefasterSources().get().getResolvedConfiguration()
-                        .getFirstLevelModuleDependencies()
-                        .stream()
-                        .flatMap(dep -> dep.getModuleArtifacts().stream())
-                        .map(ResolvedArtifact::getFile)
-                        .flatMap(file -> {
-                            if (file.getName().endsWith(".jar")) {
-                                return getProject().zipTree(file).getFiles().stream()
-                                        .filter(zipFile -> zipFile.getName().endsWith(".java"));
-                            } else if (file.getName().endsWith(".java")) {
-                                return Stream.of(file);
-                            } else {
-                                getLogger().warn("Skipping refaster rule: {}", file);
-                                return Stream.empty();
-                            }
-                        })
-                        .collect(Collectors.toList());
-
-                if (!javaSources.isEmpty()) {
-                    setSource(javaSources);
-                } else {
-                    setDidWork(false);
-                    onlyIf(t -> false);
-                }
-            }
-        });
     }
+
+    @Override
+    protected void compile() {
+        // Clear out the default error-prone providers
+        getOptions().getCompilerArgumentProviders().clear();
+        getOptions().setCompilerArgs(ImmutableList.of(
+                "-Xplugin:BaselineRefasterCompiler --out " + refasterRulesFile.get().getAbsolutePath()));
+
+        // Extract Java sources
+        List<File> javaSources = getRefasterSources().get().getResolvedConfiguration()
+                .getFirstLevelModuleDependencies()
+                .stream()
+                .flatMap(dep -> dep.getModuleArtifacts().stream())
+                .map(ResolvedArtifact::getFile)
+                .flatMap(file -> {
+                    if (file.getName().endsWith(".jar")) {
+                        return getProject().zipTree(file).getFiles().stream()
+                                .filter(zipFile -> zipFile.getName().endsWith(".java"));
+                    } else if (file.getName().endsWith(".java")) {
+                        return Stream.of(file);
+                    } else {
+                        getLogger().warn("Skipping refaster rule: {}", file);
+                        return Stream.empty();
+                    }
+                })
+                .collect(Collectors.toList());
+
+        if (!javaSources.isEmpty()) {
+            setSource(javaSources);
+            super.compile();
+        } else {
+            setDidWork(false);
+            onlyIf(t -> false);
+        }
+    }
+
 
     @InputFiles
     public final Property<Configuration> getRefasterSources() {

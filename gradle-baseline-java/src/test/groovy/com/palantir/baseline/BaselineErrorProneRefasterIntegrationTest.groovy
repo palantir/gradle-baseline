@@ -52,8 +52,9 @@ class BaselineErrorProneRefasterIntegrationTest extends AbstractPluginTest {
         '''.stripIndent()
 
         then:
-        BuildResult result = with('compileJava', '-i', '-PrefasterApply').build()
+        BuildResult result = with('compileJava', '-i', '-PrefasterApply', '-s').build()
         result.task(":compileJava").outcome == TaskOutcome.SUCCESS
+        file('build/refaster/rules.refaster').exists()
         file('src/main/java/test/Test.java').text == '''
         package test;
         import java.util.ArrayList;
