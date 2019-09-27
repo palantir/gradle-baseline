@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableMap;
 import groovy.util.Node;
 import groovy.xml.QName;
 import java.nio.file.Paths;
-import netflix.nebula.dependency.recommender.provider.RecommendationProviderContainer;
 import org.codehaus.groovy.runtime.InvokerHelper;
 import org.github.ngbinh.scalastyle.ScalaStylePlugin;
 import org.github.ngbinh.scalastyle.ScalaStyleTask;
@@ -104,14 +103,5 @@ public final class BaselineScalastyle extends AbstractBaselinePlugin {
                             .orElseGet(() -> parametersNode.appendNode("parameter"));
                     parameter.attributes().put("value", targetJvmVersion);
                 });
-    }
-
-    // separate class just so that the main plugin can still be loaded even if the nebula jar isn't on the classpath
-    private static class ExcludeZinc {
-        static void apply(Project project) {
-            project.getExtensions().configure(
-                    RecommendationProviderContainer.class,
-                    recommendations -> recommendations.excludeConfigurations("zinc"));
-        }
     }
 }
