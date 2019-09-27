@@ -24,7 +24,6 @@ class BaselineTestingIntegrationTest extends AbstractPluginTest {
         plugins {
             id 'java'
             id 'com.palantir.baseline-testing'
-            id 'com.palantir.consistent-versions' version '1.9.2'
         }
         
         repositories {
@@ -73,7 +72,7 @@ class BaselineTestingIntegrationTest extends AbstractPluginTest {
         file('src/test/java/test/TestClass5.java') << junit5Test
 
         then:
-        BuildResult result = with('test', '--write-locks').build()
+        BuildResult result = with('test').build()
         result.task(':test').outcome == TaskOutcome.SUCCESS
         new File(projectDir, "build/reports/tests/test/classes/test.TestClass4.html").exists()
         new File(projectDir, "build/reports/tests/test/classes/test.TestClass5.html").exists()
@@ -100,7 +99,7 @@ class BaselineTestingIntegrationTest extends AbstractPluginTest {
         file('src/integrationTest/java/test/TestClass5.java') << junit5Test
 
         then:
-        BuildResult result = with('integrationTest', '--write-locks').build()
+        BuildResult result = with('integrationTest').build()
         result.task(':integrationTest').outcome == TaskOutcome.SUCCESS
         new File(projectDir, "build/reports/tests/integrationTest/classes/test.TestClass5.html").exists()
     }
@@ -126,7 +125,7 @@ class BaselineTestingIntegrationTest extends AbstractPluginTest {
         file('src/integrationTest/java/test/TestClass5.java') << junit5Test
 
         then:
-        BuildResult result = with('checkJUnitDependencies', '--write-locks').buildAndFail()
+        BuildResult result = with('checkJUnitDependencies').buildAndFail()
         result.output.contains 'Some tests still use JUnit4, but Gradle has been set to use JUnit Platform'
     }
 
@@ -142,7 +141,7 @@ class BaselineTestingIntegrationTest extends AbstractPluginTest {
         file('src/test/java/test/TestClass5.java') << junit5Test
 
         then:
-        BuildResult result = with('checkJUnitDependencies', '--write-locks').buildAndFail()
+        BuildResult result = with('checkJUnitDependencies').buildAndFail()
         result.output.contains 'Some tests mention JUnit5, but the \'test\' task does not have useJUnitPlatform() enabled'
     }
 }

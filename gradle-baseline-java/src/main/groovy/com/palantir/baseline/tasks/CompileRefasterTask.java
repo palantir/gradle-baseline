@@ -27,13 +27,14 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.compile.JavaCompile;
+import org.gradle.work.InputChanges;
 
-public class RefasterCompileTask extends JavaCompile {
+public class CompileRefasterTask extends JavaCompile {
 
     private final Property<Configuration> refasterSources = getProject().getObjects().property(Configuration.class);
     private final Property<File> refasterRulesFile = getProject().getObjects().property(File.class);
 
-    public RefasterCompileTask() {
+    public CompileRefasterTask() {
         // Don't care about .class files
         setDestinationDir(getTemporaryDir());
 
@@ -42,7 +43,7 @@ public class RefasterCompileTask extends JavaCompile {
     }
 
     @Override
-    protected final void compile() {
+    protected final void compile(InputChanges inputs) {
         // Clear out the default error-prone providers
         getOptions().getCompilerArgumentProviders().clear();
         getOptions().setCompilerArgs(ImmutableList.of(
@@ -69,11 +70,12 @@ public class RefasterCompileTask extends JavaCompile {
 
         if (!javaSources.isEmpty()) {
             setSource(javaSources);
-            super.compile();
+            super.compile(inputs);
         } else {
             setDidWork(false);
         }
     }
+
 
     @InputFiles
     public final Property<Configuration> getRefasterSources() {

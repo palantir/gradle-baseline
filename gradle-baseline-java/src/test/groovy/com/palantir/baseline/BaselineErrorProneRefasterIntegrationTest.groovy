@@ -19,7 +19,6 @@ package com.palantir.baseline
 
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
-
 /**
  * This test depends on ./gradlew :baseline-error-prone:publishToMavenLocal
  */
@@ -29,11 +28,13 @@ class BaselineErrorProneRefasterIntegrationTest extends AbstractPluginTest {
         plugins {
             id 'java'
             id 'com.palantir.baseline-error-prone'
-            id 'org.inferred.processors' version '1.3.0'
+            id 'org.inferred.processors' version '3.1.0'
         }
         repositories {
             mavenLocal()
             jcenter()
+            // TODO(forozco): figure out why pTML no longer works
+            maven { url  "http://palantir.bintray.com/releases" }
         }
         tasks.withType(JavaCompile) {
             options.compilerArgs += ['-Werror', '-Xlint:deprecation']
@@ -54,6 +55,7 @@ class BaselineErrorProneRefasterIntegrationTest extends AbstractPluginTest {
         then:
         BuildResult result = with('compileJava', '-i', '-PrefasterApply').build()
         result.task(":compileJava").outcome == TaskOutcome.SUCCESS
+        file('build/refaster/rules.refaster').exists()
         file('src/main/java/test/Test.java').text == '''
         package test;
         import java.util.ArrayList;
@@ -117,6 +119,11 @@ class BaselineErrorProneRefasterIntegrationTest extends AbstractPluginTest {
     def 'compileJava with refaster fixes Utf8Length with deprecated method'() {
         when:
         buildFile << standardBuildFile
+        buildFile << '''
+            dependencies {
+                compile 'com.google.guava:guava:27.1-jre'
+            }
+        '''
         file('src/main/java/test/Test.java') << '''
         package test;
         import com.google.common.base.CharMatcher;
