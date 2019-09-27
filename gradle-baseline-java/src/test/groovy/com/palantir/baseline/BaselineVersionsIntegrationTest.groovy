@@ -32,6 +32,7 @@ class BaselineVersionsIntegrationTest extends AbstractPluginTest {
         plugins {
             id 'java'
             id 'com.palantir.baseline-versions'
+            id 'nebula.dependency-recommender' version '8.2.0'
         }
     
         repositories {

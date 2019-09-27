@@ -229,17 +229,23 @@ Also, the plugin:
 
 ## com.palantir.baseline-versions (deprecated)
 
-_Deprecated in favour of [gradle-consistent-versions](https://github.com/palantir/gradle-consistent-versions)_
+_Deprecated in favour of [gradle-consistent-versions](https://github.com/palantir/gradle-consistent-versions)._ Configures nebula dependency recommender to source version numbers from a root level `versions.props` file.  This plugin should be applied in an `allprojects` block.
 
-Uses nebula dependency recommender to source version numbers from a root level `versions.props` file.  This plugin should be applied in an `allprojects` block. It is effectively a shorthand for the following:
+```diff
+ buildscript {
+     dependencies {
++        classpath 'com.netflix.nebula:nebula-dependency-recommender:8.2.0'
+     }
+ }
+
+ allprojects {
++    apply plugin: 'com.palantir.baseline-versions'
+ }
+ ```
+
+It is effectively a shorthand for the following:
 
 ```gradle
-buildscript {
-    dependencies {
-        classpath 'com.netflix.nebula:nebula-dependency-recommender:x.y.z'
-    }
-}
-
 allprojects {
     apply plugin: 'nebula.dependency-recommender'
     dependencyRecommendations {
