@@ -227,8 +227,11 @@ Also, the plugin:
 3. stores the HTML output of tests in `$CIRCLE_ARTIFACTS/junit`
 
 
-## com.palantir.baseline-versions
-Sources version numbers from a root level `versions.props` file.  This plugin should be applied in an `allprojects` block. It is effectively a shorthand for the following:
+## com.palantir.baseline-versions (deprecated)
+
+_Deprecated in favour of [gradle-consistent-versions](https://github.com/palantir/gradle-consistent-versions)_
+
+Uses nebula dependency recommender to source version numbers from a root level `versions.props` file.  This plugin should be applied in an `allprojects` block. It is effectively a shorthand for the following:
 
 ```gradle
 buildscript {

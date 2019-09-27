@@ -60,7 +60,10 @@ import org.gradle.api.tasks.TaskProvider;
  *     }
  * }
  * </pre>
+ *
+ * @deprecated use GCV instead
  */
+@Deprecated
 public final class BaselineVersions implements Plugin<Project> {
 
     private static final Logger log = Logging.getLogger(BaselineVersions.class);
