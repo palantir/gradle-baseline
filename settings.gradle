@@ -1,4 +1,5 @@
 rootProject.name = "gradle-baseline"
+enableFeaturePreview("STABLE_PUBLISHING")
 
 include "baseline-error-prone"
 include "baseline-refaster-javac-plugin"

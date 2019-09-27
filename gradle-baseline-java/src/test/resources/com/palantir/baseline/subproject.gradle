@@ -17,6 +17,7 @@
 plugins {
     id 'java'
     id 'checkstyle'
+    id 'findbugs'
 }
 
 repositories {

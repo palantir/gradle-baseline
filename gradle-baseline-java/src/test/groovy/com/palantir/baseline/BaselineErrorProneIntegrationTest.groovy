@@ -30,13 +30,11 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         plugins {
             id 'java'
             id 'com.palantir.baseline-error-prone'
-            id 'org.inferred.processors' version '3.1.0'
+            id 'org.inferred.processors' version '1.3.0'
         }
         repositories {
             mavenLocal()
             jcenter()
-            // TODO(forozco): figure out why pTML no longer works
-            maven { url  "http://palantir.bintray.com/releases" }
         }
     '''.stripIndent()
 

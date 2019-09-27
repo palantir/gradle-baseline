@@ -29,7 +29,7 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.tasks.CacheableTask;
-import org.gradle.api.tasks.Classpath;
+import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 
@@ -43,7 +43,7 @@ public class CheckClassUniquenessTask extends DefaultTask {
         setDescription("Checks that the given configuration contains no identically named classes.");
     }
 
-    @Classpath
+    @InputFiles
     public final Configuration getConfiguration() {
         return configuration;
     }

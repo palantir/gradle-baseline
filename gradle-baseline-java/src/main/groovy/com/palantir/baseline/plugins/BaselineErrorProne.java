@@ -20,7 +20,7 @@ import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.palantir.baseline.extensions.BaselineErrorProneExtension;
-import com.palantir.baseline.tasks.CompileRefasterTask;
+import com.palantir.baseline.tasks.RefasterCompileTask;
 import java.io.File;
 import java.util.AbstractList;
 import java.util.Collections;
@@ -91,8 +91,8 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 .file("refaster/rules.refaster")
                 .map(RegularFile::getAsFile);
 
-        CompileRefasterTask compileRefaster =
-                project.getTasks().create("compileRefaster", CompileRefasterTask.class, task -> {
+        RefasterCompileTask compileRefaster =
+                project.getTasks().create("compileRefaster", RefasterCompileTask.class, task -> {
                     task.setSource(refasterConfiguration);
                     task.getRefasterSources().set(refasterConfiguration);
                     task.setClasspath(refasterCompilerConfiguration);
@@ -170,7 +170,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
     private static void configureErrorProneOptions(
             Project project,
             Provider<File> refasterRulesFile,
-            CompileRefasterTask compileRefaster,
+            RefasterCompileTask compileRefaster,
             BaselineErrorProneExtension errorProneExtension,
             JavaCompile javaCompile,
             ErrorProneOptions errorProneOptions) {
