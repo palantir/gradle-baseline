@@ -47,4 +47,24 @@ class BaselineFormatTest extends Specification {
         expect:
         project.tasks.format
     }
+
+    def spotlessPluginEagerCreationIssue() {
+        when:
+        project.buildscript {
+            repositories {
+                mavenCentral()
+            }
+
+            project.tasks.register("foo") {
+                throw new SpotlessEagerConfigException("See https://github.com/diffplug/spotless/issues/444")
+            }
+        }
+
+        then:
+        notThrown(SpotlessEagerConfigException)
+    }
+
+    static final class SpotlessEagerConfigException extends RuntimeException {
+
+    }
 }
