@@ -22,6 +22,7 @@ dependencies {
     testCompile 'junit:junit'
     testCompile 'net.lingala.zip4j:zip4j'
     testCompile 'org.assertj:assertj-core'
+    testCompile 'com.netflix.nebula:nebula-dependency-recommender'
 
     annotationProcessor 'org.inferred:freebuilder'
     compileOnly 'org.inferred:freebuilder'
