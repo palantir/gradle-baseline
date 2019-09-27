@@ -23,7 +23,9 @@ import java.nio.file.Path;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
 
 class BaselineFormat extends AbstractBaselinePlugin {
@@ -40,7 +42,8 @@ class BaselineFormat extends AbstractBaselinePlugin {
             project.getPluginManager().apply("com.diffplug.gradle.spotless");
             Path eclipseXml = eclipseConfigFile(project);
 
-            project.getExtensions().getByType(SpotlessExtension.class).java(java -> {
+            SpotlessExtension spotlessExtension = project.getExtensions().getByType(SpotlessExtension.class);
+            spotlessExtension.java(java -> {
                 // Configure a lazy FileCollection then pass it as the target
                 ConfigurableFileCollection allJavaFiles = project.files();
                 project
@@ -62,16 +65,26 @@ class BaselineFormat extends AbstractBaselinePlugin {
                 java.trimTrailingWhitespace();
             });
 
+            // Keep spotless from eagerly configuring all other tasks.  We do the same thing as the enforceCheck
+            // property below by making the check task depend on spotlessCheck.
+            // See  https://github.com/diffplug/spotless/issues/444
+            spotlessExtension.setEnforceCheck(false);
+
             // necessary because SpotlessPlugin creates tasks in an afterEvaluate block
-            Task formatTask = project.task("format");
+            TaskProvider<Task> formatTask = project.getTasks().register("format");
             project.afterEvaluate(p -> {
                 Task spotlessJava = project.getTasks().getByName("spotlessJava");
                 Task spotlessApply = project.getTasks().getByName("spotlessApply");
                 if (eclipseFormattingEnabled(project) && !Files.exists(eclipseXml)) {
                     spotlessJava.dependsOn(":baselineUpdateConfig");
                 }
-                formatTask.dependsOn(spotlessApply);
+                formatTask.configure(t -> {t.dependsOn(spotlessApply);});
                 project.getTasks().withType(JavaCompile.class).configureEach(spotlessJava::mustRunAfter);
+
+                //re-enable spotless checking, but lazily so it doesn't eagerly configure everything else
+                project.getTasks().named(JavaBasePlugin.CHECK_TASK_NAME).configure(t -> {
+                    t.dependsOn(project.getTasks().named("spotlessCheck"));
+                });
             });
         });
     }
