@@ -39,9 +39,8 @@ public final class BaselineScalastyle extends AbstractBaselinePlugin {
     public void apply(Project project) {
         this.project = project;
         project.getPluginManager().withPlugin("scala", plugin -> {
-            project.getPluginManager().withPlugin("nebula.dependency-recommender", nebulaPlugin ->
-                    project.getExtensions().configure(RecommendationProviderContainer.class,
-                            recommendations -> recommendations.excludeConfigurations("zinc")));
+            project.getPluginManager()
+                    .withPlugin("nebula.dependency-recommender", nebulaPlugin -> ExcludeZinc.apply(project));
             JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
             project.getTasks().withType(ScalaCompile.class)
                     .configureEach(scalaCompile ->
@@ -107,4 +106,12 @@ public final class BaselineScalastyle extends AbstractBaselinePlugin {
                 });
     }
 
+    // separate class just so that the main plugin can still be loaded even if the nebula jar isn't on the classpath
+    private static class ExcludeZinc {
+        static void apply(Project project) {
+            project.getExtensions().configure(
+                    RecommendationProviderContainer.class,
+                    recommendations -> recommendations.excludeConfigurations("zinc"));
+        }
+    }
 }
