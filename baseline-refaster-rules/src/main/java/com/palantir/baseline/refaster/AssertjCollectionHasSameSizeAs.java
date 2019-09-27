@@ -24,7 +24,7 @@ import java.util.Collection;
 import org.assertj.core.api.IterableAssert;
 import org.assertj.core.api.ListAssert;
 
-public final class AssertjCollectionHasSameSizeAs<T,U> {
+public final class AssertjCollectionHasSameSizeAs<T, U> {
 
     @BeforeTemplate
     IterableAssert<T> before(IterableAssert<T> assertInProgress, Collection<U> expected) {
