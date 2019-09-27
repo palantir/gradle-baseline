@@ -32,6 +32,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
+import org.slf4j.LoggerFactory;
+import org.slf4j.Logger;
 
 /**
  * TaskListener that receives compilation of a Refaster rule class and outputs a combined serialized analyzer
@@ -41,6 +43,7 @@ import java.util.List;
  */
 public final class BaselineRefasterCompilerAnalyzer implements TaskListener {
 
+    private static final Logger log = LoggerFactory.getLogger(BaselineRefasterCompilerAnalyzer.class);
     private final Context context;
     private final Path destinationPath;
 
@@ -72,7 +75,11 @@ public final class BaselineRefasterCompilerAnalyzer implements TaskListener {
         new TreeScanner<Void, Context>() {
             @Override
             public Void visitClass(ClassTree node, Context classContext) {
-                rules.addAll(RefasterRuleBuilderScanner.extractRules(node, classContext));
+                try {
+                    rules.addAll(RefasterRuleBuilderScanner.extractRules(node, classContext));
+                } catch (RuntimeException | Error e) {
+                    log.warn("Failed to extract rules", e);
+                }
                 return super.visitClass(node, classContext);
             }
         }.scan(tree, context);
