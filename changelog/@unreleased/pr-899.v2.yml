@@ -1,0 +1,7 @@
+type: break
+break:
+  description: 'nebula-dependency-recommender is no longer applied by default. If
+    you have not yet migrated to GCV, you need to explicitly depend on `com.netflix.nebula:nebula-dependency-recommender`
+    and `apply plugin: ''com.palantir.baseline-versions''`.'
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/899
