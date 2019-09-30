@@ -46,7 +46,6 @@ public class CompileRefasterTask extends JavaCompile {
     // TODO(forozco): override compile(InputChanges inputs) once we can raise our minimum version 6.0
     @SuppressWarnings("deprecated")
     protected final void compile(IncrementalTaskInputs inputs) {
-        getProject().getLogger().warn("Doing compilation - Felipe");
         // Clear out the default error-prone providers
         getOptions().getCompilerArgumentProviders().clear();
         getOptions().setCompilerArgs(ImmutableList.of(
