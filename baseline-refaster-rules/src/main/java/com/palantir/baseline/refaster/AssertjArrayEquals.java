@@ -27,13 +27,48 @@ import java.util.Arrays;
 public final class AssertjArrayEquals {
 
     @BeforeTemplate
-    void before(byte[] actual, byte[] expected) {
+    void bytes(byte[] actual, byte[] expected) {
+        assertThat(Arrays.equals(actual, expected)).isTrue();
+    }
+
+    @BeforeTemplate
+    void shorts(short[] actual, short[] expected) {
+        assertThat(Arrays.equals(actual, expected)).isTrue();
+    }
+
+    @BeforeTemplate
+    void ints(int[] actual, int[] expected) {
+        assertThat(Arrays.equals(actual, expected)).isTrue();
+    }
+
+    @BeforeTemplate
+    void longs(long[] actual, long[] expected) {
+        assertThat(Arrays.equals(actual, expected)).isTrue();
+    }
+
+    @BeforeTemplate
+    void floats(float[] actual, float[] expected) {
+        assertThat(Arrays.equals(actual, expected)).isTrue();
+    }
+
+    @BeforeTemplate
+    void doubles(double[] actual, double[] expected) {
+        assertThat(Arrays.equals(actual, expected)).isTrue();
+    }
+
+    @BeforeTemplate
+    void chars(char[] actual, char[] expected) {
+        assertThat(Arrays.equals(actual, expected)).isTrue();
+    }
+
+    @BeforeTemplate
+    void booleans(boolean[] actual, boolean[] expected) {
         assertThat(Arrays.equals(actual, expected)).isTrue();
     }
 
     @AfterTemplate
     @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
-    void after(byte[] actual, byte[] expected) {
+    <T> void after(T[] actual, T[] expected) {
         assertThat(actual).isEqualTo(expected);
     }
 }

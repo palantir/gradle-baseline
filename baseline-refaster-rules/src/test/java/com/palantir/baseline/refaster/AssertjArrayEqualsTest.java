@@ -30,7 +30,7 @@ public class AssertjArrayEqualsTest {
     }
 
     @Test
-    public void array_of_bytes() {
+    public void bytes() {
         RefasterTestHelper
                 .forRefactoring(AssertjArrayEquals.class)
                 .withInputLines(
@@ -38,17 +38,146 @@ public class AssertjArrayEqualsTest {
                         "import static org.assertj.core.api.Assertions.assertThat;",
                         "import java.util.Arrays;",
                         "public class Test {",
-                        "  void f(byte[] a, byte[] b) {",
-                        "    assertThat(Arrays.equals(a,b)).isTrue();",
-                        "  }",
+                        "  void f(byte[] a, byte[] b) { assertThat(Arrays.equals(a,b)).isTrue(); }",
                         "}")
                 .hasOutputLines(
                         "import static org.assertj.core.api.Assertions.assertThat;",
                         "import java.util.Arrays;",
                         "public class Test {",
-                        "  void f(byte[] a, byte[] b) {",
-                        "    assertThat(a).isEqualTo(b);",
-                        "  }",
+                        "  void f(byte[] a, byte[] b) { assertThat(a).isEqualTo(b); }",
+                        "}");
+    }
+
+    @Test
+    public void shorts() {
+        RefasterTestHelper
+                .forRefactoring(AssertjArrayEquals.class)
+                .withInputLines(
+                        "Test",
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import java.util.Arrays;",
+                        "public class Test {",
+                        "  void f(short[] a, short[] b) { assertThat(Arrays.equals(a,b)).isTrue(); }",
+                        "}")
+                .hasOutputLines(
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import java.util.Arrays;",
+                        "public class Test {",
+                        "  void f(short[] a, short[] b) { assertThat(a).isEqualTo(b); }",
+                        "}");
+    }
+
+    @Test
+    public void ints() {
+        RefasterTestHelper
+                .forRefactoring(AssertjArrayEquals.class)
+                .withInputLines(
+                        "Test",
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import java.util.Arrays;",
+                        "public class Test {",
+                        "  void f(int[] a, int[] b) { assertThat(Arrays.equals(a,b)).isTrue(); }",
+                        "}")
+                .hasOutputLines(
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import java.util.Arrays;",
+                        "public class Test {",
+                        "  void f(int[] a, int[] b) { assertThat(a).isEqualTo(b); }",
+                        "}");
+    }
+
+    @Test
+    public void longs() {
+        RefasterTestHelper
+                .forRefactoring(AssertjArrayEquals.class)
+                .withInputLines(
+                        "Test",
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import java.util.Arrays;",
+                        "public class Test {",
+                        "  void f(long[] a, long[] b) { assertThat(Arrays.equals(a,b)).isTrue(); }",
+                        "}")
+                .hasOutputLines(
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import java.util.Arrays;",
+                        "public class Test {",
+                        "  void f(long[] a, long[] b) { assertThat(a).isEqualTo(b); }",
+                        "}");
+    }
+
+    @Test
+    public void floats() {
+        RefasterTestHelper
+                .forRefactoring(AssertjArrayEquals.class)
+                .withInputLines(
+                        "Test",
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import java.util.Arrays;",
+                        "public class Test {",
+                        "  void f(float[] a, float[] b) { assertThat(Arrays.equals(a,b)).isTrue(); }",
+                        "}")
+                .hasOutputLines(
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import java.util.Arrays;",
+                        "public class Test {",
+                        "  void f(float[] a, float[] b) { assertThat(a).isEqualTo(b); }",
+                        "}");
+    }
+
+    @Test
+    public void doubles() {
+        RefasterTestHelper
+                .forRefactoring(AssertjArrayEquals.class)
+                .withInputLines(
+                        "Test",
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import java.util.Arrays;",
+                        "public class Test {",
+                        "  void f(double[] a, double[] b) { assertThat(Arrays.equals(a,b)).isTrue(); }",
+                        "}")
+                .hasOutputLines(
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import java.util.Arrays;",
+                        "public class Test {",
+                        "  void f(double[] a, double[] b) { assertThat(a).isEqualTo(b); }",
+                        "}");
+    }
+
+    @Test
+    public void chars() {
+        RefasterTestHelper
+                .forRefactoring(AssertjArrayEquals.class)
+                .withInputLines(
+                        "Test",
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import java.util.Arrays;",
+                        "public class Test {",
+                        "  void f(char[] a, char[] b) { assertThat(Arrays.equals(a,b)).isTrue(); }",
+                        "}")
+                .hasOutputLines(
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import java.util.Arrays;",
+                        "public class Test {",
+                        "  void f(char[] a, char[] b) { assertThat(a).isEqualTo(b); }",
+                        "}");
+    }
+
+    @Test
+    public void booleans() {
+        RefasterTestHelper
+                .forRefactoring(AssertjArrayEquals.class)
+                .withInputLines(
+                        "Test",
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import java.util.Arrays;",
+                        "public class Test {",
+                        "  void f(boolean[] a, boolean[] b) { assertThat(Arrays.equals(a,b)).isTrue(); }",
+                        "}")
+                .hasOutputLines(
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import java.util.Arrays;",
+                        "public class Test {",
+                        "  void f(boolean[] a, boolean[] b) { assertThat(a).isEqualTo(b); }",
                         "}");
     }
 }
