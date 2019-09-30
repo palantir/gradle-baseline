@@ -16,6 +16,8 @@
 
 package com.palantir.baseline.refaster;
 
+import static org.assertj.core.api.Assumptions.assumeThat;
+
 import org.junit.Test;
 
 public class AssertjOptionalPresenceTest {
@@ -68,6 +70,9 @@ public class AssertjOptionalPresenceTest {
 
     @Test
     public void isNotPresent_simple() {
+        assumeThat(System.getProperty("java.specification.version"))
+                .describedAs("Refaster does not currently support fluent refactors on java 11")
+                .isEqualTo("1.8");
         RefasterTestHelper
                 .forRefactoring(AssertjOptionalIsNotPresent.class)
                 .withInputLines(
@@ -95,6 +100,9 @@ public class AssertjOptionalPresenceTest {
 
     @Test
     public void isNotPresent_description() {
+        assumeThat(System.getProperty("java.specification.version"))
+                .describedAs("Refaster does not currently support fluent refactors on java 11")
+                .isEqualTo("1.8");
         RefasterTestHelper
                 .forRefactoring(AssertjOptionalIsNotPresentWithDescription.class)
                 .withInputLines(
