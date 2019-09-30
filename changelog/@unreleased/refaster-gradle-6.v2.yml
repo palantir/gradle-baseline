@@ -1,6 +1,6 @@
-type: break
-break:
-  description: |
-    Refaster now works on repos using Gradle 6.0. This raises the minimum supported version of Gradle from 5.0 -> 5.4
+type: improvement
+improvement:
+  description: Refaster now works on repos using Gradle 6.0
   links:
   - https://github.com/palantir/gradle-baseline/pull/804
+  - https://github.com/palantir/gradle-baseline/pull/906
