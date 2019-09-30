@@ -66,6 +66,11 @@ public final class AssertjArrayEquals {
         assertThat(Arrays.equals(actual, expected)).isTrue();
     }
 
+    @BeforeTemplate
+    <T> void arbitraryObjects(T[] actual, T[] expected) {
+        assertThat(Arrays.equals(actual, expected)).isTrue();
+    }
+
     @AfterTemplate
     @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
     <T> void after(T[] actual, T[] expected) {

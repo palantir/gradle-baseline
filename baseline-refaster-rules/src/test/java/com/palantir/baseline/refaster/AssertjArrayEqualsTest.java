@@ -180,4 +180,23 @@ public class AssertjArrayEqualsTest {
                         "  void f(boolean[] a, boolean[] b) { assertThat(a).isEqualTo(b); }",
                         "}");
     }
+
+    @Test
+    public void strings() {
+        RefasterTestHelper
+                .forRefactoring(AssertjArrayEquals.class)
+                .withInputLines(
+                        "Test",
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import java.util.Arrays;",
+                        "public class Test {",
+                        "  void f(String[] a, String[] b) { assertThat(Arrays.equals(a,b)).isTrue(); }",
+                        "}")
+                .hasOutputLines(
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import java.util.Arrays;",
+                        "public class Test {",
+                        "  void f(String[] a, String[] b) { assertThat(a).isEqualTo(b); }",
+                        "}");
+    }
 }
