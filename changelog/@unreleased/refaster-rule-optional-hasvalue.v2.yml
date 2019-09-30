@@ -1,0 +1,4 @@
+type: improvement
+improvement:
+  description: |
+    Added a Refaster rule to change `isEqualTo` checks into `hasValue` checks
