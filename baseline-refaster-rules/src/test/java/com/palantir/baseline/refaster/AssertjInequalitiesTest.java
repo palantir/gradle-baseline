@@ -77,4 +77,60 @@ public class AssertjInequalitiesTest {
                         "  }",
                         "}");
     }
+
+    @Test
+    public void less_than_or_equal_to() {
+        assumeThat(System.getProperty("java.specification.version"))
+                .describedAs("Refaster does not currently support fluent refactors on java 11")
+                .isEqualTo("1.8");
+        RefasterTestHelper
+                .forRefactoring(AssertjLessThanOrEqualTo.class)
+                .withInputLines(
+                        "Test",
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import java.util.List;",
+                        "public class Test {",
+                        "  void int_istrue(int a, int b) {",
+                        "    assertThat(a <= b).isTrue();",
+                        "    assertThat(a > b).isFalse();",
+                        "  }",
+                        "}")
+                .hasOutputLines(
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import java.util.List;",
+                        "public class Test {",
+                        "  void int_istrue(int a, int b) {",
+                        "    assertThat(a).isLessThanOrEqualTo(b);",
+                        "    assertThat(a).isLessThanOrEqualTo(b);",
+                        "  }",
+                        "}");
+    }
+
+    @Test
+    public void less_than_or_equal_to_with_description() {
+        assumeThat(System.getProperty("java.specification.version"))
+                .describedAs("Refaster does not currently support fluent refactors on java 11")
+                .isEqualTo("1.8");
+        RefasterTestHelper
+                .forRefactoring(AssertjLessThanOrEqualToWithDescription.class)
+                .withInputLines(
+                        "Test",
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import java.util.List;",
+                        "public class Test {",
+                        "  void int_istrue(int a, int b, String desc) {",
+                        "    assertThat(a <= b).describedAs(desc).isTrue();",
+                        "    assertThat(a > b).describedAs(desc).isFalse();",
+                        "  }",
+                        "}")
+                .hasOutputLines(
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import java.util.List;",
+                        "public class Test {",
+                        "  void int_istrue(int a, int b, String desc) {",
+                        "    assertThat(a).describedAs(desc).isLessThanOrEqualTo(b);",
+                        "    assertThat(a).describedAs(desc).isLessThanOrEqualTo(b);",
+                        "  }",
+                        "}");
+    }
 }
