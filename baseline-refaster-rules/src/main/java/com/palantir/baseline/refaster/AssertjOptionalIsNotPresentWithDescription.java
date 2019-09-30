@@ -36,6 +36,11 @@ public final class AssertjOptionalIsNotPresentWithDescription<T> {
         assertThat(!thing.isPresent()).describedAs(description).isTrue();
     }
 
+    @BeforeTemplate
+    void before3(Optional<T> thing, String description) {
+        assertThat(thing).describedAs(description).isEqualTo(Optional.empty());
+    }
+
     @AfterTemplate
     @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
     void after(Optional<T> thing, String description) {

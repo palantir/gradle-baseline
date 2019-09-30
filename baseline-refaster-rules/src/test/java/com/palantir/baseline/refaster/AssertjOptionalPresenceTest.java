@@ -78,6 +78,7 @@ public class AssertjOptionalPresenceTest {
                         "  void f(Optional<String> in) {",
                         "    assertThat(in.isPresent()).isFalse();",
                         "    assertThat(!in.isPresent()).isTrue();",
+                        "    assertThat(in).isEqualTo(Optional.empty());",
                         "  }",
                         "}")
                 .hasOutputLines(
@@ -85,6 +86,7 @@ public class AssertjOptionalPresenceTest {
                         "import java.util.Optional;",
                         "public class Test {",
                         "  void f(Optional<String> in) {",
+                        "    assertThat(in).isNotPresent();",
                         "    assertThat(in).isNotPresent();",
                         "    assertThat(in).isNotPresent();",
                         "  }",
@@ -103,6 +105,7 @@ public class AssertjOptionalPresenceTest {
                         "  void f(Optional<String> in) {",
                         "    assertThat(in.isPresent()).describedAs(\"desc\").isFalse();",
                         "    assertThat(!in.isPresent()).describedAs(\"desc\").isTrue();",
+                        "    assertThat(in).describedAs(\"desc\").isEqualTo(Optional.empty());",
                         "  }",
                         "}")
                 .hasOutputLines(
@@ -110,6 +113,7 @@ public class AssertjOptionalPresenceTest {
                         "import java.util.Optional;",
                         "public class Test {",
                         "  void f(Optional<String> in) {",
+                        "    assertThat(in).describedAs(\"desc\").isNotPresent();",
                         "    assertThat(in).describedAs(\"desc\").isNotPresent();",
                         "    assertThat(in).describedAs(\"desc\").isNotPresent();",
                         "  }",
