@@ -27,13 +27,18 @@ import java.util.Optional;
 public final class AssertjOptionalHasValue<T> {
 
     @BeforeTemplate
-    void before(Optional<T> thing, T expected) {
-        assertThat(thing.get()).isEqualTo(expected);
+    void before(Optional<T> optional, T innerValue) {
+        assertThat(optional.get()).isEqualTo(innerValue);
+    }
+
+    @BeforeTemplate
+    void before2(Optional<T> optional, T innerValue) {
+        assertThat(optional.isPresent() && optional.get().equals(innerValue)).isTrue();
     }
 
     @AfterTemplate
     @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
-    void after(Optional<T> thing, T expected) {
-        assertThat(thing).hasValue(expected);
+    void after(Optional<T> optional, T innerValue) {
+        assertThat(optional).hasValue(innerValue);
     }
 }
