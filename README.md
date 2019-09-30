@@ -171,6 +171,14 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `JUnit5SuiteMisuse`: When migrating from JUnit4 -> JUnit5, classes annotated with `@RunWith(Suite.class)` are dangerous because if they reference any JUnit5 test classes, these tests will silently not run!
 - `PreferAssertj`: Prefer AssertJ fluent assertions.
 
+### Programmatic Application
+
+There exist a number of programmatic code modifiations available via [refaster](https://errorprone.info/docs/refaster). You can run these on your code to apply some refactorings automatically:
+
+```
+./gradlew compileJava compileTestJava -PrefasterApply -PerrorProneApply
+```
+
 ## com.palantir.baseline-checkstyle
 Checkstyle rules can be suppressed on a per-line or per-block basis. (It is good practice to first consider formatting
 the code block in question according to the project's style guidelines before adding suppression statements.) To
@@ -380,3 +388,5 @@ Configures some sensible defaults:
     See more here: https://junit.org/junit5/docs/current/user-guide/#writing-tests-parallel-execution
 
 The plugin also adds a `checkJUnitDependencies` to make the migration to JUnit5 safer.  Specifically, it should prevent cases where the tests could silently not run due to misconfigured dependencies.
+
+
