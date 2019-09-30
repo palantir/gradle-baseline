@@ -18,7 +18,7 @@ package com.palantir.baseline.refaster;
 
 import org.junit.Test;
 
-public class AssertjOptionalHasValueTest {
+public final class AssertjOptionalHasValueTest {
 
     @Test
     public void test() {

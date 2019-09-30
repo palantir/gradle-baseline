@@ -24,7 +24,7 @@ import com.google.errorprone.refaster.annotation.BeforeTemplate;
 import com.google.errorprone.refaster.annotation.UseImportPolicy;
 import java.util.Optional;
 
-public class AssertjOptionalHasValueWithDescription<T> {
+public final class AssertjOptionalHasValueWithDescription<T> {
 
     @BeforeTemplate
     void before(Optional<T> thing, T expected, String description) {
