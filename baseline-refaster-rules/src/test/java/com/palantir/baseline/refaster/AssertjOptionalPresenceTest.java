@@ -16,6 +16,8 @@
 
 package com.palantir.baseline.refaster;
 
+import static org.assertj.core.api.Assumptions.assumeThat;
+
 import org.junit.Test;
 
 public class AssertjOptionalPresenceTest {
@@ -62,6 +64,66 @@ public class AssertjOptionalPresenceTest {
                         "public class Test {",
                         "  void f(Optional<String> in) {",
                         "    assertThat(in).describedAs(\"desc\").isPresent();",
+                        "  }",
+                        "}");
+    }
+
+    @Test
+    public void isNotPresent_simple() {
+        assumeThat(System.getProperty("java.specification.version"))
+                .describedAs("Refaster does not currently support fluent refactors on java 11")
+                .isEqualTo("1.8");
+        RefasterTestHelper
+                .forRefactoring(AssertjOptionalIsNotPresent.class)
+                .withInputLines(
+                        "Test",
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import java.util.Optional;",
+                        "public class Test {",
+                        "  void f(Optional<String> in) {",
+                        "    assertThat(in.isPresent()).isFalse();",
+                        "    assertThat(!in.isPresent()).isTrue();",
+                        "    assertThat(in).isEqualTo(Optional.empty());",
+                        "  }",
+                        "}")
+                .hasOutputLines(
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import java.util.Optional;",
+                        "public class Test {",
+                        "  void f(Optional<String> in) {",
+                        "    assertThat(in).isNotPresent();",
+                        "    assertThat(in).isNotPresent();",
+                        "    assertThat(in).isNotPresent();",
+                        "  }",
+                        "}");
+    }
+
+    @Test
+    public void isNotPresent_description() {
+        assumeThat(System.getProperty("java.specification.version"))
+                .describedAs("Refaster does not currently support fluent refactors on java 11")
+                .isEqualTo("1.8");
+        RefasterTestHelper
+                .forRefactoring(AssertjOptionalIsNotPresentWithDescription.class)
+                .withInputLines(
+                        "Test",
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import java.util.Optional;",
+                        "public class Test {",
+                        "  void f(Optional<String> in) {",
+                        "    assertThat(in.isPresent()).describedAs(\"desc\").isFalse();",
+                        "    assertThat(!in.isPresent()).describedAs(\"desc\").isTrue();",
+                        "    assertThat(in).describedAs(\"desc\").isEqualTo(Optional.empty());",
+                        "  }",
+                        "}")
+                .hasOutputLines(
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import java.util.Optional;",
+                        "public class Test {",
+                        "  void f(Optional<String> in) {",
+                        "    assertThat(in).describedAs(\"desc\").isNotPresent();",
+                        "    assertThat(in).describedAs(\"desc\").isNotPresent();",
+                        "    assertThat(in).describedAs(\"desc\").isNotPresent();",
                         "  }",
                         "}");
     }
