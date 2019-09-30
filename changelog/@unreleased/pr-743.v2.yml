@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Rewrite ImmutableCollection#addAll to add for arrays
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/743
