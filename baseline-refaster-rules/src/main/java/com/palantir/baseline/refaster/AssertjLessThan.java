@@ -19,15 +19,9 @@ package com.palantir.baseline.refaster;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.google.errorprone.refaster.ImportPolicy;
-import com.google.errorprone.refaster.Refaster;
 import com.google.errorprone.refaster.annotation.AfterTemplate;
 import com.google.errorprone.refaster.annotation.BeforeTemplate;
 import com.google.errorprone.refaster.annotation.UseImportPolicy;
-import org.assertj.core.api.AbstractDoubleAssert;
-import org.assertj.core.api.AbstractFloatAssert;
-import org.assertj.core.api.AbstractIntegerAssert;
-import org.assertj.core.api.AbstractLongAssert;
-import org.assertj.core.api.NumberAssert;
 
 public final class AssertjLessThan {
 
