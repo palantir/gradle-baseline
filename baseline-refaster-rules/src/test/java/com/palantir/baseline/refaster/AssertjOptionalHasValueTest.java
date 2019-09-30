@@ -42,4 +42,27 @@ public class AssertjOptionalHasValueTest {
                         "  }",
                         "}");
     }
+
+    @Test
+    public void testWithDescription() {
+        RefasterTestHelper
+                .forRefactoring(AssertjOptionalHasValueWithDescription.class)
+                .withInputLines(
+                        "Test",
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import java.util.Optional;",
+                        "public class Test<T> {",
+                        "  void f(Optional<T> in, T out) {",
+                        "    assertThat(in.get()).describedAs(\"desc\").isEqualTo(out);",
+                        "  }",
+                        "}")
+                .hasOutputLines(
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import java.util.Optional;",
+                        "public class Test<T> {",
+                        "  void f(Optional<T> in, T out) {",
+                        "    assertThat(in).describedAs(\"desc\").hasValue(out);",
+                        "  }",
+                        "}");
+    }
 }
