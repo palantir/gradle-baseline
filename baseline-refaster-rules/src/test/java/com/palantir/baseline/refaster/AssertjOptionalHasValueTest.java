@@ -28,16 +28,16 @@ public final class AssertjOptionalHasValueTest {
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",
                         "import java.util.Optional;",
-                        "public class Test<T> {",
-                        "  void f(Optional<T> in, T out) {",
+                        "public class Test<String> {",
+                        "  void f(Optional<String> in, String out) {",
                         "    assertThat(in.get()).isEqualTo(out);",
                         "  }",
                         "}")
                 .hasOutputLines(
                         "import static org.assertj.core.api.Assertions.assertThat;",
                         "import java.util.Optional;",
-                        "public class Test<T> {",
-                        "  void f(Optional<T> in, T out) {",
+                        "public class Test<String> {",
+                        "  void f(Optional<String> in, String out) {",
                         "    assertThat(in).hasValue(out);",
                         "  }",
                         "}");
@@ -51,16 +51,16 @@ public final class AssertjOptionalHasValueTest {
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",
                         "import java.util.Optional;",
-                        "public class Test<T> {",
-                        "  void f(Optional<T> in, T out) {",
+                        "public class Test<String> {",
+                        "  void f(Optional<String> in, String out) {",
                         "    assertThat(in.get()).describedAs(\"desc\").isEqualTo(out);",
                         "  }",
                         "}")
                 .hasOutputLines(
                         "import static org.assertj.core.api.Assertions.assertThat;",
                         "import java.util.Optional;",
-                        "public class Test<T> {",
-                        "  void f(Optional<T> in, T out) {",
+                        "public class Test<String> {",
+                        "  void f(Optional<String> in, String out) {",
                         "    assertThat(in).describedAs(\"desc\").hasValue(out);",
                         "  }",
                         "}");
