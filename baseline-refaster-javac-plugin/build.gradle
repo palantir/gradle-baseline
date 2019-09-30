@@ -5,6 +5,7 @@ apply from: "${rootDir}/gradle/publish-jar.gradle"
 
 dependencies {
     compile 'com.google.errorprone:error_prone_refaster'
+    compile 'org.slf4j:slf4j-api'
 
     annotationProcessor 'com.google.auto.service:auto-service'
     compileOnly 'com.google.auto.service:auto-service'
