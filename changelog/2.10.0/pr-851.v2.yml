@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: Some AssertJ assertions can now be automatically replaced with more
+    idiomatic ones using refaster.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/851

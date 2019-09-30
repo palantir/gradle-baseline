@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: Excavator PRs that apply other refaster rules (e.g. Witchcraft ones)
+    will not also apply baseline refaster rules.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/827

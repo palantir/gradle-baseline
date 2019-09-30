@@ -34,6 +34,7 @@ public final class JunitReportsPlugin implements Plugin<Project> {
     public static final String EXT_JUNIT_REPORTS = "junitReports";
 
     @Override
+    @SuppressWarnings("Slf4jLogsafeArgs")
     public void apply(Project project) {
         if (project != project.getRootProject()) {
             project.getLogger().warn(
@@ -82,7 +83,7 @@ public final class JunitReportsPlugin implements Plugin<Project> {
             int attemptNumber = 1;
             Path targetFile = dir.getAsFile().toPath().resolve("gradle").resolve("build.xml");
             while (targetFile.toFile().exists()) {
-                targetFile = dir.getAsFile().toPath().resolve("gradle").resolve("build" + (++attemptNumber) + ".xml");
+                targetFile = dir.getAsFile().toPath().resolve("gradle").resolve("build" + ++attemptNumber + ".xml");
             }
             return dir.file(targetFile.toAbsolutePath().toString());
         });

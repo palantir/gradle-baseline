@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Remove pom only dependencies from analysis in checkUnusedDependencies
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/773

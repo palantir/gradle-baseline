@@ -73,7 +73,7 @@ public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocati
         }
         List<Integer> badArgs = badArgsBuilder.build();
 
-        if (badArgs.isEmpty()) {
+        if (badArgs.isEmpty() || TestCheckUtils.isTestCode(state)) {
             return Description.NO_MATCH;
         } else {
             return buildDescription(tree)

@@ -19,7 +19,6 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 import org.gradle.api.Task;
 import org.gradle.api.plugins.quality.Checkstyle;
-import org.gradle.api.plugins.quality.FindBugs;
 import org.gradle.api.tasks.TaskState;
 import org.gradle.api.tasks.compile.JavaCompile;
 
@@ -29,6 +28,7 @@ public final class StyleTaskTimer implements TaskTimer {
     private long lastStartTime;
 
     @Override
+    @SuppressWarnings("PreferSafeLoggableExceptions")
     public long getTaskTimeNanos(Task styleTask) {
         if (!isStyleTask(styleTask)) {
             throw new ClassCastException("not a style task");
@@ -48,6 +48,7 @@ public final class StyleTaskTimer implements TaskTimer {
     }
 
     @Override
+    @SuppressWarnings("StrictUnusedVariable")
     public void afterExecute(Task task, TaskState taskState) {
         if (isStyleTask(task)) {
             taskTimeNanosByTask.put(task, System.nanoTime() - lastStartTime);
@@ -55,6 +56,6 @@ public final class StyleTaskTimer implements TaskTimer {
     }
 
     public static boolean isStyleTask(Task task) {
-        return task instanceof Checkstyle || task instanceof FindBugs || task instanceof JavaCompile;
+        return task instanceof Checkstyle || task instanceof JavaCompile;
     }
 }

@@ -17,7 +17,7 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.errorprone.CompilationTestHelper;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public abstract class PreconditionsTests {
 
@@ -156,137 +156,18 @@ public abstract class PreconditionsTests {
                 "  void f(boolean bArg, int iArg, Object oArg) {",
                 "    Preconditions.checkArgument(bArg);",
                 "    Preconditions.checkArgument(bArg, \"message\");",
-                "    Preconditions.checkArgument(bArg, \"message {}\", UnsafeArg.of(\"char\", 'a'));",
-                "    Preconditions.checkArgument(bArg, \"message {}\", UnsafeArg.of(\"int\", 123));",
-                "    Preconditions.checkArgument(bArg, \"message {}\", UnsafeArg.of(\"long\", 123L));",
-                "    Preconditions.checkArgument(bArg, \"message {}\", UnsafeArg.of(\"string\", \"msg\"));",
-                "    Preconditions.checkArgument(bArg, \"message {} {}\", UnsafeArg.of(\"char1\", 'a'),"
+                "    Preconditions.checkArgument(bArg, \"message {char}\", UnsafeArg.of(\"char\", 'a'));",
+                "    Preconditions.checkArgument(bArg, \"message {char1 {char2}\", UnsafeArg.of(\"char1\", 'a'),"
                         + " UnsafeArg.of(\"char2\", 'b'));",
-                "    Preconditions.checkArgument(bArg, \"message {} {}\", UnsafeArg.of(\"char\", 'a'),"
-                        + " UnsafeArg.of(\"int\", 123));",
-                "    Preconditions.checkArgument(bArg, \"message {} {}\", UnsafeArg.of(\"char\", 'a'),"
-                        + " UnsafeArg.of(\"long\", 123L));",
-                "    Preconditions.checkArgument(bArg, \"message {} {}\", UnsafeArg.of(\"char\", 'a'),"
-                        + " UnsafeArg.of(\"string\", \"msg\"));",
-                "    Preconditions.checkArgument(bArg, \"message {} {}\", UnsafeArg.of(\"int\", 123),"
-                        + " UnsafeArg.of(\"char\", 'a'));",
-                "    Preconditions.checkArgument(bArg, \"message {} {}\", UnsafeArg.of(\"int\", 123),"
-                        + " UnsafeArg.of(\"int\", 123));",
-                "    Preconditions.checkArgument(bArg, \"message {} {}\", UnsafeArg.of(\"int\", 123),"
-                        + " UnsafeArg.of(\"long\", 123L));",
-                "    Preconditions.checkArgument(bArg, \"message {} {}\", UnsafeArg.of(\"int\", 123),"
-                        + " UnsafeArg.of(\"string\", \"msg\"));",
-                "    Preconditions.checkArgument(bArg, \"message {} {}\", UnsafeArg.of(\"long\", 123L),"
-                        + " UnsafeArg.of(\"char\", 'a'));",
-                "    Preconditions.checkArgument(bArg, \"message {} {}\", UnsafeArg.of(\"long\", 123L),"
-                        + " UnsafeArg.of(\"int\", 123));",
-                "    Preconditions.checkArgument(bArg, \"message {} {}\", UnsafeArg.of(\"long\", 123L),"
-                        + " UnsafeArg.of(\"long\", 123L));",
-                "    Preconditions.checkArgument(bArg, \"message {} {}\", UnsafeArg.of(\"long\", 123L),"
-                        + " UnsafeArg.of(\"string\", \"msg\"));",
-                "    Preconditions.checkArgument(bArg, \"message {} {}\", UnsafeArg.of(\"string\", \"msg\"),"
-                        + " UnsafeArg.of(\"char\", 'a'));",
-                "    Preconditions.checkArgument(bArg, \"message {} {}\", UnsafeArg.of(\"string\", \"msg\"),"
-                        + " UnsafeArg.of(\"int\", 123));",
-                "    Preconditions.checkArgument(bArg, \"message {} {}\", UnsafeArg.of(\"string\", \"msg\"),"
-                        + " UnsafeArg.of(\"long\", 123L));",
-                "    Preconditions.checkArgument(bArg, \"message {} {}\", UnsafeArg.of(\"string1\", \"msg\"),"
-                        + " UnsafeArg.of(\"string2\", \"msg\"));",
-                "    Preconditions.checkArgument(bArg, \"message {} {} {}\","
-                        + " UnsafeArg.of(\"string1\", \"msg\"), UnsafeArg.of(\"string2\", \"msg\"),"
-                        + " UnsafeArg.of(\"string3\", \"msg\"));",
-                "    Preconditions.checkArgument(bArg, \"message {} {} {} {}\","
-                        + " UnsafeArg.of(\"string1\", \"msg\"), UnsafeArg.of(\"string2\", \"msg\"),"
-                        + " UnsafeArg.of(\"string3\", \"msg\"), UnsafeArg.of(\"string4\", \"msg\"));",
                 "",
                 "    Preconditions.checkState(iArg > 0);",
                 "    Preconditions.checkState(iArg > 0, \"message\");",
-                "    Preconditions.checkState(iArg > 0, \"message {}\", UnsafeArg.of(\"char\", 'a'));",
-                "    Preconditions.checkState(iArg > 0, \"message {}\", UnsafeArg.of(\"int\", 123));",
-                "    Preconditions.checkState(iArg > 0, \"message {}\", UnsafeArg.of(\"long\", 123L));",
-                "    Preconditions.checkState(iArg > 0, \"message {}\", UnsafeArg.of(\"string\", \"msg\"));",
-                "    Preconditions.checkState(iArg > 0, \"message {} {}\", UnsafeArg.of(\"char1\", 'a'),"
+                "    Preconditions.checkState(iArg > 0, \"message {char}\", UnsafeArg.of(\"char\", 'a'));",
+                "    Preconditions.checkState(iArg > 0, \"message {char1} {char2}\", UnsafeArg.of(\"char1\", 'a'),"
                         + " UnsafeArg.of(\"char2\", 'b'));",
-                "    Preconditions.checkState(iArg > 0, \"message {} {}\", UnsafeArg.of(\"char\", 'a'),"
-                        + " UnsafeArg.of(\"int\", 123));",
-                "    Preconditions.checkState(iArg > 0, \"message {} {}\", UnsafeArg.of(\"char\", 'a'),"
-                        + " UnsafeArg.of(\"long\", 123L));",
-                "    Preconditions.checkState(iArg > 0, \"message {} {}\", UnsafeArg.of(\"char\", 'a'),"
-                        + " UnsafeArg.of(\"string\", \"msg\"));",
-                "    Preconditions.checkState(iArg > 0, \"message {} {}\", UnsafeArg.of(\"int\", 123),"
-                        + " UnsafeArg.of(\"char\", 'a'));",
-                "    Preconditions.checkState(iArg > 0, \"message {} {}\", UnsafeArg.of(\"int\", 123),"
-                        + " UnsafeArg.of(\"int\", 123));",
-                "    Preconditions.checkState(iArg > 0, \"message {} {}\", UnsafeArg.of(\"int\", 123),"
-                        + " UnsafeArg.of(\"long\", 123L));",
-                "    Preconditions.checkState(iArg > 0, \"message {} {}\", UnsafeArg.of(\"int\", 123),"
-                        + " UnsafeArg.of(\"string\", \"msg\"));",
-                "    Preconditions.checkState(iArg > 0, \"message {} {}\", UnsafeArg.of(\"long\", 123L),"
-                        + " UnsafeArg.of(\"char\", 'a'));",
-                "    Preconditions.checkState(iArg > 0, \"message {} {}\", UnsafeArg.of(\"long\", 123L),"
-                        + " UnsafeArg.of(\"int\", 123));",
-                "    Preconditions.checkState(iArg > 0, \"message {} {}\", UnsafeArg.of(\"long\", 123L),"
-                        + " UnsafeArg.of(\"long\", 123L));",
-                "    Preconditions.checkState(iArg > 0, \"message {} {}\", UnsafeArg.of(\"long\", 123L),"
-                        + " UnsafeArg.of(\"string\", \"msg\"));",
-                "    Preconditions.checkState(iArg > 0, \"message {} {}\", UnsafeArg.of(\"string\", \"msg\"),"
-                        + " UnsafeArg.of(\"char\", 'a'));",
-                "    Preconditions.checkState(iArg > 0, \"message {} {}\", UnsafeArg.of(\"string\", \"msg\"),"
-                        + " UnsafeArg.of(\"int\", 123));",
-                "    Preconditions.checkState(iArg > 0, \"message {} {}\", UnsafeArg.of(\"string\", \"msg\"),"
-                        + " UnsafeArg.of(\"long\", 123L));",
-                "    Preconditions.checkState(iArg > 0, \"message {} {}\", UnsafeArg.of(\"string1\", \"msg\"),"
-                        + " UnsafeArg.of(\"string2\", \"msg\"));",
-                "    Preconditions.checkState(iArg > 0, \"message {} {} {}\","
-                        + " UnsafeArg.of(\"string1\", \"msg\"), UnsafeArg.of(\"string2\", \"msg\"),"
-                        + " UnsafeArg.of(\"string3\", \"msg\"));",
-                "    Preconditions.checkState(iArg > 0, \"message {} {} {} {}\","
-                        + " UnsafeArg.of(\"string1\", \"msg\"), UnsafeArg.of(\"string2\", \"msg\"),"
-                        + " UnsafeArg.of(\"string3\", \"msg\"), UnsafeArg.of(\"string4\", \"msg\"));",
                 "",
                 "    Preconditions.checkNotNull(oArg);",
                 "    Preconditions.checkNotNull(oArg, \"message\");",
-                "    Preconditions.checkNotNull(oArg, \"message {}\", UnsafeArg.of(\"char\", 'a'));",
-                "    Preconditions.checkNotNull(oArg, \"message {}\", UnsafeArg.of(\"int\", 123));",
-                "    Preconditions.checkNotNull(oArg, \"message {}\", UnsafeArg.of(\"long\", 123L));",
-                "    Preconditions.checkNotNull(oArg, \"message {}\", UnsafeArg.of(\"string\", \"msg\"));",
-                "    Preconditions.checkNotNull(oArg, \"message {} {}\", UnsafeArg.of(\"char1\", 'a'),"
-                        + " UnsafeArg.of(\"char2\", 'b'));",
-                "    Preconditions.checkNotNull(oArg, \"message {} {}\", UnsafeArg.of(\"char\", 'a'),"
-                        + " UnsafeArg.of(\"int\", 123));",
-                "    Preconditions.checkNotNull(oArg, \"message {} {}\", UnsafeArg.of(\"char\", 'a'),"
-                        + " UnsafeArg.of(\"long\", 123L));",
-                "    Preconditions.checkNotNull(oArg, \"message {} {}\", UnsafeArg.of(\"char\", 'a'),"
-                        + " UnsafeArg.of(\"string\", \"msg\"));",
-                "    Preconditions.checkNotNull(oArg, \"message {} {}\", UnsafeArg.of(\"int\", 123),"
-                        + " UnsafeArg.of(\"char\", 'a'));",
-                "    Preconditions.checkNotNull(oArg, \"message {} {}\", UnsafeArg.of(\"int\", 123),"
-                        + " UnsafeArg.of(\"int\", 123));",
-                "    Preconditions.checkNotNull(oArg, \"message {} {}\", UnsafeArg.of(\"int\", 123),"
-                        + " UnsafeArg.of(\"long\", 123L));",
-                "    Preconditions.checkNotNull(oArg, \"message {} {}\", UnsafeArg.of(\"int\", 123),"
-                        + " UnsafeArg.of(\"string\", \"msg\"));",
-                "    Preconditions.checkNotNull(oArg, \"message {} {}\", UnsafeArg.of(\"long\", 123L),"
-                        + " UnsafeArg.of(\"char\", 'a'));",
-                "    Preconditions.checkNotNull(oArg, \"message {} {}\", UnsafeArg.of(\"long\", 123L),"
-                        + " UnsafeArg.of(\"int\", 123));",
-                "    Preconditions.checkNotNull(oArg, \"message {} {}\", UnsafeArg.of(\"long\", 123L),"
-                        + " UnsafeArg.of(\"long\", 123L));",
-                "    Preconditions.checkNotNull(oArg, \"message {} {}\", UnsafeArg.of(\"long\", 123L),"
-                        + " UnsafeArg.of(\"string\", \"msg\"));",
-                "    Preconditions.checkNotNull(oArg, \"message {} {}\", UnsafeArg.of(\"string\", \"msg\"),"
-                        + " UnsafeArg.of(\"char\", 'a'));",
-                "    Preconditions.checkNotNull(oArg, \"message {} {}\", UnsafeArg.of(\"string\", \"msg\"),"
-                        + " UnsafeArg.of(\"int\", 123));",
-                "    Preconditions.checkNotNull(oArg, \"message {} {}\", UnsafeArg.of(\"string\", \"msg\"),"
-                        + " UnsafeArg.of(\"long\", 123L));",
-                "    Preconditions.checkNotNull(oArg, \"message {} {}\", UnsafeArg.of(\"string1\", \"msg\"),"
-                        + " UnsafeArg.of(\"string2\", \"msg\"));",
-                "    Preconditions.checkNotNull(oArg, \"message {} {} {}\", UnsafeArg.of(\"string1\", \"msg\"),"
-                        + " UnsafeArg.of(\"string2\", \"msg\"), UnsafeArg.of(\"string3\", \"msg\"));",
-                "    Preconditions.checkNotNull(oArg, \"message {} {} {} {}\","
-                        + " UnsafeArg.of(\"string1\", \"msg\"), UnsafeArg.of(\"string2\", \"msg\"),"
-                        + " UnsafeArg.of(\"string3\", \"msg\"), UnsafeArg.of(\"string4\", \"msg\"));",
                 "  }",
                 "}")
                 .doTest();

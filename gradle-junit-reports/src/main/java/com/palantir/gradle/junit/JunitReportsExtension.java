@@ -24,7 +24,7 @@ public class JunitReportsExtension {
     private final DirectoryProperty reportsDirectory;
 
     public JunitReportsExtension(Project project) {
-        this.reportsDirectory = project.getLayout().directoryProperty();
+        this.reportsDirectory = project.getObjects().directoryProperty();
         reportsDirectory.set(project.getLayout().getBuildDirectory().dir("junit-reports"));
     }
 

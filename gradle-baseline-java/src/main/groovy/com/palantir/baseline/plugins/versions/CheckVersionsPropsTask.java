@@ -19,6 +19,7 @@ package com.palantir.baseline.plugins.versions;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.options.Option;
 
 public class CheckVersionsPropsTask extends DefaultTask {
@@ -35,6 +36,7 @@ public class CheckVersionsPropsTask extends DefaultTask {
         this.shouldFix.set(shouldFix);
     }
 
+    @Input
     final Provider<Boolean> getShouldFix() {
         return shouldFix;
     }

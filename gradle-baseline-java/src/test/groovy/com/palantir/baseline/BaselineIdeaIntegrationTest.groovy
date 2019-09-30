@@ -70,36 +70,6 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         with('idea').build()
     }
 
-    def 'Modules for subprojects pick up the correct sourceCompatibility'() {
-        when:
-        buildFile << standardBuildFile
-        buildFile << '''
-            sourceCompatibility = 1.6
-        '''.stripIndent()
-        def subproject = multiProject.create(["subproject1", "subproject2"])
-        subproject["subproject1"].buildGradle << '''
-            apply plugin: 'java'
-            apply plugin: 'com.palantir.baseline-idea'
-            sourceCompatibility = 1.7
-        '''.stripIndent()
-        subproject["subproject2"].buildGradle << '''
-            apply plugin: 'java'
-            apply plugin: 'com.palantir.baseline-idea'
-            sourceCompatibility = 1.8
-        '''.stripIndent()
-
-        then:
-        with('idea').build()
-        def rootIml = Files.asCharSource(new File(projectDir, projectDir.name + ".iml"), Charsets.UTF_8).read()
-        rootIml ==~ /(?s).*orderEntry[^\\n]*jdkName="1.6".*/
-        def subproject1Iml = Files.asCharSource(new File(projectDir, "subproject1/subproject1.iml"),
-                Charsets.UTF_8).read()
-        subproject1Iml ==~ /(?s).*orderEntry[^\\n]*jdkName="1.7".*/
-        def subproject2Iml = Files.asCharSource(new File(projectDir, "subproject2/subproject2.iml"),
-                Charsets.UTF_8).read()
-        subproject2Iml ==~ /(?s).*orderEntry[^\\n]*jdkName="1.8".*/
-    }
-
     def 'Idea project has copyright configuration'() {
         when:
         buildFile << standardBuildFile

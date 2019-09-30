@@ -31,6 +31,8 @@ import java.util.regex.Pattern;
 @AutoService(BugChecker.class)
 @BugPattern(
         name = "GuavaPreconditionsMessageFormat",
+        link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
+        linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
         summary = "Guava Preconditions.checkX() methods must use print-f style formatting.")
 public final class GuavaPreconditionsMessageFormat extends PreconditionsMessageFormat {

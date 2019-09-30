@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: "Keep spotless plugin from eagerly configuring all tasks"
+  links:
+    - https://github.com/diffplug/spotless/issues/444

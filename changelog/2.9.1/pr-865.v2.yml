@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Ensure that `StrictUnusedVariable` correctly converts previously suppressed variables `unused` to `_`
+  links:
+    - https://github.com/palantir/gradle-baseline/pull/865

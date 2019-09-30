@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Do not apply the suggested fixes for `UnusedMethod` and `UnusedVariable` which automaticall remove code with side effects.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/757

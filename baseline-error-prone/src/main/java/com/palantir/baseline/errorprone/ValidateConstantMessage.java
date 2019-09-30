@@ -34,6 +34,8 @@ import java.util.List;
 @AutoService(BugChecker.class)
 @BugPattern(
         name = "ValidateConstantMessage",
+        link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
+        linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
         summary = "Allow only constant messages to Validate.X() methods")
 public final class ValidateConstantMessage extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {

@@ -18,16 +18,19 @@ package com.palantir.baseline.errorprone;
 
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.CompilationTestHelper;
-import org.junit.Before;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
+@Execution(ExecutionMode.CONCURRENT)
 public final class Slf4jLogsafeArgsTest {
 
     private static final ImmutableList<String> LOG_LEVELS = ImmutableList.of("trace", "debug", "info", "warn", "error");
 
     private CompilationTestHelper compilationHelper;
 
-    @Before
+    @BeforeEach
     public void before() {
         compilationHelper = CompilationTestHelper.newInstance(Slf4jLogsafeArgs.class, getClass());
     }

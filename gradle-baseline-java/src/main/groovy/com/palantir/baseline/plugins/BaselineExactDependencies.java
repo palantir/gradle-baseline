@@ -17,6 +17,7 @@
 package com.palantir.baseline.plugins;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableSet;
 import com.palantir.baseline.tasks.CheckImplicitDependenciesTask;
 import com.palantir.baseline.tasks.CheckUnusedDependenciesTask;
 import java.io.File;
@@ -35,6 +36,7 @@ import org.apache.maven.shared.dependency.analyzer.asm.ASMDependencyAnalyzer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.plugins.JavaPlugin;
@@ -50,6 +52,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     // All applications of this plugin share a single static 'Indexes' instance, because the classes
     // contained in a particular jar are immutable.
     public static final Indexes INDEXES = new Indexes();
+    public static final ImmutableSet<String> VALID_ARTIFACT_EXTENSIONS = ImmutableSet.of("jar", "");
 
     @Override
     public void apply(Project project) {
@@ -60,11 +63,17 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                     .getByName(SourceSet.MAIN_SOURCE_SET_NAME);
             Configuration compileClasspath = project.getConfigurations()
                     .getByName(JavaPlugin.COMPILE_CLASSPATH_CONFIGURATION_NAME);
+            Configuration compileOnlyClasspath = project.getConfigurations()
+                    .getByName(JavaPlugin.COMPILE_ONLY_CONFIGURATION_NAME);
+            Configuration annotationProcessorClasspath = project.getConfigurations()
+                    .getByName(JavaPlugin.ANNOTATION_PROCESSOR_CONFIGURATION_NAME);
 
             project.getTasks().create("checkUnusedDependencies", CheckUnusedDependenciesTask.class, task -> {
                 task.dependsOn(JavaPlugin.CLASSES_TASK_NAME);
                 task.setSourceClasses(mainSourceSet.getOutput().getClassesDirs());
                 task.dependenciesConfiguration(compileClasspath);
+                task.sourceOnlyConfiguration(compileOnlyClasspath);
+                task.sourceOnlyConfiguration(annotationProcessorClasspath);
 
                 // this is liberally applied to ease the Java8 -> 11 transition
                 task.ignore("javax.annotation", "javax.annotation-api");
@@ -89,6 +98,14 @@ public final class BaselineExactDependencies implements Plugin<Project> {
         }
     }
 
+    public static String asString(ResolvedArtifact artifact) {
+        return asString(artifact.getModuleVersion().getId());
+    }
+
+    public static String asString(ModuleVersionIdentifier id) {
+        return id.getGroup() + ":" + id.getName();
+    }
+
     @ThreadSafe
     public static final class Indexes {
         private final Map<String, ResolvedArtifact> classToDependency = new ConcurrentHashMap<>();
@@ -98,6 +115,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
         public void populateIndexes(Set<ResolvedDependency> declaredDependencies) {
             Set<ResolvedArtifact> allArtifacts = declaredDependencies.stream()
                     .flatMap(dependency -> dependency.getAllModuleArtifacts().stream())
+                    .filter(dependency -> VALID_ARTIFACT_EXTENSIONS.contains(dependency.getExtension()))
                     .collect(Collectors.toSet());
 
             allArtifacts.forEach(artifact -> {
@@ -111,10 +129,8 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                 }
             });
 
-            declaredDependencies.stream().forEach(dependency -> {
-                Set<ResolvedArtifact> artifacts = dependency.getModuleArtifacts();
-                artifacts.forEach(artifact -> artifactsFromDependency.put(artifact, dependency));
-            });
+            declaredDependencies.forEach(dependency -> dependency.getModuleArtifacts()
+                    .forEach(artifact -> artifactsFromDependency.put(artifact, dependency)));
         }
 
         /** Given a class, what dependency brought it in. */

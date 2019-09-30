@@ -32,6 +32,8 @@ import com.sun.source.tree.ExpressionTree;
 @AutoService(BugChecker.class)
 @BugPattern(
         name = "DangerousJsonTypeInfoUsage",
+        link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
+        linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
         summary = "Disallow usage of Jackson's JsonTypeInfo.Id.CLASS annotation for security reasons, "
                 + "cf. https://github.com/FasterXML/jackson-databind/issues/1599")
@@ -50,7 +52,7 @@ public final class DangerousJsonTypeInfoUsage extends BugChecker implements BugC
                     )));
 
     private static Matcher<ExpressionTree> treeEqualsStringMatcher(String value) {
-        return (expressionTree, state) -> expressionTree.toString().equals(value);
+        return (expressionTree, state) -> state.getSourceForNode(expressionTree).equals(value);
     }
 
     @Override

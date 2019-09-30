@@ -1,3 +1,5 @@
+import net.ltgt.gradle.errorprone.CheckSeverity
+
 buildscript {
     repositories {
         jcenter()
@@ -8,14 +10,15 @@ buildscript {
     dependencies {
         classpath 'com.gradle.publish:plugin-publish-plugin:0.10.0'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
-        classpath 'com.netflix.nebula:nebula-publishing-plugin:13.1.0'
-        classpath 'com.palantir.baseline:gradle-baseline-java:0.65.0'
+        classpath 'com.netflix.nebula:nebula-publishing-plugin:13.6.1'
+        classpath 'com.netflix.nebula:gradle-info-plugin:5.1.0'
+        classpath 'com.palantir.baseline:gradle-baseline-java:2.13.0'
     }
 }
 
 plugins {
-    id 'com.palantir.git-version' version '0.11.0'
-    id 'org.inferred.processors' version '2.2.0'
+    id 'com.palantir.git-version' version '0.12.2'
+    id 'org.inferred.processors' version '3.1.0'
 }
 
 apply plugin: 'com.palantir.baseline'
@@ -44,6 +47,15 @@ allprojects {
 
     pluginManager.withPlugin('java') {
         sourceCompatibility = 1.8
+        tasks.withType(JavaCompile) {
+            options.compilerArgs += ['-Werror', '-Xlint:deprecation']
+            options.errorprone {
+                check("Slf4jLogsafeArgs", CheckSeverity.OFF)
+                check("PreferSafeLoggableExceptions", CheckSeverity.OFF)
+                check("PreferSafeLoggingPreconditions", CheckSeverity.OFF)
+                check("PreconditionsConstantMessage", CheckSeverity.OFF)
+            }
+        }
     }
 
     apply plugin: 'org.inferred.processors'

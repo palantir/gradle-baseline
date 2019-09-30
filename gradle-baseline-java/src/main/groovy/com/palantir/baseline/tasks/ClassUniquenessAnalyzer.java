@@ -76,7 +76,7 @@ public final class ClassUniquenessAnalyzer {
                         continue;
                     }
 
-                    if (entry.getName().equals("module-info.class")) {
+                    if (entry.getName().contains("module-info.class")) {
                         // Java 9 allows jars to have a module-info.class file in the root,
                         // we shouldn't complain about these.
                         continue;

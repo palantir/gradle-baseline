@@ -41,6 +41,7 @@ import java.util.stream.Collectors;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,
         summary = "Throw SafeLoggable exceptions to ensure the exception message will not be redacted")
+@SuppressWarnings("PreferSafeLoggableExceptions")
 public final class PreferSafeLoggableExceptions extends BugChecker implements BugChecker.NewClassTreeMatcher {
 
     private static final long serialVersionUID = 1L;
