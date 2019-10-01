@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Add assertj refaster rules for map size asserts
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/919
