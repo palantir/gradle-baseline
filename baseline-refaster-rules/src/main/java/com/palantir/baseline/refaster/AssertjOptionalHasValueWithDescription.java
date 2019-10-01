@@ -42,6 +42,18 @@ public final class AssertjOptionalHasValueWithDescription<T> {
         assertThat(optional.get().equals(innerValue)).describedAs(description).isTrue();
     }
 
+    @BeforeTemplate
+    void before4(Optional<T> optional, T innerValue, String description) {
+        assertThat(optional.isPresent()).describedAs(description).isTrue();
+        assertThat(optional.get()).describedAs(description).isEqualTo(innerValue);
+    }
+
+    @BeforeTemplate
+    void before5(Optional<T> optional, T innerValue, String description) {
+        assertThat(optional.isPresent()).describedAs(description).isTrue();
+        assertThat(optional).describedAs(description).hasValue(innerValue);
+    }
+
     @AfterTemplate
     @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
     void after(Optional<T> optional, T innerValue, String description) {
