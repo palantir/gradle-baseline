@@ -34,7 +34,8 @@ public final class AssertjOptionalHasValueWithDescription<T> {
 
     @BeforeTemplate
     void before2(Optional<T> optional, T innerValue, String description, @Repeated Object descriptionArgs) {
-        assertThat(optional.isPresent() && optional.get().equals(innerValue)).describedAs(description, descriptionArgs).isTrue();
+        assertThat(optional.isPresent()
+                && optional.get().equals(innerValue)).describedAs(description, descriptionArgs).isTrue();
     }
 
     @BeforeTemplate
