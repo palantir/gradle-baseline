@@ -16,15 +16,14 @@
 
 package com.palantir.baseline.refaster;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.google.errorprone.refaster.ImportPolicy;
 import com.google.errorprone.refaster.annotation.AfterTemplate;
 import com.google.errorprone.refaster.annotation.BeforeTemplate;
 import com.google.errorprone.refaster.annotation.Repeated;
 import com.google.errorprone.refaster.annotation.UseImportPolicy;
-
 import java.util.Optional;
-
-import static org.assertj.core.api.Assertions.assertThat;
 
 public final class AssertjOptionalHasValueRedundantWithDescription<T> {
 
