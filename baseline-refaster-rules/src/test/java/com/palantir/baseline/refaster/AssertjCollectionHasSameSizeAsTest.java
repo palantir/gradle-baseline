@@ -80,6 +80,7 @@ public class AssertjCollectionHasSameSizeAsTest {
                         "    assertThat(a).describedAs(\"desc\").hasSize(target.length);",
                         "    assertThat(b).describedAs(\"desc\").hasSize(target.length);",
                         "    assertThat(c).describedAs(\"desc\").hasSize(target.length);",
+                        "    assertThat(c).describedAs(\"foo %s\", \"bar\").hasSize(target.length);",
                         "  }",
                         "}")
                 .hasOutputLines(
@@ -94,6 +95,7 @@ public class AssertjCollectionHasSameSizeAsTest {
                         "    assertThat(a).describedAs(\"desc\").hasSameSizeAs(target);",
                         "    assertThat(b).describedAs(\"desc\").hasSameSizeAs(target);",
                         "    assertThat(c).describedAs(\"desc\").hasSameSizeAs(target);",
+                        "    assertThat(c).describedAs(\"foo %s\", \"bar\").hasSameSizeAs(target);",
                         "  }",
                         "}");
     }

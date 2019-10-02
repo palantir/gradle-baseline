@@ -21,29 +21,30 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.errorprone.refaster.ImportPolicy;
 import com.google.errorprone.refaster.annotation.AfterTemplate;
 import com.google.errorprone.refaster.annotation.BeforeTemplate;
+import com.google.errorprone.refaster.annotation.Repeated;
 import com.google.errorprone.refaster.annotation.UseImportPolicy;
 import java.util.Optional;
 
 public final class AssertjOptionalIsNotPresentWithDescription<T> {
 
     @BeforeTemplate
-    void before1(Optional<T> thing, String description) {
-        assertThat(thing.isPresent()).describedAs(description).isFalse();
+    void before1(Optional<T> thing, String description, @Repeated Object descriptionArgs) {
+        assertThat(thing.isPresent()).describedAs(description, descriptionArgs).isFalse();
     }
 
     @BeforeTemplate
-    void before2(Optional<T> thing, String description) {
-        assertThat(!thing.isPresent()).describedAs(description).isTrue();
+    void before2(Optional<T> thing, String description, @Repeated Object descriptionArgs) {
+        assertThat(!thing.isPresent()).describedAs(description, descriptionArgs).isTrue();
     }
 
     @BeforeTemplate
-    void before3(Optional<T> thing, String description) {
-        assertThat(thing).describedAs(description).isEqualTo(Optional.empty());
+    void before3(Optional<T> thing, String description, @Repeated Object descriptionArgs) {
+        assertThat(thing).describedAs(description, descriptionArgs).isEqualTo(Optional.empty());
     }
 
     @AfterTemplate
     @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
-    void after(Optional<T> thing, String description) {
-        assertThat(thing).describedAs(description).isNotPresent();
+    void after(Optional<T> thing, String description, @Repeated Object descriptionArgs) {
+        assertThat(thing).describedAs(description, descriptionArgs).isNotPresent();
     }
 }

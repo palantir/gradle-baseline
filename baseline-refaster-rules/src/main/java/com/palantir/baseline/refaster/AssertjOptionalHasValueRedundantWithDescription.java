@@ -23,23 +23,32 @@ import com.google.errorprone.refaster.annotation.AfterTemplate;
 import com.google.errorprone.refaster.annotation.BeforeTemplate;
 import com.google.errorprone.refaster.annotation.Repeated;
 import com.google.errorprone.refaster.annotation.UseImportPolicy;
-import java.util.Map;
+import java.util.Optional;
 
-public final class AssertjMapHasSizeExactlyWithDescription<K, V> {
-
-    @BeforeTemplate
-    void before1(Map<K, V> things, int size, String description, @Repeated Object descriptionArgs) {
-        assertThat(things.size() == size).describedAs(description, descriptionArgs).isTrue();
-    }
+public final class AssertjOptionalHasValueRedundantWithDescription<T> {
 
     @BeforeTemplate
-    void before2(Map<K, V> things, int size, String description, @Repeated Object descriptionArgs) {
-        assertThat(things.size()).describedAs(description, descriptionArgs).isEqualTo(size);
+    void redundantAssertion(
+            Optional<T> optional,
+            T innerValue,
+            String description1,
+            @Repeated Object descriptionArgs1,
+            String description2,
+            @Repeated Object descriptionArgs2) {
+        assertThat(optional).describedAs(description1, descriptionArgs1).isPresent();
+        assertThat(optional).describedAs(description2, descriptionArgs2).hasValue(innerValue);
     }
 
     @AfterTemplate
     @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
-    void after(Map<K, V> things, int size, String description, @Repeated Object descriptionArgs) {
-        assertThat(things).describedAs(description, descriptionArgs).hasSize(size);
+    void after(
+            Optional<T> optional,
+            T innerValue,
+            // The first assertion is unnecessary
+            String _description1,
+            @Repeated Object _descriptionArgs1,
+            String description2,
+            @Repeated Object descriptionArgs2) {
+        assertThat(optional).describedAs(description2, descriptionArgs2).hasValue(innerValue);
     }
 }

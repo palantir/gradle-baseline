@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.errorprone.refaster.ImportPolicy;
 import com.google.errorprone.refaster.annotation.AfterTemplate;
 import com.google.errorprone.refaster.annotation.BeforeTemplate;
+import com.google.errorprone.refaster.annotation.Repeated;
 import com.google.errorprone.refaster.annotation.UseImportPolicy;
 import java.util.Objects;
 
@@ -31,28 +32,28 @@ import java.util.Objects;
 public final class AssertjEqualsWithDescription<T> {
 
     @BeforeTemplate
-    void before1(T expected, T actual, String description) {
-        assertThat(actual.equals(expected)).describedAs(description).isTrue();
+    void before1(T expected, T actual, String description, @Repeated Object descriptionArgs) {
+        assertThat(actual.equals(expected)).describedAs(description, descriptionArgs).isTrue();
     }
 
     @BeforeTemplate
-    void before2(T expected, T actual, String description) {
-        assertThat(Objects.equals(actual, expected)).describedAs(description).isTrue();
+    void before2(T expected, T actual, String description, @Repeated Object descriptionArgs) {
+        assertThat(Objects.equals(actual, expected)).describedAs(description, descriptionArgs).isTrue();
     }
 
     @BeforeTemplate
-    void before3(T expected, T actual, String description) {
-        assertThat(!actual.equals(expected)).describedAs(description).isFalse();
+    void before3(T expected, T actual, String description, @Repeated Object descriptionArgs) {
+        assertThat(!actual.equals(expected)).describedAs(description, descriptionArgs).isFalse();
     }
 
     @BeforeTemplate
-    void before4(T expected, T actual, String description) {
-        assertThat(!Objects.equals(actual, expected)).describedAs(description).isFalse();
+    void before4(T expected, T actual, String description, @Repeated Object descriptionArgs) {
+        assertThat(!Objects.equals(actual, expected)).describedAs(description, descriptionArgs).isFalse();
     }
 
     @AfterTemplate
     @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
-    void after(T expected, T actual, String description) {
-        assertThat(actual).describedAs(description).isEqualTo(expected);
+    void after(T expected, T actual, String description, @Repeated Object descriptionArgs) {
+        assertThat(actual).describedAs(description, descriptionArgs).isEqualTo(expected);
     }
 }

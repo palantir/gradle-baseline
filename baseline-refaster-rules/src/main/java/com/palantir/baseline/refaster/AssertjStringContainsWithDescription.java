@@ -21,23 +21,24 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.errorprone.refaster.ImportPolicy;
 import com.google.errorprone.refaster.annotation.AfterTemplate;
 import com.google.errorprone.refaster.annotation.BeforeTemplate;
+import com.google.errorprone.refaster.annotation.Repeated;
 import com.google.errorprone.refaster.annotation.UseImportPolicy;
 
 public final class AssertjStringContainsWithDescription {
 
     @BeforeTemplate
-    void before1(String input, CharSequence contains, String description) {
-        assertThat(input.contains(contains)).describedAs(description).isTrue();
+    void before1(String input, CharSequence contains, String description, @Repeated Object descriptionArgs) {
+        assertThat(input.contains(contains)).describedAs(description, descriptionArgs).isTrue();
     }
 
     @BeforeTemplate
-    void before2(String input, CharSequence contains, String description) {
-        assertThat(!input.contains(contains)).describedAs(description).isFalse();
+    void before2(String input, CharSequence contains, String description, @Repeated Object descriptionArgs) {
+        assertThat(!input.contains(contains)).describedAs(description, descriptionArgs).isFalse();
     }
 
     @AfterTemplate
     @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
-    void after(String input, CharSequence contains, String description) {
-        assertThat(input).describedAs(description).contains(contains);
+    void after(String input, CharSequence contains, String description, @Repeated Object descriptionArgs) {
+        assertThat(input).describedAs(description, descriptionArgs).contains(contains);
     }
 }
