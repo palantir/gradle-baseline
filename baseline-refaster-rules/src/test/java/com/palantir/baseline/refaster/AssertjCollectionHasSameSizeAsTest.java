@@ -59,4 +59,42 @@ public class AssertjCollectionHasSameSizeAsTest {
                         "  }",
                         "}");
     }
+
+    @Test
+    public void testArray() {
+        assumeThat(System.getProperty("java.specification.version"))
+                .describedAs("Refaster does not currently support fluent refactors on java 11")
+                .isEqualTo("1.8");
+        RefasterTestHelper
+                .forRefactoring(AssertjCollectionHasSameSizeAsArray.class)
+                .withInputLines(
+                        "Test",
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import java.util.List;",
+                        "import java.util.Collection;",
+                        "public class Test {",
+                        "  void f(List<String> a, Collection<String> b, Iterable<String> c, String[] target) {",
+                        "    assertThat(a).hasSize(target.length);",
+                        "    assertThat(b).hasSize(target.length);",
+                        "    assertThat(c).hasSize(target.length);",
+                        "    assertThat(a).describedAs(\"desc\").hasSize(target.length);",
+                        "    assertThat(b).describedAs(\"desc\").hasSize(target.length);",
+                        "    assertThat(c).describedAs(\"desc\").hasSize(target.length);",
+                        "  }",
+                        "}")
+                .hasOutputLines(
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import java.util.List;",
+                        "import java.util.Collection;",
+                        "public class Test {",
+                        "  void f(List<String> a, Collection<String> b, Iterable<String> c, String[] target) {",
+                        "    assertThat(a).hasSameSizeAs(target);",
+                        "    assertThat(b).hasSameSizeAs(target);",
+                        "    assertThat(c).hasSameSizeAs(target);",
+                        "    assertThat(a).describedAs(\"desc\").hasSameSizeAs(target);",
+                        "    assertThat(b).describedAs(\"desc\").hasSameSizeAs(target);",
+                        "    assertThat(c).describedAs(\"desc\").hasSameSizeAs(target);",
+                        "  }",
+                        "}");
+    }
 }
