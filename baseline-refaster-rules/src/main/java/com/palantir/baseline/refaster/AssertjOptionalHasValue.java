@@ -37,20 +37,8 @@ public final class AssertjOptionalHasValue<T> {
     }
 
     @BeforeTemplate
-    void before3(Optional<T> optional, T innerValue) {
-        assertThat(optional.isPresent()).isTrue();
-        assertThat(optional.get().equals(innerValue)).isTrue();
-    }
-
-    @BeforeTemplate
-    void before4(Optional<T> optional, T innerValue) {
-        assertThat(optional.isPresent()).isTrue();
-        assertThat(optional.get()).isEqualTo(innerValue);
-    }
-
-    @BeforeTemplate
-    void before5(Optional<T> optional, T innerValue) {
-        assertThat(optional.isPresent()).isTrue();
+    void redundantAssertion(Optional<T> optional, T innerValue) {
+        assertThat(optional).isPresent();
         assertThat(optional).hasValue(innerValue);
     }
 
