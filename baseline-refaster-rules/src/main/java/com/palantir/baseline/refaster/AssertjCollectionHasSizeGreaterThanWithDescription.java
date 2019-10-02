@@ -21,24 +21,25 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.errorprone.refaster.ImportPolicy;
 import com.google.errorprone.refaster.annotation.AfterTemplate;
 import com.google.errorprone.refaster.annotation.BeforeTemplate;
+import com.google.errorprone.refaster.annotation.Repeated;
 import com.google.errorprone.refaster.annotation.UseImportPolicy;
 import java.util.Collection;
 
 public final class AssertjCollectionHasSizeGreaterThanWithDescription<T> {
 
     @BeforeTemplate
-    void before1(Collection<T> things, int size, String description) {
-        assertThat(things.size() > size).describedAs(description).isTrue();
+    void before1(Collection<T> things, int size, String description, @Repeated Object descriptionArgs) {
+        assertThat(things.size() > size).describedAs(description, descriptionArgs).isTrue();
     }
 
     @BeforeTemplate
-    void before2(Collection<T> things, int size, String description) {
-        assertThat(things.size()).describedAs(description).isGreaterThan(size);
+    void before2(Collection<T> things, int size, String description, @Repeated Object descriptionArgs) {
+        assertThat(things.size()).describedAs(description, descriptionArgs).isGreaterThan(size);
     }
 
     @AfterTemplate
     @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
-    void after(Collection<T> things, int size, String description) {
-        assertThat(things).describedAs(description).hasSizeGreaterThan(size);
+    void after(Collection<T> things, int size, String description, @Repeated Object descriptionArgs) {
+        assertThat(things).describedAs(description, descriptionArgs).hasSizeGreaterThan(size);
     }
 }

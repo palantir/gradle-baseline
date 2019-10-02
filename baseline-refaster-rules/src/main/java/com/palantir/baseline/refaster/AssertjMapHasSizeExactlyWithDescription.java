@@ -21,24 +21,25 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.errorprone.refaster.ImportPolicy;
 import com.google.errorprone.refaster.annotation.AfterTemplate;
 import com.google.errorprone.refaster.annotation.BeforeTemplate;
+import com.google.errorprone.refaster.annotation.Repeated;
 import com.google.errorprone.refaster.annotation.UseImportPolicy;
 import java.util.Map;
 
 public final class AssertjMapHasSizeExactlyWithDescription<K, V> {
 
     @BeforeTemplate
-    void before1(Map<K, V> things, int size, String description) {
-        assertThat(things.size() == size).describedAs(description).isTrue();
+    void before1(Map<K, V> things, int size, String description, @Repeated Object descriptionArgs) {
+        assertThat(things.size() == size).describedAs(description, descriptionArgs).isTrue();
     }
 
     @BeforeTemplate
-    void before2(Map<K, V> things, int size, String description) {
-        assertThat(things.size()).describedAs(description).isEqualTo(size);
+    void before2(Map<K, V> things, int size, String description, @Repeated Object descriptionArgs) {
+        assertThat(things.size()).describedAs(description, descriptionArgs).isEqualTo(size);
     }
 
     @AfterTemplate
     @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
-    void after(Map<K, V> things, int size, String description) {
-        assertThat(things).describedAs(description).hasSize(size);
+    void after(Map<K, V> things, int size, String description, @Repeated Object descriptionArgs) {
+        assertThat(things).describedAs(description, descriptionArgs).hasSize(size);
     }
 }

@@ -21,34 +21,35 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.errorprone.refaster.ImportPolicy;
 import com.google.errorprone.refaster.annotation.AfterTemplate;
 import com.google.errorprone.refaster.annotation.BeforeTemplate;
+import com.google.errorprone.refaster.annotation.Repeated;
 import com.google.errorprone.refaster.annotation.UseImportPolicy;
 import java.util.Collection;
 
 public final class AssertjCollectionIsEmptyWithDescription<T> {
 
     @BeforeTemplate
-    void bad1(Collection<T> things, String description) {
-        assertThat(things.size() == 0).describedAs(description).isTrue();
+    void bad1(Collection<T> things, String description, @Repeated Object descriptionArgs) {
+        assertThat(things.size() == 0).describedAs(description, descriptionArgs).isTrue();
     }
 
     @BeforeTemplate
-    void bad2(Collection<T> things, String description) {
-        assertThat(things.isEmpty()).describedAs(description).isTrue();
+    void bad2(Collection<T> things, String description, @Repeated Object descriptionArgs) {
+        assertThat(things.isEmpty()).describedAs(description, descriptionArgs).isTrue();
     }
 
     @BeforeTemplate
-    void bad3(Collection<T> things, String description) {
-        assertThat(things.size()).describedAs(description).isZero();
+    void bad3(Collection<T> things, String description, @Repeated Object descriptionArgs) {
+        assertThat(things.size()).describedAs(description, descriptionArgs).isZero();
     }
 
     @BeforeTemplate
-    void bad4(Collection<T> things, String description) {
-        assertThat(things.size()).describedAs(description).isEqualTo(0);
+    void bad4(Collection<T> things, String description, @Repeated Object descriptionArgs) {
+        assertThat(things.size()).describedAs(description, descriptionArgs).isEqualTo(0);
     }
 
     @AfterTemplate
     @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
-    void after(Iterable<T> things, String description) {
-        assertThat(things).describedAs(description).isEmpty();
+    void after(Iterable<T> things, String description, @Repeated Object descriptionArgs) {
+        assertThat(things).describedAs(description, descriptionArgs).isEmpty();
     }
 }

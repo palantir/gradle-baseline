@@ -22,18 +22,19 @@ import com.google.errorprone.refaster.ImportPolicy;
 import com.google.errorprone.refaster.Refaster;
 import com.google.errorprone.refaster.annotation.AfterTemplate;
 import com.google.errorprone.refaster.annotation.BeforeTemplate;
+import com.google.errorprone.refaster.annotation.Repeated;
 import com.google.errorprone.refaster.annotation.UseImportPolicy;
 
 public final class AssertjInstanceOfWithDescription<T, E> {
 
     @BeforeTemplate
-    void before(T input, String description) {
-        assertThat(Refaster.<E>isInstance(input)).describedAs(description).isTrue();
+    void before(T input, String description, @Repeated Object descriptionArgs) {
+        assertThat(Refaster.<E>isInstance(input)).describedAs(description, descriptionArgs).isTrue();
     }
 
     @AfterTemplate
     @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
-    void after(T input, String description) {
-        assertThat(input).describedAs(description).isInstanceOf(Refaster.<E>clazz());
+    void after(T input, String description, @Repeated Object descriptionArgs) {
+        assertThat(input).describedAs(description, descriptionArgs).isInstanceOf(Refaster.<E>clazz());
     }
 }

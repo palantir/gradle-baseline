@@ -21,30 +21,31 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.errorprone.refaster.ImportPolicy;
 import com.google.errorprone.refaster.annotation.AfterTemplate;
 import com.google.errorprone.refaster.annotation.BeforeTemplate;
+import com.google.errorprone.refaster.annotation.Repeated;
 import com.google.errorprone.refaster.annotation.UseImportPolicy;
 import java.util.Optional;
 
 public final class AssertjOptionalHasValueWithDescription<T> {
 
     @BeforeTemplate
-    void before(Optional<T> optional, T innerValue, String description) {
-        assertThat(optional.get()).describedAs(description).isEqualTo(innerValue);
+    void before(Optional<T> optional, T innerValue, String description, @Repeated Object descriptionArgs) {
+        assertThat(optional.get()).describedAs(description, descriptionArgs).isEqualTo(innerValue);
     }
 
     @BeforeTemplate
-    void before2(Optional<T> optional, T innerValue, String description) {
-        assertThat(optional.isPresent() && optional.get().equals(innerValue)).describedAs(description).isTrue();
+    void before2(Optional<T> optional, T innerValue, String description, @Repeated Object descriptionArgs) {
+        assertThat(optional.isPresent() && optional.get().equals(innerValue)).describedAs(description, descriptionArgs).isTrue();
     }
 
     @BeforeTemplate
-    void redundantAssertion(Optional<T> optional, T innerValue, String description) {
-        assertThat(optional).describedAs(description).isPresent();
-        assertThat(optional).describedAs(description).hasValue(innerValue);
+    void redundantAssertion(Optional<T> optional, T innerValue, String description, @Repeated Object descriptionArgs) {
+        assertThat(optional).describedAs(description, descriptionArgs).isPresent();
+        assertThat(optional).describedAs(description, descriptionArgs).hasValue(innerValue);
     }
 
     @AfterTemplate
     @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
-    void after(Optional<T> optional, T innerValue, String description) {
-        assertThat(optional).describedAs(description).hasValue(innerValue);
+    void after(Optional<T> optional, T innerValue, String description, @Repeated Object descriptionArgs) {
+        assertThat(optional).describedAs(description, descriptionArgs).hasValue(innerValue);
     }
 }
