@@ -38,6 +38,10 @@ public final class AssertjOptionalHasValueTest {
                         "    assertThat(in.get()).isEqualTo(out);",
                         "    assertThat(in.isPresent() && in.get().equals(out)).isTrue();",
                         "  }",
+                        "  void g(Optional<String> in, String out) {",
+                        "    assertThat(in).isPresent();",
+                        "    assertThat(in).hasValue(out);",
+                        "  }",
                         "}")
                 .hasOutputLines(
                         "import static org.assertj.core.api.Assertions.assertThat;",
@@ -46,6 +50,10 @@ public final class AssertjOptionalHasValueTest {
                         "  void f(Optional<String> in, String out) {",
                         "    assertThat(in).hasValue(out);",
                         "    assertThat(in).hasValue(out);",
+                        "  }",
+                        "  void g(Optional<String> in, String out) {",
+                        "    assertThat(in).hasValue(out);",
+                        "    ",
                         "  }",
                         "}");
     }
@@ -66,6 +74,10 @@ public final class AssertjOptionalHasValueTest {
                         "    assertThat(in.get()).describedAs(\"desc\").isEqualTo(out);",
                         "    assertThat(in.isPresent() && in.get().equals(out)).describedAs(\"desc\").isTrue();",
                         "  }",
+                        "  void g(Optional<String> in, String out) {",
+                        "    assertThat(in).describedAs(\"desc\").isPresent();",
+                        "    assertThat(in).describedAs(\"desc\").hasValue(out);",
+                        "  }",
                         "}")
                 .hasOutputLines(
                         "import static org.assertj.core.api.Assertions.assertThat;",
@@ -74,6 +86,10 @@ public final class AssertjOptionalHasValueTest {
                         "  void f(Optional<String> in, String out) {",
                         "    assertThat(in).describedAs(\"desc\").hasValue(out);",
                         "    assertThat(in).describedAs(\"desc\").hasValue(out);",
+                        "  }",
+                        "  void g(Optional<String> in, String out) {",
+                        "    assertThat(in).describedAs(\"desc\").hasValue(out);",
+                        "    ",
                         "  }",
                         "}");
     }

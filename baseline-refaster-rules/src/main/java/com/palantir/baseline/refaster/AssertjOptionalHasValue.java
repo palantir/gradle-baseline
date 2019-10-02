@@ -36,6 +36,12 @@ public final class AssertjOptionalHasValue<T> {
         assertThat(optional.isPresent() && optional.get().equals(innerValue)).isTrue();
     }
 
+    @BeforeTemplate
+    void redundantAssertion(Optional<T> optional, T innerValue) {
+        assertThat(optional).isPresent();
+        assertThat(optional).hasValue(innerValue);
+    }
+
     @AfterTemplate
     @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
     void after(Optional<T> optional, T innerValue) {

@@ -36,6 +36,12 @@ public final class AssertjOptionalHasValueWithDescription<T> {
         assertThat(optional.isPresent() && optional.get().equals(innerValue)).describedAs(description).isTrue();
     }
 
+    @BeforeTemplate
+    void redundantAssertion(Optional<T> optional, T innerValue, String description) {
+        assertThat(optional).describedAs(description).isPresent();
+        assertThat(optional).describedAs(description).hasValue(innerValue);
+    }
+
     @AfterTemplate
     @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
     void after(Optional<T> optional, T innerValue, String description) {
