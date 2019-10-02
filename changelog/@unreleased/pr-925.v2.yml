@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Implement assertj map refactors for containsKey and containsEntry
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/925
