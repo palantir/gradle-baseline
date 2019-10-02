@@ -16,31 +16,40 @@
 
 package com.palantir.baseline.refaster;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.google.errorprone.refaster.ImportPolicy;
 import com.google.errorprone.refaster.annotation.AfterTemplate;
 import com.google.errorprone.refaster.annotation.BeforeTemplate;
 import com.google.errorprone.refaster.annotation.Repeated;
 import com.google.errorprone.refaster.annotation.UseImportPolicy;
+
 import java.util.Optional;
 
-public final class AssertjOptionalHasValueWithDescription<T> {
+import static org.assertj.core.api.Assertions.assertThat;
+
+public final class AssertjOptionalHasValueRedundantWithDescription<T> {
 
     @BeforeTemplate
-    void before(Optional<T> optional, T innerValue, String description, @Repeated Object descriptionArgs) {
-        assertThat(optional.get()).describedAs(description, descriptionArgs).isEqualTo(innerValue);
-    }
-
-    @BeforeTemplate
-    void before2(Optional<T> optional, T innerValue, String description, @Repeated Object descriptionArgs) {
-        assertThat(optional.isPresent()
-                && optional.get().equals(innerValue)).describedAs(description, descriptionArgs).isTrue();
+    void redundantAssertion(
+            Optional<T> optional,
+            T innerValue,
+            String description1,
+            @Repeated Object descriptionArgs1,
+            String description2,
+            @Repeated Object descriptionArgs2) {
+        assertThat(optional).describedAs(description1, descriptionArgs1).isPresent();
+        assertThat(optional).describedAs(description2, descriptionArgs2).hasValue(innerValue);
     }
 
     @AfterTemplate
     @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
-    void after(Optional<T> optional, T innerValue, String description, @Repeated Object descriptionArgs) {
-        assertThat(optional).describedAs(description, descriptionArgs).hasValue(innerValue);
+    void after(
+            Optional<T> optional,
+            T innerValue,
+            // The first assertion is unnecessary
+            String _description1,
+            @Repeated Object _descriptionArgs1,
+            String description2,
+            @Repeated Object descriptionArgs2) {
+        assertThat(optional).describedAs(description2, descriptionArgs2).hasValue(innerValue);
     }
 }
