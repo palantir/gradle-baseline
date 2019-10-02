@@ -21,19 +21,20 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.errorprone.refaster.ImportPolicy;
 import com.google.errorprone.refaster.annotation.AfterTemplate;
 import com.google.errorprone.refaster.annotation.BeforeTemplate;
+import com.google.errorprone.refaster.annotation.Repeated;
 import com.google.errorprone.refaster.annotation.UseImportPolicy;
 import java.util.Map;
 
 public final class AssertjMapContainsEntryWithDescription<K, V> {
 
     @BeforeTemplate
-    void before(Map<K, V> things, K key, V expectedValue, String description) {
-        assertThat(things.get(key)).describedAs(description).isEqualTo(expectedValue);
+    void before(Map<K, V> things, K key, V expectedValue, String description, @Repeated Object descriptionArgs) {
+        assertThat(things.get(key)).describedAs(description, descriptionArgs).isEqualTo(expectedValue);
     }
 
     @AfterTemplate
     @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
-    void after(Map<K, V> things, K key, V expectedValue, String description) {
-        assertThat(things).describedAs(description).containsEntry(key, expectedValue);
+    void after(Map<K, V> things, K key, V expectedValue, String description, @Repeated Object descriptionArgs) {
+        assertThat(things).describedAs(description, descriptionArgs).containsEntry(key, expectedValue);
     }
 }

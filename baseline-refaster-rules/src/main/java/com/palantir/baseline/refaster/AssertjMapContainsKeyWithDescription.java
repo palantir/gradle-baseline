@@ -21,25 +21,26 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.google.errorprone.refaster.ImportPolicy;
 import com.google.errorprone.refaster.annotation.AfterTemplate;
 import com.google.errorprone.refaster.annotation.BeforeTemplate;
+import com.google.errorprone.refaster.annotation.Repeated;
 import com.google.errorprone.refaster.annotation.UseImportPolicy;
 import java.util.Map;
 
 public final class AssertjMapContainsKeyWithDescription<K, V> {
 
     @BeforeTemplate
-    void before1(Map<K, V> things, K key, String description) {
-        assertThat(things.containsKey(key)).describedAs(description).isTrue();
+    void before1(Map<K, V> things, K key, String description, @Repeated Object descriptionArgs) {
+        assertThat(things.containsKey(key)).describedAs(description, descriptionArgs).isTrue();
     }
 
     @BeforeTemplate
     @SuppressWarnings("RedundantCollectionOperation") // It's what we're fixing
-    void before2(Map<K, V> things, K key, String description) {
-        assertThat(things.keySet().contains(key)).describedAs(description).isTrue();
+    void before2(Map<K, V> things, K key, String description, @Repeated Object descriptionArgs) {
+        assertThat(things.keySet().contains(key)).describedAs(description, descriptionArgs).isTrue();
     }
 
     @AfterTemplate
     @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
-    void after(Map<K, V> things, K key, String description) {
-        assertThat(things).describedAs(description).containsKey(key);
+    void after(Map<K, V> things, K key, String description, @Repeated Object descriptionArgs) {
+        assertThat(things).describedAs(description, descriptionArgs).containsKey(key);
     }
 }
