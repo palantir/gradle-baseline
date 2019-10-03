@@ -87,10 +87,11 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
         getLogger().debug("Possibly unused dependencies: {}",
                 possiblyUnused.stream()
                         .map(BaselineExactDependencies::asString)
+                        .sorted()
                         .collect(Collectors.toList()));
         List<ResolvedArtifact> declaredButUnused = possiblyUnused.stream()
                 .filter(artifact -> !shouldIgnore(artifact))
-                .sorted(Comparator.comparing(artifact -> artifact.getId().getDisplayName()))
+                .sorted(Comparator.comparing(BaselineExactDependencies::asString))
                 .collect(Collectors.toList());
         if (!declaredButUnused.isEmpty()) {
             // TODO(dfox): don't print warnings for jars that define service loaded classes (e.g. meta-inf)
@@ -98,7 +99,7 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
             sb.append(String.format("Found %s dependencies unused during compilation, please delete them from '%s' or "
                     + "choose one of the suggested fixes:\n", declaredButUnused.size(), buildFile()));
             for (ResolvedArtifact resolvedArtifact : declaredButUnused) {
-                sb.append('\t').append(asString(resolvedArtifact)).append('\n');
+                sb.append('\t').append(BaselineExactDependencies.asString(resolvedArtifact)).append('\n');
 
                 // Suggest fixes by looking at all transitive classes, filtering the ones we have declarations on,
                 // and mapping the remaining ones back to the jars they came from.
@@ -117,9 +118,12 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
 
                 if (!didYouMean.isEmpty()) {
                     sb.append("\t\tDid you mean:\n");
-                    didYouMean.forEach(transitive -> sb.append("\t\t\timplementation '")
-                            .append(asString(transitive))
-                            .append("\' \n"));
+                    didYouMean.stream()
+                            .map(BaselineExactDependencies::asString)
+                            .sorted()
+                            .forEach(transitive -> sb.append("\t\t\timplementation '")
+                                    .append(transitive)
+                                    .append("\' \n"));
                 }
             }
             throw new GradleException(sb.toString());
@@ -159,11 +163,7 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
     }
 
     private boolean shouldIgnore(ResolvedArtifact artifact) {
-        return ignore.get().contains(asString(artifact));
-    }
-
-    private static String asString(ResolvedArtifact artifact) {
-        return BaselineExactDependencies.asString(artifact);
+        return ignore.get().contains(BaselineExactDependencies.asString(artifact));
     }
 
     @Input
