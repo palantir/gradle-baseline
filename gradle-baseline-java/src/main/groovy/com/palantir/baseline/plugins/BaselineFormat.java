@@ -17,9 +17,12 @@
 package com.palantir.baseline.plugins;
 
 import com.diffplug.gradle.spotless.SpotlessExtension;
+import com.diffplug.spotless.FormatterFunc;
+import com.google.googlejavaformat.java.Formatter;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -32,6 +35,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
 
     // TODO(dfox): remove this feature flag when we've refined the eclipse.xml sufficiently
     private static final String ECLIPSE_FORMATTING = "com.palantir.baseline-format.eclipse";
+    private static final String PJF_PROPERTY = "com.palantir.baseline-format.palantir-java-format";
     private static final String GENERATED_MARKER = File.separator + "generated";
 
     @Override
@@ -58,8 +62,18 @@ class BaselineFormat extends AbstractBaselinePlugin {
                 // use empty string to specify one group for all non-static imports
                 java.importOrder("");
 
+                if (eclipseFormattingEnabled(project) && palantirJavaFormatterEnabled(project)) {
+                    throw new GradleException(
+                            "Can't use both eclipse and palantir-java-format at the same time, please delete one of "
+                                    + ECLIPSE_FORMATTING + " or " + PJF_PROPERTY + " from your gradle.properties");
+                }
+
                 if (eclipseFormattingEnabled(project)) {
                     java.eclipse().configFile(project.file(eclipseXml.toString()));
+                }
+
+                if (palantirJavaFormatterEnabled(project)) {
+                    java.customLazy("palantir-java-format", PalantirJavaFormatterFunc::new);
                 }
 
                 java.trimTrailingWhitespace();
@@ -95,7 +109,19 @@ class BaselineFormat extends AbstractBaselinePlugin {
         return project.hasProperty(ECLIPSE_FORMATTING);
     }
 
+    static boolean palantirJavaFormatterEnabled(Project project) { return project.hasProperty(PJF_PROPERTY); }
+
     static Path eclipseConfigFile(Project project) {
         return project.getRootDir().toPath().resolve(".baseline/spotless/eclipse.xml");
+    }
+
+    private static class PalantirJavaFormatterFunc implements FormatterFunc {
+        // TODO(dfox): replace this with the real palantir-java-format when it is published to bintray
+        private final Formatter googleJavaFormatter = new Formatter();
+
+        @Override
+        public String apply(String input) throws Exception {
+            return googleJavaFormatter.formatSource(input);
+        }
     }
 }
