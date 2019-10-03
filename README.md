@@ -309,16 +309,15 @@ spotless {
         importOrder ''
         trimTrailingWhitespace
         indentWithSpaces 4
-
-        // only enabled if you run `./gradlew format -Pcom.palantir.baseline-format.eclipse`
-        eclipse().configFile "$rootDir/.baseline/eclipse.xml"
     }
 }
 ```
 
-We chose the Eclipse formatter because it can be run from the command line and from both IDEs (IntelliJ using the [Eclipse Code Formatter](https://plugins.jetbrains.com/plugin/6546-eclipse-code-formatter) plugin).
+**Add `com.palantir.baseline-format.eclipse=true`** to your gradle.properties to format entire files with the Eclipse formatter. The Eclipse formatter can be run from IntelliJ using the [Eclipse Code Formatter](https://plugins.jetbrains.com/plugin/6546-eclipse-code-formatter) plugin.
 
 To iterate on the eclipse.xml formatter config, you can import it into an instance of Eclipse, edit it through the preferences UI and then export it, or you can manually tune individual values by referring to the master list of [DefaultCodeFormatterConstants](https://github.com/eclipse/eclipse.jdt.core/blob/6a8cee1126829229d648db4ae0e5a6b70a5d4f13/org.eclipse.jdt.core/formatter/org/eclipse/jdt/core/formatter/DefaultCodeFormatterConstants.java) and [DefaultCodeFormatterOptions](https://github.com/eclipse/eclipse.jdt.core/blob/6a8cee1126829229d648db4ae0e5a6b70a5d4f13/org.eclipse.jdt.core/formatter/org/eclipse/jdt/internal/formatter/DefaultCodeFormatterOptions.java#L41-L95). Running `./gradlew :gradle-baseline-java:test -Drecreate=true` should update all the checked-in snapshot test cases.
+
+**Add `com.palantir.baseline-format.palantir-java-format=true`** to your gradle.properties to run our experimental fork of google-java-format.
 
 ## com.palantir.baseline-reproducibility
 
