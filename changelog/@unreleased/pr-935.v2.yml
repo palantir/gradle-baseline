@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Refaster rules for checks that maps do not contain a specific key
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/935
