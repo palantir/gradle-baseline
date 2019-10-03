@@ -22,29 +22,18 @@ import com.google.errorprone.refaster.ImportPolicy;
 import com.google.errorprone.refaster.annotation.AfterTemplate;
 import com.google.errorprone.refaster.annotation.BeforeTemplate;
 import com.google.errorprone.refaster.annotation.UseImportPolicy;
-import java.util.Map;
 
-public final class AssertjMapDoesNotContainKey<K, V> {
-
-    @BeforeTemplate
-    void before1(Map<K, V> things, K key) {
-        assertThat(things.containsKey(key)).isFalse();
-    }
+public final class AssertjBooleanNegationIsFalse {
 
     @BeforeTemplate
-    void before2(Map<K, V> things, K key) {
-        assertThat(things.get(key)).isNull();
-    }
-
-    @BeforeTemplate
-    @SuppressWarnings("RedundantCollectionOperation") // It's what we're fixing
-    void before3(Map<K, V> things, K key) {
-        assertThat(things.keySet().contains(key)).isFalse();
+    void before(boolean input) {
+        assertThat(!input).isFalse();
     }
 
     @AfterTemplate
     @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
-    void after(Map<K, V> things, K key) {
-        assertThat(things).doesNotContainKey(key);
+    void after(boolean input) {
+        assertThat(input).isTrue();
     }
+
 }
