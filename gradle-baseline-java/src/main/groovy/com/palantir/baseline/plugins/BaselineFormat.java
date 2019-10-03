@@ -109,7 +109,9 @@ class BaselineFormat extends AbstractBaselinePlugin {
         return project.hasProperty(ECLIPSE_FORMATTING);
     }
 
-    static boolean palantirJavaFormatterEnabled(Project project) { return project.hasProperty(PJF_PROPERTY); }
+    static boolean palantirJavaFormatterEnabled(Project project) {
+        return project.hasProperty(PJF_PROPERTY);
+    }
 
     static Path eclipseConfigFile(Project project) {
         return project.getRootDir().toPath().resolve(".baseline/spotless/eclipse.xml");
