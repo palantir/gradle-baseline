@@ -21,7 +21,7 @@ import org.junit.Test;
 public class AssertjMapContainsKeyTest {
 
     @Test
-    public void simple() {
+    public void contains_simple() {
         RefasterTestHelper
                 .forRefactoring(AssertjMapContainsKey.class)
                 .withInputLines(
@@ -29,16 +29,18 @@ public class AssertjMapContainsKeyTest {
                         "import static org.assertj.core.api.Assertions.assertThat;",
                         "import java.util.Map;",
                         "public class Test {",
-                        "  void f(Map<String, String> in) {",
+                        "  void f(Map<String, Object> in) {",
                         "    assertThat(in.keySet().contains(\"foo\")).isTrue();",
                         "    assertThat(in.containsKey(\"foo\")).isTrue();",
+                        "    assertThat(in.get(\"foo\")).isNotNull();",
                         "  }",
                         "}")
                 .hasOutputLines(
                         "import static org.assertj.core.api.Assertions.assertThat;",
                         "import java.util.Map;",
                         "public class Test {",
-                        "  void f(Map<String, String> in) {",
+                        "  void f(Map<String, Object> in) {",
+                        "    assertThat(in).containsKey(\"foo\");",
                         "    assertThat(in).containsKey(\"foo\");",
                         "    assertThat(in).containsKey(\"foo\");",
                         "  }",
@@ -46,7 +48,7 @@ public class AssertjMapContainsKeyTest {
     }
 
     @Test
-    public void description() {
+    public void contains_description() {
         RefasterTestHelper
                 .forRefactoring(AssertjMapContainsKeyWithDescription.class)
                 .withInputLines(
@@ -54,18 +56,78 @@ public class AssertjMapContainsKeyTest {
                         "import static org.assertj.core.api.Assertions.assertThat;",
                         "import java.util.Map;",
                         "public class Test {",
-                        "  void f(Map<String, String> in) {",
+                        "  void f(Map<String, Object> in) {",
                         "    assertThat(in.keySet().contains(\"foo\")).describedAs(\"desc\").isTrue();",
                         "    assertThat(in.containsKey(\"foo\")).describedAs(\"desc\").isTrue();",
+                        "    assertThat(in.get(\"foo\")).describedAs(\"desc\").isNotNull();",
                         "  }",
                         "}")
                 .hasOutputLines(
                         "import static org.assertj.core.api.Assertions.assertThat;",
                         "import java.util.Map;",
                         "public class Test {",
-                        "  void f(Map<String, String> in) {",
+                        "  void f(Map<String, Object> in) {",
                         "    assertThat(in).describedAs(\"desc\").containsKey(\"foo\");",
                         "    assertThat(in).describedAs(\"desc\").containsKey(\"foo\");",
+                        "    assertThat(in).describedAs(\"desc\").containsKey(\"foo\");",
+                        "  }",
+                        "}");
+    }
+
+    @Test
+    public void notContain_simple() {
+        RefasterTestHelper
+                .forRefactoring(AssertjMapDoesNotContainKey.class)
+                .withInputLines(
+                        "Test",
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import java.util.Map;",
+                        "public class Test {",
+                        "  void f(Map<String, Object> in) {",
+                        "    assertThat(in.keySet().contains(\"foo\")).isFalse();",
+                        "    assertThat(!in.keySet().contains(\"foo\")).isTrue();",
+                        "    assertThat(in.containsKey(\"foo\")).isFalse();",
+                        "    assertThat(in.get(\"foo\")).isNull();",
+                        "  }",
+                        "}")
+                .hasOutputLines(
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import java.util.Map;",
+                        "public class Test {",
+                        "  void f(Map<String, Object> in) {",
+                        "    assertThat(in).doesNotContainKey(\"foo\");",
+                        "    assertThat(in).doesNotContainKey(\"foo\");",
+                        "    assertThat(in).doesNotContainKey(\"foo\");",
+                        "    assertThat(in).doesNotContainKey(\"foo\");",
+                        "  }",
+                        "}");
+    }
+
+    @Test
+    public void notContain_description() {
+        RefasterTestHelper
+                .forRefactoring(AssertjMapDoesNotContainKeyWithDescription.class)
+                .withInputLines(
+                        "Test",
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import java.util.Map;",
+                        "public class Test {",
+                        "  void f(Map<String, Object> in) {",
+                        "    assertThat(in.keySet().contains(\"foo\")).describedAs(\"desc\").isFalse();",
+                        "    assertThat(!in.keySet().contains(\"foo\")).describedAs(\"desc\").isTrue();",
+                        "    assertThat(in.containsKey(\"foo\")).describedAs(\"desc\").isFalse();",
+                        "    assertThat(in.get(\"foo\")).describedAs(\"desc\").isNull();",
+                        "  }",
+                        "}")
+                .hasOutputLines(
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "import java.util.Map;",
+                        "public class Test {",
+                        "  void f(Map<String, Object> in) {",
+                        "    assertThat(in).describedAs(\"desc\").doesNotContainKey(\"foo\");",
+                        "    assertThat(in).describedAs(\"desc\").doesNotContainKey(\"foo\");",
+                        "    assertThat(in).describedAs(\"desc\").doesNotContainKey(\"foo\");",
+                        "    assertThat(in).describedAs(\"desc\").doesNotContainKey(\"foo\");",
                         "  }",
                         "}");
     }

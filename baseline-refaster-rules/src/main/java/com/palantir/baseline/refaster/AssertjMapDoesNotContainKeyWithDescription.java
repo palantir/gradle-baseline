@@ -25,27 +25,38 @@ import com.google.errorprone.refaster.annotation.Repeated;
 import com.google.errorprone.refaster.annotation.UseImportPolicy;
 import java.util.Map;
 
-public final class AssertjMapContainsKeyWithDescription<K, V> {
+public final class AssertjMapDoesNotContainKeyWithDescription<K, V> {
 
     @BeforeTemplate
     void before1(Map<K, V> things, K key, String description, @Repeated Object descriptionArgs) {
-        assertThat(things.containsKey(key)).describedAs(description, descriptionArgs).isTrue();
+        assertThat(things.containsKey(key)).describedAs(description, descriptionArgs).isFalse();
     }
 
     @BeforeTemplate
-    @SuppressWarnings("RedundantCollectionOperation") // It's what we're fixing
     void before2(Map<K, V> things, K key, String description, @Repeated Object descriptionArgs) {
-        assertThat(things.keySet().contains(key)).describedAs(description, descriptionArgs).isTrue();
+        assertThat(!things.containsKey(key)).describedAs(description, descriptionArgs).isTrue();
     }
 
     @BeforeTemplate
     void before3(Map<K, V> things, K key, String description, @Repeated Object descriptionArgs) {
-        assertThat(things.get(key)).describedAs(description, descriptionArgs).isNotNull();
+        assertThat(things.get(key)).describedAs(description, descriptionArgs).isNull();
+    }
+
+    @BeforeTemplate
+    @SuppressWarnings("RedundantCollectionOperation") // It's what we're fixing
+    void before4(Map<K, V> things, K key, String description, @Repeated Object descriptionArgs) {
+        assertThat(things.keySet().contains(key)).describedAs(description, descriptionArgs).isFalse();
+    }
+
+    @BeforeTemplate
+    @SuppressWarnings("RedundantCollectionOperation") // It's what we're fixing
+    void before5(Map<K, V> things, K key, String description, @Repeated Object descriptionArgs) {
+        assertThat(!things.keySet().contains(key)).describedAs(description, descriptionArgs).isTrue();
     }
 
     @AfterTemplate
     @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
     void after(Map<K, V> things, K key, String description, @Repeated Object descriptionArgs) {
-        assertThat(things).describedAs(description, descriptionArgs).containsKey(key);
+        assertThat(things).describedAs(description, descriptionArgs).doesNotContainKey(key);
     }
 }
