@@ -22,29 +22,34 @@ import com.google.errorprone.refaster.ImportPolicy;
 import com.google.errorprone.refaster.annotation.AfterTemplate;
 import com.google.errorprone.refaster.annotation.BeforeTemplate;
 import com.google.errorprone.refaster.annotation.UseImportPolicy;
-import java.util.Map;
+import java.util.Objects;
 
-public final class AssertjMapContainsKey<K, V> {
+public final class AssertjNotNull {
 
     @BeforeTemplate
-    void before1(Map<K, V> things, K key) {
-        assertThat(things.containsKey(key)).isTrue();
+    void before1(Object input) {
+        assertThat(input == null).isFalse();
     }
 
     @BeforeTemplate
-    @SuppressWarnings("RedundantCollectionOperation") // It's what we're fixing
-    void before2(Map<K, V> things, K key) {
-        assertThat(things.keySet().contains(key)).isTrue();
+    void before2(Object input) {
+        assertThat(input != null).isTrue();
     }
 
     @BeforeTemplate
-    void before3(Map<K, V> things, K key) {
-        assertThat(things.get(key)).isNotNull();
+    void before3(Object input) {
+        assertThat(Objects.isNull(input)).isFalse();
+    }
+
+    @BeforeTemplate
+    void before4(Object input) {
+        assertThat(Objects.nonNull(input)).isTrue();
     }
 
     @AfterTemplate
     @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
-    void after(Map<K, V> things, K key) {
-        assertThat(things).containsKey(key);
+    void after(Object input) {
+        assertThat(input).isNotNull();
     }
+
 }

@@ -38,6 +38,11 @@ public final class AssertjMapContainsKeyWithDescription<K, V> {
         assertThat(things.keySet().contains(key)).describedAs(description, descriptionArgs).isTrue();
     }
 
+    @BeforeTemplate
+    void before3(Map<K, V> things, K key, String description, @Repeated Object descriptionArgs) {
+        assertThat(things.get(key)).describedAs(description, descriptionArgs).isNotNull();
+    }
+
     @AfterTemplate
     @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
     void after(Map<K, V> things, K key, String description, @Repeated Object descriptionArgs) {

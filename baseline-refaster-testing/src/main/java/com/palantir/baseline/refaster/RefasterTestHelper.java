@@ -33,6 +33,8 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import javax.tools.JavaFileObject;
 import org.assertj.core.api.Assertions;
@@ -49,14 +51,30 @@ public final class RefasterTestHelper {
         return new RefasterTestHelper(refasterRuleClass);
     }
 
-    private RefasterTestHelper(Class<?> refasterRuleClass) {
+    /**
+     * The source code of the given refaster rules should exist in {@code src/main/java}.
+     */
+    public static RefasterTestHelper forRefactoring(Class<?>... refasterRuleClasses) {
+        return new RefasterTestHelper(refasterRuleClasses);
+    }
+
+    private RefasterTestHelper(Class<?>... refasterRuleClasses) {
+        if (refasterRuleClasses.length == 0) {
+            throw new IllegalArgumentException("at least one rule class is required");
+        }
+        this.transformers = Arrays.stream(refasterRuleClasses)
+                .map(RefasterTestHelper::transformersForClass)
+                .flatMap(Collection::stream)
+                .collect(ImmutableList.toImmutableList());
+    }
+
+    private static ImmutableList<CodeTransformer> transformersForClass(Class<?> refasterRuleClass) {
         Path sourceFile = Paths
                 .get("src/main/java")
                 .resolve(refasterRuleClass.getName().replaceAll("\\.", File.separator) + ".java");
         try {
             Iterable<String> sourceLines = Files.readAllLines(sourceFile, StandardCharsets.UTF_8);
-            this.transformers = extractRefasterRules(
-                    JavaFileObjects.forSourceLines(refasterRuleClass.getName(), sourceLines));
+            return extractRefasterRules(JavaFileObjects.forSourceLines(refasterRuleClass.getName(), sourceLines));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -104,7 +122,7 @@ public final class RefasterTestHelper {
         }
     }
 
-    private List<CodeTransformer> extractRefasterRules(JavaFileObject object) {
+    private static ImmutableList<CodeTransformer> extractRefasterRules(JavaFileObject object) {
         CompilerUtility.CompilerResult result = CompilerUtility.compile(object);
         ClassTree classTree = result.compilationUnits().stream()
                 .flatMap(compilationUnitTree -> compilationUnitTree.getTypeDecls().stream())
