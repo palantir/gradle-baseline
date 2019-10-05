@@ -17,6 +17,7 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
+import com.google.common.collect.Iterables;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
@@ -29,10 +30,10 @@ import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
-import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.tree.JCTree.JCExpression;
+import com.sun.tools.javac.tree.JCTree.JCMethodInvocation;
+import com.sun.tools.javac.util.List;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -40,9 +41,6 @@ import java.util.IdentityHashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.SortedMap;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.concurrent.ConcurrentHashMap;
@@ -65,23 +63,44 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
     private static final Matcher<ExpressionTree> NEW_ARRAY_LIST =
             MethodMatchers.staticMethod()
                     .onClass("com.google.common.collect.Lists")
-                    .named("newArrayList");
+                    .named("newArrayList")
+                    .withParameters();
 
-    private static final Matcher<ExpressionTree> NEW_LINKED_LIST =
+    private static final Matcher<ExpressionTree> NEW_ARRAY_LIST_WITH_ITERABLE =
             MethodMatchers.staticMethod()
                     .onClass("com.google.common.collect.Lists")
-                    .named("newLinkedList");
-
-    private static final Matcher<ExpressionTree> NEW_COPY_ON_WRITE_ARRAY_LIST =
-            MethodMatchers.staticMethod()
-                    .onClass("com.google.common.collect.Lists")
-                    .named("newCopyOnWriteArrayList");
+                    .named("newArrayList")
+                    .withParameters("java.lang.Iterable");
 
     private static final Matcher<ExpressionTree> NEW_ARRAY_LIST_WITH_CAPACITY =
             MethodMatchers.staticMethod()
                     .onClass("com.google.common.collect.Lists")
                     .namedAnyOf("newArrayListWithCapacity", "newArrayListWithExpectedSize")
                     .withParameters("int");
+
+    private static final Matcher<ExpressionTree> NEW_LINKED_LIST =
+            MethodMatchers.staticMethod()
+                    .onClass("com.google.common.collect.Lists")
+                    .named("newLinkedList")
+                    .withParameters();
+
+    private static final Matcher<ExpressionTree> NEW_LINKED_LIST_WITH_ITERABLE =
+            MethodMatchers.staticMethod()
+                    .onClass("com.google.common.collect.Lists")
+                    .named("newLinkedList")
+                    .withParameters("java.lang.Iterable");
+
+    private static final Matcher<ExpressionTree> NEW_COW_ARRAY_LIST =
+            MethodMatchers.staticMethod()
+                    .onClass("com.google.common.collect.Lists")
+                    .named("newCopyOnWriteArrayList")
+                    .withParameters();
+
+    private static final Matcher<ExpressionTree> NEW_COW_ARRAY_LIST_WITH_ITERABLE =
+            MethodMatchers.staticMethod()
+                    .onClass("com.google.common.collect.Lists")
+                    .named("newCopyOnWriteArrayList")
+                    .withParameters("java.lang.Iterable");
 
     private static final Matcher<ExpressionTree> NEW_CONCURRENT_MAP =
             MethodMatchers.staticMethod()
@@ -92,7 +111,14 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
     private static final Matcher<ExpressionTree> NEW_HASH_MAP =
             MethodMatchers.staticMethod()
                     .onClass("com.google.common.collect.Maps")
-                    .named("newHashMap");
+                    .named("newHashMap")
+                    .withParameters();
+
+    private static final Matcher<ExpressionTree> NEW_HASH_MAP_WITH_MAP =
+            MethodMatchers.staticMethod()
+                    .onClass("com.google.common.collect.Maps")
+                    .named("newHashMap")
+                    .withParameters("java.util.Map");
 
     private static final Matcher<ExpressionTree> NEW_HASH_MAP_WITH_EXPECTED_SIZE =
             MethodMatchers.staticMethod()
@@ -103,17 +129,44 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
     private static final Matcher<ExpressionTree> NEW_TREE_MAP =
             MethodMatchers.staticMethod()
                     .onClass("com.google.common.collect.Maps")
-                    .named("newTreeMap");
+                    .named("newTreeMap")
+                    .withParameters();
 
-    private static final Matcher<ExpressionTree> NEW_COPY_ON_WRITE_ARRAY_SET =
+    private static final Matcher<ExpressionTree> NEW_TREE_MAP_WITH_COMPARATOR =
+            MethodMatchers.staticMethod()
+                    .onClass("com.google.common.collect.Maps")
+                    .named("newTreeMap")
+                    .withParameters("java.util.Comparator");
+
+    private static final Matcher<ExpressionTree> NEW_TREE_MAP_WITH_SORTED_MAP =
+            MethodMatchers.staticMethod()
+                    .onClass("com.google.common.collect.Maps")
+                    .named("newTreeMap")
+                    .withParameters("java.util.SortedMap");
+
+    private static final Matcher<ExpressionTree> NEW_COW_ARRAY_SET =
             MethodMatchers.staticMethod()
                     .onClass("com.google.common.collect.Sets")
-                    .named("newCopyOnWriteArraySet");
+                    .named("newCopyOnWriteArraySet")
+                    .withParameters();
+
+    private static final Matcher<ExpressionTree> NEW_COW_ARRAY_SET_WITH_ITERABLE =
+            MethodMatchers.staticMethod()
+                    .onClass("com.google.common.collect.Sets")
+                    .named("newCopyOnWriteArraySet")
+                    .withParameters("java.lang.Iterable");
 
     private static final Matcher<ExpressionTree> NEW_LINKED_HASH_SET =
             MethodMatchers.staticMethod()
                     .onClass("com.google.common.collect.Sets")
-                    .named("newLinkedHashSet");
+                    .named("newLinkedHashSet")
+                    .withParameters();
+
+    private static final Matcher<ExpressionTree> NEW_LINKED_HASH_SET_WITH_ITERABLE =
+            MethodMatchers.staticMethod()
+                    .onClass("com.google.common.collect.Sets")
+                    .named("newLinkedHashSet")
+                    .withParameters("java.lang.Iterable");
 
     private static final Matcher<ExpressionTree> NEW_LINKED_HASH_SET_WITH_EXPECTED_SIZE =
             MethodMatchers.staticMethod()
@@ -124,12 +177,32 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
     private static final Matcher<ExpressionTree> NEW_TREE_SET =
             MethodMatchers.staticMethod()
                     .onClass("com.google.common.collect.Sets")
-                    .named("newTreeSet");
+                    .named("newTreeSet")
+                    .withParameters();
+
+    private static final Matcher<ExpressionTree> NEW_TREE_SET_WITH_COMPARATOR =
+            MethodMatchers.staticMethod()
+                    .onClass("com.google.common.collect.Sets")
+                    .named("newTreeSet")
+                    .withParameters("java.util.Comparator");
+
+    private static final Matcher<ExpressionTree> NEW_TREE_SET_WITH_ITERABLE =
+            MethodMatchers.staticMethod()
+                    .onClass("com.google.common.collect.Sets")
+                    .named("newTreeSet")
+                    .withParameters("java.lang.Iterable");
 
     private static final Matcher<ExpressionTree> NEW_HASH_SET =
             MethodMatchers.staticMethod()
                     .onClass("com.google.common.collect.Sets")
-                    .named("newHashSet");
+                    .named("newHashSet")
+                    .withParameters();
+
+    private static final Matcher<ExpressionTree> NEW_HASH_SET_WITH_ITERABLE =
+            MethodMatchers.staticMethod()
+                    .onClass("com.google.common.collect.Sets")
+                    .named("newHashSet")
+                    .withParameters("java.lang.Iterable");
 
     private static final Matcher<ExpressionTree> NEW_HASH_SET_WITH_EXPECTED_SIZE =
             MethodMatchers.staticMethod()
@@ -140,7 +213,14 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
     private static final Matcher<ExpressionTree> NEW_LINKED_HASH_MAP =
             MethodMatchers.staticMethod()
                     .onClass("com.google.common.collect.Maps")
-                    .named("newLinkedHashMap");
+                    .named("newLinkedHashMap")
+                    .withParameters();
+
+    private static final Matcher<ExpressionTree> NEW_LINKED_HASH_MAP_WITH_MAP =
+            MethodMatchers.staticMethod()
+                    .onClass("com.google.common.collect.Maps")
+                    .named("newLinkedHashMap")
+                    .withParameters("java.util.Map");
 
     private static final Matcher<ExpressionTree> NEW_LINKED_HASH_MAP_WITH_EXPECTED_SIZE =
             MethodMatchers.staticMethod()
@@ -151,7 +231,20 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
     private static final Matcher<ExpressionTree> NEW_ENUM_MAP =
             MethodMatchers.staticMethod()
                     .onClass("com.google.common.collect.Maps")
-                    .named("newEnumMap");
+                    .named("newEnumMap")
+                    .withParameters();
+
+    private static final Matcher<ExpressionTree> NEW_ENUM_MAP_WITH_MAP =
+            MethodMatchers.staticMethod()
+                    .onClass("com.google.common.collect.Maps")
+                    .named("newEnumMap")
+                    .withParameters("java.util.Map");
+
+    private static final Matcher<ExpressionTree> NEW_ENUM_MAP_WITH_CLASS =
+            MethodMatchers.staticMethod()
+                    .onClass("com.google.common.collect.Maps")
+                    .named("newEnumMap")
+                    .withParameters("java.lang.Class");
 
     private static final Matcher<ExpressionTree> NEW_IDENTITY_HASH_MAP =
             MethodMatchers.staticMethod()
@@ -160,91 +253,113 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
-        // Param types used to figure out which overload is called
-        List<Type> paramTypes = ((JCTree.JCExpression) tree.getMethodSelect()).type.asMethodType().argtypes;
-
-        // Argument types used to differentiate between an Iterable and a Collection
-        List<Type> argTypes = ((JCTree.JCMethodInvocation) tree).args
-                .stream().map((JCTree.JCExpression e) -> e.type).collect(Collectors.toList());
+        // Argument type used to differentiate between an Iterable and a Collection
+        List<JCExpression> args = ((JCMethodInvocation) tree).args;
+        Type firstArgType = args.isEmpty() ? null : args.get(0).type;
 
         // For convenience
-        ExpressionTree arg = tree.getArguments().size() == 1 ? tree.getArguments().get(0) : null;
+        ExpressionTree firstArg = Iterables.getFirst(tree.getArguments(), null);
 
-        if (NEW_ARRAY_LIST.matches(tree, state)
-                && (paramTypes.isEmpty() || isIterableParamCollectionArg(state, paramTypes, argTypes))) {
-            return buildSingleArgFixSuggestion(tree, state, ArrayList.class, arg);
+        if (NEW_ARRAY_LIST.matches(tree, state)) {
+            return buildConstructorFixSuggestion(tree, state, ArrayList.class, firstArg);
+        }
+        if (NEW_ARRAY_LIST_WITH_ITERABLE.matches(tree, state) && isCollectionArg(state, firstArgType)) {
+            return buildConstructorFixSuggestion(tree, state, ArrayList.class, firstArg);
         }
         if (NEW_ARRAY_LIST_WITH_CAPACITY.matches(tree, state)) {
-            return buildSingleArgFixSuggestion(tree, state, ArrayList.class, arg);
+            return buildConstructorFixSuggestion(tree, state, ArrayList.class, firstArg);
         }
-        if (NEW_LINKED_LIST.matches(tree, state)
-                && (paramTypes.isEmpty() || isIterableParamCollectionArg(state, paramTypes, argTypes))) {
-            return buildSingleArgFixSuggestion(tree, state, LinkedList.class, arg);
+        if (NEW_LINKED_LIST.matches(tree, state)) {
+            return buildConstructorFixSuggestion(tree, state, LinkedList.class, firstArg);
         }
-        if (NEW_COPY_ON_WRITE_ARRAY_LIST.matches(tree, state)
-                && (paramTypes.isEmpty() || isIterableParamCollectionArg(state, paramTypes, argTypes))) {
-            return buildSingleArgFixSuggestion(tree, state, CopyOnWriteArrayList.class, arg);
+        if (NEW_LINKED_LIST_WITH_ITERABLE.matches(tree, state) && isCollectionArg(state, firstArgType)) {
+            return buildConstructorFixSuggestion(tree, state, LinkedList.class, firstArg);
+        }
+        if (NEW_COW_ARRAY_LIST.matches(tree, state)) {
+            return buildConstructorFixSuggestion(tree, state, CopyOnWriteArrayList.class, firstArg);
+        }
+        if (NEW_COW_ARRAY_LIST_WITH_ITERABLE.matches(tree, state) && isCollectionArg(state, firstArgType)) {
+            return buildConstructorFixSuggestion(tree, state, CopyOnWriteArrayList.class, firstArg);
         }
         if (NEW_CONCURRENT_MAP.matches(tree, state)) {
-            return buildSingleArgFixSuggestion(tree, state, ConcurrentHashMap.class, arg);
+            return buildConstructorFixSuggestion(tree, state, ConcurrentHashMap.class, firstArg);
         }
-        if (NEW_HASH_MAP.matches(tree, state)
-                && (paramTypes.isEmpty() || checkParamTypes(state, paramTypes, Map.class))) {
-            return buildSingleArgFixSuggestion(tree, state, HashMap.class, arg);
+        if (NEW_HASH_MAP.matches(tree, state)) {
+            return buildConstructorFixSuggestion(tree, state, HashMap.class, firstArg);
+        }
+        if (NEW_HASH_MAP_WITH_MAP.matches(tree, state)) {
+            return buildConstructorFixSuggestion(tree, state, HashMap.class, firstArg);
         }
         if (NEW_HASH_MAP_WITH_EXPECTED_SIZE.matches(tree, state)) {
-            return buildSingleArgFixSuggestion(tree, state, HashMap.class, arg);
+            return buildConstructorFixSuggestion(tree, state, HashMap.class, firstArg);
         }
-        if (NEW_COPY_ON_WRITE_ARRAY_SET.matches(tree, state)
-                && (paramTypes.isEmpty() || isIterableParamCollectionArg(state, paramTypes, argTypes))) {
-            return buildSingleArgFixSuggestion(tree, state, CopyOnWriteArraySet.class, arg);
+        if (NEW_COW_ARRAY_SET.matches(tree, state)) {
+            return buildConstructorFixSuggestion(tree, state, CopyOnWriteArraySet.class, firstArg);
         }
-        if (NEW_LINKED_HASH_SET.matches(tree, state)
-                && (paramTypes.isEmpty() || isIterableParamCollectionArg(state, paramTypes, argTypes))) {
-            return buildSingleArgFixSuggestion(tree, state, LinkedHashSet.class, arg);
+        if (NEW_COW_ARRAY_SET_WITH_ITERABLE.matches(tree, state) && isCollectionArg(state, firstArgType)) {
+            return buildConstructorFixSuggestion(tree, state, CopyOnWriteArraySet.class, firstArg);
+        }
+        if (NEW_LINKED_HASH_SET.matches(tree, state)) {
+            return buildConstructorFixSuggestion(tree, state, LinkedHashSet.class, firstArg);
+        }
+        if (NEW_LINKED_HASH_SET_WITH_ITERABLE.matches(tree, state) && isCollectionArg(state, firstArgType)) {
+            return buildConstructorFixSuggestion(tree, state, LinkedHashSet.class, firstArg);
         }
         if (NEW_LINKED_HASH_SET_WITH_EXPECTED_SIZE.matches(tree, state)) {
-            return buildSingleArgFixSuggestion(tree, state, LinkedHashSet.class, arg);
+            return buildConstructorFixSuggestion(tree, state, LinkedHashSet.class, firstArg);
         }
-        if (NEW_TREE_SET.matches(tree, state)
-                && (paramTypes.isEmpty()
-                        || checkParamTypes(state, paramTypes, Comparator.class)
-                        || isIterableParamCollectionArg(state, paramTypes, argTypes))) {
-            return buildSingleArgFixSuggestion(tree, state, TreeSet.class, arg);
+        if (NEW_TREE_SET.matches(tree, state)) {
+            return buildConstructorFixSuggestion(tree, state, TreeSet.class, firstArg);
         }
-        if (NEW_HASH_SET.matches(tree, state)
-                && (paramTypes.isEmpty() || isIterableParamCollectionArg(state, paramTypes, argTypes))) {
-            return buildSingleArgFixSuggestion(tree, state, HashSet.class, arg);
+        if (NEW_TREE_SET_WITH_COMPARATOR.matches(tree, state)) {
+            return buildConstructorFixSuggestion(tree, state, TreeSet.class, firstArg);
+        }
+        if (NEW_TREE_SET_WITH_ITERABLE.matches(tree, state) && isCollectionArg(state, firstArgType)) {
+            return buildConstructorFixSuggestion(tree, state, TreeSet.class, firstArg);
+        }
+        if (NEW_HASH_SET.matches(tree, state)) {
+            return buildConstructorFixSuggestion(tree, state, HashSet.class, firstArg);
+        }
+        if (NEW_HASH_SET_WITH_ITERABLE.matches(tree, state) && isCollectionArg(state, firstArgType)) {
+            return buildConstructorFixSuggestion(tree, state, HashSet.class, firstArg);
         }
         if (NEW_HASH_SET_WITH_EXPECTED_SIZE.matches(tree, state)) {
-            return buildSingleArgFixSuggestion(tree, state, HashSet.class, arg);
+            return buildConstructorFixSuggestion(tree, state, HashSet.class, firstArg);
         }
-        if (NEW_TREE_MAP.matches(tree, state)
-                && (paramTypes.isEmpty()
-                        || checkParamTypes(state, paramTypes, SortedMap.class)
-                        || checkParamTypes(state, paramTypes, Comparator.class))) {
-            return buildSingleArgFixSuggestion(tree, state, TreeMap.class, arg);
+        if (NEW_TREE_MAP.matches(tree, state)) {
+            return buildConstructorFixSuggestion(tree, state, TreeMap.class, firstArg);
         }
-        if (NEW_LINKED_HASH_MAP.matches(tree, state)
-                && (paramTypes.isEmpty() || checkParamTypes(state, paramTypes, Map.class))) {
-            return buildSingleArgFixSuggestion(tree, state, LinkedHashMap.class, arg);
+        if (NEW_TREE_MAP_WITH_SORTED_MAP.matches(tree, state)) {
+            return buildConstructorFixSuggestion(tree, state, TreeMap.class, firstArg);
+        }
+        if (NEW_TREE_MAP_WITH_COMPARATOR.matches(tree, state)) {
+            return buildConstructorFixSuggestion(tree, state, TreeMap.class, firstArg);
+        }
+        if (NEW_LINKED_HASH_MAP.matches(tree, state)) {
+            return buildConstructorFixSuggestion(tree, state, LinkedHashMap.class, firstArg);
+        }
+        if (NEW_LINKED_HASH_MAP_WITH_MAP.matches(tree, state)) {
+            return buildConstructorFixSuggestion(tree, state, LinkedHashMap.class, firstArg);
         }
         if (NEW_LINKED_HASH_MAP_WITH_EXPECTED_SIZE.matches(tree, state)) {
-            return buildSingleArgFixSuggestion(tree, state, LinkedHashMap.class, arg);
+            return buildConstructorFixSuggestion(tree, state, LinkedHashMap.class, firstArg);
         }
-        if (NEW_ENUM_MAP.matches(tree, state)
-                && (paramTypes.isEmpty()
-                        || checkParamTypes(state, paramTypes, Class.class)
-                        || checkParamTypes(state, paramTypes, Map.class))) {
-            return buildSingleArgFixSuggestion(tree, state, EnumMap.class, arg);
+        if (NEW_ENUM_MAP.matches(tree, state)) {
+            return buildConstructorFixSuggestion(tree, state, EnumMap.class, firstArg);
+        }
+        if (NEW_ENUM_MAP_WITH_CLASS.matches(tree, state)) {
+            return buildConstructorFixSuggestion(tree, state, EnumMap.class, firstArg);
+        }
+        if (NEW_ENUM_MAP_WITH_MAP.matches(tree, state)) {
+            return buildConstructorFixSuggestion(tree, state, EnumMap.class, firstArg);
         }
         if (NEW_IDENTITY_HASH_MAP.matches(tree, state)) {
-            return buildSingleArgFixSuggestion(tree, state, IdentityHashMap.class, arg);
+            return buildConstructorFixSuggestion(tree, state, IdentityHashMap.class, firstArg);
         }
         return Description.NO_MATCH;
     }
 
-    private Description buildSingleArgFixSuggestion(
+    private Description buildConstructorFixSuggestion(
             MethodInvocationTree tree,
             VisitorState state,
             Class<?> collectionClass,
@@ -258,36 +373,14 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
         String arg = argTree == null ? "" : state.getSourceForNode(argTree);
         String replacement = "new " + collectionType + "<" + typeArgs + ">(" + arg + ")";
         return buildDescription(tree)
-                .setMessage("The factory method call should be replaced with a constructor call.")
+                .setMessage("The factory method call should be replaced with a constructor call. " +
+                        "See https://git.io/JeCT6 for more information.")
                 .addFix(fixBuilder.replace(tree, replacement).build())
                 .build();
     }
 
-    private boolean isIterableParamCollectionArg(VisitorState state, List<Type> params, List<Type> args) {
-        return checkParamTypes(state, params, Iterable.class)
-                && checkArgTypes(state, args, Collection.class);
-    }
-
-    private boolean checkParamTypes(VisitorState state, List<Type> params, Class<?>... expected) {
-        return checkTypes(state, false, params, expected);
-    }
-
-    private boolean checkArgTypes(VisitorState state, List<Type> args, Class<?>... expected) {
-        return checkTypes(state, true, args, expected);
-    }
-
-    private boolean checkTypes(VisitorState state, boolean subtypes, List<Type> typeList1, Class<?>... typeList2) {
+    private boolean isCollectionArg(VisitorState state, Type type) {
         Types types = state.getTypes();
-        if (typeList1.size() != typeList2.length) {
-            return false;
-        }
-        for (int i = 0; i < typeList1.size(); i++) {
-            Type t1 = types.erasure(typeList1.get(i));
-            Type t2 = types.erasure(state.getTypeFromString(typeList2[i].getName()));
-            if ((!subtypes && !types.isSameType(t1, t2)) || (subtypes && !types.isSubtype(t1, t2))) {
-                return false;
-            }
-        }
-        return true;
+        return types.isSubtype(types.erasure(type), types.erasure(state.getTypeFromString("java.util.Collection")));
     }
 }
