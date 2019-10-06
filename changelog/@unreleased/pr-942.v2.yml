@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Refaster rule 'CollectionStreamForEach'
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/942
