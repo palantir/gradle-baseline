@@ -21,7 +21,7 @@ import com.google.errorprone.refaster.annotation.BeforeTemplate;
 import java.util.Collection;
 import java.util.function.Consumer;
 
-public class CollectionStreamForEach<T> {
+public final class CollectionStreamForEach<T> {
 
     @BeforeTemplate
     @SuppressWarnings("SimplifyStreamApiCallChains") // This is what we're fixing
