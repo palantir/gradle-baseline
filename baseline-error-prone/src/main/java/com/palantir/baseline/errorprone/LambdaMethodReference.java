@@ -39,6 +39,7 @@ import java.util.Optional;
         name = "LambdaMethodReference",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
+        providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = BugPattern.SeverityLevel.SUGGESTION,
         summary = "Lambda should be a method reference")
 public final class LambdaMethodReference extends BugChecker implements BugChecker.LambdaExpressionTreeMatcher {
