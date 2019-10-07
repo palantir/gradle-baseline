@@ -322,11 +322,14 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
     }
 
     private Class<?> findCollectionClassToUse(VisitorState state, ExpressionTree tree) {
-        boolean firstArgIsCollection = isFirstArgCollection(state, tree);
         for (Map.Entry<Matcher<ExpressionTree>, Class<?>> entry : classMap.entrySet()) {
             Matcher<ExpressionTree> matcher = entry.getKey();
-            if (matcher.matches(tree, state) && (!requiresCollectionArg.contains(matcher) || firstArgIsCollection)) {
-                return entry.getValue();
+            if (matcher.matches(tree, state)) {
+                if (!requiresCollectionArg.contains(matcher) || isFirstArgCollection(state, tree)) {
+                    return entry.getValue();
+                }
+                // All matchers are mutually exclusive, so no point in looking for another match.
+                break;
             }
         }
         return null;
