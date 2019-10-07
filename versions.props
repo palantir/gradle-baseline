@@ -1,4 +1,4 @@
-com.diffplug.spotless:spotless-plugin-gradle = 3.24.3
+com.diffplug.spotless:spotless-plugin-gradle = 3.25.0
 com.google.auto.service:auto-service = 1.0-rc4
 com.google.errorprone:error_prone_annotations = 2.3.3
 com.google.errorprone:error_prone_core = 2.3.3
