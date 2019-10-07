@@ -33,6 +33,7 @@ import com.sun.source.tree.MethodInvocationTree;
         name = "PreferBuiltInConcurrentKeySet",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
+        providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = BugPattern.SeverityLevel.SUGGESTION,
         summary = "Prefer Java's built-in Concurrent Set implementation over Guava's ConcurrentHashSet, as it does "
                 + "the same thing with less indirection and doesn't rely on Guava")

@@ -36,6 +36,7 @@ import com.sun.source.tree.Tree.Kind;
         name = "OptionalOrElseMethodInvocation",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
+        providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = SeverityLevel.ERROR,
         summary = "Expression passed to Optional#orElse invokes a method, use Optional#orElseGet instead")
 public final class OptionalOrElseMethodInvocation extends BugChecker implements MethodInvocationTreeMatcher {
