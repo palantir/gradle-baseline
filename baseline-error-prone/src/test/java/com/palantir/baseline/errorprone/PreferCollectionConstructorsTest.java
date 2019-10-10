@@ -52,14 +52,6 @@ public final class PreferCollectionConstructorsTest {
     }
 
     @Test
-    public void testNewArrayListWithExpectedSizeRewrite() {
-        testStaticFactoryMethodRewrite(
-                "Lists.newArrayListWithExpectedSize(123)",
-                "new ArrayList<>(123)",
-                "java.util.ArrayList");
-    }
-
-    @Test
     public void testNewLinkedListRewrite() {
         testStaticFactoryMethodRewrite(
                 "Lists.newLinkedList()",
@@ -132,14 +124,6 @@ public final class PreferCollectionConstructorsTest {
     }
 
     @Test
-    public void testNewHashMapWithExpectedSizeRewrite() {
-        testStaticFactoryMethodRewrite(
-                "Maps.newHashMapWithExpectedSize(123)",
-                "new HashMap<>(123)",
-                "java.util.HashMap");
-    }
-
-    @Test
     public void testNewIdentityHashMapRewrite() {
         testStaticFactoryMethodRewrite(
                 "Maps.newIdentityHashMap()",
@@ -160,14 +144,6 @@ public final class PreferCollectionConstructorsTest {
         testStaticFactoryMethodRewrite(
                 "Maps.newLinkedHashMap(new java.util.HashMap<>())",
                 "new LinkedHashMap<>(new java.util.HashMap<>())",
-                "java.util.LinkedHashMap");
-    }
-
-    @Test
-    public void testNewLinkedHashMapWithExpectedSizeRewrite() {
-        testStaticFactoryMethodRewrite(
-                "Maps.newLinkedHashMapWithExpectedSize(123)",
-                "new LinkedHashMap<>(123)",
                 "java.util.LinkedHashMap");
     }
 
@@ -228,14 +204,6 @@ public final class PreferCollectionConstructorsTest {
     }
 
     @Test
-    public void testNewHashSetWithExpectedSizeRewrite() {
-        testStaticFactoryMethodRewrite(
-                "Sets.newHashSetWithExpectedSize(123)",
-                "new HashSet<>(123)",
-                "java.util.HashSet");
-    }
-
-    @Test
     public void testNewLinkedHashSetRewrite() {
         testStaticFactoryMethodRewrite(
                 "Sets.newLinkedHashSet()",
@@ -248,14 +216,6 @@ public final class PreferCollectionConstructorsTest {
         testStaticFactoryMethodRewrite(
                 "Sets.newLinkedHashSet(new java.util.HashSet<>())",
                 "new LinkedHashSet<>(new java.util.HashSet<>())",
-                "java.util.LinkedHashSet");
-    }
-
-    @Test
-    public void testNewLinkedHashSetWithExpectedSizeRewrite() {
-        testStaticFactoryMethodRewrite(
-                "Sets.newLinkedHashSetWithExpectedSize(123)",
-                "new LinkedHashSet<>(123)",
                 "java.util.LinkedHashSet");
     }
 

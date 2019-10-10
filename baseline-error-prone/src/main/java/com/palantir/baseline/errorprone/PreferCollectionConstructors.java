@@ -78,7 +78,7 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
     private static final Matcher<ExpressionTree> NEW_ARRAY_LIST_WITH_CAPACITY =
             MethodMatchers.staticMethod()
                     .onClass("com.google.common.collect.Lists")
-                    .namedAnyOf("newArrayListWithCapacity", "newArrayListWithExpectedSize")
+                    .named("newArrayListWithCapacity")
                     .withParameters("int");
 
     private static final Matcher<ExpressionTree> NEW_LINKED_LIST =
@@ -123,12 +123,6 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
                     .named("newHashMap")
                     .withParameters("java.util.Map");
 
-    private static final Matcher<ExpressionTree> NEW_HASH_MAP_WITH_EXPECTED_SIZE =
-            MethodMatchers.staticMethod()
-                    .onClass("com.google.common.collect.Maps")
-                    .named("newHashMapWithExpectedSize")
-                    .withParameters("int");
-
     private static final Matcher<ExpressionTree> NEW_TREE_MAP =
             MethodMatchers.staticMethod()
                     .onClass("com.google.common.collect.Maps")
@@ -171,12 +165,6 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
                     .named("newLinkedHashSet")
                     .withParameters("java.lang.Iterable");
 
-    private static final Matcher<ExpressionTree> NEW_LINKED_HASH_SET_WITH_EXPECTED_SIZE =
-            MethodMatchers.staticMethod()
-                    .onClass("com.google.common.collect.Sets")
-                    .named("newLinkedHashSetWithExpectedSize")
-                    .withParameters("int");
-
     private static final Matcher<ExpressionTree> NEW_TREE_SET =
             MethodMatchers.staticMethod()
                     .onClass("com.google.common.collect.Sets")
@@ -207,12 +195,6 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
                     .named("newHashSet")
                     .withParameters("java.lang.Iterable");
 
-    private static final Matcher<ExpressionTree> NEW_HASH_SET_WITH_EXPECTED_SIZE =
-            MethodMatchers.staticMethod()
-                    .onClass("com.google.common.collect.Sets")
-                    .named("newHashSetWithExpectedSize")
-                    .withParameters("int");
-
     private static final Matcher<ExpressionTree> NEW_LINKED_HASH_MAP =
             MethodMatchers.staticMethod()
                     .onClass("com.google.common.collect.Maps")
@@ -224,12 +206,6 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
                     .onClass("com.google.common.collect.Maps")
                     .named("newLinkedHashMap")
                     .withParameters("java.util.Map");
-
-    private static final Matcher<ExpressionTree> NEW_LINKED_HASH_MAP_WITH_EXPECTED_SIZE =
-            MethodMatchers.staticMethod()
-                    .onClass("com.google.common.collect.Maps")
-                    .named("newLinkedHashMapWithExpectedSize")
-                    .withParameters("int");
 
     private static final Matcher<ExpressionTree> NEW_ENUM_MAP =
             MethodMatchers.staticMethod()
@@ -260,8 +236,6 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
                     .put(NEW_HASH_SET, HashSet.class)
                     .put(NEW_HASH_MAP, HashMap.class)
                     .put(NEW_ARRAY_LIST_WITH_CAPACITY, ArrayList.class)
-                    .put(NEW_HASH_MAP_WITH_EXPECTED_SIZE, HashMap.class)
-                    .put(NEW_HASH_SET_WITH_EXPECTED_SIZE, HashSet.class)
                     .put(NEW_LINKED_HASH_MAP, LinkedHashMap.class)
                     .put(NEW_TREE_MAP, TreeMap.class)
                     .put(NEW_CONCURRENT_MAP, ConcurrentHashMap.class)
@@ -275,7 +249,6 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
                     .put(NEW_COPY_ON_WRITE_ARRAY_SET_WITH_ITERABLE, CopyOnWriteArraySet.class)
                     .put(NEW_LINKED_HASH_SET, LinkedHashSet.class)
                     .put(NEW_LINKED_HASH_SET_WITH_ITERABLE, LinkedHashSet.class)
-                    .put(NEW_LINKED_HASH_SET_WITH_EXPECTED_SIZE, LinkedHashSet.class)
                     .put(NEW_TREE_SET, TreeSet.class)
                     .put(NEW_TREE_SET_WITH_COMPARATOR, TreeSet.class)
                     .put(NEW_TREE_SET_WITH_ITERABLE, TreeSet.class)
@@ -283,7 +256,6 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
                     .put(NEW_TREE_MAP_WITH_SORTED_MAP, TreeMap.class)
                     .put(NEW_TREE_MAP_WITH_COMPARATOR, TreeMap.class)
                     .put(NEW_LINKED_HASH_MAP_WITH_MAP, LinkedHashMap.class)
-                    .put(NEW_LINKED_HASH_MAP_WITH_EXPECTED_SIZE, LinkedHashMap.class)
                     .put(NEW_ENUM_MAP, EnumMap.class)
                     .put(NEW_ENUM_MAP_WITH_CLASS, EnumMap.class)
                     .put(NEW_ENUM_MAP_WITH_MAP, EnumMap.class)
