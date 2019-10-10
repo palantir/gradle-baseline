@@ -74,7 +74,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         result.output.contains("Found 1 dependencies unused during compilation")
     }
 
-    def 'checkUnusedDependencies passes when annotationProcessor and compileOnly classes are referenced'() {
+    def 'checkUnusedDependencies passes when annotationProcessor or compileOnly classes are not referenced'() {
         when:
         buildFile << standardBuildFile
         buildFile << """
@@ -83,24 +83,10 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         }
         dependencies {
             annotationProcessor 'org.immutables:value:2.7.5'
-            compileOnly 'com.google.code.findbugs:jsr305:3.0.2'
             compileOnly 'org.immutables:value:2.7.5:annotations'
         }
         """
-        file('src/main/java/pkg/Foo.java') << '''
-            package pkg;
-
-            import javax.annotation.Nullable;
-            import org.immutables.value.Value;
-
-            public class Foo {
-              void foo(@Nullable String nullable) {}
-              @Value.Immutable
-              interface Test {
-                String name();
-              }
-            }
-            '''.stripIndent()
+        file('src/main/java/pkg/Foo.java') << minimalJavaFile
 
         then:
         BuildResult result = with('checkUnusedDependencies', '--stacktrace').build()
