@@ -73,7 +73,7 @@ public class CheckJUnitDependencies extends DefaultTask {
         boolean junitJupiterIsPresent = hasDep(deps, CheckJUnitDependencies::isJunitJupiter);
         boolean vintageEngineExists = hasDep(deps, CheckJUnitDependencies::isVintageEngine);
         boolean spockDependency = hasDep(deps, CheckJUnitDependencies::isSpock);
-        String testRuntimeOnly = ss.getRuntimeConfigurationName() + "Only";
+        String testRuntimeOnly = ss.getRuntimeOnlyConfigurationName();
         boolean junitPlatformEnabled = BaselineTesting.useJUnitPlatformEnabled(task);
 
         // If some testing library happens to provide the junit-jupiter-api, then users might start using the
