@@ -16,7 +16,6 @@
 
 package com.palantir.baseline.tasks;
 
-
 import com.google.common.base.Preconditions;
 import com.palantir.baseline.plugins.BaselineTesting;
 import java.io.File;
@@ -166,9 +165,6 @@ public class CheckJUnitDependencies extends DefaultTask {
         return "org.junit.vintage".equals(dep.getGroup()) && "junit-vintage-engine".equals(dep.getName());
     }
 
-    private static boolean isJunit4(ModuleVersionIdentifier dep) {
-        return "junit".equals(dep.getGroup()) && "junit".equals(dep.getName());
-    }
     private static boolean isSpock(ModuleVersionIdentifier dep) {
         return "org.spockframework".equals(dep.getGroup()) && "spock-core".equals(dep.getName());
     }
