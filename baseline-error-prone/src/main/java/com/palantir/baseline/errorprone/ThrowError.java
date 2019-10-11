@@ -20,11 +20,18 @@ import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
+import com.google.errorprone.fixes.SuggestedFix;
+import com.google.errorprone.fixes.SuggestedFixes;
+import com.google.errorprone.matchers.CompileTimeConstantExpressionMatcher;
 import com.google.errorprone.matchers.Description;
+import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.NewClassTree;
 import com.sun.source.tree.ThrowTree;
+import com.sun.tools.javac.code.Type;
+import java.util.List;
+import java.util.Optional;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -44,23 +51,60 @@ import com.sun.source.tree.ThrowTree;
                 + "that throws AssertionError.")
 public final class ThrowError extends BugChecker implements BugChecker.ThrowTreeMatcher {
 
+    private static final Matcher<ExpressionTree> compileTimeConstExpressionMatcher =
+            new CompileTimeConstantExpressionMatcher();
     private static final String ERROR_NAME = Error.class.getName();
 
     @Override
     public Description matchThrow(ThrowTree tree, VisitorState state) {
         ExpressionTree expression = tree.getExpression();
-        if (expression instanceof NewClassTree) {
-            NewClassTree newClassTree = (NewClassTree) expression;
-            if (ASTHelpers.isCastable(
-                    ASTHelpers.getType(newClassTree.getIdentifier()),
-                    state.getTypeFromString(ERROR_NAME),
-                    state)
-                    // Don't discourage developers from testing edge cases involving Errors.
-                    // It's also fine for tests throw AssertionError internally in test objects.
-                    && !TestCheckUtils.isTestCode(state)) {
-                return describeMatch(tree);
-            }
+        if (!(expression instanceof NewClassTree)) {
+            return Description.NO_MATCH;
         }
-        return Description.NO_MATCH;
+        NewClassTree newClassTree = (NewClassTree) expression;
+        Type throwableType = ASTHelpers.getType(newClassTree.getIdentifier());
+        if (!ASTHelpers.isCastable(
+                throwableType,
+                state.getTypeFromString(ERROR_NAME),
+                state)
+                // Don't discourage developers from testing edge cases involving Errors.
+                // It's also fine for tests throw AssertionError internally in test objects.
+                || TestCheckUtils.isTestCode(state)) {
+            return Description.NO_MATCH;
+        }
+        return buildDescription(tree)
+                .addFix(generateFix(newClassTree, state))
+                .build();
+    }
+
+    private static Optional<SuggestedFix> generateFix(NewClassTree newClassTree, VisitorState state) {
+        Type throwableType = ASTHelpers.getType(newClassTree.getIdentifier());
+        // AssertionError is the most common failure case we've encountered, likely because it sounds
+        // similar to IllegalStateException. In this case we suggest replacing it with IllegalStateException.
+        if (!ASTHelpers.isSameType(
+                throwableType,
+                state.getTypeFromString(AssertionError.class.getName()),
+                state)) {
+            return Optional.empty();
+        }
+        List<? extends ExpressionTree> arguments = newClassTree.getArguments();
+        if (arguments.isEmpty()) {
+            SuggestedFix.Builder fix = SuggestedFix.builder();
+            String qualifiedName = SuggestedFixes.qualifyType(state, fix, IllegalStateException.class.getName());
+            return Optional.of(fix.replace(newClassTree.getIdentifier(), qualifiedName).build());
+        }
+        ExpressionTree firstArgument = arguments.get(0);
+        if (ASTHelpers.isSameType(
+                ASTHelpers.getResultType(firstArgument),
+                state.getTypeFromString(String.class.getName()),
+                state)) {
+            SuggestedFix.Builder fix = SuggestedFix.builder();
+            String qualifiedName = SuggestedFixes.qualifyType(state, fix,
+                    compileTimeConstExpressionMatcher.matches(firstArgument, state)
+                    ? "com.palantir.logsafe.exceptions.SafeIllegalStateException"
+                    : IllegalStateException.class.getName());
+            return Optional.of(fix.replace(newClassTree.getIdentifier(), qualifiedName).build());
+        }
+        return Optional.empty();
     }
 }

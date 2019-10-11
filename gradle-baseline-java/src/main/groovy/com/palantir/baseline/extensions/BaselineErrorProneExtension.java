@@ -34,6 +34,7 @@ public class BaselineErrorProneExtension {
             "PreferSafeLoggingPreconditions",
             "StrictUnusedVariable",
             "StringBuilderConstantParameters",
+            "ThrowError",
 
             // Built-in checks
             "ArrayEquals",

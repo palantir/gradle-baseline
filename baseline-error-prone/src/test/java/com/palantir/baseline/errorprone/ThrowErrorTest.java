@@ -16,6 +16,7 @@
 
 package com.palantir.baseline.errorprone;
 
+import com.google.errorprone.BugCheckerRefactoringTestHelper;
 import com.google.errorprone.CompilationTestHelper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
@@ -78,7 +79,56 @@ class ThrowErrorTest {
         ).doTest();
     }
 
+    @Test
+    void testFix() {
+        fix()
+                .addInputLines(
+                        "Test.java",
+                        "class Test {",
+                        "   void f1() {",
+                        "       throw new AssertionError();",
+                        "   }",
+                        "   void f2(String nonConstant) {",
+                        "       throw new AssertionError(nonConstant);",
+                        "   }",
+                        "   void f3() {",
+                        "       throw new AssertionError(\"constant\");",
+                        "   }",
+                        "   void f4(String nonConstant, Throwable t) {",
+                        "       throw new AssertionError(nonConstant, t);",
+                        "   }",
+                        "   void f5(Throwable t) {",
+                        "       throw new AssertionError(\"constant\", t);",
+                        "   }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.exceptions.SafeIllegalStateException;",
+                        "class Test {",
+                        "   void f1() {",
+                        "       throw new IllegalStateException();",
+                        "   }",
+                        "   void f2(String nonConstant) {",
+                        "       throw new IllegalStateException(nonConstant);",
+                        "   }",
+                        "   void f3() {",
+                        "       throw new SafeIllegalStateException(\"constant\");",
+                        "   }",
+                        "   void f4(String nonConstant, Throwable t) {",
+                        "       throw new IllegalStateException(nonConstant, t);",
+                        "   }",
+                        "   void f5(Throwable t) {",
+                        "       throw new SafeIllegalStateException(\"constant\", t);",
+                        "   }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(ThrowError.class, getClass());
+    }
+
+    private BugCheckerRefactoringTestHelper fix() {
+        return BugCheckerRefactoringTestHelper.newInstance(new ThrowError(), getClass());
     }
 }
