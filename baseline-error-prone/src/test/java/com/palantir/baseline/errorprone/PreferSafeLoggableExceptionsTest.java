@@ -164,6 +164,18 @@ public class PreferSafeLoggableExceptionsTest {
     }
 
     @Test
+    public void illegal_state_exception_with_assertj_import_doesnt_match() {
+        compilationHelper.addSourceLines(
+                "Foo.java",
+                "import static org.assertj.core.api.Assertions.assertThat;",
+                "class Foo {",
+                "  public void f() {",
+                "    throw new IllegalStateException(\"constant\");",
+                "  }",
+                "}").doTest();
+    }
+
+    @Test
     public void io_exception() {
         compilationHelper.addSourceLines(
                 "Bean.java",
