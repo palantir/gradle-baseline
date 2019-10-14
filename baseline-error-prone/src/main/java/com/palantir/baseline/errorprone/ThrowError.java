@@ -44,7 +44,7 @@ import java.util.Optional;
                 + "'catch (Exception e)' does not catch Error.\n"
                 + "Errors are normally thrown by the JVM when the system, not just the application, "
                 + "is in a bad state. For example, LinkageError is thrown by the JVM when it encounters "
-                + "incompatible classes, and OutOfMemoryError when allocations fail. These should be "
+                + "incompatible classes, and NoClassDefFoundError when a class cannot be found. These should be "
                 + "less common and handled differently from application failures.\n"
                 + "This check  is intended to be advisory - it's fine to @SuppressWarnings(\"ThrowError\") "
                 + "in certain cases, but is usually not recommended unless you are writing a testing library "
