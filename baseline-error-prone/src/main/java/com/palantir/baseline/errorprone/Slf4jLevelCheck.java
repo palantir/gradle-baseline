@@ -27,6 +27,7 @@ import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
+import com.sun.source.tree.CatchTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.IfTree;
 import com.sun.source.tree.MethodInvocationTree;
@@ -42,7 +43,7 @@ import java.util.Optional;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
-        summary = "Slf4j logger.is[Level]Enabled level must match the most severe log statement")
+        summary = "Slf4j log.is[Level]Enabled level must match the most severe log statement")
 public final class Slf4jLevelCheck extends BugChecker implements IfTreeMatcher {
 
     private static final long serialVersionUID = 1L;
@@ -57,6 +58,12 @@ public final class Slf4jLevelCheck extends BugChecker implements IfTreeMatcher {
 
     @Override
     public Description matchIf(IfTree tree, VisitorState state) {
+        if (tree.getElseStatement() != null) {
+            // If a level check has an else statement, it's more complicated than the standard fare. We avoid
+            // checking it to keep signal high, these haven't caused enough problems to necessitate becoming
+            // prescriptive.
+            return Description.NO_MATCH;
+        }
         // n.b. This check does not validate that the level check and logging occur on the same logger instance.
         // It's possible to have multiple loggers in the same class used for different purposes, however we recommend
         // against it.
@@ -132,6 +139,13 @@ public final class Slf4jLevelCheck extends BugChecker implements IfTreeMatcher {
                     }
                 }
             }
+            return null;
+        }
+
+        @Override
+        public LogLevel visitCatch(CatchTree node, VisitorState state) {
+            // Do not flag logging from a catch withing a level-check conditional. These are sometimes
+            // more severe if there's a problem generating fine grained logging.
             return null;
         }
 
