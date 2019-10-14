@@ -27,7 +27,6 @@ public class BaselineErrorProneExtension {
             "LambdaMethodReference",
             "OptionalOrElseMethodInvocation",
             "PreferBuiltInConcurrentKeySet",
-            "PreferCollectionConstructors",
             "PreferCollectionTransform",
             "PreferListsPartition",
             "PreferSafeLoggableExceptions",
