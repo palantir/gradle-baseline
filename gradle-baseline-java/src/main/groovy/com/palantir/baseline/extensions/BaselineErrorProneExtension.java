@@ -35,6 +35,7 @@ public class BaselineErrorProneExtension {
             "Slf4jLevelCheck",
             "StrictUnusedVariable",
             "StringBuilderConstantParameters",
+            "ThrowError",
 
             // Built-in checks
             "ArrayEquals",
