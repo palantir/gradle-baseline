@@ -19,7 +19,10 @@ package com.palantir.baseline.errorprone;
 import com.google.errorprone.BugCheckerRefactoringTestHelper;
 import com.google.errorprone.CompilationTestHelper;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
+@Execution(ExecutionMode.CONCURRENT)
 class Slf4jLevelCheckTest {
 
     @Test
@@ -35,6 +38,48 @@ class Slf4jLevelCheckTest {
                         "    // BUG: Diagnostic contains: level must match the most severe",
                         "    if (log.isInfoEnabled()) {",
                         "        log.warn(\"foo\");",
+                        "    }",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testElseNotMatched() {
+        helper()
+                .addSourceLines(
+                        "Test.java",
+                        "import org.slf4j.Logger;",
+                        "import org.slf4j.LoggerFactory;",
+                        "class Test {",
+                        "  private static final Logger log = LoggerFactory.getLogger(Test.class);",
+                        "  void f() {",
+                        "    if (log.isInfoEnabled()) {",
+                        "        log.warn(\"foo\");",
+                        "    } else {",
+                        "        log.warn(\"foo bar\");",
+                        "    }",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testCatchNotMatched() {
+        helper()
+                .addSourceLines(
+                        "Test.java",
+                        "import org.slf4j.Logger;",
+                        "import org.slf4j.LoggerFactory;",
+                        "class Test {",
+                        "  private static final Logger log = LoggerFactory.getLogger(Test.class);",
+                        "  void f() {",
+                        "    if (log.isInfoEnabled()) {",
+                        "      try {",
+                        "        log.info(\"info\");",
+                        "      } catch (RuntimeException e) {",
+                        "        log.error(\"failed\", e);",
+                        "      }",
                         "    }",
                         "  }",
                         "}")
@@ -121,6 +166,36 @@ class Slf4jLevelCheckTest {
                         "        } else {",
                         "            log.warn(\"bar\");",
                         "        }",
+                        "    }",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    void testFix_complexCondition() {
+        fix()
+                .addInputLines(
+                        "Test.java",
+                        "import org.slf4j.Logger;",
+                        "import org.slf4j.LoggerFactory;",
+                        "class Test {",
+                        "  private static final Logger log = LoggerFactory.getLogger(Test.class);",
+                        "  void f(boolean in) {",
+                        "    if (in && log.isInfoEnabled()) {",
+                        "        log.warn(\"foo\");",
+                        "    }",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import org.slf4j.Logger;",
+                        "import org.slf4j.LoggerFactory;",
+                        "class Test {",
+                        "  private static final Logger log = LoggerFactory.getLogger(Test.class);",
+                        "  void f(boolean in) {",
+                        "    if (in && log.isWarnEnabled()) {",
+                        "        log.warn(\"foo\");",
                         "    }",
                         "  }",
                         "}")

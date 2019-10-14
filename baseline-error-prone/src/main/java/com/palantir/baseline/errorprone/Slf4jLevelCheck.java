@@ -27,10 +27,13 @@ import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
+import com.sun.source.tree.BinaryTree;
+import com.sun.source.tree.CatchTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.IfTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.ParenthesizedTree;
+import com.sun.source.tree.Tree;
 import com.sun.source.util.SimpleTreeVisitor;
 import com.sun.source.util.TreeScanner;
 import java.util.Locale;
@@ -42,7 +45,7 @@ import java.util.Optional;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
-        summary = "Slf4j logger.is[Level]Enabled level must match the most severe log statement")
+        summary = "Slf4j log.is[Level]Enabled level must match the most severe log statement")
 public final class Slf4jLevelCheck extends BugChecker implements IfTreeMatcher {
 
     private static final long serialVersionUID = 1L;
@@ -57,6 +60,12 @@ public final class Slf4jLevelCheck extends BugChecker implements IfTreeMatcher {
 
     @Override
     public Description matchIf(IfTree tree, VisitorState state) {
+        if (tree.getElseStatement() != null) {
+            // If a level check has an else statement, it's more complicated than the standard fare. We avoid
+            // checking it to keep signal high, these haven't caused enough problems to necessitate becoming
+            // prescriptive.
+            return Description.NO_MATCH;
+        }
         // n.b. This check does not validate that the level check and logging occur on the same logger instance.
         // It's possible to have multiple loggers in the same class used for different purposes, however we recommend
         // against it.
@@ -92,11 +101,6 @@ public final class Slf4jLevelCheck extends BugChecker implements IfTreeMatcher {
         throw new IllegalStateException("Expected a level check, but was: " + state.getSourceForNode(tree));
     }
 
-    // n.b. This check is only aware of conditionals of the form 'if (log.isWarnEnabled())', and does not currently
-    // match 'if (a != null && log.isWarnEnabled())', which may be worth including in the future. We should be careful
-    // to avoid anything beyond simple AND statement matching because some statements use complex boolean logic
-    // that's easy for automation to break. If implemented, we should avoid matching conditionals with level checks
-    // on both sides of a binary tree.
     private static final class ConditionVisitor
             extends SimpleTreeVisitor<Optional<MethodInvocationTree>, VisitorState> {
 
@@ -118,6 +122,23 @@ public final class Slf4jLevelCheck extends BugChecker implements IfTreeMatcher {
         public Optional<MethodInvocationTree> visitParenthesized(ParenthesizedTree node, VisitorState state) {
             return node.getExpression().accept(this, state);
         }
+
+        // It's relatively common to do a quick check (often equality or null check) along with a level check.
+        // We only support expressions with a single level check matched with '&&' to keep things simple, as this
+        // is the most common case.
+        @Override
+        public Optional<MethodInvocationTree> visitBinary(BinaryTree node, VisitorState state) {
+            if (node.getKind() != Tree.Kind.CONDITIONAL_AND) {
+                return Optional.empty();
+            }
+            Optional<MethodInvocationTree> lhs = node.getLeftOperand().accept(this, state);
+            Optional<MethodInvocationTree> rhs = node.getRightOperand().accept(this, state);
+            // If there are level checks on both sides, bail
+            if (lhs.isPresent() && rhs.isPresent()) {
+                return Optional.empty();
+            }
+            return lhs.isPresent() ? lhs : rhs;
+        }
     }
 
     private static final class MostSevereLogStatementScanner extends TreeScanner<LogLevel, VisitorState> {
@@ -132,6 +153,13 @@ public final class Slf4jLevelCheck extends BugChecker implements IfTreeMatcher {
                     }
                 }
             }
+            return null;
+        }
+
+        @Override
+        public LogLevel visitCatch(CatchTree node, VisitorState state) {
+            // Do not flag logging from a catch withing a level-check conditional. These are sometimes
+            // more severe if there's a problem generating fine grained logging.
             return null;
         }
 
