@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: Implement Error Prone `Slf4jLevelCheck` to validate that slf4j level
+    checks agree with contained logging.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/960

@@ -141,6 +141,7 @@ checks](https://errorprone.info):
 
 - `DangerousParallelStreamUsage`: Discourage the use of Java parallel streams.
 - `Slf4jConstantLogMessage`: Allow only compile-time constant slf4j log message strings.
+- `Slf4jLevelCheck`: Slf4j level checks (`if (log.isInfoEnabled()) {`) must match the most severe level in the containing block.
 - `Slf4jLogsafeArgs`: Allow only com.palantir.logsafe.Arg types as parameter inputs to slf4j log messages. More information on
 Safe Logging can be found at [github.com/palantir/safe-logging](https://github.com/palantir/safe-logging).
 - `PreferCollectionTransform`: Prefer Guava's Lists.transform or Collections2.transform instead of Iterables.transform when first argument's declared type is a List or Collection type for performance reasons.
