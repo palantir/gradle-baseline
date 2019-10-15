@@ -18,8 +18,9 @@ package com.palantir.baseline.plugins;
 
 import com.diffplug.gradle.spotless.SpotlessExtension;
 import com.diffplug.spotless.FormatterFunc;
-import com.google.googlejavaformat.java.Formatter;
-import com.google.googlejavaformat.java.JavaFormatterOptions;
+import com.palantir.javaformat.java.Formatter;
+import com.palantir.javaformat.java.JavaFormatterOptions;
+import com.palantir.javaformat.java.JavaFormatterOptions.Style;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -119,14 +120,12 @@ class BaselineFormat extends AbstractBaselinePlugin {
     }
 
     private static class PalantirJavaFormatterFunc implements FormatterFunc {
-        // TODO(dfox): replace this with the real palantir-java-format when it is published to bintray
-        private final Formatter googleJavaFormatter = new Formatter(JavaFormatterOptions.builder()
-                .style(JavaFormatterOptions.Style.AOSP)
-                .build());
+        private final Formatter palantirJavaFormatter =
+                new Formatter(JavaFormatterOptions.builder().style(Style.PALANTIR).build());
 
         @Override
         public String apply(String input) throws Exception {
-            return googleJavaFormatter.formatSource(input);
+            return palantirJavaFormatter.formatSource(input);
         }
     }
 }
