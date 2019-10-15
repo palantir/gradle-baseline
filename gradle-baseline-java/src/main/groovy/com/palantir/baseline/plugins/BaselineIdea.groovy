@@ -68,6 +68,11 @@ class BaselineIdea extends AbstractBaselinePlugin {
             moveProjectReferencesToEnd(ideaModuleModel)
         }
 
+        if (BaselineFormat.palantirJavaFormatterEnabled(project)) {
+            // This plugin sets up intellij for us
+            project.pluginManager.apply("com.palantir.java-format")
+        }
+
         // If someone renames a project, leftover {ipr,iml,ipr} files may still exist on disk and
         // confuse users, so we proactively clean them up. Intentionally using an Action<Task> to allow up-to-dateness.
         Action<Task> cleanup = new Action<Task>() {
