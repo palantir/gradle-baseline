@@ -172,6 +172,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `JUnit5SuiteMisuse`: When migrating from JUnit4 -> JUnit5, classes annotated with `@RunWith(Suite.class)` are dangerous because if they reference any JUnit5 test classes, these tests will silently not run!
 - `PreferAssertj`: Prefer AssertJ fluent assertions.
 - `ThrowError`: Prefer throwing a RuntimeException rather than Error.
+- `ReverseDnsLookup`: Calling address.getHostName may result in an unexpected DNS lookup.
 
 ### Programmatic Application
 
