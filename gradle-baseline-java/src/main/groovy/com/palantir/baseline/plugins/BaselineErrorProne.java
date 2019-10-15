@@ -198,6 +198,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
             // Errorprone isn't officially compatible with Java13 either
             // https://github.com/google/error-prone/issues/1106
             errorProneOptions.check("TypeParameterUnusedInFormals", CheckSeverity.OFF);
+            errorProneOptions.check("PreferCollectionConstructors", CheckSeverity.OFF);
         }
 
         if (javaCompile.equals(compileRefaster)) {
