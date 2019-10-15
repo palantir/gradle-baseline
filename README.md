@@ -327,7 +327,7 @@ spotless {
 
 To iterate on the eclipse.xml formatter config, you can import it into an instance of Eclipse, edit it through the preferences UI and then export it, or you can manually tune individual values by referring to the master list of [DefaultCodeFormatterConstants](https://github.com/eclipse/eclipse.jdt.core/blob/6a8cee1126829229d648db4ae0e5a6b70a5d4f13/org.eclipse.jdt.core/formatter/org/eclipse/jdt/core/formatter/DefaultCodeFormatterConstants.java) and [DefaultCodeFormatterOptions](https://github.com/eclipse/eclipse.jdt.core/blob/6a8cee1126829229d648db4ae0e5a6b70a5d4f13/org.eclipse.jdt.core/formatter/org/eclipse/jdt/internal/formatter/DefaultCodeFormatterOptions.java#L41-L95). Running `./gradlew :gradle-baseline-java:test -Drecreate=true` should update all the checked-in snapshot test cases.
 
-**Add `com.palantir.baseline-format.palantir-java-format=true`** to your gradle.properties to run our experimental fork of google-java-format.
+**Add `com.palantir.baseline-format.palantir-java-format=true`** to your gradle.properties to run our experimental fork of google-java-format. The Palantir Java Formatter can be run from IntelliJ using the [palantir-java-format](https://plugins.jetbrains.com/plugin/13180-palantir-java-format) plugin.
 
 ## com.palantir.baseline-reproducibility
 
