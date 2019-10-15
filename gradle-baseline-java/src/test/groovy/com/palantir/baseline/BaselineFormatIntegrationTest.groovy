@@ -109,6 +109,30 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         assertThatFilesAreTheSame(testedDir, expectedDir)
     }
 
+    def 'palantir java format works'() {
+        def inputDir = new File("src/test/resources/com/palantir/baseline/formatter-in")
+        def expectedDir = new File("src/test/resources/com/palantir/baseline/palantirjavaformat-expected")
+
+        def testedDir = new File(projectDir, "src/main/java")
+        FileUtils.copyDirectory(inputDir, testedDir)
+
+        buildFile << """
+            plugins {
+                id 'java'
+                id 'com.palantir.baseline-format'
+            }
+        """.stripIndent()
+        file('gradle.properties') << "com.palantir.baseline-format.palantir-java-format=true\n"
+
+        when:
+        BuildResult result = with(':format').build()
+
+        then:
+        result.task(":format").outcome == TaskOutcome.SUCCESS
+        result.task(":spotlessApply").outcome == TaskOutcome.SUCCESS
+        assertThatFilesAreTheSame(testedDir, expectedDir)
+    }
+
     def 'eclipse formatter googlejavaformat test cases'() {
         def excludedFiles = [
                 "B19996259.java", // this causes an OOM
@@ -147,7 +171,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
             def path = file.toPath()
             Path relativized = outputDir.toPath().relativize(path)
             Path expectedFile = expectedDir.toPath().resolve(relativized)
-            if (Boolean.valueOf(System.getProperty("recreate", "false"))) {
+            if (Boolean.getBoolean("recreate")) {
                 Files.createDirectories(expectedFile.getParent())
                 Files.deleteIfExists(expectedFile)
                 Files.copy(path, expectedFile)

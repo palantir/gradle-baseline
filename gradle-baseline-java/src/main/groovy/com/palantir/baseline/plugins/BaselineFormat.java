@@ -17,9 +17,20 @@
 package com.palantir.baseline.plugins;
 
 import com.diffplug.gradle.spotless.SpotlessExtension;
+import com.diffplug.spotless.FormatterFunc;
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.Range;
+import com.palantir.javaformat.java.FormatterService;
+import com.palantir.javaformat.java.JavaFormatterOptions;
+import com.palantir.javaformat.java.JavaFormatterOptions.Style;
+import com.palantir.javaformat.java.JavaOutput;
+import com.palantir.javaformat.java.Replacement;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.ServiceLoader;
+import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -32,6 +43,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
 
     // TODO(dfox): remove this feature flag when we've refined the eclipse.xml sufficiently
     private static final String ECLIPSE_FORMATTING = "com.palantir.baseline-format.eclipse";
+    private static final String PJF_PROPERTY = "com.palantir.baseline-format.palantir-java-format";
     private static final String GENERATED_MARKER = File.separator + "generated";
 
     @Override
@@ -58,8 +70,18 @@ class BaselineFormat extends AbstractBaselinePlugin {
                 // use empty string to specify one group for all non-static imports
                 java.importOrder("");
 
+                if (eclipseFormattingEnabled(project) && palantirJavaFormatterEnabled(project)) {
+                    throw new GradleException(
+                            "Can't use both eclipse and palantir-java-format at the same time, please delete one of "
+                                    + ECLIPSE_FORMATTING + " or " + PJF_PROPERTY + " from your gradle.properties");
+                }
+
                 if (eclipseFormattingEnabled(project)) {
                     java.eclipse().configFile(project.file(eclipseXml.toString()));
+                }
+
+                if (palantirJavaFormatterEnabled(project)) {
+                    java.customLazy("palantir-java-format", PalantirJavaFormatterFunc::new);
                 }
 
                 java.trimTrailingWhitespace();
@@ -95,7 +117,25 @@ class BaselineFormat extends AbstractBaselinePlugin {
         return project.hasProperty(ECLIPSE_FORMATTING);
     }
 
+    static boolean palantirJavaFormatterEnabled(Project project) {
+        return project.hasProperty(PJF_PROPERTY);
+    }
+
     static Path eclipseConfigFile(Project project) {
         return project.getRootDir().toPath().resolve(".baseline/spotless/eclipse.xml");
+    }
+
+    private static class PalantirJavaFormatterFunc implements FormatterFunc {
+        private static final JavaFormatterOptions OPTIONS =
+                JavaFormatterOptions.builder().style(Style.PALANTIR).build();
+        private final FormatterService formatterService =
+                Iterables.getOnlyElement(ServiceLoader.load(FormatterService.class));
+
+        @Override
+        public String apply(String input) throws Exception {
+            ImmutableList<Replacement> replacements = formatterService.getFormatReplacements(
+                    OPTIONS, input, ImmutableList.of(Range.closedOpen(0, input.length())));
+            return JavaOutput.applyReplacements(input, replacements);
+        }
     }
 }
