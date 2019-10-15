@@ -60,6 +60,7 @@ import javax.lang.model.type.TypeKind;
         name = "PreferAssertj",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
+        providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = BugPattern.SeverityLevel.SUGGESTION,
         summary = "Prefer AssertJ fluent assertions")
 public final class PreferAssertj extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {

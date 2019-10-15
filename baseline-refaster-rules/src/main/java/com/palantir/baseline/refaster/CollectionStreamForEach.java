@@ -18,25 +18,25 @@ package com.palantir.baseline.refaster;
 
 import com.google.errorprone.refaster.annotation.AfterTemplate;
 import com.google.errorprone.refaster.annotation.BeforeTemplate;
-import java.util.concurrent.ExecutorService;
+import java.util.Collection;
+import java.util.function.Consumer;
 
-/**
- * Uncaught exceptions from {@link ExecutorService#submit(Runnable)} are not logged by the uncaught exception handler
- * because it is assumed that the returned future is used to watch for failures.
- * When the returned future is ignored, using {@link ExecutorService#execute(Runnable)} is preferred because
- * failures are recorded.
- */
-public final class ExecutorSubmitRunnableFutureIgnored {
+public final class CollectionStreamForEach<T> {
 
     @BeforeTemplate
-    @SuppressWarnings("FutureReturnValueIgnored")
-    void submit(ExecutorService executor, Runnable runnable) {
-        executor.submit(runnable);
+    @SuppressWarnings("SimplifyStreamApiCallChains") // This is what we're fixing
+    void before1(Collection<T> target, Consumer<? super T> consumer) {
+        target.stream().forEach(consumer);
+    }
+
+    @BeforeTemplate
+    @SuppressWarnings("SimplifyStreamApiCallChains") // This is what we're fixing
+    void before2(Collection<T> target, Consumer<? super T> consumer) {
+        target.stream().forEachOrdered(consumer);
     }
 
     @AfterTemplate
-    void execute(ExecutorService executor, Runnable runnable) {
-        executor.execute(runnable);
+    void after(Collection<T> target, Consumer<? super T> consumer) {
+        target.forEach(consumer);
     }
-
 }

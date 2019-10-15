@@ -144,4 +144,20 @@ class BaselineTestingIntegrationTest extends AbstractPluginTest {
         BuildResult result = with('checkJUnitDependencies').buildAndFail()
         result.output.contains 'Some tests mention JUnit5, but the \'test\' task does not have useJUnitPlatform() enabled'
     }
+
+    def 'checkJUnitDependencies ensures nebula test => vintage must be present'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << '''
+        apply plugin: 'groovy'
+        dependencies {
+            testImplementation "org.junit.jupiter:junit-jupiter:5.4.2"
+            testImplementation 'com.netflix.nebula:nebula-test:7.3.0'
+        }
+        '''.stripIndent()
+
+        then:
+        BuildResult result = with('checkJUnitDependencies').buildAndFail()
+        result.output.contains 'Tests may be silently not running! Spock dependency detected'
+    }
 }

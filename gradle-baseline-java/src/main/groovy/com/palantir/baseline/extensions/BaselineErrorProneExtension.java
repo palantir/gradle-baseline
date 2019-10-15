@@ -24,6 +24,7 @@ public class BaselineErrorProneExtension {
 
     private static final ImmutableList<String> DEFAULT_PATCH_CHECKS = ImmutableList.of(
             // Baseline checks
+            "ExecutorSubmitRunnableFutureIgnored",
             "LambdaMethodReference",
             "OptionalOrElseMethodInvocation",
             "PreferBuiltInConcurrentKeySet",
@@ -31,12 +32,15 @@ public class BaselineErrorProneExtension {
             "PreferListsPartition",
             "PreferSafeLoggableExceptions",
             "PreferSafeLoggingPreconditions",
+            "Slf4jLevelCheck",
             "StrictUnusedVariable",
             "StringBuilderConstantParameters",
+            "ThrowError",
 
             // Built-in checks
             "ArrayEquals",
-            "MissingOverride");
+            "MissingOverride",
+            "UnnecessaryParentheses");
 
     private final ListProperty<String> patchChecks;
 

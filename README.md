@@ -141,6 +141,7 @@ checks](https://errorprone.info):
 
 - `DangerousParallelStreamUsage`: Discourage the use of Java parallel streams.
 - `Slf4jConstantLogMessage`: Allow only compile-time constant slf4j log message strings.
+- `Slf4jLevelCheck`: Slf4j level checks (`if (log.isInfoEnabled()) {`) must match the most severe level in the containing block.
 - `Slf4jLogsafeArgs`: Allow only com.palantir.logsafe.Arg types as parameter inputs to slf4j log messages. More information on
 Safe Logging can be found at [github.com/palantir/safe-logging](https://github.com/palantir/safe-logging).
 - `PreferCollectionTransform`: Prefer Guava's Lists.transform or Collections2.transform instead of Iterables.transform when first argument's declared type is a List or Collection type for performance reasons.
@@ -170,6 +171,15 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `StringBuilderConstantParameters`: StringBuilder with a constant number of parameters should be replaced by simple concatenation.
 - `JUnit5SuiteMisuse`: When migrating from JUnit4 -> JUnit5, classes annotated with `@RunWith(Suite.class)` are dangerous because if they reference any JUnit5 test classes, these tests will silently not run!
 - `PreferAssertj`: Prefer AssertJ fluent assertions.
+- `ThrowError`: Prefer throwing a RuntimeException rather than Error.
+
+### Programmatic Application
+
+There exist a number of programmatic code modifiations available via [refaster](https://errorprone.info/docs/refaster). You can run these on your code to apply some refactorings automatically:
+
+```
+./gradlew compileJava compileTestJava -PrefasterApply -PerrorProneApply
+```
 
 ## com.palantir.baseline-checkstyle
 Checkstyle rules can be suppressed on a per-line or per-block basis. (It is good practice to first consider formatting
@@ -379,3 +389,5 @@ Configures some sensible defaults:
     See more here: https://junit.org/junit5/docs/current/user-guide/#writing-tests-parallel-execution
 
 The plugin also adds a `checkJUnitDependencies` to make the migration to JUnit5 safer.  Specifically, it should prevent cases where the tests could silently not run due to misconfigured dependencies.
+
+

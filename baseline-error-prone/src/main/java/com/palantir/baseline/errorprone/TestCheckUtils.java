@@ -21,6 +21,7 @@ import com.google.errorprone.matchers.JUnitMatchers;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.sun.source.tree.ClassTree;
+import com.sun.source.tree.ImportTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.TreePath;
 
@@ -38,7 +39,11 @@ final class TestCheckUtils {
                 return true;
             }
         }
-        return false;
+        return state.getPath().getCompilationUnit().getImports()
+                .stream()
+                .map(ImportTree::getQualifiedIdentifier)
+                .map(Object::toString)
+                .anyMatch(TestCheckUtils::isTestImport);
     }
 
     private static final Matcher<ClassTree> hasJUnit5TestCases =
@@ -48,4 +53,11 @@ final class TestCheckUtils {
 
     private static final Matcher<ClassTree> hasTestCases = Matchers
             .anyOf(JUnitMatchers.hasJUnit4TestCases, hasJUnit5TestCases);
+
+    private static boolean isTestImport(String qualifiedName) {
+        return qualifiedName.startsWith("org.junit.") // junit 4 and 5
+                || qualifiedName.startsWith("junit.") // junit 3
+                || qualifiedName.startsWith("org.mockito.")
+                || qualifiedName.startsWith("org.assertj.");
+    }
 }

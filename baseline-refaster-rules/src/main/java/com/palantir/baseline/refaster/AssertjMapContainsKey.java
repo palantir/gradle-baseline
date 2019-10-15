@@ -37,6 +37,11 @@ public final class AssertjMapContainsKey<K, V> {
         assertThat(things.keySet().contains(key)).isTrue();
     }
 
+    @BeforeTemplate
+    void before3(Map<K, V> things, K key) {
+        assertThat(things.get(key)).isNotNull();
+    }
+
     @AfterTemplate
     @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
     void after(Map<K, V> things, K key) {

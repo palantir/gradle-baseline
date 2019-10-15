@@ -39,6 +39,7 @@ import java.util.stream.Collectors;
         name = "PreferSafeLoggableExceptions",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
+        providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = BugPattern.SeverityLevel.WARNING,
         summary = "Throw SafeLoggable exceptions to ensure the exception message will not be redacted")
 @SuppressWarnings("PreferSafeLoggableExceptions")
