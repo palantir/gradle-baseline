@@ -18,12 +18,12 @@ package com.palantir.baseline.refaster;
 
 import org.junit.Test;
 
-public class MockitoVerifyNoInteractionsTest {
+public class MockitoVerifyZeroInteractionsTest {
 
     @Test
     public void testSingleArg() {
         RefasterTestHelper
-                .forRefactoring(MockitoVerifyNoInteractions.class)
+                .forRefactoring(MockitoVerifyZeroInteractions.class)
                 .withInputLines(
                         "Test",
                         "import static org.mockito.Mockito.verifyZeroInteractions;",
@@ -33,11 +33,11 @@ public class MockitoVerifyNoInteractionsTest {
                         "  }",
                         "}")
                 .hasOutputLines(
-                        "import static org.mockito.Mockito.verifyNoInteractions;",
+                        "import static org.mockito.Mockito.verifyNoMoreInteractions;",
                         "import static org.mockito.Mockito.verifyZeroInteractions;",
                         "public class Test {",
                         "  void test(Object mock) {",
-                        "    verifyNoInteractions(mock);",
+                        "    verifyNoMoreInteractions(mock);",
                         "  }",
                         "}");
     }
@@ -45,7 +45,7 @@ public class MockitoVerifyNoInteractionsTest {
     @Test
     public void testMultipleArgs() {
         RefasterTestHelper
-                .forRefactoring(MockitoVerifyNoInteractions.class)
+                .forRefactoring(MockitoVerifyZeroInteractions.class)
                 .withInputLines(
                         "Test",
                         "import static org.mockito.Mockito.verifyZeroInteractions;",
@@ -55,11 +55,11 @@ public class MockitoVerifyNoInteractionsTest {
                         "  }",
                         "}")
                 .hasOutputLines(
-                        "import static org.mockito.Mockito.verifyNoInteractions;",
+                        "import static org.mockito.Mockito.verifyNoMoreInteractions;",
                         "import static org.mockito.Mockito.verifyZeroInteractions;",
                         "public class Test {",
                         "  void test(Object mock1, Object mock2) {",
-                        "    verifyNoInteractions(mock1, mock2);",
+                        "    verifyNoMoreInteractions(mock1, mock2);",
                         "  }",
                         "}");
     }
@@ -67,7 +67,7 @@ public class MockitoVerifyNoInteractionsTest {
     @Test
     public void testVarArgs() {
         RefasterTestHelper
-                .forRefactoring(MockitoVerifyNoInteractions.class)
+                .forRefactoring(MockitoVerifyZeroInteractions.class)
                 .withInputLines(
                         "Test",
                         "import static org.mockito.Mockito.verifyZeroInteractions;",
@@ -77,11 +77,11 @@ public class MockitoVerifyNoInteractionsTest {
                         "  }",
                         "}")
                 .hasOutputLines(
-                        "import static org.mockito.Mockito.verifyNoInteractions;",
+                        "import static org.mockito.Mockito.verifyNoMoreInteractions;",
                         "import static org.mockito.Mockito.verifyZeroInteractions;",
                         "public class Test {",
                         "  void test(Object... mocks) {",
-                        "    verifyNoInteractions(mocks);",
+                        "    verifyNoMoreInteractions(mocks);",
                         "  }",
                         "}");
     }
