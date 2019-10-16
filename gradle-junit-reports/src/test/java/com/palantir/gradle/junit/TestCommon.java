@@ -81,7 +81,7 @@ public final class TestCommon {
         try {
             return Resources.toString(Resources.getResource(TestCommon.class, filename), StandardCharsets.UTF_8);
         } catch (IOException e) {
-            throw new AssertionError(e);
+            throw new RuntimeException(e);
         }
     }
 
