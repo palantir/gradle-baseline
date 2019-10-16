@@ -35,7 +35,7 @@ import java.net.InetSocketAddress;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,
-        summary = "Calling address.getHostName may result in a DNS lookup which is a network request, making the "
+        summary = "Calling address.getHostName may result in a reverse DNS lookup which is a network request, making the "
                 + "invocation significantly more expensive than expected depending on the environment.\n"
                 + "This check is intended to be advisory - it's fine to @SuppressWarnings(\"ReverseDnsLookup\") "
                 + "in certain cases, but is usually not recommended.")
