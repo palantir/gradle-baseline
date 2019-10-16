@@ -56,18 +56,20 @@ public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocati
         List<? extends ExpressionTree> allArgs = tree.getArguments();
         int lastIndex = allArgs.size() - 1;
         int startArg = ASTHelpers.isCastable(
-                ASTHelpers.getType(allArgs.get(0)),
-                state.getTypeFromString("org.slf4j.Marker"),
-                state) ? 2 : 1;
+                        ASTHelpers.getType(allArgs.get(0)), state.getTypeFromString("org.slf4j.Marker"), state)
+                ? 2
+                : 1;
         int endArg = ASTHelpers.isCastable(
-                ASTHelpers.getType(allArgs.get(lastIndex)),
-                state.getTypeFromString("java.lang.Throwable"),
-                state) ? lastIndex - 1 : lastIndex;
+                        ASTHelpers.getType(allArgs.get(lastIndex)),
+                        state.getTypeFromString("java.lang.Throwable"),
+                        state)
+                ? lastIndex - 1
+                : lastIndex;
 
         ImmutableList.Builder<Integer> badArgsBuilder = ImmutableList.builder();
         for (int i = startArg; i <= endArg; i++) {
-            if (!ASTHelpers.isCastable(ASTHelpers.getType(allArgs.get(i)),
-                    state.getTypeFromString("com.palantir.logsafe.Arg"), state)) {
+            if (!ASTHelpers.isCastable(
+                    ASTHelpers.getType(allArgs.get(i)), state.getTypeFromString("com.palantir.logsafe.Arg"), state)) {
                 badArgsBuilder.add(i);
             }
         }

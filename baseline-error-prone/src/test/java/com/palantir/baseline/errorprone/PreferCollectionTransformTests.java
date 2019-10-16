@@ -168,5 +168,4 @@ public final class PreferCollectionTransformTests {
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
-
 }

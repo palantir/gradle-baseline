@@ -26,8 +26,8 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 @Execution(ExecutionMode.CONCURRENT)
 public class CatchBlockLogExceptionTest {
 
-    private static final String errorMsg = "BUG: Diagnostic contains: "
-            + "Catch block contains log statements but thrown exception is never logged";
+    private static final String errorMsg =
+            "BUG: Diagnostic contains: " + "Catch block contains log statements but thrown exception is never logged";
 
     private CompilationTestHelper compilationHelper;
 

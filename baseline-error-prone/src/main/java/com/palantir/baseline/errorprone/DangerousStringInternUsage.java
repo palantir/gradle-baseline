@@ -54,17 +54,12 @@ public final class DangerousStringInternUsage extends BugChecker implements BugC
     private static final long serialVersionUID = 1L;
 
     private static final Matcher<ExpressionTree> STRING_INTERN_METHOD_MATCHER =
-            MethodMatchers.instanceMethod()
-                    .onExactClass(String.class.getName())
-                    .named("intern")
-                    .withParameters();
+            MethodMatchers.instanceMethod().onExactClass(String.class.getName()).named("intern").withParameters();
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
         if (STRING_INTERN_METHOD_MATCHER.matches(tree, state)) {
-            return buildDescription(tree)
-                    .setMessage(MESSAGE)
-                    .build();
+            return buildDescription(tree).setMessage(MESSAGE).build();
         }
         return Description.NO_MATCH;
     }

@@ -41,10 +41,9 @@ public final class PreconditionsConstantMessage extends BugChecker implements Bu
 
     private static final long serialVersionUID = 1L;
 
-    private static final Matcher<ExpressionTree> PRECONDITIONS_METHOD =
-            MethodMatchers.staticMethod()
-                    .onClass("com.google.common.base.Preconditions")
-                    .withNameMatching(Pattern.compile("checkArgument|checkState|checkNotNull"));
+    private static final Matcher<ExpressionTree> PRECONDITIONS_METHOD = MethodMatchers.staticMethod()
+            .onClass("com.google.common.base.Preconditions")
+            .withNameMatching(Pattern.compile("checkArgument|checkState|checkNotNull"));
 
     private final Matcher<ExpressionTree> compileTimeConstExpressionMatcher =
             new CompileTimeConstantExpressionMatcher();
@@ -66,8 +65,10 @@ public final class PreconditionsConstantMessage extends BugChecker implements Bu
             return Description.NO_MATCH;
         }
 
-        return buildDescription(tree).setMessage(
-                "Preconditions.checkX() statement uses a non-constant message. "
-                        + "Consider using a template string with '%s'.").build();
+        return buildDescription(tree)
+                .setMessage(
+                        "Preconditions.checkX() statement uses a non-constant message. "
+                                + "Consider using a template string with '%s'.")
+                .build();
     }
 }

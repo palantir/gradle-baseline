@@ -47,14 +47,14 @@ public final class CatchBlockLogException extends BugChecker implements BugCheck
             .onDescendantOf("org.slf4j.Logger")
             .withNameMatching(Pattern.compile("trace|debug|info|warn|error"));
 
-    private static final Matcher<Tree> containslogMethod = Matchers.contains(
-            Matchers.toType(ExpressionTree.class, logMethod));
+    private static final Matcher<Tree> containslogMethod =
+            Matchers.contains(Matchers.toType(ExpressionTree.class, logMethod));
 
     private static final Matcher<ExpressionTree> logException = Matchers.methodInvocation(
             logMethod, ChildMultiMatcher.MatchType.LAST, Matchers.isSubtypeOf(Throwable.class));
 
-    private static final Matcher<Tree> containslogException = Matchers.contains(Matchers.toType(
-            ExpressionTree.class, logException));
+    private static final Matcher<Tree> containslogException =
+            Matchers.contains(Matchers.toType(ExpressionTree.class, logException));
 
     @Override
     public Description matchCatch(CatchTree tree, VisitorState state) {
@@ -65,5 +65,4 @@ public final class CatchBlockLogException extends BugChecker implements BugCheck
         }
         return Description.NO_MATCH;
     }
-
 }

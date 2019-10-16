@@ -187,9 +187,8 @@ public final class Slf4jLevelCheck extends BugChecker implements IfTreeMatcher {
                 "is" + CaseFormat.UPPER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, name()) + "Enabled";
 
         @SuppressWarnings("ImmutableEnumChecker")
-        private final Matcher<ExpressionTree> levelCheckMatcher = MethodMatchers.instanceMethod()
-                .onDescendantOf("org.slf4j.Logger")
-                .named(levelCheckMethodName);
+        private final Matcher<ExpressionTree> levelCheckMatcher =
+                MethodMatchers.instanceMethod().onDescendantOf("org.slf4j.Logger").named(levelCheckMethodName);
 
         @SuppressWarnings("ImmutableEnumChecker")
         private final Matcher<ExpressionTree> logMatcher = MethodMatchers.instanceMethod()

@@ -41,13 +41,11 @@ public final class DangerousThrowableMessageSafeArg extends BugChecker
 
     private static final long serialVersionUID = 1L;
 
-    private static final Matcher<ExpressionTree> SAFEARG_FACTORY_METHOD = MethodMatchers.staticMethod()
-            .onClass("com.palantir.logsafe.SafeArg")
-            .named("of");
+    private static final Matcher<ExpressionTree> SAFEARG_FACTORY_METHOD =
+            MethodMatchers.staticMethod().onClass("com.palantir.logsafe.SafeArg").named("of");
 
-    private static final Matcher<ExpressionTree> THROWABLE_MESSAGE_METHOD = MethodMatchers.instanceMethod()
-            .onDescendantOf(Throwable.class.getName())
-            .named("getMessage");
+    private static final Matcher<ExpressionTree> THROWABLE_MESSAGE_METHOD =
+            MethodMatchers.instanceMethod().onDescendantOf(Throwable.class.getName()).named("getMessage");
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
@@ -63,8 +61,9 @@ public final class DangerousThrowableMessageSafeArg extends BugChecker
         ExpressionTree safeValueArgument = args.get(1);
         if (THROWABLE_MESSAGE_METHOD.matches(safeValueArgument, state)) {
             return buildDescription(tree)
-                    .setMessage("Do not use throwable messages as SafeArg values. "
-                            + "SafeLoggable.getLogMessage is guaranteed to be safe.")
+                    .setMessage(
+                            "Do not use throwable messages as SafeArg values. "
+                                    + "SafeLoggable.getLogMessage is guaranteed to be safe.")
                     .build();
         }
         return Description.NO_MATCH;

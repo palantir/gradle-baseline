@@ -79,9 +79,10 @@ public final class SafeLoggingExceptionMessageFormat extends BugChecker implemen
 
         if (message.contains("{}")) {
             return buildDescription(tree)
-                    .setMessage("Do not use slf4j-style formatting in logsafe Exceptions. "
-                            + "Logsafe exceptions provide a simple message and key-value pairs of arguments, "
-                            + "no interpolation is performed.")
+                    .setMessage(
+                            "Do not use slf4j-style formatting in logsafe Exceptions. "
+                                    + "Logsafe exceptions provide a simple message and key-value pairs of arguments, "
+                                    + "no interpolation is performed.")
                     .build();
         }
         return Description.NO_MATCH;

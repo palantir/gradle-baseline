@@ -39,18 +39,16 @@ import java.util.List;
         linkType = BugPattern.LinkType.CUSTOM,
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = SeverityLevel.WARNING,
-        summary = "Prefer Guava's Lists.transform or Collections2.transform instead of Iterables.transform when "
-                + "first argument's declared type is a List or Collection type for performance reasons, "
-                + "cf. https://google.github.io/guava/releases/23.0/api/docs/com/google/common/collect/Iterables.html#transform-java.lang.Iterable-com.google.common.base.Function-")
-public final class PreferCollectionTransform extends BugChecker
-        implements BugChecker.MethodInvocationTreeMatcher {
+        summary =
+                "Prefer Guava's Lists.transform or Collections2.transform instead of Iterables.transform when "
+                        + "first argument's declared type is a List or Collection type for performance reasons, "
+                        + "cf. https://google.github.io/guava/releases/23.0/api/docs/com/google/common/collect/Iterables.html#transform-java.lang.Iterable-com.google.common.base.Function-")
+public final class PreferCollectionTransform extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
 
     private static final Matcher<ExpressionTree> ITERABLES_TRANSFORM_MATCHER =
-            MethodMatchers.staticMethod()
-                    .onClass("com.google.common.collect.Iterables")
-                    .named("transform");
+            MethodMatchers.staticMethod().onClass("com.google.common.collect.Iterables").named("transform");
 
     private static final Matcher<Tree> LIST_MATCHER = Matchers.isSubtypeOf("java.util.List");
     private static final Matcher<Tree> COLLECTION_MATCHER = Matchers.isSubtypeOf("java.util.Collection");
@@ -82,5 +80,4 @@ public final class PreferCollectionTransform extends BugChecker
 
         return Description.NO_MATCH;
     }
-
 }

@@ -110,8 +110,6 @@ public final class JUnit5SuiteMisuse extends BugChecker
         }
 
         throw new UnsupportedOperationException(String.format(
-                "Unable to get referenced classes for %s of type %s",
-                state.getSourceForNode(tree),
-                value.getClass()));
+                "Unable to get referenced classes for %s of type %s", state.getSourceForNode(tree), value.getClass()));
     }
 }

@@ -39,17 +39,13 @@ public final class SwitchStatementDefaultCase extends BugChecker implements BugC
     @Override
     public Description matchSwitch(SwitchTree tree, VisitorState state) {
         if (hasDefaultCase(tree)) {
-            return buildDescription(tree)
-                    .setMessage("Avoid using default case in switch statement.")
-                    .build();
+            return buildDescription(tree).setMessage("Avoid using default case in switch statement.").build();
         }
 
         return Description.NO_MATCH;
     }
 
     private boolean hasDefaultCase(SwitchTree tree) {
-        return tree.getCases().stream()
-                .map(CaseTree::getExpression)
-                .anyMatch(Objects::isNull);
+        return tree.getCases().stream().map(CaseTree::getExpression).anyMatch(Objects::isNull);
     }
 }
