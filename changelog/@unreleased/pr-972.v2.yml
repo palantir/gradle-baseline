@@ -1,5 +1,0 @@
-type: improvement
-improvement:
-  description: Upgrade to palantir-java-format 0.2.1
-  links:
-  - https://github.com/palantir/gradle-baseline/pull/972
