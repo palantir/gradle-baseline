@@ -16,7 +16,7 @@
 
 package com.palantir.baseline.refaster;
 
-import static org.mockito.Mockito.verifyNoInteractions;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
 import static org.mockito.Mockito.verifyZeroInteractions;
 
 import com.google.errorprone.refaster.ImportPolicy;
@@ -25,7 +25,7 @@ import com.google.errorprone.refaster.annotation.BeforeTemplate;
 import com.google.errorprone.refaster.annotation.Repeated;
 import com.google.errorprone.refaster.annotation.UseImportPolicy;
 
-public final class MockitoVerifyNoInteractions {
+public final class MockitoVerifyZeroInteractions {
 
     @BeforeTemplate
     @SuppressWarnings("deprecation")
@@ -37,6 +37,6 @@ public final class MockitoVerifyNoInteractions {
     @AfterTemplate
     @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
     void after(@Repeated Object varargs) {
-        verifyNoInteractions(varargs);
+        verifyNoMoreInteractions(varargs);
     }
 }
