@@ -26,56 +26,70 @@ import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * Parses dot files listing dependencies and sorts them out
  */
-public final class DependenciesAnalyzer {
+public final class DependencyAnalyzer {
     private static final ClassAnalyzer JAR_ANALYZER = new DefaultClassAnalyzer();
     private static final ImmutableSet<String> VALID_ARTIFACT_EXTENSIONS = ImmutableSet.of("jar", "");
 
     private final Project project;
     private final List<Configuration> dependenciesConfigurations;
-    private final FileCollection dotFiles;
+    private final FileCollection fullDepFiles;
+    private final FileCollection apiDepFiles;
     private final Set<String> ignore;
 
     private boolean inited = false;
-    private Set<ResolvedArtifact> necessaryArtifacts;
+    private Set<ResolvedArtifact> allRequiredArtifacts;
+    private Set<ResolvedArtifact> apiArtifacts;
     private Set<ResolvedArtifact> declaredArtifacts;
 
-    public DependenciesAnalyzer(
+    private final Indexes indexes = new Indexes();
+
+    public DependencyAnalyzer(
             Project project,
             List<Configuration> dependenciesConfigurations,
-            FileCollection dotFiles,
+            FileCollection fullDepFiles,
+            FileCollection apiDepFiles,
             Set<String> ignore) {
         this.project = project;
         this.dependenciesConfigurations = dependenciesConfigurations;
-        this.dotFiles = dotFiles;
+        this.fullDepFiles = fullDepFiles;
+        this.apiDepFiles = apiDepFiles;
         this.ignore = ignore;
     }
 
     /**
      * @return Full list of artifacts that are required by the project
      */
-    public Set<ResolvedArtifact> findNecessaryArtifacts() {
+    public Set<ResolvedArtifact> getAllRequiredArtifacts() {
         init();
-        return necessaryArtifacts;
+        return allRequiredArtifacts;
+    }
+
+    /**
+     * @return Artifacts used in project's APIs - public or protected methods.
+     */
+    public Set<ResolvedArtifact> getApiArtifacts() {
+        return apiArtifacts;
     }
 
     /**
      * @return Artifacts that are required but are not directly declared by the project
      */
-    public List<ResolvedArtifact> findImplicitDependencies() {
+    public List<ResolvedArtifact> getImplicitDependencies() {
         init();
-        return diffArtifacts(necessaryArtifacts, declaredArtifacts);
+        return diffArtifacts(allRequiredArtifacts, declaredArtifacts);
     }
 
     /**
      * @return Artifacts that are declared, but not used.
      */
-    public List<ResolvedArtifact> findUnusedDependencies() {
+    public List<ResolvedArtifact> getUnusedDependencies() {
         init();
-        return diffArtifacts(declaredArtifacts, necessaryArtifacts);
+        return diffArtifacts(declaredArtifacts, allRequiredArtifacts);
     }
 
     private List<ResolvedArtifact> diffArtifacts(Set<ResolvedArtifact> base, Set<ResolvedArtifact> compare) {
@@ -95,26 +109,30 @@ public final class DependenciesAnalyzer {
                 .flatMap(resolved -> resolved.getFirstLevelModuleDependencies().stream())
                 .collect(Collectors.toSet());
 
-        Indexes indexes = new Indexes();
         indexes.populateIndexes(declaredDependencies);
 
-        necessaryArtifacts = findReferencedClasses().stream()
-                .map(indexes::classToDependency)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .filter(x -> !isArtifactFromCurrentProject(x))
-                .collect(Collectors.toSet());
+        allRequiredArtifacts = findReferencedArtifacts(fullDepFiles);
+        apiArtifacts = findReferencedArtifacts(apiDepFiles);
         declaredArtifacts = declaredDependencies.stream()
                 .flatMap(dependency -> dependency.getModuleArtifacts().stream())
                 .filter(dependency -> VALID_ARTIFACT_EXTENSIONS
                         .contains(dependency.getExtension()))
                 .collect(Collectors.toSet());
         inited = true;
-        //clear the memory for the massive dependency map
+        //clear the memory from the massive dependency map
         indexes.reset();
     }
 
-    private Set<String> findReferencedClasses() {
+    private Set<ResolvedArtifact> findReferencedArtifacts(FileCollection dotFiles) {
+        return findReferencedClasses(dotFiles).stream()
+                .map(indexes::classToDependency)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .filter(x -> !isArtifactFromCurrentProject(x))
+                .collect(Collectors.toSet());
+    }
+
+    private Set<String> findReferencedClasses(FileCollection dotFiles) {
         return Streams.stream(dotFiles.iterator())
                 .filter(File::exists)
                 .flatMap(this::findReferencedClasses)
@@ -122,7 +140,7 @@ public final class DependenciesAnalyzer {
     }
 
     /**
-     * Return all classes that are referenced (i.e. depended upon) by classes in the given project
+     * Return all classes that are referenced (i.e. depended upon) by classes in the given dot file
      */
     private Stream<String> findReferencedClasses(File dotFile) {
         try (InputStream input = new FileInputStream(dotFile)) {

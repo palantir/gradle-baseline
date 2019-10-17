@@ -21,7 +21,7 @@ import com.google.common.collect.ImmutableSet;
 import com.palantir.baseline.tasks.CheckImplicitDependenciesTask;
 import com.palantir.baseline.tasks.CheckUnusedDependenciesTask;
 import com.palantir.baseline.tasks.dependencies.DependencyFinderTask;
-import com.palantir.baseline.tasks.dependencies.DependencyOptimizationReportTask;
+import com.palantir.baseline.tasks.dependencies.DependencyReportTask;
 import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -104,12 +104,13 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                         t.getApiOnly().set(true);
                     });
 
-            TaskProvider<DependencyOptimizationReportTask> mainAnalyzerTask = project.getTasks()
-                    .register("analyzeMainDeps", DependencyOptimizationReportTask.class, t -> {
+            TaskProvider<DependencyReportTask> mainAnalyzerTask = project.getTasks()
+                    .register("analyzeMainDeps", DependencyReportTask.class, t -> {
                         t.setDescription(
                                 "Produces a yml report for dependencies that are directly used by this project");
                         t.setGroup(GROUP_NAME);
-                        t.getDotFiles().from(findMainDepsTask.get().getReportFile());
+                        t.getFullDepFiles().from(findMainDepsTask.get().getReportFile());
+                        t.getApiDepFiles().from(findMainApiDepsTask.get().getReportFile());
                         t.getConfigurations().addAll(classConfigs);
                     });
 

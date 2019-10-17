@@ -24,16 +24,18 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 @CacheableTask
-public class DependencyOptimizationReportTask extends DefaultTask {
+public class DependencyReportTask extends DefaultTask {
     private final ListProperty<Configuration> configurations;
-    private final ConfigurableFileCollection dotFiles;
+    private final ConfigurableFileCollection fullDepFiles;
+    private final ConfigurableFileCollection apiDepFiles;
     private final SetProperty<String> ignore;
     private final RegularFileProperty report;
 
-    public DependencyOptimizationReportTask() {
+    public DependencyReportTask() {
         configurations = getProject().getObjects().listProperty(Configuration.class);
         configurations.set(Collections.emptyList());
-        dotFiles = getProject().getObjects().fileCollection();
+        fullDepFiles = getProject().getObjects().fileCollection();
+        apiDepFiles = getProject().getObjects().fileCollection();
         ignore = getProject().getObjects().setProperty(String.class);
         ignore.set(Collections.emptySet());
         report = getProject().getObjects().fileProperty();
@@ -45,15 +47,17 @@ public class DependencyOptimizationReportTask extends DefaultTask {
 
     @TaskAction
     public final void analyzeDependencies() {
-        DependenciesAnalyzer analyzer = new DependenciesAnalyzer(getProject(),
+        DependencyAnalyzer analyzer = new DependencyAnalyzer(getProject(),
                 configurations.get(),
-                dotFiles,
+                fullDepFiles,
+                apiDepFiles,
                 ignore.get());
 
         ReportContent content = new ReportContent();
-        content.necessaryDependencies = artifactNames(analyzer.findNecessaryArtifacts());
-        content.implicitDependencies = artifactNames(analyzer.findImplicitDependencies());
-        content.unusedDependencies = artifactNames(analyzer.findUnusedDependencies());
+        content.allDependencies = artifactNames(analyzer.getAllRequiredArtifacts());
+        content.apiDependencies = artifactNames(analyzer.getApiArtifacts());
+        content.implicitDependencies = artifactNames(analyzer.getImplicitDependencies());
+        content.unusedDependencies = artifactNames(analyzer.getUnusedDependencies());
 
         Yaml yaml = new Yaml();
         try {
@@ -78,12 +82,16 @@ public class DependencyOptimizationReportTask extends DefaultTask {
     }
 
     @InputFiles
-    public final ConfigurableFileCollection getDotFiles() {
-        return dotFiles;
+    public final ConfigurableFileCollection getFullDepFiles() {
+        return fullDepFiles;
     }
 
-    @Input
-    @Optional
+    @InputFiles @Optional
+    public final ConfigurableFileCollection getApiDepFiles() {
+        return apiDepFiles;
+    }
+
+    @Input @Optional
     public final SetProperty<String> getIgnored() {
         return ignore;
     }
@@ -94,12 +102,17 @@ public class DependencyOptimizationReportTask extends DefaultTask {
     }
 
     public static final class ReportContent {
-        private List<String> necessaryDependencies;
+        private List<String> allDependencies;
+        private List<String> apiDependencies;
         private List<String> implicitDependencies;
         private List<String> unusedDependencies;
 
-        public List<String> getNecessaryDependencies() {
-            return necessaryDependencies;
+        public List<String> getAllDependencies() {
+            return allDependencies;
+        }
+
+        public List<String> getApiDependencies() {
+            return apiDependencies;
         }
 
         public List<String> getImplicitDependencies() {
@@ -110,8 +123,12 @@ public class DependencyOptimizationReportTask extends DefaultTask {
             return unusedDependencies;
         }
 
-        public void setNecessaryDependencies(List<String> necessaryDependencies) {
-            this.necessaryDependencies = necessaryDependencies;
+        public void setAllDependencies(List<String> allDependencies) {
+            this.allDependencies = allDependencies;
+        }
+
+        public void setApiDependencies(List<String> apiDependencies) {
+            this.apiDependencies = apiDependencies;
         }
 
         public void setImplicitDependencies(List<String> implicitDependencies) {

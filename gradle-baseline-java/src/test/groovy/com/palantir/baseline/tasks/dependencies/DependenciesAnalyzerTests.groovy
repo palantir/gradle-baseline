@@ -14,8 +14,8 @@ class DependenciesAnalyzerTests extends AbstractDependencyTest {
             doLast {
             println "Here"
             def f = project.tasks.named('findMainDeps').get().reportFile.get().getAsFile()
-            def analyzer = new com.palantir.baseline.tasks.dependencies.DependenciesAnalyzer(project, [configurations.compileClasspath], files(f), [] as Set)
-            def artifacts = analyzer.findNecessaryArtifacts()
+            def analyzer = new com.palantir.baseline.tasks.dependencies.DependencyAnalyzer(project, [configurations.compileClasspath], files(f), files(f), [] as Set)
+            def artifacts = analyzer.getAllRequiredArtifacts()
             println 'Num deps: ' + artifacts.size();
             artifacts.each {println 'DEP: ' + com.palantir.baseline.tasks.dependencies.DependencyUtils.getArtifactName(it)}
             }
