@@ -27,6 +27,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import net.ltgt.gradle.errorprone.CheckSeverity;
@@ -242,7 +243,10 @@ public final class BaselineErrorProne implements Plugin<Project> {
             BaselineErrorProneExtension errorProneExtension,
             JavaCompile javaCompile,
             ErrorProneOptions errorProneOptions) {
-        return errorProneExtension.getFilteredPatchChecks(javaCompile.getClasspath()).stream().filter(check -> {
+
+        Predicate<String> filterOutPreconditions = filterOutPreconditions(javaCompile.getClasspath());
+
+        return errorProneExtension.getPatchChecks().get().stream().filter(check -> {
             if (checkExplicitlyDisabled(errorProneOptions, check)) {
                 log.info(
                         "Task {}: not applying errorprone check {} because it has severity OFF in errorProneOptions",
@@ -250,8 +254,35 @@ public final class BaselineErrorProne implements Plugin<Project> {
                         check);
                 return false;
             }
-            return true;
+            return filterOutPreconditions.test(check);
         });
+    }
+
+    /** Filters out preconditions checks if the required libraries are not on the classpath. */
+    public static Predicate<String> filterOutPreconditions(FileCollection compileClasspath) {
+        boolean hasSafeLogging = !compileClasspath.filter(file -> file.getName().startsWith("safe-logging-")).isEmpty();
+        boolean hasPreconditions =
+                // The real 'preconditions' brings in 'safe-logging'. Because of inaccurate jar name checks, we
+                // use that fact to ensure we're not picking up another jar named 'preconditions' by mistake.
+                hasSafeLogging
+                        && !compileClasspath.filter(file -> file.getName().startsWith("preconditions-")).isEmpty();
+        return check -> {
+            if (!hasPreconditions && check.equals("PreferSafeLoggingPreconditions")) {
+                log.info(
+                        "Disabling check PreferSafeLoggingPreconditions as 'com.palantir.safe-logging:safe-logging' "
+                                + "missing from source set for {}",
+                        compileClasspath);
+                return false;
+            }
+            if (!hasSafeLogging && check.equals("PreferSafeLoggableExceptions")) {
+                log.info(
+                        "Disabling check PreferSafeLoggableExceptions as 'com.palantir.safe-logging:preconditions' "
+                                + "missing from source set for {}",
+                        compileClasspath);
+                return false;
+            }
+            return true;
+        };
     }
 
     private static boolean isRefactoring(Project project) {
