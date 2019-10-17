@@ -261,7 +261,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
         // If this javaCompile is associated with a source set, use it to figure out if it has preconditions or not.
         Predicate<String> filterOutPreconditions = maybeSourceSet
                 .map(ss -> filterOutPreconditions(
-                        ss, project.getConfigurations().getByName(ss.getCompileClasspathConfigurationName())))
+                        project.getConfigurations().getByName(ss.getCompileClasspathConfigurationName())))
                 .orElse(check -> true);
 
         return errorProneExtension.getPatchChecks().get().stream().filter(check -> {
@@ -287,7 +287,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
     }
 
     /** Filters out preconditions checks if the required libraries are not on the classpath. */
-    public static Predicate<String> filterOutPreconditions(SourceSet sourceSet, Configuration compileClasspath) {
+    public static Predicate<String> filterOutPreconditions(Configuration compileClasspath) {
         boolean hasPreconditions =
                 hasDependenciesMatching(compileClasspath, BaselineErrorProne::isSafeLoggingPreconditionsDep);
 
@@ -295,16 +295,16 @@ public final class BaselineErrorProne implements Plugin<Project> {
             if (!hasPreconditions) {
                 if (check.equals("PreferSafeLoggingPreconditions")) {
                     log.info(
-                            "Disabling check PreferSafeLoggingPreconditions as 'com.palantir.safe-logging:safe-logging'"
-                                    + " missing from {}",
-                            sourceSet);
+                            "Disabling check PreferSafeLoggingPreconditions as "
+                                    + "'com.palantir.safe-logging:preconditions' missing from {}",
+                            compileClasspath);
                     return false;
                 }
                 if (check.equals("PreferSafeLoggableExceptions")) {
                     log.info(
                             "Disabling check PreferSafeLoggableExceptions as 'com.palantir.safe-logging:preconditions' "
                                     + "missing from {}",
-                            sourceSet);
+                            compileClasspath);
                     return false;
                 }
             }
