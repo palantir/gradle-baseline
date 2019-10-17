@@ -1,5 +1,0 @@
-enum E {
-  ONE,
-  TWO;
-  ;
-}

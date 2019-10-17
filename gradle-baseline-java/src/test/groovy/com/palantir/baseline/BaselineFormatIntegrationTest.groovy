@@ -87,7 +87,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
 
     def 'eclipse formatter integration test'() {
         def inputDir = new File("src/test/resources/com/palantir/baseline/formatter-in")
-        def expectedDir = new File("src/test/resources/com/palantir/baseline/formatter-expected")
+        def expectedDir = new File("src/test/resources/com/palantir/baseline/eclipse-formatter-expected")
 
         def testedDir = new File(projectDir, "src/main/java")
         FileUtils.copyDirectory(inputDir, testedDir)
@@ -130,36 +130,6 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         then:
         result.task(":format").outcome == TaskOutcome.SUCCESS
         result.task(":spotlessApply").outcome == TaskOutcome.SUCCESS
-        assertThatFilesAreTheSame(testedDir, expectedDir)
-    }
-
-    def 'eclipse formatter googlejavaformat test cases'() {
-        def excludedFiles = [
-                "B19996259.java", // this causes an OOM
-        ]
-
-        def inputDir = new File("src/test/resources/com/palantir/baseline/googlejavaformat-in")
-        def expectedDir = new File("src/test/resources/com/palantir/baseline/googlejavaformat-expected")
-
-        def testedDir = new File(projectDir, "src/main/java")
-        FileUtils.copyDirectory(inputDir, testedDir, new NotFileFilter(new NameFileFilter(excludedFiles)))
-
-        buildFile << """
-            plugins {
-                id 'java'
-                id 'com.palantir.baseline-format'
-            }
-        """.stripIndent()
-        file('gradle.properties') << """
-            com.palantir.baseline-format.eclipse=true
-        """.stripIndent()
-
-        when:
-        BuildResult result = with(':format').build()
-        result.task(":format").outcome == TaskOutcome.SUCCESS
-        result.task(":spotlessApply").outcome == TaskOutcome.SUCCESS
-
-        then:
         assertThatFilesAreTheSame(testedDir, expectedDir)
     }
 

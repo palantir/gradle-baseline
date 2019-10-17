@@ -18,18 +18,12 @@ package com.palantir.baseline.plugins;
 
 import com.diffplug.gradle.spotless.SpotlessExtension;
 import com.diffplug.spotless.FormatterFunc;
-import com.google.common.collect.ImmutableList;
-import com.google.common.collect.Iterables;
-import com.google.common.collect.Range;
-import com.palantir.javaformat.java.FormatterService;
+import com.palantir.javaformat.java.Formatter;
 import com.palantir.javaformat.java.JavaFormatterOptions;
 import com.palantir.javaformat.java.JavaFormatterOptions.Style;
-import com.palantir.javaformat.java.JavaOutput;
-import com.palantir.javaformat.java.Replacement;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ServiceLoader;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -128,14 +122,10 @@ class BaselineFormat extends AbstractBaselinePlugin {
     private static class PalantirJavaFormatterFunc implements FormatterFunc {
         private static final JavaFormatterOptions OPTIONS =
                 JavaFormatterOptions.builder().style(Style.PALANTIR).build();
-        private final FormatterService formatterService =
-                Iterables.getOnlyElement(ServiceLoader.load(FormatterService.class));
 
         @Override
         public String apply(String input) throws Exception {
-            ImmutableList<Replacement> replacements = formatterService.getFormatReplacements(
-                    OPTIONS, input, ImmutableList.of(Range.closedOpen(0, input.length())));
-            return JavaOutput.applyReplacements(input, replacements);
+            return Formatter.createFormatter(OPTIONS).formatSourceAndFixImports(input);
         }
     }
 }
