@@ -1,0 +1,125 @@
+/*
+ * (c) Copyright 2019 Palantir Technologies Inc. All rights reserved.
+ */
+
+package com.palantir.baseline.tasks.dependencies;
+
+import org.gradle.api.DefaultTask;
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ResolvedArtifact;
+import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.provider.ListProperty;
+import org.gradle.api.provider.SetProperty;
+import org.gradle.api.tasks.*;
+import org.yaml.snakeyaml.Yaml;
+
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
+
+@CacheableTask
+public class DependencyOptimizationReportTask extends DefaultTask {
+    private final ListProperty<Configuration> configurations;
+    private final ConfigurableFileCollection dotFiles;
+    private final SetProperty<String> ignore;
+    private final RegularFileProperty report;
+
+    public DependencyOptimizationReportTask() {
+        configurations = getProject().getObjects().listProperty(Configuration.class);
+        configurations.set(Collections.emptyList());
+        dotFiles = getProject().getObjects().fileCollection();
+        ignore = getProject().getObjects().setProperty(String.class);
+        ignore.set(Collections.emptySet());
+        report = getProject().getObjects().fileProperty();
+        RegularFileProperty defaultReport = getProject().getObjects().fileProperty();
+        defaultReport.set(
+                getProject().file(String.format("%s/reports/%s-report.yaml", getProject().getBuildDir(), getName())));
+        report.convention(defaultReport);
+    }
+
+    @TaskAction
+    public final void analyzeDependencies() {
+        DependenciesAnalyzer analyzer = new DependenciesAnalyzer(getProject(),
+                configurations.get(),
+                dotFiles,
+                ignore.get());
+
+        ReportContent content = new ReportContent();
+        content.necessaryDependencies = artifactNames(analyzer.findNecessaryArtifacts());
+        content.implicitDependencies = artifactNames(analyzer.findImplicitDependencies());
+        content.unusedDependencies = artifactNames(analyzer.findUnusedDependencies());
+
+        Yaml yaml = new Yaml();
+        try {
+            File file = getReportFile().getAsFile().get();
+            String contents = yaml.dumpAsMap(content);
+            Files.write(file.toPath(), contents.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            throw new RuntimeException("Error writing dependency report", e);
+        }
+
+    }
+
+    private List<String> artifactNames(Collection<ResolvedArtifact> artifacts) {
+        return artifacts.stream()
+                .map(DependencyUtils::getArtifactName)
+                .sorted()
+                .collect(Collectors.toList());
+    }
+
+    public final ListProperty<Configuration> getConfigurations() {
+        return configurations;
+    }
+
+    @InputFiles
+    public final ConfigurableFileCollection getDotFiles() {
+        return dotFiles;
+    }
+
+    @Input
+    @Optional
+    public final SetProperty<String> getIgnored() {
+        return ignore;
+    }
+
+    @OutputFile
+    public final RegularFileProperty getReportFile() {
+        return report;
+    }
+
+    public static final class ReportContent {
+        private List<String> necessaryDependencies;
+        private List<String> implicitDependencies;
+        private List<String> unusedDependencies;
+
+        public List<String> getNecessaryDependencies() {
+            return necessaryDependencies;
+        }
+
+        public List<String> getImplicitDependencies() {
+            return implicitDependencies;
+        }
+
+        public List<String> getUnusedDependencies() {
+            return unusedDependencies;
+        }
+
+        public void setNecessaryDependencies(List<String> necessaryDependencies) {
+            this.necessaryDependencies = necessaryDependencies;
+        }
+
+        public void setImplicitDependencies(List<String> implicitDependencies) {
+            this.implicitDependencies = implicitDependencies;
+        }
+
+        public void setUnusedDependencies(List<String> unusedDependencies) {
+            this.unusedDependencies = unusedDependencies;
+        }
+    }
+}

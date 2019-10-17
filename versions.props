@@ -13,6 +13,9 @@ org.apache.maven.shared:maven-dependency-analyzer = 1.11.1
 org.github.ngbinh.scalastyle:gradle-scalastyle-plugin_2.11 = 1.0.1
 org.inferred:freebuilder = 1.14.6
 org.slf4j:slf4j-api = 1.7.25
+org.yaml:snakeyaml = 1.24
+com.paypal.digraph:digraph-parser = 1.0
+org.zeroturnaround:zt-exec = 1.11
 
 # test deps
 com.netflix.nebula:nebula-test = 7.4.0
