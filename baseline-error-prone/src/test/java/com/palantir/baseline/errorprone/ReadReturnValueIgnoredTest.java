@@ -17,12 +17,14 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.common.io.ByteStreams;
+import com.google.common.io.CharStreams;
 import com.google.errorprone.BugCheckerRefactoringTestHelper;
 import com.google.errorprone.CompilationTestHelper;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
+import java.io.Reader;
 import org.junit.jupiter.api.Test;
 
 class ReadReturnValueIgnoredTest {
@@ -147,6 +149,31 @@ class ReadReturnValueIgnoredTest {
     }
 
     @Test
+    void testFix_reader_skip() {
+        fix()
+                .addInputLines(
+                        "Test.java",
+                        "import " + IOException.class.getName() + ';',
+                        "import " + Reader.class.getName() + ';',
+                        "class Test {",
+                        "   void f(Reader reader) throws IOException {",
+                        "       reader.skip(4);",
+                        "   }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import " + CharStreams.class.getName() + ';',
+                        "import " + IOException.class.getName() + ';',
+                        "import " + Reader.class.getName() + ';',
+                        "class Test {",
+                        "   void f(Reader reader) throws IOException {",
+                        "       CharStreams.skipFully(reader, 4);",
+                        "   }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
     void testStream_singleByte() {
         helper().addSourceLines(
                 "Test.java",
@@ -172,6 +199,21 @@ class ReadReturnValueIgnoredTest {
                 "       // BUG: Diagnostic contains: The result of a read call must be checked",
                 "       raf.read();",
                 "       return raf.read();",
+                "   }",
+                "}").doTest();
+    }
+
+    @Test
+    void testReader_single() {
+        helper().addSourceLines(
+                "Test.java",
+                "import " + IOException.class.getName() + ';',
+                "import " + Reader.class.getName() + ';',
+                "class Test {",
+                "   int getSecondChar(Reader reader) throws IOException {",
+                "       // BUG: Diagnostic contains: The result of a read call must be checked",
+                "       reader.read();",
+                "       return reader.read();",
                 "   }",
                 "}").doTest();
     }

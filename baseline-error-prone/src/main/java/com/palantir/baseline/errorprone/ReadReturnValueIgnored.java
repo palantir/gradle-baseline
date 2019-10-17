@@ -19,6 +19,7 @@ package com.palantir.baseline.errorprone;
 import com.google.auto.service.AutoService;
 import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
+import com.google.common.io.CharStreams;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.AbstractReturnValueIgnored;
@@ -35,6 +36,7 @@ import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.Tree;
 import java.io.InputStream;
 import java.io.RandomAccessFile;
+import java.io.Reader;
 import java.util.List;
 import java.util.Optional;
 
@@ -70,6 +72,11 @@ public final class ReadReturnValueIgnored extends AbstractReturnValueIgnored {
                             .named("read")
                             .withParameters()));
 
+    private static final Matcher<ExpressionTree> READER_SKIP_MATCHER = MethodMatchers.instanceMethod()
+            .onDescendantOf(Reader.class.getName())
+            .named("skip")
+            .withParameters(long.class.getName());
+
     private static final Matcher<ExpressionTree> INPUT_STREAM_SKIP_MATCHER = MethodMatchers.instanceMethod()
             .onDescendantOf(InputStream.class.getName())
             .named("skip")
@@ -82,10 +89,14 @@ public final class ReadReturnValueIgnored extends AbstractReturnValueIgnored {
 
     private static final Matcher<ExpressionTree> MATCHER = Matchers.anyOf(
             MethodMatchers.instanceMethod()
-                    .onDescendantOfAny(InputStream.class.getName(), RandomAccessFile.class.getName())
+                    .onDescendantOfAny(
+                            RandomAccessFile.class.getName(),
+                            Reader.class.getName(),
+                            InputStream.class.getName())
                     .named("read"),
             INPUT_STREAM_SKIP_MATCHER,
-            RAF_SKIP_MATCHER);
+            RAF_SKIP_MATCHER,
+            READER_SKIP_MATCHER);
 
     @Override
     public Matcher<? super ExpressionTree> specializedMatcher() {
@@ -111,6 +122,11 @@ public final class ReadReturnValueIgnored extends AbstractReturnValueIgnored {
         if (RAF_BUFFER_READ_MATCHER.matches(methodInvocationTree, state)) {
             return buildDescription(methodInvocationTree)
                     .addFix(SuggestedFixes.renameMethodInvocation(methodInvocationTree, "readFully", state))
+                    .build();
+        }
+        if (READER_SKIP_MATCHER.matches(methodInvocationTree, state)) {
+            return buildDescription(methodInvocationTree)
+                    .addFix(replaceWithStatic(methodInvocationTree, state, CharStreams.class.getName() + ".skipFully"))
                     .build();
         }
         return describeMatch(methodInvocationTree);
