@@ -19,6 +19,8 @@ package com.palantir.baseline.plugins;
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.Iterables;
+import com.google.common.collect.MoreCollectors;
 import com.palantir.baseline.extensions.BaselineErrorProneExtension;
 import com.palantir.baseline.tasks.CompileRefasterTask;
 import java.io.File;
@@ -37,12 +39,16 @@ import org.gradle.api.JavaVersion;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.ExtensionAware;
+import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.specs.Spec;
+import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradle.api.tasks.testing.Test;
@@ -224,13 +230,20 @@ public final class BaselineErrorProne implements Plugin<Project> {
             }
 
             if (isErrorProneRefactoring(project)) {
+                Optional<SourceSet> maybeSourceSet = project
+                        .getConvention()
+                        .getPlugin(JavaPluginConvention.class)
+                        .getSourceSets()
+                        .matching(ss -> javaCompile.getName().equals(ss.getCompileJavaTaskName()))
+                        .stream()
+                        .collect(MoreCollectors.toOptional());
                 // TODO(gatesn): Is there a way to discover error-prone checks?
                 // Maybe service-load from a ClassLoader configured with annotation processor path?
                 // https://github.com/google/error-prone/pull/947
                 errorProneOptions.getErrorproneArgumentProviders().add(() -> {
                     // Don't apply checks that have been explicitly disabled
                     Stream<String> errorProneChecks = getNotDisabledErrorproneChecks(
-                            errorProneExtension, javaCompile, errorProneOptions);
+                            project, errorProneExtension, javaCompile, maybeSourceSet, errorProneOptions);
                     return ImmutableList.of(
                             "-XepPatchChecks:" + Joiner.on(',').join(errorProneChecks.iterator()),
                             "-XepPatchLocation:IN_PLACE");
@@ -240,11 +253,16 @@ public final class BaselineErrorProne implements Plugin<Project> {
     }
 
     private static Stream<String> getNotDisabledErrorproneChecks(
+            Project project,
             BaselineErrorProneExtension errorProneExtension,
             JavaCompile javaCompile,
+            Optional<SourceSet> maybeSourceSet,
             ErrorProneOptions errorProneOptions) {
-
-        Predicate<String> filterOutPreconditions = filterOutPreconditions(javaCompile.getClasspath());
+        // If this javaCompile is associated with a source set, use it to figure out if it has preconditions or not.
+        Predicate<String> filterOutPreconditions = maybeSourceSet
+                .map(ss -> filterOutPreconditions(
+                        ss, project.getConfigurations().getByName(ss.getCompileClasspathConfigurationName())))
+                .orElse(check -> true);
 
         return errorProneExtension.getPatchChecks().get().stream().filter(check -> {
             if (checkExplicitlyDisabled(errorProneOptions, check)) {
@@ -258,31 +276,44 @@ public final class BaselineErrorProne implements Plugin<Project> {
         });
     }
 
+    private static boolean hasDependenciesMatching(Configuration configuration, Spec<ModuleComponentIdentifier> spec) {
+        return !Iterables.isEmpty(
+                configuration
+                        .getIncoming()
+                        .artifactView(viewConfiguration -> viewConfiguration.componentFilter(
+                                ci -> ci instanceof ModuleComponentIdentifier
+                                        && spec.isSatisfiedBy((ModuleComponentIdentifier) ci)))
+                        .getArtifacts());
+    }
+
     /** Filters out preconditions checks if the required libraries are not on the classpath. */
-    public static Predicate<String> filterOutPreconditions(FileCollection compileClasspath) {
-        boolean hasSafeLogging = !compileClasspath.filter(file -> file.getName().startsWith("safe-logging-")).isEmpty();
+    public static Predicate<String> filterOutPreconditions(SourceSet sourceSet, Configuration compileClasspath) {
         boolean hasPreconditions =
-                // The real 'preconditions' brings in 'safe-logging'. Because of inaccurate jar name checks, we
-                // use that fact to ensure we're not picking up another jar named 'preconditions' by mistake.
-                hasSafeLogging
-                        && !compileClasspath.filter(file -> file.getName().startsWith("preconditions-")).isEmpty();
+                hasDependenciesMatching(compileClasspath, BaselineErrorProne::isSafeLoggingPreconditionsDep);
+
         return check -> {
-            if (!hasPreconditions && check.equals("PreferSafeLoggingPreconditions")) {
-                log.info(
-                        "Disabling check PreferSafeLoggingPreconditions as 'com.palantir.safe-logging:safe-logging' "
-                                + "missing from source set for {}",
-                        compileClasspath);
-                return false;
-            }
-            if (!hasSafeLogging && check.equals("PreferSafeLoggableExceptions")) {
-                log.info(
-                        "Disabling check PreferSafeLoggableExceptions as 'com.palantir.safe-logging:preconditions' "
-                                + "missing from source set for {}",
-                        compileClasspath);
-                return false;
+            if (!hasPreconditions) {
+                if (check.equals("PreferSafeLoggingPreconditions")) {
+                    log.info(
+                            "Disabling check PreferSafeLoggingPreconditions as 'com.palantir.safe-logging:safe-logging'"
+                                    + " missing from {}",
+                            sourceSet);
+                    return false;
+                }
+                if (check.equals("PreferSafeLoggableExceptions")) {
+                    log.info(
+                            "Disabling check PreferSafeLoggableExceptions as 'com.palantir.safe-logging:preconditions' "
+                                    + "missing from {}",
+                            sourceSet);
+                    return false;
+                }
             }
             return true;
         };
+    }
+
+    private static boolean isSafeLoggingPreconditionsDep(ModuleComponentIdentifier mci) {
+        return mci.getGroup().equals("com.palantir.safe-logging") && mci.getModule().equals("preconditions");
     }
 
     private static boolean isRefactoring(Project project) {
