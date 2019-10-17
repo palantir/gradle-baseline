@@ -1,6 +1,6 @@
 type: improvement
 improvement:
   description: Stop migrating source sets to safe-logging, unless they already have
-    the requisite libraries (`com.palantir.safe-logging:{preconditions,safe-logging}`).
+    the requisite library (`com.palantir.safe-logging:preconditions`).
   links:
   - https://github.com/palantir/gradle-baseline/pull/981
