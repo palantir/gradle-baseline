@@ -242,7 +242,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
             BaselineErrorProneExtension errorProneExtension,
             JavaCompile javaCompile,
             ErrorProneOptions errorProneOptions) {
-        return errorProneExtension.getPatchChecks().get().stream().filter(check -> {
+        return errorProneExtension.getFilteredPatchChecks(javaCompile.getClasspath()).stream().filter(check -> {
             if (checkExplicitlyDisabled(errorProneOptions, check)) {
                 log.info(
                         "Task {}: not applying errorprone check {} because it has severity OFF in errorProneOptions",
