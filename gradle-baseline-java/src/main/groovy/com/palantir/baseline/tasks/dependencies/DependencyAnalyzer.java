@@ -31,7 +31,7 @@ import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.file.FileCollection;
 
 /**
- * Parses dot files listing dependencies and sorts them out
+ * Parses dot files listing dependencies and sorts them out.
  */
 public final class DependencyAnalyzer {
     private static final ClassAnalyzer JAR_ANALYZER = new DefaultClassAnalyzer();
@@ -159,7 +159,7 @@ public final class DependencyAnalyzer {
     }
 
     /**
-     * Strips excess junk written by jdeps
+     * Strips excess junk written by jdeps.
      */
     private String cleanDependencyName(String name) {
         return name.replace(" (not found)", "").replace("\"", "");

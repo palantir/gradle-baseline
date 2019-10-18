@@ -104,6 +104,9 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
         return ignored.get().contains(artifact);
     }
 
+    /**
+     * @return Dependency report location.
+     */
     @InputFile
     public RegularFileProperty getReportFile() {
         return report;
