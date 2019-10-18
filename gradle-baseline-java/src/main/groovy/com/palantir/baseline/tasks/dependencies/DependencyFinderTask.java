@@ -54,6 +54,9 @@ public class DependencyFinderTask extends DefaultTask {
         ignored.convention(defaultFilter);
     }
 
+    /**
+     * Run jdeps with provided options
+     */
     @TaskAction
     protected void exec() {
         //invoke jdeps

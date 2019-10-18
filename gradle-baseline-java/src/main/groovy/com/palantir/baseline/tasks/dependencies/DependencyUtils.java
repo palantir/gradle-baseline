@@ -1,13 +1,17 @@
 package com.palantir.baseline.tasks.dependencies;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.file.Files;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
+import org.yaml.snakeyaml.Yaml;
 
-public class DependencyUtils {
+public final class DependencyUtils {
 
     private DependencyUtils() {
-
     }
 
     /**
@@ -29,4 +33,16 @@ public class DependencyUtils {
     public static boolean isProjectArtifact(ResolvedArtifact artifact) {
         return artifact.getId().getComponentIdentifier() instanceof ProjectComponentIdentifier;
     }
+
+    public static DependencyReportTask.ReportContent getReportContent(File reportFile) {
+        Yaml yaml = new Yaml();
+        DependencyReportTask.ReportContent reportContent;
+        try (InputStream input = Files.newInputStream(reportFile.toPath())) {
+            reportContent = yaml.loadAs(input, DependencyReportTask.ReportContent.class);
+        } catch (IOException e) {
+            throw new RuntimeException("Error reading dependency report", e);
+        }
+        return reportContent;
+    }
+
 }
