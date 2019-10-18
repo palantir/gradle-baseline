@@ -15,7 +15,7 @@ dependencies {
     compile 'net.ltgt.gradle:gradle-errorprone-plugin'
     compile 'org.apache.maven.shared:maven-dependency-analyzer'
     compile 'org.github.ngbinh.scalastyle:gradle-scalastyle-plugin_2.11'
-    implementation 'com.palantir.javaformat:palantir-java-format'
+    implementation 'com.palantir.javaformat:palantir-java-format-api'
     implementation 'com.palantir.javaformat:gradle-palantir-java-format'
 
     testCompile gradleTestKit()
