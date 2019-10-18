@@ -34,6 +34,17 @@ public final class DependencyUtils {
         return artifact.getId().getComponentIdentifier() instanceof ProjectComponentIdentifier;
     }
 
+    /**
+     * We have a few different string representations of project artifactNames.
+     */
+    public static boolean isProjectArtifact(String artifactName) {
+        return artifactName.startsWith("project :")
+                || artifactName.startsWith("project (')")
+                //a colon in the name (when the name doesn't start with "project" indicates it is a jar dependency
+                // of the form group:id
+                || !artifactName.contains(":");
+    }
+
     public static DependencyReportTask.ReportContent getReportContent(File reportFile) {
         Yaml yaml = new Yaml();
         DependencyReportTask.ReportContent reportContent;

@@ -19,12 +19,13 @@ package com.palantir.baseline.tasks;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Streams;
 import com.palantir.baseline.plugins.BaselineExactDependencies;
+import com.palantir.baseline.tasks.dependencies.DependencyReportTask;
+import com.palantir.baseline.tasks.dependencies.DependencyUtils;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
@@ -34,54 +35,46 @@ import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
 
 public class CheckImplicitDependenciesTask extends DefaultTask {
 
-    private final ListProperty<Configuration> dependenciesConfigurations;
-    private final Property<FileCollection> sourceClasses;
-    private final SetProperty<String> ignore;
+    private final RegularFileProperty report;
+    private final SetProperty<String> ignored;
 
     public CheckImplicitDependenciesTask() {
         setGroup("Verification");
         setDescription("Ensures all dependencies are explicitly declared, not just transitively provided");
-        dependenciesConfigurations = getProject().getObjects().listProperty(Configuration.class);
-        dependenciesConfigurations.set(Collections.emptyList());
-        sourceClasses = getProject().getObjects().property(FileCollection.class);
-        ignore = getProject().getObjects().setProperty(String.class);
-        ignore.set(Collections.emptySet());
+        report = getProject().getObjects().fileProperty();
+
+        ignored = getProject().getObjects().setProperty(String.class);
+        ignored.convention(Collections.emptySet());
     }
 
     @TaskAction
     public final void checkImplicitDependencies() {
-        Set<ResolvedDependency> declaredDependencies = dependenciesConfigurations.get().stream()
-                .map(Configuration::getResolvedConfiguration)
-                .flatMap(resolved -> resolved.getFirstLevelModuleDependencies().stream())
-                .collect(Collectors.toSet());
-        BaselineExactDependencies.INDEXES.populateIndexes(declaredDependencies);
+        DependencyReportTask.ReportContent reportContent =
+                DependencyUtils.getReportContent(getReportFile().getAsFile().get());
 
-        Set<ResolvedArtifact> necessaryArtifacts = referencedClasses().stream()
-                .map(BaselineExactDependencies.INDEXES::classToDependency)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .filter(x -> !isArtifactFromCurrentProject(x))
-                .collect(Collectors.toSet());
-        Set<ResolvedArtifact> declaredArtifacts = declaredDependencies.stream()
-                .flatMap(dependency -> dependency.getModuleArtifacts().stream())
-                .collect(Collectors.toSet());
+        if (reportContent.getImplicitDependencies().isEmpty()) {
+            return;
+        }
 
-        List<ResolvedArtifact> usedButUndeclared = Sets.difference(necessaryArtifacts, declaredArtifacts).stream()
-                .sorted(Comparator.comparing(artifact -> artifact.getId().getDisplayName()))
+        List<String> implicitDependencies = reportContent.getImplicitDependencies().stream()
                 .filter(artifact -> !shouldIgnore(artifact))
                 .collect(Collectors.toList());
-        if (!usedButUndeclared.isEmpty()) {
-            String suggestion = usedButUndeclared.stream()
+
+        if (!implicitDependencies.isEmpty()) {
+            String suggestion = implicitDependencies.stream()
                     .map(artifact -> getSuggestionString(artifact))
                     .sorted()
                     .collect(Collectors.joining("\n", "    dependencies {\n", "\n    }"));
@@ -89,85 +82,36 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
             throw new GradleException(
                     String.format("Found %d implicit dependencies - consider adding the following explicit "
                             + "dependencies to '%s', or avoid using classes from these jars:\n%s",
-                    usedButUndeclared.size(),
+                            implicitDependencies.size(),
                     buildFile(),
                     suggestion));
         }
     }
 
-    private String getSuggestionString(ResolvedArtifact artifact) {
-        String artifactNameString = isProjectArtifact(artifact)
-                ? String.format("project('%s')",
-                        ((ProjectComponentIdentifier) artifact.getId().getComponentIdentifier()).getProjectPath())
-                : String.format("'%s:%s'",
-                        artifact.getModuleVersion().getId().getGroup(), artifact.getModuleVersion().getId().getName());
-        return String.format("        implementation %s", artifactNameString);
-    }
-
-    /**
-     * Return true if the resolved artifact is derived from a project in the current build rather than an
-     * external jar.
-     */
-    private boolean isProjectArtifact(ResolvedArtifact artifact) {
-        return artifact.getId().getComponentIdentifier() instanceof ProjectComponentIdentifier;
-    }
-
-    /**
-     * Return true if the resolved artifact is derived from a project in the current build rather than an
-     * external jar.
-     */
-    private boolean isArtifactFromCurrentProject(ResolvedArtifact artifact) {
-        if (!isProjectArtifact(artifact)) {
-            return false;
+    private String getSuggestionString(String artifact) {
+        if (DependencyUtils.isProjectArtifact(artifact)) {
+            //surround the project name with quotes and parents
+            artifact = artifact.replace("project ", "project('") + "')";
         }
-        return ((ProjectComponentIdentifier) artifact.getId().getComponentIdentifier()).getProjectPath()
-                .equals(getProject().getPath());
-    }
-
-
-    /** All classes which are mentioned in this project's source code. */
-    private Set<String> referencedClasses() {
-        return Streams.stream(sourceClasses.get().iterator())
-                .flatMap(BaselineExactDependencies::referencedClasses)
-                .collect(Collectors.toSet());
+        return "implementation " + artifact;
     }
 
     private Path buildFile() {
         return getProject().getRootDir().toPath().relativize(getProject().getBuildFile().toPath());
     }
 
-    private boolean shouldIgnore(ResolvedArtifact artifact) {
-        return ignore.get().contains(BaselineExactDependencies.asString(artifact));
+    private boolean shouldIgnore(String artifact) {
+        return ignored.get().contains(artifact);
+    }
+
+    @InputFile
+    public RegularFileProperty getReportFile() {
+        return report;
     }
 
     @Input
-    public final Provider<List<Configuration>> getDependenciesConfigurations() {
-        return dependenciesConfigurations;
-    }
-
-    public final void dependenciesConfiguration(Configuration dependenciesConfiguration) {
-        this.dependenciesConfigurations.add(Objects.requireNonNull(dependenciesConfiguration));
-    }
-
-    @InputFiles
-    public final Provider<FileCollection> getSourceClasses() {
-        return sourceClasses;
-    }
-
-    public final void setSourceClasses(FileCollection newClasses) {
-        this.sourceClasses.set(getProject().files(newClasses));
-    }
-
-    public final void ignore(Provider<Set<String>> value) {
-        ignore.set(value);
-    }
-
-    public final void ignore(String group, String name) {
-        ignore.add(group + ":" + name);
-    }
-
-    @Input
-    public final Provider<Set<String>> getIgnored() {
-        return ignore;
+    @Optional
+    public final SetProperty<String> getIgnored() {
+        return ignored;
     }
 }

@@ -127,10 +127,8 @@ public final class BaselineExactDependencies implements Plugin<Project> {
 
             project.getTasks().create("checkImplicitDependencies", CheckImplicitDependenciesTask.class, task -> {
                 task.dependsOn(JavaPlugin.CLASSES_TASK_NAME);
-                task.setSourceClasses(mainSourceSetClasses);
-                task.dependenciesConfiguration(compileClasspath);
-
-                task.ignore("org.slf4j", "slf4j-api");
+                task.getReportFile().value(mainAnalyzerTask.get().getReportFile());
+                task.getIgnored().set(ImmutableSet.of("org.slf4j", "slf4j-api"));
             });
         });
     }
