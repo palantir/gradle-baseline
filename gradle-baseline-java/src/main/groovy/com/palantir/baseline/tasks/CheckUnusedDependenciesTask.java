@@ -19,6 +19,8 @@ package com.palantir.baseline.tasks;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Streams;
 import com.palantir.baseline.plugins.BaselineExactDependencies;
+import com.palantir.baseline.tasks.dependencies.DependencyReportTask;
+import com.palantir.baseline.tasks.dependencies.DependencyUtils;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Comparator;
@@ -34,96 +36,67 @@ import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.TaskAction;
 
 public class CheckUnusedDependenciesTask extends DefaultTask {
 
-    private final ListProperty<Configuration> dependenciesConfigurations;
     private final ListProperty<Configuration> sourceOnlyConfigurations;
-    private final Property<FileCollection> sourceClasses;
-    private final SetProperty<String> ignore;
+    private final RegularFileProperty report;
+    private final SetProperty<String> ignored;
 
     public CheckUnusedDependenciesTask() {
         setGroup("Verification");
         setDescription("Ensures no extraneous dependencies are declared");
-        dependenciesConfigurations = getProject().getObjects().listProperty(Configuration.class);
-        dependenciesConfigurations.set(Collections.emptyList());
         sourceOnlyConfigurations = getProject().getObjects().listProperty(Configuration.class);
-        sourceOnlyConfigurations.set(Collections.emptyList());
-        sourceClasses = getProject().getObjects().property(FileCollection.class);
-        ignore = getProject().getObjects().setProperty(String.class);
-        ignore.set(Collections.emptySet());
+        sourceOnlyConfigurations.convention(Collections.emptyList());
+
+        report = getProject().getObjects().fileProperty();
+
+        ignored = getProject().getObjects().setProperty(String.class);
+        //ignored.set(Collections.emptySet());
     }
 
     @TaskAction
     public final void checkUnusedDependencies() {
-        Set<ResolvedDependency> declaredDependencies = dependenciesConfigurations.get().stream()
-                .map(Configuration::getResolvedConfiguration)
-                .flatMap(resolved -> resolved.getFirstLevelModuleDependencies().stream())
-                .collect(Collectors.toSet());
-        BaselineExactDependencies.INDEXES.populateIndexes(declaredDependencies);
+        DependencyReportTask.ReportContent reportContent =
+                DependencyUtils.getReportContent(getReportFile().getAsFile().get());
 
-        Set<ResolvedArtifact> necessaryArtifacts = Streams.stream(sourceClasses.get().iterator())
-                .flatMap(BaselineExactDependencies::referencedClasses)
-                .map(BaselineExactDependencies.INDEXES::classToDependency)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .collect(Collectors.toSet());
-        Set<ResolvedArtifact> declaredArtifacts = declaredDependencies.stream()
-                .flatMap(dependency -> dependency.getModuleArtifacts().stream())
-                .filter(dependency -> BaselineExactDependencies.VALID_ARTIFACT_EXTENSIONS
-                        .contains(dependency.getExtension()))
-                .collect(Collectors.toSet());
+        if (reportContent.getUnusedDependencies().isEmpty()) {
+            return;
+        }
 
-        excludeSourceOnlyDependencies();
-
-        Set<ResolvedArtifact> possiblyUnused = Sets.difference(declaredArtifacts, necessaryArtifacts);
-        getLogger().debug("Possibly unused dependencies: {}",
-                possiblyUnused.stream()
-                        .map(BaselineExactDependencies::asString)
-                        .sorted()
-                        .collect(Collectors.toList()));
-        List<ResolvedArtifact> declaredButUnused = possiblyUnused.stream()
+        List<String> declaredButUnused = reportContent.getUnusedDependencies().stream()
                 .filter(artifact -> !shouldIgnore(artifact))
-                .sorted(Comparator.comparing(BaselineExactDependencies::asString))
                 .collect(Collectors.toList());
+
+        //TODO(esword): verifying if this will work with report set.  test still fails
+        //excludeSourceOnlyDependencies();
+
+        getLogger().debug("Possibly unused dependencies: {}", declaredButUnused);
         if (!declaredButUnused.isEmpty()) {
             // TODO(dfox): don't print warnings for jars that define service loaded classes (e.g. meta-inf)
             StringBuilder sb = new StringBuilder();
             sb.append(String.format("Found %s dependencies unused during compilation, please delete them from '%s' or "
                     + "choose one of the suggested fixes:\n", declaredButUnused.size(), buildFile()));
-            for (ResolvedArtifact resolvedArtifact : declaredButUnused) {
-                sb.append('\t').append(BaselineExactDependencies.asString(resolvedArtifact)).append('\n');
+            for (String resolvedArtifact : declaredButUnused) {
+                sb.append('\t').append(resolvedArtifact).append('\n');
 
-                // Suggest fixes by looking at all transitive classes, filtering the ones we have declarations on,
-                // and mapping the remaining ones back to the jars they came from.
-                ResolvedDependency dependency = BaselineExactDependencies.INDEXES
-                        .artifactsFromDependency(resolvedArtifact);
-                Set<ResolvedArtifact> didYouMean = dependency.getAllModuleArtifacts().stream()
-                        .filter(artifact -> BaselineExactDependencies.VALID_ARTIFACT_EXTENSIONS
-                                .contains(artifact.getExtension()))
-                        .flatMap(BaselineExactDependencies.INDEXES::classesFromArtifact)
-                        .filter(referencedClasses()::contains)
-                        .map(BaselineExactDependencies.INDEXES::classToDependency)
-                        .filter(Optional::isPresent)
-                        .map(Optional::get)
-                        .filter(artifact -> !declaredArtifacts.contains(artifact))
-                        .collect(Collectors.toSet());
+                // Suggest fixes from the implicit list
+                List<String> didYouMean = reportContent.getImplicitDependencies();
 
                 if (!didYouMean.isEmpty()) {
                     sb.append("\t\tDid you mean:\n");
                     didYouMean.stream()
-                            .map(BaselineExactDependencies::asString)
-                            .sorted()
-                            .forEach(transitive -> sb.append("\t\t\timplementation '")
-                                    .append(transitive)
-                                    .append("\' \n"));
+                            .map(s -> "\t\t\t"+DependencyUtils.getSuggestionString(s))
+                            .forEach(transitive -> sb.append(transitive).append("\n"));
                 }
             }
             throw new GradleException(sb.toString());
@@ -148,31 +121,15 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
     private void ignoreDependency(Configuration config, ModuleVersionIdentifier id) {
         String dependencyId = BaselineExactDependencies.asString(id);
         getLogger().info("Ignoring {} dependency: '{}'", config.getName(), dependencyId);
-        ignore.add(dependencyId);
-    }
-
-    /** All classes which are mentioned in this project's source code. */
-    private Set<String> referencedClasses() {
-        return Streams.stream(sourceClasses.get().iterator())
-                .flatMap(BaselineExactDependencies::referencedClasses)
-                .collect(Collectors.toSet());
+        ignored.add(dependencyId);
     }
 
     private Path buildFile() {
         return getProject().getRootDir().toPath().relativize(getProject().getBuildFile().toPath());
     }
 
-    private boolean shouldIgnore(ResolvedArtifact artifact) {
-        return ignore.get().contains(BaselineExactDependencies.asString(artifact));
-    }
-
-    @Input
-    public final Provider<List<Configuration>> getDependenciesConfigurations() {
-        return dependenciesConfigurations;
-    }
-
-    public final void dependenciesConfiguration(Configuration dependenciesConfiguration) {
-        this.dependenciesConfigurations.add(Objects.requireNonNull(dependenciesConfiguration));
+    private boolean shouldIgnore(String artifact) {
+        return ignored.get().contains(artifact);
     }
 
     @Input
@@ -184,25 +141,17 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
         this.sourceOnlyConfigurations.add(Objects.requireNonNull(configuration));
     }
 
-    @InputFiles
-    public final Provider<FileCollection> getSourceClasses() {
-        return sourceClasses;
-    }
-
-    public final void setSourceClasses(FileCollection newClasses) {
-        this.sourceClasses.set(getProject().files(newClasses));
-    }
-
-    public final void ignore(Provider<Set<String>> value) {
-        ignore.set(value);
-    }
-
-    public final void ignore(String group, String name) {
-        ignore.add(group + ":" + name);
+    /**
+     * @return Dependency report location.
+     */
+    @InputFile
+    public RegularFileProperty getReportFile() {
+        return report;
     }
 
     @Input
-    public final Provider<Set<String>> getIgnored() {
-        return ignore;
+    @org.gradle.api.tasks.Optional
+    public final SetProperty<String> getIgnored() {
+        return ignored;
     }
 }

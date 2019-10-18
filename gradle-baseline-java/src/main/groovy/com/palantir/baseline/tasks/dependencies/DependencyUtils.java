@@ -56,4 +56,18 @@ public final class DependencyUtils {
         return reportContent;
     }
 
+    /**
+     * Turn an artifact name into a suggestion for how to add it to gradle dependencies.
+     * TODO(esword): Add some way to determine if test or api or both
+     * @param artifact
+     * @return
+     */
+    public static String getSuggestionString(String artifact) {
+        String result = artifact;
+        if (isProjectArtifact(result)) {
+            //surround the project name with quotes and parents
+            result = result.replace("project ", "project('") + "')";
+        }
+        return "implementation " + result;
+    }
 }

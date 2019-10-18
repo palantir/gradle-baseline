@@ -115,20 +115,17 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                     });
 
             project.getTasks().create("checkUnusedDependencies", CheckUnusedDependenciesTask.class, task -> {
-                task.dependsOn(JavaPlugin.CLASSES_TASK_NAME);
-                task.setSourceClasses(mainSourceSetClasses);
-                task.dependenciesConfiguration(compileClasspath);
+                task.getReportFile().value(mainAnalyzerTask.get().getReportFile());
                 task.sourceOnlyConfiguration(compileOnlyClasspath);
                 task.sourceOnlyConfiguration(annotationProcessorClasspath);
 
                 // this is liberally applied to ease the Java8 -> 11 transition
-                task.ignore("javax.annotation", "javax.annotation-api");
+                task.getIgnored().addAll("javax.annotation", "javax.annotation-api");
             });
 
             project.getTasks().create("checkImplicitDependencies", CheckImplicitDependenciesTask.class, task -> {
-                task.dependsOn(JavaPlugin.CLASSES_TASK_NAME);
                 task.getReportFile().value(mainAnalyzerTask.get().getReportFile());
-                task.getIgnored().set(ImmutableSet.of("org.slf4j", "slf4j-api"));
+                task.getIgnored().addAll("org.slf4j", "slf4j-api");
             });
         });
     }

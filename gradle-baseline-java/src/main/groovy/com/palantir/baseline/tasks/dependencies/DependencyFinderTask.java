@@ -55,7 +55,7 @@ public class DependencyFinderTask extends DefaultTask {
     }
 
     /**
-     * Run jdeps with provided options
+     * Run jdeps with provided options.
      */
     @TaskAction
     protected void exec() {
@@ -91,7 +91,7 @@ public class DependencyFinderTask extends DefaultTask {
     }
 
     /**
-     * Directory of class files to parse
+     * Directory of class files to parse.
      */
     @InputDirectory
     public final DirectoryProperty getSourceClasses() {

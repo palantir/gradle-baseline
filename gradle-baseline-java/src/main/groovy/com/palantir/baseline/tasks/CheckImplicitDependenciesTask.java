@@ -16,33 +16,18 @@
 
 package com.palantir.baseline.tasks;
 
-import com.google.common.collect.Sets;
-import com.google.common.collect.Streams;
-import com.palantir.baseline.plugins.BaselineExactDependencies;
 import com.palantir.baseline.tasks.dependencies.DependencyReportTask;
 import com.palantir.baseline.tasks.dependencies.DependencyUtils;
 import java.nio.file.Path;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
-import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
-import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ResolvedArtifact;
-import org.gradle.api.artifacts.ResolvedDependency;
-import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFileProperty;
-import org.gradle.api.provider.ListProperty;
-import org.gradle.api.provider.Property;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
 
@@ -75,7 +60,7 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
 
         if (!implicitDependencies.isEmpty()) {
             String suggestion = implicitDependencies.stream()
-                    .map(artifact -> getSuggestionString(artifact))
+                    .map(artifact -> DependencyUtils.getSuggestionString(artifact))
                     .sorted()
                     .collect(Collectors.joining("\n", "    dependencies {\n", "\n    }"));
 
@@ -86,14 +71,6 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
                     buildFile(),
                     suggestion));
         }
-    }
-
-    private String getSuggestionString(String artifact) {
-        if (DependencyUtils.isProjectArtifact(artifact)) {
-            //surround the project name with quotes and parents
-            artifact = artifact.replace("project ", "project('") + "')";
-        }
-        return "implementation " + artifact;
     }
 
     private Path buildFile() {
