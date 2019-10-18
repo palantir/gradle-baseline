@@ -4,6 +4,14 @@
 
 package com.palantir.baseline.tasks.dependencies;
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ResolvedArtifact;
@@ -13,15 +21,6 @@ import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.*;
 import org.yaml.snakeyaml.Yaml;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.util.Collection;
-import java.util.Collections;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @CacheableTask
 public class DependencyReportTask extends DefaultTask {
@@ -86,12 +85,14 @@ public class DependencyReportTask extends DefaultTask {
         return fullDepFiles;
     }
 
-    @InputFiles @Optional
+    @InputFiles
+    @Optional
     public final ConfigurableFileCollection getApiDepFiles() {
         return apiDepFiles;
     }
 
-    @Input @Optional
+    @Input
+    @Optional
     public final SetProperty<String> getIgnored() {
         return ignore;
     }
