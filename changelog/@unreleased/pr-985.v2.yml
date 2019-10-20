@@ -1,0 +1,8 @@
+type: improvement
+improvement:
+  description: Implement `PreferConjureExceptions` error prone checker which is OFF
+    by default to avoid flagging projects which do not use conjure infrastructure.
+    This check can be leveraged to automatically migrate away from common jax-rs exceptions
+    to conjure equivalents.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/985
