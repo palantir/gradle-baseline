@@ -174,6 +174,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `ThrowError`: Prefer throwing a RuntimeException rather than Error.
 - `ReverseDnsLookup`: Calling address.getHostName may result in an unexpected DNS lookup.
 - `ReadReturnValueIgnored`: The result of a read call must be checked to know if EOF has been reached or the expected number of bytes have been consumed.
+- `PreferConjureExceptions`: Prefer throwing a ServiceException instead of jax-rs WebApplicationException subtypes.
 
 ### Programmatic Application
 

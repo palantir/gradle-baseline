@@ -18,6 +18,8 @@ dependencies {
     testCompile 'org.apache.commons:commons-lang3'
     testCompile 'commons-lang:commons-lang'
     testCompile 'org.assertj:assertj-core'
+    testCompile 'javax.ws.rs:javax.ws.rs-api'
+    testCompile 'com.palantir.conjure.java.api:errors'
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-migrationsupport'
 
