@@ -33,6 +33,9 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.OutputFiles;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.zeroturnaround.exec.InvalidExitValueException;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -106,6 +109,7 @@ public class DependencyFinderTask extends DefaultTask {
      * Directory of class files to parse.
      */
     @InputDirectory
+    @PathSensitive(PathSensitivity.RELATIVE)
     public final DirectoryProperty getSourceClasses() {
         return sourceClasses;
     }
@@ -131,6 +135,7 @@ public class DependencyFinderTask extends DefaultTask {
     /**
      * Directory where report will be written.
      */
+    @OutputFiles
     public final DirectoryProperty getReportDir() {
         return reportDir;
     }

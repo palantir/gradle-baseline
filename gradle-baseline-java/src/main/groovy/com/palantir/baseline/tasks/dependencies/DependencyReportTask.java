@@ -36,6 +36,8 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.yaml.snakeyaml.Yaml;
 
@@ -93,17 +95,21 @@ public class DependencyReportTask extends DefaultTask {
                 .collect(Collectors.toList());
     }
 
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public final ListProperty<Configuration> getConfigurations() {
         return configurations;
     }
 
     @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
     public final ConfigurableFileCollection getFullDepFiles() {
         return fullDepFiles;
     }
 
     @InputFiles
     @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
     public final ConfigurableFileCollection getApiDepFiles() {
         return apiDepFiles;
     }
