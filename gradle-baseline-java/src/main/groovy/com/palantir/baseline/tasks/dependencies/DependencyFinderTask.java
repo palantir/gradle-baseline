@@ -60,7 +60,7 @@ public class DependencyFinderTask extends DefaultTask {
 
         //jdeps will name the dot file after the directory where it read classes from
         reportFile = getProject().getObjects().fileProperty();
-        reportFile.value(reportDir.file(sourceClasses.map(s -> s.getAsFile().getName() + ".dot")));
+        reportFile.set(reportDir.file(sourceClasses.map(s -> s.getAsFile().getName() + ".dot")));
 
         //by default will not report classes in the JDK
         ignored = getProject().getObjects().setProperty(String.class);

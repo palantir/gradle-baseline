@@ -115,7 +115,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                     });
 
             project.getTasks().create("checkUnusedDependencies", CheckUnusedDependenciesTask.class, task -> {
-                task.getReportFile().value(mainAnalyzerTask.get().getReportFile());
+                task.getReportFile().set(mainAnalyzerTask.get().getReportFile());
                 task.sourceOnlyConfiguration(compileOnlyClasspath);
                 task.sourceOnlyConfiguration(annotationProcessorClasspath);
 
@@ -124,7 +124,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
             });
 
             project.getTasks().create("checkImplicitDependencies", CheckImplicitDependenciesTask.class, task -> {
-                task.getReportFile().value(mainAnalyzerTask.get().getReportFile());
+                task.getReportFile().set(mainAnalyzerTask.get().getReportFile());
                 task.getIgnored().addAll("org.slf4j", "slf4j-api");
             });
         });
