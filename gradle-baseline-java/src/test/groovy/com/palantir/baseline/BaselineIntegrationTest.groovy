@@ -16,7 +16,7 @@
 
 package com.palantir.baseline
 
-import spock.lang.Ignore
+
 import spock.lang.Unroll
 
 class BaselineIntegrationTest extends AbstractPluginTest {
@@ -34,8 +34,6 @@ class BaselineIntegrationTest extends AbstractPluginTest {
     }
 
     @Unroll("Can apply on #gradleVersion")
-    //TEMP HACK BECAUSE CIRCLE TIMING OUT
-    @Ignore
     def canApplyOnGradle() {
         buildFile << standardBuildFile()
         multiProject.addSubproject("java-project", "apply plugin: 'java'")
