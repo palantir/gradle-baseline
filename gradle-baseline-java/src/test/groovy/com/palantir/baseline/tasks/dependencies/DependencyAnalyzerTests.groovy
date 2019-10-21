@@ -19,7 +19,7 @@ package com.palantir.baseline.tasks.dependencies
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 
-class DependenciesAnalyzerTests extends AbstractDependencyTest {
+class DependencyAnalyzerTests extends AbstractDependencyTest {
 
     def 'findNecessaryArtifacts returns proper project dependency'() {
         setup:
