@@ -82,7 +82,7 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
     }
 
     /**
-     * @return Dependency report location.
+     * Dependency report location.
      */
     @InputFile
     public RegularFileProperty getReportFile() {

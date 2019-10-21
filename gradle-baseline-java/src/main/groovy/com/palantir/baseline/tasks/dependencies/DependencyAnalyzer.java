@@ -1,5 +1,17 @@
 /*
  * (c) Copyright 2019 Palantir Technologies Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 package com.palantir.baseline.tasks.dependencies;
@@ -64,7 +76,7 @@ public final class DependencyAnalyzer {
     }
 
     /**
-     * @return Full list of artifacts that are required by the project
+     * Full list of artifacts that are required by the project.
      */
     public Set<ResolvedArtifact> getAllRequiredArtifacts() {
         init();
@@ -72,14 +84,14 @@ public final class DependencyAnalyzer {
     }
 
     /**
-     * @return Artifacts used in project's APIs - public or protected methods.
+     * Artifacts used in project's APIs - public or protected methods.
      */
     public Set<ResolvedArtifact> getApiArtifacts() {
         return apiArtifacts;
     }
 
     /**
-     * @return Artifacts that are required but are not directly declared by the project
+     * Artifacts that are required but are not directly declared by the project.
      */
     public List<ResolvedArtifact> getImplicitDependencies() {
         init();
@@ -87,7 +99,7 @@ public final class DependencyAnalyzer {
     }
 
     /**
-     * @return Artifacts that are declared, but not used.
+     * Artifacts that are declared, but not used.
      */
     public List<ResolvedArtifact> getUnusedDependencies() {
         init();
@@ -142,7 +154,7 @@ public final class DependencyAnalyzer {
     }
 
     /**
-     * Return all classes that are referenced (i.e. depended upon) by classes in the given dot file
+     * Return all classes that are referenced (i.e. depended upon) by classes in the given dot file.
      */
     private Stream<String> findReferencedClasses(File dotFile) {
         try (InputStream input = new FileInputStream(dotFile)) {
@@ -152,8 +164,7 @@ public final class DependencyAnalyzer {
                     .stream()
                     .map(e -> e.getNode2().getId())
                     .map(this::cleanDependencyName);
-        }
-        catch (IOException e) {
+        } catch (IOException e) {
             throw new RuntimeException("Unable to analyze " + dotFile, e);
         }
     }

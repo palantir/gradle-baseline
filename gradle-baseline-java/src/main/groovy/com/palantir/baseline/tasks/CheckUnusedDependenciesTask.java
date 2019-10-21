@@ -16,34 +16,24 @@
 
 package com.palantir.baseline.tasks;
 
-import com.google.common.collect.Sets;
-import com.google.common.collect.Streams;
 import com.palantir.baseline.plugins.BaselineExactDependencies;
 import com.palantir.baseline.tasks.dependencies.DependencyReportTask;
 import com.palantir.baseline.tasks.dependencies.DependencyUtils;
 import java.nio.file.Path;
 import java.util.Collections;
-import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
-import org.gradle.api.artifacts.ResolvedArtifact;
-import org.gradle.api.artifacts.ResolvedDependency;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.ListProperty;
-import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
-import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.TaskAction;
 
 public class CheckUnusedDependenciesTask extends DefaultTask {
@@ -77,7 +67,7 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
                 .filter(artifact -> !shouldIgnore(artifact))
                 .collect(Collectors.toList());
 
-        //TODO(esword): verifying if this will work with report set.  test still fails
+        // TODO(esword): verifying if this will work with report set.  test still fails
         //excludeSourceOnlyDependencies();
 
         getLogger().debug("Possibly unused dependencies: {}", declaredButUnused);
@@ -95,7 +85,7 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
                 if (!didYouMean.isEmpty()) {
                     sb.append("\t\tDid you mean:\n");
                     didYouMean.stream()
-                            .map(s -> "\t\t\t"+DependencyUtils.getSuggestionString(s))
+                            .map(s -> "\t\t\t" + DependencyUtils.getSuggestionString(s))
                             .forEach(transitive -> sb.append(transitive).append("\n"));
                 }
             }
@@ -142,7 +132,7 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
     }
 
     /**
-     * @return Dependency report location.
+     * Dependency report location.
      */
     @InputFile
     public RegularFileProperty getReportFile() {
