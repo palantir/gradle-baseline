@@ -16,10 +16,6 @@
 
 package com.palantir.baseline.tasks.dependencies;
 
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -27,35 +23,33 @@ import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ResolvedArtifact;
-import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.ListProperty;
-import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.CacheableTask;
-import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
-import org.yaml.snakeyaml.Yaml;
 
 @CacheableTask
 public class DependencyReportTask extends DefaultTask {
     private final ListProperty<Configuration> configurations;
-    private final ConfigurableFileCollection fullDepFiles;
-    private final ConfigurableFileCollection apiDepFiles;
-    private final SetProperty<String> ignore;
+    private final ListProperty<Configuration> sourceOnlyConfigurations;
+    private final DirectoryProperty dotFileDir;
     private final RegularFileProperty report;
 
     public DependencyReportTask() {
         configurations = getProject().getObjects().listProperty(Configuration.class);
-        configurations.set(Collections.emptyList());
-        fullDepFiles = getProject().getObjects().fileCollection();
-        apiDepFiles = getProject().getObjects().fileCollection();
-        ignore = getProject().getObjects().setProperty(String.class);
-        ignore.set(Collections.emptySet());
+        configurations.convention(Collections.emptyList());
+        sourceOnlyConfigurations = getProject().getObjects().listProperty(Configuration.class);
+        sourceOnlyConfigurations.convention(Collections.emptyList());
+
+        dotFileDir = getProject().getObjects().directoryProperty();
+
         report = getProject().getObjects().fileProperty();
         RegularFileProperty defaultReport = getProject().getObjects().fileProperty();
         defaultReport.set(
@@ -67,9 +61,8 @@ public class DependencyReportTask extends DefaultTask {
     public final void analyzeDependencies() {
         DependencyAnalyzer analyzer = new DependencyAnalyzer(getProject(),
                 configurations.get(),
-                fullDepFiles,
-                apiDepFiles,
-                ignore.get());
+                sourceOnlyConfigurations.get(),
+                dotFileDir.get());
 
         ReportContent content = new ReportContent();
         content.allDependencies = artifactNames(analyzer.getAllRequiredArtifacts());
@@ -77,20 +70,13 @@ public class DependencyReportTask extends DefaultTask {
         content.implicitDependencies = artifactNames(analyzer.getImplicitDependencies());
         content.unusedDependencies = artifactNames(analyzer.getUnusedDependencies());
 
-        Yaml yaml = new Yaml();
-        try {
-            File file = getReportFile().getAsFile().get();
-            String contents = yaml.dumpAsMap(content);
-            Files.write(file.toPath(), contents.getBytes(StandardCharsets.UTF_8));
-        } catch (IOException e) {
-            throw new RuntimeException("Error writing dependency report", e);
-        }
+        DependencyUtils.writeDepReport(getReportFile().getAsFile().get(), content);
 
     }
 
     private List<String> artifactNames(Collection<ResolvedArtifact> artifacts) {
         return artifacts.stream()
-                .map(DependencyUtils::getArtifactName)
+                .map(DependencyUtils::getDependencyName)
                 .sorted()
                 .collect(Collectors.toList());
     }
@@ -101,23 +87,19 @@ public class DependencyReportTask extends DefaultTask {
         return configurations;
     }
 
-    @InputFiles
+    /**
+     * Directory containing dot-file reports.
+     */
+    @InputDirectory
     @PathSensitive(PathSensitivity.RELATIVE)
-    public final ConfigurableFileCollection getFullDepFiles() {
-        return fullDepFiles;
+    public final DirectoryProperty getDotFileDir() {
+        return dotFileDir;
     }
 
     @InputFiles
     @Optional
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public final ConfigurableFileCollection getApiDepFiles() {
-        return apiDepFiles;
-    }
-
-    @Input
-    @Optional
-    public final SetProperty<String> getIgnored() {
-        return ignore;
+    public final ListProperty<Configuration> getSourceOnlyConfigurations() {
+        return sourceOnlyConfigurations;
     }
 
     @OutputFile

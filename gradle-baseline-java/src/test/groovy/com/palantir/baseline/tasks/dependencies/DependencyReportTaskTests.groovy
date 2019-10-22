@@ -26,18 +26,25 @@ class DependencyReportTaskTests extends AbstractDependencyTest {
 
     def setup() {
         reportDir = new File(projectDir, "build/reports")
-        reportFile = new File(reportDir, "analyzeMainDeps-report.yaml")
+        reportFile = new File(reportDir, "analyzeDeps-report.yaml")
     }
 
     def 'test writing dep report'() {
         setup:
         setupTransitiveJarDependencyProject()
+        //include some annotation stuff to make sure not listed as unused
+        buildFile << """
+        dependencies {
+            annotationProcessor 'org.immutables:value:2.7.5'
+            compileOnly 'org.immutables:value:2.7.5:annotations'
+        }
+        """
 
         when:
-        BuildResult result = runTask('analyzeMainDeps')
+        BuildResult result = runTask('analyzeDeps')
 
         then:
-        result.task(':analyzeMainDeps').getOutcome() == TaskOutcome.SUCCESS
+        result.task(':analyzeDeps').getOutcome() == TaskOutcome.SUCCESS
         String expected = cleanFileContentsWithEol '''
             allDependencies:
             - com.google.guava:guava
@@ -56,10 +63,10 @@ class DependencyReportTaskTests extends AbstractDependencyTest {
         setupMultiProject()
 
         when:
-        BuildResult result = runTask('analyzeMainDeps')
+        BuildResult result = runTask('analyzeDeps')
 
         then:
-        result.task(':analyzeMainDeps').getOutcome() == TaskOutcome.SUCCESS
+        result.task(':analyzeDeps').getOutcome() == TaskOutcome.SUCCESS
         String expected = cleanFileContentsWithEol '''
             allDependencies:
             - com.google.guava:guava
@@ -76,5 +83,4 @@ class DependencyReportTaskTests extends AbstractDependencyTest {
         String actual = reportFile.text
         expected == actual
     }
-
 }

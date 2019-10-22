@@ -29,12 +29,11 @@ class DependencyFinderTaskTests extends AbstractDependencyTest {
         mainReportDir = new File(rootReportDir, "findDeps")
     }
 
-    def 'dot file contains proper content'() {
+    def 'dot files contain proper contents'() {
         setup:
         File fullReportFile = new File(mainReportDir, "main.dot")
-        File summaryReportFile = new File(mainReportDir, "summary.dot")
-        File apiReportFile = new File(mainReportDir, "api/summary.dot")
-        setupTransitiveJarDependencyProject()
+        File apiReportFile = new File(mainReportDir, "api/main.dot")
+        setupMultiProject()
 
         when:
         BuildResult result = runTask('findDeps')
@@ -44,25 +43,23 @@ class DependencyFinderTaskTests extends AbstractDependencyTest {
         checkReportContents fullReportFile, '''
 digraph "main" {
     
-   "pkg.Foo"                                          -> "com.google.common.collect.ImmutableList (guava-18.0.jar)";
-}'''
-
-        checkReportContents summaryReportFile, '''
-digraph "summary" {
-  "pkg"                                              -> "com.google.common.collect (guava-18.0.jar)";
+   "com.p0.RootTestClassWithDeps"                     -> "com.p1.TestClassNoDeps2 (not found)";
+   "com.p0.RootTestClassWithJarDep"                   -> "com.google.common.collect.ImmutableList (not found)";
 }'''
 
         checkReportContents apiReportFile, '''
-digraph "summary" {
+digraph "main" {
+    
+   "com.p0.RootTestClassWithJarDep"                   -> "com.google.common.collect.ImmutableList (not found)";
 }'''
 
     }
 
-    private void checkReportContents(File fullReportFile, String rawExpected) {
-        assert fullReportFile.exists()
+    private void checkReportContents(File reportFile, String rawExpected) {
+        assert reportFile.exists()
         // strip out the comment line with the path to the class files because don't care about it
         // and it changes with every test run
-        String actual = fullReportFile.text.replaceAll('// Path.*', '')
+        String actual = reportFile.text.replaceAll('// Path.*', '')
         String expected = cleanFileContentsWithEol(rawExpected)
         assert expected == actual
     }

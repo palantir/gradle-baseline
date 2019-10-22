@@ -61,10 +61,7 @@ class AbstractDependencyTest extends AbstractPluginTest {
         buildFile << standardBuildFile
         buildFile << '''
         repositories {
-            maven {
-              url "https://artifactory.palantir.build/artifactory/all-jar/"
-            }
-            mavenLocal()
+            mavenCentral()
         }
         dependencies {
             compile 'com.fasterxml.jackson.datatype:jackson-datatype-guava:2.9.9' // pulls in guava transitively

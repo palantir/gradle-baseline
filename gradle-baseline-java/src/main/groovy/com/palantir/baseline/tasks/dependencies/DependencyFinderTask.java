@@ -61,7 +61,7 @@ public class DependencyFinderTask extends DefaultTask {
     }
 
     /**
-     * Run jdeps for both full set of dependencies and just APIs
+     * Run jdeps for both full set of dependencies and just APIs.
      */
     @TaskAction
     protected void exec() {
@@ -118,7 +118,12 @@ public class DependencyFinderTask extends DefaultTask {
         return classesDir;
     }
 
+    /**
+     * Optional class path used to compile the classes.  jdeps can use this to report what jar something came from
+     * @return
+     */
     @InputFiles
+    @Optional
     public ConfigurableFileCollection getClassPath() {
         return classPath;
     }

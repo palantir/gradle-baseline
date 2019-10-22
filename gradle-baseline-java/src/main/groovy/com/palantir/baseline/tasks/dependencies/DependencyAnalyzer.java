@@ -25,9 +25,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -44,11 +42,9 @@ import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.file.Directory;
-import org.gradle.api.file.FileCollection;
 
 /**
  * Parses dot files listing dependencies and sorts them out.
- *
  */
 public final class DependencyAnalyzer {
     private static final ClassAnalyzer JAR_ANALYZER = new DefaultClassAnalyzer();
@@ -60,10 +56,10 @@ public final class DependencyAnalyzer {
     private final Directory dotFileDir;
 
     private boolean inited = false;
-    private final Set<String> ignore;
     private Set<ResolvedArtifact> allRequiredArtifacts;
     private Set<ResolvedArtifact> apiArtifacts;
     private Set<ResolvedArtifact> declaredArtifacts;
+    private Set<ResolvedArtifact> sourceOnlyArtifacts;
 
     private final Indexes indexes = new Indexes();
 
@@ -76,7 +72,6 @@ public final class DependencyAnalyzer {
         this.dependenciesConfigurations = dependenciesConfigurations;
         this.sourceOnlyConfigurations = sourceOnlyConfigurations;
         this.dotFileDir = dotFileDir;
-        this.ignore = new HashSet<>();
     }
 
     /**
@@ -91,6 +86,7 @@ public final class DependencyAnalyzer {
      * Artifacts used in project's APIs - public or protected methods.
      */
     public Set<ResolvedArtifact> getApiArtifacts() {
+        init();
         return apiArtifacts;
     }
 
@@ -109,13 +105,14 @@ public final class DependencyAnalyzer {
      */
     public List<ResolvedArtifact> getUnusedDependencies() {
         init();
-        return diffArtifacts(declaredArtifacts, allRequiredArtifacts);
+        return diffArtifacts(declaredArtifacts, allRequiredArtifacts).stream()
+                .filter(a -> !sourceOnlyArtifacts.contains(a))
+                .collect(Collectors.toList());
     }
 
     private List<ResolvedArtifact> diffArtifacts(Set<ResolvedArtifact> base, Set<ResolvedArtifact> compare) {
         return Sets.difference(base, compare)
                 .stream()
-                .filter(artifact -> !shouldIgnore(artifact))
                 .sorted(Comparator.comparing(artifact -> artifact.getId().getDisplayName()))
                 .collect(Collectors.toList());
     }
@@ -124,50 +121,54 @@ public final class DependencyAnalyzer {
         if (inited) {
             return;
         }
-        Set<ResolvedDependency> declaredDependencies = resolvedDependencies(dependenciesConfigurations);
-        Set<ResolvedArtifact> sourceOnlyArtifacts = resolveConfigurationArtifacts(sourceOnlyConfigurations);
-
+        List<ResolvedDependency> declaredDependencies = resolvedDependencies(dependenciesConfigurations);
         indexes.populateIndexes(declaredDependencies);
 
-        allRequiredArtifacts = findReferencedArtifacts(dotFileDir.file("summary.dot"));
-        apiArtifacts = findReferencedArtifacts(dotFileDir.dir("api").file("summary.dot"));
+        allRequiredArtifacts = findReferencedArtifacts(DependencyUtils.findDetailedDotReport(dotFileDir));
+        apiArtifacts = findReferencedArtifacts(DependencyUtils.findDetailedDotReport(dotFileDir.dir("api")));
         declaredArtifacts = getResolvedArtifacts(declaredDependencies);
+        sourceOnlyArtifacts = resolveConfigurationArtifacts(sourceOnlyConfigurations);
         inited = true;
         //clear the memory from the massive dependency map
         indexes.reset();
     }
 
-    private Set<ResolvedArtifact> resolveConfigurationArtifacts(List<Configuration> configurations) {
-        Set<ResolvedDependency> resolvedDeps = resolvedDependencies(configurations);
+    private static Set<ResolvedArtifact> resolveConfigurationArtifacts(Collection<Configuration> configurations) {
+        Collection<ResolvedDependency> resolvedDeps = resolvedDependencies(configurations);
         return getResolvedArtifacts(resolvedDeps);
     }
 
-    private Set<ResolvedDependency> resolvedDependencies(Collection<Configuration> configurations) {
+    /**
+     * Returns all dependencies for given configurations.  Cannot use a Set because dependency object ids for
+     * hashing do not account for classifiers.
+     */
+    private static List<ResolvedDependency> resolvedDependencies(Collection<Configuration> configurations) {
         return configurations.stream()
                 .map(Configuration::getResolvedConfiguration)
                 .flatMap(resolved -> resolved.getFirstLevelModuleDependencies().stream())
-                .collect(Collectors.toSet());
+                .collect(Collectors.toList());
     }
 
-    private Set<ResolvedArtifact> getResolvedArtifacts(Collection<ResolvedDependency> dependencies) {
+    private static Set<ResolvedArtifact> getResolvedArtifacts(Collection<ResolvedDependency> dependencies) {
         return getResolvedArtifacts(dependencies, false);
     }
 
-    private Set<ResolvedArtifact> getResolvedArtifacts(Collection<ResolvedDependency> dependencies, boolean recursive) {
+    /**
+     * All artifacts with valid extensions (i.e. jar) from the dependencies, optionally including
+     * transitives.  Artifact identifiers are unique for hashing, so can return a set.
+     */
+    private static Set<ResolvedArtifact> getResolvedArtifacts(Collection<ResolvedDependency> dependencies,
+                                                              boolean recursive) {
         return dependencies.stream()
-                .flatMap(dependency -> (recursive ?
-                        dependency.getAllModuleArtifacts() : dependency.getModuleArtifacts()).stream())
-                .filter(dependency -> VALID_ARTIFACT_EXTENSIONS
-                        .contains(dependency.getExtension()))
+                .flatMap(dependency -> (recursive ? dependency.getAllModuleArtifacts()
+                        : dependency.getModuleArtifacts()).stream())
+                .filter(dependency -> VALID_ARTIFACT_EXTENSIONS.contains(dependency.getExtension()))
                 .collect(Collectors.toSet());
     }
 
-    private Set<ResolvedArtifact> findReferencedArtifacts(File dotFile) {
-        if (!dotFile.exists()) {
-            return Collections.emptySet();
-        }
-
-        return  findReferencedClasses(dotFile)
+    private Set<ResolvedArtifact> findReferencedArtifacts(Optional<File> dotFile) {
+        return Streams.stream(dotFile)
+                .flatMap(this::findReferencedClasses)
                 .map(indexes::classToDependency)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
@@ -192,13 +193,6 @@ public final class DependencyAnalyzer {
     }
 
     /**
-     * Returns the name of the jar
-     */
-    private String getJarName(String name) {
-        return name.replace(" (not found)", "").replace("\"", "");
-    }
-
-    /**
      * Strips excess junk written by jdeps.
      */
     private String cleanDependencyName(String name) {
@@ -210,36 +204,23 @@ public final class DependencyAnalyzer {
      * external jar.
      */
     private boolean isArtifactFromCurrentProject(ResolvedArtifact artifact) {
-        if (!DependencyUtils.isProjectArtifact(artifact)) {
+        if (!DependencyUtils.isProjectDependency(artifact)) {
             return false;
         }
         return ((ProjectComponentIdentifier) artifact.getId().getComponentIdentifier()).getProjectPath()
                 .equals(project.getPath());
     }
 
-    private boolean shouldIgnore(ResolvedArtifact artifact) {
-        return ignore.contains(DependencyUtils.getArtifactName(artifact));
-    }
-
     @ThreadSafe
     public static final class Indexes {
         private final Map<String, ResolvedArtifact> classToDependency = new ConcurrentHashMap<>();
-        private final Map<String, ResolvedArtifact> fileToArtifact = new ConcurrentHashMap<>();
 
-        public void populateIndexes(Set<ResolvedDependency> declaredDependencies) {
-            Set<ResolvedArtifact> allArtifacts = declaredDependencies.stream()
-                    .flatMap(dependency -> dependency.getAllModuleArtifacts().stream())
-                    .filter(dependency -> VALID_ARTIFACT_EXTENSIONS.contains(dependency.getExtension()))
-                    .collect(Collectors.toSet());
+        public void populateIndexes(Collection<ResolvedDependency> declaredDependencies) {
+            Collection<ResolvedArtifact> allArtifacts = getResolvedArtifacts(declaredDependencies, true);
 
             allArtifacts.forEach(artifact -> {
                 try {
                     File jar = artifact.getFile();
-                    //there is a chance that two artifacts could have the same jar.  Keep the first one since that
-                    //is earlier in the classpath
-                    if (!fileToArtifact.containsKey(jar.getName())) {
-                        fileToArtifact.put(jar.getName(), artifact);
-                    }
 
                     Set<String> classesInArtifact = JAR_ANALYZER.analyze(jar.toURI().toURL());
                     classesInArtifact.forEach(clazz -> classToDependency.put(clazz, artifact));
@@ -254,13 +235,7 @@ public final class DependencyAnalyzer {
             return Optional.ofNullable(classToDependency.get(clazz));
         }
 
-        /** Given a jar file name, what artifact brought it in. */
-        public Optional<ResolvedArtifact> fileToArtifact(String fileName) {
-            return Optional.ofNullable(fileToArtifact.get(fileName));
-        }
-
         public void reset() {
-            fileToArtifact.clear();
             classToDependency.clear();
         }
     }
