@@ -225,9 +225,9 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
     def 'formatDiff updates only relevant chunks of files'() {
         when:
         buildFile << standardBuildFile
-        "git init".execute(Collections.emptyList(), projectDir)
-        "git config user.name Foo".execute(Collections.emptyList(), projectDir)
-        "git config user.email foo@bar.com".execute(Collections.emptyList(), projectDir)
+        "git init".execute(Collections.emptyList(), projectDir).waitFor()
+        "git config user.name Foo".execute(Collections.emptyList(), projectDir).waitFor()
+        "git config user.email foo@bar.com".execute(Collections.emptyList(), projectDir).waitFor()
 
         file('src/main/java/Main.java') << '''
         class Main {
@@ -237,7 +237,8 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         }
         '''.stripIndent()
 
-        "git commit --allow-empty -m Commit".execute(Collections.emptyList(), projectDir)
+        "git add .".execute(Collections.emptyList(), projectDir).waitFor()
+        "git commit -m Commit".execute(Collections.emptyList(), projectDir).waitFor()
 
         file('src/main/java/Main.java').text = '''
         class Main {
