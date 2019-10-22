@@ -45,7 +45,9 @@ class BaselineConfigIntegrationTest extends AbstractPluginTest {
         """.stripIndent()
 
         then:
-        with('--stacktrace', '--info', 'baselineUpdateConfig', '-Pcom.palantir.baseline-format.eclipse').build()
+        with('--stacktrace', '--info', 'baselineUpdateConfig',
+                '-Pcom.palantir.baseline-format.eclipse',
+                '-Pcom.palantir.baseline-format.palantir-java-format').build()
         directory('.baseline').list().toList().toSet() == [
                 'checkstyle', 'copyright', 'eclipse', 'idea', 'spotless'
         ].toSet()

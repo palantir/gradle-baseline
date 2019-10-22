@@ -16,6 +16,12 @@
 
 package com.palantir.baseline.plugins;
 
+import com.google.common.base.Preconditions;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Optional;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
@@ -69,9 +75,10 @@ class BaselineConfig extends AbstractBaselinePlugin {
                         + "'baseline' configuration, found: " + configuration.getFiles());
             }
 
+            Path configDir = Paths.get(BaselineConfig.this.getConfigDir());
             rootProject.copy(copySpec -> {
                 copySpec.from(rootProject.zipTree(configuration.getSingleFile()));
-                copySpec.into(BaselineConfig.this.getConfigDir());
+                copySpec.into(configDir);
                 copySpec.exclude("**/scalastyle_config.xml");
                 copySpec.setIncludeEmptyDirs(false);
 
@@ -79,6 +86,28 @@ class BaselineConfig extends AbstractBaselinePlugin {
                     copySpec.exclude("**/spotless/eclipse.xml");
                 }
             });
+
+            if (BaselineFormat.palantirJavaFormatterEnabled(rootProject)) {
+                Path checkstyleXml = configDir.resolve("checkstyle/checkstyle.xml");
+
+                try {
+                    String contents = new String(Files.readAllBytes(checkstyleXml), StandardCharsets.UTF_8);
+                    String replaced = contents.replace(
+                            "        <module name=\"Indentation\"> "
+                                    + "<!-- Java Style Guide: Block indentation: +4 spaces -->\n"
+                                    + "            <property name=\"arrayInitIndent\" value=\"8\"/>\n"
+                                    + "            <property name=\"lineWrappingIndentation\" value=\"8\"/>\n"
+                                    + "        </module>\n",
+                            "");
+                    Preconditions.checkState(
+                            !contents.equals(replaced),
+                            "Patching checkstyle.xml must make a change");
+                    Files.write(checkstyleXml, replaced.getBytes(StandardCharsets.UTF_8));
+                } catch (IOException e) {
+                    throw new RuntimeException("Unable to patch " + checkstyleXml, e);
+                }
+            }
+
             if (rootProject
                     .getAllprojects()
                     .stream()
