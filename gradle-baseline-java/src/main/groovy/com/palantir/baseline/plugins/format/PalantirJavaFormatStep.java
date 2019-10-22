@@ -85,6 +85,6 @@ public final class PalantirJavaFormatStep {
         throw new RuntimeException("Expected not be be able to load "
                 + IMPL_CLASS
                 + " via main class loader but was able to. Please ensure that `buildscript.configurations.classpath`"
-                + " doesn't depend on `com.palnatir.javaformat:palantir-java-format`.");
+                + " doesn't depend on `com.palantir.javaformat:palantir-java-format`.");
     }
 }
