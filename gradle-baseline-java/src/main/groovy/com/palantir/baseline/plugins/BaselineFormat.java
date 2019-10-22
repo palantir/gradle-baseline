@@ -116,7 +116,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
     }
 
     public static class FormatDiffTask extends DefaultTask {
-        public FormatDiffTask() {
+        FormatDiffTask() {
             setDescription("Format only chunks of files that appear in git diff");
             setGroup("Formatting");
         }
