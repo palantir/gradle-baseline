@@ -75,7 +75,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
 
                 if (palantirJavaFormatterEnabled(project)) {
                     Preconditions.checkState(
-                            project.getRootProject().getPluginManager().hasPlugin("com.palantir.java-format"),
+                            project.getRootProject().getPluginManager().hasPlugin("com.palantir.java-format-provider"),
                             "Must apply `com.palantir.baseline` to root project when setting '%s'",
                             PJF_PROPERTY);
                     java.addStep(PalantirJavaFormatStep.create(
