@@ -37,18 +37,6 @@ public final class PalantirJavaFormatStep {
 
     private static final String NAME = "palantir-java-format";
 
-    private static final String FORMATTER_CLASS = "com.palantir.javaformat.java.Formatter";
-    private static final String FORMATTER_CREATE_METHOD = "createFormatter";
-
-    private static final String FORMATTER_METHOD = "formatSourceAndFixImports";
-
-    private static final String OPTIONS_CLASS = "com.palantir.javaformat.java.JavaFormatterOptions";
-    private static final String OPTIONS_BUILDER_METHOD = "builder";
-    private static final String OPTIONS_BUILDER_CLASS = "com.palantir.javaformat.java.JavaFormatterOptions$Builder";
-    private static final String OPTIONS_BUILDER_STYLE_METHOD = "style";
-    private static final String OPTIONS_BUILDER_BUILD_METHOD = "build";
-    private static final String OPTIONS_Style = "com.palantir.javaformat.java.JavaFormatterOptions$Style";
-
     /** Creates a step which formats everything - code, import order, and unused imports. */
     public static FormatterStep create(Configuration palantirJavaFormat) {
         final ConfigurationBackedProvisioner provisioner =
