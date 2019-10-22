@@ -16,20 +16,17 @@
 
 package com.palantir.baseline.plugins.format;
 
+import com.diffplug.spotless.FileSignature;
 import com.diffplug.spotless.FormatterFunc;
 import com.diffplug.spotless.FormatterStep;
-import com.diffplug.spotless.JarState;
-import com.diffplug.spotless.Provisioner;
-import com.google.common.collect.Iterables;
+import com.google.common.base.Suppliers;
+import com.palantir.javaformat.gradle.JavaFormatExtension;
 import com.palantir.javaformat.java.FormatterService;
 import java.io.File;
+import java.io.IOException;
 import java.io.Serializable;
-import java.util.Collection;
-import java.util.ServiceLoader;
-import java.util.Set;
-import java.util.stream.Collectors;
+import java.util.function.Supplier;
 import org.gradle.api.artifacts.Configuration;
-import org.jetbrains.annotations.NotNull;
 
 public final class PalantirJavaFormatStep {
 
@@ -38,53 +35,40 @@ public final class PalantirJavaFormatStep {
     private static final String NAME = "palantir-java-format";
 
     /** Creates a step which formats everything - code, import order, and unused imports. */
-    public static FormatterStep create(Configuration palantirJavaFormat) {
-        final ConfigurationBackedProvisioner provisioner =
-                new ConfigurationBackedProvisioner(palantirJavaFormat);
+    public static FormatterStep create(Configuration palantirJavaFormat, JavaFormatExtension extension) {
+        Supplier<FormatterService> memoizedService = Suppliers.memoize(extension::serviceLoad);
         return FormatterStep.createLazy(
-                NAME,
-                () -> new State(JarState.from(
-                        palantirJavaFormat.getAllDependencies().stream().map(Object::toString).collect(
-                                Collectors.toList()),
-                        provisioner)),
-                State::createFormat);
+                NAME, () -> new State(palantirJavaFormat.getFiles(), memoizedService), State::createFormat);
     }
 
     static final class State implements Serializable {
         private static final long serialVersionUID = 1L;
 
-        /** Kept for state serialization purposes. */
+        // Kept for state serialization purposes.
         @SuppressWarnings("unused")
         private final String stepName = NAME;
-        /** The jars that contain the palantir-java-format implementation. */
-        private final JarState jarState;
 
-        State(JarState jarState) {
-            this.jarState = jarState;
+        // Kept for state serialization purposes.
+        @SuppressWarnings({"unused", "FieldCanBeLocal"})
+        private final FileSignature jarsSignature;
+
+        // Transient as this is not serializable.
+        private final transient Supplier<FormatterService> memoizedFormatter;
+
+        /**
+         * Build a cacheable state for spotless from the given jars, that uses the given {@link FormatterService}.
+         *
+         * @param jars The jars that contain the palantir-java-format implementation. This is only used for caching and
+         *     up-to-dateness purposes.
+         */
+        State(Iterable<File> jars, Supplier<FormatterService> memoizedFormatter) throws IOException {
+            this.jarsSignature = FileSignature.signAsSet(jars);
+            this.memoizedFormatter = memoizedFormatter;
         }
 
-        FormatterFunc createFormat() throws Exception {
-            ClassLoader classLoader = jarState.getClassLoader();
-            FormatterService formatter =
-                    Iterables.getOnlyElement(ServiceLoader.load(FormatterService.class, classLoader));
-            return formatter::formatSourceReflowStringsAndFixImports;
-        }
-    }
-
-    /**
-     * A naughty provisioner that ignores the requested coordinates and just returns the contents of a configuration.
-     */
-    private static class ConfigurationBackedProvisioner implements Provisioner {
-        private final Configuration configuration;
-
-        ConfigurationBackedProvisioner(Configuration configuration) {
-            this.configuration = configuration;
-        }
-
-        @NotNull
-        @Override
-        public Set<File> provisionWithTransitives(boolean withTransitives, Collection<String> mavenCoordinates) {
-            return configuration.getFiles();
+        @SuppressWarnings("NullableProblems")
+        FormatterFunc createFormat() {
+            return memoizedFormatter.get()::formatSourceReflowStringsAndFixImports;
         }
     }
 }
