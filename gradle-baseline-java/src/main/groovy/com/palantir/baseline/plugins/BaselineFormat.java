@@ -119,7 +119,6 @@ class BaselineFormat extends AbstractBaselinePlugin {
         public FormatDiffTask() {
             setDescription("Format only chunks of files that appear in git diff");
             setGroup("Formatting");
-            onlyIf(t -> palantirJavaFormatterEnabled(getProject()));
         }
 
         @TaskAction

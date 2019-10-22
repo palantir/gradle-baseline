@@ -249,7 +249,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         '''.stripIndent()
 
         then:
-        with('formatDiff', '-Pcom.palantir.baseline-format.palantir-java-format').build()
+        with('formatDiff').build()
         file('src/main/java/Main.java').text == '''
         class Main {
             public static void crazyExistingFormatting  (  String... args) {
