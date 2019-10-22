@@ -22,73 +22,49 @@ import org.gradle.testkit.runner.TaskOutcome
 class DependencyFinderTaskTests extends AbstractDependencyTest {
 
     File rootReportDir
+    File mainReportDir
 
     def setup() {
         rootReportDir = new File(projectDir, "build/reports/dep-dot-files")
-    }
-
-    def 'output report file path property correct'() {
-        setup:
-        File reportFile = new File(rootReportDir, "findMainDeps/main.dot")
-        setupTransitiveJarDependencyProject()
-        buildFile << """
-        project.tasks.named('findMainDeps').configure {
-            doLast {t ->
-                println "REPORTFILE: " + t.reportFile.getAsFile().get().getAbsolutePath()
-            }
-        }
-        """.stripIndent()
-
-        when:
-        BuildResult result = runTask('findMainDeps')
-
-        then:
-        result.task(':findMainDeps').getOutcome() == TaskOutcome.SUCCESS
-        result.output.contains(reportFile.absolutePath)
+        mainReportDir = new File(rootReportDir, "findDeps")
     }
 
     def 'dot file contains proper content'() {
         setup:
-        File reportFile = new File(rootReportDir, "findMainDeps/main.dot")
+        File fullReportFile = new File(mainReportDir, "main.dot")
+        File summaryReportFile = new File(mainReportDir, "summary.dot")
+        File apiReportFile = new File(mainReportDir, "api/summary.dot")
         setupTransitiveJarDependencyProject()
 
         when:
-        BuildResult result = runTask('findMainDeps')
+        BuildResult result = runTask('findDeps')
 
         then:
-        result.task(':findMainDeps').getOutcome() == TaskOutcome.SUCCESS
-        String expected =  cleanFileContentsWithEol'''
+        result.task(':findDeps').getOutcome() == TaskOutcome.SUCCESS
+        checkReportContents fullReportFile, '''
 digraph "main" {
     
-   "pkg.Foo"                                          -> "com.google.common.collect.ImmutableList (not found)";
+   "pkg.Foo"                                          -> "com.google.common.collect.ImmutableList (guava-18.0.jar)";
 }'''
-        reportFile.exists()
-        // strip out the comment line with the path to the class files because don't care about it
-        // and it changes with every test run
-        String actual = reportFile.text.replaceAll('// Path.*', '')
-        expected == actual
+
+        checkReportContents summaryReportFile, '''
+digraph "summary" {
+  "pkg"                                              -> "com.google.common.collect (guava-18.0.jar)";
+}'''
+
+        checkReportContents apiReportFile, '''
+digraph "summary" {
+}'''
+
     }
 
-    def 'apionly report'() {
-        setup:
-        File reportFile = new File(rootReportDir, "findMainApiDeps/main.dot")
-        setupMultiProject()
-
-        when:
-        BuildResult result = runTask('findMainApiDeps')
-
-        then:
-        result.task(':findMainApiDeps').getOutcome() == TaskOutcome.SUCCESS
-        String expected =  cleanFileContentsWithEol'''
-digraph "main" {
-    
-   "com.p0.RootTestClassWithJarDep"                   -> "com.google.common.collect.ImmutableList (not found)";
-}'''
-        reportFile.exists()
+    private void checkReportContents(File fullReportFile, String rawExpected) {
+        assert fullReportFile.exists()
         // strip out the comment line with the path to the class files because don't care about it
         // and it changes with every test run
-        String actual = reportFile.text.replaceAll('// Path.*', '')
-        expected == actual
+        String actual = fullReportFile.text.replaceAll('// Path.*', '')
+        String expected = cleanFileContentsWithEol(rawExpected)
+        assert expected == actual
     }
 
 }

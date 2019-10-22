@@ -22,17 +22,14 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeoutException;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
-import org.gradle.api.file.RegularFile;
-import org.gradle.api.file.RegularFileProperty;
-import org.gradle.api.provider.Property;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
+import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
-import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.OutputFiles;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
@@ -42,53 +39,60 @@ import org.zeroturnaround.exec.ProcessExecutor;
 
 @CacheableTask
 public class DependencyFinderTask extends DefaultTask {
-    private final DirectoryProperty sourceClasses;
+    private final DirectoryProperty classesDir;
+    private final ConfigurableFileCollection classPath;
     private final DirectoryProperty reportDir;
-    private final RegularFileProperty reportFile;
-    private final Property<Boolean> apiOnly;
     private final SetProperty<String> ignored;
 
     public DependencyFinderTask() {
-        sourceClasses = getProject().getObjects().directoryProperty();
-
-        apiOnly = getProject().getObjects().property(Boolean.class);
-        apiOnly.convention(false);
+        classesDir = getProject().getObjects().directoryProperty();
+        classPath = getProject().getObjects().fileCollection();
 
         reportDir = getProject().getObjects().directoryProperty();
         reportDir.convention(getProject().getLayout().getBuildDirectory()
                 .dir(String.format("reports/dep-dot-files/%s", getName())));
 
-        //jdeps will name the dot file after the directory where it read classes from
-        reportFile = getProject().getObjects().fileProperty();
-        reportFile.set(reportDir.file(sourceClasses.map(s -> s.getAsFile().getName() + ".dot")));
-
-        //by default will not report classes in the JDK
+        //do not report classes in the JDK by default
         ignored = getProject().getObjects().setProperty(String.class);
         SetProperty<String> defaultFilter = getProject().getObjects().setProperty(String.class);
         defaultFilter.set(ImmutableSet.<String>of("java.*"));
         ignored.convention(defaultFilter);
+
     }
 
     /**
-     * Run jdeps with provided options.
+     * Run jdeps for both full set of dependencies and just APIs
      */
     @TaskAction
     protected void exec() {
-        //invoke jdeps
-        final List<String> command = new ArrayList<>();
-        command.add("jdeps");
-        command.add("-verbose:class");
-        command.add("-dotoutput");
-        command.add(reportDir.getAsFile().get().getAbsolutePath());
-        if (apiOnly.get()) {
-            command.add("-apionly");
-        }
+        List<String> baseCommand = new ArrayList<>();
+        baseCommand.add("jdeps");
+        baseCommand.add("-verbose:class");
         ignored.get().forEach(s -> {
-            command.add("-f");
-            command.add(s);
+            baseCommand.add("-f");
+            baseCommand.add(s);
         });
-        command.add(sourceClasses.get().getAsFile().getAbsolutePath());
+        if (!classPath.isEmpty()) {
+            baseCommand.add("-cp");
+            baseCommand.add(classPath.getAsPath());
+        }
 
+        List<String> fullCommand = new ArrayList<>(baseCommand);
+        fullCommand.add("-dotoutput");
+        fullCommand.add(reportDir.getAsFile().get().getAbsolutePath());
+        fullCommand.add(classesDir.get().getAsFile().getAbsolutePath());
+        runJDeps(fullCommand);
+
+        //run the command for APIs.  Put the reports in a sub-dir
+        List<String> apiCommand = new ArrayList<>(baseCommand);
+        apiCommand.add("-dotoutput");
+        apiCommand.add(reportDir.dir("api").get().getAsFile().getAbsolutePath());
+        apiCommand.add("-apionly");
+        apiCommand.add(classesDir.get().getAsFile().getAbsolutePath());
+        runJDeps(apiCommand);
+    }
+
+    private void runJDeps(List<String> command) {
         getProject().getLogger().info("Calling jdeps with command line: " + command);
         try {
             new ProcessExecutor().command(command)
@@ -110,8 +114,13 @@ public class DependencyFinderTask extends DefaultTask {
      */
     @InputDirectory
     @PathSensitive(PathSensitivity.RELATIVE)
-    public final DirectoryProperty getSourceClasses() {
-        return sourceClasses;
+    public final DirectoryProperty getClassesDir() {
+        return classesDir;
+    }
+
+    @InputFiles
+    public ConfigurableFileCollection getClassPath() {
+        return classPath;
     }
 
     /**
@@ -124,28 +133,10 @@ public class DependencyFinderTask extends DefaultTask {
     }
 
     /**
-     * Whether to pass apionly flag to jdeps.  See jdeps documentation for more details.
-     */
-    @Input
-    @Optional
-    public Property<Boolean> getApiOnly() {
-        return apiOnly;
-    }
-
-    /**
-     * Directory where report will be written.
+     * Directory where reports will be written.
      */
     @OutputFiles
     public final DirectoryProperty getReportDir() {
         return reportDir;
-    }
-
-    /**
-     * This is a Provider rather than a property because it cannot be changed.  The report
-     * file name is fixed by jdeps and the path is set by the reportDir property
-     */
-    @OutputFile
-    public final Provider<RegularFile> getReportFile() {
-        return reportFile;
     }
 }

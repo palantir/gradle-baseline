@@ -24,7 +24,10 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.Collection;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -40,10 +43,12 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
+import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
 
 /**
  * Parses dot files listing dependencies and sorts them out.
+ *
  */
 public final class DependencyAnalyzer {
     private static final ClassAnalyzer JAR_ANALYZER = new DefaultClassAnalyzer();
@@ -51,11 +56,11 @@ public final class DependencyAnalyzer {
 
     private final Project project;
     private final List<Configuration> dependenciesConfigurations;
-    private final FileCollection fullDepFiles;
-    private final FileCollection apiDepFiles;
-    private final Set<String> ignore;
+    private final List<Configuration> sourceOnlyConfigurations;
+    private final Directory dotFileDir;
 
     private boolean inited = false;
+    private final Set<String> ignore;
     private Set<ResolvedArtifact> allRequiredArtifacts;
     private Set<ResolvedArtifact> apiArtifacts;
     private Set<ResolvedArtifact> declaredArtifacts;
@@ -65,14 +70,13 @@ public final class DependencyAnalyzer {
     public DependencyAnalyzer(
             Project project,
             List<Configuration> dependenciesConfigurations,
-            FileCollection fullDepFiles,
-            FileCollection apiDepFiles,
-            Set<String> ignore) {
+            List<Configuration> sourceOnlyConfigurations,
+            Directory dotFileDir) {
         this.project = project;
         this.dependenciesConfigurations = dependenciesConfigurations;
-        this.fullDepFiles = fullDepFiles;
-        this.apiDepFiles = apiDepFiles;
-        this.ignore = ignore;
+        this.sourceOnlyConfigurations = sourceOnlyConfigurations;
+        this.dotFileDir = dotFileDir;
+        this.ignore = new HashSet<>();
     }
 
     /**
@@ -99,7 +103,9 @@ public final class DependencyAnalyzer {
     }
 
     /**
-     * Artifacts that are declared, but not used.
+     * Artifacts that are declared, but not used.  If the sourceOnlyConfigurations are properly set, then excludes
+     * dependencies that would be incorrectly flagged as unused  because they are not contained in byte code
+     * (i.e. they are in annotations or other references that are source-only.
      */
     public List<ResolvedArtifact> getUnusedDependencies() {
         init();
@@ -118,38 +124,54 @@ public final class DependencyAnalyzer {
         if (inited) {
             return;
         }
-        Set<ResolvedDependency> declaredDependencies = dependenciesConfigurations.stream()
-                .map(Configuration::getResolvedConfiguration)
-                .flatMap(resolved -> resolved.getFirstLevelModuleDependencies().stream())
-                .collect(Collectors.toSet());
+        Set<ResolvedDependency> declaredDependencies = resolvedDependencies(dependenciesConfigurations);
+        Set<ResolvedArtifact> sourceOnlyArtifacts = resolveConfigurationArtifacts(sourceOnlyConfigurations);
 
         indexes.populateIndexes(declaredDependencies);
 
-        allRequiredArtifacts = findReferencedArtifacts(fullDepFiles);
-        apiArtifacts = findReferencedArtifacts(apiDepFiles);
-        declaredArtifacts = declaredDependencies.stream()
-                .flatMap(dependency -> dependency.getModuleArtifacts().stream())
-                .filter(dependency -> VALID_ARTIFACT_EXTENSIONS
-                        .contains(dependency.getExtension()))
-                .collect(Collectors.toSet());
+        allRequiredArtifacts = findReferencedArtifacts(dotFileDir.file("summary.dot"));
+        apiArtifacts = findReferencedArtifacts(dotFileDir.dir("api").file("summary.dot"));
+        declaredArtifacts = getResolvedArtifacts(declaredDependencies);
         inited = true;
         //clear the memory from the massive dependency map
         indexes.reset();
     }
 
-    private Set<ResolvedArtifact> findReferencedArtifacts(FileCollection dotFiles) {
-        return findReferencedClasses(dotFiles).stream()
+    private Set<ResolvedArtifact> resolveConfigurationArtifacts(List<Configuration> configurations) {
+        Set<ResolvedDependency> resolvedDeps = resolvedDependencies(configurations);
+        return getResolvedArtifacts(resolvedDeps);
+    }
+
+    private Set<ResolvedDependency> resolvedDependencies(Collection<Configuration> configurations) {
+        return configurations.stream()
+                .map(Configuration::getResolvedConfiguration)
+                .flatMap(resolved -> resolved.getFirstLevelModuleDependencies().stream())
+                .collect(Collectors.toSet());
+    }
+
+    private Set<ResolvedArtifact> getResolvedArtifacts(Collection<ResolvedDependency> dependencies) {
+        return getResolvedArtifacts(dependencies, false);
+    }
+
+    private Set<ResolvedArtifact> getResolvedArtifacts(Collection<ResolvedDependency> dependencies, boolean recursive) {
+        return dependencies.stream()
+                .flatMap(dependency -> (recursive ?
+                        dependency.getAllModuleArtifacts() : dependency.getModuleArtifacts()).stream())
+                .filter(dependency -> VALID_ARTIFACT_EXTENSIONS
+                        .contains(dependency.getExtension()))
+                .collect(Collectors.toSet());
+    }
+
+    private Set<ResolvedArtifact> findReferencedArtifacts(File dotFile) {
+        if (!dotFile.exists()) {
+            return Collections.emptySet();
+        }
+
+        return  findReferencedClasses(dotFile)
                 .map(indexes::classToDependency)
                 .filter(Optional::isPresent)
                 .map(Optional::get)
                 .filter(x -> !isArtifactFromCurrentProject(x))
-                .collect(Collectors.toSet());
-    }
-
-    private Set<String> findReferencedClasses(FileCollection dotFiles) {
-        return Streams.stream(dotFiles.iterator())
-                .filter(File::exists)
-                .flatMap(this::findReferencedClasses)
                 .collect(Collectors.toSet());
     }
 
@@ -167,6 +189,13 @@ public final class DependencyAnalyzer {
         } catch (IOException e) {
             throw new RuntimeException("Unable to analyze " + dotFile, e);
         }
+    }
+
+    /**
+     * Returns the name of the jar
+     */
+    private String getJarName(String name) {
+        return name.replace(" (not found)", "").replace("\"", "");
     }
 
     /**
@@ -195,6 +224,7 @@ public final class DependencyAnalyzer {
     @ThreadSafe
     public static final class Indexes {
         private final Map<String, ResolvedArtifact> classToDependency = new ConcurrentHashMap<>();
+        private final Map<String, ResolvedArtifact> fileToArtifact = new ConcurrentHashMap<>();
 
         public void populateIndexes(Set<ResolvedDependency> declaredDependencies) {
             Set<ResolvedArtifact> allArtifacts = declaredDependencies.stream()
@@ -205,6 +235,12 @@ public final class DependencyAnalyzer {
             allArtifacts.forEach(artifact -> {
                 try {
                     File jar = artifact.getFile();
+                    //there is a chance that two artifacts could have the same jar.  Keep the first one since that
+                    //is earlier in the classpath
+                    if (!fileToArtifact.containsKey(jar.getName())) {
+                        fileToArtifact.put(jar.getName(), artifact);
+                    }
+
                     Set<String> classesInArtifact = JAR_ANALYZER.analyze(jar.toURI().toURL());
                     classesInArtifact.forEach(clazz -> classToDependency.put(clazz, artifact));
                 } catch (IOException e) {
@@ -218,7 +254,13 @@ public final class DependencyAnalyzer {
             return Optional.ofNullable(classToDependency.get(clazz));
         }
 
+        /** Given a jar file name, what artifact brought it in. */
+        public Optional<ResolvedArtifact> fileToArtifact(String fileName) {
+            return Optional.ofNullable(fileToArtifact.get(fileName));
+        }
+
         public void reset() {
+            fileToArtifact.clear();
             classToDependency.clear();
         }
     }
