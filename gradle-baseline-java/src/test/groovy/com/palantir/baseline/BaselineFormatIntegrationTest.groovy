@@ -222,7 +222,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         result.task(":spotlessJava").outcome == TaskOutcome.SUCCESS
     }
 
-    def 'formatDiff updates only relevant chunks of files'() {
+    def 'formatDiff updates only lines changed in git diff'() {
         when:
         buildFile << standardBuildFile
         "git init".execute(Collections.emptyList(), projectDir).waitFor()
@@ -231,7 +231,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
 
         file('src/main/java/Main.java') << '''
         class Main {
-            public static void main(String... args) {
+            public static void crazyExistingFormatting  (  String... args) {
 
             }
         }
@@ -242,7 +242,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
 
         file('src/main/java/Main.java').text = '''
         class Main {
-            public static void main(String... args) {
+            public static void crazyExistingFormatting  (  String... args) {
                                         System.out.println("Reformat me please");
             }
         }
@@ -252,7 +252,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         with('formatDiff', '-Pcom.palantir.baseline-format.palantir-java-format').build()
         file('src/main/java/Main.java').text == '''
         class Main {
-            public static void main(String... args) {
+            public static void crazyExistingFormatting  (  String... args) {
                 System.out.println("Reformat me please");
             }
         }

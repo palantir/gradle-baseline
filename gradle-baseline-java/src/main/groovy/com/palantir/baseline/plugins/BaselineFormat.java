@@ -49,9 +49,11 @@ class BaselineFormat extends AbstractBaselinePlugin {
         this.project = project;
 
         project.getPluginManager().withPlugin("java", plugin -> {
-            // if (palantirJavaFormatterEnabled(project)) {
-                project.getTasks().register("formatDiff", FormatDiffTask.class);
-            // }
+            project.getTasks().register("formatDiff", FormatDiffTask.class, task -> {
+                task.setDescription("Format only chunks of files that appear in git diff");
+                task.setGroup("Formatting");
+                task.onlyIf(t -> palantirJavaFormatterEnabled(project));
+            });
 
             project.getPluginManager().apply("com.diffplug.gradle.spotless");
             Path eclipseXml = eclipseConfigFile(project);
@@ -95,7 +97,9 @@ class BaselineFormat extends AbstractBaselinePlugin {
             spotlessExtension.setEnforceCheck(false);
 
             // necessary because SpotlessPlugin creates tasks in an afterEvaluate block
-            TaskProvider<Task> formatTask = project.getTasks().register("format");
+            TaskProvider<Task> formatTask = project.getTasks().register("format", task -> {
+                task.setGroup("Formatting");
+            });
             project.afterEvaluate(p -> {
                 Task spotlessJava = project.getTasks().getByName("spotlessJava");
                 Task spotlessApply = project.getTasks().getByName("spotlessApply");
