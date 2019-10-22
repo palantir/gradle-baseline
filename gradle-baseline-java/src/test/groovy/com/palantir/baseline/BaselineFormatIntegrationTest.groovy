@@ -221,4 +221,40 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         BuildResult result = with('spotlessJavaCheck').build()
         result.task(":spotlessJava").outcome == TaskOutcome.SUCCESS
     }
+
+    def 'formatDiff updates only relevant chunks of files'() {
+        when:
+        buildFile << standardBuildFile
+        "git init".execute(Collections.emptyList(), projectDir)
+        "git config user.name Foo".execute(Collections.emptyList(), projectDir)
+        "git config user.email foo@bar.com".execute(Collections.emptyList(), projectDir)
+
+        file('src/main/java/Main.java') << '''
+        class Main {
+            public static void main(String... args) {
+
+            }
+        }
+        '''.stripIndent()
+
+        "git commit --allow-empty -m Commit".execute(Collections.emptyList(), projectDir)
+
+        file('src/main/java/Main.java').text = '''
+        class Main {
+            public static void main(String... args) {
+                                        System.out.println("Reformat me please");
+            }
+        }
+        '''.stripIndent()
+
+        then:
+        with('formatDiff', '-Pcom.palantir.baseline-format.palantir-java-format').build()
+        file('src/main/java/Main.java').text == '''
+        class Main {
+            public static void main(String... args) {
+                System.out.println("Reformat me please");
+            }
+        }
+        '''.stripIndent()
+    }
 }

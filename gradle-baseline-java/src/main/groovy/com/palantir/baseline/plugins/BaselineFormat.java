@@ -49,9 +49,9 @@ class BaselineFormat extends AbstractBaselinePlugin {
         this.project = project;
 
         project.getPluginManager().withPlugin("java", plugin -> {
-            if (palantirJavaFormatterEnabled(project)) {
+            // if (palantirJavaFormatterEnabled(project)) {
                 project.getTasks().register("formatDiff", FormatDiffTask.class);
-            }
+            // }
 
             project.getPluginManager().apply("com.diffplug.gradle.spotless");
             Path eclipseXml = eclipseConfigFile(project);
