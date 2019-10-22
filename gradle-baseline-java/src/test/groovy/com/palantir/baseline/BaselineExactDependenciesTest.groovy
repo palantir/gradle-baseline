@@ -16,8 +16,6 @@
 
 package com.palantir.baseline
 
-import spock.lang.Ignore
-
 import java.nio.file.Files
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
@@ -76,8 +74,6 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         result.output.contains("Found 1 dependencies unused during compilation")
     }
 
-    // FIXME(esword): temp ignore until get source-only stuff working
-    @Ignore
     def 'checkUnusedDependencies passes when annotationProcessor or compileOnly classes are not referenced'() {
         when:
         buildFile << standardBuildFile

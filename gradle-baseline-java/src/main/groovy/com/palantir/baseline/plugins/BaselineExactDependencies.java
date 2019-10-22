@@ -20,12 +20,8 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableSet;
 import com.palantir.baseline.tasks.CheckImplicitDependenciesTask;
 import com.palantir.baseline.tasks.CheckUnusedDependenciesTask;
-import com.palantir.baseline.tasks.dependencies.DependencyFinderTask;
-import com.palantir.baseline.tasks.dependencies.DependencyReportTask;
 import java.io.File;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -43,11 +39,9 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
-import org.gradle.api.tasks.TaskProvider;
 
 /** Validates that java projects declare exactly the dependencies they rely on, no more and no less. */
 public final class BaselineExactDependencies implements Plugin<Project> {
@@ -59,17 +53,14 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     // contained in a particular jar are immutable.
     public static final Indexes INDEXES = new Indexes();
     public static final ImmutableSet<String> VALID_ARTIFACT_EXTENSIONS = ImmutableSet.of("jar", "");
-    public static final String GROUP_NAME = "Dependency Analysis";
 
     @Override
     public void apply(Project project) {
         project.getPluginManager().withPlugin("java", plugin -> {
-            FileCollection mainSourceSetClasses = project.getConvention()
+            SourceSet mainSourceSet = project.getConvention()
                     .getPlugin(JavaPluginConvention.class)
                     .getSourceSets()
-                    .getByName(SourceSet.MAIN_SOURCE_SET_NAME)
-                    .getOutput()
-                    .getClassesDirs();
+                    .getByName(SourceSet.MAIN_SOURCE_SET_NAME);
             Configuration compileClasspath = project.getConfigurations()
                     .getByName(JavaPlugin.COMPILE_CLASSPATH_CONFIGURATION_NAME);
             Configuration compileOnlyClasspath = project.getConfigurations()
@@ -77,55 +68,23 @@ public final class BaselineExactDependencies implements Plugin<Project> {
             Configuration annotationProcessorClasspath = project.getConfigurations()
                     .getByName(JavaPlugin.ANNOTATION_PROCESSOR_CONFIGURATION_NAME);
 
-
-            List<Configuration> classConfigs = new ArrayList<>();
-            classConfigs.add(compileClasspath);
-            if (annotationProcessorClasspath != null) {
-                classConfigs.add(annotationProcessorClasspath);
-            }
-
-            TaskProvider<DependencyFinderTask> findMainDepsTask = project.getTasks()
-                    .register("findMainDeps", DependencyFinderTask.class, t -> {
-                        t.dependsOn(JavaPlugin.CLASSES_TASK_NAME);
-                        t.setDescription(
-                                "Produces a dot file with dependencies that are directly used by main sources "
-                                        + "in this project");
-                        t.setGroup(GROUP_NAME);
-                        t.getSourceClasses().set(mainSourceSetClasses.getSingleFile());
-                    });
-
-            TaskProvider<DependencyFinderTask> findMainApiDepsTask = project.getTasks()
-                    .register("findMainApiDeps", DependencyFinderTask.class, t -> {
-                        t.dependsOn(JavaPlugin.CLASSES_TASK_NAME);
-                        t.setDescription(
-                                "Produces a dot file with API dependencies of the main sources in this project");
-                        t.setGroup(GROUP_NAME);
-                        t.getSourceClasses().set(mainSourceSetClasses.getSingleFile());
-                        t.getApiOnly().set(true);
-                    });
-
-            TaskProvider<DependencyReportTask> mainAnalyzerTask = project.getTasks()
-                    .register("analyzeMainDeps", DependencyReportTask.class, t -> {
-                        t.setDescription(
-                                "Produces a yml report for dependencies that are directly used by this project");
-                        t.setGroup(GROUP_NAME);
-                        t.getFullDepFiles().from(findMainDepsTask.get().getReportFile());
-                        t.getApiDepFiles().from(findMainApiDepsTask.get().getReportFile());
-                        t.getConfigurations().addAll(classConfigs);
-                    });
-
             project.getTasks().create("checkUnusedDependencies", CheckUnusedDependenciesTask.class, task -> {
-                task.getReportFile().set(mainAnalyzerTask.get().getReportFile());
+                task.dependsOn(JavaPlugin.CLASSES_TASK_NAME);
+                task.setSourceClasses(mainSourceSet.getOutput().getClassesDirs());
+                task.dependenciesConfiguration(compileClasspath);
                 task.sourceOnlyConfiguration(compileOnlyClasspath);
                 task.sourceOnlyConfiguration(annotationProcessorClasspath);
 
                 // this is liberally applied to ease the Java8 -> 11 transition
-                task.getIgnored().addAll("javax.annotation", "javax.annotation-api");
+                task.ignore("javax.annotation", "javax.annotation-api");
             });
 
             project.getTasks().create("checkImplicitDependencies", CheckImplicitDependenciesTask.class, task -> {
-                task.getReportFile().set(mainAnalyzerTask.get().getReportFile());
-                task.getIgnored().addAll("org.slf4j", "slf4j-api");
+                task.dependsOn(JavaPlugin.CLASSES_TASK_NAME);
+                task.setSourceClasses(mainSourceSet.getOutput().getClassesDirs());
+                task.dependenciesConfiguration(compileClasspath);
+
+                task.ignore("org.slf4j", "slf4j-api");
             });
         });
     }
