@@ -20,11 +20,12 @@ import com.diffplug.spotless.FormatterFunc;
 import com.diffplug.spotless.FormatterStep;
 import com.diffplug.spotless.JarState;
 import com.diffplug.spotless.Provisioner;
+import com.google.common.collect.Iterables;
+import com.palantir.javaformat.java.FormatterService;
 import java.io.File;
-import java.io.IOException;
 import java.io.Serializable;
-import java.lang.reflect.Method;
 import java.util.Collection;
+import java.util.ServiceLoader;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.artifacts.Configuration;
@@ -50,13 +51,14 @@ public final class PalantirJavaFormatStep {
 
     /** Creates a step which formats everything - code, import order, and unused imports. */
     public static FormatterStep create(Configuration palantirJavaFormat) {
-
+        final ConfigurationBackedProvisioner provisioner =
+                new ConfigurationBackedProvisioner(palantirJavaFormat);
         return FormatterStep.createLazy(
                 NAME,
-                () -> new State(
+                () -> new State(JarState.from(
                         palantirJavaFormat.getAllDependencies().stream().map(Object::toString).collect(
                                 Collectors.toList()),
-                        new ConfigurationBackedProvisioner(palantirJavaFormat)),
+                        provisioner)),
                 State::createFormat);
     }
 
@@ -66,37 +68,18 @@ public final class PalantirJavaFormatStep {
         /** Kept for state serialization purposes. */
         @SuppressWarnings("unused")
         private final String stepName = NAME;
-        /** The jar that contains the palantir-java-format implementation. */
+        /** The jars that contain the palantir-java-format implementation. */
         private final JarState jarState;
 
-        State(Collection<String> deps, Provisioner provisioner) throws IOException {
-            this.jarState = JarState.from(deps, provisioner);
+        State(JarState jarState) {
+            this.jarState = jarState;
         }
 
-        @SuppressWarnings({"unchecked", "rawtypes"})
         FormatterFunc createFormat() throws Exception {
             ClassLoader classLoader = jarState.getClassLoader();
-
-            Class<?> optionsClass = classLoader.loadClass(OPTIONS_CLASS);
-            Class<?> optionsBuilderClass = classLoader.loadClass(OPTIONS_BUILDER_CLASS);
-            Method optionsBuilderMethod = optionsClass.getMethod(OPTIONS_BUILDER_METHOD);
-            Object optionsBuilder = optionsBuilderMethod.invoke(null);
-
-            Class<?> optionsStyleClass = classLoader.loadClass(OPTIONS_Style);
-            Object styleConstant = Enum.valueOf((Class<Enum>) optionsStyleClass, "PALANTIR");
-            Method optionsBuilderStyleMethod =
-                    optionsBuilderClass.getMethod(OPTIONS_BUILDER_STYLE_METHOD, optionsStyleClass);
-            optionsBuilderStyleMethod.invoke(optionsBuilder, styleConstant);
-
-            Method optionsBuilderBuildMethod = optionsBuilderClass.getMethod(OPTIONS_BUILDER_BUILD_METHOD);
-            Object options = optionsBuilderBuildMethod.invoke(optionsBuilder);
-
-            // instantiate the formatter and get its format method
-            Class<?> formatterClazz = classLoader.loadClass(FORMATTER_CLASS);
-            Object formatter = formatterClazz.getMethod(FORMATTER_CREATE_METHOD, optionsClass).invoke(null, options);
-            Method formatterMethod = formatterClazz.getMethod(FORMATTER_METHOD, String.class);
-
-            return input -> (String) formatterMethod.invoke(formatter, input);
+            FormatterService formatter =
+                    Iterables.getOnlyElement(ServiceLoader.load(FormatterService.class, classLoader));
+            return formatter::formatSourceReflowStringsAndFixImports;
         }
     }
 
