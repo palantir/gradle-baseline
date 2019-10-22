@@ -52,11 +52,8 @@ class BaselineFormat extends AbstractBaselinePlugin {
             spotlessExtension.java(java -> {
                 // Configure a lazy FileCollection then pass it as the target
                 ConfigurableFileCollection allJavaFiles = project.files();
-                project
-                        .getConvention()
-                        .getPlugin(JavaPluginConvention.class)
-                        .getSourceSets()
-                        .all(sourceSet -> allJavaFiles.from(
+                project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().all(
+                        sourceSet -> allJavaFiles.from(
                                 sourceSet.getAllJava().filter(file -> !file.toString().contains(GENERATED_MARKER))));
 
                 java.target(allJavaFiles);
@@ -67,7 +64,10 @@ class BaselineFormat extends AbstractBaselinePlugin {
                 if (eclipseFormattingEnabled(project) && palantirJavaFormatterEnabled(project)) {
                     throw new GradleException(
                             "Can't use both eclipse and palantir-java-format at the same time, please delete one of "
-                                    + ECLIPSE_FORMATTING + " or " + PJF_PROPERTY + " from your gradle.properties");
+                                    + ECLIPSE_FORMATTING
+                                    + " or "
+                                    + PJF_PROPERTY
+                                    + " from your gradle.properties");
                 }
 
                 if (eclipseFormattingEnabled(project)) {
@@ -99,7 +99,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
                 });
                 project.getTasks().withType(JavaCompile.class).configureEach(spotlessJava::mustRunAfter);
 
-                //re-enable spotless checking, but lazily so it doesn't eagerly configure everything else
+                // re-enable spotless checking, but lazily so it doesn't eagerly configure everything else
                 project.getTasks().named(JavaBasePlugin.CHECK_TASK_NAME).configure(t -> {
                     t.dependsOn(project.getTasks().named("spotlessCheck"));
                 });
