@@ -49,11 +49,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
         this.project = project;
 
         project.getPluginManager().withPlugin("java", plugin -> {
-            project.getTasks().register("formatDiff", FormatDiffTask.class, task -> {
-                task.setDescription("Format only chunks of files that appear in git diff");
-                task.setGroup("Formatting");
-                task.onlyIf(t -> palantirJavaFormatterEnabled(project));
-            });
+            project.getTasks().register("formatDiff", FormatDiffTask.class);
 
             project.getPluginManager().apply("com.diffplug.gradle.spotless");
             Path eclipseXml = eclipseConfigFile(project);
@@ -120,6 +116,12 @@ class BaselineFormat extends AbstractBaselinePlugin {
     }
 
     public static class FormatDiffTask extends DefaultTask {
+        public FormatDiffTask() {
+            setDescription("Format only chunks of files that appear in git diff");
+            setGroup("Formatting");
+            onlyIf(t -> palantirJavaFormatterEnabled(getProject()));
+        }
+
         @TaskAction
         public final void formatDiff() throws IOException, InterruptedException {
             FormatDiff.formatDiff(getProject().getProjectDir().toPath());
