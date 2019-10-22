@@ -119,7 +119,13 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         buildFile << """
             plugins {
                 id 'java'
+                id 'com.palantir.java-format'
                 id 'com.palantir.baseline-format'
+            }
+            repositories {
+                // to resolve the `palantirJavaFormat` configuration
+                maven { url 'https://dl.bintray.com/palantir/releases' }
+                jcenter()
             }
         """.stripIndent()
         file('gradle.properties') << "com.palantir.baseline-format.palantir-java-format=true\n"

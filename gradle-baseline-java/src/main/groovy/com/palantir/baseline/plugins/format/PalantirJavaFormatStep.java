@@ -28,13 +28,18 @@ import java.util.Collection;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.artifacts.Configuration;
+import org.jetbrains.annotations.NotNull;
 
 public final class PalantirJavaFormatStep {
+
     private PalantirJavaFormatStep() {}
 
-    static final String NAME = "palantir-java-format";
-    static final String FORMATTER_CLASS = "com.palantir.javaformat.java.Formatter";
-    static final String FORMATTER_METHOD = "formatSourceAndFixImports";
+    private static final String NAME = "palantir-java-format";
+
+    private static final String FORMATTER_CLASS = "com.palantir.javaformat.java.Formatter";
+    private static final String FORMATTER_CREATE_METHOD = "createFormatter";
+
+    private static final String FORMATTER_METHOD = "formatSourceAndFixImports";
 
     private static final String OPTIONS_CLASS = "com.palantir.javaformat.java.JavaFormatterOptions";
     private static final String OPTIONS_BUILDER_METHOD = "builder";
@@ -59,6 +64,7 @@ public final class PalantirJavaFormatStep {
         private static final long serialVersionUID = 1L;
 
         /** Kept for state serialization purposes. */
+        @SuppressWarnings("unused")
         private final String stepName = NAME;
         /** The jar that contains the palantir-java-format implementation. */
         private final JarState jarState;
@@ -71,7 +77,6 @@ public final class PalantirJavaFormatStep {
         FormatterFunc createFormat() throws Exception {
             ClassLoader classLoader = jarState.getClassLoader();
 
-            // instantiate the formatter and get its format method
             Class<?> optionsClass = classLoader.loadClass(OPTIONS_CLASS);
             Class<?> optionsBuilderClass = classLoader.loadClass(OPTIONS_BUILDER_CLASS);
             Method optionsBuilderMethod = optionsClass.getMethod(OPTIONS_BUILDER_METHOD);
@@ -86,8 +91,9 @@ public final class PalantirJavaFormatStep {
             Method optionsBuilderBuildMethod = optionsBuilderClass.getMethod(OPTIONS_BUILDER_BUILD_METHOD);
             Object options = optionsBuilderBuildMethod.invoke(optionsBuilder);
 
+            // instantiate the formatter and get its format method
             Class<?> formatterClazz = classLoader.loadClass(FORMATTER_CLASS);
-            Object formatter = formatterClazz.getConstructor(optionsClass).newInstance(options);
+            Object formatter = formatterClazz.getMethod(FORMATTER_CREATE_METHOD, optionsClass).invoke(null, options);
             Method formatterMethod = formatterClazz.getMethod(FORMATTER_METHOD, String.class);
 
             return input -> (String) formatterMethod.invoke(formatter, input);
@@ -104,6 +110,7 @@ public final class PalantirJavaFormatStep {
             this.configuration = configuration;
         }
 
+        @NotNull
         @Override
         public Set<File> provisionWithTransitives(boolean withTransitives, Collection<String> mavenCoordinates) {
             return configuration.getFiles();

@@ -17,10 +17,8 @@
 package com.palantir.baseline.plugins;
 
 import com.diffplug.gradle.spotless.SpotlessExtension;
-import com.diffplug.spotless.FormatterFunc;
-import com.palantir.javaformat.java.Formatter;
-import com.palantir.javaformat.java.JavaFormatterOptions;
-import com.palantir.javaformat.java.JavaFormatterOptions.Style;
+import com.google.common.base.Preconditions;
+import com.palantir.baseline.plugins.format.PalantirJavaFormatStep;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -75,7 +73,12 @@ class BaselineFormat extends AbstractBaselinePlugin {
                 }
 
                 if (palantirJavaFormatterEnabled(project)) {
-                    java.customLazy("palantir-java-format", PalantirJavaFormatterFunc::new);
+                    Preconditions.checkState(
+                            project.getRootProject().getPluginManager().hasPlugin("com.palantir.java-format"),
+                            "Must apply `com.palantir.baseline` to root project when setting '%s'",
+                            PJF_PROPERTY);
+                    java.addStep(PalantirJavaFormatStep.create(
+                            project.getRootProject().getConfigurations().getByName("palantirJavaFormat")));
                 }
 
                 java.trimTrailingWhitespace();
@@ -117,15 +120,5 @@ class BaselineFormat extends AbstractBaselinePlugin {
 
     static Path eclipseConfigFile(Project project) {
         return project.getRootDir().toPath().resolve(".baseline/spotless/eclipse.xml");
-    }
-
-    private static class PalantirJavaFormatterFunc implements FormatterFunc {
-        private static final JavaFormatterOptions OPTIONS =
-                JavaFormatterOptions.builder().style(Style.PALANTIR).build();
-
-        @Override
-        public String apply(String input) throws Exception {
-            return Formatter.createFormatter(OPTIONS).formatSourceAndFixImports(input);
-        }
     }
 }
