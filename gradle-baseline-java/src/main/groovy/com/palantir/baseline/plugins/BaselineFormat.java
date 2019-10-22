@@ -18,11 +18,14 @@ package com.palantir.baseline.plugins;
 
 import com.diffplug.gradle.spotless.SpotlessExtension;
 import com.diffplug.spotless.FormatterFunc;
-import com.palantir.javaformat.java.FormatDiffCli;
+import com.palantir.javaformat.java.FormatDiff;
 import com.palantir.javaformat.java.Formatter;
 import com.palantir.javaformat.java.JavaFormatterOptions;
 import com.palantir.javaformat.java.JavaFormatterOptions.Style;
+import java.io.File;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
@@ -33,10 +36,6 @@ import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
-
-import java.io.File;
-import java.nio.file.Files;
-import java.nio.file.Path;
 
 class BaselineFormat extends AbstractBaselinePlugin {
 
@@ -51,7 +50,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
 
         project.getPluginManager().withPlugin("java", plugin -> {
             if (palantirJavaFormatterEnabled(project)) {
-                project.getTasks().register("formatDiff", FormatDiff.class);
+                project.getTasks().register("formatDiff", FormatDiffTask.class);
             }
 
             project.getPluginManager().apply("com.diffplug.gradle.spotless");
@@ -116,10 +115,10 @@ class BaselineFormat extends AbstractBaselinePlugin {
         });
     }
 
-    public static class FormatDiff extends DefaultTask {
+    public static class FormatDiffTask extends DefaultTask {
         @TaskAction
         public final void formatDiff() throws IOException, InterruptedException {
-            FormatDiffCli.formatDiff(getProject().getProjectDir().toPath());
+            FormatDiff.formatDiff(getProject().getProjectDir().toPath());
         }
     }
 
