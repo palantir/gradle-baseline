@@ -40,6 +40,11 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
             id 'java'
             id 'com.palantir.baseline-format'
         }
+        repositories {
+            // to resolve the `palantirJavaFormat` configuration
+            maven { url 'https://dl.bintray.com/palantir/releases' }
+            jcenter()
+        }
     '''.stripIndent()
 
     def noJavaBuildFile = '''
@@ -255,7 +260,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         '''.stripIndent()
 
         then:
-        with('formatDiff').build()
+        with('formatDiff', '-Pcom.palantir.baseline-format.palantir-java-format').build()
         file('src/main/java/Main.java').text == '''
         class Main {
             public static void crazyExistingFormatting  (  String... args) {
