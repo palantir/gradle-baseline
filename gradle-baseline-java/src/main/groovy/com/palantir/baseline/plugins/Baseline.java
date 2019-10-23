@@ -36,10 +36,6 @@ public final class Baseline implements Plugin<Project> {
 
         rootProject.getPluginManager().apply(BaselineConfig.class);
         rootProject.getPluginManager().apply(BaselineCircleCi.class);
-        if (BaselineFormat.palantirJavaFormatterEnabled(project)) {
-            rootProject.getPluginManager().apply("com.palantir.java-format-provider");
-            rootProject.getPluginManager().apply("com.palantir.java-format-idea");
-        }
         rootProject.allprojects(proj -> {
             proj.getPluginManager().apply(BaselineCheckstyle.class);
             proj.getPluginManager().apply(BaselineScalastyle.class);

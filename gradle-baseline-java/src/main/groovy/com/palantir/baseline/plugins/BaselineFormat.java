@@ -20,6 +20,9 @@ import com.diffplug.gradle.spotless.SpotlessExtension;
 import com.google.common.base.Preconditions;
 import com.palantir.baseline.plugins.format.PalantirJavaFormatStep;
 import com.palantir.javaformat.gradle.JavaFormatExtension;
+import com.palantir.javaformat.gradle.PalantirJavaFormatIdeaPlugin;
+import com.palantir.javaformat.gradle.PalantirJavaFormatPlugin;
+import com.palantir.javaformat.gradle.PalantirJavaFormatProviderPlugin;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -42,6 +45,18 @@ class BaselineFormat extends AbstractBaselinePlugin {
     @Override
     public void apply(Project project) {
         this.project = project;
+
+        if (project == project.getRootProject()) {
+            if (BaselineFormat.palantirJavaFormatterEnabled(project)) {
+                project.getPluginManager().apply(PalantirJavaFormatIdeaPlugin.class);
+            }
+        }
+
+        project.getPluginManager().withPlugin("java", plugin -> {
+            if (palantirJavaFormatterEnabled(project)) {
+                project.getPlugins().apply(PalantirJavaFormatPlugin.class); // provides the formatDiff task
+            }
+        });
 
         project.getPluginManager().withPlugin("java", plugin -> {
             project.getPluginManager().apply("com.diffplug.gradle.spotless");
@@ -75,8 +90,8 @@ class BaselineFormat extends AbstractBaselinePlugin {
 
                 if (palantirJavaFormatterEnabled(project)) {
                     Preconditions.checkState(
-                            project.getRootProject().getPluginManager().hasPlugin("com.palantir.java-format-provider"),
-                            "Must apply `com.palantir.baseline` to root project when setting '%s'",
+                            project.getRootProject().getPlugins().hasPlugin(PalantirJavaFormatProviderPlugin.class),
+                            "Must apply `com.palantir.baseline-format` to root project when setting '%s'",
                             PJF_PROPERTY);
                     java.addStep(PalantirJavaFormatStep.create(
                             project.getRootProject().getConfigurations().getByName("palantirJavaFormat"),
@@ -92,7 +107,9 @@ class BaselineFormat extends AbstractBaselinePlugin {
             spotlessExtension.setEnforceCheck(false);
 
             // necessary because SpotlessPlugin creates tasks in an afterEvaluate block
-            TaskProvider<Task> formatTask = project.getTasks().register("format");
+            TaskProvider<Task> formatTask = project.getTasks().register("format", task -> {
+                task.setGroup("Formatting");
+            });
             project.afterEvaluate(p -> {
                 Task spotlessJava = project.getTasks().getByName("spotlessJava");
                 Task spotlessApply = project.getTasks().getByName("spotlessApply");
