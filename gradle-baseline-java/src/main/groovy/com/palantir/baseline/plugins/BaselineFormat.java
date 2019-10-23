@@ -17,26 +17,21 @@
 package com.palantir.baseline.plugins;
 
 import com.diffplug.gradle.spotless.SpotlessExtension;
-import com.diffplug.spotless.FormatterFunc;
-import com.palantir.javaformat.java.FormatDiff;
-import com.palantir.javaformat.java.Formatter;
-import com.palantir.javaformat.java.JavaFormatterOptions;
-import com.palantir.javaformat.java.JavaFormatterOptions.Style;
 import com.google.common.base.Preconditions;
 import com.palantir.baseline.plugins.format.PalantirJavaFormatStep;
 import com.palantir.javaformat.gradle.JavaFormatExtension;
+import com.palantir.javaformat.gradle.PalantirJavaFormatIdeaPlugin;
+import com.palantir.javaformat.gradle.PalantirJavaFormatPlugin;
+import com.palantir.javaformat.gradle.PalantirJavaFormatProviderPlugin;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
-import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
 
@@ -51,9 +46,19 @@ class BaselineFormat extends AbstractBaselinePlugin {
     public void apply(Project project) {
         this.project = project;
 
-        project.getPluginManager().withPlugin("java", plugin -> {
-            project.getTasks().register("formatDiff", FormatDiffTask.class);
+        if (project == project.getRootProject()) {
+            if (BaselineFormat.palantirJavaFormatterEnabled(project)) {
+                project.getPluginManager().apply(PalantirJavaFormatIdeaPlugin.class);
+            }
+        }
 
+        project.getPluginManager().withPlugin("java", plugin -> {
+            if (palantirJavaFormatterEnabled(project)) {
+                project.getPlugins().apply(PalantirJavaFormatPlugin.class); // provides the formatDiff task
+            }
+        });
+
+        project.getPluginManager().withPlugin("java", plugin -> {
             project.getPluginManager().apply("com.diffplug.gradle.spotless");
             Path eclipseXml = eclipseConfigFile(project);
 
@@ -85,8 +90,8 @@ class BaselineFormat extends AbstractBaselinePlugin {
 
                 if (palantirJavaFormatterEnabled(project)) {
                     Preconditions.checkState(
-                            project.getRootProject().getPluginManager().hasPlugin("com.palantir.java-format-provider"),
-                            "Must apply `com.palantir.baseline` to root project when setting '%s'",
+                            project.getRootProject().getPlugins().hasPlugin(PalantirJavaFormatProviderPlugin.class),
+                            "Must apply `com.palantir.baseline-format` to root project when setting '%s'",
                             PJF_PROPERTY);
                     java.addStep(PalantirJavaFormatStep.create(
                             project.getRootProject().getConfigurations().getByName("palantirJavaFormat"),
@@ -122,18 +127,6 @@ class BaselineFormat extends AbstractBaselinePlugin {
                 });
             });
         });
-    }
-
-    public static class FormatDiffTask extends DefaultTask {
-        FormatDiffTask() {
-            setDescription("Format only chunks of files that appear in git diff");
-            setGroup("Formatting");
-        }
-
-        @TaskAction
-        public final void formatDiff() throws IOException, InterruptedException {
-            FormatDiff.formatDiff(getProject().getProjectDir().toPath());
-        }
     }
 
     static boolean eclipseFormattingEnabled(Project project) {
