@@ -37,9 +37,8 @@ public final class Baseline implements Plugin<Project> {
         rootProject.getPluginManager().apply(BaselineConfig.class);
         rootProject.getPluginManager().apply(BaselineCircleCi.class);
         if (BaselineFormat.palantirJavaFormatterEnabled(project)) {
-            // This plugin currently sets up IntelliJ but could set up eclipse too in the future, so it doesn't
-            // belong in BaselineIdea.
-            rootProject.getPluginManager().apply("com.palantir.java-format");
+            rootProject.getPluginManager().apply("com.palantir.java-format-provider");
+            rootProject.getPluginManager().apply("com.palantir.java-format-idea");
         }
         rootProject.allprojects(proj -> {
             proj.getPluginManager().apply(BaselineCheckstyle.class);

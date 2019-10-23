@@ -22,6 +22,9 @@ import com.palantir.javaformat.java.FormatDiff;
 import com.palantir.javaformat.java.Formatter;
 import com.palantir.javaformat.java.JavaFormatterOptions;
 import com.palantir.javaformat.java.JavaFormatterOptions.Style;
+import com.google.common.base.Preconditions;
+import com.palantir.baseline.plugins.format.PalantirJavaFormatStep;
+import com.palantir.javaformat.gradle.JavaFormatExtension;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -58,11 +61,8 @@ class BaselineFormat extends AbstractBaselinePlugin {
             spotlessExtension.java(java -> {
                 // Configure a lazy FileCollection then pass it as the target
                 ConfigurableFileCollection allJavaFiles = project.files();
-                project
-                        .getConvention()
-                        .getPlugin(JavaPluginConvention.class)
-                        .getSourceSets()
-                        .all(sourceSet -> allJavaFiles.from(
+                project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().all(
+                        sourceSet -> allJavaFiles.from(
                                 sourceSet.getAllJava().filter(file -> !file.toString().contains(GENERATED_MARKER))));
 
                 java.target(allJavaFiles);
@@ -73,7 +73,10 @@ class BaselineFormat extends AbstractBaselinePlugin {
                 if (eclipseFormattingEnabled(project) && palantirJavaFormatterEnabled(project)) {
                     throw new GradleException(
                             "Can't use both eclipse and palantir-java-format at the same time, please delete one of "
-                                    + ECLIPSE_FORMATTING + " or " + PJF_PROPERTY + " from your gradle.properties");
+                                    + ECLIPSE_FORMATTING
+                                    + " or "
+                                    + PJF_PROPERTY
+                                    + " from your gradle.properties");
                 }
 
                 if (eclipseFormattingEnabled(project)) {
@@ -81,7 +84,13 @@ class BaselineFormat extends AbstractBaselinePlugin {
                 }
 
                 if (palantirJavaFormatterEnabled(project)) {
-                    java.customLazy("palantir-java-format", PalantirJavaFormatterFunc::new);
+                    Preconditions.checkState(
+                            project.getRootProject().getPluginManager().hasPlugin("com.palantir.java-format-provider"),
+                            "Must apply `com.palantir.baseline` to root project when setting '%s'",
+                            PJF_PROPERTY);
+                    java.addStep(PalantirJavaFormatStep.create(
+                            project.getRootProject().getConfigurations().getByName("palantirJavaFormat"),
+                            project.getRootProject().getExtensions().getByType(JavaFormatExtension.class)));
                 }
 
                 java.trimTrailingWhitespace();
@@ -107,7 +116,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
                 });
                 project.getTasks().withType(JavaCompile.class).configureEach(spotlessJava::mustRunAfter);
 
-                //re-enable spotless checking, but lazily so it doesn't eagerly configure everything else
+                // re-enable spotless checking, but lazily so it doesn't eagerly configure everything else
                 project.getTasks().named(JavaBasePlugin.CHECK_TASK_NAME).configure(t -> {
                     t.dependsOn(project.getTasks().named("spotlessCheck"));
                 });
@@ -137,15 +146,5 @@ class BaselineFormat extends AbstractBaselinePlugin {
 
     static Path eclipseConfigFile(Project project) {
         return project.getRootDir().toPath().resolve(".baseline/spotless/eclipse.xml");
-    }
-
-    private static class PalantirJavaFormatterFunc implements FormatterFunc {
-        private static final JavaFormatterOptions OPTIONS =
-                JavaFormatterOptions.builder().style(Style.PALANTIR).build();
-
-        @Override
-        public String apply(String input) throws Exception {
-            return Formatter.createFormatter(OPTIONS).formatSourceAndFixImports(input);
-        }
     }
 }
