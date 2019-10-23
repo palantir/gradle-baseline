@@ -41,6 +41,11 @@ public final class AssertjOptionalIsNotPresent<T> {
         assertThat(thing).isEqualTo(Optional.empty());
     }
 
+    @BeforeTemplate
+    void before4(Optional<T> thing) {
+        assertThat(Optional.empty()).isEqualTo(thing);
+    }
+
     @AfterTemplate
     @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
     void after(Optional<T> thing) {
