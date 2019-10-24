@@ -13,6 +13,5 @@
 .settings
 build
 out/
-gradle.properties
 docs/node_modules/
 generated_src
