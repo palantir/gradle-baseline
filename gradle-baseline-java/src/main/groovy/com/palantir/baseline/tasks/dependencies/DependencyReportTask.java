@@ -98,6 +98,7 @@ public class DependencyReportTask extends DefaultTask {
 
     @InputFiles
     @Optional
+    @PathSensitive(PathSensitivity.RELATIVE)
     public final ListProperty<Configuration> getSourceOnlyConfigurations() {
         return sourceOnlyConfigurations;
     }
