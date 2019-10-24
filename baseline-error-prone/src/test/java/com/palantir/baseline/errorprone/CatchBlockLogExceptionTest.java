@@ -172,26 +172,6 @@ public class CatchBlockLogExceptionTest {
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
-    @Test
-    public void testFix_doesNotApplyToInfo() {
-        fix()
-                .addInputLines("Test.java",
-                        "import org.slf4j.Logger;",
-                        "import org.slf4j.LoggerFactory;",
-                        "class Test {",
-                        "  private static final Logger log = LoggerFactory.getLogger(Test.class);",
-                        "  void f(String param) {",
-                        "    try {",
-                        "        log.info(\"hello\");",
-                        "    } catch (Throwable t) {",
-                        "        log.info(\"foo\");",
-                        "    }",
-                        "  }",
-                        "}")
-                .expectUnchanged()
-                .doTest();
-    }
-
     private void test(Class<? extends Throwable> exceptionClass, String catchStatement, Optional<String> error) {
         compilationHelper
                 .addSourceLines(

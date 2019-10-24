@@ -57,10 +57,6 @@ public final class CatchBlockLogException extends BugChecker implements BugCheck
             .onDescendantOf("org.slf4j.Logger")
             .withNameMatching(Pattern.compile("trace|debug|info|warn|error"));
 
-    private static final Matcher<ExpressionTree> severeLogMethod = MethodMatchers.instanceMethod()
-            .onDescendantOf("org.slf4j.Logger")
-            .withNameMatching(Pattern.compile("warn|error"));
-
     private static final Matcher<Tree> containslogMethod = Matchers.contains(
             Matchers.toType(ExpressionTree.class, logMethod));
 
@@ -83,15 +79,12 @@ public final class CatchBlockLogException extends BugChecker implements BugCheck
 
     private static Optional<SuggestedFix> attemptFix(CatchTree tree, VisitorState state) {
         List<MethodInvocationTree> matchingLoggingStatements =
-                tree.getBlock().accept(MostSevereLogStatementScanner.INSTANCE, state);
+                tree.getBlock().accept(LogStatementScanner.INSTANCE, state);
         if (matchingLoggingStatements == null || matchingLoggingStatements.size() != 1) {
             return Optional.empty();
         }
         MethodInvocationTree loggingInvocation = matchingLoggingStatements.get(0);
-        if (containslogException.matches(loggingInvocation, state)
-                // Only suggest fixes for warnings and errors to begin with. A future change
-                // should expand this to other statements if it goes well.
-                || !severeLogMethod.matches(loggingInvocation, state)) {
+        if (containslogException.matches(loggingInvocation, state)) {
             return Optional.empty();
         }
         List<? extends ExpressionTree> loggingArguments = loggingInvocation.getArguments();
@@ -140,9 +133,8 @@ public final class CatchBlockLogException extends BugChecker implements BugCheck
         }
     }
 
-    private static final class MostSevereLogStatementScanner
-            extends TreeScanner<List<MethodInvocationTree>, VisitorState> {
-        private static final MostSevereLogStatementScanner INSTANCE = new MostSevereLogStatementScanner();
+    private static final class LogStatementScanner extends TreeScanner<List<MethodInvocationTree>, VisitorState> {
+        private static final LogStatementScanner INSTANCE = new LogStatementScanner();
 
         @Override
         public List<MethodInvocationTree> visitMethodInvocation(MethodInvocationTree node, VisitorState state) {
