@@ -53,7 +53,7 @@ public final class BaselineDependencyPluginv2 implements Plugin<Project> {
     }
 
     private Provider<DependencyFinderTask> createFinderTask(Project project, SourceSet sourceSet) {
-        String taskName = sourceSet.getTaskName("find", "deps");
+        String taskName = TaskNamer.getFinderTaskName(sourceSet);
         return project.getTasks().register(taskName, DependencyFinderTask.class, t -> {
             t.dependsOn(sourceSet.getClassesTaskName());
             t.setDescription("Produces listings in dot-file format with dependencies that are directly used by the "
@@ -65,7 +65,7 @@ public final class BaselineDependencyPluginv2 implements Plugin<Project> {
 
     private Provider<DependencyReportTask> createReportTask(Project project, SourceSet sourceSet,
                                                             Provider<DependencyFinderTask> finderTask) {
-        String taskName = sourceSet.getTaskName("analyze", "deps");
+        String taskName = TaskNamer.getReportTaskName(sourceSet);
         return project.getTasks().register(taskName, DependencyReportTask.class, t -> {
             t.setDescription("Produces a report for dependencies of the " + sourceSet.getName() + " source set.");
             t.setGroup(GROUP_NAME);
@@ -79,7 +79,7 @@ public final class BaselineDependencyPluginv2 implements Plugin<Project> {
 
     private Provider<CheckImplicitDependenciesTaskv2> createCheckImplicitTask(Project project, SourceSet sourceSet,
                                                                             Provider<DependencyReportTask> reportTask) {
-        String taskName = sourceSet.getTaskName("checkImplicit", "deps");
+        String taskName = TaskNamer.getCheckImplicitTaskName(sourceSet);
         return project.getTasks().register(taskName, CheckImplicitDependenciesTaskv2.class, t -> {
             t.setDescription("Verifies that project declares all dependencies that are directly used by "
                     + sourceSet.getName() + " source set rather than relying on transitive dependencies.");
@@ -91,7 +91,7 @@ public final class BaselineDependencyPluginv2 implements Plugin<Project> {
 
     private Provider<CheckUnusedDependenciesTaskv2> createCheckUnusedTask(Project project, SourceSet sourceSet,
                                                                           Provider<DependencyReportTask> reportTask) {
-        String taskName = sourceSet.getTaskName("checkUnused", "deps");
+        String taskName = TaskNamer.getCheckUnusedTaskName(sourceSet);
         return project.getTasks().register(taskName, CheckUnusedDependenciesTaskv2.class, t -> {
             t.setDescription("Verifies that project does not declare any dependencies for the "
                     + sourceSet.getName() + " source set that it does not use.");
@@ -102,4 +102,21 @@ public final class BaselineDependencyPluginv2 implements Plugin<Project> {
         });
     }
 
+    /**
+     * Useful for other plugins that need to depend on a task's output.
+     */
+    public static class TaskNamer {
+        public static String getFinderTaskName(SourceSet sourceSet) {
+            return sourceSet.getTaskName("find", "deps");
+        }
+        public static String getReportTaskName(SourceSet sourceSet) {
+            return sourceSet.getTaskName("analyze", "deps");
+        }
+        public static String getCheckImplicitTaskName(SourceSet sourceSet) {
+            return sourceSet.getTaskName("checkImplicit", "deps");
+        }
+        public static String getCheckUnusedTaskName(SourceSet sourceSet) {
+            return sourceSet.getTaskName("checkUnused", "deps");
+        }
+    }
 }
