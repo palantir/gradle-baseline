@@ -52,5 +52,4 @@ public final class AssertjNotNullWithDescription {
     void after(Object input, String description, @Repeated Object descriptionArgs) {
         assertThat(input).describedAs(description, descriptionArgs).isNotNull();
     }
-
 }

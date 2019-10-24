@@ -72,5 +72,5 @@ final class JunitReportCreator {
         return name.replace(" - ", ".");
     }
 
-    private JunitReportCreator() { }
+    private JunitReportCreator() {}
 }

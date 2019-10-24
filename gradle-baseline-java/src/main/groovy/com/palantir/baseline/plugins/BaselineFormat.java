@@ -66,8 +66,8 @@ class BaselineFormat extends AbstractBaselinePlugin {
             spotlessExtension.java(java -> {
                 // Configure a lazy FileCollection then pass it as the target
                 ConfigurableFileCollection allJavaFiles = project.files();
-                project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().all(
-                        sourceSet -> allJavaFiles.from(
+                project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().all(sourceSet ->
+                        allJavaFiles.from(
                                 sourceSet.getAllJava().filter(file -> !file.toString().contains(GENERATED_MARKER))));
 
                 java.target(allJavaFiles);

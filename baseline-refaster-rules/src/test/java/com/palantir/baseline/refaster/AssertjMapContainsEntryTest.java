@@ -27,8 +27,7 @@ public class AssertjMapContainsEntryTest {
         assumeThat(System.getProperty("java.specification.version"))
                 .describedAs("Refaster does not currently support fluent refactors on java 11")
                 .isEqualTo("1.8");
-        RefasterTestHelper
-                .forRefactoring(AssertjMapContainsEntry.class)
+        RefasterTestHelper.forRefactoring(AssertjMapContainsEntry.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",
@@ -53,8 +52,7 @@ public class AssertjMapContainsEntryTest {
         assumeThat(System.getProperty("java.specification.version"))
                 .describedAs("Refaster does not currently support fluent refactors on java 11")
                 .isEqualTo("1.8");
-        RefasterTestHelper
-                .forRefactoring(AssertjMapContainsEntryWithDescription.class)
+        RefasterTestHelper.forRefactoring(AssertjMapContainsEntryWithDescription.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",

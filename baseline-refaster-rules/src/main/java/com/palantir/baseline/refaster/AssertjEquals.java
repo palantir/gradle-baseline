@@ -25,8 +25,8 @@ import com.google.errorprone.refaster.annotation.UseImportPolicy;
 import java.util.Objects;
 
 /**
- * We have to guess as to which value is expected and which is the actual result, but either way failures will
- * produce significantly more helpful output.
+ * We have to guess as to which value is expected and which is the actual result, but either way failures will produce
+ * significantly more helpful output.
  */
 public final class AssertjEquals<T> {
 

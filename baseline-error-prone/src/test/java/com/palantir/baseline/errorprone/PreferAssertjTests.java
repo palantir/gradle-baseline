@@ -28,8 +28,7 @@ public class PreferAssertjTests {
 
     @Test
     public void fix_booleanAsserts() {
-        test()
-                .addInputLines(
+        test().addInputLines(
                         "Test.java",
                         "import static org.hamcrest.MatcherAssert.assertThat;",
                         "",
@@ -62,8 +61,7 @@ public class PreferAssertjTests {
 
     @Test
     public void fixAssertFalse_existingAssertThat() {
-        test()
-                .addInputLines(
+        test().addInputLines(
                         "Test.java",
                         "import static org.junit.Assert.assertThat;",
                         "",
@@ -90,8 +88,7 @@ public class PreferAssertjTests {
 
     @Test
     public void fix_assertNull() {
-        test()
-                .addInputLines(
+        test().addInputLines(
                         "Test.java",
                         "import static org.junit.Assert.assertNull;",
                         "import static org.junit.Assert.assertNotNull;",
@@ -121,8 +118,7 @@ public class PreferAssertjTests {
 
     @Test
     public void fix_assertSame() {
-        test()
-                .addInputLines(
+        test().addInputLines(
                         "Test.java",
                         "import static org.junit.Assert.assertSame;",
                         "import static org.junit.Assert.assertNotSame;",
@@ -152,8 +148,7 @@ public class PreferAssertjTests {
 
     @Test
     public void fix_fail() {
-        test()
-                .addInputLines(
+        test().addInputLines(
                         "Test.java",
                         "import static org.junit.Assert.fail;",
                         "",
@@ -182,8 +177,7 @@ public class PreferAssertjTests {
 
     @Test
     public void fix_assertEqualsFloating() {
-        test()
-                .addInputLines(
+        test().addInputLines(
                         "Test.java",
                         "import static org.junit.Assert.assertEquals;",
                         "import static org.junit.Assert.assertNotEquals;",
@@ -242,8 +236,7 @@ public class PreferAssertjTests {
 
     @Test
     public void fix_assertEqualsInt() {
-        test()
-                .addInputLines(
+        test().addInputLines(
                         "Test.java",
                         "import static org.junit.Assert.assertEquals;",
                         "class Test {",
@@ -265,8 +258,7 @@ public class PreferAssertjTests {
 
     @Test
     public void fix_assertEqualsString() {
-        test()
-                .addInputLines(
+        test().addInputLines(
                         "Test.java",
                         "import static org.junit.Assert.assertEquals;",
                         "import static org.junit.Assert.assertNotEquals;",
@@ -296,8 +288,7 @@ public class PreferAssertjTests {
 
     @Test
     public void fix_assertEqualsString_testcase() {
-        test()
-                .addInputLines(
+        test().addInputLines(
                         "Test.java",
                         "import static junit.framework.TestCase.assertEquals;",
                         "class Test {",
@@ -319,8 +310,7 @@ public class PreferAssertjTests {
 
     @Test
     public void fix_assertEqualsString_frameworkAssert() {
-        test()
-                .addInputLines(
+        test().addInputLines(
                         "Test.java",
                         "import static junit.framework.Assert.assertEquals;",
                         "class Test {",
@@ -342,8 +332,7 @@ public class PreferAssertjTests {
 
     @Test
     public void fix_assertEqualsIntDescription() {
-        test()
-                .addInputLines(
+        test().addInputLines(
                         "Test.java",
                         "import static org.junit.Assert.assertEquals;",
                         "class Test {",
@@ -365,8 +354,7 @@ public class PreferAssertjTests {
 
     @Test
     public void fix_assertArrayEqualsInt() {
-        test()
-                .addInputLines(
+        test().addInputLines(
                         "Test.java",
                         "import static org.junit.Assert.assertArrayEquals;",
                         "class Test {",
@@ -388,8 +376,7 @@ public class PreferAssertjTests {
 
     @Test
     public void fix_assertArrayEqualsIntDescription() {
-        test()
-                .addInputLines(
+        test().addInputLines(
                         "Test.java",
                         "import static org.junit.Assert.assertArrayEquals;",
                         "class Test {",
@@ -411,40 +398,41 @@ public class PreferAssertjTests {
 
     @Test
     public void fails_assertArrayEqualsDelta_double() {
-        CompilationTestHelper.newInstance(PreferAssertj.class, getClass()).addSourceLines(
-                "Test.java",
-                "import static org.junit.Assert.assertArrayEquals;",
-                "class Test {",
-                "  void f(double[] param) {",
-                "    // BUG: Diagnostic contains: Prefer AssertJ",
-                "    assertArrayEquals(param, new double[] { 1D }, .1D);",
-                "    // BUG: Diagnostic contains: Prefer AssertJ",
-                "    assertArrayEquals(\"desc\", param, new double[] { 1D }, .1D);",
-                "  }",
-                "}")
+        CompilationTestHelper.newInstance(PreferAssertj.class, getClass())
+                .addSourceLines(
+                        "Test.java",
+                        "import static org.junit.Assert.assertArrayEquals;",
+                        "class Test {",
+                        "  void f(double[] param) {",
+                        "    // BUG: Diagnostic contains: Prefer AssertJ",
+                        "    assertArrayEquals(param, new double[] { 1D }, .1D);",
+                        "    // BUG: Diagnostic contains: Prefer AssertJ",
+                        "    assertArrayEquals(\"desc\", param, new double[] { 1D }, .1D);",
+                        "  }",
+                        "}")
                 .doTest();
     }
 
     @Test
     public void fails_assertArrayEqualsDelta_float() {
-        CompilationTestHelper.newInstance(PreferAssertj.class, getClass()).addSourceLines(
-                "Test.java",
-                "import static org.junit.Assert.assertArrayEquals;",
-                "class Test {",
-                "  void f(float[] param) {",
-                "    // BUG: Diagnostic contains: Prefer AssertJ",
-                "    assertArrayEquals(param, new float[] { 1f }, .1f);",
-                "    // BUG: Diagnostic contains: Prefer AssertJ",
-                "    assertArrayEquals(\"desc\", param, new float[] { 1f }, .1f);",
-                "  }",
-                "}")
+        CompilationTestHelper.newInstance(PreferAssertj.class, getClass())
+                .addSourceLines(
+                        "Test.java",
+                        "import static org.junit.Assert.assertArrayEquals;",
+                        "class Test {",
+                        "  void f(float[] param) {",
+                        "    // BUG: Diagnostic contains: Prefer AssertJ",
+                        "    assertArrayEquals(param, new float[] { 1f }, .1f);",
+                        "    // BUG: Diagnostic contains: Prefer AssertJ",
+                        "    assertArrayEquals(\"desc\", param, new float[] { 1f }, .1f);",
+                        "  }",
+                        "}")
                 .doTest();
     }
 
     @Test
     public void fix_assertArrayEqualsDelta() {
-        test()
-                .addInputLines(
+        test().addInputLines(
                         "Test.java",
                         "import static org.junit.Assert.assertArrayEquals;",
                         "class Test {",
@@ -481,8 +469,7 @@ public class PreferAssertjTests {
 
     @Test
     public void fix_assertNotEqualsInt() {
-        test()
-                .addInputLines(
+        test().addInputLines(
                         "Test.java",
                         "import static org.junit.Assert.assertNotEquals;",
                         "class Test {",
@@ -506,8 +493,7 @@ public class PreferAssertjTests {
 
     @Test
     public void fix_assertThatInt() {
-        test()
-                .addInputLines(
+        test().addInputLines(
                         "Test.java",
                         "import static org.junit.Assert.assertThat;",
                         "import static org.hamcrest.Matchers.is;",
@@ -532,8 +518,7 @@ public class PreferAssertjTests {
 
     @Test
     public void fix_matcherAssertThatString_fallback() {
-        test()
-                .addInputLines(
+        test().addInputLines(
                         "Test.java",
                         "import static org.hamcrest.MatcherAssert.assertThat;",
                         "import static org.hamcrest.Matchers.*;",
@@ -558,8 +543,7 @@ public class PreferAssertjTests {
 
     @Test
     public void fix_assertThat_is_instanceOf() {
-        test()
-                .addInputLines(
+        test().addInputLines(
                         "Test.java",
                         "import static org.hamcrest.MatcherAssert.assertThat;",
                         "import static org.hamcrest.Matchers.*;",
@@ -596,8 +580,7 @@ public class PreferAssertjTests {
 
     @Test
     public void fix_assertThat_equality() {
-        test()
-                .addInputLines(
+        test().addInputLines(
                         "Test.java",
                         "import static org.hamcrest.MatcherAssert.assertThat;",
                         "import static org.hamcrest.Matchers.*;",
@@ -640,8 +623,7 @@ public class PreferAssertjTests {
 
     @Test
     public void fix_assertThat_nullness() {
-        test()
-                .addInputLines(
+        test().addInputLines(
                         "Test.java",
                         "import static org.hamcrest.MatcherAssert.assertThat;",
                         "import static org.hamcrest.Matchers.*;",
@@ -686,8 +668,7 @@ public class PreferAssertjTests {
 
     @Test
     public void fix_assertThat_contains() {
-        test()
-                .addInputLines(
+        test().addInputLines(
                         "Test.java",
                         "import static org.hamcrest.MatcherAssert.assertThat;",
                         "import static org.hamcrest.Matchers.*;",
@@ -726,8 +707,7 @@ public class PreferAssertjTests {
 
     @Test
     public void fix_assertThat_empty() {
-        test()
-                .addInputLines(
+        test().addInputLines(
                         "Test.java",
                         "import static org.hamcrest.MatcherAssert.assertThat;",
                         "import static org.hamcrest.Matchers.*;",
@@ -776,8 +756,7 @@ public class PreferAssertjTests {
 
     @Test
     public void fix_assertThat_size() {
-        test()
-                .addInputLines(
+        test().addInputLines(
                         "Test.java",
                         "import static org.hamcrest.MatcherAssert.assertThat;",
                         "import static org.hamcrest.Matchers.*;",
@@ -810,8 +789,7 @@ public class PreferAssertjTests {
 
     @Test
     public void fix_assertThat_same() {
-        test()
-                .addInputLines(
+        test().addInputLines(
                         "Test.java",
                         "import static org.hamcrest.MatcherAssert.assertThat;",
                         "import static org.hamcrest.Matchers.*;",
@@ -840,8 +818,7 @@ public class PreferAssertjTests {
 
     @Test
     public void fix_assertThat_strings() {
-        test()
-                .addInputLines(
+        test().addInputLines(
                         "Test.java",
                         "import static org.hamcrest.MatcherAssert.assertThat;",
                         "import static org.hamcrest.Matchers.*;",
@@ -874,8 +851,7 @@ public class PreferAssertjTests {
 
     @Test
     public void fix_assertThat_wrongImport() {
-        test()
-                .addInputLines(
+        test().addInputLines(
                         "Test.java",
                         "import static org.hamcrest.MatcherAssert.assertThat;",
                         "import static org.hamcrest.core.Is.is;",
@@ -910,8 +886,7 @@ public class PreferAssertjTests {
     public void fix_assert_iterableMap() {
         // Iterable Maps result in ambiguous assertThat references
         // to to both assertThat(Iterable) and assertThat(Map)
-        test()
-                .addInputLines(
+        test().addInputLines(
                         "Test.java",
                         "import static org.hamcrest.MatcherAssert.assertThat;",
                         "import static org.hamcrest.Matchers.*;",

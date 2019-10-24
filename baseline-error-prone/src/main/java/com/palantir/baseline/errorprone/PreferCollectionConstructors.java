@@ -260,10 +260,9 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
         String arg = tree.getArguments().isEmpty() ? "" : state.getSourceForNode(tree.getArguments().get(0));
         String replacement = "new " + collectionType + "<" + typeArgs + ">(" + arg + ")";
         return buildDescription(tree)
-                .setMessage(
-                        "The factory method call should be replaced with a constructor call. See"
-                            + " https://github.com/palantir/gradle-baseline/blob/develop/docs/best-practices/java-coding-guidelines/readme.md#avoid-generics-clutter-where-possible"
-                            + " for more information.")
+                .setMessage("The factory method call should be replaced with a constructor call. See"
+                                + " https://github.com/palantir/gradle-baseline/blob/develop/docs/best-practices/java-coding-guidelines/readme.md#avoid-generics-clutter-where-possible"
+                                + " for more information.")
                 .addFix(fixBuilder.replace(tree, replacement).build())
                 .build();
     }

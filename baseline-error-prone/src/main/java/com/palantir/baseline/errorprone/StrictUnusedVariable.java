@@ -100,9 +100,9 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
 
 /**
- * Copy from {@Link UnusedVariable } except we consider all parameter for unused analysis.
- * We modified the `onlyCheckForReassignments` filter to exclude abstract methods, to check loggers
- * */
+ * Copy from {@Link UnusedVariable } except we consider all parameter for unused analysis. We modified the
+ * `onlyCheckForReassignments` filter to exclude abstract methods, to check loggers
+ */
 @AutoService(BugChecker.class)
 @BugPattern(
         name = "StrictUnusedVariable",
@@ -116,33 +116,28 @@ import javax.lang.model.element.Name;
 public final class StrictUnusedVariable extends BugChecker implements BugChecker.CompilationUnitTreeMatcher {
     private static final ImmutableSet<String> EXEMPT_PREFIXES = ImmutableSet.of("_");
 
-    /**
-     * The set of annotation full names which exempt annotated element from being reported as unused.
-     */
-    private static final ImmutableSet<String> EXEMPTING_VARIABLE_ANNOTATIONS =
-            ImmutableSet.of(
-                    "javax.persistence.Basic",
-                    "javax.persistence.Column",
-                    "javax.persistence.Id",
-                    "javax.persistence.Version",
-                    "javax.xml.bind.annotation.XmlElement",
-                    "org.junit.Rule",
-                    "org.mockito.Mock",
-                    "org.openqa.selenium.support.FindBy",
-                    "org.openqa.selenium.support.FindBys");
+    /** The set of annotation full names which exempt annotated element from being reported as unused. */
+    private static final ImmutableSet<String> EXEMPTING_VARIABLE_ANNOTATIONS = ImmutableSet.of(
+            "javax.persistence.Basic",
+            "javax.persistence.Column",
+            "javax.persistence.Id",
+            "javax.persistence.Version",
+            "javax.xml.bind.annotation.XmlElement",
+            "org.junit.Rule",
+            "org.mockito.Mock",
+            "org.openqa.selenium.support.FindBy",
+            "org.openqa.selenium.support.FindBys");
 
     /** The set of types exempting a type that is extending or implementing them. */
     private static final ImmutableSet<String> EXEMPTING_SUPER_TYPES = ImmutableSet.of();
 
     /** The set of types exempting a field of type extending them. */
-    private static final ImmutableSet<String> EXEMPTING_FIELD_SUPER_TYPES =
-            ImmutableSet.of("org.junit.rules.TestRule");
+    private static final ImmutableSet<String> EXEMPTING_FIELD_SUPER_TYPES = ImmutableSet.of("org.junit.rules.TestRule");
 
-    private static final ImmutableList<String> SPECIAL_FIELDS =
-            ImmutableList.of(
-                    "serialVersionUID",
-                    // TAG fields are used by convention in Android apps.
-                    "TAG");
+    private static final ImmutableList<String> SPECIAL_FIELDS = ImmutableList.of(
+            "serialVersionUID",
+            // TAG fields are used by convention in Android apps.
+            "TAG");
     private static final String UNUSED = "unused";
 
     @Override
@@ -173,8 +168,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
         // appropriate fixes for them.
         ListMultimap<Symbol, TreePath> usageSites = variableFinder.usageSites;
 
-        FilterUsedVariables
-                filterUsedVariables = new FilterUsedVariables(unusedElements, usageSites);
+        FilterUsedVariables filterUsedVariables = new FilterUsedVariables(unusedElements, usageSites);
         filterUsedVariables.scan(state.getPath(), null);
 
         // Keeps track of whether a symbol was _ever_ used (between reassignments).
@@ -183,8 +177,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
 
         // Add the left-over unused variables...
         for (Map.Entry<Symbol, TreePath> entry : unusedElements.entrySet()) {
-            unusedSpecs.add(
-                    UnusedSpec.of(entry.getKey(), entry.getValue(), usageSites.get(entry.getKey()), null));
+            unusedSpecs.add(UnusedSpec.of(entry.getKey(), entry.getValue(), usageSites.get(entry.getKey()), null));
         }
 
         ImmutableListMultimap<Symbol, UnusedSpec> unusedSpecsBySymbol =
@@ -215,21 +208,17 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             }
             state.reportMatch(
                     buildDescription(unused)
-                            .setMessage(
-                                    String.format(
-                                            "%s %s '%s' is never read.",
-                                            unused instanceof VariableTree ? "The" : "The assignment to this",
-                                            describeVariable(symbol),
-                                            symbol.name))
-                            .addAllFixes(
-                                    fixes.stream()
-                                            .map(
-                                                    f ->
-                                                            SuggestedFix.builder()
-                                                                    .merge(makeFirstAssignmentDeclaration)
-                                                                    .merge(f)
-                                                                    .build())
-                                            .collect(toImmutableList()))
+                            .setMessage(String.format(
+                                    "%s %s '%s' is never read.",
+                                    unused instanceof VariableTree ? "The" : "The assignment to this",
+                                    describeVariable(symbol),
+                                    symbol.name))
+                            .addAllFixes(fixes.stream()
+                                    .map(f -> SuggestedFix.builder()
+                                            .merge(makeFirstAssignmentDeclaration)
+                                            .merge(f)
+                                            .build())
+                                    .collect(toImmutableList()))
                             .build());
         }
         return Description.NO_MATCH;
@@ -246,13 +235,11 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             state.reportMatch(
                     buildDescription(entry.getValue())
                             .setMessage(String.format(
-                                    "The %s '%s' is read but has 'StrictUnusedVariable' " +
-                                            "suppressed because of its name.",
-                                    describeVariable((Symbol.VarSymbol) entry.getKey()),
-                                    entry.getKey().name))
-                                    .addFix(constructUsedVariableSuggestedFix(usageSites, state))
+                                    "The %s '%s' is read but has 'StrictUnusedVariable' "
+                                            + "suppressed because of its name.",
+                                    describeVariable((Symbol.VarSymbol) entry.getKey()), entry.getKey().name))
+                            .addFix(constructUsedVariableSuggestedFix(usageSites, state))
                             .build());
-
         });
     }
 
@@ -290,16 +277,13 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
     }
 
     private static void renameVariable(int startPos, int endPos, String name, SuggestedFix.Builder fix) {
-        EXEMPT_PREFIXES.stream()
-                .filter(name::startsWith)
-                .findFirst()
-                .ifPresent(prefix -> fix.replace(
-                        startPos,
-                        endPos,
-                        prefix.length() == name.length()
-                                // Fall back to a generic variable name if the prefix is the entire variable name
-                                ? "value"
-                                : CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, name.substring(prefix.length()))));
+        EXEMPT_PREFIXES.stream().filter(name::startsWith).findFirst().ifPresent(prefix -> fix.replace(
+                startPos,
+                endPos,
+                prefix.length() == name.length()
+                        // Fall back to a generic variable name if the prefix is the entire variable name
+                        ? "value"
+                        : CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, name.substring(prefix.length()))));
     }
 
     private static SuggestedFix makeAssignmentDeclaration(
@@ -310,18 +294,16 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
         if (unusedSymbol.getKind() != ElementKind.LOCAL_VARIABLE) {
             return SuggestedFix.builder().build();
         }
-        Optional<VariableTree> removedVariableTree =
-                allUsageSites.stream()
-                        .filter(tp -> tp.getLeaf() instanceof VariableTree)
-                        .findFirst()
-                        .map(tp -> (VariableTree) tp.getLeaf());
-        Optional<AssignmentTree> reassignment =
-                specs.stream()
-                        .map(UnusedSpec::terminatingAssignment)
-                        .filter(Optional::isPresent)
-                        .map(Optional::get)
-                        .filter(a -> allUsageSites.stream().noneMatch(tp -> tp.getLeaf().equals(a)))
-                        .findFirst();
+        Optional<VariableTree> removedVariableTree = allUsageSites.stream()
+                .filter(tp -> tp.getLeaf() instanceof VariableTree)
+                .findFirst()
+                .map(tp -> (VariableTree) tp.getLeaf());
+        Optional<AssignmentTree> reassignment = specs.stream()
+                .map(UnusedSpec::terminatingAssignment)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .filter(a -> allUsageSites.stream().noneMatch(tp -> tp.getLeaf().equals(a)))
+                .findFirst();
         if (!removedVariableTree.isPresent() || !reassignment.isPresent()) {
             return SuggestedFix.builder().build();
         }
@@ -358,15 +340,14 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
     }
 
     // https://docs.oracle.com/javase/specs/jls/se11/html/jls-14.html#jls-ExpressionStatement
-    private static final ImmutableSet<Tree.Kind> TOP_LEVEL_EXPRESSIONS =
-            ImmutableSet.of(
-                    Tree.Kind.ASSIGNMENT,
-                    Tree.Kind.PREFIX_INCREMENT,
-                    Tree.Kind.PREFIX_DECREMENT,
-                    Tree.Kind.POSTFIX_INCREMENT,
-                    Tree.Kind.POSTFIX_DECREMENT,
-                    Tree.Kind.METHOD_INVOCATION,
-                    Tree.Kind.NEW_CLASS);
+    private static final ImmutableSet<Tree.Kind> TOP_LEVEL_EXPRESSIONS = ImmutableSet.of(
+            Tree.Kind.ASSIGNMENT,
+            Tree.Kind.PREFIX_INCREMENT,
+            Tree.Kind.PREFIX_DECREMENT,
+            Tree.Kind.POSTFIX_INCREMENT,
+            Tree.Kind.POSTFIX_DECREMENT,
+            Tree.Kind.METHOD_INVOCATION,
+            Tree.Kind.NEW_CLASS);
 
     private static boolean needsBlock(TreePath path) {
         Tree leaf = path.getLeaf();
@@ -419,20 +400,18 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                 ExpressionTree initializer = variableTree.getInitializer();
                 if (hasSideEffect(initializer) && TOP_LEVEL_EXPRESSIONS.contains(initializer.getKind())) {
                     if (varKind == ElementKind.FIELD) {
-                        String newContent =
-                                String.format(
-                                        "%s{ %s; }",
-                                        varSymbol.isStatic() ? "static " : "", state.getSourceForNode(initializer));
+                        String newContent = String.format(
+                                "%s{ %s; }",
+                                varSymbol.isStatic() ? "static " : "", state.getSourceForNode(initializer));
                         fix.merge(SuggestedFixes.replaceIncludingComments(usagePath, newContent, state));
                     } else {
                         fix.replace(statement, String.format("%s;", state.getSourceForNode(initializer)));
                     }
                 } else if (isEnhancedForLoopVar(usagePath)) {
-                    String modifiers =
-                            nullToEmpty(
-                                    variableTree.getModifiers() == null
-                                            ? null
-                                            : state.getSourceForNode(variableTree.getModifiers()));
+                    String modifiers = nullToEmpty(
+                            variableTree.getModifiers() == null
+                                    ? null
+                                    : state.getSourceForNode(variableTree.getModifiers()));
                     String newContent = String.format(
                             "%s%s unused", modifiers.isEmpty() ? "" : (modifiers + " "), variableTree.getType());
                     // The new content for the second fix should be identical to the content for the first
@@ -450,18 +429,19 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                     if (hasSideEffect(((CompoundAssignmentTree) tree).getExpression())) {
                         // If it's a compound assignment, there's no reason we'd want to remove the expression,
                         // so don't set `encounteredSideEffects` based on this usage.
-                        SuggestedFix replacement =
-                                SuggestedFix.replace(
-                                        tree.getStartPosition(),
-                                        ((JCTree.JCAssignOp) tree).getExpression().getStartPosition(),
-                                        "");
+                        SuggestedFix replacement = SuggestedFix.replace(
+                                tree.getStartPosition(),
+                                ((JCTree.JCAssignOp) tree).getExpression().getStartPosition(),
+                                "");
                         fix.merge(replacement);
                         continue;
                     }
                 } else if (tree instanceof AssignmentTree) {
                     if (hasSideEffect(((AssignmentTree) tree).getExpression())) {
                         fix.replace(
-                                tree.getStartPosition(), ((JCTree.JCAssign) tree).getExpression().getStartPosition(), "");
+                                tree.getStartPosition(),
+                                ((JCTree.JCAssign) tree).getExpression().getStartPosition(),
+                                "");
                         continue;
                     }
                 }
@@ -563,7 +543,8 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                     }
                     String name = tree.getName().toString();
                     if (name.startsWith(UNUSED)) {
-                        fix.replace(startPos, endPos, "_"  + (name.equals(UNUSED)
+                        fix.replace(startPos, endPos, "_"
+                                + (name.equals(UNUSED)
                                         ? "value"
                                         : CaseFormat.UPPER_CAMEL.to(
                                                 CaseFormat.LOWER_CAMEL, name.substring(UNUSED.length()))));
@@ -579,16 +560,14 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
     private static boolean isEnhancedForLoopVar(TreePath variablePath) {
         Tree tree = variablePath.getLeaf();
         Tree parent = variablePath.getParentPath().getLeaf();
-        return parent instanceof EnhancedForLoopTree
-                && ((EnhancedForLoopTree) parent).getVariable() == tree;
+        return parent instanceof EnhancedForLoopTree && ((EnhancedForLoopTree) parent).getVariable() == tree;
     }
 
     /**
      * Looks at the list of {@code annotations} and see if there is any annotation which exists {@code
      * exemptingAnnotations}.
      */
-    private static boolean exemptedByAnnotation(
-            List<? extends AnnotationTree> annotations, VisitorState unused) {
+    private static boolean exemptedByAnnotation(List<? extends AnnotationTree> annotations, VisitorState unused) {
         for (AnnotationTree annotation : annotations) {
             if (((JCTree.JCAnnotation) annotation).type != null) {
                 Symbol.TypeSymbol tsym = ((JCTree.JCAnnotation) annotation).type.tsym;
@@ -633,8 +612,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                 exemptedVariables.put(symbol, variableTree);
                 return null;
             }
-            if (symbol.getKind() == ElementKind.FIELD
-                    && exemptedFieldBySuperType(getType(variableTree), state)) {
+            if (symbol.getKind() == ElementKind.FIELD && exemptedFieldBySuperType(getType(variableTree), state)) {
                 return null;
             }
             super.visitVariable(variableTree, null);
@@ -748,8 +726,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
 
         private final ImmutableMap<Symbol, TreePath> declarationSites;
 
-        private FilterUsedVariables(
-                Map<Symbol, TreePath> unusedElements, ListMultimap<Symbol, TreePath> usageSites) {
+        private FilterUsedVariables(Map<Symbol, TreePath> unusedElements, ListMultimap<Symbol, TreePath> usageSites) {
             this.unusedElements = unusedElements;
             this.usageSites = usageSites;
             this.declarationSites = ImmutableMap.copyOf(unusedElements);
@@ -831,8 +808,8 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
         }
 
         /**
-         * Deals with assignment trees; works out if the assignment definitely overwrites the variable
-         * in all ways that could be observed as we scan forwards.
+         * Deals with assignment trees; works out if the assignment definitely overwrites the variable in all ways that
+         * could be observed as we scan forwards.
          */
         private void handleReassignment(AssignmentTree tree) {
             Tree parent = getCurrentPath().getParentPath().getLeaf();
@@ -952,9 +929,9 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             // Then it is possible that this is not a real usage of 'i'.
             if (isInExpressionStatementTree()
                     && (tree.getKind() == POSTFIX_DECREMENT
-                    || tree.getKind() == POSTFIX_INCREMENT
-                    || tree.getKind() == PREFIX_DECREMENT
-                    || tree.getKind() == PREFIX_INCREMENT)) {
+                            || tree.getKind() == POSTFIX_INCREMENT
+                            || tree.getKind() == PREFIX_DECREMENT
+                            || tree.getKind() == PREFIX_INCREMENT)) {
                 leftHandSideAssignment = true;
                 scan(tree.getExpression(), null);
                 leftHandSideAssignment = false;
@@ -969,10 +946,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             return scan(tree.getErrorTrees(), null);
         }
 
-        /**
-         * Looks at method invocations and removes the invoked private methods from {@code
-         * #unusedElements}.
-         */
+        /** Looks at method invocations and removes the invoked private methods from {@code #unusedElements}. */
         @Override
         public Void visitMethodInvocation(MethodInvocationTree tree, Void unused) {
             inMethodCall++;
@@ -1012,8 +986,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
         TreePath variableTree();
 
         /**
-         * All the usage sites of this variable that we claim are unused (including the initial
-         * declaration/assignment).
+         * All the usage sites of this variable that we claim are unused (including the initial declaration/assignment).
          */
         ImmutableList<TreePath> usageSites();
 

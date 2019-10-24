@@ -25,14 +25,13 @@ public class AssertjArrayEqualsTest {
     public void sanity_check() {
         byte[] bytes = {1, 2, 3};
         // both of these work, but I think isEqualTo reads a bit more nicely
-        assertThat(bytes).isEqualTo(new byte[]{1, 2, 3});
-        assertThat(bytes).containsExactly(new byte[]{1, 2, 3});
+        assertThat(bytes).isEqualTo(new byte[] {1, 2, 3});
+        assertThat(bytes).containsExactly(new byte[] {1, 2, 3});
     }
 
     @Test
     public void bytes() {
-        RefasterTestHelper
-                .forRefactoring(AssertjArrayEquals.class)
+        RefasterTestHelper.forRefactoring(AssertjArrayEquals.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",
@@ -50,8 +49,7 @@ public class AssertjArrayEqualsTest {
 
     @Test
     public void shorts() {
-        RefasterTestHelper
-                .forRefactoring(AssertjArrayEquals.class)
+        RefasterTestHelper.forRefactoring(AssertjArrayEquals.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",
@@ -69,8 +67,7 @@ public class AssertjArrayEqualsTest {
 
     @Test
     public void ints() {
-        RefasterTestHelper
-                .forRefactoring(AssertjArrayEquals.class)
+        RefasterTestHelper.forRefactoring(AssertjArrayEquals.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",
@@ -88,8 +85,7 @@ public class AssertjArrayEqualsTest {
 
     @Test
     public void longs() {
-        RefasterTestHelper
-                .forRefactoring(AssertjArrayEquals.class)
+        RefasterTestHelper.forRefactoring(AssertjArrayEquals.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",
@@ -107,8 +103,7 @@ public class AssertjArrayEqualsTest {
 
     @Test
     public void floats() {
-        RefasterTestHelper
-                .forRefactoring(AssertjArrayEquals.class)
+        RefasterTestHelper.forRefactoring(AssertjArrayEquals.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",
@@ -126,8 +121,7 @@ public class AssertjArrayEqualsTest {
 
     @Test
     public void doubles() {
-        RefasterTestHelper
-                .forRefactoring(AssertjArrayEquals.class)
+        RefasterTestHelper.forRefactoring(AssertjArrayEquals.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",
@@ -145,8 +139,7 @@ public class AssertjArrayEqualsTest {
 
     @Test
     public void chars() {
-        RefasterTestHelper
-                .forRefactoring(AssertjArrayEquals.class)
+        RefasterTestHelper.forRefactoring(AssertjArrayEquals.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",
@@ -164,8 +157,7 @@ public class AssertjArrayEqualsTest {
 
     @Test
     public void booleans() {
-        RefasterTestHelper
-                .forRefactoring(AssertjArrayEquals.class)
+        RefasterTestHelper.forRefactoring(AssertjArrayEquals.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",
@@ -183,8 +175,7 @@ public class AssertjArrayEqualsTest {
 
     @Test
     public void strings() {
-        RefasterTestHelper
-                .forRefactoring(AssertjArrayEquals.class)
+        RefasterTestHelper.forRefactoring(AssertjArrayEquals.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",

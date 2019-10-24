@@ -23,20 +23,14 @@ import java.util.regex.Pattern;
 
 public final class FailuresReportGenerator {
 
-    private FailuresReportGenerator() { }
+    private FailuresReportGenerator() {}
 
     private static final Pattern JAVA_FILE_RX = Pattern.compile(".*src/\\w+/java/(.*)\\.java");
 
     public static Report failuresReport(
-            File rootDir,
-            String projectName,
-            String taskName,
-            long elapsedTimeNanos,
-            List<Failure> failures) {
-        Report.Builder report = new Report.Builder()
-                .elapsedTimeNanos(elapsedTimeNanos)
-                .name(projectName)
-                .subname(taskName);
+            File rootDir, String projectName, String taskName, long elapsedTimeNanos, List<Failure> failures) {
+        Report.Builder report =
+                new Report.Builder().elapsedTimeNanos(elapsedTimeNanos).name(projectName).subname(taskName);
 
         for (Failure failure : failures) {
             String shortSource = failure.source().isEmpty() ? "" : failure.source().replaceAll(".*\\.", "") + " - ";
@@ -46,11 +40,18 @@ public final class FailuresReportGenerator {
                     .name(shortSource + className)
                     .failure(new Report.Failure.Builder()
                             .message(failure.file().getName() + ":" + failure.line() + ": " + failure.message())
-                            .details(
-                                    failure.severity() + ": " + failure.message() + failure.details() + "\n"
-                                            + (failure.source().isEmpty() ? "" : "Category: " + failure.source() + "\n")
-                                            + "File: " + relativise(rootDir, failure) + "\n"
-                                            + "Line: " + failure.line() + "\n")
+                            .details(failure.severity()
+                                    + ": "
+                                    + failure.message()
+                                    + failure.details()
+                                    + "\n"
+                                    + (failure.source().isEmpty() ? "" : "Category: " + failure.source() + "\n")
+                                    + "File: "
+                                    + relativise(rootDir, failure)
+                                    + "\n"
+                                    + "Line: "
+                                    + failure.line()
+                                    + "\n")
                             .build())
                     .build();
             report.addTestCases(testCase);
@@ -74,5 +75,4 @@ public final class FailuresReportGenerator {
         }
         return file.toString();
     }
-
 }

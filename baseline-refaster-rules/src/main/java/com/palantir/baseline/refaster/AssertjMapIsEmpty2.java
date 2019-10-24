@@ -32,9 +32,7 @@ public final class AssertjMapIsEmpty2<A extends MapAssert<K, V>, K, V> {
 
     @BeforeTemplate
     void before2(A in) {
-        in.isEqualTo(Refaster.anyOf(
-                ImmutableMap.of(),
-                Collections.emptyMap()));
+        in.isEqualTo(Refaster.anyOf(ImmutableMap.of(), Collections.emptyMap()));
     }
 
     @AfterTemplate

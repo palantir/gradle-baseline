@@ -22,8 +22,7 @@ public class AssertjInstanceOfTest {
 
     @Test
     public void simple() {
-        RefasterTestHelper
-                .forRefactoring(AssertjInstanceOf.class)
+        RefasterTestHelper.forRefactoring(AssertjInstanceOf.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",
@@ -49,8 +48,7 @@ public class AssertjInstanceOfTest {
 
     @Test
     public void description() {
-        RefasterTestHelper
-                .forRefactoring(AssertjInstanceOfWithDescription.class)
+        RefasterTestHelper.forRefactoring(AssertjInstanceOfWithDescription.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",

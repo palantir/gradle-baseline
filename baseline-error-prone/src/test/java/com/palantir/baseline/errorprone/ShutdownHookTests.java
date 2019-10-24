@@ -38,40 +38,43 @@ public class ShutdownHookTests {
 
     @Test
     public void testRemoveShutdownHook() {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "class Test {",
-                "  void f(String param) {",
-                "// " + errorMsg,
-                "    Runtime.getRuntime().removeShutdownHook(new Thread());",
-                "  }",
-                "}"
-        ).doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "class Test {",
+                        "  void f(String param) {",
+                        "// " + errorMsg,
+                        "    Runtime.getRuntime().removeShutdownHook(new Thread());",
+                        "  }",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void testUsesAddShutdownHook() {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "class Test {",
-                "  void f(String param) {",
-                "// " + errorMsg,
-                "    Runtime.getRuntime().addShutdownHook(new Thread());",
-                "  }",
-                "}"
-        ).doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "class Test {",
+                        "  void f(String param) {",
+                        "// " + errorMsg,
+                        "    Runtime.getRuntime().addShutdownHook(new Thread());",
+                        "  }",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void testDoesNotUseShutdownHooks() {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "class Test {",
-                "  void f(String param) {",
-                "// ",
-                "    Runtime.getRuntime().availableProcessors();",
-                "  }",
-                "}"
-        ).doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "class Test {",
+                        "  void f(String param) {",
+                        "// ",
+                        "    Runtime.getRuntime().availableProcessors();",
+                        "  }",
+                        "}")
+                .doTest();
     }
 }

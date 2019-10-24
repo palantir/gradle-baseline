@@ -62,27 +62,31 @@ public class CheckClassUniquenessTask extends DefaultTask {
         if (!success) {
             analyzer.getDifferingProblemJars().forEach(problemJars -> {
                 Set<String> differingClasses = analyzer.getDifferingSharedClassesInProblemJars(problemJars);
-                getLogger().error("{} Identically named classes with differing impls found in {}: {}",
-                        differingClasses.size(), problemJars, differingClasses);
+                getLogger()
+                        .error(
+                                "{} Identically named classes with differing impls found in {}: {}",
+                                differingClasses.size(),
+                                problemJars,
+                                differingClasses);
             });
 
             throw new IllegalStateException(String.format(
                     "'%s' contains multiple copies of identically named classes - "
                             + "this may cause different runtime behaviour depending on classpath ordering.\n"
                             + "To resolve this, try excluding one of the following jars:\n\n%s",
-                    configuration.getName(),
-                    formatSummary(analyzer)
-            ));
+                    configuration.getName(), formatSummary(analyzer)));
         }
     }
 
     private static String formatSummary(ClassUniquenessAnalyzer summary) {
         Collection<Set<ModuleVersionIdentifier>> allProblemJars = summary.getDifferingProblemJars();
 
-        int maxLength = allProblemJars.stream().flatMap(Set::stream)
+        int maxLength = allProblemJars.stream()
+                .flatMap(Set::stream)
                 .map(ModuleVersionIdentifier::toString)
                 .map(String::length)
-                .max(Comparator.naturalOrder()).get();
+                .max(Comparator.naturalOrder())
+                .get();
         String format = "%-" + (maxLength + 1) + "s";
 
         StringBuilder builder = new StringBuilder();
@@ -101,12 +105,12 @@ public class CheckClassUniquenessTask extends DefaultTask {
         return builder.toString();
     }
 
-    /**
-     * This only exists to convince gradle this task is incremental.
-     */
+    /** This only exists to convince gradle this task is incremental. */
     @OutputFile
     public final File getResultFile() {
-        return getProject().getBuildDir().toPath()
+        return getProject()
+                .getBuildDir()
+                .toPath()
                 .resolve(Paths.get("uniqueClassNames", configuration.getName()))
                 .toFile();
     }

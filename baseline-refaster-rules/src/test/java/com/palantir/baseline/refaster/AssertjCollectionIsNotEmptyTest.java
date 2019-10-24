@@ -22,8 +22,7 @@ public class AssertjCollectionIsNotEmptyTest {
 
     @Test
     public void simple() {
-        RefasterTestHelper
-                .forRefactoring(AssertjCollectionIsNotEmpty.class)
+        RefasterTestHelper.forRefactoring(AssertjCollectionIsNotEmpty.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",
@@ -51,8 +50,7 @@ public class AssertjCollectionIsNotEmptyTest {
 
     @Test
     public void description() {
-        RefasterTestHelper
-                .forRefactoring(AssertjCollectionIsNotEmptyWithDescription.class)
+        RefasterTestHelper.forRefactoring(AssertjCollectionIsNotEmptyWithDescription.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",
@@ -77,5 +75,4 @@ public class AssertjCollectionIsNotEmptyTest {
                         "  }",
                         "}");
     }
-
 }

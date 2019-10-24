@@ -149,5 +149,4 @@ public final class Slf4jConstantLogMessageTests {
                         "}")
                 .doTest();
     }
-
 }

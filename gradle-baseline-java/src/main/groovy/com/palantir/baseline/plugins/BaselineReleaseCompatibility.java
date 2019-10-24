@@ -27,14 +27,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * <p>
- * When using JDK 9+ to compile with a targetCompatibility less than JDK 9, this plugin adds compiler arguments
- * per <a href="https://openjdk.java.net/jeps/247">JEP 247</a> to explicitly set the target JDK platform API
- * to maintain binary compatibility.
- * </p>
- * <p>
- * See also <a href="https://github.com/gradle/gradle/issues/2510">Gradle JDK release issue</a>.
- * </p>
+ * When using JDK 9+ to compile with a targetCompatibility less than JDK 9, this plugin adds compiler arguments per <a
+ * href="https://openjdk.java.net/jeps/247">JEP 247</a> to explicitly set the target JDK platform API to maintain binary
+ * compatibility.
+ *
+ * <p>See also <a href="https://github.com/gradle/gradle/issues/2510">Gradle JDK release issue</a>.
  */
 public final class BaselineReleaseCompatibility extends AbstractBaselinePlugin {
     private static final Logger log = LoggerFactory.getLogger(BaselineReleaseCompatibility.class);

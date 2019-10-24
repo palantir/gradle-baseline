@@ -199,5 +199,4 @@ public class BaselineCircleCiJavaIntegrationTests {
             throw new AssertionError(e);
         }
     }
-
 }

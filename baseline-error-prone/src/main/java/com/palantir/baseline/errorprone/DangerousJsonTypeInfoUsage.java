@@ -60,9 +60,8 @@ public final class DangerousJsonTypeInfoUsage extends BugChecker implements BugC
         }
 
         return buildDescription(tree)
-                .setMessage(
-                        "Must not use Jackson @JsonTypeInfo annotation with "
-                                + "JsonTypeInfo.Id.CLASS or JsonTypeInfo.Id.MINIMAL_CLASS")
+                .setMessage("Must not use Jackson @JsonTypeInfo annotation with "
+                        + "JsonTypeInfo.Id.CLASS or JsonTypeInfo.Id.MINIMAL_CLASS")
                 .build();
     }
 }

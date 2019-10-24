@@ -28,9 +28,7 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 
-/**
- * Extracts Baseline configuration into the configuration directory.
- */
+/** Extracts Baseline configuration into the configuration directory. */
 class BaselineConfig extends AbstractBaselinePlugin {
 
     public void apply(Project rootProject) {
@@ -72,7 +70,8 @@ class BaselineConfig extends AbstractBaselinePlugin {
         public void execute(Task task) {
             if (configuration.getFiles().size() != 1) {
                 throw new IllegalArgumentException("Expected to find exactly one config dependency in the "
-                        + "'baseline' configuration, found: " + configuration.getFiles());
+                        + "'baseline' configuration, found: "
+                        + configuration.getFiles());
             }
 
             Path configDir = Paths.get(BaselineConfig.this.getConfigDir());
@@ -99,27 +98,20 @@ class BaselineConfig extends AbstractBaselinePlugin {
                                     + "            <property name=\"lineWrappingIndentation\" value=\"8\"/>\n"
                                     + "        </module>\n",
                             "");
-                    Preconditions.checkState(
-                            !contents.equals(replaced),
-                            "Patching checkstyle.xml must make a change");
+                    Preconditions.checkState(!contents.equals(replaced), "Patching checkstyle.xml must make a change");
                     Files.write(checkstyleXml, replaced.getBytes(StandardCharsets.UTF_8));
                 } catch (IOException e) {
                     throw new RuntimeException("Unable to patch " + checkstyleXml, e);
                 }
             }
 
-            if (rootProject
-                    .getAllprojects()
-                    .stream()
-                    .anyMatch(p -> p.getPluginManager().hasPlugin("scala") && p
-                            .getPluginManager()
-                            .hasPlugin("com.palantir.baseline-scalastyle"))) {
+            if (rootProject.getAllprojects().stream().anyMatch(p -> p.getPluginManager().hasPlugin("scala")
+                    && p.getPluginManager().hasPlugin("com.palantir.baseline-scalastyle"))) {
                 // Matches intellij scala plugin settings per
                 // https://github.com/JetBrains/intellij-scala/blob/baaa7c1dabe5222c4bca7c4dd8d80890ad2a8c6b/scala/scala-impl/src/org/jetbrains/plugins/scala/codeInspection/scalastyle/ScalastyleCodeInspection.scala#L19
                 rootProject.copy(copySpec -> {
-                    copySpec.from(rootProject
-                            .zipTree(configuration.getSingleFile())
-                            .filter(file -> file.getName().equals("scalastyle_config.xml")));
+                    copySpec.from(rootProject.zipTree(configuration.getSingleFile()).filter(file ->
+                            file.getName().equals("scalastyle_config.xml")));
                     copySpec.into(rootProject.getRootDir().toPath().resolve("project"));
                     copySpec.setIncludeEmptyDirs(false);
                 });

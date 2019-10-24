@@ -22,8 +22,7 @@ public class AssertjNullTest {
 
     @Test
     public void test() {
-        RefasterTestHelper
-                .forRefactoring(
+        RefasterTestHelper.forRefactoring(
                         AssertjIsNull.class,
                         AssertjIsNullWithDescription.class,
                         AssertjNotNull.class,

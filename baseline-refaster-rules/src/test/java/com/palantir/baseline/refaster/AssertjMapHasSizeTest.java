@@ -22,8 +22,7 @@ public class AssertjMapHasSizeTest {
 
     @Test
     public void exactSize_simple() {
-        RefasterTestHelper
-                .forRefactoring(AssertjMapHasSizeExactly.class)
+        RefasterTestHelper.forRefactoring(AssertjMapHasSizeExactly.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",
@@ -47,8 +46,7 @@ public class AssertjMapHasSizeTest {
 
     @Test
     public void exactSize_description() {
-        RefasterTestHelper
-                .forRefactoring(AssertjMapHasSizeExactlyWithDescription.class)
+        RefasterTestHelper.forRefactoring(AssertjMapHasSizeExactlyWithDescription.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",

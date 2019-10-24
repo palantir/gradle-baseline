@@ -22,8 +22,7 @@ public class CollectionStreamForEachTest {
 
     @Test
     public void test() {
-        RefasterTestHelper
-                .forRefactoring(CollectionStreamForEach.class)
+        RefasterTestHelper.forRefactoring(CollectionStreamForEach.class)
                 .withInputLines(
                         "Test",
                         "import java.util.List;",
@@ -42,5 +41,4 @@ public class CollectionStreamForEachTest {
                         "  }",
                         "}");
     }
-
 }

@@ -38,31 +38,35 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testMethodReference() {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "import " + ImmutableList.class.getName() + ';',
-                "import " + List.class.getName() + ';',
-                "import " + Optional.class.getName() + ';',
-                "class Test {",
-                "  public List<Object> foo(Optional<List<Object>> optional) {",
-                "    return optional.orElseGet(ImmutableList::of);",
-                "  }",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import " + ImmutableList.class.getName() + ';',
+                        "import " + List.class.getName() + ';',
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public List<Object> foo(Optional<List<Object>> optional) {",
+                        "    return optional.orElseGet(ImmutableList::of);",
+                        "  }",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void testPositive_block() {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "import " + ImmutableList.class.getName() + ';',
-                "import " + List.class.getName() + ';',
-                "import " + Optional.class.getName() + ';',
-                "class Test {",
-                "  public List<Object> foo(Optional<List<Object>> optional) {",
-                "    // BUG: Diagnostic contains: Lambda should be a method reference",
-                "    return optional.orElseGet(() -> { return ImmutableList.of(); });",
-                "  }",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import " + ImmutableList.class.getName() + ';',
+                        "import " + List.class.getName() + ';',
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public List<Object> foo(Optional<List<Object>> optional) {",
+                        "    // BUG: Diagnostic contains: Lambda should be a method reference",
+                        "    return optional.orElseGet(() -> { return ImmutableList.of(); });",
+                        "  }",
+                        "}")
+                .doTest();
     }
 
     @Test
@@ -93,20 +97,22 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testNegative_block_localMethod() {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "import " + ImmutableList.class.getName() + ';',
-                "import " + List.class.getName() + ';',
-                "import " + Optional.class.getName() + ';',
-                "class Test {",
-                "  public List<Object> foo(Optional<List<Object>> optional) {",
-                // A future improvement may rewrite the following to 'orElseGet(this::bar)'
-                "    return optional.orElseGet(() -> { return bar(); });",
-                "  }",
-                "  private List<Object> bar() {",
-                "    return ImmutableList.of();",
-                "  }",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import " + ImmutableList.class.getName() + ';',
+                        "import " + List.class.getName() + ';',
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public List<Object> foo(Optional<List<Object>> optional) {",
+                        // A future improvement may rewrite the following to 'orElseGet(this::bar)'
+                        "    return optional.orElseGet(() -> { return bar(); });",
+                        "  }",
+                        "  private List<Object> bar() {",
+                        "    return ImmutableList.of();",
+                        "  }",
+                        "}")
+                .doTest();
     }
 
     @Test
@@ -144,31 +150,35 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testNegative_block() {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "import " + ImmutableList.class.getName() + ';',
-                "import " + List.class.getName() + ';',
-                "import " + Optional.class.getName() + ';',
-                "class Test {",
-                "  public List<Object> foo(Optional<List<Object>> optional) {",
-                "    return optional.orElseGet(() -> { return ImmutableList.of(1); });",
-                "  }",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import " + ImmutableList.class.getName() + ';',
+                        "import " + List.class.getName() + ';',
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public List<Object> foo(Optional<List<Object>> optional) {",
+                        "    return optional.orElseGet(() -> { return ImmutableList.of(1); });",
+                        "  }",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void testPositive_expression() {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "import " + ImmutableList.class.getName() + ';',
-                "import " + List.class.getName() + ';',
-                "import " + Optional.class.getName() + ';',
-                "class Test {",
-                "  public List<Object> foo(Optional<List<Object>> optional) {",
-                "    // BUG: Diagnostic contains: Lambda should be a method reference",
-                "    return optional.orElseGet(() -> ImmutableList.of());",
-                "  }",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import " + ImmutableList.class.getName() + ';',
+                        "import " + List.class.getName() + ';',
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public List<Object> foo(Optional<List<Object>> optional) {",
+                        "    // BUG: Diagnostic contains: Lambda should be a method reference",
+                        "    return optional.orElseGet(() -> ImmutableList.of());",
+                        "  }",
+                        "}")
+                .doTest();
     }
 
     @Test
@@ -199,20 +209,22 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testNegative_expression_localMethod() {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "import " + ImmutableList.class.getName() + ';',
-                "import " + List.class.getName() + ';',
-                "import " + Optional.class.getName() + ';',
-                "class Test {",
-                "  public List<Object> foo(Optional<List<Object>> optional) {",
-                // A future improvement may rewrite the following to 'orElseGet(this::bar)'
-                "    return optional.orElseGet(() -> bar());",
-                "  }",
-                "  private List<Object> bar() {",
-                "    return ImmutableList.of();",
-                "  }",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import " + ImmutableList.class.getName() + ';',
+                        "import " + List.class.getName() + ';',
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public List<Object> foo(Optional<List<Object>> optional) {",
+                        // A future improvement may rewrite the following to 'orElseGet(this::bar)'
+                        "    return optional.orElseGet(() -> bar());",
+                        "  }",
+                        "  private List<Object> bar() {",
+                        "    return ImmutableList.of();",
+                        "  }",
+                        "}")
+                .doTest();
     }
 
     @Test
@@ -250,30 +262,35 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testNegative_expression() {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "import " + ImmutableList.class.getName() + ';',
-                "import " + List.class.getName() + ';',
-                "import " + Optional.class.getName() + ';',
-                "class Test {",
-                "  public List<Object> foo(Optional<List<Object>> optional) {",
-                "    return optional.orElseGet(() -> ImmutableList.of(1));",
-                "  }",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import " + ImmutableList.class.getName() + ';',
+                        "import " + List.class.getName() + ';',
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public List<Object> foo(Optional<List<Object>> optional) {",
+                        "    return optional.orElseGet(() -> ImmutableList.of(1));",
+                        "  }",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void testNegative_expression_chain() {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "import " + ImmutableList.class.getName() + ';',
-                "import " + Optional.class.getName() + ';',
-                "class Test {",
-                "  public Object foo(Optional<Object> optional) {",
-                // It's important that this is not rewritten to 'optional.orElseGet(ImmutableList.of(1)::size)'
-                // which create a new list eagerly, and returns a supplier for the new instances 'size()' function.
-                "    return optional.orElseGet(() -> ImmutableList.of(1).size());",
-                "  }",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import " + ImmutableList.class.getName() + ';',
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Object foo(Optional<Object> optional) {",
+                        // It's important that this is not rewritten to 'optional.orElseGet(ImmutableList.of(1)::size)'
+                        // which create a new list eagerly, and returns a supplier for the new instances 'size()'
+                        // function.
+                        "    return optional.orElseGet(() -> ImmutableList.of(1).size());",
+                        "  }",
+                        "}")
+                .doTest();
     }
 }

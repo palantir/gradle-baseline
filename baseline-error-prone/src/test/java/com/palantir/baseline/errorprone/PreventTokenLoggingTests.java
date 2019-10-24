@@ -308,66 +308,72 @@ public class PreventTokenLoggingTests {
     }
 
     private void passSlf4j(String statement) {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "import org.slf4j.Logger;",
-                "import org.slf4j.LoggerFactory;",
-                "import com.palantir.tokens.auth.AuthHeader;",
-                "import com.palantir.tokens.auth.BearerToken;",
-                "class Test {",
-                "  private static final Logger log = LoggerFactory.getLogger(Test.class);",
-                "  void f(AuthHeader authHeader, BearerToken bearerToken, String message, Object arg1, Object arg2) {",
-                "    " + statement,
-                "  }",
-                "}")
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import org.slf4j.Logger;",
+                        "import org.slf4j.LoggerFactory;",
+                        "import com.palantir.tokens.auth.AuthHeader;",
+                        "import com.palantir.tokens.auth.BearerToken;",
+                        "class Test {",
+                        "  private static final Logger log = LoggerFactory.getLogger(Test.class);",
+                        "  void f(AuthHeader authHeader, BearerToken bearerToken, String message, Object arg1, Object"
+                                + " arg2) {",
+                        "    " + statement,
+                        "  }",
+                        "}")
                 .doTest();
     }
 
     private void failSlf4j(String statement) {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "import org.slf4j.Logger;",
-                "import org.slf4j.LoggerFactory;",
-                "import com.palantir.tokens.auth.AuthHeader;",
-                "import com.palantir.tokens.auth.BearerToken;",
-                "class Test {",
-                "  private static final Logger log = LoggerFactory.getLogger(Test.class);",
-                "  void f(AuthHeader authHeader, BearerToken bearerToken, String message, Object arg1, Object arg2) {",
-                "    // BUG: Diagnostic contains: not allowed to be logged",
-                "    " + statement,
-                "  }",
-                "}")
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import org.slf4j.Logger;",
+                        "import org.slf4j.LoggerFactory;",
+                        "import com.palantir.tokens.auth.AuthHeader;",
+                        "import com.palantir.tokens.auth.BearerToken;",
+                        "class Test {",
+                        "  private static final Logger log = LoggerFactory.getLogger(Test.class);",
+                        "  void f(AuthHeader authHeader, BearerToken bearerToken, String message, Object arg1, Object"
+                                + " arg2) {",
+                        "    // BUG: Diagnostic contains: not allowed to be logged",
+                        "    " + statement,
+                        "  }",
+                        "}")
                 .doTest();
     }
 
     private void passLogSafe(String statement) {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "import com.palantir.logsafe.SafeArg;",
-                "import com.palantir.logsafe.UnsafeArg;",
-                "import com.palantir.tokens.auth.AuthHeader;",
-                "import com.palantir.tokens.auth.BearerToken;",
-                "class Test {",
-                "  void f(AuthHeader authHeader, BearerToken bearerToken, String name, Object value) {",
-                "    " + statement,
-                "  }",
-                "}")
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.SafeArg;",
+                        "import com.palantir.logsafe.UnsafeArg;",
+                        "import com.palantir.tokens.auth.AuthHeader;",
+                        "import com.palantir.tokens.auth.BearerToken;",
+                        "class Test {",
+                        "  void f(AuthHeader authHeader, BearerToken bearerToken, String name, Object value) {",
+                        "    " + statement,
+                        "  }",
+                        "}")
                 .doTest();
     }
 
     private void failLogSafe(String statement) {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "import com.palantir.logsafe.SafeArg;",
-                "import com.palantir.logsafe.UnsafeArg;",
-                "import com.palantir.tokens.auth.AuthHeader;",
-                "import com.palantir.tokens.auth.BearerToken;",
-                "class Test {",
-                "  void f(AuthHeader authHeader, BearerToken bearerToken, String name, Object value) {",
-                "    // BUG: Diagnostic contains: not allowed to be logged",
-                "    " + statement,
-                "  }",
-                "}")
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.SafeArg;",
+                        "import com.palantir.logsafe.UnsafeArg;",
+                        "import com.palantir.tokens.auth.AuthHeader;",
+                        "import com.palantir.tokens.auth.BearerToken;",
+                        "class Test {",
+                        "  void f(AuthHeader authHeader, BearerToken bearerToken, String name, Object value) {",
+                        "    // BUG: Diagnostic contains: not allowed to be logged",
+                        "    " + statement,
+                        "  }",
+                        "}")
                 .doTest();
     }
 }

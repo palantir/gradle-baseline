@@ -27,8 +27,7 @@ public class AssertjMapContainsKeyTest {
         assumeThat(System.getProperty("java.specification.version"))
                 .describedAs("Refaster does not currently support fluent refactors on java 11")
                 .isEqualTo("1.8");
-        RefasterTestHelper
-                .forRefactoring(AssertjMapContainsKey.class)
+        RefasterTestHelper.forRefactoring(AssertjMapContainsKey.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",
@@ -57,8 +56,7 @@ public class AssertjMapContainsKeyTest {
         assumeThat(System.getProperty("java.specification.version"))
                 .describedAs("Refaster does not currently support fluent refactors on java 11")
                 .isEqualTo("1.8");
-        RefasterTestHelper
-                .forRefactoring(AssertjMapContainsKeyWithDescription.class)
+        RefasterTestHelper.forRefactoring(AssertjMapContainsKeyWithDescription.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",
@@ -87,8 +85,7 @@ public class AssertjMapContainsKeyTest {
         assumeThat(System.getProperty("java.specification.version"))
                 .describedAs("Refaster does not currently support fluent refactors on java 11")
                 .isEqualTo("1.8");
-        RefasterTestHelper
-                .forRefactoring(AssertjMapDoesNotContainKey.class)
+        RefasterTestHelper.forRefactoring(AssertjMapDoesNotContainKey.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",
@@ -117,8 +114,7 @@ public class AssertjMapContainsKeyTest {
         assumeThat(System.getProperty("java.specification.version"))
                 .describedAs("Refaster does not currently support fluent refactors on java 11")
                 .isEqualTo("1.8");
-        RefasterTestHelper
-                .forRefactoring(AssertjMapDoesNotContainKeyWithDescription.class)
+        RefasterTestHelper.forRefactoring(AssertjMapDoesNotContainKeyWithDescription.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",

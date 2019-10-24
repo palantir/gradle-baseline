@@ -35,5 +35,4 @@ public final class AssertjBooleanNegationIsTrue {
     void after(boolean input) {
         assertThat(input).isFalse();
     }
-
 }

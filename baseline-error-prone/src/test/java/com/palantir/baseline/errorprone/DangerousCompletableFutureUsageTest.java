@@ -32,118 +32,131 @@ public final class DangerousCompletableFutureUsageTest {
 
     @Test
     public void should_fail_without_executor_supplyAsync() {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "import java.util.concurrent.CompletableFuture;",
-                "class Test {",
-                "   public static final void main(String[] args) {",
-                "       // BUG: Diagnostic contains: Should not use CompletableFuture methods without specifying",
-                "       CompletableFuture.supplyAsync(() -> 1L);",
-                "   }",
-                "}"
-        ).doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.concurrent.CompletableFuture;",
+                        "class Test {",
+                        "   public static final void main(String[] args) {",
+                        "       // BUG: Diagnostic contains: Should not use CompletableFuture methods without"
+                                + " specifying",
+                        "       CompletableFuture.supplyAsync(() -> 1L);",
+                        "   }",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void should_pass_with_executor_supplyAsync() {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "import java.util.concurrent.CompletableFuture;",
-                "import java.util.concurrent.Executors;",
-                "class Test {",
-                "   public static final void main(String[] args) {",
-                "       CompletableFuture.supplyAsync(() -> 1L, Executors.newCachedThreadPool());",
-                "   }",
-                "}"
-        ).doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.concurrent.CompletableFuture;",
+                        "import java.util.concurrent.Executors;",
+                        "class Test {",
+                        "   public static final void main(String[] args) {",
+                        "       CompletableFuture.supplyAsync(() -> 1L, Executors.newCachedThreadPool());",
+                        "   }",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void should_fail_without_executor_runAsync() {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "import java.util.concurrent.CompletableFuture;",
-                "class Test {",
-                "   public static final void main(String[] args) {",
-                "       // BUG: Diagnostic contains: Should not use CompletableFuture methods without specifying",
-                "       CompletableFuture.runAsync(() -> {});",
-                "   }",
-                "}"
-        ).doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.concurrent.CompletableFuture;",
+                        "class Test {",
+                        "   public static final void main(String[] args) {",
+                        "       // BUG: Diagnostic contains: Should not use CompletableFuture methods without"
+                                + " specifying",
+                        "       CompletableFuture.runAsync(() -> {});",
+                        "   }",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void should_pass_with_executor_runAsync() {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "import java.util.concurrent.CompletableFuture;",
-                "import java.util.concurrent.Executors;",
-                "class Test {",
-                "   public static final void main(String[] args) {",
-                "       CompletableFuture.runAsync(() -> {}, Executors.newCachedThreadPool());",
-                "   }",
-                "}"
-        ).doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.concurrent.CompletableFuture;",
+                        "import java.util.concurrent.Executors;",
+                        "class Test {",
+                        "   public static final void main(String[] args) {",
+                        "       CompletableFuture.runAsync(() -> {}, Executors.newCachedThreadPool());",
+                        "   }",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void should_fail_without_executor_thenApplyAsync() {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "import java.util.concurrent.CompletableFuture;",
-                "class Test {",
-                "   public static final void main(String[] args) {",
-                "       CompletableFuture<Integer> future = CompletableFuture.completedFuture(1);",
-                "       // BUG: Diagnostic contains: Should not use CompletableFuture methods without specifying",
-                "       future.thenApplyAsync(i -> i);",
-                "   }",
-                "}"
-        ).doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.concurrent.CompletableFuture;",
+                        "class Test {",
+                        "   public static final void main(String[] args) {",
+                        "       CompletableFuture<Integer> future = CompletableFuture.completedFuture(1);",
+                        "       // BUG: Diagnostic contains: Should not use CompletableFuture methods without"
+                                + " specifying",
+                        "       future.thenApplyAsync(i -> i);",
+                        "   }",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void should_pass_with_executor_thenApplyAsync() {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "import java.util.concurrent.CompletableFuture;",
-                "import java.util.concurrent.Executors;",
-                "class Test {",
-                "   public static final void main(String[] args) {",
-                "       CompletableFuture.completedFuture(1).thenApplyAsync(i -> i, Executors.newCachedThreadPool());",
-                "   }",
-                "}"
-        ).doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.concurrent.CompletableFuture;",
+                        "import java.util.concurrent.Executors;",
+                        "class Test {",
+                        "   public static final void main(String[] args) {",
+                        "       CompletableFuture.completedFuture(1).thenApplyAsync(i -> i,"
+                                + " Executors.newCachedThreadPool());",
+                        "   }",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void should_fail_without_executor_applyToEitherAsync() {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "import java.util.concurrent.CompletableFuture;",
-                "class Test {",
-                "   public static final void main(String[] args) {",
-                "       CompletableFuture<Integer> futureOne = CompletableFuture.completedFuture(1);",
-                "       CompletableFuture<Integer> futureTwo = CompletableFuture.completedFuture(2);",
-                "       // BUG: Diagnostic contains: Should not use CompletableFuture methods without specifying",
-                "       futureOne.applyToEitherAsync(futureTwo, i -> i);",
-                "   }",
-                "}"
-        ).doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.concurrent.CompletableFuture;",
+                        "class Test {",
+                        "   public static final void main(String[] args) {",
+                        "       CompletableFuture<Integer> futureOne = CompletableFuture.completedFuture(1);",
+                        "       CompletableFuture<Integer> futureTwo = CompletableFuture.completedFuture(2);",
+                        "       // BUG: Diagnostic contains: Should not use CompletableFuture methods without"
+                                + " specifying",
+                        "       futureOne.applyToEitherAsync(futureTwo, i -> i);",
+                        "   }",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void should_pass_with_executor_applyToEitherAsync() {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "import java.util.concurrent.CompletableFuture;",
-                "import java.util.concurrent.Executors;",
-                "class Test {",
-                "   public static final void main(String[] args) {",
-                "       CompletableFuture<Integer> futureOne = CompletableFuture.completedFuture(1);",
-                "       CompletableFuture<Integer> futureTwo = CompletableFuture.completedFuture(2);",
-                "       futureOne.applyToEitherAsync(futureTwo, i -> i, Executors.newCachedThreadPool());",
-                "   }",
-                "}"
-        ).doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.concurrent.CompletableFuture;",
+                        "import java.util.concurrent.Executors;",
+                        "class Test {",
+                        "   public static final void main(String[] args) {",
+                        "       CompletableFuture<Integer> futureOne = CompletableFuture.completedFuture(1);",
+                        "       CompletableFuture<Integer> futureTwo = CompletableFuture.completedFuture(2);",
+                        "       futureOne.applyToEitherAsync(futureTwo, i -> i, Executors.newCachedThreadPool());",
+                        "   }",
+                        "}")
+                .doTest();
     }
 }

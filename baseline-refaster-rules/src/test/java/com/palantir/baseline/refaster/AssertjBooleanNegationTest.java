@@ -18,13 +18,11 @@ package com.palantir.baseline.refaster;
 
 import org.junit.Test;
 
-
 public class AssertjBooleanNegationTest {
 
     @Test
     public void test() {
-        RefasterTestHelper
-                .forRefactoring(
+        RefasterTestHelper.forRefactoring(
                         AssertjBooleanNegationIsFalse.class,
                         AssertjBooleanNegationIsFalseWithDescription.class,
                         AssertjBooleanNegationIsTrue.class,

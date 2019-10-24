@@ -52,23 +52,22 @@ public class CompileRefasterTask extends JavaCompile {
                 "-Xplugin:BaselineRefasterCompiler --out " + refasterRulesFile.get().getAbsolutePath()));
 
         // Extract Java sources
-        List<File> javaSources = getRefasterSources().get().getResolvedConfiguration()
-                .getFirstLevelModuleDependencies()
-                .stream()
-                .flatMap(dep -> dep.getModuleArtifacts().stream())
-                .map(ResolvedArtifact::getFile)
-                .flatMap(file -> {
-                    if (file.getName().endsWith(".jar")) {
-                        return getProject().zipTree(file).getFiles().stream()
-                                .filter(zipFile -> zipFile.getName().endsWith(".java"));
-                    } else if (file.getName().endsWith(".java")) {
-                        return Stream.of(file);
-                    } else {
-                        getLogger().warn("Skipping refaster rule: {}", file);
-                        return Stream.empty();
-                    }
-                })
-                .collect(Collectors.toList());
+        List<File> javaSources =
+                getRefasterSources().get().getResolvedConfiguration().getFirstLevelModuleDependencies().stream()
+                        .flatMap(dep -> dep.getModuleArtifacts().stream())
+                        .map(ResolvedArtifact::getFile)
+                        .flatMap(file -> {
+                            if (file.getName().endsWith(".jar")) {
+                                return getProject().zipTree(file).getFiles().stream()
+                                        .filter(zipFile -> zipFile.getName().endsWith(".java"));
+                            } else if (file.getName().endsWith(".java")) {
+                                return Stream.of(file);
+                            } else {
+                                getLogger().warn("Skipping refaster rule: {}", file);
+                                return Stream.empty();
+                            }
+                        })
+                        .collect(Collectors.toList());
 
         if (!javaSources.isEmpty()) {
             setSource(javaSources);
@@ -77,7 +76,6 @@ public class CompileRefasterTask extends JavaCompile {
             setDidWork(false);
         }
     }
-
 
     @InputFiles
     public final Property<Configuration> getRefasterSources() {

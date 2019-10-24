@@ -36,31 +36,34 @@ public final class DangerousThrowableMessageSafeArgTest {
 
     @Test
     public void unsafe_safearg_value() {
-        compilationHelper.addSourceLines(
-                "Bean.java",
-                "import " + SafeIllegalArgumentException.class.getName() + ';',
-                "import " + SafeArg.class.getName() + ';',
-                "class Bean {",
-                "  public SafeArg<?> foo() {",
-                "    Exception foo = new SafeIllegalArgumentException(\"Foo\");",
-                "    // BUG: Diagnostic contains: Do not use throwable messages as SafeArg values",
-                "    return SafeArg.of(\"foo\", foo.getMessage());",
-                "  }",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Bean.java",
+                        "import " + SafeIllegalArgumentException.class.getName() + ';',
+                        "import " + SafeArg.class.getName() + ';',
+                        "class Bean {",
+                        "  public SafeArg<?> foo() {",
+                        "    Exception foo = new SafeIllegalArgumentException(\"Foo\");",
+                        "    // BUG: Diagnostic contains: Do not use throwable messages as SafeArg values",
+                        "    return SafeArg.of(\"foo\", foo.getMessage());",
+                        "  }",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void safe_safearg_value() {
-        compilationHelper.addSourceLines(
-                "Bean.java",
-                "import " + SafeIllegalArgumentException.class.getName() + ';',
-                "import " + SafeArg.class.getName() + ';',
-                "class Bean {",
-                "  public SafeArg<?> foo() {",
-                "    SafeIllegalArgumentException foo = new SafeIllegalArgumentException(\"Foo\");",
-                "    return SafeArg.of(\"foo\", foo.getLogMessage());",
-                "  }",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Bean.java",
+                        "import " + SafeIllegalArgumentException.class.getName() + ';',
+                        "import " + SafeArg.class.getName() + ';',
+                        "class Bean {",
+                        "  public SafeArg<?> foo() {",
+                        "    SafeIllegalArgumentException foo = new SafeIllegalArgumentException(\"Foo\");",
+                        "    return SafeArg.of(\"foo\", foo.getLogMessage());",
+                        "  }",
+                        "}")
+                .doTest();
     }
-
 }

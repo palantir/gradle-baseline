@@ -61,9 +61,8 @@ public final class DangerousThrowableMessageSafeArg extends BugChecker
         ExpressionTree safeValueArgument = args.get(1);
         if (THROWABLE_MESSAGE_METHOD.matches(safeValueArgument, state)) {
             return buildDescription(tree)
-                    .setMessage(
-                            "Do not use throwable messages as SafeArg values. "
-                                    + "SafeLoggable.getLogMessage is guaranteed to be safe.")
+                    .setMessage("Do not use throwable messages as SafeArg values. "
+                            + "SafeLoggable.getLogMessage is guaranteed to be safe.")
                     .build();
         }
         return Description.NO_MATCH;

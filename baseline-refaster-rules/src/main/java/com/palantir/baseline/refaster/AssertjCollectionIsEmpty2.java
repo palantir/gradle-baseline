@@ -25,8 +25,11 @@ import java.util.Collections;
 import org.assertj.core.api.AbstractAssert;
 import org.assertj.core.api.AbstractIterableAssert;
 
-public final class AssertjCollectionIsEmpty2<A extends AbstractIterableAssert<A, I, T, E>,
-        I extends Iterable<? extends T>, T, E extends AbstractAssert<E, T>> {
+public final class AssertjCollectionIsEmpty2<
+        A extends AbstractIterableAssert<A, I, T, E>,
+        I extends Iterable<? extends T>,
+        T,
+        E extends AbstractAssert<E, T>> {
 
     @BeforeTemplate
     void before1(A in) {
@@ -35,11 +38,8 @@ public final class AssertjCollectionIsEmpty2<A extends AbstractIterableAssert<A,
 
     @BeforeTemplate
     void before2(A in) {
-        in.isEqualTo(Refaster.anyOf(
-                ImmutableList.of(),
-                ImmutableSet.of(),
-                Collections.emptySet(),
-                Collections.emptyList()));
+        in.isEqualTo(
+                Refaster.anyOf(ImmutableList.of(), ImmutableSet.of(), Collections.emptySet(), Collections.emptyList()));
     }
 
     @AfterTemplate

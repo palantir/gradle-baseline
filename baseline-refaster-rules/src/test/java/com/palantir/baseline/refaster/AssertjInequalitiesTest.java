@@ -27,8 +27,7 @@ public class AssertjInequalitiesTest {
         assumeThat(System.getProperty("java.specification.version"))
                 .describedAs("Refaster does not currently support fluent refactors on java 11")
                 .isEqualTo("1.8");
-        RefasterTestHelper
-                .forRefactoring(AssertjLessThan.class)
+        RefasterTestHelper.forRefactoring(AssertjLessThan.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",
@@ -55,8 +54,7 @@ public class AssertjInequalitiesTest {
         assumeThat(System.getProperty("java.specification.version"))
                 .describedAs("Refaster does not currently support fluent refactors on java 11")
                 .isEqualTo("1.8");
-        RefasterTestHelper
-                .forRefactoring(AssertjLessThanWithDescription.class)
+        RefasterTestHelper.forRefactoring(AssertjLessThanWithDescription.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",
@@ -83,8 +81,7 @@ public class AssertjInequalitiesTest {
         assumeThat(System.getProperty("java.specification.version"))
                 .describedAs("Refaster does not currently support fluent refactors on java 11")
                 .isEqualTo("1.8");
-        RefasterTestHelper
-                .forRefactoring(AssertjGreaterThan.class)
+        RefasterTestHelper.forRefactoring(AssertjGreaterThan.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",
@@ -111,8 +108,7 @@ public class AssertjInequalitiesTest {
         assumeThat(System.getProperty("java.specification.version"))
                 .describedAs("Refaster does not currently support fluent refactors on java 11")
                 .isEqualTo("1.8");
-        RefasterTestHelper
-                .forRefactoring(AssertjGreaterThanWithDescription.class)
+        RefasterTestHelper.forRefactoring(AssertjGreaterThanWithDescription.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",
@@ -139,8 +135,7 @@ public class AssertjInequalitiesTest {
         assumeThat(System.getProperty("java.specification.version"))
                 .describedAs("Refaster does not currently support fluent refactors on java 11")
                 .isEqualTo("1.8");
-        RefasterTestHelper
-                .forRefactoring(AssertjLessThanOrEqualTo.class)
+        RefasterTestHelper.forRefactoring(AssertjLessThanOrEqualTo.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",
@@ -167,8 +162,7 @@ public class AssertjInequalitiesTest {
         assumeThat(System.getProperty("java.specification.version"))
                 .describedAs("Refaster does not currently support fluent refactors on java 11")
                 .isEqualTo("1.8");
-        RefasterTestHelper
-                .forRefactoring(AssertjLessThanOrEqualToWithDescription.class)
+        RefasterTestHelper.forRefactoring(AssertjLessThanOrEqualToWithDescription.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",
@@ -195,8 +189,7 @@ public class AssertjInequalitiesTest {
         assumeThat(System.getProperty("java.specification.version"))
                 .describedAs("Refaster does not currently support fluent refactors on java 11")
                 .isEqualTo("1.8");
-        RefasterTestHelper
-                .forRefactoring(AssertjGreaterThanOrEqualTo.class)
+        RefasterTestHelper.forRefactoring(AssertjGreaterThanOrEqualTo.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",
@@ -223,8 +216,7 @@ public class AssertjInequalitiesTest {
         assumeThat(System.getProperty("java.specification.version"))
                 .describedAs("Refaster does not currently support fluent refactors on java 11")
                 .isEqualTo("1.8");
-        RefasterTestHelper
-                .forRefactoring(AssertjGreaterThanOrEqualToWithDescription.class)
+        RefasterTestHelper.forRefactoring(AssertjGreaterThanOrEqualToWithDescription.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",

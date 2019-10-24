@@ -27,8 +27,7 @@ public class AssertjIsNotZeroTest {
         assumeThat(System.getProperty("java.specification.version"))
                 .describedAs("Refaster does not currently support fluent refactors on java 11")
                 .isEqualTo("1.8");
-        RefasterTestHelper
-                .forRefactoring(AssertjIsNotZero.class)
+        RefasterTestHelper.forRefactoring(AssertjIsNotZero.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",
@@ -63,5 +62,4 @@ public class AssertjIsNotZeroTest {
                         "  }",
                         "}");
     }
-
 }

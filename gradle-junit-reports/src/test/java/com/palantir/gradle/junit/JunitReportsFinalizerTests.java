@@ -54,8 +54,8 @@ public class JunitReportsFinalizerTests {
 
         File targetFile = new File(projectDir.getRoot(), "reports/report.xml");
 
-        JunitReportsFinalizer finalizer = (JunitReportsFinalizer) project
-                .task(ImmutableMap.of("type", JunitReportsFinalizer.class), "checkstyleTestCircleFinalizer");
+        JunitReportsFinalizer finalizer = (JunitReportsFinalizer)
+                project.task(ImmutableMap.of("type", JunitReportsFinalizer.class), "checkstyleTestCircleFinalizer");
         finalizer.setStyleTask(checkstyle);
         finalizer.setTaskTimer(timer);
         finalizer.setFailuresSupplier(XmlReportFailuresSupplier.create(checkstyle, new CheckstyleReportHandler()));
@@ -65,8 +65,8 @@ public class JunitReportsFinalizerTests {
 
         String report = Resources.toString(targetFile.toURI().toURL(), StandardCharsets.UTF_8)
                 .replaceAll("\\p{Blank}*(?=<)", "");
-        String expectedReport = Resources.toString(
-                testFile("two-namecheck-failures-checkstyle-report.xml"), StandardCharsets.UTF_8);
+        String expectedReport =
+                Resources.toString(testFile("two-namecheck-failures-checkstyle-report.xml"), StandardCharsets.UTF_8);
 
         assertThat(report).isEqualTo(expectedReport);
     }
@@ -83,8 +83,8 @@ public class JunitReportsFinalizerTests {
 
         File targetFile = new File(projectDir.getRoot(), "reports/report.xml");
 
-        JunitReportsFinalizer finalizer = (JunitReportsFinalizer) project
-                .task(ImmutableMap.of("type", JunitReportsFinalizer.class), "checkstyleTestCircleFinalizer");
+        JunitReportsFinalizer finalizer = (JunitReportsFinalizer)
+                project.task(ImmutableMap.of("type", JunitReportsFinalizer.class), "checkstyleTestCircleFinalizer");
         finalizer.setStyleTask(checkstyle);
         finalizer.setTaskTimer(timer);
         finalizer.setFailuresSupplier(XmlReportFailuresSupplier.create(checkstyle, new CheckstyleReportHandler()));
@@ -101,8 +101,7 @@ public class JunitReportsFinalizerTests {
         SingleFileReport xmlReport = checkstyle.getReports().getByName("xml");
 
         String originalReportXml = readTestFile("two-namecheck-failures-checkstyle.xml");
-        String modifiedReportXml = originalReportXml.replace(
-                ROOT.toString(), projectDir.getRoot().getCanonicalPath());
+        String modifiedReportXml = originalReportXml.replace(ROOT.toString(), projectDir.getRoot().getCanonicalPath());
         File modifiedReportFile = projectDir.newFile();
         Files.write(modifiedReportXml.getBytes(StandardCharsets.UTF_8), modifiedReportFile);
 

@@ -23,7 +23,6 @@ import com.google.errorprone.refaster.annotation.UseImportPolicy;
 import org.assertj.core.api.IterableAssert;
 import org.assertj.core.api.ListAssert;
 
-
 public final class AssertjCollectionHasSameSizeAsArray<T, U> {
 
     @BeforeTemplate

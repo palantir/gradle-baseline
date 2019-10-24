@@ -27,8 +27,7 @@ public class AssertjCollectionHasSameSizeAsTest {
         assumeThat(System.getProperty("java.specification.version"))
                 .describedAs("Refaster does not currently support fluent refactors on java 11")
                 .isEqualTo("1.8");
-        RefasterTestHelper
-                .forRefactoring(AssertjCollectionHasSameSizeAs.class)
+        RefasterTestHelper.forRefactoring(AssertjCollectionHasSameSizeAs.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",
@@ -65,8 +64,7 @@ public class AssertjCollectionHasSameSizeAsTest {
         assumeThat(System.getProperty("java.specification.version"))
                 .describedAs("Refaster does not currently support fluent refactors on java 11")
                 .isEqualTo("1.8");
-        RefasterTestHelper
-                .forRefactoring(AssertjCollectionHasSameSizeAsArray.class)
+        RefasterTestHelper.forRefactoring(AssertjCollectionHasSameSizeAsArray.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",

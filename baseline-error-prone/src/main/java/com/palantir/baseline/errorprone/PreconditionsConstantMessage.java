@@ -66,9 +66,8 @@ public final class PreconditionsConstantMessage extends BugChecker implements Bu
         }
 
         return buildDescription(tree)
-                .setMessage(
-                        "Preconditions.checkX() statement uses a non-constant message. "
-                                + "Consider using a template string with '%s'.")
+                .setMessage("Preconditions.checkX() statement uses a non-constant message. "
+                        + "Consider using a template string with '%s'.")
                 .build();
     }
 }

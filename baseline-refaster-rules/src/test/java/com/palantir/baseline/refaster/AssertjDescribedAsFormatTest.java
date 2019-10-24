@@ -27,8 +27,7 @@ public class AssertjDescribedAsFormatTest {
         assumeThat(System.getProperty("java.specification.version"))
                 .describedAs("Refaster does not currently support fluent refactors on java 11")
                 .isEqualTo("1.8");
-        RefasterTestHelper
-                .forRefactoring(AssertjDescribedAsFormat.class)
+        RefasterTestHelper.forRefactoring(AssertjDescribedAsFormat.class)
                 .withInputLines(
                         "Test",
                         "import static java.lang.String.format;",

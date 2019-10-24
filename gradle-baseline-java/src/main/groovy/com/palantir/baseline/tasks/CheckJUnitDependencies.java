@@ -42,30 +42,26 @@ public class CheckJUnitDependencies extends DefaultTask {
 
     @TaskAction
     public final void validateDependencies() {
-        getProject().getConvention()
-                .getPlugin(JavaPluginConvention.class)
-                .getSourceSets()
-                .forEach(ss -> {
-                    if (ss.getName().equals("main")) {
-                        return;
-                    }
+        getProject().getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().forEach(ss -> {
+            if (ss.getName().equals("main")) {
+                return;
+            }
 
-                    Optional<Test> maybeTestTask = BaselineTesting.getTestTaskForSourceSet(getProject(), ss);
-                    if (!maybeTestTask.isPresent()) {
-                        // source set doesn't have a test task, e.g. 'schema'
-                        return;
-                    }
-                    Test task = maybeTestTask.get();
+            Optional<Test> maybeTestTask = BaselineTesting.getTestTaskForSourceSet(getProject(), ss);
+            if (!maybeTestTask.isPresent()) {
+                // source set doesn't have a test task, e.g. 'schema'
+                return;
+            }
+            Test task = maybeTestTask.get();
 
-                    getProject().getLogger().info(
-                            "Analyzing source set {} with task {}",
-                            ss.getName(), task.getName());
-                    validateSourceSet(ss, task);
-                });
+            getProject().getLogger().info("Analyzing source set {} with task {}", ss.getName(), task.getName());
+            validateSourceSet(ss, task);
+        });
     }
 
     private void validateSourceSet(SourceSet ss, Test task) {
-        Set<ResolvedComponentResult> deps = getProject().getConfigurations()
+        Set<ResolvedComponentResult> deps = getProject()
+                .getConfigurations()
                 .getByName(ss.getRuntimeClasspathConfigurationName())
                 .getIncoming()
                 .getResolutionResult()
@@ -81,12 +77,14 @@ public class CheckJUnitDependencies extends DefaultTask {
         // unless the user has wired up the dependency correctly.
         if (sourceSetMentionsJUnit5Api(ss)) {
             String implementation = ss.getImplementationConfigurationName();
-            Preconditions.checkState(
-                    junitPlatformEnabled,
-                    "Some tests mention JUnit5, but the '" + task.getName() + "' task does not have "
-                            + "useJUnitPlatform() enabled. This means tests may be silently not running! Please "
-                            + "add the following:\n\n"
-                            + "    " + implementation + " 'org.junit.jupiter:junit-jupiter'\n");
+            Preconditions.checkState(junitPlatformEnabled, "Some tests mention JUnit5, but the '"
+                    + task.getName()
+                    + "' task does not have "
+                    + "useJUnitPlatform() enabled. This means tests may be silently not running! Please "
+                    + "add the following:\n\n"
+                    + "    "
+                    + implementation
+                    + " 'org.junit.jupiter:junit-jupiter'\n");
         }
 
         // When doing an incremental migration to JUnit5, a project may have some JUnit4 and some JUnit5 tests at the
@@ -99,7 +97,9 @@ public class CheckJUnitDependencies extends DefaultTask {
                         "Tests may be silently not running! Some tests still use JUnit4, but Gradle has "
                                 + "been set to use JUnit Platform. "
                                 + "To ensure your old JUnit4 tests still run, please add the following:\n\n"
-                                + "    " + testRuntimeOnly + " 'org.junit.jupiter:junit-jupiter'\n\n"
+                                + "    "
+                                + testRuntimeOnly
+                                + " 'org.junit.jupiter:junit-jupiter'\n\n"
                                 + "Otherwise they will silently not run.");
 
                 Preconditions.checkState(
@@ -107,24 +107,25 @@ public class CheckJUnitDependencies extends DefaultTask {
                         "Tests may be silently not running! Some tests still use JUnit4, but Gradle has "
                                 + "been set to use JUnit Platform. "
                                 + "To ensure your old JUnit4 tests still run, please add the following:\n\n"
-                                + "    " + testRuntimeOnly + " 'org.junit.vintage:junit-vintage-engine'\n\n"
+                                + "    "
+                                + testRuntimeOnly
+                                + " 'org.junit.vintage:junit-vintage-engine'\n\n"
                                 + "Otherwise they will silently not run.");
             } else {
-                Preconditions.checkState(
-                        !junitJupiterIsPresent,
-                        "Tests may be silently not running! Please remove "
-                                + "'org.junit.jupiter:junit-jupiter' dependency "
-                                + "because tests use JUnit4 and useJUnitPlatform() is not enabled.");
+                Preconditions.checkState(!junitJupiterIsPresent, "Tests may be silently not running! Please remove "
+                        + "'org.junit.jupiter:junit-jupiter' dependency "
+                        + "because tests use JUnit4 and useJUnitPlatform() is not enabled.");
             }
         }
 
         // spock uses JUnit4 under the hood, so the vintage engine is critical
         if (spockDependency && junitPlatformEnabled) {
             Preconditions.checkState(
-                    vintageEngineExists,
-                    "Tests may be silently not running! Spock dependency detected (which uses "
+                    vintageEngineExists, "Tests may be silently not running! Spock dependency detected (which uses "
                             + "a JUnit4 Runner under the hood). Please add the following:\n\n"
-                            + "    " + testRuntimeOnly + " 'org.junit.vintage:junit-vintage-engine'\n\n");
+                            + "    "
+                            + testRuntimeOnly
+                            + " 'org.junit.vintage:junit-vintage-engine'\n\n");
         }
     }
 
@@ -134,10 +135,9 @@ public class CheckJUnitDependencies extends DefaultTask {
 
     private boolean sourceSetMentionsJUnit4(SourceSet ss) {
         return !ss.getAllJava()
-                .filter(file -> fileContainsSubstring(file, l ->
-                        l.contains("org.junit.Test")
-                                || l.contains("org.junit.runner")
-                                || l.contains("org.junit.ClassRule")))
+                .filter(file -> fileContainsSubstring(file, l -> l.contains("org.junit.Test")
+                        || l.contains("org.junit.runner")
+                        || l.contains("org.junit.ClassRule")))
                 .isEmpty();
     }
 

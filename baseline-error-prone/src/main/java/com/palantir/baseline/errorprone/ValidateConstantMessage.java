@@ -42,9 +42,8 @@ public final class ValidateConstantMessage extends BugChecker implements BugChec
 
     private static final long serialVersionUID = 1L;
 
-    private static final Matcher<ExpressionTree> VALIDATE_METHODS =
-            MethodMatchers.staticMethod()
-                    .onClassAny("org.apache.commons.lang3.Validate", "org.apache.commons.lang.Validate");
+    private static final Matcher<ExpressionTree> VALIDATE_METHODS = MethodMatchers.staticMethod()
+            .onClassAny("org.apache.commons.lang3.Validate", "org.apache.commons.lang.Validate");
 
     private final Matcher<ExpressionTree> compileTimeConstExpressionMatcher =
             new CompileTimeConstantExpressionMatcher();
@@ -88,9 +87,7 @@ public final class ValidateConstantMessage extends BugChecker implements BugChec
 
         ExpressionTree messageArg = args.get(messageArgNumber - 1);
         boolean isStringType = ASTHelpers.isSameType(
-                ASTHelpers.getType(messageArg),
-                state.getTypeFromString("java.lang.String"),
-                state);
+                ASTHelpers.getType(messageArg), state.getTypeFromString("java.lang.String"), state);
         boolean isConstantString = compileTimeConstExpressionMatcher.matches(messageArg, state);
         if (!isStringType || isConstantString) {
             return Description.NO_MATCH;
@@ -100,7 +97,6 @@ public final class ValidateConstantMessage extends BugChecker implements BugChec
             return Description.NO_MATCH;
         }
 
-        return buildDescription(tree).setMessage(
-                "Validate.X() statement uses a non-constant message").build();
+        return buildDescription(tree).setMessage("Validate.X() statement uses a non-constant message").build();
     }
 }

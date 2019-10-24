@@ -47,30 +47,25 @@ import java.util.Optional;
         linkType = BugPattern.LinkType.CUSTOM,
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = BugPattern.SeverityLevel.ERROR,
-        summary = "The result of a read call must be checked to know if EOF has been reached or the expected number "
-                + "of bytes have been consumed.")
+        summary =
+                "The result of a read call must be checked to know if EOF has been reached or the expected number "
+                        + "of bytes have been consumed.")
 public final class ReadReturnValueIgnored extends AbstractReturnValueIgnored {
 
     // MethodMatchers does not support matching arrays
     private static final Matcher<ExpressionTree> INPUT_STREAM_BUFFER_READ_MATCHER = Matchers.allOf(
-            MethodMatchers.instanceMethod()
+            MethodMatchers.instanceMethod().onDescendantOf(InputStream.class.getName()).named("read"),
+            Matchers.not(MethodMatchers.instanceMethod()
                     .onDescendantOf(InputStream.class.getName())
-                    .named("read"),
-            Matchers.not(
-                    MethodMatchers.instanceMethod()
-                            .onDescendantOf(InputStream.class.getName())
-                            .named("read")
-                            .withParameters()));
+                    .named("read")
+                    .withParameters()));
 
     private static final Matcher<ExpressionTree> RAF_BUFFER_READ_MATCHER = Matchers.allOf(
-            MethodMatchers.instanceMethod()
+            MethodMatchers.instanceMethod().onDescendantOf(RandomAccessFile.class.getName()).named("read"),
+            Matchers.not(MethodMatchers.instanceMethod()
                     .onDescendantOf(RandomAccessFile.class.getName())
-                    .named("read"),
-            Matchers.not(
-                    MethodMatchers.instanceMethod()
-                            .onDescendantOf(RandomAccessFile.class.getName())
-                            .named("read")
-                            .withParameters()));
+                    .named("read")
+                    .withParameters()));
 
     private static final Matcher<ExpressionTree> READER_SKIP_MATCHER = MethodMatchers.instanceMethod()
             .onDescendantOf(Reader.class.getName())
@@ -90,9 +85,7 @@ public final class ReadReturnValueIgnored extends AbstractReturnValueIgnored {
     private static final Matcher<ExpressionTree> MATCHER = Matchers.anyOf(
             MethodMatchers.instanceMethod()
                     .onDescendantOfAny(
-                            RandomAccessFile.class.getName(),
-                            Reader.class.getName(),
-                            InputStream.class.getName())
+                            RandomAccessFile.class.getName(), Reader.class.getName(), InputStream.class.getName())
                     .named("read"),
             INPUT_STREAM_SKIP_MATCHER,
             RAF_SKIP_MATCHER,
@@ -147,10 +140,13 @@ public final class ReadReturnValueIgnored extends AbstractReturnValueIgnored {
         SuggestedFix.Builder fix = SuggestedFix.builder();
         String qualifiedReference = SuggestedFixes.qualifyType(state, fix, fullyQualifiedReplacement);
         CharSequence args = sourceCode.subSequence(
-                state.getEndPosition(methodSelect) + 1,
-                state.getEndPosition(lastItem(tree.getArguments())));
-        fix.replace(tree, qualifiedReference + '('
-                + state.getSourceForNode(memberSelectTree.getExpression()) + ", " + args + ')');
+                state.getEndPosition(methodSelect) + 1, state.getEndPosition(lastItem(tree.getArguments())));
+        fix.replace(tree, qualifiedReference
+                + '('
+                + state.getSourceForNode(memberSelectTree.getExpression())
+                + ", "
+                + args
+                + ')');
         return Optional.of(fix.build());
     }
 

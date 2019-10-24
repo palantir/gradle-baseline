@@ -52,18 +52,16 @@ public final class LogSafePreconditionsMessageFormat extends PreconditionsMessag
     protected Description matchMessageFormat(MethodInvocationTree tree, String message, VisitorState state) {
         if (message.contains("%s")) {
             return buildDescription(tree)
-                    .setMessage(
-                            "Do not use printf-style formatting in logsafe Preconditions. "
-                                    + "Logsafe exceptions provide a simple message and key-value pairs of arguments, "
-                                    + "no interpolation is performed.")
+                    .setMessage("Do not use printf-style formatting in logsafe Preconditions. "
+                            + "Logsafe exceptions provide a simple message and key-value pairs of arguments, "
+                            + "no interpolation is performed.")
                     .build();
         }
         if (message.contains("{}")) {
             return buildDescription(tree)
-                    .setMessage(
-                            "Do not use slf4j-style formatting in logsafe Preconditions. "
-                                    + "Logsafe exceptions provide a simple message and key-value pairs of arguments, "
-                                    + "no interpolation is performed.")
+                    .setMessage("Do not use slf4j-style formatting in logsafe Preconditions. "
+                            + "Logsafe exceptions provide a simple message and key-value pairs of arguments, "
+                            + "no interpolation is performed.")
                     .build();
         }
         return Description.NO_MATCH;

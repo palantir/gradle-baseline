@@ -52,9 +52,7 @@ public final class ClassUniquenessAnalyzer {
 
     public void analyzeConfiguration(Configuration configuration) {
         Instant before = Instant.now();
-        Set<ResolvedArtifact> dependencies = configuration
-                .getResolvedConfiguration()
-                .getResolvedArtifacts();
+        Set<ResolvedArtifact> dependencies = configuration.getResolvedConfiguration().getResolvedArtifacts();
 
         // we use these temporary maps to accumulate information as we process each jar,
         // so they may include singletons which we filter out later
@@ -86,13 +84,9 @@ public final class ClassUniquenessAnalyzer {
                     HashingInputStream inputStream = new HashingInputStream(Hashing.sha256(), jarInputStream);
                     ByteStreams.exhaust(inputStream);
 
-                    multiMapPut(classToJars,
-                            className,
-                            resolvedArtifact.getModuleVersion().getId());
+                    multiMapPut(classToJars, className, resolvedArtifact.getModuleVersion().getId());
 
-                    multiMapPut(tempClassToHashCodes,
-                            className,
-                            inputStream.hash());
+                    multiMapPut(tempClassToHashCodes, className, inputStream.hash());
                 }
             } catch (IOException e) {
                 log.error("Failed to read JarFile {}", resolvedArtifact, e);
@@ -101,50 +95,42 @@ public final class ClassUniquenessAnalyzer {
         });
 
         // discard all the classes that only come from one jar - these are completely safe!
-        classToJars.entrySet().stream()
-                .filter(entry -> entry.getValue().size() > 1)
-                .forEach(entry -> multiMapPut(jarsToClasses, entry.getValue(), entry.getKey()));
+        classToJars.entrySet().stream().filter(entry -> entry.getValue().size() > 1).forEach(entry ->
+                multiMapPut(jarsToClasses, entry.getValue(), entry.getKey()));
 
         // figure out which classes have differing hashes
-        tempClassToHashCodes.entrySet().stream()
-                .filter(entry -> entry.getValue().size() > 1)
-                .forEach(entry ->
-                        entry.getValue().forEach(value -> multiMapPut(classToHashCodes, entry.getKey(), value)));
+        tempClassToHashCodes.entrySet().stream().filter(entry -> entry.getValue().size() > 1).forEach(entry ->
+                entry.getValue().forEach(value -> multiMapPut(classToHashCodes, entry.getKey(), value)));
 
         Instant after = Instant.now();
-        log.info("Checked {} classes from {} dependencies for uniqueness ({}ms)",
-                classToJars.size(), dependencies.size(), Duration.between(before, after).toMillis());
+        log.info(
+                "Checked {} classes from {} dependencies for uniqueness ({}ms)",
+                classToJars.size(),
+                dependencies.size(),
+                Duration.between(before, after).toMillis());
     }
 
     /**
-     * Any groups jars that all contain some identically named classes.
-     * Note: may contain non-scary duplicates - class files which are 100% identical, so their
-     * clashing name doesn't have any effect.
+     * Any groups jars that all contain some identically named classes. Note: may contain non-scary duplicates - class
+     * files which are 100% identical, so their clashing name doesn't have any effect.
      */
     public Collection<Set<ModuleVersionIdentifier>> getProblemJars() {
         return jarsToClasses.keySet();
     }
 
-    /**
-     * Class names that appear in all of the given jars.
-     */
+    /** Class names that appear in all of the given jars. */
     public Set<String> getSharedClassesInProblemJars(Collection<ModuleVersionIdentifier> problemJars) {
         return jarsToClasses.get(problemJars);
     }
 
-    /**
-     * Jars which contain identically named classes with non-identical implementations.
-     */
+    /** Jars which contain identically named classes with non-identical implementations. */
     public Collection<Set<ModuleVersionIdentifier>> getDifferingProblemJars() {
-        return getProblemJars()
-                .stream()
+        return getProblemJars().stream()
                 .filter(jars -> getDifferingSharedClassesInProblemJars(jars).size() > 0)
                 .collect(Collectors.toSet());
     }
 
-    /**
-     * Class names which appear in all of the given jars and also have non-identical implementations.
-     */
+    /** Class names which appear in all of the given jars and also have non-identical implementations. */
     public Set<String> getDifferingSharedClassesInProblemJars(Collection<ModuleVersionIdentifier> problemJars) {
         return getSharedClassesInProblemJars(problemJars).stream()
                 .filter(classToHashCodes::containsKey)

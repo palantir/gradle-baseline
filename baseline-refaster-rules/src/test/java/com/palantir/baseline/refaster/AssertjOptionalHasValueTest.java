@@ -27,8 +27,7 @@ public final class AssertjOptionalHasValueTest {
         assumeThat(System.getProperty("java.specification.version"))
                 .describedAs("Refaster does not currently support fluent refactors on java 11")
                 .isEqualTo("1.8");
-        RefasterTestHelper
-                .forRefactoring(AssertjOptionalHasValue.class)
+        RefasterTestHelper.forRefactoring(AssertjOptionalHasValue.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",
@@ -63,8 +62,7 @@ public final class AssertjOptionalHasValueTest {
         assumeThat(System.getProperty("java.specification.version"))
                 .describedAs("Refaster does not currently support fluent refactors on java 11")
                 .isEqualTo("1.8");
-        RefasterTestHelper
-                .forRefactoring(AssertjOptionalHasValueWithDescription.class)
+        RefasterTestHelper.forRefactoring(AssertjOptionalHasValueWithDescription.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",
@@ -91,8 +89,7 @@ public final class AssertjOptionalHasValueTest {
         assumeThat(System.getProperty("java.specification.version"))
                 .describedAs("Refaster does not currently support fluent refactors on java 11")
                 .isEqualTo("1.8");
-        RefasterTestHelper
-                .forRefactoring(AssertjOptionalHasValueRedundantWithDescription.class)
+        RefasterTestHelper.forRefactoring(AssertjOptionalHasValueRedundantWithDescription.class)
                 .withInputLines(
                         "Test",
                         "import static org.assertj.core.api.Assertions.assertThat;",

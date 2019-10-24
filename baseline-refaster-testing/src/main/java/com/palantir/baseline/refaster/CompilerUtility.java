@@ -42,12 +42,8 @@ final class CompilerUtility {
                 compiler.getStandardFileManager(diagnosticsCollector, Locale.ENGLISH, StandardCharsets.UTF_8);
 
         JavacTaskImpl task = (JavacTaskImpl) compiler.getTask(
-                CharStreams.nullWriter(),
-                fileManager,
-                diagnosticsCollector,
-                ImmutableList.of(),
-                null,
-                ImmutableList.of(javaFileObject));
+                CharStreams.nullWriter(), fileManager, diagnosticsCollector, ImmutableList.of(), null, ImmutableList.of(
+                        javaFileObject));
 
         Iterable<? extends CompilationUnitTree> trees;
         try {
@@ -82,7 +78,5 @@ final class CompilerUtility {
         List<CompilationUnitTree> compilationUnits();
 
         List<Diagnostic<? extends JavaFileObject>> diagnostics();
-
     }
-
 }

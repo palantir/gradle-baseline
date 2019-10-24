@@ -46,8 +46,8 @@ public final class GuavaPreconditionsConstantMessageTests extends PreconditionsT
 
     @Test
     public void testCheckArgument_stringFormat() {
-        failGuava(DIAGNOSTIC,
-                "Preconditions.checkArgument(param != \"string\", String.format(\"constant %s\", param));");
+        failGuava(
+                DIAGNOSTIC, "Preconditions.checkArgument(param != \"string\", String.format(\"constant %s\", param));");
     }
 
     @Test
@@ -57,8 +57,7 @@ public final class GuavaPreconditionsConstantMessageTests extends PreconditionsT
 
     @Test
     public void testCheckState_stringFormat() {
-        failGuava(DIAGNOSTIC,
-                "Preconditions.checkState(param != \"string\", String.format(\"constant %s\", param));");
+        failGuava(DIAGNOSTIC, "Preconditions.checkState(param != \"string\", String.format(\"constant %s\", param));");
     }
 
     @Test

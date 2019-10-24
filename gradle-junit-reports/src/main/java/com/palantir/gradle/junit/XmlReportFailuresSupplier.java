@@ -32,7 +32,7 @@ public final class XmlReportFailuresSupplier implements FailuresSupplier {
 
     public static <T extends Task & Reporting<? extends ReportContainer<SingleFileReport>>>
             XmlReportFailuresSupplier create(final T task, final ReportHandler<T> reportHandler) {
-            // Ensure any necessary output is enabled
+        // Ensure any necessary output is enabled
         task.doFirst(new Action<Task>() {
             @Override
             @SuppressWarnings("StrictUnusedVariable")
@@ -47,8 +47,7 @@ public final class XmlReportFailuresSupplier implements FailuresSupplier {
     private final ReportHandler<?> reportHandler;
 
     private XmlReportFailuresSupplier(
-            Reporting<? extends ReportContainer<SingleFileReport>> reporting,
-            ReportHandler<?> reportHandler) {
+            Reporting<? extends ReportContainer<SingleFileReport>> reporting, ReportHandler<?> reportHandler) {
         this.reporting = reporting;
         this.reportHandler = reportHandler;
     }
@@ -73,7 +72,8 @@ public final class XmlReportFailuresSupplier implements FailuresSupplier {
         }
         for (SingleFileReport rawReport : reporting.getReports()) {
             if (rawReport.isEnabled()) {
-                rawReport.getDestination()
+                rawReport
+                        .getDestination()
                         .renameTo(rawReportsDir.resolve(rawReport.getDestination().getName()).toFile());
             }
         }

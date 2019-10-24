@@ -25,5 +25,6 @@ import org.xml.sax.helpers.DefaultHandler;
 abstract class ReportHandler<T extends Task & Reporting<? extends ReportContainer<SingleFileReport>>>
         extends DefaultHandler {
     public abstract void configureTask(T task);
+
     public abstract List<Failure> failures();
 }

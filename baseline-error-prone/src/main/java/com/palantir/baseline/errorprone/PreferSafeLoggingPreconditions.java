@@ -54,11 +54,12 @@ public final class PreferSafeLoggingPreconditions extends BugChecker implements 
             new CompileTimeConstantExpressionMatcher();
 
     private static final Matcher<ExpressionTree> METHOD_MATCHER = Matchers.anyOf(
-            MethodMatchers.staticMethod().onClass("com.google.common.base.Preconditions").withNameMatching(
-                    Pattern.compile("checkArgument|checkState|checkNotNull")),
+            MethodMatchers.staticMethod()
+                    .onClass("com.google.common.base.Preconditions")
+                    .withNameMatching(Pattern.compile("checkArgument|checkState|checkNotNull")),
             MethodMatchers.staticMethod().onClass("java.util.Objects").named("requireNonNull"),
-            MethodMatchers.staticMethod().onClass("org.apache.commons.lang3.Validate").withNameMatching(
-                    Pattern.compile("isTrue|notNull|validState")));
+            MethodMatchers.staticMethod().onClass("org.apache.commons.lang3.Validate").withNameMatching(Pattern.compile(
+                    "isTrue|notNull|validState")));
 
     private static final ImmutableMap<String, String> TRANSLATIONS_TO_LOGSAFE_PRECONDITIONS_METHODS = ImmutableMap.of(
             "requireNonNull", "checkNotNull", // java.util.Objects.requireNotNull
@@ -96,9 +97,8 @@ public final class PreferSafeLoggingPreconditions extends BugChecker implements 
         String replacement = String.format("%s.%s", logSafeQualifiedClassName, logSafeMethodName);
 
         return buildDescription(tree)
-                .setMessage(
-                        "The call can be replaced with an equivalent one from com.palantir.logsafe.Preconditions "
-                                + "for standardization as the functionality is the same.")
+                .setMessage("The call can be replaced with an equivalent one from com.palantir.logsafe.Preconditions "
+                        + "for standardization as the functionality is the same.")
                 .addFix(fix.replace(tree.getMethodSelect(), replacement).build())
                 .build();
     }

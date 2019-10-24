@@ -51,5 +51,4 @@ public final class AssertjNotNull {
     void after(Object input) {
         assertThat(input).isNotNull();
     }
-
 }

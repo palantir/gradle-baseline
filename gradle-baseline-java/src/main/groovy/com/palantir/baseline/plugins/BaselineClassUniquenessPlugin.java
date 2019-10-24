@@ -20,11 +20,11 @@ import com.palantir.baseline.plugins.rules.BaselineClassUniquenessRule;
 import org.gradle.api.Project;
 
 /**
- * This plugin is similar to https://github.com/nebula-plugins/gradle-lint-plugin/wiki/Duplicate-Classes-Rule
- * but goes one step further and actually hashes any identically named classfiles to figure out if they're
- * <i>completely</i> identical (and therefore safely interchangeable).
+ * This plugin is similar to https://github.com/nebula-plugins/gradle-lint-plugin/wiki/Duplicate-Classes-Rule but goes
+ * one step further and actually hashes any identically named classfiles to figure out if they're <i>completely</i>
+ * identical (and therefore safely interchangeable).
  *
- * The task only fails if it finds classes which have the same name but different implementations.
+ * <p>The task only fails if it finds classes which have the same name but different implementations.
  */
 public class BaselineClassUniquenessPlugin extends AbstractBaselinePlugin {
     @Override
@@ -36,8 +36,7 @@ public class BaselineClassUniquenessPlugin extends AbstractBaselinePlugin {
         project.getPlugins().withId("java", plugin -> {
             String checkRuntimeClasspathTask = "checkRuntimeClasspathClassUniqueness";
             rule.apply(checkRuntimeClasspathTask);
-            project.getTasks().getByName("check")
-                    .dependsOn(project.getTasks().getByName(checkRuntimeClasspathTask));
+            project.getTasks().getByName("check").dependsOn(project.getTasks().getByName(checkRuntimeClasspathTask));
         });
     }
 }

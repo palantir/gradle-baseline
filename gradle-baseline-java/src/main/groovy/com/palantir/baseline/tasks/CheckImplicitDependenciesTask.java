@@ -86,44 +86,42 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
                     .sorted()
                     .collect(Collectors.joining("\n", "    dependencies {\n", "\n    }"));
 
-            throw new GradleException(
-                    String.format("Found %d implicit dependencies - consider adding the following explicit "
+            throw new GradleException(String.format(
+                    "Found %d implicit dependencies - consider adding the following explicit "
                             + "dependencies to '%s', or avoid using classes from these jars:\n%s",
-                    usedButUndeclared.size(),
-                    buildFile(),
-                    suggestion));
+                    usedButUndeclared.size(), buildFile(), suggestion));
         }
     }
 
     private String getSuggestionString(ResolvedArtifact artifact) {
         String artifactNameString = isProjectArtifact(artifact)
-                ? String.format("project('%s')",
+                ? String.format(
+                        "project('%s')",
                         ((ProjectComponentIdentifier) artifact.getId().getComponentIdentifier()).getProjectPath())
-                : String.format("'%s:%s'",
+                : String.format(
+                        "'%s:%s'",
                         artifact.getModuleVersion().getId().getGroup(), artifact.getModuleVersion().getId().getName());
         return String.format("        implementation %s", artifactNameString);
     }
 
     /**
-     * Return true if the resolved artifact is derived from a project in the current build rather than an
-     * external jar.
+     * Return true if the resolved artifact is derived from a project in the current build rather than an external jar.
      */
     private boolean isProjectArtifact(ResolvedArtifact artifact) {
         return artifact.getId().getComponentIdentifier() instanceof ProjectComponentIdentifier;
     }
 
     /**
-     * Return true if the resolved artifact is derived from a project in the current build rather than an
-     * external jar.
+     * Return true if the resolved artifact is derived from a project in the current build rather than an external jar.
      */
     private boolean isArtifactFromCurrentProject(ResolvedArtifact artifact) {
         if (!isProjectArtifact(artifact)) {
             return false;
         }
-        return ((ProjectComponentIdentifier) artifact.getId().getComponentIdentifier()).getProjectPath()
+        return ((ProjectComponentIdentifier) artifact.getId().getComponentIdentifier())
+                .getProjectPath()
                 .equals(getProject().getPath());
     }
-
 
     /** All classes which are mentioned in this project's source code. */
     private Set<String> referencedClasses() {

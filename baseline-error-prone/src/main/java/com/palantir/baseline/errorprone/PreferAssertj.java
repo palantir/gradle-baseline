@@ -51,9 +51,9 @@ import javax.lang.model.type.TypeKind;
 
 /**
  * {@link PreferAssertj} provides an automated path from legacy test libraries to AssertJ. Our goal is to migrate
- * existing assertions to AssertJ without losing any information. It's an explicit non-goal to take advantage
- * of better assertions provided by AssertJ, because those should be implemented in such a way to improve poor
- * uses of AssertJ as well, which may run after the suggested fixes provided by this checker.
+ * existing assertions to AssertJ without losing any information. It's an explicit non-goal to take advantage of better
+ * assertions provided by AssertJ, because those should be implemented in such a way to improve poor uses of AssertJ as
+ * well, which may run after the suggested fixes provided by this checker.
  */
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -66,102 +66,83 @@ import javax.lang.model.type.TypeKind;
 public final class PreferAssertj extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final ImmutableSet<String> LEGACY_ASSERT_CLASSES = ImmutableSet.of(
-            "org.hamcrest.MatcherAssert",
-            "org.junit.Assert",
-            "junit.framework.TestCase",
-            "junit.framework.Assert");
+            "org.hamcrest.MatcherAssert", "org.junit.Assert", "junit.framework.TestCase", "junit.framework.Assert");
 
     // Must match everything otherwise matched by this check, used to avoid
     // additional checks for each method invocation.
-    private static final Matcher<ExpressionTree> FAST_CHECK = MethodMatchers.staticMethod()
-            .onClassAny(LEGACY_ASSERT_CLASSES);
+    private static final Matcher<ExpressionTree> FAST_CHECK =
+            MethodMatchers.staticMethod().onClassAny(LEGACY_ASSERT_CLASSES);
 
-    private static final Matcher<ExpressionTree> ASSERT_TRUE =
-            MethodMatchers.staticMethod()
-                    .onClassAny(LEGACY_ASSERT_CLASSES)
-                    .named("assertTrue")
-                    .withParameters(boolean.class.getName());
+    private static final Matcher<ExpressionTree> ASSERT_TRUE = MethodMatchers.staticMethod()
+            .onClassAny(LEGACY_ASSERT_CLASSES)
+            .named("assertTrue")
+            .withParameters(boolean.class.getName());
 
-    private static final Matcher<ExpressionTree> ASSERT_TRUE_DESCRIPTION =
-            MethodMatchers.staticMethod()
-                    .onClassAny(LEGACY_ASSERT_CLASSES)
-                    .namedAnyOf(
-                            "assertTrue",
-                            // org.hamcrest.MatcherAssert.assertThat(String,boolean) is an assertTrue
-                            "assertThat")
-                    .withParameters(String.class.getName(), boolean.class.getName());
+    private static final Matcher<ExpressionTree> ASSERT_TRUE_DESCRIPTION = MethodMatchers.staticMethod()
+            .onClassAny(LEGACY_ASSERT_CLASSES)
+            .namedAnyOf(
+                    "assertTrue",
+                    // org.hamcrest.MatcherAssert.assertThat(String,boolean) is an assertTrue
+                    "assertThat")
+            .withParameters(String.class.getName(), boolean.class.getName());
 
-    private static final Matcher<ExpressionTree> ASSERT_FALSE =
-            MethodMatchers.staticMethod()
-                    .onClassAny(LEGACY_ASSERT_CLASSES)
-                    .named("assertFalse")
-                    .withParameters(boolean.class.getName());
+    private static final Matcher<ExpressionTree> ASSERT_FALSE = MethodMatchers.staticMethod()
+            .onClassAny(LEGACY_ASSERT_CLASSES)
+            .named("assertFalse")
+            .withParameters(boolean.class.getName());
 
-    private static final Matcher<ExpressionTree> ASSERT_FALSE_DESCRIPTION =
-            MethodMatchers.staticMethod()
-                    .onClassAny(LEGACY_ASSERT_CLASSES)
-                    .named("assertFalse")
-                    .withParameters(String.class.getName(), boolean.class.getName());
+    private static final Matcher<ExpressionTree> ASSERT_FALSE_DESCRIPTION = MethodMatchers.staticMethod()
+            .onClassAny(LEGACY_ASSERT_CLASSES)
+            .named("assertFalse")
+            .withParameters(String.class.getName(), boolean.class.getName());
 
-    private static final Matcher<ExpressionTree> ASSERT_NULL =
-            MethodMatchers.staticMethod()
-                    .onClassAny(LEGACY_ASSERT_CLASSES)
-                    .named("assertNull")
-                    .withParameters(Object.class.getName());
+    private static final Matcher<ExpressionTree> ASSERT_NULL = MethodMatchers.staticMethod()
+            .onClassAny(LEGACY_ASSERT_CLASSES)
+            .named("assertNull")
+            .withParameters(Object.class.getName());
 
-    private static final Matcher<ExpressionTree> ASSERT_NULL_DESCRIPTION =
-            MethodMatchers.staticMethod()
-                    .onClassAny(LEGACY_ASSERT_CLASSES)
-                    .named("assertNull")
-                    .withParameters(String.class.getName(), Object.class.getName());
+    private static final Matcher<ExpressionTree> ASSERT_NULL_DESCRIPTION = MethodMatchers.staticMethod()
+            .onClassAny(LEGACY_ASSERT_CLASSES)
+            .named("assertNull")
+            .withParameters(String.class.getName(), Object.class.getName());
 
-    private static final Matcher<ExpressionTree> ASSERT_NOT_NULL =
-            MethodMatchers.staticMethod()
-                    .onClassAny(LEGACY_ASSERT_CLASSES)
-                    .named("assertNotNull")
-                    .withParameters(Object.class.getName());
+    private static final Matcher<ExpressionTree> ASSERT_NOT_NULL = MethodMatchers.staticMethod()
+            .onClassAny(LEGACY_ASSERT_CLASSES)
+            .named("assertNotNull")
+            .withParameters(Object.class.getName());
 
-    private static final Matcher<ExpressionTree> ASSERT_NOT_NULL_DESCRIPTION =
-            MethodMatchers.staticMethod()
-                    .onClassAny(LEGACY_ASSERT_CLASSES)
-                    .named("assertNotNull")
-                    .withParameters(String.class.getName(), Object.class.getName());
+    private static final Matcher<ExpressionTree> ASSERT_NOT_NULL_DESCRIPTION = MethodMatchers.staticMethod()
+            .onClassAny(LEGACY_ASSERT_CLASSES)
+            .named("assertNotNull")
+            .withParameters(String.class.getName(), Object.class.getName());
 
-    private static final Matcher<ExpressionTree> ASSERT_SAME =
-            MethodMatchers.staticMethod()
-                    .onClassAny(LEGACY_ASSERT_CLASSES)
-                    .named("assertSame")
-                    .withParameters(Object.class.getName(), Object.class.getName());
+    private static final Matcher<ExpressionTree> ASSERT_SAME = MethodMatchers.staticMethod()
+            .onClassAny(LEGACY_ASSERT_CLASSES)
+            .named("assertSame")
+            .withParameters(Object.class.getName(), Object.class.getName());
 
-    private static final Matcher<ExpressionTree> ASSERT_SAME_DESCRIPTION =
-            MethodMatchers.staticMethod()
-                    .onClassAny(LEGACY_ASSERT_CLASSES)
-                    .named("assertSame")
-                    .withParameters(String.class.getName(), Object.class.getName(), Object.class.getName());
+    private static final Matcher<ExpressionTree> ASSERT_SAME_DESCRIPTION = MethodMatchers.staticMethod()
+            .onClassAny(LEGACY_ASSERT_CLASSES)
+            .named("assertSame")
+            .withParameters(String.class.getName(), Object.class.getName(), Object.class.getName());
 
-    private static final Matcher<ExpressionTree> ASSERT_NOT_SAME =
-            MethodMatchers.staticMethod()
-                    .onClassAny(LEGACY_ASSERT_CLASSES)
-                    .named("assertNotSame")
-                    .withParameters(Object.class.getName(), Object.class.getName());
+    private static final Matcher<ExpressionTree> ASSERT_NOT_SAME = MethodMatchers.staticMethod()
+            .onClassAny(LEGACY_ASSERT_CLASSES)
+            .named("assertNotSame")
+            .withParameters(Object.class.getName(), Object.class.getName());
 
-    private static final Matcher<ExpressionTree> ASSERT_NOT_SAME_DESCRIPTION =
-            MethodMatchers.staticMethod()
-                    .onClassAny(LEGACY_ASSERT_CLASSES)
-                    .named("assertNotSame")
-                    .withParameters(String.class.getName(), Object.class.getName(), Object.class.getName());
+    private static final Matcher<ExpressionTree> ASSERT_NOT_SAME_DESCRIPTION = MethodMatchers.staticMethod()
+            .onClassAny(LEGACY_ASSERT_CLASSES)
+            .named("assertNotSame")
+            .withParameters(String.class.getName(), Object.class.getName(), Object.class.getName());
 
     private static final Matcher<ExpressionTree> FAIL =
-            MethodMatchers.staticMethod()
-                    .onClassAny(LEGACY_ASSERT_CLASSES)
-                    .named("fail")
-                    .withParameters();
+            MethodMatchers.staticMethod().onClassAny(LEGACY_ASSERT_CLASSES).named("fail").withParameters();
 
-    private static final Matcher<ExpressionTree> FAIL_DESCRIPTION =
-            MethodMatchers.staticMethod()
-                    .onClassAny(LEGACY_ASSERT_CLASSES)
-                    .named("fail")
-                    .withParameters(String.class.getName());
+    private static final Matcher<ExpressionTree> FAIL_DESCRIPTION = MethodMatchers.staticMethod()
+            .onClassAny(LEGACY_ASSERT_CLASSES)
+            .named("fail")
+            .withParameters(String.class.getName());
 
     private static final Matcher<ExpressionTree> ASSERT_EQUALS_FLOATING = Matchers.anyOf(
             MethodMatchers.staticMethod()
@@ -215,21 +196,17 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
 
     // Does not match specific patterns, this handles all overloads of both assertEquals and assertArrayEquals.
     // Order is important, more specific (e.g. floating point) checks must execute first.
-    private static final Matcher<ExpressionTree> ASSERT_EQUALS_CATCHALL =
-            MethodMatchers.staticMethod()
-                    .onClassAny(LEGACY_ASSERT_CLASSES)
-                    .namedAnyOf("assertEquals", "assertArrayEquals");
+    private static final Matcher<ExpressionTree> ASSERT_EQUALS_CATCHALL = MethodMatchers.staticMethod()
+            .onClassAny(LEGACY_ASSERT_CLASSES)
+            .namedAnyOf("assertEquals", "assertArrayEquals");
 
     private static final Matcher<ExpressionTree> ASSERT_ARRAY_EQUALS_CATCHALL =
-            MethodMatchers.staticMethod()
-                    .onClassAny(LEGACY_ASSERT_CLASSES)
-                    .named("assertArrayEquals");
+            MethodMatchers.staticMethod().onClassAny(LEGACY_ASSERT_CLASSES).named("assertArrayEquals");
 
-    private static final Matcher<ExpressionTree> ASSERT_NOT_EQUALS_CATCHALL =
-            MethodMatchers.staticMethod()
-                    .onClassAny(LEGACY_ASSERT_CLASSES)
-                    // There is no Assert.assertArrayNotEquals
-                    .named("assertNotEquals");
+    private static final Matcher<ExpressionTree> ASSERT_NOT_EQUALS_CATCHALL = MethodMatchers.staticMethod()
+            .onClassAny(LEGACY_ASSERT_CLASSES)
+            // There is no Assert.assertArrayNotEquals
+            .named("assertNotEquals");
 
     @Override
     @SuppressWarnings({"CyclomaticComplexity", "MethodLength"})
@@ -272,119 +249,127 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
                     fix.replace(tree, assertThat + ".isSameAs(" + argSource(tree, state, 0) + ")"));
         }
         if (ASSERT_SAME_DESCRIPTION.matches(tree, state)) {
-            return withAssertThat(tree, state, 2, (assertThat, fix) ->
-                    fix.replace(tree, assertThat
-                            + ".describedAs(" + argSource(tree, state, 0) + ").isSameAs("
-                            + argSource(tree, state, 1) + ")"));
+            return withAssertThat(tree, state, 2, (assertThat, fix) -> fix.replace(tree, assertThat
+                    + ".describedAs("
+                    + argSource(tree, state, 0)
+                    + ").isSameAs("
+                    + argSource(tree, state, 1)
+                    + ")"));
         }
         if (ASSERT_NOT_SAME.matches(tree, state)) {
             return withAssertThat(tree, state, 1, (assertThat, fix) ->
                     fix.replace(tree, assertThat + ".isNotSameAs(" + argSource(tree, state, 0) + ")"));
         }
         if (ASSERT_NOT_SAME_DESCRIPTION.matches(tree, state)) {
-            return withAssertThat(tree, state, 2, (assertThat, fix) ->
-                    fix.replace(tree, assertThat
-                            + ".describedAs(" + argSource(tree, state, 0) + ").isNotSameAs("
-                            + argSource(tree, state, 1) + ")"));
+            return withAssertThat(tree, state, 2, (assertThat, fix) -> fix.replace(tree, assertThat
+                    + ".describedAs("
+                    + argSource(tree, state, 0)
+                    + ").isNotSameAs("
+                    + argSource(tree, state, 1)
+                    + ")"));
         }
         if (FAIL_DESCRIPTION.matches(tree, state) || FAIL.matches(tree, state)) {
             return buildDescription(tree)
                     .addFix(SuggestedFix.builder()
                             .removeStaticImport("org.junit.Assert.fail")
                             .addStaticImport("org.assertj.core.api.Assertions.fail")
-                            .replace(tree, "fail(" + (tree.getArguments().isEmpty()
-                                    ? "\"fail\""
-                                    : argSource(tree, state, 0)) + ")")
+                            .replace(tree, "fail("
+                                    + (tree.getArguments().isEmpty() ? "\"fail\"" : argSource(tree, state, 0))
+                                    + ")")
                             .build())
                     .build();
-
         }
         if (ASSERT_EQUALS_FLOATING.matches(tree, state)) {
-            return withAssertThat(tree, state, 1, (assertThat, fix) -> fix
-                    .addStaticImport("org.assertj.core.api.Assertions.within")
-                    .replace(tree, String.format("%s%s",
+            return withAssertThat(tree, state, 1, (assertThat, fix) ->
+                    fix.addStaticImport("org.assertj.core.api.Assertions.within").replace(tree, String.format(
+                            "%s%s",
                             assertThat,
                             isConstantZero(tree.getArguments().get(2))
                                     ? String.format(".isEqualTo(%s)", argSource(tree, state, 0))
-                                    : String.format(".isCloseTo(%s, within(%s))",
-                                    argSource(tree, state, 0), argSource(tree, state, 2)))));
+                                    : String.format(
+                                            ".isCloseTo(%s, within(%s))",
+                                            argSource(tree, state, 0), argSource(tree, state, 2)))));
         }
         if (ASSERT_EQUALS_FLOATING_DESCRIPTION.matches(tree, state)) {
-            return withAssertThat(tree, state, 2, (assertThat, fix) -> fix
-                    .addStaticImport("org.assertj.core.api.Assertions.within")
-                    .replace(tree, String.format("%s.describedAs(%s)%s",
+            return withAssertThat(tree, state, 2, (assertThat, fix) ->
+                    fix.addStaticImport("org.assertj.core.api.Assertions.within").replace(tree, String.format(
+                            "%s.describedAs(%s)%s",
                             assertThat,
                             argSource(tree, state, 0),
                             isConstantZero(tree.getArguments().get(3))
                                     ? String.format(".isEqualTo(%s)", argSource(tree, state, 1))
-                                    : String.format(".isCloseTo(%s, within(%s))",
-                                    argSource(tree, state, 1), argSource(tree, state, 3)))));
+                                    : String.format(
+                                            ".isCloseTo(%s, within(%s))",
+                                            argSource(tree, state, 1), argSource(tree, state, 3)))));
         }
         if (ASSERT_NOT_EQUALS_FLOATING.matches(tree, state)) {
-            return withAssertThat(tree, state, 1, (assertThat, fix) -> fix
-                    .addStaticImport("org.assertj.core.api.Assertions.within")
-                    .replace(tree, String.format("%s%s",
+            return withAssertThat(tree, state, 1, (assertThat, fix) ->
+                    fix.addStaticImport("org.assertj.core.api.Assertions.within").replace(tree, String.format(
+                            "%s%s",
                             assertThat,
                             isConstantZero(tree.getArguments().get(2))
                                     ? String.format(".isNotEqualTo(%s)", argSource(tree, state, 0))
-                                    : String.format(".isNotCloseTo(%s, within(%s))",
-                                    argSource(tree, state, 0), argSource(tree, state, 2)))));
+                                    : String.format(
+                                            ".isNotCloseTo(%s, within(%s))",
+                                            argSource(tree, state, 0), argSource(tree, state, 2)))));
         }
         if (ASSERT_NOT_EQUALS_FLOATING_DESCRIPTION.matches(tree, state)) {
-            return withAssertThat(tree, state, 2, (assertThat, fix) -> fix
-                    .addStaticImport("org.assertj.core.api.Assertions.within")
-                    .replace(tree, String.format("%s.describedAs(%s)%s",
+            return withAssertThat(tree, state, 2, (assertThat, fix) ->
+                    fix.addStaticImport("org.assertj.core.api.Assertions.within").replace(tree, String.format(
+                            "%s.describedAs(%s)%s",
                             assertThat,
                             argSource(tree, state, 0),
                             isConstantZero(tree.getArguments().get(3))
                                     ? String.format(".isNotEqualTo(%s)", argSource(tree, state, 1))
-                                    : String.format(".isNotCloseTo(%s, within(%s))",
-                                    argSource(tree, state, 1), argSource(tree, state, 3)))));
+                                    : String.format(
+                                            ".isNotCloseTo(%s, within(%s))",
+                                            argSource(tree, state, 1), argSource(tree, state, 3)))));
         }
         if (ASSERT_THAT.matches(tree, state)) {
-            Optional<String> replacement = tree.getArguments().get(1)
-                    .accept(HamcrestVisitor.INSTANCE, state);
-            return withAssertThat(tree, state, 0, (assertThat, fix) ->
-                    fix.replace(tree, assertThat
-                            + replacement.orElseGet(() ->
-                            ".is(new "
+            Optional<String> replacement = tree.getArguments().get(1).accept(HamcrestVisitor.INSTANCE, state);
+            return withAssertThat(tree, state, 0, (assertThat, fix) -> fix.replace(tree, assertThat
+                    + replacement.orElseGet(() -> ".is(new "
                             + SuggestedFixes.qualifyType(state, fix, "org.assertj.core.api.HamcrestCondition")
                             + "<>("
-                            + argSource(tree, state, 1) + "))")));
+                            + argSource(tree, state, 1)
+                            + "))")));
         }
         if (ASSERT_THAT_DESCRIPTION.matches(tree, state)) {
-            Optional<String> replacement = tree.getArguments().get(2)
-                    .accept(HamcrestVisitor.INSTANCE, state);
-            return withAssertThat(tree, state, 1, (assertThat, fix) ->
-                    fix.replace(tree, assertThat
-                            + ".describedAs(" + argSource(tree, state, 0) + ")"
-                            + replacement.orElseGet(() -> ".is(new "
+            Optional<String> replacement = tree.getArguments().get(2).accept(HamcrestVisitor.INSTANCE, state);
+            return withAssertThat(tree, state, 1, (assertThat, fix) -> fix.replace(tree, assertThat
+                    + ".describedAs("
+                    + argSource(tree, state, 0)
+                    + ")"
+                    + replacement.orElseGet(() -> ".is(new "
                             + SuggestedFixes.qualifyType(state, fix, "org.assertj.core.api.HamcrestCondition")
-                            + "<>(" + argSource(tree, state, 2) + "))")));
+                            + "<>("
+                            + argSource(tree, state, 2)
+                            + "))")));
         }
         if (ASSERT_EQUALS_CATCHALL.matches(tree, state)) {
             int parameters = tree.getArguments().size();
             if (parameters == 2) {
                 return withAssertThat(tree, state, 1, (assertThat, fix) ->
-                        fix.replace(tree, assertThat
-                                + ".isEqualTo(" + argSource(tree, state, 0) + ")"));
-            } else if (parameters == 3 && ASTHelpers.isSameType(
-                    getParameterType(tree, 0),
-                    state.getTypeFromString(String.class.getName()),
-                    state)) {
-                return withAssertThat(tree, state, 2, (assertThat, fix) ->
-                        fix.replace(tree, assertThat
-                                + ".describedAs(" + argSource(tree, state, 0) + ").isEqualTo("
-                                + argSource(tree, state, 1) + ")"));
+                        fix.replace(tree, assertThat + ".isEqualTo(" + argSource(tree, state, 0) + ")"));
+            } else if (parameters == 3
+                    && ASTHelpers.isSameType(
+                            getParameterType(tree, 0), state.getTypeFromString(String.class.getName()), state)) {
+                return withAssertThat(tree, state, 2, (assertThat, fix) -> fix.replace(tree, assertThat
+                        + ".describedAs("
+                        + argSource(tree, state, 0)
+                        + ").isEqualTo("
+                        + argSource(tree, state, 1)
+                        + ")"));
             } else if (parameters == 3 && isFloatingPointArrayEqualsWithZeroDelta(tree, state)) {
                 return withAssertThat(tree, state, 1, (assertThat, fix) ->
-                        fix.replace(tree, assertThat
-                                + ".isEqualTo(" + argSource(tree, state, 0) + ")"));
+                        fix.replace(tree, assertThat + ".isEqualTo(" + argSource(tree, state, 0) + ")"));
             } else if (parameters == 4 && isFloatingPointArrayEqualsWithZeroDelta(tree, state)) {
-                return withAssertThat(tree, state, 2, (assertThat, fix) ->
-                        fix.replace(tree, assertThat
-                                + ".describedAs(" + argSource(tree, state, 0) + ").isEqualTo("
-                                + argSource(tree, state, 1) + ")"));
+                return withAssertThat(tree, state, 2, (assertThat, fix) -> fix.replace(tree, assertThat
+                        + ".describedAs("
+                        + argSource(tree, state, 0)
+                        + ").isEqualTo("
+                        + argSource(tree, state, 1)
+                        + ")"));
             } else {
                 // Does not fix assertArrayEquals(double[], double[], double)
                 // or assertArrayEquals(float[], float[], float)
@@ -395,16 +380,18 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
             int parameters = tree.getArguments().size();
             if (parameters == 2) {
                 return withAssertThat(tree, state, 1, (assertThat, fix) ->
-                        fix.replace(tree, assertThat
-                                + ".isNotEqualTo(" + argSource(tree, state, 0) + ")"));
-            } else if (parameters == 3 && ASTHelpers.isSameType(
-                    ASTHelpers.getType(tree.getArguments().get(0)),
-                    state.getTypeFromString(String.class.getName()),
-                    state)) {
-                return withAssertThat(tree, state, 2, (assertThat, fix) ->
-                        fix.replace(tree, assertThat
-                                + ".describedAs(" + argSource(tree, state, 0) + ").isNotEqualTo("
-                                + argSource(tree, state, 1) + ")"));
+                        fix.replace(tree, assertThat + ".isNotEqualTo(" + argSource(tree, state, 0) + ")"));
+            } else if (parameters == 3
+                    && ASTHelpers.isSameType(
+                            ASTHelpers.getType(tree.getArguments().get(0)),
+                            state.getTypeFromString(String.class.getName()),
+                            state)) {
+                return withAssertThat(tree, state, 2, (assertThat, fix) -> fix.replace(tree, assertThat
+                        + ".describedAs("
+                        + argSource(tree, state, 0)
+                        + ").isNotEqualTo("
+                        + argSource(tree, state, 1)
+                        + ")"));
             } else {
                 // I'm not aware of anything that should hit this.
                 return describeMatch(tree);
@@ -414,8 +401,8 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
     }
 
     /**
-     * Provides a qualified 'assertThat' name. We attempt to use a static import if possible, otherwise fall back
-     * to as qualified as possible.
+     * Provides a qualified 'assertThat' name. We attempt to use a static import if possible, otherwise fall back to as
+     * qualified as possible.
      */
     private Description withAssertThat(
             MethodInvocationTree tree,
@@ -436,26 +423,19 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
         String actualArgumentString = argSource(tree, state, actualIndex);
         ExpressionTree actualArgument = tree.getArguments().get(actualIndex);
         if (isIterableMap(actualArgument, state)) {
-            actualArgumentString = String.format("(%s<?, ?>) %s",
-                    SuggestedFixes.qualifyType(state, fix, "java.util.Map"),
-                    actualArgumentString);
+            actualArgumentString = String.format(
+                    "(%s<?, ?>) %s", SuggestedFixes.qualifyType(state, fix, "java.util.Map"), actualArgumentString);
         }
         assertThat.accept(qualified + '(' + actualArgumentString + ')', fix);
-        return buildDescription(tree)
-                .addFix(fix.build())
-                .build();
+        return buildDescription(tree).addFix(fix.build()).build();
     }
 
     private static boolean isIterableMap(ExpressionTree value, VisitorState state) {
-        return isSubtype(value, "java.lang.Iterable", state)
-                && isSubtype(value, "java.util.Map", state);
+        return isSubtype(value, "java.lang.Iterable", state) && isSubtype(value, "java.util.Map", state);
     }
 
     private static boolean isSubtype(ExpressionTree value, String castableTo, VisitorState state) {
-        return ASTHelpers.isSubtype(
-                ASTHelpers.getType(value),
-                state.getTypeFromString(castableTo),
-                state);
+        return ASTHelpers.isSubtype(ASTHelpers.getType(value), state.getTypeFromString(castableTo), state);
     }
 
     private static boolean useStaticAssertjImport(VisitorState state) {
@@ -490,15 +470,10 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
 
     private static boolean isExpressionSameType(VisitorState state, MemberSelectTree memberSelectTree, String type) {
         return ASTHelpers.isSameType(
-                ASTHelpers.getType(memberSelectTree.getExpression()),
-                state.getTypeFromString(type),
-                state);
+                ASTHelpers.getType(memberSelectTree.getExpression()), state.getTypeFromString(type), state);
     }
 
-    private static String argSource(
-            MethodInvocationTree invocation,
-            VisitorState state,
-            int index) {
+    private static String argSource(MethodInvocationTree invocation, VisitorState state, int index) {
         checkArgument(index >= 0, "Index must be non-negative");
         List<? extends ExpressionTree> arguments = checkNotNull(invocation, "MethodInvocationTree").getArguments();
         checkArgument(index < arguments.size(), "Index is out of bounds");
@@ -524,13 +499,13 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
 
             private final TypePredicate matcherPredicate = TypePredicates.isDescendantOf("org.hamcrest.Matcher");
             private final TypePredicate[] predicates = new TypePredicate[] {
-                    TypePredicates.isExactType("org.hamcrest.Matchers"),
-                    TypePredicates.isExactType("org.hamcrest.CoreMatchers"),
-                    // Allows uses of direct imports to be migrated as well,
-                    // e.g. 'org.hamcrest.core.Is.is'.
-                    (TypePredicate) (type, state) -> matcherPredicate.apply(type, state)
-                            // Limit to Hamcrest packages to avoid interaction with non-standard library code
-                            && type.toString().startsWith("org.hamcrest.")
+                TypePredicates.isExactType("org.hamcrest.Matchers"),
+                TypePredicates.isExactType("org.hamcrest.CoreMatchers"),
+                // Allows uses of direct imports to be migrated as well,
+                // e.g. 'org.hamcrest.core.Is.is'.
+                (TypePredicate) (type, state) -> matcherPredicate.apply(type, state)
+                        // Limit to Hamcrest packages to avoid interaction with non-standard library code
+                        && type.toString().startsWith("org.hamcrest.")
             };
 
             @Override
@@ -544,15 +519,11 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
             }
         };
 
-        private static final Matcher<ExpressionTree> IS_MATCHER = MethodMatchers.staticMethod()
-                .onClass(MATCHERS)
-                .named("is")
-                .withParameters("org.hamcrest.Matcher");
+        private static final Matcher<ExpressionTree> IS_MATCHER =
+                MethodMatchers.staticMethod().onClass(MATCHERS).named("is").withParameters("org.hamcrest.Matcher");
 
-        private static final Matcher<ExpressionTree> NOT_MATCHER = MethodMatchers.staticMethod()
-                .onClass(MATCHERS)
-                .named("not")
-                .withParameters("org.hamcrest.Matcher");
+        private static final Matcher<ExpressionTree> NOT_MATCHER =
+                MethodMatchers.staticMethod().onClass(MATCHERS).named("not").withParameters("org.hamcrest.Matcher");
 
         private static final Matcher<ExpressionTree> EQUALS = MethodMatchers.staticMethod()
                 .onClass(MATCHERS)
@@ -565,20 +536,11 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
                 .withParameters("java.lang.Class");
 
         private static final Matcher<ExpressionTree> NULL = Matchers.anyOf(
-                MethodMatchers.staticMethod()
-                        .onClass(MATCHERS)
-                        .named("nullValue")
-                        .withParameters(),
-                MethodMatchers.staticMethod()
-                        .onClass(MATCHERS)
-                        .named("nullValue")
-                        .withParameters("java.lang.Class"));
+                MethodMatchers.staticMethod().onClass(MATCHERS).named("nullValue").withParameters(),
+                MethodMatchers.staticMethod().onClass(MATCHERS).named("nullValue").withParameters("java.lang.Class"));
 
         private static final Matcher<ExpressionTree> NOT_NULL = Matchers.anyOf(
-                MethodMatchers.staticMethod()
-                        .onClass(MATCHERS)
-                        .named("notNullValue")
-                        .withParameters(),
+                MethodMatchers.staticMethod().onClass(MATCHERS).named("notNullValue").withParameters(),
                 MethodMatchers.staticMethod()
                         .onClass(MATCHERS)
                         .named("notNullValue")
@@ -595,17 +557,15 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
                         .withParameters(String.class.getName()));
 
         // Note: cannot match array/vararg arguments
-        private static final Matcher<ExpressionTree> HAS_ITEMS = MethodMatchers.staticMethod()
-                .onClass(MATCHERS)
-                .named("hasItems");
+        private static final Matcher<ExpressionTree> HAS_ITEMS =
+                MethodMatchers.staticMethod().onClass(MATCHERS).named("hasItems");
 
         private static final Matcher<ExpressionTree> CONTAINS_EXACTLY_ANY_ORDER = MethodMatchers.staticMethod()
                 .onClass(MATCHERS)
                 .namedAnyOf("arrayContainingInAnyOrder", "containsInAnyOrder");
 
-        private static final Matcher<ExpressionTree> CONTAINS_EXACTLY_ORDERED = MethodMatchers.staticMethod()
-                .onClass(MATCHERS)
-                .named("contains");
+        private static final Matcher<ExpressionTree> CONTAINS_EXACTLY_ORDERED =
+                MethodMatchers.staticMethod().onClass(MATCHERS).named("contains");
 
         private static final Matcher<ExpressionTree> IS_EMPTY = Matchers.anyOf(
                 MethodMatchers.staticMethod()
@@ -655,12 +615,11 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
                 return node.getArguments().get(0).accept(this.negated ? INSTANCE : NEGATED, state);
             }
             if (EQUALS.matches(node, state)) {
-                return Optional.of((negated ? ".isNotEqualTo(" : ".isEqualTo(")
-                        + argSource(node, state, 0) + ")");
+                return Optional.of((negated ? ".isNotEqualTo(" : ".isEqualTo(") + argSource(node, state, 0) + ")");
             }
             if (INSTANCE_OF.matches(node, state)) {
-                return Optional.of((negated ? ".isNotInstanceOf(" : ".isInstanceOf(")
-                        + argSource(node, state, 0) + ")");
+                return Optional.of(
+                        (negated ? ".isNotInstanceOf(" : ".isInstanceOf(") + argSource(node, state, 0) + ")");
             }
             if (NULL.matches(node, state)) {
                 return Optional.of(negated ? ".isNotNull()" : ".isNull()");
@@ -697,27 +656,27 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
                     // evaluates as 'does not contain any'.
                     return Optional.empty();
                 }
-                return Optional.of(".contains(" + node.getArguments().stream()
-                        .map(state::getSourceForNode)
-                        .collect(Collectors.joining(", ")) + ')');
+                return Optional.of(".contains("
+                        + node.getArguments().stream().map(state::getSourceForNode).collect(Collectors.joining(", "))
+                        + ')');
             }
             if (CONTAINS_EXACTLY_ANY_ORDER.matches(node, state) && isObjectVarArgs(node, state)) {
                 if (negated) {
                     // this negates to 'doesNotContainExactlyInAnyOrder' which doesn't exist.
                     return Optional.empty();
                 }
-                return Optional.of(".containsExactlyInAnyOrder(" + node.getArguments().stream()
-                        .map(state::getSourceForNode)
-                        .collect(Collectors.joining(", ")) + ')');
+                return Optional.of(".containsExactlyInAnyOrder("
+                        + node.getArguments().stream().map(state::getSourceForNode).collect(Collectors.joining(", "))
+                        + ')');
             }
             if (CONTAINS_EXACTLY_ORDERED.matches(node, state) && isObjectVarArgs(node, state)) {
                 if (negated) {
                     // this negates to 'doesNotContainExactly' which doesn't exist.
                     return Optional.empty();
                 }
-                return Optional.of(".containsExactly(" + node.getArguments().stream()
-                        .map(state::getSourceForNode)
-                        .collect(Collectors.joining(", ")) + ')');
+                return Optional.of(".containsExactly("
+                        + node.getArguments().stream().map(state::getSourceForNode).collect(Collectors.joining(", "))
+                        + ')');
             }
             return Optional.empty();
         }
@@ -732,17 +691,18 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
         checkState(varSymbol.type instanceof Type.ArrayType, "Expected an array as last argument of a vararg method");
         Type.ArrayType arrayType = (Type.ArrayType) varSymbol.type;
         return ASTHelpers.isSameType(
-                arrayType.getComponentType(),
-                state.getTypeFromString(Object.class.getName()),
-                state);
+                arrayType.getComponentType(), state.getTypeFromString(Object.class.getName()), state);
     }
 
     private static Type getParameterType(MethodInvocationTree tree, int parameterIndex) {
         Symbol.MethodSymbol methodSymbol = checkNotNull(ASTHelpers.getSymbol(tree), "symbol");
         List<Symbol.VarSymbol> parameters = methodSymbol.getParameters();
         checkArgument(parameterIndex >= 0, "index must be greater than zero, was %s", parameterIndex);
-        checkArgument(parameterIndex < parameters.size(),
-                "index '%s' is out of bounds for collection %s", parameterIndex, parameters);
+        checkArgument(
+                parameterIndex < parameters.size(),
+                "index '%s' is out of bounds for collection %s",
+                parameterIndex,
+                parameters);
         return methodSymbol.getParameters().get(parameterIndex).type;
     }
 
@@ -755,7 +715,7 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
         Type doubleType = state.getTypeFromString("double");
         int deltaParameterIndex = parameters - 1;
         return (ASTHelpers.isSameType(getParameterType(tree, deltaParameterIndex), floatType, state)
-                || ASTHelpers.isSameType(getParameterType(tree, deltaParameterIndex), doubleType, state))
+                        || ASTHelpers.isSameType(getParameterType(tree, deltaParameterIndex), doubleType, state))
                 && isConstantZero(tree.getArguments().get(deltaParameterIndex));
     }
 }

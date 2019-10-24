@@ -90,13 +90,15 @@ public final class PreferSafeLoggableExceptions extends BugChecker implements Bu
 
         return EXCEPTION_MAPPINGS.entrySet().stream()
                 .filter(entry -> Matchers.isSameType(entry.getKey()).matches(tree.getIdentifier(), state))
-                .map(entry -> buildDescription(tree)
-                        .setMessage("Prefer " + entry.getValue() + " from com.palantir.safe-logging:preconditions")
-                        .addFix(SuggestedFix.builder()
-                                .replace(tree.getIdentifier(), entry.getValue())
-                                .addImport("com.palantir.logsafe.exceptions." + entry.getValue())
+                .map(entry ->
+                        buildDescription(tree)
+                                .setMessage(
+                                        "Prefer " + entry.getValue() + " from com.palantir.safe-logging:preconditions")
+                                .addFix(SuggestedFix.builder()
+                                        .replace(tree.getIdentifier(), entry.getValue())
+                                        .addImport("com.palantir.logsafe.exceptions." + entry.getValue())
+                                        .build())
                                 .build())
-                        .build())
                 .findAny()
                 .orElseThrow(() -> new IllegalStateException("Expected to match a known replaceable exception type"));
     }

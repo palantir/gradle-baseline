@@ -48,27 +48,31 @@ class ExecutorSubmitRunnableFutureIgnoredTest {
 
     @Test
     void testNegative() {
-        CompilationTestHelper.newInstance(ExecutorSubmitRunnableFutureIgnored.class, getClass()).addSourceLines(
-                "Test.java",
-                "import " + ExecutorService.class.getName() + ';',
-                "import " + Future.class.getName() + ';',
-                "class Test {",
-                "   void f(ExecutorService exec) {",
-                "       Future<?> future = exec.submit(() -> System.out.println(\"Hello\"));",
-                "   }",
-                "}").doTest();
+        CompilationTestHelper.newInstance(ExecutorSubmitRunnableFutureIgnored.class, getClass())
+                .addSourceLines(
+                        "Test.java",
+                        "import " + ExecutorService.class.getName() + ';',
+                        "import " + Future.class.getName() + ';',
+                        "class Test {",
+                        "   void f(ExecutorService exec) {",
+                        "       Future<?> future = exec.submit(() -> System.out.println(\"Hello\"));",
+                        "   }",
+                        "}")
+                .doTest();
     }
 
     @Test
     void testMessage() {
-        CompilationTestHelper.newInstance(ExecutorSubmitRunnableFutureIgnored.class, getClass()).addSourceLines(
-                "Test.java",
-                "import " + ExecutorService.class.getName() + ';',
-                "class Test {",
-                "   void f(ExecutorService exec) {",
-                "       // BUG: Diagnostic contains: not logged by the uncaught exception handler",
-                "       exec.submit(() -> System.out.println(\"Hello\"));",
-                "   }",
-                "}").doTest();
+        CompilationTestHelper.newInstance(ExecutorSubmitRunnableFutureIgnored.class, getClass())
+                .addSourceLines(
+                        "Test.java",
+                        "import " + ExecutorService.class.getName() + ';',
+                        "class Test {",
+                        "   void f(ExecutorService exec) {",
+                        "       // BUG: Diagnostic contains: not logged by the uncaught exception handler",
+                        "       exec.submit(() -> System.out.println(\"Hello\"));",
+                        "   }",
+                        "}")
+                .doTest();
     }
 }
