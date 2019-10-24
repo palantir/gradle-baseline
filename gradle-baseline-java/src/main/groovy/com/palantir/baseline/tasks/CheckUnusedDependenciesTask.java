@@ -30,7 +30,6 @@ import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.file.FileCollection;
@@ -95,11 +94,15 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
                 .collect(Collectors.toList());
         if (!declaredButUnused.isEmpty()) {
             // TODO(dfox): don't print warnings for jars that define service loaded classes (e.g. meta-inf)
-            StringBuilder sb = new StringBuilder();
-            sb.append(String.format("Found %s dependencies unused during compilation, please delete them from '%s' or "
-                    + "choose one of the suggested fixes:\n", declaredButUnused.size(), buildFile()));
+            StringBuilder builder = new StringBuilder();
+            builder.append(String.format(
+                    "Found %s dependencies unused during compilation, please delete them from '%s' or choose one of "
+                    + "the suggested fixes:\n", declaredButUnused.size(), buildFile()));
             for (ResolvedArtifact resolvedArtifact : declaredButUnused) {
-                sb.append('\t').append(BaselineExactDependencies.asString(resolvedArtifact)).append('\n');
+                builder
+                        .append('\t')
+                        .append(BaselineExactDependencies.asDependencyStringWithName(resolvedArtifact))
+                        .append('\n');
 
                 // Suggest fixes by looking at all transitive classes, filtering the ones we have declarations on,
                 // and mapping the remaining ones back to the jars they came from.
@@ -117,16 +120,17 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
                         .collect(Collectors.toSet());
 
                 if (!didYouMean.isEmpty()) {
-                    sb.append("\t\tDid you mean:\n");
+                    builder.append("\t\tDid you mean:\n");
                     didYouMean.stream()
-                            .map(BaselineExactDependencies::asString)
+                            .map(BaselineExactDependencies::asDependencyStringWithoutName)
                             .sorted()
-                            .forEach(transitive -> sb.append("\t\t\timplementation '")
-                                    .append(transitive)
-                                    .append("\' \n"));
+                            .forEach(dependencyString -> builder
+                                    .append("\t\t\timplementation ")
+                                    .append(dependencyString)
+                                    .append("\n"));
                 }
             }
-            throw new GradleException(sb.toString());
+            throw new GradleException(builder.toString());
         }
     }
 
@@ -138,16 +142,14 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
      */
     private void excludeSourceOnlyDependencies() {
         sourceOnlyConfigurations.get().forEach(config ->
-                config.getResolvedConfiguration().getFirstLevelModuleDependencies().forEach(dependency -> {
-                    ignoreDependency(config, dependency.getModule().getId());
-                    dependency.getModuleArtifacts().forEach(artifact ->
-                            ignoreDependency(config, artifact.getModuleVersion().getId()));
-                }));
+                config.getResolvedConfiguration().getFirstLevelModuleDependencies().stream()
+                        .flatMap(dependency -> dependency.getModuleArtifacts().stream())
+                        .forEach(artifact -> ignoreDependency(config, artifact)));
     }
 
-    private void ignoreDependency(Configuration config, ModuleVersionIdentifier id) {
-        String dependencyId = BaselineExactDependencies.asString(id);
-        getLogger().info("Ignoring {} dependency: '{}'", config.getName(), dependencyId);
+    private void ignoreDependency(Configuration config, ResolvedArtifact artifact) {
+        String dependencyId = BaselineExactDependencies.asString(artifact);
+        getLogger().info("Ignoring {} dependency: {}", config.getName(), dependencyId);
         ignore.add(dependencyId);
     }
 

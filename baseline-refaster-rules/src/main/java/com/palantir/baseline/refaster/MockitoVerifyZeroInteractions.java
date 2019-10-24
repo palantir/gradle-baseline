@@ -16,39 +16,27 @@
 
 package com.palantir.baseline.refaster;
 
-import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.Mockito.verifyNoMoreInteractions;
+import static org.mockito.Mockito.verifyZeroInteractions;
 
 import com.google.errorprone.refaster.ImportPolicy;
 import com.google.errorprone.refaster.annotation.AfterTemplate;
 import com.google.errorprone.refaster.annotation.BeforeTemplate;
+import com.google.errorprone.refaster.annotation.Repeated;
 import com.google.errorprone.refaster.annotation.UseImportPolicy;
-import java.util.Optional;
 
-public final class AssertjOptionalIsNotPresent<T> {
-
-    @BeforeTemplate
-    void before1(Optional<T> thing) {
-        assertThat(thing.isPresent()).isFalse();
-    }
+public final class MockitoVerifyZeroInteractions {
 
     @BeforeTemplate
-    void before2(Optional<T> thing) {
-        assertThat(!thing.isPresent()).isTrue();
-    }
-
-    @BeforeTemplate
-    void before3(Optional<T> thing) {
-        assertThat(thing).isEqualTo(Optional.empty());
-    }
-
-    @BeforeTemplate
-    void before4(Optional<T> thing) {
-        assertThat(Optional.empty()).isEqualTo(thing);
+    @SuppressWarnings("deprecation")
+    // must use @Repeated for varargs per https://github.com/google/error-prone/issues/568
+    void before(@Repeated Object varargs) {
+        verifyZeroInteractions(varargs);
     }
 
     @AfterTemplate
     @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
-    void after(Optional<T> thing) {
-        assertThat(thing).isNotPresent();
+    void after(@Repeated Object varargs) {
+        verifyNoMoreInteractions(varargs);
     }
 }

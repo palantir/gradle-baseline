@@ -1,0 +1,7 @@
+type: improvement
+improvement:
+  description: Load palantir-java-format dynamically from the same configuration set
+    up by `com.palantir-java-format` which is also used to determine the version used
+    by IntelliJ.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/989

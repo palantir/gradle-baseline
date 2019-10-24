@@ -40,6 +40,11 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
             id 'java'
             id 'com.palantir.baseline-format'
         }
+        repositories {
+            // to resolve the `palantirJavaFormat` configuration
+            maven { url 'https://dl.bintray.com/palantir/releases' }
+            jcenter()
+        }
     '''.stripIndent()
 
     def noJavaBuildFile = '''
@@ -87,7 +92,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
 
     def 'eclipse formatter integration test'() {
         def inputDir = new File("src/test/resources/com/palantir/baseline/formatter-in")
-        def expectedDir = new File("src/test/resources/com/palantir/baseline/formatter-expected")
+        def expectedDir = new File("src/test/resources/com/palantir/baseline/eclipse-formatter-expected")
 
         def testedDir = new File(projectDir, "src/main/java")
         FileUtils.copyDirectory(inputDir, testedDir)
@@ -119,7 +124,13 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         buildFile << """
             plugins {
                 id 'java'
+                id 'com.palantir.java-format'
                 id 'com.palantir.baseline-format'
+            }
+            repositories {
+                // to resolve the `palantirJavaFormat` configuration
+                maven { url 'https://dl.bintray.com/palantir/releases' }
+                jcenter()
             }
         """.stripIndent()
         file('gradle.properties') << "com.palantir.baseline-format.palantir-java-format=true\n"
@@ -130,36 +141,6 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         then:
         result.task(":format").outcome == TaskOutcome.SUCCESS
         result.task(":spotlessApply").outcome == TaskOutcome.SUCCESS
-        assertThatFilesAreTheSame(testedDir, expectedDir)
-    }
-
-    def 'eclipse formatter googlejavaformat test cases'() {
-        def excludedFiles = [
-                "B19996259.java", // this causes an OOM
-        ]
-
-        def inputDir = new File("src/test/resources/com/palantir/baseline/googlejavaformat-in")
-        def expectedDir = new File("src/test/resources/com/palantir/baseline/googlejavaformat-expected")
-
-        def testedDir = new File(projectDir, "src/main/java")
-        FileUtils.copyDirectory(inputDir, testedDir, new NotFileFilter(new NameFileFilter(excludedFiles)))
-
-        buildFile << """
-            plugins {
-                id 'java'
-                id 'com.palantir.baseline-format'
-            }
-        """.stripIndent()
-        file('gradle.properties') << """
-            com.palantir.baseline-format.eclipse=true
-        """.stripIndent()
-
-        when:
-        BuildResult result = with(':format').build()
-        result.task(":format").outcome == TaskOutcome.SUCCESS
-        result.task(":spotlessApply").outcome == TaskOutcome.SUCCESS
-
-        then:
         assertThatFilesAreTheSame(testedDir, expectedDir)
     }
 
@@ -250,5 +231,42 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         then:
         BuildResult result = with('spotlessJavaCheck').build()
         result.task(":spotlessJava").outcome == TaskOutcome.SUCCESS
+    }
+
+    def 'formatDiff updates only lines changed in git diff'() {
+        when:
+        buildFile << standardBuildFile
+        "git init".execute(Collections.emptyList(), projectDir).waitFor()
+        "git config user.name Foo".execute(Collections.emptyList(), projectDir).waitFor()
+        "git config user.email foo@bar.com".execute(Collections.emptyList(), projectDir).waitFor()
+
+        file('src/main/java/Main.java') << '''
+        class Main {
+            public static void crazyExistingFormatting  (  String... args) {
+
+            }
+        }
+        '''.stripIndent()
+
+        "git add .".execute(Collections.emptyList(), projectDir).waitFor()
+        "git commit -m Commit".execute(Collections.emptyList(), projectDir).waitFor()
+
+        file('src/main/java/Main.java').text = '''
+        class Main {
+            public static void crazyExistingFormatting  (  String... args) {
+                                        System.out.println("Reformat me please");
+            }
+        }
+        '''.stripIndent()
+
+        then:
+        with('formatDiff', '-Pcom.palantir.baseline-format.palantir-java-format').build()
+        file('src/main/java/Main.java').text == '''
+        class Main {
+            public static void crazyExistingFormatting  (  String... args) {
+                System.out.println("Reformat me please");
+            }
+        }
+        '''.stripIndent()
     }
 }

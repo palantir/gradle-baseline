@@ -173,6 +173,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `PreferAssertj`: Prefer AssertJ fluent assertions.
 - `ThrowError`: Prefer throwing a RuntimeException rather than Error.
 - `ReverseDnsLookup`: Calling address.getHostName may result in an unexpected DNS lookup.
+- `ReadReturnValueIgnored`: The result of a read call must be checked to know if EOF has been reached or the expected number of bytes have been consumed.
 
 ### Programmatic Application
 
