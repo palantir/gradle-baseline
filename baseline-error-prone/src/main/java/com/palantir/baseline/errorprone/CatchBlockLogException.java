@@ -44,6 +44,7 @@ import javax.annotation.Nullable;
         name = "CatchBlockLogException",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = LinkType.CUSTOM,
+        providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = SeverityLevel.ERROR,
         summary = "log statement in catch block does not log the caught exception.")
 public final class CatchBlockLogException extends BugChecker implements BugChecker.CatchTreeMatcher {
