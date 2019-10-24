@@ -91,7 +91,7 @@ class AbstractDependencyTest extends AbstractPluginTest {
         buildFile << '''
         allprojects {
             apply plugin: 'java'
-            apply plugin: 'com.palantir.baseline-exact-dependencies'
+            apply plugin: 'com.palantir.baseline-dependencies-v2'
         }
         repositories {
             maven {

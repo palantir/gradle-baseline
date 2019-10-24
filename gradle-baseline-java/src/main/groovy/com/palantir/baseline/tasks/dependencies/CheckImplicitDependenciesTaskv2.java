@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-package com.palantir.baseline.tasks;
+package com.palantir.baseline.tasks.dependencies;
 
-import com.palantir.baseline.tasks.dependencies.DependencyReportTask;
-import com.palantir.baseline.tasks.dependencies.DependencyUtils;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.List;
@@ -37,8 +35,6 @@ public class CheckImplicitDependenciesTaskv2 extends DefaultTask {
     private final SetProperty<String> ignored;
 
     public CheckImplicitDependenciesTaskv2() {
-        setGroup("Verification");
-        setDescription("Ensures all dependencies are explicitly declared, not just transitively provided");
         report = getProject().getObjects().fileProperty();
 
         ignored = getProject().getObjects().setProperty(String.class);
