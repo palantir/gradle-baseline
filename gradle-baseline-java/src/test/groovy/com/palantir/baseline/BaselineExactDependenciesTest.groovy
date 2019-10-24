@@ -153,6 +153,16 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         result.task(':sub-project-no-deps:checkImplicitDependencies').getOutcome() == TaskOutcome.SUCCESS
     }
 
+    def 'checkUnusedDependencies fails when a redundant project dep is present'() {
+        when:
+        setupMultiProject()
+
+        then:
+        BuildResult result = with(':checkUnusedDependencies', '--stacktrace').withDebug(true).buildAndFail()
+        result.output.contains "project(':sub-project-with-deps') (sub-project-with-deps.jar (project :sub-project-with-deps))"
+        result.output.contains "implementation project(':sub-project-no-deps')"
+    }
+
     /**
      * Sets up a multi-module project with 2 sub projects.  The root project has a transitive dependency on sub-project-no-deps
      * and so checkImplicitDependencies should fail on it.
