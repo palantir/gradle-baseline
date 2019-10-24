@@ -24,8 +24,8 @@ import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
+import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
-import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import java.util.List;
@@ -51,6 +51,8 @@ public final class DangerousThrowableMessageSafeArg extends BugChecker
             .onDescendantOf(Throwable.class.getName())
             .named("getMessage");
 
+    private static final Matcher<ExpressionTree> THROWABLE_MATCHER = Matchers.isSubtypeOf(Throwable.class);
+
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
         if (!SAFEARG_FACTORY_METHOD.matches(tree, state)) {
@@ -65,10 +67,7 @@ public final class DangerousThrowableMessageSafeArg extends BugChecker
                             + "SafeLoggable.getLogMessage is guaranteed to be safe.")
                     .build();
         }
-        if (ASTHelpers.isCastable(
-                ASTHelpers.getResultType(safeValueArgument),
-                state.getTypeFromString(Throwable.class.getName()),
-                state)) {
+        if (THROWABLE_MATCHER.matches(safeValueArgument, state)) {
             return buildDescription(tree)
                     .setMessage("Do not use throwables as SafeArg values. "
                             + "Throwables must be logged without an Arg wrapper as the last parameter, otherwise "
