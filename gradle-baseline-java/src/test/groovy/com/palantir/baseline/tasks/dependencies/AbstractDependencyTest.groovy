@@ -32,7 +32,7 @@ class AbstractDependencyTest extends AbstractPluginTest {
         return cleanFileContents('''
         plugins {
             id 'java'
-            id 'com.palantir.baseline-exact-dependencies-v2'
+            id 'com.palantir.baseline-dependencies-v2'
         }
     ''')
     }

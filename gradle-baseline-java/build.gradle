@@ -61,8 +61,8 @@ gradlePlugin {
             id = 'com.palantir.baseline-exact-dependencies'
             implementationClass = 'com.palantir.baseline.plugins.BaselineExactDependencies'
         }
-        baselineExactDependenciesPluginv2 {
-            id = 'com.palantir.baseline-exact-dependencies-v2'
+        baselineDependencyPluginv2 {
+            id = 'com.palantir.baseline-dependencies-v2'
             implementationClass = 'com.palantir.baseline.plugins.BaselineDependencyPluginv2'
         }
         baselineEclipsePlugin {
@@ -107,7 +107,7 @@ pluginBundle {
         baselineExactDependenciesPlugin {
             displayName = 'Deprecated Palantir Baseline Exact Dependencies Plugin'
         }
-        baselineExactDependenciesPluginv2 {
+        baselineDependencyPluginv2 {
             displayName = 'Palantir Baseline Exact Dependencies Plugin'
         }
         baselineEclipsePlugin {
