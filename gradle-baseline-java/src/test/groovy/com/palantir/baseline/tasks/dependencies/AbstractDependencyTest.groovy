@@ -94,10 +94,7 @@ class AbstractDependencyTest extends AbstractPluginTest {
             apply plugin: 'com.palantir.baseline-dependencies-v2'
         }
         repositories {
-            maven {
-              url "https://artifactory.palantir.build/artifactory/all-jar/"
-            }
-            mavenLocal()
+            mavenCentral()
         }
         dependencies {
             compile project(':sub-project-with-deps')
@@ -143,10 +140,7 @@ class AbstractDependencyTest extends AbstractPluginTest {
         //*********** setup sub-project-jar-deps ***********
         subProjects['sub-project-jar-deps'].buildGradle << cleanFileContents('''
         repositories {
-            maven {
-              url "https://artifactory.palantir.build/artifactory/all-jar/"
-            }
-            mavenLocal()
+            mavenCentral()
         }
         dependencies {
             compile 'com.google.guava:guava:27.0.1-jre' 
