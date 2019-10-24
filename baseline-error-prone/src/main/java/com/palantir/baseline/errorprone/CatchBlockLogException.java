@@ -17,11 +17,13 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
+import com.google.common.collect.ImmutableList;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.BugPattern.LinkType;
 import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
+import com.google.errorprone.fixes.SuggestedFix;
 import com.google.errorprone.matchers.ChildMultiMatcher;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
@@ -29,8 +31,13 @@ import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.sun.source.tree.CatchTree;
 import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.Tree;
+import com.sun.source.util.TreeScanner;
+import java.util.List;
+import java.util.Optional;
 import java.util.regex.Pattern;
+import javax.annotation.Nullable;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -60,10 +67,64 @@ public final class CatchBlockLogException extends BugChecker implements BugCheck
     public Description matchCatch(CatchTree tree, VisitorState state) {
         if (containslogMethod.matches(tree, state) && !containslogException.matches(tree, state)) {
             return buildDescription(tree)
+                    .addFix(attemptFix(tree, state))
                     .setMessage("Catch block contains log statements but thrown exception is never logged.")
                     .build();
         }
         return Description.NO_MATCH;
     }
 
+    private static Optional<SuggestedFix> attemptFix(CatchTree tree, VisitorState state) {
+        List<MethodInvocationTree> matchingLoggingStatements =
+                tree.getBlock().accept(MostSevereLogStatementScanner.INSTANCE, state);
+        if (matchingLoggingStatements == null || matchingLoggingStatements.size() != 1) {
+            return Optional.empty();
+        }
+        MethodInvocationTree loggingInvocation = matchingLoggingStatements.get(0);
+        if (containslogException.matches(loggingInvocation, state)) {
+            return Optional.empty();
+        }
+        List<? extends ExpressionTree> loggingArguments = loggingInvocation.getArguments();
+        // There are no valid log invocations without at least a single argument.
+        ExpressionTree lastArgument = loggingArguments.get(loggingArguments.size() - 1);
+        return Optional.of(SuggestedFix.builder()
+                .replace(lastArgument, state.getSourceForNode(lastArgument) + ", " + tree.getParameter().getName())
+                .build());
+    }
+
+    private static final class MostSevereLogStatementScanner
+            extends TreeScanner<List<MethodInvocationTree>, VisitorState> {
+        private static final MostSevereLogStatementScanner INSTANCE = new MostSevereLogStatementScanner();
+
+        @Override
+        public List<MethodInvocationTree> visitMethodInvocation(MethodInvocationTree node, VisitorState state) {
+            if (logMethod.matches(node, state)) {
+                return ImmutableList.of(node);
+            }
+            return super.visitMethodInvocation(node, state);
+        }
+
+        @Override
+        public List<MethodInvocationTree> visitCatch(CatchTree node, VisitorState state) {
+            // Do not flag logging from a nested catch, it's handled separately
+            return ImmutableList.of();
+        }
+
+        @Override
+        public List<MethodInvocationTree> reduce(
+                @Nullable List<MethodInvocationTree> left,
+                @Nullable List<MethodInvocationTree> right) {
+            // Unfortunately there's no way to provide default initial values, so we must handle nulls.
+            if (left == null) {
+                return right;
+            }
+            if (right == null) {
+                return left;
+            }
+            return ImmutableList.<MethodInvocationTree>builder()
+                    .addAll(left)
+                    .addAll(right)
+                    .build();
+        }
+    }
 }
