@@ -71,7 +71,7 @@ public final class DangerousThrowableMessageSafeArg extends BugChecker
                 state)) {
             return buildDescription(tree)
                     .setMessage("Do not use throwables as SafeArg values. "
-                            + "Throwables must be logged without an Arg wrapper as the last parameter, otherwise"
+                            + "Throwables must be logged without an Arg wrapper as the last parameter, otherwise "
                             + "unsafe data may be leaked from the unsafe message or the unsafe message of a cause.")
                     .build();
         }
