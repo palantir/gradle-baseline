@@ -31,8 +31,10 @@ import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.sun.source.tree.CatchTree;
 import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.Tree;
+import com.sun.source.util.SimpleTreeVisitor;
 import com.sun.source.util.TreeScanner;
 import java.util.List;
 import java.util.Optional;
@@ -54,6 +56,10 @@ public final class CatchBlockLogException extends BugChecker implements BugCheck
     private static final Matcher<ExpressionTree> logMethod = MethodMatchers.instanceMethod()
             .onDescendantOf("org.slf4j.Logger")
             .withNameMatching(Pattern.compile("trace|debug|info|warn|error"));
+
+    private static final Matcher<ExpressionTree> severeLogMethod = MethodMatchers.instanceMethod()
+            .onDescendantOf("org.slf4j.Logger")
+            .withNameMatching(Pattern.compile("warn|error"));
 
     private static final Matcher<Tree> containslogMethod = Matchers.contains(
             Matchers.toType(ExpressionTree.class, logMethod));
@@ -82,15 +88,56 @@ public final class CatchBlockLogException extends BugChecker implements BugCheck
             return Optional.empty();
         }
         MethodInvocationTree loggingInvocation = matchingLoggingStatements.get(0);
-        if (containslogException.matches(loggingInvocation, state)) {
+        if (containslogException.matches(loggingInvocation, state)
+                // Only suggest fixes for warnings and errors to begin with. A future change
+                // should expand this to other statements if it goes well.
+                || !severeLogMethod.matches(loggingInvocation, state)) {
             return Optional.empty();
         }
         List<? extends ExpressionTree> loggingArguments = loggingInvocation.getArguments();
         // There are no valid log invocations without at least a single argument.
         ExpressionTree lastArgument = loggingArguments.get(loggingArguments.size() - 1);
         return Optional.of(SuggestedFix.builder()
-                .replace(lastArgument, state.getSourceForNode(lastArgument) + ", " + tree.getParameter().getName())
+                .replace(lastArgument, lastArgument.accept(ThrowableFromArgVisitor.INSTANCE, state)
+                        .orElseGet(() -> state.getSourceForNode(lastArgument) + ", " + tree.getParameter().getName()))
                 .build());
+    }
+
+    private static final class ThrowableFromArgVisitor extends SimpleTreeVisitor<Optional<String>, VisitorState> {
+        private static final ThrowableFromArgVisitor INSTANCE = new ThrowableFromArgVisitor();
+
+        private static final Matcher<ExpressionTree> throwableMessageInvocation = Matchers.instanceMethod()
+                .onDescendantOf(Throwable.class.getName())
+                .named("getMessage");
+
+        ThrowableFromArgVisitor() {
+            super(Optional.empty());
+        }
+
+        @Override
+        public Optional<String> visitMethodInvocation(MethodInvocationTree node, VisitorState state) {
+            if (throwableMessageInvocation.matches(node, state)) {
+                return node.getMethodSelect().accept(ThrowableFromInvocationVisitor.INSTANCE, state);
+            }
+            return Optional.empty();
+        }
+    }
+
+    private static final class ThrowableFromInvocationVisitor
+            extends SimpleTreeVisitor<Optional<String>, VisitorState> {
+        private static final ThrowableFromInvocationVisitor INSTANCE = new ThrowableFromInvocationVisitor();
+
+        ThrowableFromInvocationVisitor() {
+            super(Optional.empty());
+        }
+
+        @Override
+        public Optional<String> visitMemberSelect(MemberSelectTree node, VisitorState state) {
+            if (node.getIdentifier().contentEquals("getMessage")) {
+                return Optional.ofNullable(state.getSourceForNode(node.getExpression()));
+            }
+            return Optional.empty();
+        }
     }
 
     private static final class MostSevereLogStatementScanner

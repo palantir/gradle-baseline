@@ -84,7 +84,7 @@ public class CatchBlockLogExceptionTest {
                         "    try {",
                         "        log.info(\"hello\");",
                         "    } catch (Throwable t) {",
-                        "        log.info(\"foo\");",
+                        "        log.error(\"foo\");",
                         "    }",
                         "  }",
                         "}")
@@ -97,7 +97,7 @@ public class CatchBlockLogExceptionTest {
                         "    try {",
                         "        log.info(\"hello\");",
                         "    } catch (Throwable t) {",
-                        "        log.info(\"foo\", t);",
+                        "        log.error(\"foo\", t);",
                         "    }",
                         "  }",
                         "}")
@@ -117,8 +117,8 @@ public class CatchBlockLogExceptionTest {
                         "    try {",
                         "        log.info(\"hello\");",
                         "    } catch (Throwable t) {",
-                        "        log.info(\"foo\");",
-                        "        log.debug(\"bar\");",
+                        "        log.error(\"foo\");",
+                        "        log.warn(\"bar\");",
                         "    }",
                         "  }",
                         "}")
@@ -131,12 +131,65 @@ public class CatchBlockLogExceptionTest {
                         "    try {",
                         "        log.info(\"hello\");",
                         "    } catch (Throwable t) {",
-                        "        log.info(\"foo\");",
-                        "        log.debug(\"bar\");",
+                        "        log.error(\"foo\");",
+                        "        log.warn(\"bar\");",
                         "    }",
                         "  }",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    public void testFix_getMessage() {
+        // In this case there are multiple options, no fixes should be suggested.
+        fix()
+                .addInputLines("Test.java",
+                        "import org.slf4j.Logger;",
+                        "import org.slf4j.LoggerFactory;",
+                        "class Test {",
+                        "  private static final Logger log = LoggerFactory.getLogger(Test.class);",
+                        "  void f(String param) {",
+                        "    try {",
+                        "        log.info(\"hello\");",
+                        "    } catch (Throwable t) {",
+                        "        log.error(\"foo\", t.getMessage());",
+                        "    }",
+                        "  }",
+                        "}")
+                .addOutputLines("Test.java",
+                        "import org.slf4j.Logger;",
+                        "import org.slf4j.LoggerFactory;",
+                        "class Test {",
+                        "  private static final Logger log = LoggerFactory.getLogger(Test.class);",
+                        "  void f(String param) {",
+                        "    try {",
+                        "        log.info(\"hello\");",
+                        "    } catch (Throwable t) {",
+                        "        log.error(\"foo\", t);",
+                        "    }",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    public void testFix_doesNotApplyToInfo() {
+        fix()
+                .addInputLines("Test.java",
+                        "import org.slf4j.Logger;",
+                        "import org.slf4j.LoggerFactory;",
+                        "class Test {",
+                        "  private static final Logger log = LoggerFactory.getLogger(Test.class);",
+                        "  void f(String param) {",
+                        "    try {",
+                        "        log.info(\"hello\");",
+                        "    } catch (Throwable t) {",
+                        "        log.info(\"foo\");",
+                        "    }",
+                        "  }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
     }
 
     private void test(Class<? extends Throwable> exceptionClass, String catchStatement, Optional<String> error) {
