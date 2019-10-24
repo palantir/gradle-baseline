@@ -121,7 +121,6 @@ public class DependencyFinderTask extends DefaultTask {
 
     /**
      * Optional class path used to compile the classes.  jdeps can use this to report what jar something came from
-     * @return
      */
     @InputFiles
     @Classpath
