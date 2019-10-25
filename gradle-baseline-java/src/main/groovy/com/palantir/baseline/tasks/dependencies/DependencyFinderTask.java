@@ -17,6 +17,7 @@
 package com.palantir.baseline.tasks.dependencies;
 
 import com.google.common.collect.ImmutableSet;
+import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,6 +35,7 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFiles;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
 import org.zeroturnaround.exec.InvalidExitValueException;
 import org.zeroturnaround.exec.ProcessExecutor;
@@ -66,6 +68,12 @@ public class DependencyFinderTask extends DefaultTask {
      */
     @TaskAction
     protected void exec() {
+        File classDir = classesDir.get().getAsFile();
+        String classesPath = classDir.getAbsolutePath();
+        if (!classDir.exists()) {
+            getLogger().info("Classes directory does not exist: " + classesPath);
+            return;
+        }
         List<String> baseCommand = new ArrayList<>();
         baseCommand.add("jdeps");
         baseCommand.add("-verbose:class");
@@ -81,7 +89,7 @@ public class DependencyFinderTask extends DefaultTask {
         List<String> fullCommand = new ArrayList<>(baseCommand);
         fullCommand.add("-dotoutput");
         fullCommand.add(reportDir.getAsFile().get().getAbsolutePath());
-        fullCommand.add(classesDir.get().getAsFile().getAbsolutePath());
+        fullCommand.add(classesPath);
         runJDeps(fullCommand);
 
         //run the command for APIs.  Put the reports in a sub-dir
@@ -89,7 +97,7 @@ public class DependencyFinderTask extends DefaultTask {
         apiCommand.add("-dotoutput");
         apiCommand.add(reportDir.dir("api").get().getAsFile().getAbsolutePath());
         apiCommand.add("-apionly");
-        apiCommand.add(classesDir.get().getAsFile().getAbsolutePath());
+        apiCommand.add(classesPath);
         runJDeps(apiCommand);
     }
 
@@ -115,6 +123,7 @@ public class DependencyFinderTask extends DefaultTask {
      */
     @InputDirectory
     @PathSensitive(PathSensitivity.RELATIVE)
+    @SkipWhenEmpty
     public final DirectoryProperty getClassesDir() {
         return classesDir;
     }

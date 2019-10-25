@@ -33,6 +33,7 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
+import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
 
 @CacheableTask
@@ -92,6 +93,7 @@ public class DependencyReportTask extends DefaultTask {
      */
     @InputDirectory
     @PathSensitive(PathSensitivity.RELATIVE)
+    @SkipWhenEmpty
     public final DirectoryProperty getDotFileDir() {
         return dotFileDir;
     }
