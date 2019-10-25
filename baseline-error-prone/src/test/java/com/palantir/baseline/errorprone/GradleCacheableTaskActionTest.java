@@ -25,8 +25,8 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 @Execution(ExecutionMode.CONCURRENT)
 public class GradleCacheableTaskActionTest {
 
-    private static final String errorMsg = "BUG: Diagnostic contains: "
-            + "Gradle task actions are not cacheable when implemented by lambdas";
+    private static final String errorMsg =
+            "BUG: Diagnostic contains: " + "Gradle task actions are not cacheable when implemented by lambdas";
 
     private CompilationTestHelper compilationHelper;
 

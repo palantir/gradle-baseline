@@ -43,8 +43,8 @@ import java.util.regex.Pattern;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.ERROR,
         summary = "Disallow CompletableFuture asynchronous operations without an Executor.")
-public final class DangerousCompletableFutureUsage
-        extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
+public final class DangerousCompletableFutureUsage extends BugChecker
+        implements BugChecker.MethodInvocationTreeMatcher {
     private static final long serialVersionUID = 1L;
 
     private static final String ERROR_MESSAGE = "Should not use CompletableFuture methods without specifying a "

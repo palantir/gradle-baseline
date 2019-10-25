@@ -53,18 +53,16 @@ public final class JUnit5RuleUsage extends BugChecker implements BugChecker.Clas
         if (!hasMigrationSupport.matches(tree, state)
                 && hasJunit5TestCases.matches(tree, state)
                 && hasJunit4Rules.matches(tree, state)) {
-            return buildDescription(tree)
-                    .setMessage("Do not use Rule/ClassRule with junit-jupiter")
-                    .build();
+            return buildDescription(tree).setMessage("Do not use Rule/ClassRule with junit-jupiter").build();
         }
 
         return Description.NO_MATCH;
     }
 
     static Matcher<ClassTree> hasVariable(Matcher<VariableTree> matcher) {
-        return (classTree, state) -> classTree.getMembers().stream()
-                .filter(tree -> tree instanceof VariableTree)
-                .anyMatch(tree -> matcher.matches((VariableTree) tree, state));
+        return (classTree, state) ->
+                classTree.getMembers().stream().filter(tree -> tree instanceof VariableTree).anyMatch(tree ->
+                        matcher.matches((VariableTree) tree, state));
     }
 
     static Matcher<VariableTree> hasAnnotationOnVariable(String annotation) {

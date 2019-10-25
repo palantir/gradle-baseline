@@ -57,14 +57,14 @@ public final class CatchBlockLogException extends BugChecker implements BugCheck
             .onDescendantOf("org.slf4j.Logger")
             .withNameMatching(Pattern.compile("trace|debug|info|warn|error"));
 
-    private static final Matcher<Tree> containslogMethod = Matchers.contains(
-            Matchers.toType(ExpressionTree.class, logMethod));
+    private static final Matcher<Tree> containslogMethod =
+            Matchers.contains(Matchers.toType(ExpressionTree.class, logMethod));
 
     private static final Matcher<ExpressionTree> logException = Matchers.methodInvocation(
             logMethod, ChildMultiMatcher.MatchType.LAST, Matchers.isSubtypeOf(Throwable.class));
 
-    private static final Matcher<Tree> containslogException = Matchers.contains(Matchers.toType(
-            ExpressionTree.class, logException));
+    private static final Matcher<Tree> containslogException =
+            Matchers.contains(Matchers.toType(ExpressionTree.class, logException));
 
     @Override
     public Description matchCatch(CatchTree tree, VisitorState state) {
@@ -91,17 +91,16 @@ public final class CatchBlockLogException extends BugChecker implements BugCheck
         // There are no valid log invocations without at least a single argument.
         ExpressionTree lastArgument = loggingArguments.get(loggingArguments.size() - 1);
         return Optional.of(SuggestedFix.builder()
-                .replace(lastArgument, lastArgument.accept(ThrowableFromArgVisitor.INSTANCE, state)
-                        .orElseGet(() -> state.getSourceForNode(lastArgument) + ", " + tree.getParameter().getName()))
+                .replace(lastArgument, lastArgument.accept(ThrowableFromArgVisitor.INSTANCE, state).orElseGet(() ->
+                        state.getSourceForNode(lastArgument) + ", " + tree.getParameter().getName()))
                 .build());
     }
 
     private static final class ThrowableFromArgVisitor extends SimpleTreeVisitor<Optional<String>, VisitorState> {
         private static final ThrowableFromArgVisitor INSTANCE = new ThrowableFromArgVisitor();
 
-        private static final Matcher<ExpressionTree> throwableMessageInvocation = Matchers.instanceMethod()
-                .onDescendantOf(Throwable.class.getName())
-                .named("getMessage");
+        private static final Matcher<ExpressionTree> throwableMessageInvocation =
+                Matchers.instanceMethod().onDescendantOf(Throwable.class.getName()).named("getMessage");
 
         ThrowableFromArgVisitor() {
             super(Optional.empty());
@@ -152,8 +151,7 @@ public final class CatchBlockLogException extends BugChecker implements BugCheck
 
         @Override
         public List<MethodInvocationTree> reduce(
-                @Nullable List<MethodInvocationTree> left,
-                @Nullable List<MethodInvocationTree> right) {
+                @Nullable List<MethodInvocationTree> left, @Nullable List<MethodInvocationTree> right) {
             // Unfortunately there's no way to provide default initial values, so we must handle nulls.
             if (left == null) {
                 return right;
@@ -161,10 +159,7 @@ public final class CatchBlockLogException extends BugChecker implements BugCheck
             if (right == null) {
                 return left;
             }
-            return ImmutableList.<MethodInvocationTree>builder()
-                    .addAll(left)
-                    .addAll(right)
-                    .build();
+            return ImmutableList.<MethodInvocationTree>builder().addAll(left).addAll(right).build();
         }
     }
 }

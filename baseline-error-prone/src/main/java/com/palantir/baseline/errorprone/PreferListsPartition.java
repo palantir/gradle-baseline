@@ -39,21 +39,20 @@ import java.util.List;
         linkType = BugPattern.LinkType.CUSTOM,
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = SeverityLevel.WARNING,
-        summary = "Prefer Guava's Lists.partition(List, int) instead of Iterables.partition(Iterable, int) when "
-                + "first argument's declared type is a list for performance reasons, "
-                + "cf. https://github.com/palantir/gradle-baseline/issues/621")
-public final class PreferListsPartition extends BugChecker
-        implements BugChecker.MethodInvocationTreeMatcher {
+        summary =
+                "Prefer Guava's Lists.partition(List, int) instead of Iterables.partition(Iterable, int) when "
+                        + "first argument's declared type is a list for performance reasons, "
+                        + "cf. https://github.com/palantir/gradle-baseline/issues/621")
+public final class PreferListsPartition extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
 
     private static final String ERROR_MESSAGE = "Prefer Lists.partition";
 
-    private static final Matcher<ExpressionTree> ITERABLES_PARTITION_MATCHER =
-            MethodMatchers.staticMethod()
-                    .onClass("com.google.common.collect.Iterables")
-                    .named("partition")
-                    .withParameters("java.lang.Iterable", "int");
+    private static final Matcher<ExpressionTree> ITERABLES_PARTITION_MATCHER = MethodMatchers.staticMethod()
+            .onClass("com.google.common.collect.Iterables")
+            .named("partition")
+            .withParameters("java.lang.Iterable", "int");
 
     private static final Matcher<Tree> LIST_MATCHER = Matchers.isSubtypeOf("java.util.List");
 
@@ -79,5 +78,4 @@ public final class PreferListsPartition extends BugChecker
 
         return Description.NO_MATCH;
     }
-
 }

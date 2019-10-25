@@ -42,8 +42,10 @@ import java.util.regex.Pattern;
         linkType = BugPattern.LinkType.CUSTOM,
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = BugPattern.SeverityLevel.WARNING,
-        summary = "Precondition and similar checks with a constant message and no parameters should use equivalent "
-                + "checks from com.palantir.logsafe.Preconditions for standardization as functionality is the same.")
+        summary =
+                "Precondition and similar checks with a constant message and no parameters should use equivalent"
+                        + " checks from com.palantir.logsafe.Preconditions for standardization as functionality is the"
+                        + " same.")
 public final class PreferSafeLoggingPreconditions extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
@@ -51,17 +53,13 @@ public final class PreferSafeLoggingPreconditions extends BugChecker implements 
     private final Matcher<ExpressionTree> compileTimeConstExpressionMatcher =
             new CompileTimeConstantExpressionMatcher();
 
-    private static final Matcher<ExpressionTree> METHOD_MATCHER =
-            Matchers.anyOf(
-                    MethodMatchers.staticMethod()
-                            .onClass("com.google.common.base.Preconditions")
-                            .withNameMatching(Pattern.compile("checkArgument|checkState|checkNotNull")),
-                    MethodMatchers.staticMethod()
-                            .onClass("java.util.Objects")
-                            .named("requireNonNull"),
-                    MethodMatchers.staticMethod()
-                            .onClass("org.apache.commons.lang3.Validate")
-                            .withNameMatching(Pattern.compile("isTrue|notNull|validState")));
+    private static final Matcher<ExpressionTree> METHOD_MATCHER = Matchers.anyOf(
+            MethodMatchers.staticMethod()
+                    .onClass("com.google.common.base.Preconditions")
+                    .withNameMatching(Pattern.compile("checkArgument|checkState|checkNotNull")),
+            MethodMatchers.staticMethod().onClass("java.util.Objects").named("requireNonNull"),
+            MethodMatchers.staticMethod().onClass("org.apache.commons.lang3.Validate").withNameMatching(Pattern.compile(
+                    "isTrue|notNull|validState")));
 
     private static final ImmutableMap<String, String> TRANSLATIONS_TO_LOGSAFE_PRECONDITIONS_METHODS = ImmutableMap.of(
             "requireNonNull", "checkNotNull", // java.util.Objects.requireNotNull
@@ -83,9 +81,7 @@ public final class PreferSafeLoggingPreconditions extends BugChecker implements 
         if (args.size() == 2) {
             ExpressionTree messageArg = args.get(1);
             boolean isStringType = ASTHelpers.isSameType(
-                    ASTHelpers.getType(messageArg),
-                    state.getTypeFromString("java.lang.String"),
-                    state);
+                    ASTHelpers.getType(messageArg), state.getTypeFromString("java.lang.String"), state);
             if (!isStringType || !compileTimeConstExpressionMatcher.matches(messageArg, state)) {
                 return Description.NO_MATCH;
             }

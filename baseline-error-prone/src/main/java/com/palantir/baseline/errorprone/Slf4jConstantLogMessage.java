@@ -58,9 +58,9 @@ public final class Slf4jConstantLogMessage extends BugChecker implements MethodI
 
         List<? extends ExpressionTree> args = tree.getArguments();
         ExpressionTree messageArg = ASTHelpers.isCastable(
-                ASTHelpers.getType(tree.getArguments().get(0)),
-                state.getTypeFromString("org.slf4j.Marker"),
-                state)
+                        ASTHelpers.getType(tree.getArguments().get(0)),
+                        state.getTypeFromString("org.slf4j.Marker"),
+                        state)
                 ? args.get(1)
                 : args.get(0);
 
@@ -70,5 +70,4 @@ public final class Slf4jConstantLogMessage extends BugChecker implements MethodI
 
         return buildDescription(tree).setMessage("slf4j log statement uses a non-constant expression").build();
     }
-
 }
