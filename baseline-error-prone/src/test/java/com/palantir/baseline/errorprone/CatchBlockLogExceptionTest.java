@@ -16,6 +16,7 @@
 
 package com.palantir.baseline.errorprone;
 
+import com.google.errorprone.BugCheckerRefactoringTestHelper;
 import com.google.errorprone.CompilationTestHelper;
 import java.util.Optional;
 import org.junit.jupiter.api.BeforeEach;
@@ -71,6 +72,109 @@ public class CatchBlockLogExceptionTest {
         test(RuntimeException.class, "// Do nothing", Optional.empty());
     }
 
+    @Test
+    public void testFix_simple() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import org.slf4j.Logger;",
+                        "import org.slf4j.LoggerFactory;",
+                        "class Test {",
+                        "  private static final Logger log = LoggerFactory.getLogger(Test.class);",
+                        "  void f(String param) {",
+                        "    try {",
+                        "        log.info(\"hello\");",
+                        "    } catch (Throwable t) {",
+                        "        log.error(\"foo\");",
+                        "    }",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import org.slf4j.Logger;",
+                        "import org.slf4j.LoggerFactory;",
+                        "class Test {",
+                        "  private static final Logger log = LoggerFactory.getLogger(Test.class);",
+                        "  void f(String param) {",
+                        "    try {",
+                        "        log.info(\"hello\");",
+                        "    } catch (Throwable t) {",
+                        "        log.error(\"foo\", t);",
+                        "    }",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    public void testFix_ambiguous() {
+        // In this case there are multiple options, no fixes should be suggested.
+        fix().addInputLines(
+                        "Test.java",
+                        "import org.slf4j.Logger;",
+                        "import org.slf4j.LoggerFactory;",
+                        "class Test {",
+                        "  private static final Logger log = LoggerFactory.getLogger(Test.class);",
+                        "  void f(String param) {",
+                        "    try {",
+                        "        log.info(\"hello\");",
+                        "    } catch (Throwable t) {",
+                        "        log.error(\"foo\");",
+                        "        log.warn(\"bar\");",
+                        "    }",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import org.slf4j.Logger;",
+                        "import org.slf4j.LoggerFactory;",
+                        "class Test {",
+                        "  private static final Logger log = LoggerFactory.getLogger(Test.class);",
+                        "  void f(String param) {",
+                        "    try {",
+                        "        log.info(\"hello\");",
+                        "    } catch (Throwable t) {",
+                        "        log.error(\"foo\");",
+                        "        log.warn(\"bar\");",
+                        "    }",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    public void testFix_getMessage() {
+        // In this case there are multiple options, no fixes should be suggested.
+        fix().addInputLines(
+                        "Test.java",
+                        "import org.slf4j.Logger;",
+                        "import org.slf4j.LoggerFactory;",
+                        "class Test {",
+                        "  private static final Logger log = LoggerFactory.getLogger(Test.class);",
+                        "  void f(String param) {",
+                        "    try {",
+                        "        log.info(\"hello\");",
+                        "    } catch (Throwable t) {",
+                        "        log.error(\"foo\", t.getMessage());",
+                        "    }",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import org.slf4j.Logger;",
+                        "import org.slf4j.LoggerFactory;",
+                        "class Test {",
+                        "  private static final Logger log = LoggerFactory.getLogger(Test.class);",
+                        "  void f(String param) {",
+                        "    try {",
+                        "        log.info(\"hello\");",
+                        "    } catch (Throwable t) {",
+                        "        log.error(\"foo\", t);",
+                        "    }",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
     private void test(Class<? extends Throwable> exceptionClass, String catchStatement, Optional<String> error) {
         compilationHelper
                 .addSourceLines(
@@ -89,5 +193,9 @@ public class CatchBlockLogExceptionTest {
                         "  }",
                         "}")
                 .doTest();
+    }
+
+    private BugCheckerRefactoringTestHelper fix() {
+        return BugCheckerRefactoringTestHelper.newInstance(new CatchBlockLogException(), getClass());
     }
 }
