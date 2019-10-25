@@ -186,7 +186,7 @@ public final class DependencyAnalyzer {
                     .values()
                     .stream()
                     .map(e -> e.getNode2().getId())
-                    .map(this::cleanDependencyName);
+                    .map(DependencyAnalyzer::cleanDependencyName);
         } catch (IOException e) {
             throw new RuntimeException("Unable to analyze " + dotFile, e);
         }
@@ -195,8 +195,8 @@ public final class DependencyAnalyzer {
     /**
      * Strips excess junk written by jdeps.
      */
-    private String cleanDependencyName(String name) {
-        return name.replace(" (not found)", "").replace("\"", "");
+    private static String cleanDependencyName(String name) {
+        return name.replaceAll(" \\([^)]*\\)", "").replace("\"", "");
     }
 
     /**

@@ -21,14 +21,19 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.Optional;
+import java.util.stream.Stream;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.file.Directory;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.yaml.snakeyaml.Yaml;
 
 public final class DependencyUtils {
+    private static final Logger log = LoggerFactory.getLogger(DependencyUtils.class);
 
     private DependencyUtils() {
     }
@@ -113,13 +118,29 @@ public final class DependencyUtils {
         return "implementation " + result;
     }
 
+
     /**
      * The report directory will normally contain the main report and a summary report.  The main report's
      * name can vary, so find it by looking for whatever is not the summary.
      */
-    static Optional<File> findDetailedDotReport(Directory dotFileDir) {
-        return dotFileDir.getAsFileTree().getFiles().stream()
-                .filter(f -> !f.isDirectory() && !f.getName().equals("summary.dot"))
-                .findFirst();
+    public static Optional<File> findDetailedDotReport(Directory dotFileDir) {
+        return findDetailedDotReport(dotFileDir.getAsFile());
+    }
+
+    /**
+     * The report directory will normally contain the main report and a summary report.  The main report's
+     * name can vary, so find it by looking for whatever is not the summary.
+     */
+    public static Optional<File> findDetailedDotReport(File dotFileDir) {
+        try (Stream<Path> walk = Files.list(dotFileDir.toPath())) {
+            return walk.filter(Files::isRegularFile)
+                    .map(Path::toFile)
+                    .filter(f -> !f.getName().equals("summary.dot"))
+                    .findFirst();
+
+        } catch (IOException e) {
+            log.info("Error walking directory path for dot file", e);
+            return Optional.empty();
+        }
     }
 }

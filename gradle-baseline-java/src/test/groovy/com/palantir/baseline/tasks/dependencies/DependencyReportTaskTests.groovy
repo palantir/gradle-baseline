@@ -29,7 +29,7 @@ class DependencyReportTaskTests extends AbstractDependencyTest {
         reportFile = new File(reportDir, "analyzeDeps-report.yaml")
     }
 
-    def 'test writing dep report'() {
+    def 'dependency report has proper contents'() {
         setup:
         setupTransitiveJarDependencyProject()
         //include some annotation stuff to make sure not listed as unused
@@ -58,7 +58,7 @@ class DependencyReportTaskTests extends AbstractDependencyTest {
         expected == actual
     }
 
-    def 'test writing dep report with api deps'() {
+    def 'multi-module dep report'() {
         setup:
         setupMultiProject()
 
@@ -77,6 +77,33 @@ class DependencyReportTaskTests extends AbstractDependencyTest {
             - com.google.guava:guava
             - project :sub-project-no-deps
             unusedDependencies:
+            - project :sub-project-jar-deps
+            - project :sub-project-with-deps
+        '''
+        String actual = reportFile.text
+        expected == actual
+    }
+
+    def 'report for test source set'() {
+        setup:
+        setupMultiProject()
+        reportFile = new File(reportDir, "analyzeTestDeps-report.yaml")
+
+        when:
+        BuildResult result = runTask('analyzeTestDeps')
+
+        then:
+        result.task(':analyzeTestDeps').getOutcome() == TaskOutcome.SUCCESS
+        String expected = cleanFileContentsWithEol '''
+            allDependencies:
+            - com.google.guava:guava
+            - junit:junit
+            apiDependencies:
+            - junit:junit
+            implicitDependencies:
+            - com.google.guava:guava
+            unusedDependencies:
+            - com.fasterxml.jackson.datatype:jackson-datatype-guava
             - project :sub-project-jar-deps
             - project :sub-project-with-deps
         '''
