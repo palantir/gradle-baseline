@@ -21,7 +21,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
-import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.SetProperty;
@@ -65,20 +64,20 @@ public class DependencyReportTask extends DefaultTask {
         DependencyAnalyzer analyzer = new DependencyAnalyzer(getProject(),
                 configurations.get(),
                 dotFileDir.get());
+        analyzer.analyze();
 
         ReportContent content = new ReportContent();
-        content.allDependencies = artifactNames(analyzer.getAllRequiredArtifacts());
-        content.apiDependencies = artifactNames(analyzer.getApiArtifacts());
-        content.implicitDependencies = artifactNames(analyzer.getImplicitDependencies());
-        content.unusedDependencies = artifactNames(analyzer.getUnusedDependencies());
+        content.allDependencies = sortDependencies(analyzer.getAllRequiredDependencies());
+        content.apiDependencies = sortDependencies(analyzer.getApiDependencies());
+        content.implicitDependencies = sortDependencies(analyzer.getImplicitDependencies());
+        content.unusedDependencies = sortDependencies(analyzer.getUnusedDependencies());
 
         DependencyUtils.writeDepReport(getReportFile().getAsFile().get(), content);
 
     }
 
-    private List<String> artifactNames(Collection<ResolvedArtifact> artifacts) {
-        return artifacts.stream()
-                .map(DependencyUtils::getDependencyName)
+    private List<String> sortDependencies(Collection<String> dependencyIds) {
+        return dependencyIds.stream()
                 .sorted()
                 .collect(Collectors.toList());
     }

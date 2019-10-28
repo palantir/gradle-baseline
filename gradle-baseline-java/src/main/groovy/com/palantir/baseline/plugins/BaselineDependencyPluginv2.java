@@ -71,9 +71,9 @@ public final class BaselineDependencyPluginv2 implements Plugin<Project> {
             t.getDotFileDir().set(finderTask.get().getReportDir());
 
             t.getConfigurations().addAll(sourceSet.getCompileOnlyConfigurationName(),
-                sourceSet.getImplementationConfigurationName(),
-                sourceSet.getCompileConfigurationName(),
-                sourceSet.getApiConfigurationName());
+                    sourceSet.getImplementationConfigurationName(),
+                    sourceSet.getCompileConfigurationName(),
+                    sourceSet.getApiConfigurationName());
         });
     }
 

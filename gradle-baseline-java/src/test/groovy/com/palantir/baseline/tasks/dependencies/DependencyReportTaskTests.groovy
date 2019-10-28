@@ -33,6 +33,7 @@ class DependencyReportTaskTests extends AbstractDependencyTest {
         setup:
         setupTransitiveJarDependencyProject()
         //include some annotation stuff to make sure not listed as unused
+        //and a compileOnly to make sure we pick up things from it
         buildFile << """
         dependencies {
             annotationProcessor 'org.immutables:value:2.7.5'

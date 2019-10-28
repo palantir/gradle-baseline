@@ -58,8 +58,7 @@ public final class DependencyUtils {
     public static String getDependencyName(ModuleDependency dependency) {
         if (isProjectDependency(dependency)) {
             return String.format("project :%s", ((ProjectDependency) dependency).getDependencyProject().getName());
-        }
-        else {
+        } else {
             Optional<String> maybeClassifier = dependency.getArtifacts().stream()
                     .findFirst()
                     .map(DependencyArtifact::getClassifier);
