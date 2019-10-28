@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: New dependency analyzer yields cleaner results and tasks store output in files so better
+    caching and analysis can be reused for other purposes
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/983
