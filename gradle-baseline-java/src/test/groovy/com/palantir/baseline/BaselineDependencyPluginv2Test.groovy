@@ -68,7 +68,7 @@ class BaselineDependencyPluginv2Test extends AbstractDependencyTest {
         result.output.contains("Found 1 dependencies unused during compilation")
     }
 
-    def 'checkUnusedDeps passes when annotationProcessor or compileOnly classes are not referenced'() {
+    def 'checkUnusedDeps passes when unused dependency is in ignored'() {
         when:
         buildFile << standardBuildFile
         buildFile << """
@@ -76,7 +76,6 @@ class BaselineDependencyPluginv2Test extends AbstractDependencyTest {
             mavenCentral()
         }
         dependencies {
-            annotationProcessor 'org.immutables:value:2.7.5'
             compileOnly 'org.immutables:value:2.7.5:annotations'
         }
         """

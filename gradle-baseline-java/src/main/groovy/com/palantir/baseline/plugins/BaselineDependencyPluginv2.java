@@ -99,6 +99,9 @@ public final class BaselineDependencyPluginv2 implements Plugin<Project> {
             t.getReportFile().set(reportTask.get().getReportFile());
             // this is liberally applied to ease the Java8 -> 11 transition
             t.getIgnored().add("javax.annotation:javax.annotation-api");
+            //Projects may apply this in compileOnly to work around
+            //https://github.com/immutables/immutables/issues/291
+            t.getIgnored().add("org.immutables:value::annotations");
         });
     }
 
