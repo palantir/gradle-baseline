@@ -22,7 +22,6 @@ import com.palantir.baseline.tasks.dependencies.DependencyFinderTask;
 import com.palantir.baseline.tasks.dependencies.DependencyReportTask;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSet;
@@ -70,10 +69,11 @@ public final class BaselineDependencyPluginv2 implements Plugin<Project> {
             t.setDescription("Produces a report for dependencies of the " + sourceSet.getName() + " source set.");
             t.setGroup(GROUP_NAME);
             t.getDotFileDir().set(finderTask.get().getReportDir());
-            ConfigurationContainer configs = project.getConfigurations();
-            t.getConfigurations().add(configs.getByName(sourceSet.getCompileClasspathConfigurationName()));
-            t.getSourceOnlyConfigurations().add(configs.getByName(sourceSet.getAnnotationProcessorConfigurationName()));
-            t.getSourceOnlyConfigurations().add(configs.getByName(sourceSet.getCompileOnlyConfigurationName()));
+
+            t.getConfigurations().addAll(sourceSet.getCompileOnlyConfigurationName(),
+                sourceSet.getImplementationConfigurationName(),
+                sourceSet.getCompileConfigurationName(),
+                sourceSet.getApiConfigurationName());
         });
     }
 

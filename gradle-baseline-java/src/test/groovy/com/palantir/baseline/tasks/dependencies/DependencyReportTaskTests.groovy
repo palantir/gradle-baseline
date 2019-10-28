@@ -53,6 +53,7 @@ class DependencyReportTaskTests extends AbstractDependencyTest {
             - com.google.guava:guava
             unusedDependencies:
             - com.fasterxml.jackson.datatype:jackson-datatype-guava
+            - org.immutables:value::annotations
         '''
         String actual = reportFile.text
         expected == actual
@@ -104,8 +105,6 @@ class DependencyReportTaskTests extends AbstractDependencyTest {
             - com.google.guava:guava
             unusedDependencies:
             - com.fasterxml.jackson.datatype:jackson-datatype-guava
-            - project :sub-project-jar-deps
-            - project :sub-project-with-deps
         '''
         String actual = reportFile.text
         expected == actual

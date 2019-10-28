@@ -24,7 +24,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.stream.Stream;
+import org.gradle.api.artifacts.DependencyArtifact;
+import org.gradle.api.artifacts.ModuleDependency;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
+import org.gradle.api.artifacts.ProjectDependency;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.file.Directory;
@@ -48,21 +51,37 @@ public final class DependencyUtils {
         return isProjectDependency(artifact)
                 ? String.format("project :%s",
                 ((ProjectComponentIdentifier) artifact.getId().getComponentIdentifier()).getProjectName())
-                : getJarDependencyName(artifact);
+                : getJarDepName(id.getGroup(), id.getName(), Optional.empty(),
+                Optional.ofNullable(artifact.getClassifier()));
+    }
+
+    public static String getDependencyName(ModuleDependency dependency) {
+        if (isProjectDependency(dependency)) {
+            return String.format("project :%s", ((ProjectDependency) dependency).getDependencyProject().getName());
+        }
+        else {
+            Optional<String> maybeClassifier = dependency.getArtifacts().stream()
+                    .findFirst()
+                    .map(DependencyArtifact::getClassifier);
+            return getJarDepName(dependency.getGroup(), dependency.getName(), Optional.empty(), maybeClassifier);
+        }
     }
 
     /**
-     * Generate dependency id in the standard way except for version - group:name[:classifier].
+     * Generate dependency id in the standard way except for version - group:name[:version][:classifier].
      */
-    private static String getJarDependencyName(ResolvedArtifact artifact) {
-        final ModuleVersionIdentifier id = artifact.getModuleVersion().getId();
-        String classifier = artifact.getClassifier();
+    public static String getJarDepName(String group, String name,
+                                        Optional<String> version, Optional<String> classifier) {
+        return group + ":" + name + version.map(v -> ":" + v).orElse(classifier.isPresent() ? ":" : "")
+                + classifier.map(s -> ":" + s).orElse("");
+    }
 
-        String result = id.getGroup() + ":" + id.getName();
-        if (classifier != null && !classifier.isEmpty()) {
-            result = result + ":" + classifier;
-        }
-        return result;
+    /**
+     * Return true if the resolved artifact is derived from a project in the current build rather than an
+     * external jar.
+     */
+    public static boolean isProjectDependency(ModuleDependency dependency) {
+        return dependency instanceof ProjectDependency;
     }
 
     /**

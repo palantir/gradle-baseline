@@ -21,33 +21,35 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
-import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
-import org.gradle.api.provider.ListProperty;
+import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.CacheableTask;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
-import org.gradle.api.tasks.InputFiles;
-import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
 
+/**
+ * Produces report to optimize dependencies for a project.
+ *
+ * Configurations are passed by name rather than the full configuration themselves because the caching calculations
+ * attempt to resolve the configurations.  This leads to errors with configs that cannot be resolved at configuration
+ * time, notably implementation and api.
+ */
 @CacheableTask
 public class DependencyReportTask extends DefaultTask {
-    private final ListProperty<Configuration> configurations;
-    private final ListProperty<Configuration> sourceOnlyConfigurations;
+    private final SetProperty<String> configurations;
     private final DirectoryProperty dotFileDir;
     private final RegularFileProperty report;
 
     public DependencyReportTask() {
-        configurations = getProject().getObjects().listProperty(Configuration.class);
+        configurations = getProject().getObjects().setProperty(String.class);
         configurations.convention(Collections.emptyList());
-        sourceOnlyConfigurations = getProject().getObjects().listProperty(Configuration.class);
-        sourceOnlyConfigurations.convention(Collections.emptyList());
 
         dotFileDir = getProject().getObjects().directoryProperty();
 
@@ -62,7 +64,6 @@ public class DependencyReportTask extends DefaultTask {
     public final void analyzeDependencies() {
         DependencyAnalyzer analyzer = new DependencyAnalyzer(getProject(),
                 configurations.get(),
-                sourceOnlyConfigurations.get(),
                 dotFileDir.get());
 
         ReportContent content = new ReportContent();
@@ -82,9 +83,8 @@ public class DependencyReportTask extends DefaultTask {
                 .collect(Collectors.toList());
     }
 
-    @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public final ListProperty<Configuration> getConfigurations() {
+    @Input
+    public final SetProperty<String> getConfigurations() {
         return configurations;
     }
 
@@ -96,13 +96,6 @@ public class DependencyReportTask extends DefaultTask {
     @SkipWhenEmpty
     public final DirectoryProperty getDotFileDir() {
         return dotFileDir;
-    }
-
-    @InputFiles
-    @Optional
-    @PathSensitive(PathSensitivity.RELATIVE)
-    public final ListProperty<Configuration> getSourceOnlyConfigurations() {
-        return sourceOnlyConfigurations;
     }
 
     @OutputFile
