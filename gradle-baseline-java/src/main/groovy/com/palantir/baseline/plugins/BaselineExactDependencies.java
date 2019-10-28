@@ -39,6 +39,8 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
+import org.gradle.api.artifacts.component.ComponentIdentifier;
+import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
@@ -99,11 +101,45 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     }
 
     public static String asString(ResolvedArtifact artifact) {
-        return asString(artifact.getModuleVersion().getId());
+        ModuleVersionIdentifier moduleVersionId = artifact.getModuleVersion().getId();
+        StringBuilder builder = new StringBuilder()
+                .append(moduleVersionId.getGroup())
+                .append(":")
+                .append(moduleVersionId.getName());
+        if (artifact.getClassifier() != null) {
+            builder
+                    .append("::")
+                    .append(artifact.getClassifier());
+        }
+        return builder.toString();
     }
 
-    public static String asString(ModuleVersionIdentifier id) {
-        return id.getGroup() + ":" + id.getName();
+    public static String asDependencyStringWithName(ResolvedArtifact artifact) {
+        return asDependencyString(artifact, true);
+    }
+
+    public static String asDependencyStringWithoutName(ResolvedArtifact artifact) {
+        return asDependencyString(artifact, false);
+    }
+
+    private static String asDependencyString(ResolvedArtifact artifact, boolean withName) {
+        ComponentIdentifier componentId = artifact.getId().getComponentIdentifier();
+        if (componentId instanceof ProjectComponentIdentifier) {
+            ProjectComponentIdentifier projectComponentId = (ProjectComponentIdentifier) componentId;
+            StringBuilder builder = new StringBuilder()
+                    .append("project('")
+                    .append(projectComponentId.getProjectPath())
+                    .append("')");
+            if (withName) {
+                builder
+                    .append(" (")
+                    .append(artifact.getId().getDisplayName())
+                    .append(")");
+            }
+            return builder.toString();
+        }
+
+        return asString(artifact);
     }
 
     @ThreadSafe

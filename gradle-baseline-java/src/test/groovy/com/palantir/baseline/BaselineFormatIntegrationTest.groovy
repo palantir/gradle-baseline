@@ -40,6 +40,11 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
             id 'java'
             id 'com.palantir.baseline-format'
         }
+        repositories {
+            // to resolve the `palantirJavaFormat` configuration
+            maven { url 'https://dl.bintray.com/palantir/releases' }
+            jcenter()
+        }
     '''.stripIndent()
 
     def noJavaBuildFile = '''
@@ -119,7 +124,13 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         buildFile << """
             plugins {
                 id 'java'
+                id 'com.palantir.java-format'
                 id 'com.palantir.baseline-format'
+            }
+            repositories {
+                // to resolve the `palantirJavaFormat` configuration
+                maven { url 'https://dl.bintray.com/palantir/releases' }
+                jcenter()
             }
         """.stripIndent()
         file('gradle.properties') << "com.palantir.baseline-format.palantir-java-format=true\n"
@@ -220,5 +231,42 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         then:
         BuildResult result = with('spotlessJavaCheck').build()
         result.task(":spotlessJava").outcome == TaskOutcome.SUCCESS
+    }
+
+    def 'formatDiff updates only lines changed in git diff'() {
+        when:
+        buildFile << standardBuildFile
+        "git init".execute(Collections.emptyList(), projectDir).waitFor()
+        "git config user.name Foo".execute(Collections.emptyList(), projectDir).waitFor()
+        "git config user.email foo@bar.com".execute(Collections.emptyList(), projectDir).waitFor()
+
+        file('src/main/java/Main.java') << '''
+        class Main {
+            public static void crazyExistingFormatting  (  String... args) {
+
+            }
+        }
+        '''.stripIndent()
+
+        "git add .".execute(Collections.emptyList(), projectDir).waitFor()
+        "git commit -m Commit".execute(Collections.emptyList(), projectDir).waitFor()
+
+        file('src/main/java/Main.java').text = '''
+        class Main {
+            public static void crazyExistingFormatting  (  String... args) {
+                                        System.out.println("Reformat me please");
+            }
+        }
+        '''.stripIndent()
+
+        then:
+        with('formatDiff', '-Pcom.palantir.baseline-format.palantir-java-format').build()
+        file('src/main/java/Main.java').text == '''
+        class Main {
+            public static void crazyExistingFormatting  (  String... args) {
+                System.out.println("Reformat me please");
+            }
+        }
+        '''.stripIndent()
     }
 }

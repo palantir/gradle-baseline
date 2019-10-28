@@ -42,6 +42,11 @@ public final class AssertjOptionalIsNotPresentWithDescription<T> {
         assertThat(thing).describedAs(description, descriptionArgs).isEqualTo(Optional.empty());
     }
 
+    @BeforeTemplate
+    void before4(Optional<T> thing, String description, @Repeated Object descriptionArgs) {
+        assertThat(Optional.empty()).describedAs(description, descriptionArgs).isEqualTo(thing);
+    }
+
     @AfterTemplate
     @UseImportPolicy(ImportPolicy.STATIC_IMPORT_ALWAYS)
     void after(Optional<T> thing, String description, @Repeated Object descriptionArgs) {
