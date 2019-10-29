@@ -43,7 +43,7 @@ public class CheckImplicitDependenciesTaskv2 extends DefaultTask {
 
     @TaskAction
     public final void checkImplicitDependencies() {
-        DependencyReportTask.ReportContent reportContent =
+        DependencyAnalysisTask.ReportContent reportContent =
                 DependencyUtils.getReportContent(getReportFile().getAsFile().get());
 
         if (reportContent.getImplicitDependencies().isEmpty()) {

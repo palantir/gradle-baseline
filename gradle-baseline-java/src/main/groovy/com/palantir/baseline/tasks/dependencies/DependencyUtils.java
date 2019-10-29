@@ -102,7 +102,7 @@ public final class DependencyUtils {
                 || !artifactName.contains(":");
     }
 
-    static void writeDepReport(File file, DependencyReportTask.ReportContent content) {
+    static void writeDepReport(File file, DependencyAnalysisTask.ReportContent content) {
         Yaml yaml = new Yaml();
         try {
             String contents = yaml.dumpAsMap(content);
@@ -112,11 +112,11 @@ public final class DependencyUtils {
         }
     }
 
-    public static DependencyReportTask.ReportContent getReportContent(File reportFile) {
+    public static DependencyAnalysisTask.ReportContent getReportContent(File reportFile) {
         Yaml yaml = new Yaml();
-        DependencyReportTask.ReportContent reportContent;
+        DependencyAnalysisTask.ReportContent reportContent;
         try (InputStream input = Files.newInputStream(reportFile.toPath())) {
-            reportContent = yaml.loadAs(input, DependencyReportTask.ReportContent.class);
+            reportContent = yaml.loadAs(input, DependencyAnalysisTask.ReportContent.class);
         } catch (IOException e) {
             throw new RuntimeException("Error reading dependency report", e);
         }

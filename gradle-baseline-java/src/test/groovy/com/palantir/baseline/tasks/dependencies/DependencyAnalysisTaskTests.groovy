@@ -19,7 +19,7 @@ package com.palantir.baseline.tasks.dependencies
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 
-class DependencyReportTaskTests extends AbstractDependencyTest {
+class DependencyAnalysisTaskTests extends AbstractDependencyTest {
 
     File reportDir
     File reportFile
@@ -60,7 +60,7 @@ class DependencyReportTaskTests extends AbstractDependencyTest {
         expected == actual
     }
 
-    def 'multi-module dep report'() {
+    def 'multi-module report'() {
         setup:
         setupMultiProject()
 
@@ -86,7 +86,7 @@ class DependencyReportTaskTests extends AbstractDependencyTest {
         expected == actual
     }
 
-    def 'report for test source set'() {
+    def 'analyze test source set'() {
         setup:
         setupMultiProject()
         reportFile = new File(reportDir, "analyzeTestDeps-report.yaml")

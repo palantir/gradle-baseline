@@ -43,7 +43,7 @@ public class CheckUnusedDependenciesTaskv2 extends DefaultTask {
 
     @TaskAction
     public final void checkUnusedDependencies() {
-        DependencyReportTask.ReportContent reportContent =
+        DependencyAnalysisTask.ReportContent reportContent =
                 DependencyUtils.getReportContent(getReportFile().getAsFile().get());
 
         if (reportContent.getUnusedDependencies().isEmpty()) {

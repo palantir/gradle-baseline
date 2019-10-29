@@ -18,8 +18,8 @@ package com.palantir.baseline.plugins;
 
 import com.palantir.baseline.tasks.dependencies.CheckImplicitDependenciesTaskv2;
 import com.palantir.baseline.tasks.dependencies.CheckUnusedDependenciesTaskv2;
+import com.palantir.baseline.tasks.dependencies.DependencyAnalysisTask;
 import com.palantir.baseline.tasks.dependencies.DependencyFinderTask;
-import com.palantir.baseline.tasks.dependencies.DependencyReportTask;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
@@ -46,7 +46,7 @@ public final class BaselineDependencyPluginv2 implements Plugin<Project> {
 
     private void createTasksForSourceSet(Project project, SourceSet sourceSet) {
         Provider<DependencyFinderTask> findDepsTask = createFinderTask(project, sourceSet);
-        Provider<DependencyReportTask> analyzeDepsTask = createReportTask(project, sourceSet,
+        Provider<DependencyAnalysisTask> analyzeDepsTask = createAnalyzerTask(project, sourceSet,
                 findDepsTask);
         createCheckImplicitTask(project, sourceSet, analyzeDepsTask);
         createCheckUnusedTask(project, sourceSet, analyzeDepsTask);
@@ -69,10 +69,10 @@ public final class BaselineDependencyPluginv2 implements Plugin<Project> {
         });
     }
 
-    private Provider<DependencyReportTask> createReportTask(Project project, SourceSet sourceSet,
-                                                            Provider<DependencyFinderTask> finderTask) {
-        String taskName = TaskNamer.getReportTaskName(sourceSet);
-        return project.getTasks().register(taskName, DependencyReportTask.class, t -> {
+    private Provider<DependencyAnalysisTask> createAnalyzerTask(Project project, SourceSet sourceSet,
+                                                              Provider<DependencyFinderTask> finderTask) {
+        String taskName = TaskNamer.getAnalyzerTaskName(sourceSet);
+        return project.getTasks().register(taskName, DependencyAnalysisTask.class, t -> {
             t.setDescription("Produces a report for dependencies of the " + sourceSet.getName() + " source set.");
             t.setGroup(GROUP_NAME);
             t.getDotFileDir().set(finderTask.get().getReportDir());
@@ -85,25 +85,25 @@ public final class BaselineDependencyPluginv2 implements Plugin<Project> {
     }
 
     private Provider<CheckImplicitDependenciesTaskv2> createCheckImplicitTask(Project project, SourceSet sourceSet,
-                                                                            Provider<DependencyReportTask> reportTask) {
+                                                                        Provider<DependencyAnalysisTask> analyzerTask) {
         String taskName = TaskNamer.getCheckImplicitTaskName(sourceSet);
         return project.getTasks().register(taskName, CheckImplicitDependenciesTaskv2.class, t -> {
             t.setDescription("Verifies that project declares all dependencies that are directly used by "
                     + sourceSet.getName() + " source set rather than relying on transitive dependencies.");
             t.setGroup(GROUP_NAME);
-            t.getReportFile().set(reportTask.get().getReportFile());
+            t.getReportFile().set(analyzerTask.get().getReportFile());
             t.getIgnored().add("org.slf4j:slf4j-api");
         });
     }
 
     private Provider<CheckUnusedDependenciesTaskv2> createCheckUnusedTask(Project project, SourceSet sourceSet,
-                                                                          Provider<DependencyReportTask> reportTask) {
+                                                                      Provider<DependencyAnalysisTask> analyzerTask) {
         String taskName = TaskNamer.getCheckUnusedTaskName(sourceSet);
         return project.getTasks().register(taskName, CheckUnusedDependenciesTaskv2.class, t -> {
             t.setDescription("Verifies that project does not declare any dependencies for the "
                     + sourceSet.getName() + " source set that it does not use.");
             t.setGroup(GROUP_NAME);
-            t.getReportFile().set(reportTask.get().getReportFile());
+            t.getReportFile().set(analyzerTask.get().getReportFile());
             // this is liberally applied to ease the Java8 -> 11 transition
             t.getIgnored().add("javax.annotation:javax.annotation-api");
             //Projects may apply this in compileOnly to work around
@@ -119,7 +119,7 @@ public final class BaselineDependencyPluginv2 implements Plugin<Project> {
         public static String getFinderTaskName(SourceSet sourceSet) {
             return sourceSet.getTaskName("find", "deps");
         }
-        public static String getReportTaskName(SourceSet sourceSet) {
+        public static String getAnalyzerTaskName(SourceSet sourceSet) {
             return sourceSet.getTaskName("analyze", "deps");
         }
         public static String getCheckImplicitTaskName(SourceSet sourceSet) {
