@@ -53,6 +53,12 @@ digraph "main" {
    "com.p0.RootTestClassWithJarDep"                   -> "com.google.common.collect.ImmutableList (not found)";
 }'''
 
+        when:
+        result = runTask('findDeps')
+
+        then:
+        result.task(':findDeps').getOutcome() == TaskOutcome.UP_TO_DATE
+
     }
 
     private void checkReportContents(File reportFile, String rawExpected) {
