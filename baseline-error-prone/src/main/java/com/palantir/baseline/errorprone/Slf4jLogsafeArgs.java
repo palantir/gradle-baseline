@@ -62,6 +62,11 @@ public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocati
             return Description.NO_MATCH;
         }
 
+        Optional<Description> wrappedThrowableDescription = checkThrowableArgumentNotWrapped(tree, state);
+        if (wrappedThrowableDescription.isPresent()) {
+            return wrappedThrowableDescription.get();
+        }
+
         List<? extends ExpressionTree> allArgs = tree.getArguments();
         int lastIndex = allArgs.size() - 1;
         int startArg = ASTHelpers.isCastable(
@@ -80,16 +85,6 @@ public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocati
             }
         }
         List<Integer> badArgs = badArgsBuilder.build();
-        if (!lastArgIsThrowable && !badArgs.contains(lastIndex)) {
-            Optional<Description> description = lastArg.accept(ThrowableArgVisitor.INSTANCE, state)
-                    .map(node -> buildDescription(tree)
-                            .setMessage("slf4j log statement should not use logsafe wrappers for throwables")
-                            .addFix(SuggestedFix.replace(lastArg, state.getSourceForNode(node)))
-                            .build());
-            if (description.isPresent()) {
-                return description.get();
-            }
-        }
         if (badArgs.isEmpty() || TestCheckUtils.isTestCode(state)) {
             return Description.NO_MATCH;
         } else {
@@ -97,6 +92,19 @@ public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocati
                     .setMessage("slf4j log statement does not use logsafe parameters for arguments " + badArgs)
                     .build();
         }
+    }
+
+    private Optional<Description> checkThrowableArgumentNotWrapped(MethodInvocationTree tree, VisitorState state) {
+        ExpressionTree lastArg = tree.getArguments().get(tree.getArguments().size() - 1);
+        boolean lastArgIsThrowable = THROWABLE.matches(lastArg, state);
+        if (lastArgIsThrowable) {
+            return Optional.empty();
+        }
+        return lastArg.accept(ThrowableArgVisitor.INSTANCE, state)
+                .map(node -> buildDescription(tree)
+                        .setMessage("slf4j log statement should not use logsafe wrappers for throwables")
+                        .addFix(SuggestedFix.replace(lastArg, state.getSourceForNode(node)))
+                        .build());
     }
 
     /** Returns the throwable argument from SafeArg.of(name, throwable) or UnsafeArg.of(name, throwable). */
