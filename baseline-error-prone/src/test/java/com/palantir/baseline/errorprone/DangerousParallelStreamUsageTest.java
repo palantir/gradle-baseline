@@ -39,7 +39,7 @@ public final class DangerousParallelStreamUsageTest {
                 "class Test {",
                 "   public static final void main(String[] args) {",
                 "       List<String> list = new ArrayList<>();",
-                "       // BUG: Diagnostic contains: Should not use .parallel() on a Java stream.",
+                "       // BUG: Diagnostic contains: Should not use parallel Java streams.",
                 "       list.stream().parallel();",
                 "   }",
                 "}"
@@ -243,11 +243,44 @@ public final class DangerousParallelStreamUsageTest {
                 "   public static final ForkJoinPool POOL_FOR_THIS_CLASS = new ForkJoinPool();",
                 "   public static final void main(String[] args) {",
                 "       FooStream<String> fooStream = new FooStream<>();",
-                "       // BUG: Diagnostic contains: Should not use .parallel() on a Java stream.",
+                "       // BUG: Diagnostic contains: Should not use parallel Java streams.",
                 "       fooStream.parallel();",
                 "       // This should fail too because it still won't allow you to properly control parallelism",
-                "       // BUG: Diagnostic contains: Should not use .parallel() on a Java stream.",
+                "       // BUG: Diagnostic contains: Should not use parallel Java streams.",
                 "       fooStream.parallel(POOL_FOR_THIS_CLASS);",
+                "   }",
+                "}"
+        ).doTest();
+    }
+
+    @Test
+    public void should_warn_collection_parallelStream() {
+        compilationHelper.addSourceLines(
+                "Test.java",
+                "import java.util.List;",
+                "import java.util.ArrayList;",
+                "class Test {",
+                "   public static final void main(String[] args) {",
+                "       List<String> list = new ArrayList<>();",
+                "       // BUG: Diagnostic contains: Should not use parallel Java streams.",
+                "       list.parallelStream();",
+                "   }",
+                "}"
+        ).doTest();
+    }
+
+    @Test
+    public void should_warn_stream_support_parallel() {
+        compilationHelper.addSourceLines(
+                "Test.java",
+                "import java.util.ArrayList;",
+                "import java.util.stream.StreamSupport;",
+                "class Test {",
+                "   public static final void main(String[] args) {",
+                "       StreamSupport.stream(new ArrayList<>().spliterator(), false);",
+                "       StreamSupport.stream(new ArrayList<>().spliterator(), args.length == 4);",
+                "       // BUG: Diagnostic contains: Should not use parallel Java streams.",
+                "       StreamSupport.stream(new ArrayList<>().spliterator(), true);",
                 "   }",
                 "}"
         ).doTest();
