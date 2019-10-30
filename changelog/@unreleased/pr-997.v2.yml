@@ -1,0 +1,7 @@
+type: improvement
+improvement:
+  description: |-
+    DangerousThrowableMessageSafeArg disallows Throwables in SafeArg values.
+    Throwables must be logged without an Arg wrapper as the last parameter, otherwise unsafe data may be leaked from the unsafe message or the unsafe message of a cause.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/997

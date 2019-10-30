@@ -63,4 +63,17 @@ public final class DangerousThrowableMessageSafeArgTest {
                 "}").doTest();
     }
 
+    @Test
+    public void unsafe_safearg_throwable() {
+        compilationHelper.addSourceLines(
+                "Bean.java",
+                "import " + SafeIllegalArgumentException.class.getName() + ';',
+                "import " + SafeArg.class.getName() + ';',
+                "class Bean {",
+                "  public SafeArg<?> foo() {",
+                "    // BUG: Diagnostic contains: Do not use throwables as SafeArg values",
+                "    return SafeArg.of(\"foo\", new SafeIllegalArgumentException(\"Foo\"));",
+                "  }",
+                "}").doTest();
+    }
 }
