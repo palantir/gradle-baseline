@@ -29,6 +29,25 @@ class DependencyAnalysisTaskTests extends AbstractDependencyTest {
         reportFile = new File(reportDir, "analyzeDeps-report.yaml")
     }
 
+    def 'empty project should work'() {
+        setup:
+        buildFile << standardBuildFile
+
+        when:
+        BuildResult result = runTask('analyzeDeps')
+
+        then:
+        result.task(':analyzeDeps').getOutcome() == TaskOutcome.SUCCESS
+        String expected = cleanFileContentsWithEol '''
+            allDependencies: []
+            apiDependencies: []
+            implicitDependencies: []
+            unusedDependencies: []
+        '''
+        String actual = reportFile.text
+        expected == actual
+    }
+
     def 'dependency report has proper contents'() {
         setup:
         setupTransitiveJarDependencyProject()

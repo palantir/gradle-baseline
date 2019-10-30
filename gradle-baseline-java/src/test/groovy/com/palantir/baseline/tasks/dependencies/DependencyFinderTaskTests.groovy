@@ -29,6 +29,23 @@ class DependencyFinderTaskTests extends AbstractDependencyTest {
         mainReportDir = new File(rootReportDir, "findDeps")
     }
 
+    def 'empty project should work'() {
+        setup:
+        buildFile << standardBuildFile
+        File stubReportFile = new File(mainReportDir, "summary.dot");
+
+        when:
+        BuildResult result = runTask('findDeps')
+
+        then:
+        result.task(':findDeps').getOutcome() == TaskOutcome.SUCCESS
+        checkReportContents stubReportFile, '''
+digraph "summary" {
+
+}'''
+    }
+
+
     def 'dot files contain proper contents'() {
         setup:
         File fullReportFile = new File(mainReportDir, "main.dot")
@@ -65,7 +82,7 @@ digraph "main" {
         assert reportFile.exists()
         // strip out the comment line with the path to the class files because don't care about it
         // and it changes with every test run
-        String actual = reportFile.text.replaceAll('// Path.*', '')
+        String actual = reportFile.text.replaceAll('//.*', '')
         String expected = cleanFileContentsWithEol(rawExpected)
         assert expected == actual
     }

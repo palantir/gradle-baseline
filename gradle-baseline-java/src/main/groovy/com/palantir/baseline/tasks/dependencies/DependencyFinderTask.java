@@ -19,8 +19,11 @@ package com.palantir.baseline.tasks.dependencies;
 import com.google.common.collect.ImmutableSet;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 import java.util.concurrent.TimeoutException;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.ConfigurableFileCollection;
@@ -29,26 +32,24 @@ import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
-import org.gradle.api.tasks.SkipWhenEmpty;
 import org.gradle.api.tasks.TaskAction;
 import org.zeroturnaround.exec.InvalidExitValueException;
 import org.zeroturnaround.exec.ProcessExecutor;
 
 @CacheableTask
 public class DependencyFinderTask extends DefaultTask {
-    private final DirectoryProperty classesDir;
+    private final ConfigurableFileCollection classesDirs;
     private final ConfigurableFileCollection classPath;
     private final DirectoryProperty reportDir;
     private final SetProperty<String> ignored;
 
     public DependencyFinderTask() {
-        classesDir = getProject().getObjects().directoryProperty();
+        classesDirs = getProject().getObjects().fileCollection();
         classPath = getProject().getObjects().fileCollection();
 
         reportDir = getProject().getObjects().directoryProperty();
@@ -68,12 +69,25 @@ public class DependencyFinderTask extends DefaultTask {
      */
     @TaskAction
     protected void exec() {
-        File classDir = classesDir.get().getAsFile();
-        String classesPath = classDir.getAbsolutePath();
-        if (!classDir.exists()) {
-            getLogger().info("Classes directory does not exist: " + classesPath);
+
+        File outputDir = reportDir.getAsFile().get();
+        Set<File> dirs = classesDirs.getFiles();
+
+        if (classesDirs.isEmpty() || dirs.size() == 0) {
+            writeStubFile(outputDir, "No classes directories set");
             return;
         }
+        if (dirs.size() > 1) {
+            getLogger().warn("More than one classes directory set.  Only the first will be analyzed.");
+        }
+
+        File classDir = dirs.stream().findFirst().get();
+        String classesPath = classDir.getAbsolutePath();
+        if (!classDir.exists()) {
+            writeStubFile(outputDir, "Classes directory does not exist: " + classesPath);
+            return;
+        }
+
         List<String> baseCommand = new ArrayList<>();
         baseCommand.add("jdeps");
         baseCommand.add("-verbose:class");
@@ -88,7 +102,7 @@ public class DependencyFinderTask extends DefaultTask {
 
         List<String> fullCommand = new ArrayList<>(baseCommand);
         fullCommand.add("-dotoutput");
-        fullCommand.add(reportDir.getAsFile().get().getAbsolutePath());
+        fullCommand.add(outputDir.getAbsolutePath());
         fullCommand.add(classesPath);
         runJDeps(fullCommand);
 
@@ -119,13 +133,27 @@ public class DependencyFinderTask extends DefaultTask {
     }
 
     /**
+     * Write a useful file if no processing takes place.
+     */
+    private void writeStubFile(File outputDir, String message) {
+        outputDir.mkdirs();
+        File emptyFile = new File(outputDir, "summary.dot");
+        String contents = "digraph \"summary\" {\n//" + message + "\n}\n";
+
+        try {
+            Files.write(emptyFile.toPath(), contents.getBytes(StandardCharsets.UTF_8));
+        } catch (IOException e) {
+            getProject().getLogger().warn("Could not write stub file", e);
+        }
+    }
+
+    /**
      * Directory of class files to parse.
      */
-    @InputDirectory
+    @InputFiles
     @PathSensitive(PathSensitivity.RELATIVE)
-    @SkipWhenEmpty
-    public final DirectoryProperty getClassesDir() {
-        return classesDir;
+    public final ConfigurableFileCollection getClassesDirs() {
+        return classesDirs;
     }
 
     /**

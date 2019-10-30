@@ -22,7 +22,6 @@ import com.palantir.baseline.tasks.dependencies.DependencyAnalysisTask;
 import com.palantir.baseline.tasks.dependencies.DependencyFinderTask;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSet;
@@ -59,13 +58,7 @@ public final class BaselineDependencyPluginv2 implements Plugin<Project> {
             t.setDescription("Produces listings in dot-file format with dependencies that are directly used by the "
                             + sourceSet.getName() + " source set.");
             t.setGroup(GROUP_NAME);
-            FileCollection classesDirs = sourceSet.getOutput().getClassesDirs();
-            try {
-                t.getClassesDir().set(classesDirs.getSingleFile());
-            } catch (IllegalStateException e) {
-                //more than one classes dir.  just take the first for now
-                t.getClassesDir().set(classesDirs.getFiles().stream().findFirst().get());
-            }
+            t.getClassesDirs().from(sourceSet.getOutput().getClassesDirs());
         });
     }
 

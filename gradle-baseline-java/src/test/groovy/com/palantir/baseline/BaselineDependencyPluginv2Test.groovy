@@ -28,6 +28,15 @@ class BaselineDependencyPluginv2Test extends AbstractDependencyTest {
     public class Foo { void foo() {} }
     '''.stripIndent()
 
+
+    def 'both tasks vacuously pass with no sources'() {
+        when:
+        buildFile << standardBuildFile
+
+        then:
+        with('checkUnusedDeps', 'checkImplicitDeps', '--stacktrace').build()
+    }
+
     def 'both tasks vacuously pass with no dependencies'() {
         when:
         buildFile << standardBuildFile
