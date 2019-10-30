@@ -17,6 +17,7 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.common.collect.ImmutableList;
+import com.google.errorprone.BugCheckerRefactoringTestHelper;
 import com.google.errorprone.CompilationTestHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -170,5 +171,41 @@ public final class Slf4jLogsafeArgsTest {
                         "  }",
                         "}")
                 .doTest());
+    }
+
+    @Test
+    public void testLastArgThrowable() {
+        fix()
+                .addInputLines("Test.java",
+                        "import org.slf4j.Logger;",
+                        "import org.slf4j.LoggerFactory;",
+                        "import com.palantir.logsafe.SafeArg;",
+                        "import com.palantir.logsafe.UnsafeArg;",
+                        "class Test {",
+                        "  private static final Logger log = LoggerFactory.getLogger(Test.class);",
+                        "  void f(Throwable t) {",
+                        "    log.warn(\"1\", SafeArg.of(\"extra\", t), t);",
+                        "    log.warn(\"2\", SafeArg.of(\"extra\", t), SafeArg.of(\"name\", t));",
+                        "    log.warn(\"3\", SafeArg.of(\"extra\", t), UnsafeArg.of(\"name\", t));",
+                        "  }",
+                        "}")
+                .addOutputLines("Test.java",
+                        "import org.slf4j.Logger;",
+                        "import org.slf4j.LoggerFactory;",
+                        "import com.palantir.logsafe.SafeArg;",
+                        "import com.palantir.logsafe.UnsafeArg;",
+                        "class Test {",
+                        "  private static final Logger log = LoggerFactory.getLogger(Test.class);",
+                        "  void f(Throwable t) {",
+                        "    log.warn(\"1\", SafeArg.of(\"extra\", t), t);",
+                        "    log.warn(\"2\", SafeArg.of(\"extra\", t), t);",
+                        "    log.warn(\"3\", SafeArg.of(\"extra\", t), t);",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    private BugCheckerRefactoringTestHelper fix() {
+        return BugCheckerRefactoringTestHelper.newInstance(new Slf4jLogsafeArgs(), getClass());
     }
 }
