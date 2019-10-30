@@ -21,11 +21,16 @@ import com.google.errorprone.BugPattern;
 import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
+import com.google.errorprone.matchers.ChildMultiMatcher;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
+import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
+import java.util.Collection;
+import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -38,7 +43,7 @@ public final class DangerousParallelStreamUsage extends BugChecker implements Bu
     private static final long serialVersionUID = 1L;
     private static final String MORE_STREAMS_URL = "https://github.com/palantir/streams/"
             + "blob/1.9.1/src/main/java/com/palantir/common/streams/MoreStreams.java#L53";
-    private static final String ERROR_MESSAGE = "Should not use .parallel() on a Java stream. "
+    private static final String ERROR_MESSAGE = "Should not use parallel Java streams. "
             + "Doing so has very subtle and potentially severe performance implications, so in general you're better "
             + "off using " + MORE_STREAMS_URL + " which allows you to provide your own executor service and "
             + "specify the desired parallelism (i.e. the max number of concurrent tasks that will be submitted).\n"
@@ -57,12 +62,28 @@ public final class DangerousParallelStreamUsage extends BugChecker implements Bu
 
     private static final Matcher<ExpressionTree> PARALLEL_CALL_ON_JAVA_STREAM_MATCHER =
             MethodMatchers.instanceMethod()
-                    .onDescendantOf("java.util.stream.Stream")
+                    .onDescendantOf(Stream.class.getName())
                     .named("parallel");
+
+    private static final Matcher<ExpressionTree> PARALLEL_STREAM_ON_COLLECTION_MATCHER =
+            MethodMatchers.instanceMethod()
+                    .onDescendantOf(Collection.class.getName())
+                    .named("parallelStream")
+                    .withParameters();
+
+    private static final Matcher<ExpressionTree> PARALLEL_STREAM_SUPPORT_MATCHER = Matchers.methodInvocation(
+            MethodMatchers.staticMethod().onClass(StreamSupport.class.getName()),
+            ChildMultiMatcher.MatchType.LAST,
+            Matchers.booleanLiteral(true));
+
+    private static final Matcher<ExpressionTree> PARALLEL_MATCHER = Matchers.anyOf(
+            PARALLEL_CALL_ON_JAVA_STREAM_MATCHER,
+            PARALLEL_STREAM_ON_COLLECTION_MATCHER,
+            PARALLEL_STREAM_SUPPORT_MATCHER);
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
-        if (!PARALLEL_CALL_ON_JAVA_STREAM_MATCHER.matches(tree, state)) {
+        if (!PARALLEL_MATCHER.matches(tree, state)) {
             return Description.NO_MATCH;
         }
 

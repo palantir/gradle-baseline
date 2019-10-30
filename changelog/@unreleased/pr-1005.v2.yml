@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: '`DangerousParallelStreamUsage` checks for `Collection.parallelStream()`
+    and `StreamSupport` utility methods with parallel=true.'
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1005
