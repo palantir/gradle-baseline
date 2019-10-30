@@ -21,12 +21,15 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.provider.Property;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
+import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
@@ -39,16 +42,22 @@ import org.gradle.api.tasks.TaskAction;
  * Configurations are passed by name rather than the full configuration themselves because the caching calculations
  * attempt to resolve the configurations.  This leads to errors with configs that cannot be resolved at configuration
  * time, notably implementation and api.
+ *
+ * The classpathConfiguration is also passed in order to give the most complete set of dependency artifacts to search
+ * when looking up a class.  Using it also avoids some errors under Gradle 5.x because it can better access classes
+ * in project-dependencies than the other configurations can.
  */
 @CacheableTask
 public class DependencyAnalysisTask extends DefaultTask {
     private final SetProperty<String> configurations;
+    private final Property<Configuration> classpathConfiguration;
     private final DirectoryProperty dotFileDir;
     private final RegularFileProperty report;
 
     public DependencyAnalysisTask() {
         configurations = getProject().getObjects().setProperty(String.class);
         configurations.convention(Collections.emptyList());
+        classpathConfiguration = getProject().getObjects().property(Configuration.class);
 
         dotFileDir = getProject().getObjects().directoryProperty();
 
@@ -63,6 +72,7 @@ public class DependencyAnalysisTask extends DefaultTask {
     public final void analyzeDependencies() {
         DependencyAnalyzer analyzer = new DependencyAnalyzer(getProject(),
                 configurations.get(),
+                classpathConfiguration.get(),
                 dotFileDir.get());
         analyzer.analyze();
 
@@ -89,6 +99,16 @@ public class DependencyAnalysisTask extends DefaultTask {
     @Input
     public final SetProperty<String> getConfigurations() {
         return configurations;
+    }
+
+    /**
+     * The configuration used to generate the compile classpath for the classes being analyzed.  This is normally
+     * a superset of the configurations being analyzed.
+     */
+    @InputFiles
+    @PathSensitive(PathSensitivity.RELATIVE)
+    public Property<Configuration> getClasspathConfiguration() {
+        return classpathConfiguration;
     }
 
     /**

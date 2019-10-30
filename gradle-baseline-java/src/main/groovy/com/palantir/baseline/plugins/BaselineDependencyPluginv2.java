@@ -81,6 +81,9 @@ public final class BaselineDependencyPluginv2 implements Plugin<Project> {
                     sourceSet.getImplementationConfigurationName(),
                     sourceSet.getCompileConfigurationName(),
                     sourceSet.getApiConfigurationName());
+
+            t.getClasspathConfiguration().set(
+                    project.getConfigurations().getByName(sourceSet.getCompileClasspathConfigurationName()));
         });
     }
 
