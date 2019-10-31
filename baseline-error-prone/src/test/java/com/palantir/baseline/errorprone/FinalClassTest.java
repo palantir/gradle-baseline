@@ -181,6 +181,65 @@ public class FinalClassTest {
         ).doTest();
     }
 
+    @Test
+    void testGenericNestedClassIgnored() {
+        helper().addSourceLines(
+                "Test.java",
+                "public class Test {",
+                "  private static final class NestedImpl extends Nested<String> {}",
+                "  private static class Nested<T extends CharSequence> {",
+                "    private Nested() {}",
+                "  }",
+                "}"
+        ).doTest();
+    }
+
+    @Test
+    void testNestedAnonymousClassIgnored() {
+        helper().addSourceLines(
+                "Test.java",
+                "public class Test {",
+                "  private static class Nested<T extends CharSequence> {",
+                "    private Nested() {}",
+                "  }",
+                "  public static Object get() {",
+                "    return new Nested<String>() {",
+                "      @Override public String toString() {",
+                "        return \"value\";",
+                "      }",
+                "    };",
+                "  }",
+                "}"
+        ).doTest();
+    }
+
+    @Test
+    void testNested_withNewInstance() {
+        fix()
+                .addInputLines(
+                        "Test.java",
+                        "public class Test {",
+                        "  private static class Nested<T extends CharSequence> {",
+                        "    private Nested() {}",
+                        "  }",
+                        "  public static Object get() {",
+                        "    return new Nested<String>();",
+                        "  }",
+                        "}"
+                )
+                .addOutputLines(
+                        "Test.java",
+                        "public class Test {",
+                        "  private static final class Nested<T extends CharSequence> {",
+                        "    private Nested() {}",
+                        "  }",
+                        "  public static Object get() {",
+                        "    return new Nested<String>();",
+                        "  }",
+                        "}"
+                ).doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(FinalClass.class, getClass());
     }

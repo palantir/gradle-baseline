@@ -27,6 +27,7 @@ import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.MethodTree;
+import com.sun.source.tree.NewClassTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.TreeScanner;
 import java.util.List;
@@ -59,7 +60,8 @@ public final class FinalClass extends BugChecker implements BugChecker.ClassTree
             return Description.NO_MATCH;
         }
         Set<Modifier> classModifiers = tree.getModifiers().getFlags();
-        if (classModifiers.contains(Modifier.FINAL)) {
+        if (classModifiers.contains(Modifier.FINAL)
+                || classModifiers.contains(Modifier.ABSTRACT)) {
             // Already final, nothing to check
             return Description.NO_MATCH;
         }
@@ -86,6 +88,13 @@ public final class FinalClass extends BugChecker implements BugChecker.ClassTree
             // In these cases we mustn't fail validation or suggest a final modifier.
             for (Tree typeDeclaration : state.getPath().getCompilationUnit().getTypeDecls()) {
                 Boolean maybeResult = typeDeclaration.accept(new TreeScanner<Boolean, Void>() {
+
+                    @Override
+                    public Boolean reduce(Boolean lhs, Boolean rhs) {
+                        // Fail if any class extends 'tree'
+                        return Boolean.TRUE.equals(lhs) || Boolean.TRUE.equals(rhs);
+                    }
+
                     @Override
                     public Boolean visitClass(ClassTree classTree, Void attachment) {
                         Tree extendsClause = classTree.getExtendsClause();
@@ -94,6 +103,15 @@ public final class FinalClass extends BugChecker implements BugChecker.ClassTree
                             return true;
                         }
                         return super.visitClass(classTree, attachment);
+                    }
+
+                    @Override
+                    public Boolean visitNewClass(NewClassTree newClassTree, Void attachment) {
+                        if (newClassTree.getClassBody() != null && ASTHelpers.isSameType(
+                                ASTHelpers.getType(tree), ASTHelpers.getType(newClassTree.getIdentifier()), state)) {
+                            return true;
+                        }
+                        return super.visitNewClass(newClassTree, attachment);
                     }
                 }, null);
                 // Unfortunately TreeScanner doesn't provide a way to set a default value, so we must account for null.
