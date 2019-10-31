@@ -155,6 +155,32 @@ public class FinalClassTest {
         ).doTest();
     }
 
+    @Test
+    void testNestedAbstractClassIgnored() {
+        helper().addSourceLines(
+                "Test.java",
+                "public class Test {",
+                "  private abstract static class Nested {",
+                "    private Nested() {}",
+                "  }",
+                "  private static final class NestedImpl extends Nested {}",
+                "}"
+        ).doTest();
+    }
+
+    @Test
+    void testNestedClassIgnored() {
+        helper().addSourceLines(
+                "Test.java",
+                "public class Test {",
+                "  private static class Nested {",
+                "    private Nested() {}",
+                "  }",
+                "  private static final class NestedImpl extends Nested {}",
+                "}"
+        ).doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(FinalClass.class, getClass());
     }
