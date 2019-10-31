@@ -240,6 +240,23 @@ public class FinalClassTest {
                 ).doTest();
     }
 
+    @Test
+    void testTopLevelExtendedByNestedIgnored() {
+        helper().addSourceLines(
+                "Test.java",
+                "public class Test {",
+                "  private Test() {}",
+                "  public static Object get() {",
+                "    return new Test() {",
+                "      @Override public String toString() {",
+                "        return \"value\";",
+                "      }",
+                "    };",
+                "  }",
+                "}"
+        ).doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(FinalClass.class, getClass());
     }
