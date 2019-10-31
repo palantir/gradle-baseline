@@ -150,6 +150,9 @@ public final class DependencyUtils {
      * name can vary, so find it by looking for whatever is not the summary.
      */
     public static Optional<File> findDetailedDotReport(File dotFileDir) {
+        if (!dotFileDir.exists()) {
+            return Optional.empty();
+        }
         try (Stream<Path> walk = Files.list(dotFileDir.toPath())) {
             return walk.filter(Files::isRegularFile)
                     .map(Path::toFile)
