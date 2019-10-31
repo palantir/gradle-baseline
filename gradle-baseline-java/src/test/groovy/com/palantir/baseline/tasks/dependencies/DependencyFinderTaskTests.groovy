@@ -16,6 +16,7 @@
 
 package com.palantir.baseline.tasks.dependencies
 
+import nebula.test.multiproject.MultiProjectIntegrationInfo
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 
@@ -45,6 +46,47 @@ digraph "summary" {
 }'''
     }
 
+    def 'two empty projects should have different stub output'() {
+        setup:
+        buildFile << standardBuildFile
+        buildFile << '''
+        allprojects {
+            apply plugin: 'java'
+            apply plugin: 'com.palantir.baseline-dependencies-v2'
+        }
+        '''
+        Map<String, MultiProjectIntegrationInfo> subProjects = multiProject.create(['sub-project-1', 'sub-project-2'])
+
+        String relPath = 'build/reports/dep-dot-files/findDeps/summary.dot';
+        File stubReportFile1 = new File(subProjects['sub-project-1'].directory, relPath);
+        File stubReportFile2 = new File(subProjects['sub-project-2'].directory, relPath);
+
+        when:
+        BuildResult result = runTask('findDeps', '--build-cache')
+
+        then:
+        stubReportFile1.text != stubReportFile2.text
+    }
+
+    def 'cache should work with different absolute dir'() {
+        setup:
+        buildFile << standardBuildFile
+        file('src/main/java/pkg/Foo.java') << minimalJavaFile
+
+        when:
+        BuildResult result = runTask('findDeps', '--build-cache')
+
+        then:
+        result.task(':findDeps').getOutcome() == TaskOutcome.SUCCESS
+
+        when:
+        projectDir.renameTo('someOtherDirName' + Random.newInstance().nextInt())
+        result = runTask('clean', 'findDeps', '--build-cache')
+
+        then:
+        result.task(':findDeps').getOutcome() == TaskOutcome.FROM_CACHE
+
+    }
 
     def 'dot files contain proper contents'() {
         setup:

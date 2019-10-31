@@ -23,12 +23,6 @@ import org.gradle.testkit.runner.TaskOutcome
 
 class BaselineDependencyPluginv2Test extends AbstractDependencyTest {
 
-    def minimalJavaFile = '''
-    package pkg;
-    public class Foo { void foo() {} }
-    '''.stripIndent()
-
-
     def 'both tasks vacuously pass with no sources'() {
         when:
         buildFile << standardBuildFile

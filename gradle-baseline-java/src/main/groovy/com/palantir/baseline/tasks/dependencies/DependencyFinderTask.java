@@ -151,7 +151,7 @@ public class DependencyFinderTask extends DefaultTask {
      * Directory of class files to parse.
      */
     @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @PathSensitive(PathSensitivity.ABSOLUTE)
     public final ConfigurableFileCollection getClassesDirs() {
         return classesDirs;
     }

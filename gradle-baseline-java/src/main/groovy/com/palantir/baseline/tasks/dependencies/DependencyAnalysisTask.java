@@ -27,6 +27,7 @@ import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.CacheableTask;
+import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.InputFiles;
@@ -106,7 +107,7 @@ public class DependencyAnalysisTask extends DefaultTask {
      * a superset of the configurations being analyzed.
      */
     @InputFiles
-    @PathSensitive(PathSensitivity.RELATIVE)
+    @Classpath
     public Property<Configuration> getClasspathConfiguration() {
         return classpathConfiguration;
     }

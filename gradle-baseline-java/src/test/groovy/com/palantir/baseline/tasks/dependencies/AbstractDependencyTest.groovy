@@ -24,8 +24,14 @@ import java.nio.file.Files
 
 class AbstractDependencyTest extends AbstractPluginTest {
 
-    BuildResult runTask(String task) {
-        with(task, '--stacktrace', '--info').withDebug(true).build()
+    String minimalJavaFile = '''
+    package pkg;
+    public class Foo { void foo() {} }
+    '''.stripIndent()
+
+    BuildResult runTask(String... tasks) {
+        String[] args = tasks + ['--stacktrace', '--info']
+        with(args).withDebug(true).build()
     }
 
     protected String getStandardBuildFile() {
