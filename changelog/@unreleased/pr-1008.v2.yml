@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: Implement `FinalClass` error prone check, replacing the checkstyle
+    implementation
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1008
