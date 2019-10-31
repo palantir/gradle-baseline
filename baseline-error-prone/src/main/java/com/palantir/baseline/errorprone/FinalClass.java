@@ -22,13 +22,17 @@ import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
+import com.google.errorprone.matchers.Matcher;
+import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.Tree;
+import com.sun.source.util.TreeScanner;
 import java.util.List;
 import java.util.Set;
 import javax.lang.model.element.Modifier;
+import javax.lang.model.element.NestingKind;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -45,6 +49,9 @@ import javax.lang.model.element.Modifier;
                 + "https://github.com/palantir/gradle-baseline/tree/develop/docs/best-practices/"
                 + "java-coding-guidelines#private-constructors")
 public final class FinalClass extends BugChecker implements BugChecker.ClassTreeMatcher {
+
+    private static final Matcher<ClassTree> NOT_TOP_LEVEL = Matchers.not(Matchers.nestingKind(NestingKind.TOP_LEVEL));
+
     @Override
     public Description matchClass(ClassTree tree, VisitorState state) {
         if (tree.getKind() != Tree.Kind.CLASS) {
@@ -65,8 +72,36 @@ public final class FinalClass extends BugChecker implements BugChecker.ClassTree
                 return Description.NO_MATCH;
             }
         }
+        if (isClassExtendedInternally(tree, state)) {
+            return Description.NO_MATCH;
+        }
         return buildDescription(tree)
                 .addFix(SuggestedFixes.addModifiers(tree, state, Modifier.FINAL))
                 .build();
+    }
+
+    private static boolean isClassExtendedInternally(ClassTree tree, VisitorState state) {
+        if (NOT_TOP_LEVEL.matches(tree, state)) {
+            // Encapsulated classes can be extended by other nested classes, even if they have private constructors.
+            // In these cases we mustn't fail validation or suggest a final modifier.
+            for (Tree typeDeclaration : state.getPath().getCompilationUnit().getTypeDecls()) {
+                Boolean maybeResult = typeDeclaration.accept(new TreeScanner<Boolean, Void>() {
+                    @Override
+                    public Boolean visitClass(ClassTree classTree, Void attachment) {
+                        Tree extendsClause = classTree.getExtendsClause();
+                        if (extendsClause != null && ASTHelpers.isSameType(
+                                ASTHelpers.getType(tree), ASTHelpers.getType(extendsClause), state)) {
+                            return true;
+                        }
+                        return super.visitClass(classTree, attachment);
+                    }
+                }, null);
+                // Unfortunately TreeScanner doesn't provide a way to set a default value, so we must account for null.
+                if (Boolean.TRUE.equals(maybeResult)) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 }
