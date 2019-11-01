@@ -371,10 +371,6 @@
             <property name="message" value="Prefer Guava''s [CharStreams,Files,Resources].toString to avoid charset/stream closing issues."/>
         </module>
         <module name="RegexpSinglelineJava">
-            <property name="format" value="static enum"/>
-            <property name="message" value="Redundant ''static'' modifier."/>
-        </module>
-        <module name="RegexpSinglelineJava">
             <property name="format" value="\/\/TODO|\/\/ TODO(?!\([^()\s]+\): )"/>
             <property name="message" value="TODO format: // TODO(#issue): explanation"/>
         </module>
