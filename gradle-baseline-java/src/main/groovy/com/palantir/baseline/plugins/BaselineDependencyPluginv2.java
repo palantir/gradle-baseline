@@ -16,12 +16,17 @@
 
 package com.palantir.baseline.plugins;
 
+import com.google.common.collect.ImmutableSet;
 import com.palantir.baseline.tasks.dependencies.CheckImplicitDependenciesTaskv2;
 import com.palantir.baseline.tasks.dependencies.CheckUnusedDependenciesTaskv2;
 import com.palantir.baseline.tasks.dependencies.DependencyAnalysisTask;
 import com.palantir.baseline.tasks.dependencies.DependencyFinderTask;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSet;
@@ -70,10 +75,20 @@ public final class BaselineDependencyPluginv2 implements Plugin<Project> {
             t.setGroup(GROUP_NAME);
             t.getDotFileDir().set(finderTask.get().getReportDir());
 
-            t.getConfigurations().addAll(sourceSet.getCompileOnlyConfigurationName(),
+            ConfigurationContainer configContainer = project.getConfigurations();
+
+            //Look at all the standard compile-related configurations
+            Set<String> configNames = ImmutableSet.of(sourceSet.getCompileOnlyConfigurationName(),
                     sourceSet.getImplementationConfigurationName(),
                     sourceSet.getCompileConfigurationName(),
                     sourceSet.getApiConfigurationName());
+
+            Set<Configuration> configs = configNames.stream()
+                    .map(configContainer::findByName)
+                    .filter(c -> c != null)
+                    .collect(Collectors.toSet());
+
+            t.getConfigurations().set(configs);
 
             t.getClasspathConfiguration().set(
                     project.getConfigurations().getByName(sourceSet.getCompileClasspathConfigurationName()));
