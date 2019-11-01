@@ -120,12 +120,20 @@ class RedundantModifierTest {
     @Test
     void allowInterface() {
         helper().addSourceLines(
-                "Test.java",
-                "public enum Test {",
-                "  INSTANCE(\"str\");",
-                "  private final String str;",
-                "  Test(String str) {",
-                "    this.str = str;",
+                "Enclosing.java",
+                "public class Enclosing {",
+                "  public interface Test {",
+                "  }",
+                "}"
+        ).doTest();
+    }
+
+    @Test
+    void allowNestedInterface() {
+        helper().addSourceLines(
+                "Enclosing.java",
+                "interface Enclosing {",
+                "  public interface Test {",
                 "  }",
                 "}"
         ).doTest();

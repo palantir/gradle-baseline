@@ -26,6 +26,7 @@ import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.MethodTree;
+import com.sun.source.tree.ModifiersTree;
 import com.sun.source.tree.Tree;
 import java.util.Locale;
 import javax.lang.model.element.Modifier;
@@ -118,11 +119,23 @@ public final class RedundantModifier extends BugChecker
 
     private static Matcher<MethodTree> methodHasExplicitModifier(Modifier modifier) {
         return (Matcher<MethodTree>) (methodTree, state) ->
-                methodTree.getModifiers().getFlags().contains(modifier);
+                containsModifier(methodTree.getModifiers(), state, modifier);
     }
 
     private static Matcher<ClassTree> classHasExplicitModifier(Modifier modifier) {
         return (Matcher<ClassTree>) (classTree, state) ->
-                classTree.getModifiers().getFlags().contains(modifier);
+                containsModifier(classTree.getModifiers(), state, modifier);
+    }
+
+    private static boolean containsModifier(ModifiersTree tree, VisitorState state, Modifier modifier) {
+        if (!tree.getFlags().contains(modifier)) {
+            return false;
+        }
+        String source = state.getSourceForNode(tree);
+        if (source == null) {
+            return true; // When source is not available, rely on the modifier flags
+        }
+        // nested interfaces report a static modifier despite not being present
+        return source.contains(modifier.name().toLowerCase(Locale.ENGLISH));
     }
 }
