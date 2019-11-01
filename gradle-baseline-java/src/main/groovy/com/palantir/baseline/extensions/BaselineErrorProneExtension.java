@@ -25,6 +25,7 @@ public class BaselineErrorProneExtension {
             // Baseline checks
             "CatchBlockLogException",
             "ExecutorSubmitRunnableFutureIgnored",
+            "FinalClass",
             "LambdaMethodReference",
             "OptionalOrElseMethodInvocation",
             "PreferBuiltInConcurrentKeySet",
