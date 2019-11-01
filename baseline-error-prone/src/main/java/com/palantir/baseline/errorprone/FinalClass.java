@@ -23,6 +23,8 @@ import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.fixes.SuggestedFix;
 import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
+import com.google.errorprone.matchers.Matcher;
+import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.MethodTree;
@@ -49,6 +51,12 @@ import javax.lang.model.element.Modifier;
                 + "https://github.com/palantir/gradle-baseline/tree/develop/docs/best-practices/"
                 + "java-coding-guidelines#private-constructors")
 public final class FinalClass extends BugChecker implements BugChecker.ClassTreeMatcher {
+
+    private static final Matcher<MethodTree> SIMPLIFIABLE_INSTANCE_METHOD = Matchers.allOf(
+            Matchers.hasModifier(Modifier.FINAL),
+            // 'static final' is redundant, however it's outside the scope of this check to fix.
+            Matchers.not(Matchers.hasModifier(Modifier.STATIC)),
+            Matchers.not(Matchers.hasAnnotation(SafeVarargs.class)));
 
     @Override
     public Description matchClass(ClassTree tree, VisitorState state) {
@@ -87,10 +95,7 @@ public final class FinalClass extends BugChecker implements BugChecker.ClassTree
                     tree.getMembers().stream()
                             .filter(member -> member instanceof MethodTree)
                             .map(MethodTree.class::cast)
-                            .filter(methodTree -> methodTree.getModifiers().getFlags().contains(Modifier.FINAL)
-                                    // static final is redundant, however outside of the scope of this check
-                                    // to modify.
-                                    && !methodTree.getModifiers().getFlags().contains(Modifier.STATIC))
+                            .filter(methodTree -> SIMPLIFIABLE_INSTANCE_METHOD.matches(methodTree, state))
                             .forEach(methodTree -> SuggestedFixes.removeModifiers(methodTree, state, Modifier.FINAL)
                                     .ifPresent(builder::merge));
                     return builder.build();

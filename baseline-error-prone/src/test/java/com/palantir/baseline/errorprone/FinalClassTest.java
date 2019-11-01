@@ -66,6 +66,7 @@ public class FinalClassTest {
                         "  protected final String d() { return \"d\"; }",
                         "  final String e() { return \"e\"; }",
                         "  public static final String f() { return \"f\"; }",
+                        "  @SafeVarargs public final String f(Object... args) { return \"f\"; }",
                         "}"
                 )
                 .addOutputLines(
@@ -79,6 +80,8 @@ public class FinalClassTest {
                         "  String e() { return \"e\"; }",
                         // static final is redundant, however it's not within the scope of this check to fix
                         "  public static final String f() { return \"f\"; }",
+                        // SafeVarargs is a special case, the final modifier is required by the compiler
+                        "  @SafeVarargs public final String f(Object... args) { return \"f\"; }",
                         "}"
                 ).doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
