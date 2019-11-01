@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Fix `RedundantModifier` interpretation of implicit modifiers
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1014
