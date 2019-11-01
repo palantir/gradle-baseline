@@ -54,6 +54,36 @@ public class FinalClassTest {
     }
 
     @Test
+    void testFixRemovesRedundantFinalModifiers() {
+        fix()
+                .addInputLines(
+                        "Test.java",
+                        "public class Test {",
+                        "  private Test() {}",
+                        "  private final String a() { return \"a\"; }",
+                        "  public final String b() { return \"b\"; }",
+                        "  protected final String c() { return \"c\"; }",
+                        "  protected final String d() { return \"d\"; }",
+                        "  final String e() { return \"e\"; }",
+                        "  public static final String f() { return \"f\"; }",
+                        "}"
+                )
+                .addOutputLines(
+                        "Test.java",
+                        "public final class Test {",
+                        "  private Test() {}",
+                        "  private String a() { return \"a\"; }",
+                        "  public String b() { return \"b\"; }",
+                        "  protected String c() { return \"c\"; }",
+                        "  protected String d() { return \"d\"; }",
+                        "  String e() { return \"e\"; }",
+                        // static final is redundant, however it's not within the scope of this check to fix
+                        "  public static final String f() { return \"f\"; }",
+                        "}"
+                ).doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
     void testNested() {
         helper().addSourceLines(
                 "Test.java",
@@ -87,7 +117,7 @@ public class FinalClassTest {
                         "    private Nested() {}",
                         "  }",
                         "}"
-                ).doTest();
+                ).doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
     @Test
@@ -121,7 +151,7 @@ public class FinalClassTest {
                         "    private Nested() {}",
                         "  }",
                         "}"
-                ).doTest();
+                ).doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
     @Test
@@ -237,7 +267,7 @@ public class FinalClassTest {
                         "    return new Nested<String>();",
                         "  }",
                         "}"
-                ).doTest();
+                ).doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
     @Test

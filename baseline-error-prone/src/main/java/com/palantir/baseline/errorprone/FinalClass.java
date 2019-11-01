@@ -20,6 +20,7 @@ import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
+import com.google.errorprone.fixes.SuggestedFix;
 import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.util.ASTHelpers;
@@ -29,6 +30,7 @@ import com.sun.source.tree.NewClassTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.TreeScanner;
 import java.util.List;
+import java.util.Optional;
 import java.util.Set;
 import javax.lang.model.element.Modifier;
 
@@ -73,8 +75,25 @@ public final class FinalClass extends BugChecker implements BugChecker.ClassTree
             return Description.NO_MATCH;
         }
         return buildDescription(tree)
-                .addFix(SuggestedFixes.addModifiers(tree, state, Modifier.FINAL))
+                .addFix(buildFix(tree, state))
                 .build();
+    }
+
+    private static Optional<SuggestedFix> buildFix(ClassTree tree, VisitorState state) {
+        return SuggestedFixes.addModifiers(tree, state, Modifier.FINAL)
+                .map(fix -> {
+                    SuggestedFix.Builder builder = SuggestedFix.builder().merge(fix);
+                    tree.getMembers().stream()
+                            .filter(member -> member instanceof MethodTree)
+                            .map(MethodTree.class::cast)
+                            .filter(methodTree -> methodTree.getModifiers().getFlags().contains(Modifier.FINAL)
+                                    // static final is redundant, however outside of the scope of this check
+                                    // to modify.
+                                    && !methodTree.getModifiers().getFlags().contains(Modifier.STATIC))
+                            .forEach(methodTree -> SuggestedFixes.removeModifiers(methodTree, state, Modifier.FINAL)
+                                    .ifPresent(builder::merge));
+                    return builder.build();
+                });
     }
 
     private static boolean isClassExtendedInternally(ClassTree tree, VisitorState state) {
