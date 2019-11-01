@@ -36,7 +36,7 @@ import javax.lang.model.element.Modifier;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
-        severity = BugPattern.SeverityLevel.WARNING,
+        severity = BugPattern.SeverityLevel.ERROR,
         summary = "Avoid using redundant modifiers")
 public final class RedundantModifier extends BugChecker
         implements BugChecker.ClassTreeMatcher, BugChecker.MethodTreeMatcher {
