@@ -34,6 +34,7 @@ public class BaselineErrorProneExtension {
             "PreferSafeLoggableExceptions",
             "PreferSafeLoggingPreconditions",
             "ReadReturnValueIgnored",
+            "RedundantModifier",
             "Slf4jLevelCheck",
             "Slf4jLogsafeArgs",
             "StrictUnusedVariable",

@@ -175,6 +175,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `ReverseDnsLookup`: Calling address.getHostName may result in an unexpected DNS lookup.
 - `ReadReturnValueIgnored`: The result of a read call must be checked to know if EOF has been reached or the expected number of bytes have been consumed.
 - `FinalClass`: A class should be declared final if all of its constructors are private.
+- `RedundantModifier`: Avoid using redundant modifiers.
 
 ### Programmatic Application
 
