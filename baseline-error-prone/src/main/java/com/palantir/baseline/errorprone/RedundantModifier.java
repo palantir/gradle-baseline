@@ -30,6 +30,11 @@ import com.sun.source.tree.Tree;
 import java.util.Locale;
 import javax.lang.model.element.Modifier;
 
+/**
+ * In a future change we may want to validate against unnecessary modifiers based on encapsulating
+ * component visibility, for example there's no reason to allow a public constructor for a private
+ * class.
+ */
 @AutoService(BugChecker.class)
 @BugPattern(
         name = "RedundantModifier",
