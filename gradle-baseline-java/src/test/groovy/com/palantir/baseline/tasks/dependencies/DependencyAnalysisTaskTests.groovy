@@ -79,6 +79,31 @@ class DependencyAnalysisTaskTests extends AbstractDependencyTest {
         expected == actual
     }
 
+    def 'adding implicit dependency to buildFile should make task dirty'() {
+        setup:
+        setupTransitiveJarDependencyProject()
+        BuildResult result = runTask('analyzeDeps')
+
+        when:
+        //add the implicit dependency - this just inserts it as the first line in the dependencies block
+        buildFile.text = buildFile.text.replaceAll('(dependencies [^\n]+\n)', "\$1\tcompile 'com.google.guava:guava'\n");
+
+        BuildResult result2 = runTask('analyzeDeps')
+
+        then:
+        result2.task(':analyzeDeps').getOutcome() == TaskOutcome.SUCCESS
+        String expected = cleanFileContentsWithEol '''
+            allDependencies:
+            - com.google.guava:guava
+            apiDependencies: []
+            implicitDependencies: []
+            unusedDependencies:
+            - com.fasterxml.jackson.datatype:jackson-datatype-guava
+        '''
+        String actual = reportFile.text
+        expected == actual
+    }
+
     def 'multi-module report'() {
         setup:
         setupMultiProject()

@@ -36,8 +36,6 @@ import org.apache.maven.shared.dependency.analyzer.ClassAnalyzer;
 import org.apache.maven.shared.dependency.analyzer.DefaultClassAnalyzer;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ConfigurationContainer;
-import org.gradle.api.artifacts.ModuleDependency;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.file.Directory;
 import org.gradle.api.logging.Logger;
@@ -61,7 +59,7 @@ public final class DependencyAnalyzer {
     private static final ImmutableSet<String> VALID_ARTIFACT_EXTENSIONS = ImmutableSet.of("jar", "");
 
     private final Project project;
-    private final Set<String> configurations;
+    private final Set<Configuration> configurations;
     private final Configuration classpathConfiguration;
     private final Directory dotFileDir;
 
@@ -69,18 +67,20 @@ public final class DependencyAnalyzer {
     private Set<String> apiDependencies;
     private Set<String> implicitDependencies;
     private Set<String> unusedDependencies;
+    private Set<String> directDependencyIds;
 
     private final Indexes indexes = new Indexes();
 
     public DependencyAnalyzer(
             Project project,
-            Set<String> configurations,
+            Set<Configuration> configurations,
             Configuration classpathConfiguration,
-            Directory dotFileDir) {
+            Set<String> directDependencyIds, Directory dotFileDir) {
         this.project = project;
 
         this.configurations = configurations;
         this.classpathConfiguration = classpathConfiguration;
+        this.directDependencyIds = directDependencyIds;
         this.dotFileDir = dotFileDir;
     }
 
@@ -116,39 +116,22 @@ public final class DependencyAnalyzer {
     }
 
     public void analyze() {
-        ConfigurationContainer configContainer = project.getConfigurations();
-        Set<Configuration> configs = configurations.stream()
-                .map(configContainer::findByName)
-                .filter(c -> c != null)
-                .collect(Collectors.toSet());
-
         indexes.populateIndexes(classpathConfiguration, project.getLogger());
 
         allRequiredDependencies = findReferencedDependencies(DependencyUtils.findDetailedDotReport(dotFileDir));
         apiDependencies = findReferencedDependencies(DependencyUtils.findDetailedDotReport(dotFileDir.dir("api")));
-        Set<String> declaredDependencies = getDependencyIds(configs, false);
-        Set<String> directlyDeclaredDependencies = getDependencyIds(configs, true);
+        Set<String> declaredDependencies = configurations.stream()
+                .map(c -> DependencyUtils.getDependencyNames(c, true))
+                .flatMap(Collection::parallelStream)
+                .collect(Collectors.toSet());
 
         implicitDependencies = Sets.difference(allRequiredDependencies, declaredDependencies);
         unusedDependencies = Sets.difference(declaredDependencies, allRequiredDependencies).stream()
-                .filter(a -> directlyDeclaredDependencies.contains(a))
+                .filter(a -> directDependencyIds.contains(a))
                 .collect(Collectors.toSet());
 
         //clear the memory from the massive dependency map
         indexes.reset();
-    }
-
-    /**
-     * Returns dependencies declared in the given configurations, optionally including those declared by parent
-     * configurations.  Does not include transitive dependencies.
-     */
-    private static Set<String> getDependencyIds(Collection<Configuration> configurations, boolean directOnly) {
-        return configurations.stream()
-                .flatMap(d -> (directOnly ? d.getDependencies() : d.getAllDependencies()).stream())
-                .filter(ModuleDependency.class::isInstance)
-                .map(ModuleDependency.class::cast)
-                .map(DependencyUtils::getDependencyName)
-                .collect(Collectors.toSet());
     }
 
     private Set<String> findReferencedDependencies(Optional<File> dotFile) {

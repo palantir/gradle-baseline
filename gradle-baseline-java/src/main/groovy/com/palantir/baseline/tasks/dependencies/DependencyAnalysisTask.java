@@ -19,18 +19,22 @@ package com.palantir.baseline.tasks.dependencies;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputDirectory;
 import org.gradle.api.tasks.InputFiles;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
@@ -55,6 +59,9 @@ public class DependencyAnalysisTask extends DefaultTask {
     private final DirectoryProperty dotFileDir;
     private final RegularFileProperty report;
 
+    private final SetProperty<String> directDependencyIds;
+
+
     public DependencyAnalysisTask() {
         configurations = getProject().getObjects().setProperty(String.class);
         configurations.convention(Collections.emptyList());
@@ -67,13 +74,31 @@ public class DependencyAnalysisTask extends DefaultTask {
         defaultReport.set(
                 getProject().file(String.format("%s/reports/%s-report.yaml", getProject().getBuildDir(), getName())));
         report.convention(defaultReport);
+
+        directDependencyIds = getProject().getObjects().setProperty(String.class);
+        directDependencyIds.set(configurations.map(configNames -> {
+            return getFullConfigurations(configNames).stream()
+                    .map(DependencyUtils::getDirectDependencyNames)
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toSet());
+        }));
+    }
+
+    @Internal
+    private Set<Configuration> getFullConfigurations(Set<String> configNames) {
+        ConfigurationContainer configContainer = getProject().getConfigurations();
+        return configNames.stream()
+                .map(configContainer::findByName)
+                .filter(c -> c != null)
+                .collect(Collectors.toSet());
     }
 
     @TaskAction
     public final void analyzeDependencies() {
         DependencyAnalyzer analyzer = new DependencyAnalyzer(getProject(),
-                configurations.get(),
+                getFullConfigurations(configurations.get()),
                 classpathConfiguration.get(),
+                directDependencyIds.get(),
                 dotFileDir.get());
         analyzer.analyze();
 
@@ -98,7 +123,7 @@ public class DependencyAnalysisTask extends DefaultTask {
      * @return
      */
     @Input
-    public final SetProperty<String> getConfigurations() {
+    public SetProperty<String> getConfigurations() {
         return configurations;
     }
 
@@ -118,13 +143,26 @@ public class DependencyAnalysisTask extends DefaultTask {
     @InputDirectory
     @PathSensitive(PathSensitivity.RELATIVE)
     @SkipWhenEmpty
-    public final DirectoryProperty getDotFileDir() {
+    public DirectoryProperty getDotFileDir() {
         return dotFileDir;
     }
 
+    /**
+     * The location of the generated report.
+     */
     @OutputFile
-    public final RegularFileProperty getReportFile() {
+    public RegularFileProperty getReportFile() {
         return report;
+    }
+
+    /**
+     * Dependencies declared directly in the given configurations.  This is not set directly, but is derived from the
+     * passed configuration names.  It is declared as an input property so that up-to-date checks correctly detect
+     * when a configuration has changed in a way that requires this task to be rerun.
+     */
+    @Input
+    public Provider<Set<String>> getDirectDependencyIds() {
+        return directDependencyIds;
     }
 
     public static final class ReportContent {

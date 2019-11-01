@@ -23,8 +23,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.DependencyArtifact;
+import org.gradle.api.artifacts.DependencySet;
 import org.gradle.api.artifacts.ModuleDependency;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ProjectDependency;
@@ -73,6 +77,26 @@ public final class DependencyUtils {
                                         Optional<String> version, Optional<String> classifier) {
         return group + ":" + name + version.map(v -> ":" + v).orElse(classifier.isPresent() ? ":" : "")
                 + classifier.map(s -> ":" + s).orElse("");
+    }
+
+    /**
+     * Returns dependencies declared directly in the given configurations.
+     */
+    public static Set<String> getDirectDependencyNames(Configuration config) {
+        return getDependencyNames(config, false);
+    }
+
+    /**
+     * Returns module dependencies declared in the given configurations, optionally including those declared by parent
+     * configurations.  Does not include transitive dependencies.
+     */
+    public static Set<String> getDependencyNames(Configuration config, boolean includeParents) {
+        DependencySet dependencies = includeParents ? config.getAllDependencies() : config.getDependencies();
+        return dependencies.stream()
+                .filter(ModuleDependency.class::isInstance)
+                .map(ModuleDependency.class::cast)
+                .map(DependencyUtils::getDependencyName)
+                .collect(Collectors.toSet());
     }
 
     /**
