@@ -82,6 +82,7 @@ public final class FinalClass extends BugChecker implements BugChecker.ClassTree
     private static Optional<SuggestedFix> buildFix(ClassTree tree, VisitorState state) {
         return SuggestedFixes.addModifiers(tree, state, Modifier.FINAL)
                 .map(fix -> {
+                    // Remove redundant 'final' methods modifers that are no longer necessary.
                     SuggestedFix.Builder builder = SuggestedFix.builder().merge(fix);
                     tree.getMembers().stream()
                             .filter(member -> member instanceof MethodTree)
