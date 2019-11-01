@@ -48,30 +48,30 @@ public final class RedundantModifier extends BugChecker
 
     private static final Matcher<ClassTree> STATIC_ENUM_OR_INTERFACE = Matchers.allOf(
             Matchers.anyOf(Matchers.kindIs(Tree.Kind.ENUM), Matchers.kindIs(Tree.Kind.INTERFACE)),
-            Matchers.hasModifier(Modifier.STATIC));
+            classHasExplicitModifier(Modifier.STATIC));
 
     private static final Matcher<MethodTree> PRIVATE_ENUM_CONSTRUCTOR = Matchers.allOf(
             Matchers.methodIsConstructor(),
             Matchers.enclosingClass(Matchers.kindIs(Tree.Kind.ENUM)),
-            Matchers.hasModifier(Modifier.PRIVATE));
+            methodHasExplicitModifier(Modifier.PRIVATE));
 
     private static final Matcher<MethodTree> STATIC_FINAL_METHOD = Matchers.allOf(
-            Matchers.isStatic(),
-            Matchers.hasModifier(Modifier.FINAL));
+            methodHasExplicitModifier(Modifier.STATIC),
+            methodHasExplicitModifier(Modifier.FINAL));
 
     private static final Matcher<MethodTree> UNNECESSARY_INTERFACE_METHOD_MODIFIERS = Matchers.allOf(
             Matchers.enclosingClass(Matchers.kindIs(Tree.Kind.INTERFACE)),
             Matchers.not(Matchers.isStatic()),
             Matchers.not(Matchers.hasModifier(Modifier.DEFAULT)),
-            Matchers.anyOf(Matchers.hasModifier(Modifier.PUBLIC), Matchers.hasModifier(Modifier.ABSTRACT)));
+            Matchers.anyOf(methodHasExplicitModifier(Modifier.PUBLIC), methodHasExplicitModifier(Modifier.ABSTRACT)));
 
     private static final Matcher<MethodTree> UNNECESSARY_FINAL_METHOD_ON_FINAL_CLASS = Matchers.allOf(
             Matchers.not(Matchers.isStatic()),
             Matchers.enclosingClass(Matchers.allOf(
                     Matchers.kindIs(Tree.Kind.CLASS),
-                    Matchers.hasModifier(Modifier.FINAL))),
+                    classHasExplicitModifier(Modifier.FINAL))),
             Matchers.allOf(
-                    Matchers.hasModifier(Modifier.FINAL),
+                    methodHasExplicitModifier(Modifier.FINAL),
                     Matchers.not(Matchers.hasAnnotation(SafeVarargs.class))));
 
     @Override
@@ -114,5 +114,15 @@ public final class RedundantModifier extends BugChecker
                     .build();
         }
         return Description.NO_MATCH;
+    }
+
+    private static Matcher<MethodTree> methodHasExplicitModifier(Modifier modifier) {
+        return (Matcher<MethodTree>) (methodTree, state) ->
+                methodTree.getModifiers().getFlags().contains(modifier);
+    }
+
+    private static Matcher<ClassTree> classHasExplicitModifier(Modifier modifier) {
+        return (Matcher<ClassTree>) (classTree, state) ->
+                classTree.getModifiers().getFlags().contains(modifier);
     }
 }

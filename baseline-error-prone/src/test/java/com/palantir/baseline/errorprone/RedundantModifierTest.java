@@ -17,6 +17,7 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.errorprone.BugCheckerRefactoringTestHelper;
+import com.google.errorprone.CompilationTestHelper;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
@@ -50,6 +51,20 @@ class RedundantModifierTest {
     }
 
     @Test
+    void allowEnumResult() {
+        helper().addSourceLines(
+                "Test.java",
+                "public enum Test {",
+                "  INSTANCE(\"str\");",
+                "  private final String str;",
+                "  Test(String str) {",
+                "    this.str = str;",
+                "  }",
+                "}"
+        ).doTest();
+    }
+
+    @Test
     @SuppressWarnings("checkstyle:RegexpSinglelineJava")
     void fixStaticEnum() {
         fix()
@@ -72,6 +87,18 @@ class RedundantModifierTest {
     }
 
     @Test
+    void testAllowPrivateEnum() {
+        helper().addSourceLines(
+                "Enclosing.java",
+                "public class Enclosing {",
+                "  private enum Test {",
+                "    INSTANCE",
+                "  }",
+                "}"
+        ).doTest();
+    }
+
+    @Test
     void fixStaticInterface() {
         fix()
                 .addInputLines(
@@ -88,6 +115,20 @@ class RedundantModifierTest {
                         "  }",
                         "}"
                 ).doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    void allowInterface() {
+        helper().addSourceLines(
+                "Test.java",
+                "public enum Test {",
+                "  INSTANCE(\"str\");",
+                "  private final String str;",
+                "  Test(String str) {",
+                "    this.str = str;",
+                "  }",
+                "}"
+        ).doTest();
     }
 
     @Test
@@ -118,6 +159,21 @@ class RedundantModifierTest {
     }
 
     @Test
+    void allowValidInterfaceMethods() {
+        helper().addSourceLines(
+                "Enclosing.java",
+                "public class Enclosing {",
+                "  public interface Test {",
+                "    int a();",
+                "    int b();",
+                "    int c();",
+                "    int d();",
+                "  }",
+                "}"
+        ).doTest();
+    }
+
+    @Test
     void fixFinalClassModifiers() {
         fix()
                 .addInputLines(
@@ -139,6 +195,20 @@ class RedundantModifierTest {
                         "  @SafeVarargs public final void d(Object... value) {}",
                         "}"
                 ).doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    void allowFinalClass() {
+        helper().addSourceLines(
+                "Test.java",
+                "public final class Test {",
+                "  public void a() {}",
+                "  private void b() {}",
+                "  void c() {}",
+                // SafeVarargs is a special case
+                "  @SafeVarargs public final void d(Object... value) {}",
+                "}"
+        ).doTest();
     }
 
     @Test
@@ -174,7 +244,29 @@ class RedundantModifierTest {
                 ).doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
+    @Test
+    void allowStaticMethods() {
+        helper().addSourceLines(
+                "Test.java",
+                "public class Test {",
+                "  public static int a() {",
+                "    return 1;",
+                "  }",
+                "  private static int b() {",
+                "    return 1;",
+                "  }",
+                "  static int c() {",
+                "    return 1;",
+                "  }",
+                "}"
+        ).doTest();
+    }
+
     private BugCheckerRefactoringTestHelper fix() {
         return BugCheckerRefactoringTestHelper.newInstance(new RedundantModifier(), getClass());
+    }
+
+    private CompilationTestHelper helper() {
+        return CompilationTestHelper.newInstance(RedundantModifier.class, getClass());
     }
 }
