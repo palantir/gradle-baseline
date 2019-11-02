@@ -289,7 +289,7 @@ public final class PreferCollectionConstructorsTest {
         }
         outputLines.add("class Test {{ " + after + "; }}");
 
-        BugCheckerRefactoringTestHelper.newInstance(new PreferCollectionConstructors(), getClass())
+        RefactoringValidator.of(new PreferCollectionConstructors(), getClass())
                 .addInputLines("Test.java", inputLines.toArray(new String[0]))
                 .addOutputLines("Test.java", outputLines.toArray(new String[0]))
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);

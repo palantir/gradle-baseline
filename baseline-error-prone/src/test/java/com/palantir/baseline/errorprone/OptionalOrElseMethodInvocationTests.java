@@ -27,12 +27,12 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 public final class OptionalOrElseMethodInvocationTests {
 
     private CompilationTestHelper compilationHelper;
-    private BugCheckerRefactoringTestHelper refactoringTestHelper;
+    private RefactoringValidator refactoringTestHelper;
 
     @BeforeEach
     public void before() {
         compilationHelper = CompilationTestHelper.newInstance(OptionalOrElseMethodInvocation.class, getClass());
-        refactoringTestHelper = BugCheckerRefactoringTestHelper.newInstance(
+        refactoringTestHelper = RefactoringValidator.of(
                 new OptionalOrElseMethodInvocation(), getClass());
     }
 

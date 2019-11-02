@@ -56,7 +56,7 @@ public class PreferBuiltInConcurrentKeySetTests {
 
     @Test
     public void auto_fix() {
-        BugCheckerRefactoringTestHelper.newInstance(new PreferBuiltInConcurrentKeySet(), getClass())
+        RefactoringValidator.of(new PreferBuiltInConcurrentKeySet(), getClass())
                 .addInputLines(
                         "Test.java",
                         "import com.google.common.collect.Sets;",

@@ -246,8 +246,8 @@ class ReadReturnValueIgnoredTest {
                 "}").doTest();
     }
 
-    private BugCheckerRefactoringTestHelper fix() {
-        return BugCheckerRefactoringTestHelper.newInstance(new ReadReturnValueIgnored(), getClass());
+    private RefactoringValidator fix() {
+        return RefactoringValidator.of(new ReadReturnValueIgnored(), getClass());
     }
 
     private CompilationTestHelper helper() {

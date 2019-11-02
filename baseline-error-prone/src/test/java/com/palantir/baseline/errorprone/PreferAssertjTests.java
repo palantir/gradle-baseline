@@ -950,7 +950,7 @@ public class PreferAssertjTests {
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
-    private BugCheckerRefactoringTestHelper test() {
-        return BugCheckerRefactoringTestHelper.newInstance(new PreferAssertj(), getClass());
+    private RefactoringValidator test() {
+        return RefactoringValidator.of(new PreferAssertj(), getClass());
     }
 }

@@ -47,7 +47,7 @@ public class StringBuilderConstantParametersTests {
 
     @Test
     public void shouldWarnOnConstantNumberOfParams_fix() {
-        BugCheckerRefactoringTestHelper.newInstance(new StringBuilderConstantParameters(), getClass())
+        RefactoringValidator.of(new StringBuilderConstantParameters(), getClass())
                 .addInputLines(
                         "Test.java",
                         "class Test {",
@@ -81,7 +81,7 @@ public class StringBuilderConstantParametersTests {
 
     @Test
     public void shouldWarnOnConstantNumberOfParams_stringCtor_fix() {
-        BugCheckerRefactoringTestHelper.newInstance(new StringBuilderConstantParameters(), getClass())
+        RefactoringValidator.of(new StringBuilderConstantParameters(), getClass())
                 .addInputLines(
                         "Test.java",
                         "class Test {",
@@ -114,7 +114,7 @@ public class StringBuilderConstantParametersTests {
 
     @Test
     public void shouldWarnOnConstantNumberOfParams_charSequenceCtor_fix() {
-        BugCheckerRefactoringTestHelper.newInstance(new StringBuilderConstantParameters(), getClass())
+        RefactoringValidator.of(new StringBuilderConstantParameters(), getClass())
                 .addInputLines(
                         "Test.java",
                         "class Test {",
@@ -147,7 +147,7 @@ public class StringBuilderConstantParametersTests {
 
     @Test
     public void shouldWarnOnConstantNumberOfNonConstantParams_fix() {
-        BugCheckerRefactoringTestHelper.newInstance(new StringBuilderConstantParameters(), getClass())
+        RefactoringValidator.of(new StringBuilderConstantParameters(), getClass())
                 .addInputLines(
                         "Test.java",
                         "class Test {",
@@ -167,7 +167,7 @@ public class StringBuilderConstantParametersTests {
 
     @Test
     public void shouldWarnOnConstantNumberOfNonConstantParams_firstString_fix() {
-        BugCheckerRefactoringTestHelper.newInstance(new StringBuilderConstantParameters(), getClass())
+        RefactoringValidator.of(new StringBuilderConstantParameters(), getClass())
                 .addInputLines(
                         "Test.java",
                         "class Test {",
@@ -216,7 +216,7 @@ public class StringBuilderConstantParametersTests {
 
     @Test
     public void doesNotRemoveComments() {
-        BugCheckerRefactoringTestHelper.newInstance(new StringBuilderConstantParameters(), getClass())
+        RefactoringValidator.of(new StringBuilderConstantParameters(), getClass())
                 .addInputLines(
                         "Test.java",
                         "class Test {",
@@ -243,7 +243,7 @@ public class StringBuilderConstantParametersTests {
 
     @Test
     public void shouldWarnOnNoParams_fix() {
-        BugCheckerRefactoringTestHelper.newInstance(new StringBuilderConstantParameters(), getClass())
+        RefactoringValidator.of(new StringBuilderConstantParameters(), getClass())
                 .addInputLines(
                         "Test.java",
                         "class Test {",
@@ -263,7 +263,7 @@ public class StringBuilderConstantParametersTests {
 
     @Test
     public void suggestedFixRetainsCast() {
-        BugCheckerRefactoringTestHelper.newInstance(new StringBuilderConstantParameters(), getClass())
+        RefactoringValidator.of(new StringBuilderConstantParameters(), getClass())
                 .addInputLines(
                         "Test.java",
                         "class Test {",
@@ -283,7 +283,7 @@ public class StringBuilderConstantParametersTests {
 
     @Test
     public void suggestedFixHandlesTernary() {
-        BugCheckerRefactoringTestHelper.newInstance(new StringBuilderConstantParameters(), getClass())
+        RefactoringValidator.of(new StringBuilderConstantParameters(), getClass())
                 .addInputLines(
                         "Test.java",
                         "class Test {",
@@ -307,7 +307,7 @@ public class StringBuilderConstantParametersTests {
 
     @Test
     public void suggestedFixHandlesAddition() {
-        BugCheckerRefactoringTestHelper.newInstance(new StringBuilderConstantParameters(), getClass())
+        RefactoringValidator.of(new StringBuilderConstantParameters(), getClass())
                 .addInputLines(
                         "Test.java",
                         "class Test {",

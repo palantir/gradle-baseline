@@ -52,7 +52,7 @@ class ReverseDnsLookupTest {
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
-    private BugCheckerRefactoringTestHelper fix() {
-        return BugCheckerRefactoringTestHelper.newInstance(new ReverseDnsLookup(), getClass());
+    private RefactoringValidator fix() {
+        return RefactoringValidator.of(new ReverseDnsLookup(), getClass());
     }
 }

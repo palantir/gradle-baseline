@@ -89,7 +89,7 @@ public final class PreferListsPartitionTests {
 
     @Test
     public void auto_fix_Iterables_partition() {
-        BugCheckerRefactoringTestHelper.newInstance(new PreferListsPartition(), getClass())
+        RefactoringValidator.of(new PreferListsPartition(), getClass())
                 .addInputLines(
                         "Test.java",
                         "import com.google.common.collect.Iterables;",
