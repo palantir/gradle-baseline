@@ -205,7 +205,7 @@ public final class Slf4jLogsafeArgsTest {
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
-    private BugCheckerRefactoringTestHelper fix() {
-        return BugCheckerRefactoringTestHelper.newInstance(new Slf4jLogsafeArgs(), getClass());
+    private RefactoringValidator fix() {
+        return RefactoringValidator.of(new Slf4jLogsafeArgs(), getClass());
     }
 }

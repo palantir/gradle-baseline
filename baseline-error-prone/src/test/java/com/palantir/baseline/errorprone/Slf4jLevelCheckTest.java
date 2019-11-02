@@ -206,7 +206,7 @@ class Slf4jLevelCheckTest {
         return CompilationTestHelper.newInstance(Slf4jLevelCheck.class, getClass());
     }
 
-    private BugCheckerRefactoringTestHelper fix() {
-        return BugCheckerRefactoringTestHelper.newInstance(new Slf4jLevelCheck(), getClass());
+    private RefactoringValidator fix() {
+        return RefactoringValidator.of(new Slf4jLevelCheck(), getClass());
     }
 }

@@ -67,7 +67,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testAutoFix_block() {
-        BugCheckerRefactoringTestHelper.newInstance(new LambdaMethodReference(), getClass())
+        RefactoringValidator.of(new LambdaMethodReference(), getClass())
                 .addInputLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',
@@ -111,7 +111,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testAutoFix_block_localMethod() {
-        BugCheckerRefactoringTestHelper.newInstance(new LambdaMethodReference(), getClass())
+        RefactoringValidator.of(new LambdaMethodReference(), getClass())
                 .addInputLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',
@@ -173,7 +173,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testAutoFix_expression() {
-        BugCheckerRefactoringTestHelper.newInstance(new LambdaMethodReference(), getClass())
+        RefactoringValidator.of(new LambdaMethodReference(), getClass())
                 .addInputLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',
@@ -217,7 +217,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testAutoFix_expression_localMethod() {
-        BugCheckerRefactoringTestHelper.newInstance(new LambdaMethodReference(), getClass())
+        RefactoringValidator.of(new LambdaMethodReference(), getClass())
                 .addInputLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',

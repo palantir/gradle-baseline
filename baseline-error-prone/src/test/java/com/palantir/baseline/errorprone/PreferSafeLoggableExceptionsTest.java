@@ -45,7 +45,7 @@ public class PreferSafeLoggableExceptionsTest {
 
     @Test
     public void auto_fix_illegal_argument_exception() {
-        BugCheckerRefactoringTestHelper.newInstance(new PreferSafeLoggableExceptions(), getClass())
+        RefactoringValidator.of(new PreferSafeLoggableExceptions(), getClass())
                 .addInputLines(
                         "Bean.java",
                         "class Bean {",
@@ -74,7 +74,7 @@ public class PreferSafeLoggableExceptionsTest {
 
     @Test
     public void auto_fix_illegal_state_exception() {
-        BugCheckerRefactoringTestHelper.newInstance(new PreferSafeLoggableExceptions(), getClass())
+        RefactoringValidator.of(new PreferSafeLoggableExceptions(), getClass())
                 .addInputLines(
                         "Bean.java",
                         "class Bean {",

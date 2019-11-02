@@ -294,7 +294,7 @@ public class FinalClassTest {
         return CompilationTestHelper.newInstance(FinalClass.class, getClass());
     }
 
-    private BugCheckerRefactoringTestHelper fix() {
-        return BugCheckerRefactoringTestHelper.newInstance(new FinalClass(), getClass());
+    private RefactoringValidator fix() {
+        return RefactoringValidator.of(new FinalClass(), getClass());
     }
 }
