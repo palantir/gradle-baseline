@@ -604,7 +604,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
         return EXEMPT_PREFIXES.stream().anyMatch(prefix -> Ascii.toLowerCase(name.toString()).startsWith(prefix));
     }
 
-    private class VariableFinder extends TreePathScanner<Void, Void> {
+    private final class VariableFinder extends TreePathScanner<Void, Void> {
         private final Map<Symbol, TreePath> unusedElements = new HashMap<>();
 
         private final Set<Symbol> onlyCheckForReassignments = new HashSet<>();

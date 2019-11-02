@@ -128,7 +128,7 @@ class ThrowErrorTest {
         return CompilationTestHelper.newInstance(ThrowError.class, getClass());
     }
 
-    private BugCheckerRefactoringTestHelper fix() {
-        return BugCheckerRefactoringTestHelper.newInstance(new ThrowError(), getClass());
+    private RefactoringValidator fix() {
+        return RefactoringValidator.of(new ThrowError(), getClass());
     }
 }

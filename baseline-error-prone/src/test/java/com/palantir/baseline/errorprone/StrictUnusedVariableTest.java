@@ -16,7 +16,6 @@
 
 package com.palantir.baseline.errorprone;
 
-import com.google.errorprone.BugCheckerRefactoringTestHelper;
 import com.google.errorprone.BugCheckerRefactoringTestHelper.TestMode;
 import com.google.errorprone.CompilationTestHelper;
 import org.junit.jupiter.api.BeforeEach;
@@ -28,13 +27,12 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 public class StrictUnusedVariableTest {
 
     private CompilationTestHelper compilationHelper;
-    private BugCheckerRefactoringTestHelper refactoringTestHelper;
+    private RefactoringValidator refactoringTestHelper;
 
     @BeforeEach
     public void before() {
         compilationHelper = CompilationTestHelper.newInstance(StrictUnusedVariable.class, getClass());
-        refactoringTestHelper = BugCheckerRefactoringTestHelper.newInstance(
-                new StrictUnusedVariable(), getClass());
+        refactoringTestHelper = RefactoringValidator.of(new StrictUnusedVariable(), getClass());
     }
 
     @Test
@@ -197,7 +195,7 @@ public class StrictUnusedVariableTest {
                         "    System.out.println(value2 + value3 + field);",
                         "  }",
                         "}"
-                ).doTest(TestMode.TEXT_MATCH);
+                ).doTestExpectingFailure(TestMode.TEXT_MATCH);
     }
 
     @Test

@@ -136,7 +136,7 @@ public class CatchBlockLogExceptionTest {
                         "    }",
                         "  }",
                         "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+                .doTestExpectingFailure(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
     @Test
@@ -192,7 +192,7 @@ public class CatchBlockLogExceptionTest {
                 .doTest();
     }
 
-    private BugCheckerRefactoringTestHelper fix() {
-        return BugCheckerRefactoringTestHelper.newInstance(new CatchBlockLogException(), getClass());
+    private RefactoringValidator fix() {
+        return RefactoringValidator.of(new CatchBlockLogException(), getClass());
     }
 }

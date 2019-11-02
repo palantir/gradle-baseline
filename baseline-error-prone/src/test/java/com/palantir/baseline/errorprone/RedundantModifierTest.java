@@ -282,8 +282,8 @@ class RedundantModifierTest {
         ).doTest();
     }
 
-    private BugCheckerRefactoringTestHelper fix() {
-        return BugCheckerRefactoringTestHelper.newInstance(new RedundantModifier(), getClass());
+    private RefactoringValidator fix() {
+        return RefactoringValidator.of(new RedundantModifier(), getClass());
     }
 
     private CompilationTestHelper helper() {

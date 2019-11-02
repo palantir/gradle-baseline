@@ -26,7 +26,7 @@ class ExecutorSubmitRunnableFutureIgnoredTest {
 
     @Test
     void testFix() {
-        BugCheckerRefactoringTestHelper.newInstance(new ExecutorSubmitRunnableFutureIgnored(), getClass())
+        RefactoringValidator.of(new ExecutorSubmitRunnableFutureIgnored(), getClass())
                 .addInputLines(
                         "Test.java",
                         "import " + ExecutorService.class.getName() + ';',

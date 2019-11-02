@@ -178,7 +178,7 @@ public final class PreferSafeLoggingPreconditionsTests {
 
     @Test
     public void testPreconditionsAutoFixShortNames() {
-        BugCheckerRefactoringTestHelper.newInstance(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
+        RefactoringValidator.of(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
                 "Test.java",
                 "import com.google.common.base.Preconditions;",
                 "class Test {",
@@ -201,7 +201,7 @@ public final class PreferSafeLoggingPreconditionsTests {
 
     @Test
     public void testPreconditionsAutoFixFullNames() {
-        BugCheckerRefactoringTestHelper.newInstance(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
+        RefactoringValidator.of(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
                 "Test.java",
                 "class Test {",
                 "  void f(String param) {",
@@ -223,7 +223,7 @@ public final class PreferSafeLoggingPreconditionsTests {
 
     @Test
     public void testMixedGuavaPreconditionsFullNamesAndLogSafeShortNames() {
-        BugCheckerRefactoringTestHelper.newInstance(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
+        RefactoringValidator.of(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
                 "Test.java",
                 "import com.palantir.logsafe.Preconditions;",
                 "class Test {",
@@ -252,7 +252,7 @@ public final class PreferSafeLoggingPreconditionsTests {
 
     @Test
     public void testMixedGuavaPreconditionsShortNamesAndLogSafeFullNames() {
-        BugCheckerRefactoringTestHelper.newInstance(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
+        RefactoringValidator.of(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
                 "Test.java",
                 "import com.google.common.base.Preconditions;",
                 "class Test {",
@@ -281,7 +281,7 @@ public final class PreferSafeLoggingPreconditionsTests {
 
     @Test
     public void testObjectsAutoFixShortNames() {
-        BugCheckerRefactoringTestHelper.newInstance(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
+        RefactoringValidator.of(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
                 "Test.java",
                 "import java.util.Objects;",
                 "class Test {",
@@ -301,7 +301,7 @@ public final class PreferSafeLoggingPreconditionsTests {
 
     @Test
     public void testObjectsAutoFixFullNames() {
-        BugCheckerRefactoringTestHelper.newInstance(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
+        RefactoringValidator.of(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
                 "Test.java",
                 "class Test {",
                 "  void f(String param) {",
@@ -319,7 +319,7 @@ public final class PreferSafeLoggingPreconditionsTests {
 
     @Test
     public void testMixedObjectsFullNamesAndLogSafeShortNames() {
-        BugCheckerRefactoringTestHelper.newInstance(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
+        RefactoringValidator.of(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
                 "Test.java",
                 "import com.palantir.logsafe.Preconditions;",
                 "class Test {",
@@ -340,7 +340,7 @@ public final class PreferSafeLoggingPreconditionsTests {
 
     @Test
     public void testMixedObjectsShortNamesAndLogSafeFullNames() {
-        BugCheckerRefactoringTestHelper.newInstance(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
+        RefactoringValidator.of(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
                 "Test.java",
                 "import java.util.Objects;",
                 "class Test {",
@@ -362,7 +362,7 @@ public final class PreferSafeLoggingPreconditionsTests {
 
     @Test
     public void testMixedValidateAutoFixShortNames() {
-        BugCheckerRefactoringTestHelper.newInstance(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
+        RefactoringValidator.of(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
                 "Test.java",
                 "import org.apache.commons.lang3.Validate;",
                 "class Test {",
@@ -386,7 +386,7 @@ public final class PreferSafeLoggingPreconditionsTests {
 
     @Test
     public void testMixedValidateAutoFixFullNames() {
-        BugCheckerRefactoringTestHelper.newInstance(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
+        RefactoringValidator.of(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
                 "Test.java",
                 "class Test {",
                 "  void f(String param) {",
@@ -408,7 +408,7 @@ public final class PreferSafeLoggingPreconditionsTests {
 
     @Test
     public void testMixedValidateFullNamesAndLogSafeShortNames() {
-        BugCheckerRefactoringTestHelper.newInstance(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
+        RefactoringValidator.of(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
                 "Test.java",
                 "import com.palantir.logsafe.Preconditions;",
                 "class Test {",
@@ -437,7 +437,7 @@ public final class PreferSafeLoggingPreconditionsTests {
 
     @Test
     public void testMixedValidateShortNamesAndLogSafeFullNames() {
-        BugCheckerRefactoringTestHelper.newInstance(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
+        RefactoringValidator.of(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
                 "Test.java",
                 "import org.apache.commons.lang3.Validate;",
                 "class Test {",
@@ -467,7 +467,7 @@ public final class PreferSafeLoggingPreconditionsTests {
 
     @Test
     public void testMixedGuavaPreconditionsAndObjectsAutoFixShortNames() {
-        BugCheckerRefactoringTestHelper.newInstance(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
+        RefactoringValidator.of(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
                 "Test.java",
                 "import com.google.common.base.Preconditions;",
                 "import java.util.Objects;",
@@ -494,7 +494,7 @@ public final class PreferSafeLoggingPreconditionsTests {
 
     @Test
     public void testMixedGuavaPreconditionsAndObjectsAutoFixFullNames() {
-        BugCheckerRefactoringTestHelper.newInstance(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
+        RefactoringValidator.of(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
                 "Test.java",
                 "class Test {",
                 "  void f(String param) {",
@@ -518,7 +518,7 @@ public final class PreferSafeLoggingPreconditionsTests {
 
     @Test
     public void testMixedGuavaPreconditionsAndObjectsAndValidateAutoFixFullNames() {
-        BugCheckerRefactoringTestHelper.newInstance(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
+        RefactoringValidator.of(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
                 "Test.java",
                 "class Test {",
                 "  void f(String param) {",
@@ -548,7 +548,7 @@ public final class PreferSafeLoggingPreconditionsTests {
 
     @Test
     public void testMixedGuavaPreconditionsAndObjectsAndValidateAutoFixShortNames() {
-        BugCheckerRefactoringTestHelper.newInstance(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
+        RefactoringValidator.of(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
                 "Test.java",
                 "import com.google.common.base.Preconditions;",
                 "import org.apache.commons.lang3.Validate;",
