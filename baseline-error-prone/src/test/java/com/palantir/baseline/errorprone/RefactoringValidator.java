@@ -4,6 +4,9 @@ import com.google.errorprone.BugCheckerRefactoringTestHelper;
 import com.google.errorprone.CompilationTestHelper;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.bugpatterns.BugChecker;
+import com.sun.tools.javac.main.Main;
+
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 /**
  * {@link RefactoringValidator} delegates to a {@link BugCheckerRefactoringTestHelper},
@@ -80,6 +83,15 @@ final class RefactoringValidator {
             helper.compilationHelper
                     .addSourceLines(helper.outputPath, helper.outputLines)
                     .doTest();
+        }
+
+        void doTestExpectingFailure(BugCheckerRefactoringTestHelper.TestMode testMode) {
+            delegate.doTest(testMode);
+            assertThatThrownBy(() -> helper.compilationHelper
+                    .addSourceLines(helper.outputPath, helper.outputLines)
+                    .doTest())
+                    .describedAs("Expected the result to fail validation")
+                    .isInstanceOf(AssertionError.class);
         }
     }
 }

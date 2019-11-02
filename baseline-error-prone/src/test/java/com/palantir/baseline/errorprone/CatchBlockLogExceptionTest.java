@@ -136,7 +136,7 @@ public class CatchBlockLogExceptionTest {
                         "    }",
                         "  }",
                         "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+                .doTestExpectingFailure(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
     @Test

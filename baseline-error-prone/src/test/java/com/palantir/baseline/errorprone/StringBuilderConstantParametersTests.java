@@ -228,17 +228,8 @@ public class StringBuilderConstantParametersTests {
                         "           .toString();",
                         "   }",
                         "}")
-                .addOutputLines(
-                        "Test.java",
-                        "class Test {",
-                        "   String f() {",
-                        "       return new StringBuilder()",
-                        "           .append(\"foo\") // comment",
-                        "           .append(\"bar\")",
-                        "           .toString();",
-                        "   }",
-                        "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+                .expectUnchanged()
+                .doTestExpectingFailure(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
     @Test

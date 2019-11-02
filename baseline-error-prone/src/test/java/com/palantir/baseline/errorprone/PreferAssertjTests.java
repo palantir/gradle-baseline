@@ -476,7 +476,7 @@ public class PreferAssertjTests {
                         "    assertArrayEquals(new double[] { 1D }, doubleArray, .1D);",
                         "  }",
                         "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+                .doTestExpectingFailure(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
     @Test

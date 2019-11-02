@@ -195,7 +195,7 @@ public class StrictUnusedVariableTest {
                         "    System.out.println(value2 + value3 + field);",
                         "  }",
                         "}"
-                ).doTest(TestMode.TEXT_MATCH);
+                ).doTestExpectingFailure(TestMode.TEXT_MATCH);
     }
 
     @Test
