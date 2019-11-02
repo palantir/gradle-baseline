@@ -132,8 +132,9 @@ public final class RedundantModifier extends BugChecker
             return false;
         }
         String source = state.getSourceForNode(tree);
+        // getSourceForNode returns null when there are no modifiers specified
         if (source == null) {
-            return true; // When source is not available, rely on the modifier flags
+            return false;
         }
         // nested interfaces report a static modifier despite not being present
         return source.contains(modifier.name().toLowerCase(Locale.ENGLISH));

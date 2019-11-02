@@ -99,6 +99,18 @@ class RedundantModifierTest {
     }
 
     @Test
+    void testAllowInterfaceNestedEnum() {
+        helper().addSourceLines(
+                "Enclosing.java",
+                "public interface Enclosing {",
+                "  enum Test {",
+                "    INSTANCE",
+                "  }",
+                "}"
+        ).doTest();
+    }
+
+    @Test
     void fixStaticInterface() {
         fix()
                 .addInputLines(
