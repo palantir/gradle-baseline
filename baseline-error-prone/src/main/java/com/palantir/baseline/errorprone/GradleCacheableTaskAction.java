@@ -40,7 +40,7 @@ import java.util.regex.Pattern;
 public final class GradleCacheableTaskAction extends BugChecker implements LambdaExpressionTreeMatcher {
 
     private static final long serialVersionUID = 1L;
-    private static final Matcher<ExpressionTree> IS_ACTION = Matchers.isSubtypeOf("org.gradle.api.Action");
+    private static final Matcher<ExpressionTree> IS_ACTION = MoreMatchers.isSubtypeOf("org.gradle.api.Action");
 
     private static final Matcher<ExpressionTree> TASK_ACTION = MethodMatchers.instanceMethod()
             .onDescendantOf("org.gradle.api.Task")

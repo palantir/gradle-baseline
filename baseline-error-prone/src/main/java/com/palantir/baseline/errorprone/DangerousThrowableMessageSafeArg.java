@@ -24,7 +24,6 @@ import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
-import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
@@ -51,7 +50,7 @@ public final class DangerousThrowableMessageSafeArg extends BugChecker
             .onDescendantOf(Throwable.class.getName())
             .named("getMessage");
 
-    private static final Matcher<ExpressionTree> THROWABLE_MATCHER = Matchers.isSubtypeOf(Throwable.class);
+    private static final Matcher<ExpressionTree> THROWABLE_MATCHER = MoreMatchers.isSubtypeOf(Throwable.class);
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {

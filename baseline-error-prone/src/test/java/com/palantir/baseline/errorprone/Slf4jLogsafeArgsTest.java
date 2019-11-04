@@ -19,7 +19,6 @@ package com.palantir.baseline.errorprone;
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.BugCheckerRefactoringTestHelper;
 import com.google.errorprone.CompilationTestHelper;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
@@ -29,15 +28,8 @@ public final class Slf4jLogsafeArgsTest {
 
     private static final ImmutableList<String> LOG_LEVELS = ImmutableList.of("trace", "debug", "info", "warn", "error");
 
-    private CompilationTestHelper compilationHelper;
-
-    @BeforeEach
-    public void before() {
-        compilationHelper = CompilationTestHelper.newInstance(Slf4jLogsafeArgs.class, getClass());
-    }
-
     private void test(String logArgs, String failingArgs) throws Exception {
-        LOG_LEVELS.forEach(logLevel -> compilationHelper
+        LOG_LEVELS.forEach(logLevel -> CompilationTestHelper.newInstance(Slf4jLogsafeArgs.class, getClass())
                 .addSourceLines(
                         "Test.java",
                         "import com.palantir.logsafe.SafeArg;",
@@ -88,11 +80,14 @@ public final class Slf4jLogsafeArgsTest {
 
         // log.<>(String, Object, Arg<T>, Throwable)"
         test("\"constant {} {}\", \"string\", SafeArg.of(\"name\", \"string\"), new Throwable()", "[1]");
+
+        // log.<>(String, Arg<T>, null literal)
+        test("\"constant {}\", SafeArg.of(\"name\", \"string\"), null", "[2]");
     }
 
     @Test
     public void testPassingLogsafeArgs() throws Exception {
-        LOG_LEVELS.forEach(logLevel -> compilationHelper
+        LOG_LEVELS.forEach(logLevel -> CompilationTestHelper.newInstance(Slf4jLogsafeArgs.class, getClass())
                 .addSourceLines(
                         "Test.java",
                         "import com.palantir.logsafe.SafeArg;",

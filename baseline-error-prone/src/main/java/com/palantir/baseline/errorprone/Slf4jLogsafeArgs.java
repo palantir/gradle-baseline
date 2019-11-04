@@ -29,11 +29,9 @@ import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
-import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.util.SimpleTreeVisitor;
-import com.sun.tools.javac.code.Type;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -54,7 +52,9 @@ public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocati
             .onDescendantOf("org.slf4j.Logger")
             .withNameMatching(Pattern.compile("trace|debug|info|warn|error"));
 
-    private static final Matcher<ExpressionTree> THROWABLE = Matchers.isSubtypeOf(Throwable.class);
+    private static final Matcher<ExpressionTree> THROWABLE = MoreMatchers.isSubtypeOf(Throwable.class);
+    private static final Matcher<ExpressionTree> ARG = MoreMatchers.isSubtypeOf("com.palantir.logsafe.Arg");
+    private static final Matcher<ExpressionTree> MARKER = MoreMatchers.isSubtypeOf("org.slf4j.Marker");
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
@@ -69,18 +69,14 @@ public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocati
 
         List<? extends ExpressionTree> allArgs = tree.getArguments();
         int lastIndex = allArgs.size() - 1;
-        int startArg = ASTHelpers.isCastable(
-                ASTHelpers.getType(allArgs.get(0)),
-                state.getTypeFromString("org.slf4j.Marker"),
-                state) ? 2 : 1;
+        int startArg = MARKER.matches(allArgs.get(0), state) ? 2 : 1;
         ExpressionTree lastArg = allArgs.get(lastIndex);
         boolean lastArgIsThrowable = THROWABLE.matches(lastArg, state);
         int endArg = lastArgIsThrowable ? lastIndex - 1 : lastIndex;
 
         ImmutableList.Builder<Integer> badArgsBuilder = ImmutableList.builder();
-        Type argType = state.getTypeFromString("com.palantir.logsafe.Arg");
         for (int i = startArg; i <= endArg; i++) {
-            if (!ASTHelpers.isCastable(ASTHelpers.getType(allArgs.get(i)), argType, state)) {
+            if (!ARG.matches(allArgs.get(i), state)) {
                 badArgsBuilder.add(i);
             }
         }
@@ -111,13 +107,13 @@ public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocati
     private static final class ThrowableArgVisitor extends SimpleTreeVisitor<Optional<ExpressionTree>, VisitorState> {
         private static final ThrowableArgVisitor INSTANCE = new ThrowableArgVisitor();
 
-        private static final Matcher<ExpressionTree> ARG = Matchers.staticMethod()
+        private static final Matcher<ExpressionTree> ARG_FACTORY = Matchers.staticMethod()
                 .onClassAny("com.palantir.logsafe.SafeArg", "com.palantir.logsafe.UnsafeArg")
                 .named("of")
                 .withParameters(String.class.getName(), Object.class.getName());
 
         private static final Matcher<ExpressionTree> THROWABLE_ARG = Matchers.methodInvocation(
-                ARG, ChildMultiMatcher.MatchType.LAST, THROWABLE);
+                ARG_FACTORY, ChildMultiMatcher.MatchType.LAST, THROWABLE);
 
         private ThrowableArgVisitor() {
             super(Optional.empty());

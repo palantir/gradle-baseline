@@ -25,7 +25,6 @@ import com.google.errorprone.fixes.SuggestedFix;
 import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
-import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
@@ -52,8 +51,8 @@ public final class PreferCollectionTransform extends BugChecker
                     .onClass("com.google.common.collect.Iterables")
                     .named("transform");
 
-    private static final Matcher<Tree> LIST_MATCHER = Matchers.isSubtypeOf("java.util.List");
-    private static final Matcher<Tree> COLLECTION_MATCHER = Matchers.isSubtypeOf("java.util.Collection");
+    private static final Matcher<Tree> LIST_MATCHER = MoreMatchers.isSubtypeOf("java.util.List");
+    private static final Matcher<Tree> COLLECTION_MATCHER = MoreMatchers.isSubtypeOf("java.util.Collection");
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {

@@ -53,7 +53,7 @@ public final class ThrowError extends BugChecker implements BugChecker.ThrowTree
 
     private static final Matcher<ExpressionTree> compileTimeConstExpressionMatcher =
             new CompileTimeConstantExpressionMatcher();
-    private static final String ERROR_NAME = Error.class.getName();
+    private static final Matcher<ExpressionTree> ERROR = MoreMatchers.isSubtypeOf(Error.class);
 
     @Override
     public Description matchThrow(ThrowTree tree, VisitorState state) {
@@ -62,11 +62,7 @@ public final class ThrowError extends BugChecker implements BugChecker.ThrowTree
             return Description.NO_MATCH;
         }
         NewClassTree newClassTree = (NewClassTree) expression;
-        Type throwableType = ASTHelpers.getType(newClassTree.getIdentifier());
-        if (!ASTHelpers.isCastable(
-                throwableType,
-                state.getTypeFromString(ERROR_NAME),
-                state)
+        if (!ERROR.matches(newClassTree.getIdentifier(), state)
                 // Don't discourage developers from testing edge cases involving Errors.
                 // It's also fine for tests throw AssertionError internally in test objects.
                 || TestCheckUtils.isTestCode(state)) {

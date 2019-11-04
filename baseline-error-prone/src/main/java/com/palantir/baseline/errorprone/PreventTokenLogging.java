@@ -26,7 +26,6 @@ import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
-import com.sun.source.tree.Tree;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -46,13 +45,9 @@ public final class PreventTokenLogging extends BugChecker implements BugChecker.
                             .onClassAny("com.palantir.logsafe.SafeArg", "com.palantir.logsafe.UnsafeArg")
                             .named("of"));
 
-    private static final Matcher<ExpressionTree> AUTH_MATCHER =
-            Matchers.allOf(
-                    Matchers.anyOf(
-                            Matchers.isSubtypeOf("com.palantir.tokens.auth.AuthHeader"),
-                            Matchers.isSubtypeOf("com.palantir.tokens.auth.BearerToken")),
-                    Matchers.not(
-                            Matchers.kindIs(Tree.Kind.NULL_LITERAL)));
+    private static final Matcher<ExpressionTree> AUTH_MATCHER = Matchers.anyOf(
+            MoreMatchers.isSubtypeOf("com.palantir.tokens.auth.AuthHeader"),
+            MoreMatchers.isSubtypeOf("com.palantir.tokens.auth.BearerToken"));
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
