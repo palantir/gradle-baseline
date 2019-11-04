@@ -28,6 +28,7 @@ import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.ModifiersTree;
 import com.sun.source.tree.Tree;
+import com.sun.source.tree.VariableTree;
 import java.util.Locale;
 import javax.lang.model.element.Modifier;
 
@@ -45,7 +46,7 @@ import javax.lang.model.element.Modifier;
         severity = BugPattern.SeverityLevel.ERROR,
         summary = "Avoid using redundant modifiers")
 public final class RedundantModifier extends BugChecker
-        implements BugChecker.ClassTreeMatcher, BugChecker.MethodTreeMatcher {
+        implements BugChecker.ClassTreeMatcher, BugChecker.MethodTreeMatcher, BugChecker.VariableTreeMatcher {
 
     private static final Matcher<ClassTree> STATIC_ENUM_OR_INTERFACE = Matchers.allOf(
             Matchers.anyOf(Matchers.kindIs(Tree.Kind.ENUM), Matchers.kindIs(Tree.Kind.INTERFACE)),
@@ -65,6 +66,19 @@ public final class RedundantModifier extends BugChecker
             Matchers.not(Matchers.isStatic()),
             Matchers.not(Matchers.hasModifier(Modifier.DEFAULT)),
             Matchers.anyOf(methodHasExplicitModifier(Modifier.PUBLIC), methodHasExplicitModifier(Modifier.ABSTRACT)));
+
+    private static final Matcher<MethodTree> INTERFACE_STATIC_METHOD_MODIFIERS = Matchers.allOf(
+            Matchers.enclosingClass(Matchers.kindIs(Tree.Kind.INTERFACE)),
+            Matchers.isStatic(),
+            methodHasExplicitModifier(Modifier.PUBLIC));
+
+    private static final Matcher<VariableTree> INTERFACE_FIELD_MODIFIERS = Matchers.allOf(
+            Matchers.enclosingClass(Matchers.kindIs(Tree.Kind.INTERFACE)),
+            Matchers.isStatic(),
+            Matchers.anyOf(
+                    variableHasExplicitModifier(Modifier.PUBLIC),
+                    variableHasExplicitModifier(Modifier.STATIC),
+                    variableHasExplicitModifier(Modifier.FINAL)));
 
     private static final Matcher<MethodTree> UNNECESSARY_FINAL_METHOD_ON_FINAL_CLASS = Matchers.allOf(
             Matchers.not(Matchers.isStatic()),
@@ -108,10 +122,29 @@ public final class RedundantModifier extends BugChecker
                     .addFix(SuggestedFixes.removeModifiers(tree, state, Modifier.PUBLIC, Modifier.ABSTRACT))
                     .build();
         }
+        if (INTERFACE_STATIC_METHOD_MODIFIERS.matches(tree, state)) {
+            return buildDescription(tree)
+                    .setMessage("Interface components are public by default. The 'public' modifier is unnecessary.")
+                    .addFix(SuggestedFixes.removeModifiers(tree, state, Modifier.PUBLIC))
+                    .build();
+        }
         if (UNNECESSARY_FINAL_METHOD_ON_FINAL_CLASS.matches(tree, state)) {
             return buildDescription(tree)
                     .setMessage("Redundant 'final' modifier on an instance method of a final class.")
                     .addFix(SuggestedFixes.removeModifiers(tree, state, Modifier.FINAL))
+                    .build();
+        }
+        return Description.NO_MATCH;
+    }
+
+    @Override
+    public Description matchVariable(VariableTree tree, VisitorState state) {
+        if (INTERFACE_FIELD_MODIFIERS.matches(tree, state)) {
+            return buildDescription(tree)
+                    .setMessage("Interface fields are public, static, and final by default. "
+                            + "These modifiers are unnecessary to specify.")
+                    .addFix(SuggestedFixes.removeModifiers(
+                            tree, state, Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL))
                     .build();
         }
         return Description.NO_MATCH;
@@ -125,6 +158,11 @@ public final class RedundantModifier extends BugChecker
     private static Matcher<ClassTree> classHasExplicitModifier(Modifier modifier) {
         return (Matcher<ClassTree>) (classTree, state) ->
                 containsModifier(classTree.getModifiers(), state, modifier);
+    }
+
+    private static Matcher<VariableTree> variableHasExplicitModifier(Modifier modifier) {
+        return (Matcher<VariableTree>) (variableTree, state) ->
+                containsModifier(variableTree.getModifiers(), state, modifier);
     }
 
     private static boolean containsModifier(ModifiersTree tree, VisitorState state, Modifier modifier) {

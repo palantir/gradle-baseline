@@ -282,6 +282,50 @@ class RedundantModifierTest {
         ).doTest();
     }
 
+    @Test
+    void fixInterfacePublicStaticMethod() {
+        fix()
+                .addInputLines(
+                        "Test.java",
+                        "public interface Test {",
+                        "  public static void a() {}",
+                        "}"
+                )
+                .addOutputLines(
+                        "Test.java",
+                        "public interface Test {",
+                        "  static void a() {}",
+                        "}"
+                ).doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    void fixInterfaceStaticFieldModifiers() {
+        fix()
+                .addInputLines(
+                        "Test.java",
+                        "public interface Test {",
+                        "  int VALUE_0 = 0;",
+                        "  public static final int VALUE_1 = 1;",
+                        "  public final int VALUE_2 = 2;",
+                        "  public static int VALUE_3 = 3;",
+                        "  final int VALUE_4 = 4;",
+                        "  static int VALUE_5 = 5;",
+                        "}"
+                )
+                .addOutputLines(
+                        "Test.java",
+                        "public interface Test {",
+                        "  int VALUE_0 = 0;",
+                        "  int VALUE_1 = 1;",
+                        "  int VALUE_2 = 2;",
+                        "  int VALUE_3 = 3;",
+                        "  int VALUE_4 = 4;",
+                        "  int VALUE_5 = 5;",
+                        "}"
+                ).doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
     private RefactoringValidator fix() {
         return RefactoringValidator.of(new RedundantModifier(), getClass());
     }
