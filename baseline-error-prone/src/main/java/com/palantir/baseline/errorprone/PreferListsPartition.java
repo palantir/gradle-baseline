@@ -25,7 +25,6 @@ import com.google.errorprone.fixes.SuggestedFix;
 import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
-import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
@@ -55,7 +54,7 @@ public final class PreferListsPartition extends BugChecker
                     .named("partition")
                     .withParameters("java.lang.Iterable", "int");
 
-    private static final Matcher<Tree> LIST_MATCHER = Matchers.isSubtypeOf("java.util.List");
+    private static final Matcher<Tree> LIST_MATCHER = MoreMatchers.isSubtypeOf("java.util.List");
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {

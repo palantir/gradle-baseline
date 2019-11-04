@@ -76,4 +76,28 @@ public final class DangerousThrowableMessageSafeArgTest {
                 "  }",
                 "}").doTest();
     }
+
+    @Test
+    public void safe_null_allowed() {
+        compilationHelper.addSourceLines(
+                "Bean.java",
+                "import " + SafeArg.class.getName() + ';',
+                "class Bean {",
+                "  public SafeArg<?> foo() {",
+                "    return SafeArg.of(\"foo\", null);",
+                "  }",
+                "}").doTest();
+    }
+
+    @Test
+    public void safe_object_allowed() {
+        compilationHelper.addSourceLines(
+                "Bean.java",
+                "import " + SafeArg.class.getName() + ';',
+                "class Bean {",
+                "  public SafeArg<?> foo(Object object) {",
+                "    return SafeArg.of(\"foo\", object);",
+                "  }",
+                "}").doTest();
+    }
 }

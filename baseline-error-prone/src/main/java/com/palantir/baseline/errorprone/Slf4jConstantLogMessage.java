@@ -26,7 +26,6 @@ import com.google.errorprone.matchers.CompileTimeConstantExpressionMatcher;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
-import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import java.util.List;
@@ -47,6 +46,8 @@ public final class Slf4jConstantLogMessage extends BugChecker implements MethodI
             .onDescendantOf("org.slf4j.Logger")
             .withNameMatching(Pattern.compile("trace|debug|info|warn|error"));
 
+    private static final Matcher<ExpressionTree> MARKER = MoreMatchers.isSubtypeOf("org.slf4j.Marker");
+
     private final Matcher<ExpressionTree> compileTimeConstExpressionMatcher =
             new CompileTimeConstantExpressionMatcher();
 
@@ -57,10 +58,7 @@ public final class Slf4jConstantLogMessage extends BugChecker implements MethodI
         }
 
         List<? extends ExpressionTree> args = tree.getArguments();
-        ExpressionTree messageArg = ASTHelpers.isCastable(
-                ASTHelpers.getType(tree.getArguments().get(0)),
-                state.getTypeFromString("org.slf4j.Marker"),
-                state)
+        ExpressionTree messageArg = MARKER.matches(tree.getArguments().get(0), state)
                 ? args.get(1)
                 : args.get(0);
 
