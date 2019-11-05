@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Ignore module-info.java files to support projects with Jigsaw.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1023
