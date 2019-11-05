@@ -16,9 +16,17 @@
 
 package com.palantir.baseline.errorprone;
 
+import com.google.errorprone.VisitorState;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
+import com.sun.source.tree.ClassTree;
+import com.sun.source.tree.MethodTree;
+import com.sun.source.tree.ModifiersTree;
 import com.sun.source.tree.Tree;
+import com.sun.source.tree.VariableTree;
+import com.sun.source.util.TreePath;
+import java.util.Locale;
+import javax.lang.model.element.Modifier;
 
 /** Additional {@link Matcher} factory methods shared by baseline checks. */
 final class MoreMatchers {
@@ -47,6 +55,58 @@ final class MoreMatchers {
         return Matchers.allOf(
                 Matchers.isSubtypeOf(baseTypeString),
                 Matchers.not(Matchers.kindIs(Tree.Kind.NULL_LITERAL)));
+    }
+
+    /**
+     * Matches enclosing classes on {@link ClassTree} blocks. This differs from
+     * {@link Matchers#enclosingClass(Matcher)} which matches the input {@link ClassTree},
+     * not the enclosing class.
+     */
+    static <T extends ClassTree> Matcher<T> classEnclosingClass(Matcher<ClassTree> matcher) {
+        return (Matcher<T>) (classTree, state) -> {
+            TreePath currentPath = state.getPath().getParentPath();
+            while (currentPath != null) {
+                Tree leaf = currentPath.getLeaf();
+                if (leaf instanceof ClassTree) {
+                    return matcher.matches((ClassTree) leaf, state);
+                }
+                currentPath = currentPath.getParentPath();
+            }
+            return false;
+        };
+    }
+
+    /**
+     * Works similarly to {@link Matchers#hasModifier(Modifier)}, but only matches elements
+     * which explicitly list the modifier. For example, all components nested in an interface
+     * are public by default, but they don't necessarily use the public keyword.
+     */
+    static <T extends Tree> Matcher<T> hasExplicitModifier(Modifier modifier) {
+        return (Matcher<T>) (tree, state) -> {
+            if (tree instanceof ClassTree) {
+                return containsModifier(((ClassTree) tree).getModifiers(), state, modifier);
+            }
+            if (tree instanceof MethodTree) {
+                return containsModifier(((MethodTree) tree).getModifiers(), state, modifier);
+            }
+            if (tree instanceof VariableTree) {
+                return containsModifier(((VariableTree) tree).getModifiers(), state, modifier);
+            }
+            return false;
+        };
+    }
+
+    private static boolean containsModifier(ModifiersTree tree, VisitorState state, Modifier modifier) {
+        if (!tree.getFlags().contains(modifier)) {
+            return false;
+        }
+        String source = state.getSourceForNode(tree);
+        // getSourceForNode returns null when there are no modifiers specified
+        if (source == null) {
+            return false;
+        }
+        // nested interfaces report a static modifier despite not being present
+        return source.contains(modifier.name().toLowerCase(Locale.ENGLISH));
     }
 
     private MoreMatchers() {}

@@ -145,7 +145,7 @@ class RedundantModifierTest {
         helper().addSourceLines(
                 "Enclosing.java",
                 "interface Enclosing {",
-                "  public interface Test {",
+                "  interface Test {",
                 "  }",
                 "}"
         ).doTest();
@@ -322,6 +322,31 @@ class RedundantModifierTest {
                         "  int VALUE_3 = 3;",
                         "  int VALUE_4 = 4;",
                         "  int VALUE_5 = 5;",
+                        "}"
+                ).doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    void fixInterfaceNestedPublicClass() {
+        fix()
+                .addInputLines(
+                        "Test.java",
+                        "public interface Test {",
+                        "  public static final class Class0 {}",
+                        "  public class Class1 {}",
+                        "  static class Class2 {}",
+                        "  final class Class3 {}",
+                        "  public interface Interface0 {}",
+                        "}"
+                )
+                .addOutputLines(
+                        "Test.java",
+                        "public interface Test {",
+                        "  final class Class0 {}",
+                        "  class Class1 {}",
+                        "  class Class2 {}",
+                        "  final class Class3 {}",
+                        "  interface Interface0 {}",
                         "}"
                 ).doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
