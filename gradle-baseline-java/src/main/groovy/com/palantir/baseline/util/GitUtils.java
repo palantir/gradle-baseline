@@ -28,7 +28,7 @@ public final class GitUtils {
 
     public static Optional<String> maybeGitHubUri() {
         try {
-            String gitConfigContents = GFileUtils.readFile(new File(".git/config'"));
+            String gitConfigContents = GFileUtils.readFile(new File(".git/config"));
             Matcher matcher = GIT_ORIGIN.matcher(gitConfigContents);
             if (!matcher.find()) {
                 return Optional.of(String.format("https://%s/%s", matcher.group(1), matcher.group(2)));
