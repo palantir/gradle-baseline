@@ -1,0 +1,9 @@
+type: improvement
+improvement:
+  description: |-
+    Drop RedundantModifier to SUGGESTION and FinalClass to WARNING
+
+    These checks don't imply bugs, and automation will fix failing cases automatically, so it's not necessary to block compilation.
+    FinalClass moved to warning rather than suggestion because there are a few edge cases (e.g. dependent projects using mockito without inline mock maker) where releases can run into issues if the bots don't fix findings in time.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1028
