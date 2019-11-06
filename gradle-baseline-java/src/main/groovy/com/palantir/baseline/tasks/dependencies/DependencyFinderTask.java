@@ -90,7 +90,7 @@ public class DependencyFinderTask extends DefaultTask {
 
         List<String> baseCommand = new ArrayList<>();
         baseCommand.add("jdeps");
-        baseCommand.add("-verbose:class");
+        baseCommand.add("-v");
         ignored.get().forEach(s -> {
             baseCommand.add("-f");
             baseCommand.add(s);
