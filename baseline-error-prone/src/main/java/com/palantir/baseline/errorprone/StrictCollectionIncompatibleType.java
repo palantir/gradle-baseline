@@ -47,7 +47,7 @@ import javax.annotation.Nullable;
         name = "StrictCollectionIncompatibleType",
         // Idea provides a similar check, avoid noise when that warning is already suppressed.
         // https://github.com/JetBrains/intellij-community/blob/master/java/java-analysis-impl/src/com/intellij/codeInspection/miscGenerics/SuspiciousCollectionsMethodCallsInspection.java
-        altNames = "SuspiciousMethodCalls",
+        altNames = {"SuspiciousMethodCalls", "CollectionIncompatibleType"},
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,

@@ -126,12 +126,18 @@ class StrictCollectionIncompatibleTypeTest {
     }
 
     @Test
-    void testIdeaSuppression() {
+    void testAdditionalSuppressions() {
         helper().addSourceLines(
                 "Test.java",
                 "import java.util.Map;",
                 "class Test {",
+                // idea style
                 "   @SuppressWarnings(\"SuspiciousMethodCalls\")",
+                "   Object f0(Map<Integer, Integer> map, String key) {",
+                "       return map.get(key);",
+                "   }",
+                // default error prone check suppression
+                "   @SuppressWarnings(\"CollectionIncompatibleType\")",
                 "   Object f1(Map<Integer, Integer> map, String key) {",
                 "       return map.get(key);",
                 "   }",
