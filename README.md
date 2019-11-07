@@ -177,6 +177,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `FinalClass`: A class should be declared final if all of its constructors are private.
 - `RedundantModifier`: Avoid using redundant modifiers.
 - `StrictCollectionIncompatibleType`: Likely programming error due to using the wrong type in a method that accepts Object.
+- `InvocationHandlerDelegation`: InvocationHandlers which delegate to another object must catch and unwrap InvocationTargetException.
 
 ### Programmatic Application
 
