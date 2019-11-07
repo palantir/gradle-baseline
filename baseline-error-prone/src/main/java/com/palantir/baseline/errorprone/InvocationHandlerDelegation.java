@@ -26,8 +26,10 @@ import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.LambdaExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.MethodTree;
+import com.sun.source.tree.NewClassTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.TryTree;
 import java.lang.reflect.InvocationHandler;
@@ -77,10 +79,15 @@ public final class InvocationHandlerDelegation extends BugChecker implements Bug
             ExpressionTree.class, UNWRAP_ITE);
 
     private static final Matcher<MethodTree> HANDLES_ITE =
-            Matchers.contains(TryTree.class, (Matcher<TryTree>) (tree, state) ->
+            Matchers.anyOf(
+                    Matchers.contains(TryTree.class, (Matcher<TryTree>) (tree, state) ->
                     CONTAINS_METHOD_INVOKE.matches(tree.getBlock(), state)
                             && tree.getCatches().stream()
-                            .anyMatch(catchTree -> CONTAINS_UNWRAP_ITE.matches(catchTree.getBlock(), state)));
+                            .anyMatch(catchTree -> CONTAINS_UNWRAP_ITE.matches(catchTree.getBlock(), state))),
+                    // If Method.invoke occurs in a lambda or anonymous class, we don't have enough
+                    // conviction that it's a bug.
+                    Matchers.contains(LambdaExpressionTree.class, CONTAINS_METHOD_INVOKE::matches),
+                    Matchers.contains(NewClassTree.class, CONTAINS_METHOD_INVOKE::matches));
 
     private static final Matcher<MethodInvocationTree> MATCHER = Matchers.allOf(
             METHOD_INVOKE_ENCLOSED_BY_INVOCATION_HANDLER,

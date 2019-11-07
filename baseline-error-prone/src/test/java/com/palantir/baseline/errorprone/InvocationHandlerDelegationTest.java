@@ -132,6 +132,26 @@ class InvocationHandlerDelegationTest {
                 "}")
                 .doTest();
     }
+
+    @Test
+    void testCorrectInvocationHandler_lambda() {
+        helper().addSourceLines(
+                "Test.java",
+                "import java.lang.reflect.*;",
+                "import com.google.common.util.concurrent.*;",
+                "abstract class Test implements InvocationHandler {",
+                "  @Override",
+                "  public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {",
+                // Avoid flagging invocations nested in anonymous classes or lambdas
+                "  return FluentFuture.from(executor().submit(() -> method.invoke(this, args)))",
+                "    .catching(InvocationTargetException.class, ignored -> null, MoreExecutors.directExecutor())",
+                "    .get();",
+                "  }",
+                "  abstract ListeningExecutorService executor();",
+                "}")
+                .doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(InvocationHandlerDelegation.class, getClass());
     }
