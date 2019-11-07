@@ -21,6 +21,7 @@ import com.google.common.reflect.AbstractInvocationHandler;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
+import com.google.errorprone.matchers.ChildMultiMatcher;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
@@ -44,7 +45,10 @@ import java.lang.reflect.Method;
         severity = BugPattern.SeverityLevel.WARNING,
         summary = "InvocationHandlers which delegate to another object must catch and unwrap "
                 + "InvocationTargetException, otherwise an UndeclaredThrowableException will be thrown "
-                + "each time the delegate throws an exception")
+                + "each time the delegate throws an exception.\n"
+                + "This check is intended to be advisory. It's fine to "
+                + "@SuppressWarnings(\"InvocationHandlerDelegation\") in certain cases, "
+                + "but is usually not recommended.")
 public final class InvocationHandlerDelegation extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final Matcher<MethodTree> INVOCATION_HANDLER = Matchers.anyOf(
@@ -75,8 +79,14 @@ public final class InvocationHandlerDelegation extends BugChecker implements Bug
             .namedAnyOf("getCause", "getTargetException")
             .withParameters();
 
-    private static final Matcher<Tree> CONTAINS_UNWRAP_ITE = Matchers.contains(
-            ExpressionTree.class, UNWRAP_ITE);
+    private static final Matcher<ExpressionTree> PASS_ITE = Matchers.methodInvocation(
+            Matchers.anyMethod(),
+            ChildMultiMatcher.MatchType.AT_LEAST_ONE,
+            Matchers.isSubtypeOf(InvocationTargetException.class));
+
+    private static final Matcher<Tree> CONTAINS_UNWRAP_ITE = Matchers.anyOf(
+            Matchers.contains(ExpressionTree.class, UNWRAP_ITE),
+            Matchers.contains(ExpressionTree.class, PASS_ITE));
 
     private static final Matcher<MethodTree> HANDLES_ITE =
             Matchers.anyOf(

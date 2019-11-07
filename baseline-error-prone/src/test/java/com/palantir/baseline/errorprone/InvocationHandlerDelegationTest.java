@@ -152,6 +152,29 @@ class InvocationHandlerDelegationTest {
                 .doTest();
     }
 
+    @Test
+    void testCorrectInvocationHandler_delegatesException() {
+        helper().addSourceLines(
+                "Test.java",
+                "import java.lang.reflect.InvocationHandler;",
+                "import java.lang.reflect.Method;",
+                "import java.lang.reflect.InvocationTargetException;",
+                "final class Test implements InvocationHandler {",
+                "  @Override",
+                "  public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {",
+                "    try {",
+                "      return method.invoke(this, args);",
+                "    } catch (InvocationTargetException e) {",
+                "        throw handleInvocationTargetException(e);",
+                "    }",
+                "  }",
+                "  private Throwable handleInvocationTargetException(InvocationTargetException e) throws Throwable {",
+                "    throw e.getCause();",
+                "  }",
+                "}")
+                .doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(InvocationHandlerDelegation.class, getClass());
     }
