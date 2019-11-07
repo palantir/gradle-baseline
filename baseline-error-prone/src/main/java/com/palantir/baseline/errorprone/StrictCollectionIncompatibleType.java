@@ -28,6 +28,7 @@ import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.MemberReferenceTree;
 import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.tools.javac.code.Symbol;
@@ -40,6 +41,8 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Stack;
 import java.util.Vector;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import javax.annotation.Nullable;
 
 @AutoService(BugChecker.class)
@@ -54,8 +57,9 @@ import javax.annotation.Nullable;
         summary = "Likely programming error due to using incompatible types as "
                 + "arguments for a collection method that accepts Object.")
 public final class StrictCollectionIncompatibleType
-        extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
+        extends BugChecker implements BugChecker.MethodInvocationTreeMatcher, BugChecker.MemberReferenceTreeMatcher {
 
+    // Collection Types
     private static final String COLLECTION = Collection.class.getName();
     private static final String DEQUE = Deque.class.getName();
     private static final String DICTIONARY = Dictionary.class.getName();
@@ -63,6 +67,9 @@ public final class StrictCollectionIncompatibleType
     private static final String MAP = Map.class.getName();
     private static final String STACK = Stack.class.getName();
     private static final String VECTOR = Vector.class.getName();
+    // Functional Types
+    private static final String FUNCTION = Function.class.getName();
+    private static final String PREDICATE = Predicate.class.getName();
 
     private final ImmutableList<IncompatibleTypeMatcher> matchers = ImmutableList.of(
             // Matched patterns are based error-prone CollectionIncompatibleType
@@ -87,6 +94,19 @@ public final class StrictCollectionIncompatibleType
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
+        // Return the description from the first matching IncompatibleTypeMatcher
+        for (int i = 0; i < matchers.size(); i++) {
+            IncompatibleTypeMatcher matcher = matchers.get(i);
+            Optional<Description> result = matcher.describe(tree, state);
+            if (result.isPresent()) {
+                return result.get();
+            }
+        }
+        return Description.NO_MATCH;
+    }
+
+    @Override
+    public Description matchMemberReference(MemberReferenceTree tree, VisitorState state) {
         // Return the description from the first matching IncompatibleTypeMatcher
         for (int i = 0; i < matchers.size(); i++) {
             IncompatibleTypeMatcher matcher = matchers.get(i);
@@ -124,6 +144,26 @@ public final class StrictCollectionIncompatibleType
     }
 
     @Nullable
+    private static Type getTargetTypeAsSuper(
+            MemberReferenceTree tree,
+            String superTarget,
+            VisitorState state) {
+        ExpressionTree targetExpressionTree = tree.getQualifierExpression();
+        if (targetExpressionTree == null) {
+            return null;
+        }
+        Type targetMapType = ASTHelpers.getResultType(targetExpressionTree);
+        if (targetMapType == null) {
+            return null;
+        }
+        Symbol mapSymbol = state.getSymbolFromString(superTarget);
+        if (mapSymbol == null) {
+            return null;
+        }
+        return state.getTypes().asSuper(targetMapType, mapSymbol);
+    }
+
+    @Nullable
     private static Type getTargetType(MethodInvocationTree tree) {
         ExpressionTree methodSelect = tree.getMethodSelect();
         if (methodSelect instanceof MemberSelectTree) {
@@ -142,45 +182,115 @@ public final class StrictCollectionIncompatibleType
         Matcher<ExpressionTree> methodMatcher = MethodMatchers.instanceMethod()
                 .onDescendantOf(baseType)
                 .withSignature(signature);
-        return (tree, state) -> {
-            if (!methodMatcher.matches(tree, state)) {
-                // This matcher does not apply
-                return Optional.empty();
+        return new IncompatibleTypeMatcher() {
+
+            @Override
+            public Optional<Description> describe(MethodInvocationTree tree, VisitorState state) {
+                if (!methodMatcher.matches(tree, state)) {
+                    // This matcher does not apply
+                    return Optional.empty();
+                }
+                if (tree.getArguments().size() <= argumentIndex) {
+                    return IncompatibleTypeMatcher.NO_MATCH;
+                }
+                Type targetType = getTargetTypeAsSuper(tree, baseType, state);
+                if (targetType == null) {
+                    return IncompatibleTypeMatcher.NO_MATCH;
+                }
+                if (targetType.getTypeArguments().size() <= typeArgumentIndex) {
+                    return IncompatibleTypeMatcher.NO_MATCH;
+                }
+                Type typeArgumentType = targetType.getTypeArguments().get(typeArgumentIndex);
+                ExpressionTree argumentTree = tree.getArguments().get(argumentIndex);
+                Type argumentType = getBoxedResult(argumentTree, state);
+                if (argumentType == null) {
+                    return IncompatibleTypeMatcher.NO_MATCH;
+                }
+                if (typesCompatible(argumentType, typeArgumentType, state)) {
+                    return IncompatibleTypeMatcher.NO_MATCH;
+                }
+                return Optional.of(buildDescription(argumentTree)
+                        .setMessage("Likely programming error due to using incompatible types as arguments for "
+                                + "a collection method that accepts Object. Value '"
+                                + state.getSourceForNode(argumentTree) + "' of type '" + prettyType(argumentType)
+                                + "' is not compatible with the expected type '" + prettyType(typeArgumentType) + '\'')
+                        .build());
             }
-            if (tree.getArguments().size() <= argumentIndex) {
-                return IncompatibleTypeMatcher.NO_MATCH;
+
+            @Override
+            public Optional<Description> describe(MemberReferenceTree tree, VisitorState state) {
+                if (!methodMatcher.matches(tree, state)) {
+                    // This matcher does not apply
+                    return Optional.empty();
+                }
+                if (tree.getMode() != MemberReferenceTree.ReferenceMode.INVOKE) {
+                    return IncompatibleTypeMatcher.NO_MATCH;
+                }
+                Type targetType = getTargetTypeAsSuper(tree, baseType, state);
+                if (targetType == null) {
+                    return IncompatibleTypeMatcher.NO_MATCH;
+                }
+                if (targetType.getTypeArguments().size() <= typeArgumentIndex) {
+                    return IncompatibleTypeMatcher.NO_MATCH;
+                }
+                Type typeArgumentType = targetType.getTypeArguments().get(typeArgumentIndex);
+                Type rawArgumentType = getFunctionalInterfaceArgumentType(tree, argumentIndex, state);
+                if (rawArgumentType == null) {
+                    return IncompatibleTypeMatcher.NO_MATCH;
+                }
+                Type argumentType = state.getTypes().boxedTypeOrType(rawArgumentType);
+                if (typesCompatible(argumentType, typeArgumentType, state)) {
+                    return IncompatibleTypeMatcher.NO_MATCH;
+                }
+                return Optional.of(buildDescription(tree)
+                        .setMessage("Likely programming error due to using incompatible types as arguments for "
+                                + "a collection method that accepts Object. Type '" + prettyType(argumentType)
+                                + "' is not compatible with the expected type '" + prettyType(typeArgumentType) + '\'')
+                        .build());
             }
-            Type targetType = getTargetTypeAsSuper(tree, baseType, state);
-            if (targetType == null) {
-                return IncompatibleTypeMatcher.NO_MATCH;
-            }
-            if (targetType.getTypeArguments().size() <= typeArgumentIndex) {
-                return IncompatibleTypeMatcher.NO_MATCH;
-            }
-            Type typeArgumentType = targetType.getTypeArguments().get(typeArgumentIndex);
-            ExpressionTree argumentTree = tree.getArguments().get(argumentIndex);
-            Type argumentType = getBoxedResult(argumentTree, state);
-            if (argumentType == null) {
-                return IncompatibleTypeMatcher.NO_MATCH;
-            }
-            // Check erased types only to avoid more complex edge cases. This way we only warn when we
-            // have high confidence something isn't right.
-            // This tests that types are within the same (linear) inheritance hierarchy, but does not
-            // not accept types with a common ancestor.
-            if (ASTHelpers.isSubtype(argumentType, typeArgumentType, state)
-                    // Check the reverse direction as well, this allows 'Object' to succeed for
-                    // delegation, as well as most false positives without sacrificing many known
-                    // failure cases.
-                    || ASTHelpers.isSubtype(typeArgumentType, argumentType, state)) {
-                return IncompatibleTypeMatcher.NO_MATCH;
-            }
-            return Optional.of(buildDescription(argumentTree)
-                    .setMessage("Likely programming error due to using incompatible types as arguments for "
-                            + "a collection method that accepts Object. Value '"
-                            + state.getSourceForNode(argumentTree) + "' of type '" + prettyType(argumentType)
-                            + "' is not compatible with the expected type '" + prettyType(typeArgumentType) + '\'')
-                    .build());
         };
+    }
+
+    private static boolean typesCompatible(Type argumentType, Type typeArgumentType, VisitorState state) {
+        // Check erased types only to avoid more complex edge cases. This way we only warn when we
+        // have high confidence something isn't right.
+        // This tests that types are within the same (linear) inheritance hierarchy, but does not
+        // not accept types with a common ancestor.
+        return ASTHelpers.isSubtype(argumentType, typeArgumentType, state)
+                // Check the reverse direction as well, this allows 'Object' to succeed for
+                // delegation, as well as most false positives without sacrificing many known
+                // failure cases.
+                || ASTHelpers.isSubtype(typeArgumentType, argumentType, state);
+    }
+
+    @Nullable
+    private static Type getFunctionalInterfaceArgumentType(
+            MemberReferenceTree tree,
+            int argumentIndex,
+            VisitorState state) {
+        Type resultType = ASTHelpers.getResultType(tree);
+        if (resultType == null) {
+            return null;
+        }
+
+        if (!isSupportedFunctionalInterface(resultType, state)) {
+            return null;
+        }
+        if (resultType.getTypeArguments().size() <= argumentIndex) {
+            // Not enough information, it's possible we can
+            // inspect the resolved symbol in a future change.
+            return null;
+        }
+        return resultType.getTypeArguments().get(argumentIndex);
+    }
+
+    // We don't have a great way to check types on arbitrary interfaces, currently
+    // we specifically support common types used in streams.
+    private static boolean isSupportedFunctionalInterface(Type type, VisitorState state) {
+        // We don't use subtype checks because it's possible for interfaces to extend Function with a default
+        // apply implementation, expecting a type that doesn't match function type variables.
+        return ASTHelpers.isSameType(type, state.getTypeFromString(FUNCTION), state)
+                || ASTHelpers.isSameType(type, state.getTypeFromString(PREDICATE), state);
     }
 
     /**
@@ -205,5 +315,7 @@ public final class StrictCollectionIncompatibleType
          * returned for valid use.
          */
         Optional<Description> describe(MethodInvocationTree tree, VisitorState state);
+
+        Optional<Description> describe(MemberReferenceTree tree, VisitorState state);
     }
 }

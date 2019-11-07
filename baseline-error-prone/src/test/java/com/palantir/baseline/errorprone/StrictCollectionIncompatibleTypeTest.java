@@ -28,7 +28,9 @@ class StrictCollectionIncompatibleTypeTest {
     void testUnexpectedType_map() {
         helper().addSourceLines(
                 "Test.java",
+                "import java.util.function.Function;",
                 "import java.util.Map;",
+                "import java.util.List;",
                 "class Test {",
                 "   String f0(Map<Integer, String> map, String key) {",
                 "       // BUG: Diagnostic contains: incompatible types",
@@ -50,7 +52,22 @@ class StrictCollectionIncompatibleTypeTest {
                 "       // BUG: Diagnostic contains: incompatible types",
                 "       return map.remove(key);",
                 "   }",
+                "   Object f4(Map<Integer, String> map, List<String> keys) {",
+                "       // BUG: Diagnostic contains: incompatible types",
+                "       return keys.stream().map(map::get);",
+                "   }",
+                "   Object f6(Map<CharSequence, String> map, List<String> keys) {",
+                "       return keys.stream().map(map::get);",
+                "   }",
+                "   Object f7(Map<String, String> map, List<CharSequence> keys) {",
+                "       return keys.stream().map(map::get);",
+                "   }",
+                "   Converter f8(CustomMap map, List<String> keys) {",
+                "       // This should fail once we implement a more general check",
+                "       return map::get;",
+                "   }",
                 "   interface CustomMap extends Map<Integer, String> {}",
+                "   interface Converter { String convert(Integer input); }",
                 "}"
         ).doTest();
     }
