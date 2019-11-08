@@ -32,7 +32,17 @@ public final class AssertjIsTrue {
 
     @BeforeTemplate
     void before2(boolean bool) {
+        assertThat(true).isEqualTo(bool);
+    }
+
+    @BeforeTemplate
+    void before3(boolean bool) {
         assertThat(bool).isEqualTo(Boolean.TRUE);
+    }
+
+    @BeforeTemplate
+    void before4(boolean bool) {
+        assertThat(Boolean.TRUE).isEqualTo(bool);
     }
 
     @AfterTemplate
