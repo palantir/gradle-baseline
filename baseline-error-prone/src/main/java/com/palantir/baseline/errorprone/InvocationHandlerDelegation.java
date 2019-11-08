@@ -26,7 +26,11 @@ import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
+import com.google.errorprone.util.ASTHelpers;
+import com.sun.source.tree.ConditionalExpressionTree;
 import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.IfTree;
+import com.sun.source.tree.InstanceOfTree;
 import com.sun.source.tree.LambdaExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.MethodTree;
@@ -73,6 +77,14 @@ public final class InvocationHandlerDelegation extends BugChecker implements Bug
     private static final Matcher<Tree> CONTAINS_METHOD_INVOKE = Matchers.contains(
             ExpressionTree.class, METHOD_INVOKE);
 
+    private static final Matcher<ExpressionTree> UNWRAP_THROWABLE = MethodMatchers.instanceMethod()
+            .onDescendantOf(Throwable.class.getName())
+            .named("getCause")
+            .withParameters();
+
+    private static final Matcher<Tree> CONTAINS_UNWRAP_THROWABLE =
+            Matchers.contains(ExpressionTree.class, UNWRAP_THROWABLE);
+
     private static final Matcher<ExpressionTree> UNWRAP_ITE = MethodMatchers.instanceMethod()
             .onDescendantOf(InvocationTargetException.class.getName())
             // getTargetException is deprecated, but does work correctly.
@@ -84,9 +96,26 @@ public final class InvocationHandlerDelegation extends BugChecker implements Bug
             ChildMultiMatcher.MatchType.AT_LEAST_ONE,
             Matchers.isSubtypeOf(InvocationTargetException.class));
 
+    private static final Matcher<Tree> CONTAINS_INSTANCEOF_ITE = Matchers.contains(
+            InstanceOfTree.class,
+            (instanceOfTree, state) -> ASTHelpers.isSameType(
+                    ASTHelpers.getType(instanceOfTree.getType()),
+                    state.getTypeFromString(InvocationTargetException.class.getName()),
+                    state));
+
     private static final Matcher<Tree> CONTAINS_UNWRAP_ITE = Matchers.anyOf(
             Matchers.contains(ExpressionTree.class, UNWRAP_ITE),
-            Matchers.contains(ExpressionTree.class, PASS_ITE));
+            Matchers.contains(ExpressionTree.class, PASS_ITE),
+            Matchers.contains(
+                    IfTree.class,
+                    (Matcher<IfTree>) (ifExpression, state) ->
+                            CONTAINS_INSTANCEOF_ITE.matches(ifExpression.getCondition(), state)
+                                    && CONTAINS_UNWRAP_THROWABLE.matches(ifExpression.getThenStatement(), state)),
+            Matchers.contains(
+                    ConditionalExpressionTree.class,
+                    (Matcher<ConditionalExpressionTree>) (ifExpression, state) ->
+                            CONTAINS_INSTANCEOF_ITE.matches(ifExpression.getCondition(), state)
+                                    && CONTAINS_UNWRAP_THROWABLE.matches(ifExpression.getTrueExpression(), state)));
 
     private static final Matcher<MethodTree> HANDLES_ITE =
             Matchers.anyOf(

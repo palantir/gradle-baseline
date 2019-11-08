@@ -175,6 +175,77 @@ class InvocationHandlerDelegationTest {
                 .doTest();
     }
 
+    @Test
+    void testInvocationHandler_instanceOf_if() {
+        helper().addSourceLines(
+                "Test.java",
+                "import java.lang.reflect.InvocationHandler;",
+                "import java.lang.reflect.Method;",
+                "import java.lang.reflect.InvocationTargetException;",
+                "final class Test implements InvocationHandler {",
+                "  @Override",
+                "  public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {",
+                "    try {",
+                "      return method.invoke(this, args);",
+                "    } catch (Throwable t) {",
+                "      if (t instanceof InvocationTargetException) {",
+                "        throw t.getCause();",
+                "      }",
+                "      throw t;",
+                "    }",
+                "  }",
+                "}")
+                .doTest();
+    }
+
+    @Test
+    void testInvocationHandler_instanceOf_ternary() {
+        helper().addSourceLines(
+                "Test.java",
+                "import java.lang.reflect.InvocationHandler;",
+                "import java.lang.reflect.Method;",
+                "import java.lang.reflect.InvocationTargetException;",
+                "final class Test implements InvocationHandler {",
+                "  @Override",
+                "  public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {",
+                "    try {",
+                "      return method.invoke(this, args);",
+                "    } catch (Throwable t) {",
+                "      throw (t instanceof InvocationTargetException) ? t.getCause() : t;",
+                "    }",
+                "  }",
+                "}")
+                .doTest();
+    }
+
+    @Test
+    void testInvocationHandler_delegatedThrowable() {
+        // This implementation is functionally correct, but risks breaking when code is refactored.
+        helper().addSourceLines(
+                "Test.java",
+                "import java.lang.reflect.InvocationHandler;",
+                "import java.lang.reflect.Method;",
+                "import java.lang.reflect.InvocationTargetException;",
+                "final class Test implements InvocationHandler {",
+                "  @Override",
+                "  public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {",
+                "    try {",
+                "      // BUG: Diagnostic contains: unwrap InvocationTargetException",
+                "      return method.invoke(this, args);",
+                "    } catch (Throwable t) {",
+                "      return handle(t);",
+                "    }",
+                "  }",
+                "  private static Object handle(Throwable t) throws Throwable {",
+                "    if (t instanceof InvocationTargetException) {",
+                "      throw t.getCause();",
+                "    }",
+                "    throw t;",
+                "  }",
+                "}")
+                .doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(InvocationHandlerDelegation.class, getClass());
     }
