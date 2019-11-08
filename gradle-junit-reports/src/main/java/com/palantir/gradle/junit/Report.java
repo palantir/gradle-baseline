@@ -23,7 +23,7 @@ import org.inferred.freebuilder.FreeBuilder;
 interface Report {
 
     @FreeBuilder
-    public interface Failure {
+    interface Failure {
         String message();
         String details();
 
@@ -32,7 +32,7 @@ interface Report {
     }
 
     @FreeBuilder
-    public interface TestCase {
+    interface TestCase {
         String name();
         @Nullable Failure failure();
 
