@@ -45,7 +45,9 @@ public final class DangerousParallelStreamUsage extends BugChecker implements Bu
             + "blob/1.9.1/src/main/java/com/palantir/common/streams/MoreStreams.java#L53";
     private static final String ERROR_MESSAGE = "Should not use parallel Java streams. "
             + "Doing so has very subtle and potentially severe performance implications, so in general you're better "
-            + "off using " + MORE_STREAMS_URL + " which allows you to provide your own executor service and "
+            + "off using "
+            + MORE_STREAMS_URL
+            + " which allows you to provide your own executor service and "
             + "specify the desired parallelism (i.e. the max number of concurrent tasks that will be submitted).\n"
             + "On the contrary the implementation of Java parallel streams uses a globally shared ForkJoinPool and "
             + "does not allow you to provide your own pool. Fork/join pools implement work-stealing, where any thread "
@@ -61,15 +63,12 @@ public final class DangerousParallelStreamUsage extends BugChecker implements Bu
             + "You can find more info here: https://stackoverflow.com/a/54581148/7182570";
 
     private static final Matcher<ExpressionTree> PARALLEL_CALL_ON_JAVA_STREAM_MATCHER =
-            MethodMatchers.instanceMethod()
-                    .onDescendantOf(Stream.class.getName())
-                    .named("parallel");
+            MethodMatchers.instanceMethod().onDescendantOf(Stream.class.getName()).named("parallel");
 
-    private static final Matcher<ExpressionTree> PARALLEL_STREAM_ON_COLLECTION_MATCHER =
-            MethodMatchers.instanceMethod()
-                    .onDescendantOf(Collection.class.getName())
-                    .named("parallelStream")
-                    .withParameters();
+    private static final Matcher<ExpressionTree> PARALLEL_STREAM_ON_COLLECTION_MATCHER = MethodMatchers.instanceMethod()
+            .onDescendantOf(Collection.class.getName())
+            .named("parallelStream")
+            .withParameters();
 
     private static final Matcher<ExpressionTree> PARALLEL_STREAM_SUPPORT_MATCHER = Matchers.methodInvocation(
             MethodMatchers.staticMethod().onClass(StreamSupport.class.getName()),

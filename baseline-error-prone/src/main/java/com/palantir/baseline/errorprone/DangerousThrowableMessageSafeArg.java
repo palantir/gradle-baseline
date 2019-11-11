@@ -46,9 +46,8 @@ public final class DangerousThrowableMessageSafeArg extends BugChecker
             .named("of")
             .withParameters(String.class.getName(), Object.class.getName());
 
-    private static final Matcher<ExpressionTree> THROWABLE_MESSAGE_METHOD = MethodMatchers.instanceMethod()
-            .onDescendantOf(Throwable.class.getName())
-            .named("getMessage");
+    private static final Matcher<ExpressionTree> THROWABLE_MESSAGE_METHOD =
+            MethodMatchers.instanceMethod().onDescendantOf(Throwable.class.getName()).named("getMessage");
 
     private static final Matcher<ExpressionTree> THROWABLE_MATCHER = MoreMatchers.isSubtypeOf(Throwable.class);
 

@@ -47,12 +47,13 @@ import java.lang.reflect.Method;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,
-        summary = "InvocationHandlers which delegate to another object must catch and unwrap "
-                + "InvocationTargetException, otherwise an UndeclaredThrowableException will be thrown "
-                + "each time the delegate throws an exception.\n"
-                + "This check is intended to be advisory. It's fine to "
-                + "@SuppressWarnings(\"InvocationHandlerDelegation\") in certain cases, "
-                + "but is usually not recommended.")
+        summary =
+                "InvocationHandlers which delegate to another object must catch and unwrap "
+                        + "InvocationTargetException, otherwise an UndeclaredThrowableException will be thrown "
+                        + "each time the delegate throws an exception.\n"
+                        + "This check is intended to be advisory. It's fine to "
+                        + "@SuppressWarnings(\"InvocationHandlerDelegation\") in certain cases, "
+                        + "but is usually not recommended.")
 public final class InvocationHandlerDelegation extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final Matcher<MethodTree> INVOCATION_HANDLER = Matchers.anyOf(
@@ -70,12 +71,10 @@ public final class InvocationHandlerDelegation extends BugChecker implements Bug
             .onExactClass(Method.class.getName())
             .withSignature("invoke(java.lang.Object,java.lang.Object...)");
 
-    private static final Matcher<ExpressionTree> METHOD_INVOKE_ENCLOSED_BY_INVOCATION_HANDLER = Matchers.allOf(
-            METHOD_INVOKE,
-            Matchers.enclosingMethod(INVOCATION_HANDLER));
+    private static final Matcher<ExpressionTree> METHOD_INVOKE_ENCLOSED_BY_INVOCATION_HANDLER =
+            Matchers.allOf(METHOD_INVOKE, Matchers.enclosingMethod(INVOCATION_HANDLER));
 
-    private static final Matcher<Tree> CONTAINS_METHOD_INVOKE = Matchers.contains(
-            ExpressionTree.class, METHOD_INVOKE);
+    private static final Matcher<Tree> CONTAINS_METHOD_INVOKE = Matchers.contains(ExpressionTree.class, METHOD_INVOKE);
 
     private static final Matcher<ExpressionTree> UNWRAP_THROWABLE = MethodMatchers.instanceMethod()
             .onDescendantOf(Throwable.class.getName())
@@ -92,13 +91,11 @@ public final class InvocationHandlerDelegation extends BugChecker implements Bug
             .withParameters();
 
     private static final Matcher<ExpressionTree> PASS_ITE = Matchers.methodInvocation(
-            Matchers.anyMethod(),
-            ChildMultiMatcher.MatchType.AT_LEAST_ONE,
-            Matchers.isSubtypeOf(InvocationTargetException.class));
+            Matchers.anyMethod(), ChildMultiMatcher.MatchType.AT_LEAST_ONE, Matchers.isSubtypeOf(
+                    InvocationTargetException.class));
 
     private static final Matcher<Tree> CONTAINS_INSTANCEOF_ITE = Matchers.contains(
-            InstanceOfTree.class,
-            (instanceOfTree, state) -> ASTHelpers.isSameType(
+            InstanceOfTree.class, (instanceOfTree, state) -> ASTHelpers.isSameType(
                     ASTHelpers.getType(instanceOfTree.getType()),
                     state.getTypeFromString(InvocationTargetException.class.getName()),
                     state));
@@ -106,31 +103,25 @@ public final class InvocationHandlerDelegation extends BugChecker implements Bug
     private static final Matcher<Tree> CONTAINS_UNWRAP_ITE = Matchers.anyOf(
             Matchers.contains(ExpressionTree.class, UNWRAP_ITE),
             Matchers.contains(ExpressionTree.class, PASS_ITE),
-            Matchers.contains(
-                    IfTree.class,
-                    (Matcher<IfTree>) (ifExpression, state) ->
-                            CONTAINS_INSTANCEOF_ITE.matches(ifExpression.getCondition(), state)
-                                    && CONTAINS_UNWRAP_THROWABLE.matches(ifExpression.getThenStatement(), state)),
-            Matchers.contains(
-                    ConditionalExpressionTree.class,
-                    (Matcher<ConditionalExpressionTree>) (ifExpression, state) ->
-                            CONTAINS_INSTANCEOF_ITE.matches(ifExpression.getCondition(), state)
-                                    && CONTAINS_UNWRAP_THROWABLE.matches(ifExpression.getTrueExpression(), state)));
+            Matchers.contains(IfTree.class, (Matcher<IfTree>)
+                    (ifExpression, state) -> CONTAINS_INSTANCEOF_ITE.matches(ifExpression.getCondition(), state)
+                            && CONTAINS_UNWRAP_THROWABLE.matches(ifExpression.getThenStatement(), state)),
+            Matchers.contains(ConditionalExpressionTree.class, (Matcher<ConditionalExpressionTree>)
+                    (ifExpression, state) -> CONTAINS_INSTANCEOF_ITE.matches(ifExpression.getCondition(), state)
+                            && CONTAINS_UNWRAP_THROWABLE.matches(ifExpression.getTrueExpression(), state)));
 
-    private static final Matcher<MethodTree> HANDLES_ITE =
-            Matchers.anyOf(
-                    Matchers.contains(TryTree.class, (Matcher<TryTree>) (tree, state) ->
-                    CONTAINS_METHOD_INVOKE.matches(tree.getBlock(), state)
+    private static final Matcher<MethodTree> HANDLES_ITE = Matchers.anyOf(
+            Matchers.contains(TryTree.class, (Matcher<TryTree>)
+                    (tree, state) -> CONTAINS_METHOD_INVOKE.matches(tree.getBlock(), state)
                             && tree.getCatches().stream()
-                            .anyMatch(catchTree -> CONTAINS_UNWRAP_ITE.matches(catchTree.getBlock(), state))),
-                    // If Method.invoke occurs in a lambda or anonymous class, we don't have enough
-                    // conviction that it's a bug.
-                    Matchers.contains(LambdaExpressionTree.class, CONTAINS_METHOD_INVOKE::matches),
-                    Matchers.contains(NewClassTree.class, CONTAINS_METHOD_INVOKE::matches));
+                                    .anyMatch(catchTree -> CONTAINS_UNWRAP_ITE.matches(catchTree.getBlock(), state))),
+            // If Method.invoke occurs in a lambda or anonymous class, we don't have enough
+            // conviction that it's a bug.
+            Matchers.contains(LambdaExpressionTree.class, CONTAINS_METHOD_INVOKE::matches),
+            Matchers.contains(NewClassTree.class, CONTAINS_METHOD_INVOKE::matches));
 
     private static final Matcher<MethodInvocationTree> MATCHER = Matchers.allOf(
-            METHOD_INVOKE_ENCLOSED_BY_INVOCATION_HANDLER,
-            Matchers.not(Matchers.enclosingMethod(HANDLES_ITE)));
+            METHOD_INVOKE_ENCLOSED_BY_INVOCATION_HANDLER, Matchers.not(Matchers.enclosingMethod(HANDLES_ITE)));
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {

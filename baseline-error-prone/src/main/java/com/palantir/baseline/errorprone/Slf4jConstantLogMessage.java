@@ -58,9 +58,7 @@ public final class Slf4jConstantLogMessage extends BugChecker implements MethodI
         }
 
         List<? extends ExpressionTree> args = tree.getArguments();
-        ExpressionTree messageArg = MARKER.matches(tree.getArguments().get(0), state)
-                ? args.get(1)
-                : args.get(0);
+        ExpressionTree messageArg = MARKER.matches(tree.getArguments().get(0), state) ? args.get(1) : args.get(0);
 
         if (compileTimeConstExpressionMatcher.matches(messageArg, state)) {
             return Description.NO_MATCH;
@@ -68,5 +66,4 @@ public final class Slf4jConstantLogMessage extends BugChecker implements MethodI
 
         return buildDescription(tree).setMessage("slf4j log statement uses a non-constant expression").build();
     }
-
 }
