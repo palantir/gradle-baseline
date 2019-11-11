@@ -19,12 +19,14 @@ package com.palantir.baseline.errorprone;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
+import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.ModifiersTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.VariableTree;
 import com.sun.source.util.TreePath;
+import com.sun.tools.javac.code.Symbol;
 import java.util.Locale;
 import javax.lang.model.element.Modifier;
 
@@ -107,6 +109,17 @@ final class MoreMatchers {
         }
         // nested interfaces report a static modifier despite not being present
         return source.contains(modifier.name().toLowerCase(Locale.ENGLISH));
+    }
+
+    /** Matches a {@link MethodTree} by method signature. */
+    static Matcher<MethodTree> hasSignature(String signature) {
+        return (methodTree, state) -> {
+            Symbol.MethodSymbol symbol = ASTHelpers.getSymbol(methodTree);
+            if (symbol == null) {
+                return false;
+            }
+            return signature.equals(symbol.toString());
+        };
     }
 
     private MoreMatchers() {}
