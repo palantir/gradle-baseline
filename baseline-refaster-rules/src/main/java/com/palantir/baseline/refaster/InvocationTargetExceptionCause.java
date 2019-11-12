@@ -2,14 +2,14 @@ package com.palantir.baseline.refaster;
 
 import com.google.errorprone.refaster.annotation.AfterTemplate;
 import com.google.errorprone.refaster.annotation.BeforeTemplate;
-
 import java.lang.reflect.InvocationTargetException;
 
 /**
  * {@link InvocationTargetException#getTargetException()} javadoc recommends using
- * {@link InvocationTargetException#getCause()} instead.
+ * {@link InvocationTargetException#getCause()} instead. getTargetException was added
+ * before throwables had getCause.
  */
-public class InvocationTargetExceptionCause {
+public final class InvocationTargetExceptionCause {
 
     @BeforeTemplate
     Throwable before(InvocationTargetException ite) {
