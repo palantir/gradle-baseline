@@ -190,7 +190,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
         String projectPath = project.getProjectDir().getPath();
         String separator = Paths.get(projectPath).getFileSystem().getSeparator();
         errorProneOptions.setExcludedPaths(
-                String.format("%s%s(build|src/generated.*)%s.*", separator, Pattern.quote(projectPath), separator));
+                String.format("%s%s(build|src/generated.*)%s.*", Pattern.quote(projectPath), separator, separator));
         errorProneOptions.check("UnusedVariable", CheckSeverity.OFF);
         errorProneOptions.check("EqualsHashCode", CheckSeverity.ERROR);
         errorProneOptions.check("EqualsIncompatibleType", CheckSeverity.ERROR);
