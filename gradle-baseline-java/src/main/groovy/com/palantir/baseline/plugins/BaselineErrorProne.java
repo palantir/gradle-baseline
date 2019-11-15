@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Predicate;
+import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import net.ltgt.gradle.errorprone.CheckSeverity;
@@ -186,7 +187,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
         errorProneOptions.setEnabled(true);
         errorProneOptions.setDisableWarningsInGeneratedCode(true);
         errorProneOptions.setExcludedPaths(
-                String.format("%s/(build|src/generated.*)/.*", project.getProjectDir().getPath()));
+                String.format("%s/(build|src/generated.*)/.*", Pattern.quote(project.getProjectDir().getPath())));
         errorProneOptions.check("UnusedVariable", CheckSeverity.OFF);
         errorProneOptions.check("EqualsHashCode", CheckSeverity.ERROR);
         errorProneOptions.check("EqualsIncompatibleType", CheckSeverity.ERROR);
