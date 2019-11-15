@@ -24,6 +24,7 @@ import com.google.common.collect.MoreCollectors;
 import com.palantir.baseline.extensions.BaselineErrorProneExtension;
 import com.palantir.baseline.tasks.CompileRefasterTask;
 import java.io.File;
+import java.nio.file.Paths;
 import java.util.AbstractList;
 import java.util.Collections;
 import java.util.List;
@@ -186,8 +187,10 @@ public final class BaselineErrorProne implements Plugin<Project> {
 
         errorProneOptions.setEnabled(true);
         errorProneOptions.setDisableWarningsInGeneratedCode(true);
+        String projectPath = project.getProjectDir().getPath();
+        String separator = Paths.get(projectPath).getFileSystem().getSeparator();
         errorProneOptions.setExcludedPaths(
-                String.format("%s/(build|src/generated.*)/.*", Pattern.quote(project.getProjectDir().getPath())));
+                String.format("%s%s(build|src/generated.*)%s.*", separator, Pattern.quote(projectPath), separator));
         errorProneOptions.check("UnusedVariable", CheckSeverity.OFF);
         errorProneOptions.check("EqualsHashCode", CheckSeverity.ERROR);
         errorProneOptions.check("EqualsIncompatibleType", CheckSeverity.ERROR);
