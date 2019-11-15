@@ -188,7 +188,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
         errorProneOptions.setEnabled(true);
         errorProneOptions.setDisableWarningsInGeneratedCode(true);
         String projectPath = project.getProjectDir().getPath();
-        String separator = Paths.get(projectPath).getFileSystem().getSeparator();
+        String separator = Pattern.quote(Paths.get(projectPath).getFileSystem().getSeparator());
         errorProneOptions.setExcludedPaths(String.format(
                 "%s%s(build|src%sgenerated.*)%s.*", Pattern.quote(projectPath), separator, separator, separator));
         errorProneOptions.check("UnusedVariable", CheckSeverity.OFF);
