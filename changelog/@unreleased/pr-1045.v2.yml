@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Fix using errorprone when running under Windows.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1045
