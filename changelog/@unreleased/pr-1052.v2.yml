@@ -1,0 +1,8 @@
+type: improvement
+improvement:
+  description: |-
+    PreferAssertj disallows `assert` statements in test code.
+
+    Tests should use more specific AssertJ checks, which cannot be disabled by turning off asserts. Arguably the `assert` keyword should never be used, preferring preconditions allowing production environments to avoid invoking code paths that are impossible to test.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1052
