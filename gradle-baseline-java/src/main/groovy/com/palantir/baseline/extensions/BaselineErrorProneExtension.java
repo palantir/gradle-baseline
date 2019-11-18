@@ -37,6 +37,7 @@ public class BaselineErrorProneExtension {
             "RedundantModifier",
             "Slf4jLevelCheck",
             "Slf4jLogsafeArgs",
+            "Slf4jThrowable",
             "StrictUnusedVariable",
             "StringBuilderConstantParameters",
             "ThrowError",
