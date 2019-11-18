@@ -41,6 +41,9 @@ public class PreferAssertjTests {
                         "    Assert.assertTrue(b);",
                         "    Assert.assertTrue(\"desc\", b);",
                         "    assertThat(\"desc\", b);",
+                        "    assert b;",
+                        "    assert b : \"desc\";",
+                        "    assert b : 123;",
                         "  }",
                         "}")
                 .addOutputLines(
@@ -55,6 +58,9 @@ public class PreferAssertjTests {
                         "    assertThat(b).isTrue();",
                         "    assertThat(b).describedAs(\"desc\").isTrue();",
                         "    assertThat(b).describedAs(\"desc\").isTrue();",
+                        "    assertThat(b).isTrue();",
+                        "    assertThat(b).describedAs(\"desc\").isTrue();",
+                        "    assertThat(b).describedAs(\"%s\", 123).isTrue();",
                         "  }",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
@@ -947,6 +953,19 @@ public class PreferAssertjTests {
                         "    assertThat((Map<?, ?>) actual).describedAs(\"desc\").isNull();",
                         "  }",
                         "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    public void assertsIgnoredInProductionCode() {
+        test().addInputLines("Test.java",
+                "class Test {",
+                "  void execute(String input) {",
+                "    assert input != null : \"input should not be null\";",
+                "    assert input.length() == 5;",
+                "  }",
+                "}")
+                .expectUnchanged()
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 

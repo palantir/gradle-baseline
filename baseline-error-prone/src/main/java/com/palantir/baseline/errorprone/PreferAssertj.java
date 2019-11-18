@@ -21,6 +21,7 @@ import static com.google.common.base.Preconditions.checkNotNull;
 import static com.google.common.base.Preconditions.checkState;
 
 import com.google.auto.service.AutoService;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Iterables;
 import com.google.errorprone.BugPattern;
@@ -35,6 +36,7 @@ import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.predicates.TypePredicate;
 import com.google.errorprone.predicates.TypePredicates;
 import com.google.errorprone.util.ASTHelpers;
+import com.sun.source.tree.AssertTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.ImportTree;
 import com.sun.source.tree.MemberSelectTree;
@@ -47,6 +49,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import javax.lang.model.type.TypeKind;
 
 /**
@@ -63,7 +66,8 @@ import javax.lang.model.type.TypeKind;
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = BugPattern.SeverityLevel.SUGGESTION,
         summary = "Prefer AssertJ fluent assertions")
-public final class PreferAssertj extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
+public final class PreferAssertj
+        extends BugChecker implements BugChecker.AssertTreeMatcher, BugChecker.MethodInvocationTreeMatcher {
 
     private static final ImmutableSet<String> LEGACY_ASSERT_CLASSES = ImmutableSet.of(
             "org.hamcrest.MatcherAssert",
@@ -413,6 +417,40 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
         return Description.NO_MATCH;
     }
 
+    @Override
+    public Description matchAssert(AssertTree tree, VisitorState state) {
+        if (!TestCheckUtils.isTestCode(state)) {
+            return Description.NO_MATCH;
+        }
+        SuggestedFix.Builder fix = SuggestedFix.builder();
+        return buildDescription(tree)
+                .setMessage("Prefer AssertJ fluent assertions instead of the 'assert' keyword in tests. "
+                        + "Assertions can be disabled which is never expected in tests.")
+                .addFix(fix.replace(tree, String.format("%s(%s)%s.isTrue();",
+                        qualifyAssertThat(fix, state),
+                        state.getSourceForNode(tree.getCondition()),
+                        getAssertDescription(tree.getDetail(), state)))
+                        .build())
+                .build();
+    }
+
+    /** Returns the describedAs invocation if a detail is present, otherwise an empty string. */
+    private static String getAssertDescription(@Nullable ExpressionTree detail, VisitorState state) {
+        if (detail == null) {
+            return "";
+        }
+        String detailSource = state.getSourceForNode(detail);
+        if (Strings.isNullOrEmpty(detailSource)) {
+            return "";
+        }
+        if (state.getTypes().isAssignable(
+                ASTHelpers.getResultType(detail), state.getTypeFromString(String.class.getName()))) {
+            return ".describedAs(" + detailSource + ')';
+        }
+        // Lazily allow the value to be evaluated on failures
+        return ".describedAs(\"%s\", " + detailSource + ')';
+    }
+
     /**
      * Provides a qualified 'assertThat' name. We attempt to use a static import if possible, otherwise fall back
      * to as qualified as possible.
@@ -423,16 +461,7 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
             int actualIndex,
             BiConsumer<String, SuggestedFix.Builder> assertThat) {
         SuggestedFix.Builder fix = SuggestedFix.builder();
-        String qualified;
-        if (useStaticAssertjImport(state)) {
-            fix.removeStaticImport("org.junit.Assert.assertThat")
-                    .removeStaticImport("org.hamcrest.MatcherAssert.assertThat")
-                    .addStaticImport("org.assertj.core.api.Assertions.assertThat");
-            qualified = "assertThat";
-        } else {
-            qualified = SuggestedFixes.qualifyType(state, fix, "org.assertj.core.api.Assertions.assertThat");
-        }
-
+        String qualified = qualifyAssertThat(fix, state);
         String actualArgumentString = argSource(tree, state, actualIndex);
         ExpressionTree actualArgument = tree.getArguments().get(actualIndex);
         if (isIterableMap(actualArgument, state)) {
@@ -444,6 +473,17 @@ public final class PreferAssertj extends BugChecker implements BugChecker.Method
         return buildDescription(tree)
                 .addFix(fix.build())
                 .build();
+    }
+
+    private static String qualifyAssertThat(SuggestedFix.Builder fix, VisitorState state) {
+        if (useStaticAssertjImport(state)) {
+            fix.removeStaticImport("org.junit.Assert.assertThat")
+                    .removeStaticImport("org.hamcrest.MatcherAssert.assertThat")
+                    .addStaticImport("org.assertj.core.api.Assertions.assertThat");
+            return "assertThat";
+        } else {
+            return SuggestedFixes.qualifyType(state, fix, "org.assertj.core.api.Assertions.assertThat");
+        }
     }
 
     private static boolean isIterableMap(ExpressionTree value, VisitorState state) {
