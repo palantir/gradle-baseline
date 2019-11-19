@@ -179,6 +179,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `StrictCollectionIncompatibleType`: Likely programming error due to using the wrong type in a method that accepts Object.
 - `InvocationHandlerDelegation`: InvocationHandlers which delegate to another object must catch and unwrap InvocationTargetException.
 - `Slf4jThrowable`: Slf4j loggers require throwables to be the last parameter otherwise a stack trace is not produced.
+- `JooqResultStreamLeak`: Autocloseable streams and cursors from jOOQ results should be obtained in a try-with-resources statement.
 
 ### Programmatic Application
 

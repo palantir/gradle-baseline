@@ -18,6 +18,7 @@ dependencies {
     testCompile 'org.apache.commons:commons-lang3'
     testCompile 'commons-lang:commons-lang'
     testCompile 'org.assertj:assertj-core'
+    testCompile 'org.jooq:jooq'
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-migrationsupport'
 
