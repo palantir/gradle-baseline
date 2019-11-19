@@ -54,6 +54,21 @@ public final class JooqResultStreamLeakTest {
     }
 
     @Test
+    public void test_query_steps_ignored() {
+        testHelper.addSourceLines("JooqStream.java",
+                "import java.util.stream.Collectors;",
+                "import java.util.stream.Stream;",
+                "import org.jooq.Record;",
+                "import org.jooq.SelectConditionStep;",
+                "class Test {",
+                "  SelectConditionStep<Record> f(SelectConditionStep<Record> select) {",
+                "    return select.and(\"some_field <> 3\");",
+                "  }",
+                "}")
+                .doTest();
+    }
+
+    @Test
     public void test_negative() {
         testHelper.addSourceLines("JooqStream.java",
             "import java.util.stream.Stream;",
