@@ -35,7 +35,8 @@ import com.sun.source.tree.MethodInvocationTree;
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = BugPattern.SeverityLevel.ERROR,
         summary = "Methods that return an AutoCloseable stream on jOOQ's ResultQuery should be closed using "
-                + "try-with-resources")
+                + "try-with-resources. Not doing so can result in leaked database resources (such as connections or "
+                + "cursors) in code paths that throw an exception or fail to call #close().")
 public final class JooqResultStreamLeak extends StreamResourceLeak {
     // TODO(ilyan): Would be neat if we could reflectively find any method that returns a stream or cursor (or indeed
     // anything autocloseable).
