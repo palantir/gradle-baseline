@@ -16,7 +16,6 @@
 
 package com.palantir.baseline.errorprone;
 
-import com.google.errorprone.BugCheckerRefactoringTestHelper;
 import com.google.errorprone.CompilationTestHelper;
 import org.junit.Test;
 import org.junit.jupiter.api.parallel.Execution;
@@ -28,8 +27,8 @@ public final class JooqResultStreamLeakTest {
     private final CompilationTestHelper testHelper =
             CompilationTestHelper.newInstance(JooqResultStreamLeak.class, getClass());
 
-    private final BugCheckerRefactoringTestHelper refactoringTestHelper =
-            BugCheckerRefactoringTestHelper.newInstance(new JooqResultStreamLeak(), getClass());
+    private final RefactoringValidator refactoringValidator =
+            RefactoringValidator.of(new JooqResultStreamLeak(), getClass());
 
     @Test
     public void test_positive() {
@@ -75,7 +74,7 @@ public final class JooqResultStreamLeakTest {
 
     @Test
     public void test_fix() {
-        refactoringTestHelper
+        refactoringValidator
                 .addInputLines("in/JooqStream.java",
                     "import java.util.stream.Stream;",
                     "import org.jooq.Record;",
@@ -101,7 +100,7 @@ public final class JooqResultStreamLeakTest {
 
     @Test
     public void test_fix_variable() {
-        refactoringTestHelper
+        refactoringValidator
                 .addInputLines("in/JooqStream.java",
                         "import java.util.stream.Collectors;",
                         "import java.util.stream.Stream;",

@@ -27,7 +27,6 @@ import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
-import java.util.stream.Stream;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -35,8 +34,8 @@ import java.util.stream.Stream;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
-        severity = BugPattern.SeverityLevel.ERROR,
-        summary = "Methods that return a stream or cursor on jOOQ's ResultQuery should be closed using "
+        severity = BugPattern.SeverityLevel.WARNING,
+        summary = "Methods that return an autocloseable resource on jOOQ's ResultQuery should be closed using "
                 + "try-with-resources. Not doing so can result in leaked database resources (such as connections or "
                 + "cursors) in code paths that throw an exception or fail to call #close().")
 public final class JooqResultStreamLeak extends StreamResourceLeak {
@@ -52,22 +51,16 @@ public final class JooqResultStreamLeak extends StreamResourceLeak {
             return Description.NO_MATCH;
         }
 
-        if (!isStreamOrCursor(tree, state)) {
+        if (!isAutoCloseable(tree, state)) {
             return Description.NO_MATCH;
         }
 
         return matchNewClassOrMethodInvocation(tree, state);
     }
 
-    private static boolean isStreamOrCursor(MethodInvocationTree tree, VisitorState state) {
-        boolean isStream = ASTHelpers.isSubtype(ASTHelpers.getReturnType(tree),
-                state.getTypeFromString(Stream.class.getName()),
+    private static boolean isAutoCloseable(MethodInvocationTree tree, VisitorState state) {
+        return ASTHelpers.isSubtype(ASTHelpers.getReturnType(tree),
+                state.getTypeFromString(AutoCloseable.class.getName()),
                 state);
-
-        boolean isCursor = ASTHelpers.isSubtype(ASTHelpers.getReturnType(tree),
-                state.getTypeFromString("org.jooq.Cursor"),
-                state);
-
-        return isCursor || isStream;
     }
 }
