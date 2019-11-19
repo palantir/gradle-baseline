@@ -62,9 +62,9 @@ public final class JUnit5RuleUsage extends BugChecker implements BugChecker.Clas
     }
 
     static Matcher<ClassTree> hasVariable(Matcher<VariableTree> matcher) {
-        return (classTree, state) -> classTree.getMembers().stream()
-                .filter(tree -> tree instanceof VariableTree)
-                .anyMatch(tree -> matcher.matches((VariableTree) tree, state));
+        return (classTree, state) ->
+                classTree.getMembers().stream().filter(tree -> tree instanceof VariableTree).anyMatch(tree ->
+                        matcher.matches((VariableTree) tree, state));
     }
 
     static Matcher<VariableTree> hasAnnotationOnVariable(String annotation) {

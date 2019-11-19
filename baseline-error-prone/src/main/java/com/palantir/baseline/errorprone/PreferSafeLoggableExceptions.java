@@ -55,8 +55,8 @@ public final class PreferSafeLoggableExceptions extends BugChecker implements Bu
             NullPointerException.class, "SafeNullPointerException",
             RuntimeException.class, "SafeRuntimeException");
 
-    private static final Matcher<ExpressionTree> FAST_EXCEPTION_TYPE_CHECK = Matchers.anyOf(
-            EXCEPTION_MAPPINGS.keySet().stream().map(Matchers::isSameType).collect(Collectors.toList()));
+    private static final Matcher<ExpressionTree> FAST_EXCEPTION_TYPE_CHECK =
+            Matchers.anyOf(EXCEPTION_MAPPINGS.keySet().stream().map(Matchers::isSameType).collect(Collectors.toList()));
 
     private final Matcher<ExpressionTree> compileTimeConstExpressionMatcher =
             new CompileTimeConstantExpressionMatcher();
@@ -71,9 +71,7 @@ public final class PreferSafeLoggableExceptions extends BugChecker implements Bu
         List<? extends ExpressionTree> args = tree.getArguments();
         Optional<? extends ExpressionTree> messageArg = args.stream()
                 .filter(arg -> ASTHelpers.isSameType(
-                        ASTHelpers.getType(arg),
-                        state.getTypeFromString("java.lang.String"),
-                        state))
+                        ASTHelpers.getType(arg), state.getTypeFromString("java.lang.String"), state))
                 .reduce((one, two) -> one);
 
         if (!messageArg.isPresent()) {
@@ -92,13 +90,15 @@ public final class PreferSafeLoggableExceptions extends BugChecker implements Bu
 
         return EXCEPTION_MAPPINGS.entrySet().stream()
                 .filter(entry -> Matchers.isSameType(entry.getKey()).matches(tree.getIdentifier(), state))
-                .map(entry -> buildDescription(tree)
-                        .setMessage("Prefer " + entry.getValue() + " from com.palantir.safe-logging:preconditions")
-                        .addFix(SuggestedFix.builder()
-                                .replace(tree.getIdentifier(), entry.getValue())
-                                .addImport("com.palantir.logsafe.exceptions." + entry.getValue())
+                .map(entry ->
+                        buildDescription(tree)
+                                .setMessage(
+                                        "Prefer " + entry.getValue() + " from com.palantir.safe-logging:preconditions")
+                                .addFix(SuggestedFix.builder()
+                                        .replace(tree.getIdentifier(), entry.getValue())
+                                        .addImport("com.palantir.logsafe.exceptions." + entry.getValue())
+                                        .build())
                                 .build())
-                        .build())
                 .findAny()
                 .orElseThrow(() -> new IllegalStateException("Expected to match a known replaceable exception type"));
     }

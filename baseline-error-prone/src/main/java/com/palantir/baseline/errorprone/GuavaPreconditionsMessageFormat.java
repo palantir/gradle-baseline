@@ -53,7 +53,8 @@ public final class GuavaPreconditionsMessageFormat extends PreconditionsMessageF
             return Description.NO_MATCH;
         }
 
-        return buildDescription(tree).setMessage(
-                "Use printf-style formatting in Guava Preconditions, not '{}' style formatting.").build();
+        return buildDescription(tree)
+                .setMessage("Use printf-style formatting in Guava Preconditions, not '{}' style formatting.")
+                .build();
     }
 }
