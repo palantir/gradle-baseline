@@ -27,6 +27,7 @@ import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
+import com.sun.tools.javac.code.Type;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -51,16 +52,27 @@ public final class JooqResultStreamLeak extends StreamResourceLeak {
             return Description.NO_MATCH;
         }
 
-        if (!isAutoCloseable(tree, state)) {
+        if (!shouldBeAutoClosed(tree, state)) {
             return Description.NO_MATCH;
         }
 
         return matchNewClassOrMethodInvocation(tree, state);
     }
 
-    private static boolean isAutoCloseable(MethodInvocationTree tree, VisitorState state) {
-        return ASTHelpers.isSubtype(ASTHelpers.getReturnType(tree),
+    private static boolean shouldBeAutoClosed(MethodInvocationTree tree, VisitorState state) {
+        Type returnType = ASTHelpers.getReturnType(tree);
+
+        // Most auto-closeable returns should be auto-closed.
+        boolean isAutoCloseable = ASTHelpers.isSubtype(returnType,
                 state.getTypeFromString(AutoCloseable.class.getName()),
                 state);
+
+        // QueryParts can hold resources but usually don't, so auto-tripping and trying to fix on things
+        // like SelectConditionStep is unnecessary.
+        boolean isJooqQuery = ASTHelpers.isSubtype(returnType,
+                state.getTypeFromString("org.jooq.QueryPart"),
+                state);
+
+        return isAutoCloseable && !isJooqQuery;
     }
 }
