@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Refaster rule to eliminate unnecessary casting.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1060
