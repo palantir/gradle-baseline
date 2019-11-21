@@ -83,11 +83,11 @@ public final class StringBuilderConstantParameters
                     .build();
         }
         List<ExpressionTree> arguments = result.get();
-        Stream<String> prefixStream = arguments.stream().findFirst()
+        Stream<String> prefixStream = arguments.stream()
+                .findFirst()
                 .map(ASTHelpers::getType)
-                .filter(type ->
-                        ASTHelpers.isSameType(type, state.getTypeFromString("java.lang.String"), state))
-                .map(ignored -> Stream.<String>of())
+                .filter(type -> ASTHelpers.isSameType(type, state.getTypeFromString("java.lang.String"), state))
+                .map(ignored -> Stream.empty())
                 .orElseGet(() -> Stream.of("\"\""));
 
         return buildDescription(tree)
