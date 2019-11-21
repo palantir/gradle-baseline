@@ -123,4 +123,31 @@ class BaselineConfigIntegrationTest extends AbstractPluginTest {
         def secondResult = with('baselineUpdateConfig').build()
         assert secondResult.tasks(TaskOutcome.UP_TO_DATE).collect { it.getPath() }.contains(':baselineUpdateConfig')
     }
+
+    def 'started pjf conversion disables checkstyle Indentation module'() {
+        file('gradle.properties') << """
+            com.palantir.baseline-format.palantir-java-format = started
+        """.stripIndent()
+
+        buildFile << standardBuildFile
+        buildFile << """
+            repositories {
+                jcenter()
+                mavenLocal()
+            }
+            dependencies {
+                // NOTE: This only works on Git-clean repositories since it relies on the locally published config artifact,
+                // see ./gradle-baseline-java-config/build.gradle
+                baseline "com.palantir.baseline:gradle-baseline-java-config:${projectVersion}@zip"
+            }
+        """.stripIndent()
+
+        when:
+        with('baselineUpdateConfig').build()
+
+        then:
+        !new File(projectDir, '.baseline/checkstyle/checkstyle.xml').readLines().any {
+            it.contains '<module name="Indentation">'
+        }
+    }
 }

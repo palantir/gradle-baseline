@@ -47,13 +47,13 @@ class BaselineFormat extends AbstractBaselinePlugin {
         this.project = project;
 
         if (project == project.getRootProject()) {
-            if (BaselineFormat.palantirJavaFormatterEnabled(project)) {
+            if (BaselineFormat.palantirJavaFormatterState(project) == FormatterState.ON) {
                 project.getPluginManager().apply(PalantirJavaFormatIdeaPlugin.class);
             }
         }
 
         project.getPluginManager().withPlugin("java", plugin -> {
-            if (palantirJavaFormatterEnabled(project)) {
+            if (palantirJavaFormatterState(project) == FormatterState.ON) {
                 project.getPlugins().apply(PalantirJavaFormatPlugin.class); // provides the formatDiff task
             }
         });
@@ -75,7 +75,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
                 // use empty string to specify one group for all non-static imports
                 java.importOrder("");
 
-                if (eclipseFormattingEnabled(project) && palantirJavaFormatterEnabled(project)) {
+                if (eclipseFormattingEnabled(project) && palantirJavaFormatterState(project) != FormatterState.OFF) {
                     throw new GradleException(
                             "Can't use both eclipse and palantir-java-format at the same time, please delete one of "
                                     + ECLIPSE_FORMATTING
@@ -88,7 +88,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
                     java.eclipse().configFile(project.file(eclipseXml.toString()));
                 }
 
-                if (palantirJavaFormatterEnabled(project)) {
+                if (palantirJavaFormatterState(project) == FormatterState.ON) {
                     Preconditions.checkState(
                             project.getRootProject().getPlugins().hasPlugin(PalantirJavaFormatProviderPlugin.class),
                             "Must apply `com.palantir.baseline-format` to root project when setting '%s'",
@@ -133,8 +133,26 @@ class BaselineFormat extends AbstractBaselinePlugin {
         return project.hasProperty(ECLIPSE_FORMATTING);
     }
 
-    static boolean palantirJavaFormatterEnabled(Project project) {
-        return project.hasProperty(PJF_PROPERTY);
+    static FormatterState palantirJavaFormatterState(Project project) {
+        if (!project.hasProperty(PJF_PROPERTY)) {
+            return FormatterState.OFF;
+        }
+        Object propertyValue = project.property(PJF_PROPERTY);
+        if ("started".equals(propertyValue)) {
+            return FormatterState.STARTED_CONVERTING;
+        }
+        if ("true".equals(propertyValue) || "".equals(propertyValue)) {
+            return FormatterState.ON;
+        }
+        throw new RuntimeException(String.format(
+                "Unexpected value for %s: %s.%nExpected one of [started, true].",
+                PJF_PROPERTY, propertyValue));
+    }
+
+    enum FormatterState {
+        OFF,
+        STARTED_CONVERTING,
+        ON
     }
 
     static Path eclipseConfigFile(Project project) {

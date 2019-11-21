@@ -17,6 +17,7 @@
 package com.palantir.baseline.plugins;
 
 import com.google.common.base.Preconditions;
+import com.palantir.baseline.plugins.BaselineFormat.FormatterState;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -87,7 +88,8 @@ class BaselineConfig extends AbstractBaselinePlugin {
                 }
             });
 
-            if (BaselineFormat.palantirJavaFormatterEnabled(rootProject)) {
+            // Disable some checkstyle rules that clash with PJF
+            if (BaselineFormat.palantirJavaFormatterState(rootProject) != FormatterState.OFF) {
                 Path checkstyleXml = configDir.resolve("checkstyle/checkstyle.xml");
 
                 try {
