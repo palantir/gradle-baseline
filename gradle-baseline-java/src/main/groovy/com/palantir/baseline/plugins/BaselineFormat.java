@@ -137,15 +137,16 @@ class BaselineFormat extends AbstractBaselinePlugin {
         if (!project.hasProperty(PJF_PROPERTY)) {
             return FormatterState.OFF;
         }
-        if (project.property(PJF_PROPERTY).equals("started")) {
+        Object propertyValue = project.property(PJF_PROPERTY);
+        if ("started".equals(propertyValue)) {
             return FormatterState.STARTED_CONVERTING;
         }
-        if (project.property(PJF_PROPERTY).equals("true")) {
+        if ("true".equals(propertyValue) || "".equals(propertyValue)) {
             return FormatterState.ON;
         }
         throw new RuntimeException(String.format(
                 "Unexpected value for %s: %s.%nExpected one of [started, true].",
-                PJF_PROPERTY, project.property(PJF_PROPERTY)));
+                PJF_PROPERTY, propertyValue));
     }
 
     enum FormatterState {
