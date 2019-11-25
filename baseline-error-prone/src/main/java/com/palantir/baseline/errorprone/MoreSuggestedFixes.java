@@ -34,7 +34,7 @@ final class MoreSuggestedFixes {
      * Renames a method invocation without modifying type arguments.
      * This differs from SuggestedFixes.renameMethodInvocation because it does not
      * remove type arguments.
-     * Implementation is based on error-prone SuggestedFixes.renameMethodInvocation (Apache 2.0)
+     * Implementation is based on error-prone SuggestedFixes.renameMethodInvocation (Apache 2)
      * https://github.com/google/error-prone/blob/master/check_api/src/main/java/com/google/errorprone/fixes/SuggestedFixes.java#L574
      */
     static SuggestedFix renameInvocationRetainingTypeArguments(
