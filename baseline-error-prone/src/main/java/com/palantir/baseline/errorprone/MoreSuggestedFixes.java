@@ -25,22 +25,17 @@ import com.sun.source.tree.Tree;
 import com.sun.tools.javac.tree.JCTree;
 import java.util.stream.Collectors;
 
-/**
- * Additional utility functionality for {@link SuggestedFix} objects.
- */
+/** Additional utility functionality for {@link SuggestedFix} objects. */
 final class MoreSuggestedFixes {
 
     /**
-     * Renames a method invocation without modifying type arguments.
-     * This differs from SuggestedFixes.renameMethodInvocation because it does not
-     * remove type arguments.
-     * Implementation is based on error-prone SuggestedFixes.renameMethodInvocation (Apache 2)
+     * Renames a method invocation without modifying type arguments. This differs from
+     * SuggestedFixes.renameMethodInvocation because it does not remove type arguments. Implementation is based on
+     * error-prone SuggestedFixes.renameMethodInvocation (Apache 2)
      * https://github.com/google/error-prone/blob/master/check_api/src/main/java/com/google/errorprone/fixes/SuggestedFixes.java#L574
      */
     static SuggestedFix renameInvocationRetainingTypeArguments(
-            MethodInvocationTree methodInvocationTree,
-            String newMethodName,
-            VisitorState state) {
+            MethodInvocationTree methodInvocationTree, String newMethodName, VisitorState state) {
         SuggestedFix.Builder fix = SuggestedFix.builder();
         Tree methodSelect = methodInvocationTree.getMethodSelect();
         int startPos;
