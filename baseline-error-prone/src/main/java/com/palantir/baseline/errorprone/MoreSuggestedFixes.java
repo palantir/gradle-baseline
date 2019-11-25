@@ -34,6 +34,8 @@ final class MoreSuggestedFixes {
      * Renames a method invocation without modifying type arguments.
      * This differs from SuggestedFixes.renameMethodInvocation because it does not
      * remove type arguments.
+     * Implementation is based on error-prone SuggestedFixes.renameMethodInvocation (Apache 2.0)
+     * https://github.com/google/error-prone/blob/master/check_api/src/main/java/com/google/errorprone/fixes/SuggestedFixes.java#L574
      */
     static SuggestedFix renameInvocationRetainingTypeArguments(
             MethodInvocationTree methodInvocationTree,
@@ -44,10 +46,12 @@ final class MoreSuggestedFixes {
         int startPos;
         String extra = "";
         if (methodSelect instanceof MemberSelectTree) {
-            startPos = state.getEndPosition(((MemberSelectTree) methodSelect).getExpression());
+            MemberSelectTree memberSelectTree = (MemberSelectTree) methodSelect;
+            startPos = state.getEndPosition(memberSelectTree.getExpression());
             extra = ".";
         } else if (methodSelect instanceof IdentifierTree) {
-            startPos = ((JCTree) methodInvocationTree).getStartPosition();
+            JCTree methodInvocationJcTree = (JCTree) methodInvocationTree;
+            startPos = methodInvocationJcTree.getStartPosition();
         } else {
             return fix.build();
         }
