@@ -38,6 +38,7 @@ public class BaselineErrorProneExtension {
             "Slf4jLevelCheck",
             "Slf4jLogsafeArgs",
             "Slf4jThrowable",
+            "StreamOfEmpty",
             "StrictUnusedVariable",
             "StringBuilderConstantParameters",
             "ThrowError",

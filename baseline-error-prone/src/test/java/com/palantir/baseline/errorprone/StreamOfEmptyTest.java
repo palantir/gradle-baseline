@@ -14,28 +14,39 @@
  * limitations under the License.
  */
 
-package com.palantir.baseline.refaster;
+package com.palantir.baseline.errorprone;
 
-import org.junit.Test;
+import com.google.errorprone.BugCheckerRefactoringTestHelper;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.parallel.Execution;
+import org.junit.jupiter.api.parallel.ExecutionMode;
 
-public class StreamEmptyTest {
+@Execution(ExecutionMode.CONCURRENT)
+class StreamOfEmptyTest {
 
     @Test
-    public void test() {
-        RefasterTestHelper
-                .forRefactoring(StreamEmpty.class)
-                .withInputLines(
-                        "Test",
-                        "import java.util.*;",
+    void testFix() {
+        fix()
+                .addInputLines(
+                        "Test.java",
                         "import java.util.stream.Stream;",
                         "public class Test {",
                         "  Stream<Integer> i = Stream.of();",
+                        "  Stream<Integer> negative = Stream.of(1, 2);",
+                        "  Object o = Stream.<String>of();",
                         "}")
-                .hasOutputLines(
-                        "import java.util.*;",
+                .addOutputLines(
+                        "Test.java",
                         "import java.util.stream.Stream;",
                         "public class Test {",
                         "  Stream<Integer> i = Stream.empty();",
-                        "}");
+                        "  Stream<Integer> negative = Stream.of(1, 2);",
+                        "  Object o = Stream.<String>empty();",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    private RefactoringValidator fix() {
+        return RefactoringValidator.of(new StreamOfEmpty(), getClass());
     }
 }
