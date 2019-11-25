@@ -181,6 +181,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `Slf4jThrowable`: Slf4j loggers require throwables to be the last parameter otherwise a stack trace is not produced.
 - `JooqResultStreamLeak`: Autocloseable streams and cursors from jOOQ results should be obtained in a try-with-resources statement.
 - `StreamOfEmpty`: Stream.of() should be replaced with Stream.empty() to avoid unnecessary varargs allocation.
+- `RedundantMethodReference`: Redundant method reference to the same type.
 
 ### Programmatic Application
 
