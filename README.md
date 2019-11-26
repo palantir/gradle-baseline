@@ -185,6 +185,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `AssertjPrimitiveComparison`: Prefer using AssertJ fluent comparisons over logic in an assertThat statement.
 - `ExceptionSpecificity`: Prefer more specific catch types than Exception and Throwable.
 - `ThrowSpecificity`: Prefer to declare more specific `throws` types than Exception and Throwable.
+- `HandleInterruption`: InterruptedException must be handled.
 
 ### Programmatic Application
 
