@@ -1,0 +1,12 @@
+type: improvement
+improvement:
+  description: |-
+    Error prone ExceptionSpecificity check to avoid catching too broadly
+
+    Prefer more specific catch types than Exception and Throwable.
+    When methods are updated to throw new checked exceptions they expect
+    callers to handle failure types explicitly. Catching broad types defeats
+    the type system. By catching the most specific types possible we
+    leverage existing compiler functionality to detect unreachable code.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1074
