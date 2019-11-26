@@ -465,7 +465,7 @@ public final class PreferAssertj
         String actualArgumentString = argSource(tree, state, actualIndex);
         ExpressionTree actualArgument = tree.getArguments().get(actualIndex);
         if (isIterableMap(actualArgument, state)) {
-            String qualifiedMap = SuggestedFixes.qualifyType(
+            String qualifiedMap = SuggestedFixes.prettyType(
                     state,
                     fix,
                     state.getTypes().asSuper(
