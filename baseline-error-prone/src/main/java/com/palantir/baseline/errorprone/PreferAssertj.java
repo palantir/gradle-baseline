@@ -465,9 +465,13 @@ public final class PreferAssertj
         String actualArgumentString = argSource(tree, state, actualIndex);
         ExpressionTree actualArgument = tree.getArguments().get(actualIndex);
         if (isIterableMap(actualArgument, state)) {
-            actualArgumentString = String.format("(%s<?, ?>) %s",
-                    SuggestedFixes.qualifyType(state, fix, "java.util.Map"),
-                    actualArgumentString);
+            String qualifiedMap = SuggestedFixes.qualifyType(
+                    state,
+                    fix,
+                    state.getTypes().asSuper(
+                            ASTHelpers.getType(actualArgument),
+                            state.getSymbolFromString("java.util.Map")));
+            actualArgumentString = String.format("(%s) %s", qualifiedMap, actualArgumentString);
         }
         assertThat.accept(qualified + '(' + actualArgumentString + ')', fix);
         return buildDescription(tree)
