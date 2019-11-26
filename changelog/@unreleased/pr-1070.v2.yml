@@ -1,0 +1,13 @@
+type: improvement
+improvement:
+  description: |-
+    Improve `NonComparableStreamSort` to validate that stream types implement comparable, as opposed to validating that casting to comparable does not cause a compiler error.
+
+    This commit reduces the severity to WARNING because it's
+    possible that the check will flag code that happens to work
+    today, but we strongly recommend against sorting streams of
+    a type that is not directly comparable without a custom
+    comparator because it is likely to break later due to lack
+    of enforcement by the type system.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1070
