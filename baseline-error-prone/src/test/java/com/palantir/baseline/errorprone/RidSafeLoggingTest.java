@@ -39,7 +39,7 @@ public class RidSafeLoggingTest {
                         "class Test {",
                         "  private static final Logger log = LoggerFactory.getLogger(Test.class);",
                         "  void f(String param) {",
-                        "    // BUG: Diagnostic contains: Log statments do not use the GothamRidArg.of() helper for arguments " + failingArgs,
+                        "    // BUG: Diagnostic contains: Log statments do not use the RidArg.of() helper for arguments " + failingArgs,
                         "    log." + logLevel + "(" + logArgs + ");",
                         "  }",
                         "}")

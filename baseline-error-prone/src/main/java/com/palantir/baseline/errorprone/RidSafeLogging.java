@@ -41,7 +41,7 @@ import java.util.regex.Pattern;
         linkType = BugPattern.LinkType.CUSTOM,
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = BugPattern.SeverityLevel.ERROR,
-        summary = "RIDs should only be logged using the GothamRidArg.of static helper.")
+        summary = "RIDs should only be logged using the RidArg.of static helper.")
 public final class RidSafeLogging extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
@@ -69,7 +69,7 @@ public final class RidSafeLogging extends BugChecker implements BugChecker.Metho
             return Description.NO_MATCH;
         } else {
             return buildDescription(tree)
-                    .setMessage("Log statments do not use the GothamRidArg.of() helper for arguments "
+                    .setMessage("Log statments do not use the RidArg.of() helper for arguments "
                             + ridArgsWithoutHelper)
                     .build();
         }
