@@ -946,11 +946,11 @@ public class PreferAssertjTests {
                         "class Test {",
                         "  interface IMap<K, V> extends Map<K, V>, Iterable<Map.Entry<K, V>> {}",
                         "  <K, V> void foo(IMap<K, V> expected, IMap<K, V> actual) {",
-                        "    assertThat((Map<?, ?>) actual).isEqualTo(expected);",
-                        "    assertThat((Map<?, ?>) actual).isEqualTo(expected);",
-                        "    assertThat((Map<?, ?>) actual).describedAs(\"desc\").isEqualTo(expected);",
-                        "    assertThat((Map<?, ?>) actual).isNull();",
-                        "    assertThat((Map<?, ?>) actual).describedAs(\"desc\").isNull();",
+                        "    assertThat((Map<K, V>) actual).isEqualTo(expected);",
+                        "    assertThat((Map<K, V>) actual).isEqualTo(expected);",
+                        "    assertThat((Map<K, V>) actual).describedAs(\"desc\").isEqualTo(expected);",
+                        "    assertThat((Map<K, V>) actual).isNull();",
+                        "    assertThat((Map<K, V>) actual).describedAs(\"desc\").isNull();",
                         "  }",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
