@@ -18,7 +18,6 @@ package com.palantir.baseline.errorprone;
 
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.CompilationTestHelper;
-import com.palantir.ri.ResourceIdentifier;
 import org.junit.jupiter.api.Test;
 
 public class RidSafeLoggingTest {
@@ -36,29 +35,30 @@ public class RidSafeLoggingTest {
                         "import org.slf4j.LoggerFactory;",
                         "import org.slf4j.Marker;",
                         "import java.util.Iterator;",
+                        "import com.palantir.ri.ResourceIdentifier;",
                         "class Test {",
                         "  private static final Logger log = LoggerFactory.getLogger(Test.class);",
                         "  void f(String param) {",
-                        "    // BUG: Diagnostic contains: does not use logsafe parameters for arguments " + failingArgs,
+                        "    // BUG: Diagnostic contains: Log statments do not use the GothamRidArg.of() helper for arguments " + failingArgs,
                         "    log." + logLevel + "(" + logArgs + ");",
-                        "  }",
-                        "",
-                        "  class DummyMarker implements Marker {",
-                        "    public String getName() { return null; }",
-                        "    public void add(Marker reference) {}",
-                        "    public boolean remove(Marker reference) { return true; }",
-                        "    public boolean hasChildren() { return false; }",
-                        "    public boolean hasReferences() { return false; }",
-                        "    public Iterator<Marker> iterator() { return null; }",
-                        "    public boolean contains(Marker other) { return false; }",
-                        "    public boolean contains(String name) { return false; }",
                         "  }",
                         "}")
                 .doTest());
     }
 
     @Test
-    public void testFailingLogsafeArgs() throws Exception {
-        test("SafeArg.of(\"rid\", \"ResourceIdentifier.of(\"fakeRid\")\")", "[1]");
+    public void testFailingRidLogging() throws Exception {
+        test("\"logMessage\", SafeArg.of(\"rid\", ResourceIdentifier.of(\"fakeRid\"))", "[1]");
+        test("\"logMessage\", \"constant\", SafeArg.of(\"rid\", ResourceIdentifier.of(\"fakeRid\"))", "[2]");
+        test("\"logMessage\", SafeArg.of(\"rid\", ResourceIdentifier.of(\"fakeRid\")), \"constant\"", "[1]");
+        test("\"logMessage\", UnsafeArg.of(\"rid\", ResourceIdentifier.of(\"fakeRid\"))", "[1]");
+        test("\"logMessage\", \"constant\", UnsafeArg.of(\"rid\", ResourceIdentifier.of(\"fakeRid\"))", "[2]");
+        test("\"logMessage\", UnsafeArg.of(\"rid\", ResourceIdentifier.of(\"fakeRid\")), \"constant\"", "[1]");
+    }
+
+    @Test
+    public void testValidRidLogging() throws Exception {
+        // can only test this once the source file can import GothamRidArg (i.e. once its committed)
+        // test("\"logMessage\", GothamRidArg.of(ResourceIdentifier.of(\"fakeRid\"))", "[]");
     }
 }

@@ -82,7 +82,7 @@ public final class RidSafeLogging extends BugChecker implements BugChecker.Metho
         private static final Matcher<ExpressionTree> RID_ARG_FACTORY = Matchers.staticMethod()
                 .onClassAny("com.palantir.logsafe.SafeArg", "com.palantir.logsafe.UnsafeArg")
                 .named("of")
-                .withParameters(String.class.getName(), ResourceIdentifier.class.getName());
+                .withParameters(String.class.getName(), Object.class.getName());
 
         private static final Matcher<ExpressionTree> RID_ARG = Matchers.methodInvocation(
                 RID_ARG_FACTORY, ChildMultiMatcher.MatchType.AT_LEAST_ONE, RID);
