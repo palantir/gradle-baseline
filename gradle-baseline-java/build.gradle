@@ -7,6 +7,7 @@ apply from: "${rootDir}/gradle/publish-jar.gradle"
 dependencies {
     compile project(':gradle-junit-reports')
     compile gradleApi()
+    compile 'org.apache.commons:commons-lang3'
     compile 'com.diffplug.spotless:spotless-plugin-gradle'
     compile 'com.google.errorprone:error_prone_refaster'
     compile 'com.google.guava:guava'
