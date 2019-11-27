@@ -58,7 +58,8 @@ import javax.lang.model.element.Name;
         severity = BugPattern.SeverityLevel.SUGGESTION,
         summary = "Prefer more specific catch types than Exception and Throwable. When methods are updated to throw "
                 + "new checked exceptions they expect callers to handle failure types explicitly. Catching broad "
-                + "types defeats the type system.")
+                + "types defeats the type system. By catching the most specific types possible we leverage existing "
+                + "compiler functionality to detect unreachable code.")
 public final class ExceptionSpecificity extends BugChecker implements BugChecker.TryTreeMatcher {
 
     private static final Matcher<Tree> THROWABLE = Matchers.isSameType(Throwable.class);
