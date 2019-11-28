@@ -25,7 +25,7 @@ _Baseline is a family of Gradle plugins for configuring Java projects with sensi
 | `com.palantir.baseline-release-compatibility` | Ensures projects targetting older JREs only compile against classes and methods available in those JREs.
 | `com.palantir.baseline-testing`               | Configures test tasks to dump heap dumps (hprof files) for convenient debugging
 
-See also the [Baseline Java Style Guide and Best Practises](./docs).
+See also the [Baseline Java Style Guide and Best Practices](./docs).
 
 
 ## Usage
