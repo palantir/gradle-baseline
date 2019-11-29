@@ -182,6 +182,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `JooqResultStreamLeak`: Autocloseable streams and cursors from jOOQ results should be obtained in a try-with-resources statement.
 - `StreamOfEmpty`: Stream.of() should be replaced with Stream.empty() to avoid unnecessary varargs allocation.
 - `RedundantMethodReference`: Redundant method reference to the same type.
+- `AssertjPrimitiveComparison`: Prefer using AssertJ fluent comparisons over logic in an assertThat statement.
 
 ### Programmatic Application
 
