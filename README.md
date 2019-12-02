@@ -186,7 +186,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 
 ### Programmatic Application
 
-There exist a number of programmatic code modifiations available via [refaster](https://errorprone.info/docs/refaster). You can run these on your code to apply some refactorings automatically:
+There exist a number of programmatic code modifications available via [refaster](https://errorprone.info/docs/refaster). You can run these on your code to apply some refactorings automatically:
 
 ```
 ./gradlew compileJava compileTestJava -PrefasterApply -PerrorProneApply
