@@ -20,6 +20,7 @@ import com.google.auto.service.AutoService;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Iterables;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
@@ -36,6 +37,7 @@ import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.IfTree;
 import com.sun.source.tree.InstanceOfTree;
 import com.sun.source.tree.LambdaExpressionTree;
+import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.NewClassTree;
 import com.sun.source.tree.ParenthesizedTree;
 import com.sun.source.tree.StatementTree;
@@ -43,7 +45,9 @@ import com.sun.source.tree.Tree;
 import com.sun.source.tree.TryTree;
 import com.sun.source.util.SimpleTreeVisitor;
 import com.sun.source.util.TreeScanner;
+import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
+import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.tree.JCTree;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -52,6 +56,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
+import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
 
 @AutoService(BugChecker.class)
@@ -60,12 +65,14 @@ import javax.lang.model.element.Name;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.SUGGESTION,
-        summary = "Prefer more specific catch types than Exception and Throwable. When methods are updated to throw "
+        summary = "Prefer more specific error types than Exception and Throwable. When methods are updated to throw "
                 + "new checked exceptions they expect callers to handle failure types explicitly. Catching broad "
                 + "types defeats the type system. By catching the most specific types possible we leverage existing "
                 + "compiler functionality to detect unreachable code.")
-public final class ExceptionSpecificity extends BugChecker implements BugChecker.TryTreeMatcher {
+public final class ExceptionSpecificity
+        extends BugChecker implements BugChecker.MethodTreeMatcher, BugChecker.TryTreeMatcher {
 
+    private static boolean MATCH_TRY = Boolean.getBoolean("ExceptionSpecificity.try");
     // Maximum of three checked exception types to avoid unreadable long catch statements.
     private static final int MAX_CHECKED_EXCEPTIONS = 3;
     private static final Matcher<Tree> THROWABLE = Matchers.isSameType(Throwable.class);
@@ -79,6 +86,9 @@ public final class ExceptionSpecificity extends BugChecker implements BugChecker
     @Override
     @SuppressWarnings("CyclomaticComplexity")
     public Description matchTry(TryTree tree, VisitorState state) {
+        if (!MATCH_TRY) {
+            return Description.NO_MATCH;
+        }
         List<Type> encounteredTypes = new ArrayList<>();
         for (CatchTree catchTree : tree.getCatches()) {
             Tree catchTypeTree = catchTree.getParameter().getType();
@@ -127,6 +137,7 @@ public final class ExceptionSpecificity extends BugChecker implements BugChecker
                                 fix, replacements, catchTree.getParameter().getName()), state);
                         fix.replace(catchTypeTree, replacements.stream()
                                 .map(type -> SuggestedFixes.prettyType(state, fix, type))
+                                .sorted()
                                 .collect(Collectors.joining(" | ")));
                     }
                     return buildDescription(catchTypeTree)
@@ -137,6 +148,65 @@ public final class ExceptionSpecificity extends BugChecker implements BugChecker
             }
             // mark the type as caught before continuing
             encounteredTypes.add(catchType);
+        }
+        return Description.NO_MATCH;
+    }
+
+    @Override
+    @SuppressWarnings("CyclomaticComplexity")
+    public Description matchMethod(MethodTree tree, VisitorState state) {
+        Symbol.MethodSymbol symbol = ASTHelpers.getSymbol(tree);
+        if (symbol == null) {
+            return Description.NO_MATCH;
+        }
+
+        Set<Modifier> methodModifiers = symbol.getModifiers();
+        if (methodModifiers.contains(Modifier.ABSTRACT)
+                // Don't suggest modifying public API
+                || methodModifiers.contains(Modifier.PUBLIC)) {
+            return Description.NO_MATCH;
+        }
+        List<? extends ExpressionTree> throwsExpressions = tree.getThrows();
+        if (throwsExpressions.size() != 1) {
+            return Description.NO_MATCH;
+        }
+        Types types = state.getTypes();
+        if (ASTHelpers.findSuperMethod(ASTHelpers.getSymbol(tree), types).isPresent()) {
+            return Description.NO_MATCH;
+        }
+        Type exception = state.getTypeFromString(Exception.class.getName());
+        Type throwable = state.getTypeFromString(Throwable.class.getName());
+        ExpressionTree throwsExpression = Iterables.getOnlyElement(throwsExpressions);
+        Type throwsExpressionType = ASTHelpers.getType(throwsExpression);
+        if (throwsExpressionType != null
+                && (ASTHelpers.isSameType(throwsExpressionType, exception, state)
+                || ASTHelpers.isSameType(throwsExpressionType, throwable, state))) {
+            ImmutableSet<Type> checkedExceptions = flattenExceptionTypes(
+                    MoreASTHelpers.getThrownExceptions(tree.getBody(), state).stream()
+                            .filter(type -> MoreASTHelpers.isCheckedException(type, state))
+                            .map(type -> normalizeAnonymousType(type, state))
+                            .collect(ImmutableSet.toImmutableSet()), state);
+            if (checkedExceptions.size() > MAX_CHECKED_EXCEPTIONS
+                    || checkedExceptions.stream().anyMatch(thrown ->
+                    types.isSameType(thrown, exception) || types.isSameType(thrown, throwable))
+                    // Avoid code churn in test sources for the time being.
+                    || TestCheckUtils.isTestCode(state)) {
+                return Description.NO_MATCH;
+            }
+            if (checkedExceptions.isEmpty()) {
+                return buildDescription(throwsExpression)
+                        .addFix(SuggestedFixes.deleteExceptions(tree, state, ImmutableList.of(throwsExpression)))
+                        .build();
+            }
+            SuggestedFix.Builder fix = SuggestedFix.builder();
+            return buildDescription(throwsExpression)
+                    .addFix(fix.replace(throwsExpression, checkedExceptions.stream()
+                            .map(checkedException -> SuggestedFixes.prettyType(state, fix, checkedException))
+                            .sorted()
+                            .collect(Collectors.joining(", ")))
+                            .build())
+                    .build();
+
         }
         return Description.NO_MATCH;
     }
