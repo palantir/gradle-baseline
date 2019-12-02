@@ -23,6 +23,7 @@ import org.gradle.api.provider.ListProperty;
 public class BaselineErrorProneExtension {
     private static final ImmutableList<String> DEFAULT_PATCH_CHECKS = ImmutableList.of(
             // Baseline checks
+            "AssertjPrimitiveComparison",
             "CatchBlockLogException",
             "ExecutorSubmitRunnableFutureIgnored",
             "FinalClass",
