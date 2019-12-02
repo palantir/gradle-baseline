@@ -145,6 +145,14 @@ final class MoreASTHelpers {
             scan(tree.getFinallyBlock(), null);
             Set<Type> fromBlock = thrownTypes.pop();
             getThrownTypes().addAll(fromBlock);
+            // The above getCatches block isn't quite accurate when exceptions are thrown from earlier catch blocks.
+            // The above code is necessary to reduce exceptions thrown by resources and the main block, but doesn't
+            // adequately capture those thrown from catch blocks.
+            for (CatchTree catchTree : tree.getCatches()) {
+                ScanThrownTypes nestedScanner = new ScanThrownTypes(state);
+                catchTree.getBlock().accept(nestedScanner, null);
+                getThrownTypes().addAll(nestedScanner.getThrownTypes());
+            }
             return null;
         }
 

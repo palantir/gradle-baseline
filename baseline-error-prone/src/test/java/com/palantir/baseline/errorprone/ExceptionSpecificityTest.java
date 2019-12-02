@@ -777,6 +777,42 @@ class ExceptionSpecificityTest {
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
+    @Test
+    void nestedCatch() {
+        fix()
+                .addInputLines("Test.java",
+                        "import java.io.*;",
+                        "import java.net.*;",
+                        "abstract class Test {",
+                        "  final void f() throws Exception {",
+                        "    try {",
+                        "      go();",
+                        "    } catch (SocketException e) {",
+                        "      throw new IOException(e);",
+                        "    } catch (IOException e) {",
+                        "      throw new RuntimeException();",
+                        "    }",
+                        "  }",
+                        "  abstract void go() throws SocketException, IOException;",
+                        "}")
+                .addOutputLines("Test.java",
+                        "import java.io.*;",
+                        "import java.net.*;",
+                        "abstract class Test {",
+                        "  final void f() throws IOException {",
+                        "    try {",
+                        "      go();",
+                        "    } catch (SocketException e) {",
+                        "      throw new IOException(e);",
+                        "    } catch (IOException e) {",
+                        "      throw new RuntimeException();",
+                        "    }",
+                        "  }",
+                        "  abstract void go() throws SocketException, IOException;",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
     private RefactoringValidator fix() {
         return RefactoringValidator.of(new ExceptionSpecificity(), getClass());
     }
