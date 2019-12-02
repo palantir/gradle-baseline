@@ -155,19 +155,11 @@ public final class ExceptionSpecificity
     @Override
     @SuppressWarnings("CyclomaticComplexity")
     public Description matchMethod(MethodTree tree, VisitorState state) {
-        Symbol.MethodSymbol symbol = ASTHelpers.getSymbol(tree);
-        if (symbol == null) {
-            return Description.NO_MATCH;
-        }
-
-        Set<Modifier> methodModifiers = symbol.getModifiers();
-        if (methodModifiers.contains(Modifier.ABSTRACT)
-                // Don't suggest modifying public API
-                || methodModifiers.contains(Modifier.PUBLIC)) {
-            return Description.NO_MATCH;
-        }
         List<? extends ExpressionTree> throwsExpressions = tree.getThrows();
         if (throwsExpressions.size() != 1) {
+            return Description.NO_MATCH;
+        }
+        if (!isValidMethod(tree)) {
             return Description.NO_MATCH;
         }
         Types types = state.getTypes();
@@ -209,6 +201,23 @@ public final class ExceptionSpecificity
 
         }
         return Description.NO_MATCH;
+    }
+
+    private static boolean isValidMethod(MethodTree tree) {
+        Symbol.MethodSymbol symbol = ASTHelpers.getSymbol(tree);
+        if (symbol == null) {
+            return false;
+        }
+        Set<Modifier> methodModifiers = symbol.getModifiers();
+        if (symbol.isPrivate()) {
+            return true;
+        }
+        return !methodModifiers.contains(Modifier.ABSTRACT)
+                // Don't suggest modifying public API
+                && !methodModifiers.contains(Modifier.PUBLIC)
+                && (symbol.isStatic()
+                || methodModifiers.contains(Modifier.FINAL)
+                || ASTHelpers.enclosingClass(symbol).getModifiers().contains(Modifier.FINAL));
     }
 
     /** Caught types cannot be duplicated because code will not compile. */

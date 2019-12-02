@@ -568,12 +568,12 @@ class ExceptionSpecificityTest {
     }
 
     @Test
-    void fixUnnecessaryThrow() {
+    void fixUnnecessaryThrow_finalClass() {
         fix()
                 .addInputLines("Test.java",
                         "import java.io.*;",
                         "import java.net.*;",
-                        "class Test {",
+                        "final class Test {",
                         "  void f0() throws Exception {",
                         "  }",
                         "  void f1() throws Throwable {",
@@ -604,7 +604,7 @@ class ExceptionSpecificityTest {
                 .addOutputLines("Test.java",
                         "import java.io.*;",
                         "import java.net.*;",
-                        "class Test {",
+                        "final class Test {",
                         "  void f0() {}",
                         "  void f1() {}",
                         "  void f2() throws IOException {",
@@ -627,6 +627,102 @@ class ExceptionSpecificityTest {
                         "    Throwable cause = e.getCause();",
                         "    if (cause instanceof IllegalStateException) {",
                         "      throw cause;",
+                        "    }",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    void fixUnnecessaryThrow_private() {
+        fix()
+                .addInputLines("Test.java",
+                        "import java.io.*;",
+                        "import java.net.*;",
+                        "class Test {",
+                        "  private void f0() throws Exception {",
+                        "  }",
+                        "  private void f1() throws Throwable {",
+                        "  }",
+                        "  private void f2() throws Exception {",
+                        "    throw new IOException();",
+                        "  }",
+                        "  private void f3() throws Throwable {",
+                        "    throw new IOException();",
+                        "  }",
+                        "  private void f4(boolean in) throws Throwable {",
+                        "    if (in) {",
+                        "      throw new FileNotFoundException();",
+                        "    } else {",
+                        "      throw new ConnectException();",
+                        "    }",
+                        "  }",
+                        "}")
+                .addOutputLines("Test.java",
+                        "import java.io.*;",
+                        "import java.net.*;",
+                        "class Test {",
+                        "  private void f0() {}",
+                        "  private void f1() {}",
+                        "  private void f2() throws IOException {",
+                        "    throw new IOException();",
+                        "  }",
+                        "  private void f3() throws IOException {",
+                        "    throw new IOException();",
+                        "  }",
+                        "  private void f4(boolean in) throws ConnectException, FileNotFoundException {",
+                        "    if (in) {",
+                        "      throw new FileNotFoundException();",
+                        "    } else {",
+                        "      throw new ConnectException();",
+                        "    }",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    void fixUnnecessaryThrow_static() {
+        fix()
+                .addInputLines("Test.java",
+                        "import java.io.*;",
+                        "import java.net.*;",
+                        "class Test {",
+                        "  static void f0() throws Exception {",
+                        "  }",
+                        "  static void f1() throws Throwable {",
+                        "  }",
+                        "  static void f2() throws Exception {",
+                        "    throw new IOException();",
+                        "  }",
+                        "  static void f3() throws Throwable {",
+                        "    throw new IOException();",
+                        "  }",
+                        "  static void f4(boolean in) throws Throwable {",
+                        "    if (in) {",
+                        "      throw new FileNotFoundException();",
+                        "    } else {",
+                        "      throw new ConnectException();",
+                        "    }",
+                        "  }",
+                        "}")
+                .addOutputLines("Test.java",
+                        "import java.io.*;",
+                        "import java.net.*;",
+                        "class Test {",
+                        "  static void f0() {}",
+                        "  static void f1() {}",
+                        "  static void f2() throws IOException {",
+                        "    throw new IOException();",
+                        "  }",
+                        "  static void f3() throws IOException {",
+                        "    throw new IOException();",
+                        "  }",
+                        "  static void f4(boolean in) throws ConnectException, FileNotFoundException {",
+                        "    if (in) {",
+                        "      throw new FileNotFoundException();",
+                        "    } else {",
+                        "      throw new ConnectException();",
                         "    }",
                         "  }",
                         "}")
