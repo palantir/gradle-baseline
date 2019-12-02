@@ -66,6 +66,8 @@ import javax.lang.model.element.Name;
                 + "compiler functionality to detect unreachable code.")
 public final class ExceptionSpecificity extends BugChecker implements BugChecker.TryTreeMatcher {
 
+    // Maximum of three checked exception types to avoid unreadable long catch statements.
+    private static final int MAX_CHECKED_EXCEPTIONS = 3;
     private static final Matcher<Tree> THROWABLE = Matchers.isSameType(Throwable.class);
     private static final Matcher<Tree> EXCEPTION = Matchers.isSameType(Exception.class);
 
@@ -94,19 +96,15 @@ public final class ExceptionSpecificity extends BugChecker implements BugChecker
             boolean isException = EXCEPTION.matches(catchTypeTree, state);
             boolean isThrowable = THROWABLE.matches(catchTypeTree, state);
             if (isException || isThrowable) {
-                // Currently we only check that there are no checked exceptions. In a future change
-                // we should apply the checked exceptions to our replacement when:
-                // 1. Checked exceptions include neither Exception nor Throwable.
-                // 2. We have implemented deduplication e.g. [IOException, FileNotFoundException] -> [IOException].
-                // 3. There are fewer than some threshold of checked exceptions, perhaps three.
+                // In a future change we may want to support flattening exceptions with common ancestors
+                // e.g. [ConnectException, FileNotFoundException, SocketException] -> [IOException].
                 ImmutableSet<Type> thrownCheckedExceptions = normalizeExceptions(
                         getThrownCheckedExceptions(tree, state), state);
                 if (containsBroadException(thrownCheckedExceptions, state)) {
                     return Description.NO_MATCH;
                 }
                 ImmutableSet<Type> thrown = flattenExceptionTypes(thrownCheckedExceptions, state);
-                // Maximum of three checked exception types to avoid unreadable long catch statements.
-                if (thrown.size() <= 3
+                if (thrown.size() <= MAX_CHECKED_EXCEPTIONS
                         // Do not apply this to test code where it's likely to be noisy.
                         // In the future we may want to revisit this.
                         && !TestCheckUtils.isTestCode(state)) {
