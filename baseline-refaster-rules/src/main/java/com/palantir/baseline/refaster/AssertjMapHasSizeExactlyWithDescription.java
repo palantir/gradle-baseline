@@ -29,7 +29,7 @@ public final class AssertjMapHasSizeExactlyWithDescription<K, V> {
 
     @BeforeTemplate
     void before1(Map<K, V> things, int size, String description, @Repeated Object descriptionArgs) {
-        assertThat(things.size() == size).describedAs(description, descriptionArgs).isTrue();
+        assertThat(things.size()).describedAs(description, descriptionArgs).isEqualTo(size);
     }
 
     @BeforeTemplate
