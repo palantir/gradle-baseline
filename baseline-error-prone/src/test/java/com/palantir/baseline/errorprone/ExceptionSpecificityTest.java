@@ -514,6 +514,54 @@ class ExceptionSpecificityTest {
     }
 
     @Test
+    void exceptionAssignment_singleType() {
+        fix()
+                .addInputLines("Test.java",
+                        "class Test {",
+                        "  void f() throws Exception {",
+                        "    try {",
+                        "        System.out.println();",
+                        "    } catch (Exception e) {",
+                        "        e = new RuntimeException(e);",
+                        "        throw e;",
+                        "    }",
+                        "  }",
+                        "}")
+                .addOutputLines("Test.java",
+                        "class Test {",
+                        "  void f() throws Exception {",
+                        "    try {",
+                        "        System.out.println();",
+                        "    } catch (RuntimeException e) {",
+                        "        e = new RuntimeException(e);",
+                        "        throw e;",
+                        "    }",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    void exceptionAssignment_unionType() {
+        fix()
+                .addInputLines("Test.java",
+                        "class Test {",
+                        "  void f() throws Throwable {",
+                        "    try {",
+                        "        System.out.println();",
+                        "    } catch (Throwable t) {",
+                        // If Throwable is replaced with 'RuntimeException | Error', the following assignment
+                        // will fail.
+                        "        t = new RuntimeException(t);",
+                        "        throw t;",
+                        "    }",
+                        "  }",
+                        "}")
+                .expectUnchanged()
+                .doTestExpectingFailure(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
     void typeParameterExceptionToRuntimeException() {
         fix()
                 .addInputLines("Test.java",

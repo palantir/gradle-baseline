@@ -30,6 +30,7 @@ import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.util.ASTHelpers;
+import com.sun.source.tree.AssignmentTree;
 import com.sun.source.tree.BlockTree;
 import com.sun.source.tree.CatchTree;
 import com.sun.source.tree.ExpressionTree;
@@ -51,6 +52,7 @@ import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.tree.JCTree;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
@@ -72,7 +74,6 @@ import javax.lang.model.element.Name;
 public final class ExceptionSpecificity
         extends BugChecker implements BugChecker.MethodTreeMatcher, BugChecker.TryTreeMatcher {
 
-    private static boolean MATCH_TRY = Boolean.getBoolean("ExceptionSpecificity.try");
     // Maximum of three checked exception types to avoid unreadable long catch statements.
     private static final int MAX_CHECKED_EXCEPTIONS = 3;
     private static final Matcher<Tree> THROWABLE = Matchers.isSameType(Throwable.class);
@@ -86,9 +87,6 @@ public final class ExceptionSpecificity
     @Override
     @SuppressWarnings("CyclomaticComplexity")
     public Description matchTry(TryTree tree, VisitorState state) {
-        if (!MATCH_TRY) {
-            return Description.NO_MATCH;
-        }
         List<Type> encounteredTypes = new ArrayList<>();
         for (CatchTree catchTree : tree.getCatches()) {
             Tree catchTypeTree = catchTree.getParameter().getType();
@@ -133,12 +131,16 @@ public final class ExceptionSpecificity
                         // If the replacements list is empty, this catch block isn't reachable and can be removed.
                         fix.replace(catchTree, "");
                     } else {
-                        catchTree.accept(new ImpossibleConditionScanner(
-                                fix, replacements, catchTree.getParameter().getName()), state);
-                        fix.replace(catchTypeTree, replacements.stream()
-                                .map(type -> SuggestedFixes.prettyType(state, fix, type))
-                                .sorted()
-                                .collect(Collectors.joining(" | ")));
+                        Name parameterName = catchTree.getParameter().getName();
+                        AssignmentScanner assignmentScanner = new AssignmentScanner(parameterName);
+                        catchTree.getBlock().accept(assignmentScanner, null);
+                        if (replacements.size() == 1 || !assignmentScanner.variableWasAssigned) {
+                            catchTree.accept(new ImpossibleConditionScanner(
+                                    fix, replacements, parameterName), state);
+                            fix.replace(catchTypeTree, replacements.stream()
+                                    .map(type -> SuggestedFixes.prettyType(state, fix, type))
+                                    .collect(Collectors.joining(" | ")));
+                        }
                     }
                     return buildDescription(catchTypeTree)
                             .addFix(fix.build())
@@ -194,7 +196,6 @@ public final class ExceptionSpecificity
             return buildDescription(throwsExpression)
                     .addFix(fix.replace(throwsExpression, checkedExceptions.stream()
                             .map(checkedException -> SuggestedFixes.prettyType(state, fix, checkedException))
-                            .sorted()
                             .collect(Collectors.joining(", ")))
                             .build())
                     .build();
@@ -286,6 +287,8 @@ public final class ExceptionSpecificity
         return deduplicated.stream()
                 .filter(type -> deduplicated.stream().noneMatch(item -> !Objects.equals(type, item)
                         && state.getTypes().isSubtype(type, item)))
+                // Sort by pretty name
+                .sorted(Comparator.comparing(type -> SuggestedFixes.prettyType(state, null, type)))
                 .collect(ImmutableList.toImmutableList());
     }
 
@@ -375,6 +378,38 @@ public final class ExceptionSpecificity
                 return source.subSequence(startPosition, endPosition).toString();
             }
             return state.getSourceForNode(statement);
+        }
+    }
+
+    private static final class AssignmentScanner extends TreeScanner<Void, Void> {
+
+        private final Name exceptionName;
+        private boolean variableWasAssigned;
+
+        AssignmentScanner(Name exceptionName) {
+            this.exceptionName = exceptionName;
+        }
+
+        @Override
+        public Void visitAssignment(AssignmentTree node, Void state) {
+            ExpressionTree expression = node.getVariable();
+            if (expression instanceof IdentifierTree
+                    && ((IdentifierTree) expression).getName().contentEquals(exceptionName)) {
+                variableWasAssigned = true;
+            }
+            return super.visitAssignment(node, state);
+        }
+
+        // Avoid searching outside the current scope
+        @Override
+        public Void visitLambdaExpression(LambdaExpressionTree node, Void state) {
+            return null;
+        }
+
+        // Avoid searching outside the current scope
+        @Override
+        public Void visitNewClass(NewClassTree var1, Void state) {
+            return null;
         }
     }
 }
