@@ -108,12 +108,12 @@ public final class ExceptionSpecificity
             if (isException || isThrowable) {
                 // In a future change we may want to support flattening exceptions with common ancestors
                 // e.g. [ConnectException, FileNotFoundException, SocketException] -> [IOException].
-                ImmutableSet<Type> thrownCheckedExceptions = normalizeExceptions(
+                ImmutableList<Type> thrownCheckedExceptions = normalizeExceptions(
                         getThrownCheckedExceptions(tree, state), state);
                 if (containsBroadException(thrownCheckedExceptions, state)) {
                     return Description.NO_MATCH;
                 }
-                ImmutableSet<Type> thrown = flattenExceptionTypes(thrownCheckedExceptions, state);
+                ImmutableList<Type> thrown = flattenExceptionTypes(thrownCheckedExceptions, state);
                 if (thrown.size() <= MAX_CHECKED_EXCEPTIONS
                         // Do not apply this to test code where it's likely to be noisy.
                         // In the future we may want to revisit this.
@@ -181,14 +181,14 @@ public final class ExceptionSpecificity
         if (throwsExpressionType != null
                 && (ASTHelpers.isSameType(throwsExpressionType, exception, state)
                 || ASTHelpers.isSameType(throwsExpressionType, throwable, state))) {
-            ImmutableSet<Type> checkedExceptions = flattenExceptionTypes(
-                    MoreASTHelpers.getThrownExceptions(tree.getBody(), state).stream()
-                            .filter(type -> MoreASTHelpers.isCheckedException(type, state))
-                            .map(type -> normalizeAnonymousType(type, state))
-                            .collect(ImmutableSet.toImmutableSet()), state);
+            ImmutableSet<Type> allThrownExceptions = MoreASTHelpers.getThrownExceptions(tree.getBody(), state);
+            ImmutableList<Type> normalizedThrownExceptions = allThrownExceptions.stream()
+                    .filter(type -> MoreASTHelpers.isCheckedException(type, state))
+                    .map(type -> normalizeAnonymousType(type, state))
+                    .collect(ImmutableList.toImmutableList());
+            ImmutableList<Type> checkedExceptions = flattenExceptionTypes(normalizedThrownExceptions, state);
             if (checkedExceptions.size() > MAX_CHECKED_EXCEPTIONS
-                    || checkedExceptions.stream().anyMatch(thrown ->
-                    types.isSameType(thrown, exception) || types.isSameType(thrown, throwable))
+                    || containsBroadException(checkedExceptions, state)
                     // Avoid code churn in test sources for the time being.
                     || TestCheckUtils.isTestCode(state)) {
                 return Description.NO_MATCH;
@@ -226,22 +226,23 @@ public final class ExceptionSpecificity
         return replacements;
     }
 
-    private static ImmutableSet<Type> getThrownCheckedExceptions(TryTree tree, VisitorState state) {
+    private static ImmutableList<Type> getThrownCheckedExceptions(TryTree tree, VisitorState state) {
         return MoreASTHelpers.getThrownExceptionsFromTryBody(tree, state).stream()
                 .filter(type -> MoreASTHelpers.isCheckedException(type, state))
-                .collect(ImmutableSet.toImmutableSet());
+                .collect(ImmutableList.toImmutableList());
     }
 
-    private static boolean containsBroadException(Set<Type> exceptions, VisitorState state) {
-        return exceptions.contains(state.getTypeFromString(Exception.class.getName()))
-                || exceptions.contains(state.getTypeFromString(Throwable.class.getName()));
+    private static boolean containsBroadException(Collection<Type> exceptions, VisitorState state) {
+        return exceptions.stream().anyMatch(type ->
+                ASTHelpers.isSameType(state.getTypeFromString(Exception.class.getName()), type, state)
+                        || ASTHelpers.isSameType(state.getTypeFromString(Throwable.class.getName()), type, state));
     }
 
     /** Removes any exception type that is a subtype of another type in the set. */
-    private static ImmutableSet<Type> normalizeExceptions(ImmutableSet<Type> types, VisitorState state) {
+    private static ImmutableList<Type> normalizeExceptions(ImmutableList<Type> types, VisitorState state) {
         return types.stream()
                 .map(type -> normalizeAnonymousType(type, state))
-                .collect(ImmutableSet.toImmutableSet());
+                .collect(ImmutableList.toImmutableList());
     }
 
     /** Anonymous types cannot be referenced directly, so we must use the supertype. */
@@ -257,11 +258,26 @@ public final class ExceptionSpecificity
     }
 
     /** Removes any exception type that is a subtype of another type in the set. */
-    private static ImmutableSet<Type> flattenExceptionTypes(Collection<Type> types, VisitorState state) {
-        return types.stream()
-                .filter(type -> types.stream().noneMatch(item -> !Objects.equals(type, item)
+    private static ImmutableList<Type> flattenExceptionTypes(ImmutableList<Type> types, VisitorState state) {
+        ImmutableList.Builder<Type> deduplicatedBuilder = ImmutableList.builderWithExpectedSize(types.size());
+        for (int i = 0; i < types.size(); i++) {
+            Type current = types.get(i);
+            boolean duplicate = false;
+            for (int j = 0; j < i; j++) {
+                if (ASTHelpers.isSameType(types.get(j), current, state)) {
+                    duplicate = true;
+                    break;
+                }
+            }
+            if (!duplicate) {
+                deduplicatedBuilder.add(current);
+            }
+        }
+        ImmutableList<Type> deduplicated = deduplicatedBuilder.build();
+        return deduplicated.stream()
+                .filter(type -> deduplicated.stream().noneMatch(item -> !Objects.equals(type, item)
                         && state.getTypes().isSubtype(type, item)))
-                .collect(ImmutableSet.toImmutableSet());
+                .collect(ImmutableList.toImmutableList());
     }
 
     private static final class ImpossibleConditionScanner extends TreeScanner<Void, VisitorState> {
