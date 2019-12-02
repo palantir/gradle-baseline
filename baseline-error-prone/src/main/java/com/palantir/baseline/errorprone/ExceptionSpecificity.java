@@ -17,7 +17,9 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
+import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
@@ -41,11 +43,13 @@ import com.sun.source.tree.Tree;
 import com.sun.source.tree.TryTree;
 import com.sun.source.util.SimpleTreeVisitor;
 import com.sun.source.util.TreeScanner;
-import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.tree.JCTree;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
+import java.util.Set;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.lang.model.element.Name;
@@ -71,6 +75,7 @@ public final class ExceptionSpecificity extends BugChecker implements BugChecker
             ImmutableList.of(RuntimeException.class.getName());
 
     @Override
+    @SuppressWarnings("CyclomaticComplexity")
     public Description matchTry(TryTree tree, VisitorState state) {
         List<Type> encounteredTypes = new ArrayList<>();
         for (CatchTree catchTree : tree.getCatches()) {
@@ -94,12 +99,25 @@ public final class ExceptionSpecificity extends BugChecker implements BugChecker
                 // 1. Checked exceptions include neither Exception nor Throwable.
                 // 2. We have implemented deduplication e.g. [IOException, FileNotFoundException] -> [IOException].
                 // 3. There are fewer than some threshold of checked exceptions, perhaps three.
-                if (!throwsCheckedExceptions(tree, state)
+                ImmutableSet<Type> thrownCheckedExceptions = normalizeExceptions(
+                        getThrownCheckedExceptions(tree, state), state);
+                if (containsBroadException(thrownCheckedExceptions, state)) {
+                    return Description.NO_MATCH;
+                }
+                ImmutableSet<Type> thrown = flattenExceptionTypes(thrownCheckedExceptions, state);
+                // Maximum of three checked exception types to avoid unreadable long catch statements.
+                if (thrown.size() <= 3
                         // Do not apply this to test code where it's likely to be noisy.
                         // In the future we may want to revisit this.
                         && !TestCheckUtils.isTestCode(state)) {
-                    List<String> replacements = deduplicateCatchTypes(
-                            isThrowable ? THROWABLE_REPLACEMENTS : EXCEPTION_REPLACEMENTS,
+                    List<Type> replacements = deduplicateCatchTypes(
+                            ImmutableList.<Type>builder()
+                                    .addAll(thrown)
+                                    .addAll((isThrowable ? THROWABLE_REPLACEMENTS : EXCEPTION_REPLACEMENTS).stream()
+                                            .map(name -> Preconditions.checkNotNull(
+                                                    state.getTypeFromString(name), "Failed to find type"))
+                                            .collect(ImmutableList.toImmutableList()))
+                                    .build(),
                             encounteredTypes,
                             state);
                     SuggestedFix.Builder fix = SuggestedFix.builder();
@@ -107,13 +125,10 @@ public final class ExceptionSpecificity extends BugChecker implements BugChecker
                         // If the replacements list is empty, this catch block isn't reachable and can be removed.
                         fix.replace(catchTree, "");
                     } else {
-                        ImmutableList<Type> replacementTypes = replacements.stream()
-                                .map(state::getTypeFromString)
-                                .collect(ImmutableList.toImmutableList());
                         catchTree.accept(new ImpossibleConditionScanner(
-                                fix, replacementTypes, catchTree.getParameter().getName()), state);
+                                fix, replacements, catchTree.getParameter().getName()), state);
                         fix.replace(catchTypeTree, replacements.stream()
-                                .map(type -> SuggestedFixes.qualifyType(state, fix, type))
+                                .map(type -> SuggestedFixes.prettyType(state, fix, type))
                                 .collect(Collectors.joining(" | ")));
                     }
                     return buildDescription(catchTypeTree)
@@ -129,47 +144,56 @@ public final class ExceptionSpecificity extends BugChecker implements BugChecker
     }
 
     /** Caught types cannot be duplicated because code will not compile. */
-    private static List<String> deduplicateCatchTypes(
-            List<String> proposedReplacements,
+    private static List<Type> deduplicateCatchTypes(
+            List<Type> proposedReplacements,
             List<Type> caughtTypes,
             VisitorState state) {
-        List<String> replacements = new ArrayList<>();
-        for (String proposedReplacement : proposedReplacements) {
-            Type replacementType = state.getTypeFromString(proposedReplacement);
+        List<Type> replacements = new ArrayList<>();
+        for (Type replacementType : proposedReplacements) {
             if (caughtTypes.stream()
                     .noneMatch(alreadyCaught -> state.getTypes().isSubtype(replacementType, alreadyCaught))) {
-                replacements.add(proposedReplacement);
+                replacements.add(replacementType);
             }
         }
         return replacements;
     }
 
-    private static boolean throwsCheckedExceptions(TryTree tree, VisitorState state) {
-        return throwsCheckedExceptions(tree.getBlock(), state)
-                || tree.getResources().stream().anyMatch(resource -> resourceThrowsCheckedExceptions(resource, state));
+    private static ImmutableSet<Type> getThrownCheckedExceptions(TryTree tree, VisitorState state) {
+        return MoreASTHelpers.getThrownExceptionsFromTryBody(tree, state).stream()
+                .filter(type -> MoreASTHelpers.isCheckedException(type, state))
+                .collect(ImmutableSet.toImmutableSet());
     }
 
-    private static boolean throwsCheckedExceptions(Tree tree, VisitorState state) {
-        return MoreASTHelpers.getThrownExceptions(tree, state).stream()
-                .anyMatch(type -> MoreASTHelpers.isCheckedException(type, state));
+    private static boolean containsBroadException(Set<Type> exceptions, VisitorState state) {
+        return exceptions.contains(state.getTypeFromString(Exception.class.getName()))
+                || exceptions.contains(state.getTypeFromString(Throwable.class.getName()));
     }
 
-    private static boolean resourceThrowsCheckedExceptions(Tree resource, VisitorState state) {
-        if (throwsCheckedExceptions(resource, state)) {
-            return true;
+    /** Removes any exception type that is a subtype of another type in the set. */
+    private static ImmutableSet<Type> normalizeExceptions(ImmutableSet<Type> types, VisitorState state) {
+        return types.stream()
+                .map(type -> normalizeAnonymousType(type, state))
+                .collect(ImmutableSet.toImmutableSet());
+    }
+
+    /** Anonymous types cannot be referenced directly, so we must use the supertype. */
+    private static Type normalizeAnonymousType(Type input, VisitorState state) {
+        Type upperBound = input.getUpperBound();
+        if (upperBound != null) {
+            return normalizeAnonymousType(upperBound, state);
         }
-        Type resourceType = ASTHelpers.getType(resource);
-        if (resourceType == null) {
-            return false;
+        if (input.tsym.isAnonymous()) {
+            return normalizeAnonymousType(state.getTypes().supertype(input), state);
         }
-        Symbol.TypeSymbol symbol = resourceType.tsym;
-        if (symbol instanceof Symbol.ClassSymbol) {
-            return MoreASTHelpers.getCloseMethod((Symbol.ClassSymbol) symbol, state)
-                    .map(Symbol.MethodSymbol::getThrownTypes).map(types -> types.stream()
-                            .anyMatch(type -> MoreASTHelpers.isCheckedException(type, state)))
-                    .orElse(false);
-        }
-        return false;
+        return input;
+    }
+
+    /** Removes any exception type that is a subtype of another type in the set. */
+    private static ImmutableSet<Type> flattenExceptionTypes(Collection<Type> types, VisitorState state) {
+        return types.stream()
+                .filter(type -> types.stream().noneMatch(item -> !Objects.equals(type, item)
+                        && state.getTypes().isSubtype(type, item)))
+                .collect(ImmutableSet.toImmutableSet());
     }
 
     private static final class ImpossibleConditionScanner extends TreeScanner<Void, VisitorState> {

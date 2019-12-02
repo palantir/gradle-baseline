@@ -57,6 +57,22 @@ final class MoreASTHelpers {
                 && !types.isSubtype(type, state.getTypeFromString(ERROR));
     }
 
+    /** Gets thrown exceptions from a {@link TryTree} excluding those thrown from {@link CatchTree}. */
+    static ImmutableSet<Type> getThrownExceptionsFromTryBody(TryTree tree, VisitorState state) {
+        ImmutableSet.Builder<Type> results = ImmutableSet.builder();
+        results.addAll(getThrownExceptions(tree.getBlock(), state));
+        tree.getResources().forEach(resource -> {
+            results.addAll(getThrownExceptions(resource, state));
+            Type resourceType = ASTHelpers.getType(resource);
+            if (resourceType != null && resourceType.tsym instanceof Symbol.ClassSymbol) {
+                MoreASTHelpers.getCloseMethod((Symbol.ClassSymbol) resourceType.tsym, state)
+                        .map(Symbol.MethodSymbol::getThrownTypes)
+                        .ifPresent(results::addAll);
+            }
+        });
+        return results.build();
+    }
+
     /**
      * Returns all exceptions thrown by
      * getThrownExceptions and associated utilities are borrowed from upstream error-prone with an Apache 2 license.
@@ -69,7 +85,7 @@ final class MoreASTHelpers {
     }
 
     /** Returns an optional of the {@link AutoCloseable#close()} method on the provided symbol. */
-    static Optional<Symbol.MethodSymbol> getCloseMethod(Symbol.ClassSymbol symbol, VisitorState state) {
+    private static Optional<Symbol.MethodSymbol> getCloseMethod(Symbol.ClassSymbol symbol, VisitorState state) {
         Types types = state.getTypes();
         return symbol.getEnclosedElements().stream()
                 .filter(sym ->
