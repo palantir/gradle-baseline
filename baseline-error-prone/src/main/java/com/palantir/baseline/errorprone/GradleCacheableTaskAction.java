@@ -28,7 +28,6 @@ import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.LambdaExpressionTree;
-import java.util.regex.Pattern;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -44,10 +43,12 @@ public final class GradleCacheableTaskAction extends BugChecker implements Lambd
 
     private static final Matcher<ExpressionTree> TASK_ACTION = MethodMatchers.instanceMethod()
             .onDescendantOf("org.gradle.api.Task")
-            .withNameMatching(Pattern.compile("doFirst|doLast"));
+            .namedAnyOf("doFirst", "doLast");
 
     private static final Matcher<ExpressionTree> IS_TASK_ACTION =
-            Matchers.allOf(Matchers.parentNode(Matchers.methodInvocation(TASK_ACTION)), IS_ACTION);
+            Matchers.allOf(
+                    Matchers.parentNode(Matchers.toType(ExpressionTree.class, Matchers.methodInvocation(TASK_ACTION))),
+                    IS_ACTION);
 
     @Override
     public Description matchLambdaExpression(LambdaExpressionTree tree, VisitorState state) {

@@ -1,0 +1,7 @@
+type: improvement
+improvement:
+  description: "We now run error-prone 2.3.4, to benefit from smarter static analysis,
+    and hopefully pick up the claimed performance Improvements: \n\n> 40% speedup
+    when run against Google's codebase with errors enabled."
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1082
