@@ -46,16 +46,17 @@ public final class GradleCacheableTaskAction extends BugChecker implements Lambd
             .onDescendantOf("org.gradle.api.Task")
             .withNameMatching(Pattern.compile("doFirst|doLast"));
 
-    private static final Matcher<ExpressionTree> IS_TASK_ACTION =
-            Matchers.allOf(Matchers.parentNode(Matchers.methodInvocation(TASK_ACTION)), IS_ACTION);
+    // private static final Matcher<ExpressionTree> IS_TASK_ACTION =
+    //         Matchers.allOf(Matchers.parentNode(Matchers.methodInvocation(TASK_ACTION)), IS_ACTION);
 
     @Override
-    public Description matchLambdaExpression(LambdaExpressionTree tree, VisitorState state) {
-        if (!IS_TASK_ACTION.matches(tree, state)) {
-            return Description.NO_MATCH;
-        }
-        return buildDescription(tree)
-                .setMessage("Gradle task actions are not cacheable when implemented by lambdas")
-                .build();
+    public Description matchLambdaExpression(LambdaExpressionTree _tree, VisitorState _state) {
+        return Description.NO_MATCH;
+        // if (!IS_TASK_ACTION.matches(tree, state)) {
+        //     return Description.NO_MATCH;
+        // }
+        // return buildDescription(tree)
+        //         .setMessage("Gradle task actions are not cacheable when implemented by lambdas")
+        //         .build();
     }
 }

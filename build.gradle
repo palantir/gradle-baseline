@@ -54,6 +54,7 @@ allprojects {
                 check("PreferSafeLoggableExceptions", CheckSeverity.OFF)
                 check("PreferSafeLoggingPreconditions", CheckSeverity.OFF)
                 check("PreconditionsConstantMessage", CheckSeverity.OFF)
+                check("GradleCacheableTaskAction", CheckSeverity.OFF)
             }
         }
     }
