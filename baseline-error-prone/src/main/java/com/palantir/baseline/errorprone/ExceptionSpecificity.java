@@ -155,26 +155,18 @@ public final class ExceptionSpecificity
     }
 
     @Override
-    @SuppressWarnings("CyclomaticComplexity")
     public Description matchMethod(MethodTree tree, VisitorState state) {
         List<? extends ExpressionTree> throwsExpressions = tree.getThrows();
-        if (throwsExpressions.size() != 1) {
-            return Description.NO_MATCH;
-        }
-        if (!isValidMethod(tree)) {
+        if (throwsExpressions.size() != 1 || !safeToModifyThrowsClause(tree)) {
             return Description.NO_MATCH;
         }
         Types types = state.getTypes();
         if (ASTHelpers.findSuperMethod(ASTHelpers.getSymbol(tree), types).isPresent()) {
             return Description.NO_MATCH;
         }
-        Type exception = state.getTypeFromString(Exception.class.getName());
-        Type throwable = state.getTypeFromString(Throwable.class.getName());
         ExpressionTree throwsExpression = Iterables.getOnlyElement(throwsExpressions);
         Type throwsExpressionType = ASTHelpers.getType(throwsExpression);
-        if (throwsExpressionType != null
-                && (ASTHelpers.isSameType(throwsExpressionType, exception, state)
-                || ASTHelpers.isSameType(throwsExpressionType, throwable, state))) {
+        if (throwsExpressionType != null && isBroadException(throwsExpressionType, state)) {
             ImmutableSet<Type> allThrownExceptions = MoreASTHelpers.getThrownExceptions(tree.getBody(), state);
             ImmutableList<Type> normalizedThrownExceptions = allThrownExceptions.stream()
                     .filter(type -> MoreASTHelpers.isCheckedException(type, state))
@@ -204,7 +196,7 @@ public final class ExceptionSpecificity
         return Description.NO_MATCH;
     }
 
-    private static boolean isValidMethod(MethodTree tree) {
+    private static boolean safeToModifyThrowsClause(MethodTree tree) {
         Symbol.MethodSymbol symbol = ASTHelpers.getSymbol(tree);
         if (symbol == null) {
             return false;
@@ -243,9 +235,12 @@ public final class ExceptionSpecificity
     }
 
     private static boolean containsBroadException(Collection<Type> exceptions, VisitorState state) {
-        return exceptions.stream().anyMatch(type ->
-                ASTHelpers.isSameType(state.getTypeFromString(Exception.class.getName()), type, state)
-                        || ASTHelpers.isSameType(state.getTypeFromString(Throwable.class.getName()), type, state));
+        return exceptions.stream().anyMatch(type -> isBroadException(type, state));
+    }
+
+    private static boolean isBroadException(Type type, VisitorState state) {
+        return ASTHelpers.isSameType(state.getTypeFromString(Exception.class.getName()), type, state)
+                || ASTHelpers.isSameType(state.getTypeFromString(Throwable.class.getName()), type, state);
     }
 
     /** Removes any exception type that is a subtype of another type in the set. */
