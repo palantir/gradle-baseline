@@ -17,7 +17,6 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.errorprone.CompilationTestHelper;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
 import org.junit.jupiter.api.parallel.ExecutionMode;
@@ -25,15 +24,8 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 @Execution(ExecutionMode.CONCURRENT)
 public final class Slf4jConstantLogMessageTests {
 
-    private CompilationTestHelper compilationHelper;
-
-    @BeforeEach
-    public void before() {
-        compilationHelper = CompilationTestHelper.newInstance(Slf4jConstantLogMessage.class, getClass());
-    }
-
-    private void test(String log) throws Exception {
-        compilationHelper
+    private void test(String log) {
+        helper()
                 .addSourceLines(
                         "Test.java",
                         "import org.slf4j.Logger;",
@@ -76,8 +68,8 @@ public final class Slf4jConstantLogMessageTests {
     }
 
     @Test
-    public void negative() throws Exception {
-        compilationHelper
+    public void negative() {
+        helper()
                 .addSourceLines(
                         "Test.java",
                         "import org.slf4j.Logger;",
@@ -150,4 +142,7 @@ public final class Slf4jConstantLogMessageTests {
                 .doTest();
     }
 
+    private CompilationTestHelper helper() {
+        return CompilationTestHelper.newInstance(Slf4jConstantLogMessage.class, getClass());
+    }
 }
