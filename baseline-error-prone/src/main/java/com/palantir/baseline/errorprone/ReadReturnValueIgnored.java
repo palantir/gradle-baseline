@@ -104,8 +104,8 @@ public final class ReadReturnValueIgnored extends AbstractReturnValueIgnored {
     }
 
     @Override
-    public Description describe(MethodInvocationTree methodInvocationTree, VisitorState state) {
-        Description result = super.describe(methodInvocationTree, state);
+    public Description describeReturnValueIgnored(MethodInvocationTree methodInvocationTree, VisitorState state) {
+        Description result = super.describeReturnValueIgnored(methodInvocationTree, state);
         if (Description.NO_MATCH.equals(result)) {
             return result;
         }
