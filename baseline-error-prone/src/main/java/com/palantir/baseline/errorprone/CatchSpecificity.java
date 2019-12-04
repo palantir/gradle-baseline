@@ -96,7 +96,8 @@ public final class CatchSpecificity extends BugChecker implements BugChecker.Try
             if (isException || isThrowable) {
                 // In a future change we may want to support flattening exceptions with common ancestors
                 // e.g. [ConnectException, FileNotFoundException, SocketException] -> [IOException].
-                ImmutableList<Type> thrown = MoreASTHelpers.flattenTypesForAssignment(getThrownCheckedExceptions(tree, state), state);
+                ImmutableList<Type> thrown =
+                        MoreASTHelpers.flattenTypesForAssignment(getThrownCheckedExceptions(tree, state), state);
                 if (containsBroadException(thrown, state)) {
                     return Description.NO_MATCH;
                 }

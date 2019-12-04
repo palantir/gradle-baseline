@@ -73,7 +73,8 @@ public final class ThrowSpecificity extends BugChecker implements BugChecker.Met
         ImmutableList<Type> normalizedThrownExceptions = allThrownExceptions.stream()
                 .filter(type -> MoreASTHelpers.isCheckedException(type, state))
                 .collect(ImmutableList.toImmutableList());
-        ImmutableList<Type> checkedExceptions = MoreASTHelpers.flattenTypesForAssignment(normalizedThrownExceptions, state);
+        ImmutableList<Type> checkedExceptions =
+                MoreASTHelpers.flattenTypesForAssignment(normalizedThrownExceptions, state);
         if (checkedExceptions.size() > MAX_CHECKED_EXCEPTIONS
                 || containsBroadException(checkedExceptions, state)
                 // Avoid code churn in test sources for the time being.
