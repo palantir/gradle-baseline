@@ -48,7 +48,8 @@ public class BaselineErrorProneExtension {
             // Built-in checks
             "ArrayEquals",
             "MissingOverride",
-            "UnnecessaryParentheses");
+            "UnnecessaryParentheses",
+            "UnnecessaryBoxedVariable");
 
     private final ListProperty<String> patchChecks;
 
