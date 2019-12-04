@@ -39,7 +39,6 @@ import java.util.ArrayDeque;
 import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashSet;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -53,6 +52,7 @@ final class MoreASTHelpers {
     private static final String THROWABLE = Throwable.class.getName();
 
     /** Removes any type that is a subtype of another type in the set. */
+    @SuppressWarnings("ReferenceEquality")
     static ImmutableList<Type> flattenTypesForAssignment(ImmutableList<Type> input, VisitorState state) {
         ImmutableList<Type> types = input.stream()
                 .map(type -> broadenAnonymousType(type, state))
@@ -73,8 +73,10 @@ final class MoreASTHelpers {
         }
         ImmutableList<Type> deduplicated = deduplicatedBuilder.build();
         return deduplicated.stream()
-                .filter(type -> deduplicated.stream().noneMatch(item -> !Objects.equals(type, item)
-                        && state.getTypes().isSubtype(type, item)))
+                .filter(type -> deduplicated.stream().noneMatch(item ->
+                        // An item cannot deduplicate itself
+                        type != item
+                                && state.getTypes().isSubtype(type, item)))
                 // Sort by pretty name
                 .sorted(Comparator.comparing(type -> SuggestedFixes.prettyType(state, null, type)))
                 .collect(ImmutableList.toImmutableList());
