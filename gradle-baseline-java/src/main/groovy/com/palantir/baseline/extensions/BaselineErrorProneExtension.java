@@ -25,6 +25,7 @@ public class BaselineErrorProneExtension {
             // Baseline checks
             "AssertjPrimitiveComparison",
             "CatchBlockLogException",
+            "CatchSpecificity",
             "ExecutorSubmitRunnableFutureIgnored",
             "FinalClass",
             "LambdaMethodReference",
@@ -44,6 +45,7 @@ public class BaselineErrorProneExtension {
             "StrictUnusedVariable",
             "StringBuilderConstantParameters",
             "ThrowError",
+            "ThrowSpecificity",
 
             // Built-in checks
             "ArrayEquals",
