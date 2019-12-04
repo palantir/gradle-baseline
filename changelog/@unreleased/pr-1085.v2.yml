@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: Baseline now depends on `mockito-errorprone` to get Mockito error-prone
+    checks.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1085
