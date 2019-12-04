@@ -81,16 +81,15 @@ public final class CatchSpecificity extends BugChecker implements BugChecker.Try
         for (CatchTree catchTree : tree.getCatches()) {
             Tree catchTypeTree = catchTree.getParameter().getType();
             Type catchType = ASTHelpers.getType(catchTypeTree);
-            // Don't match union types for now e.g. 'catch (RuntimeException | Error e)'
-            // It's not worth the complexity at this point.
             if (catchType == null) {
-                continue;
+                // This should not be possible, but could change in future java versions.
+                // avoid failing noisily in this case.
+                return Description.NO_MATCH;
             }
             if (catchType.isUnion()) {
                 encounteredTypes.addAll(MoreASTHelpers.expandUnion(catchType));
                 continue;
             }
-
             boolean isException = EXCEPTION.matches(catchTypeTree, state);
             boolean isThrowable = THROWABLE.matches(catchTypeTree, state);
             if (isException || isThrowable) {
@@ -117,14 +116,17 @@ public final class CatchSpecificity extends BugChecker implements BugChecker.Try
                                 .build(),
                         encounteredTypes,
                         state);
-                SuggestedFix.Builder fix = SuggestedFix.builder();
                 if (replacements.isEmpty()) {
                     // If the replacements list is empty, this catch block isn't reachable and can be removed.
-                    fix.replace(catchTree, "");
+                    // Note that in this case 'encounteredTypes' is not updated.
+                    state.reportMatch(buildDescription(catchTree)
+                            .addFix(SuggestedFix.replace(catchTree, ""))
+                            .build());
                 } else {
                     Name parameterName = catchTree.getParameter().getName();
                     AssignmentScanner assignmentScanner = new AssignmentScanner(parameterName);
                     catchTree.getBlock().accept(assignmentScanner, null);
+                    SuggestedFix.Builder fix = SuggestedFix.builder();
                     if (replacements.size() == 1 || !assignmentScanner.variableWasAssigned) {
                         catchTree.accept(new ImpossibleConditionScanner(
                                 fix, replacements, parameterName), state);
@@ -132,13 +134,15 @@ public final class CatchSpecificity extends BugChecker implements BugChecker.Try
                                 .map(type -> SuggestedFixes.prettyType(state, fix, type))
                                 .collect(Collectors.joining(" | ")));
                     }
+                    state.reportMatch(buildDescription(catchTree)
+                            .addFix(fix.build())
+                            .build());
                 }
-                return buildDescription(catchTypeTree)
-                        .addFix(fix.build())
-                        .build();
+                encounteredTypes.addAll(replacements);
+            } else {
+                // mark the type as caught before continuing
+                encounteredTypes.add(catchType);
             }
-            // mark the type as caught before continuing
-            encounteredTypes.add(catchType);
         }
         return Description.NO_MATCH;
     }

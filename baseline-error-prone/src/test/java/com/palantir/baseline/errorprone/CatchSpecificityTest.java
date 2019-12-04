@@ -16,7 +16,6 @@
 
 package com.palantir.baseline.errorprone;
 
-import com.google.common.collect.ImmutableList;
 import com.google.errorprone.BugCheckerRefactoringTestHelper;
 import org.junit.jupiter.api.Test;
 
@@ -413,22 +412,6 @@ class CatchSpecificityTest {
 
     @Test
     void testCatchesExceptionAndThrowable() {
-        // This requires two runs to fully fix, but I've never encountered it in the wild, and it makes the code
-        // better in each iteration, so it's not worth optimizing on.
-        String[] firstOutput = ImmutableList.of(
-                "import java.io.*;",
-                "class Test {",
-                "  void f(String param) {",
-                "    try {",
-                "        System.out.println(\"task\");",
-                "    } catch (RuntimeException e) {",
-                "        System.out.println(\"Exception\");",
-                "    } catch (Throwable t) {",
-                "        System.out.println(\"Throwable\");",
-                "    }",
-                "  }",
-                "}"
-        ).toArray(new String[0]);
         fix()
                 .addInputLines("Test.java",
                         "import java.io.*;",
@@ -443,13 +426,7 @@ class CatchSpecificityTest {
                         "    }",
                         "  }",
                         "}")
-                .addOutputLines("Test.java", firstOutput)
-                .doTestExpectingFailure(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
-        fix()
-                .addInputLines("Test.java",
-                        firstOutput)
-                .addOutputLines(
-                        "Test.java",
+                .addOutputLines("Test.java",
                         "import java.io.*;",
                         "class Test {",
                         "  void f(String param) {",
