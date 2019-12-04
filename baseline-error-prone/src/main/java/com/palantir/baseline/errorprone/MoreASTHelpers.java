@@ -19,6 +19,7 @@ package com.palantir.baseline.errorprone;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.VisitorState;
+import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.CatchTree;
 import com.sun.source.tree.ClassTree;
@@ -35,8 +36,10 @@ import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
 import java.util.ArrayDeque;
+import java.util.Comparator;
 import java.util.Deque;
 import java.util.HashSet;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import javax.annotation.Nullable;
@@ -48,6 +51,46 @@ final class MoreASTHelpers {
     private static final String RUNTIME_EXCEPTION = RuntimeException.class.getName();
     private static final String ERROR = Error.class.getName();
     private static final String THROWABLE = Throwable.class.getName();
+
+    /** Removes any type that is a subtype of another type in the set. */
+    static ImmutableList<Type> flattenTypesForAssignment(ImmutableList<Type> input, VisitorState state) {
+        ImmutableList<Type> types = input.stream()
+                .map(type -> broadenAnonymousType(type, state))
+                .collect(ImmutableList.toImmutableList());
+        ImmutableList.Builder<Type> deduplicatedBuilder = ImmutableList.builderWithExpectedSize(types.size());
+        for (int i = 0; i < types.size(); i++) {
+            Type current = types.get(i);
+            boolean duplicate = false;
+            for (int j = 0; j < i; j++) {
+                if (ASTHelpers.isSameType(types.get(j), current, state)) {
+                    duplicate = true;
+                    break;
+                }
+            }
+            if (!duplicate) {
+                deduplicatedBuilder.add(current);
+            }
+        }
+        ImmutableList<Type> deduplicated = deduplicatedBuilder.build();
+        return deduplicated.stream()
+                .filter(type -> deduplicated.stream().noneMatch(item -> !Objects.equals(type, item)
+                        && state.getTypes().isSubtype(type, item)))
+                // Sort by pretty name
+                .sorted(Comparator.comparing(type -> SuggestedFixes.prettyType(state, null, type)))
+                .collect(ImmutableList.toImmutableList());
+    }
+
+    /** Anonymous types cannot be referenced directly, so we must use the supertype. */
+    private static Type broadenAnonymousType(Type input, VisitorState state) {
+        Type upperBound = input.getUpperBound();
+        if (upperBound != null) {
+            return broadenAnonymousType(upperBound, state);
+        }
+        if (input.tsym.isAnonymous()) {
+            return broadenAnonymousType(state.getTypes().supertype(input), state);
+        }
+        return input;
+    }
 
     /** Returns true if the provided type represents a checked exception. */
     static boolean isCheckedException(Type type, VisitorState state) {
@@ -145,9 +188,9 @@ final class MoreASTHelpers {
             scan(tree.getFinallyBlock(), null);
             Set<Type> fromBlock = thrownTypes.pop();
             getThrownTypes().addAll(fromBlock);
-            // The above getCatches block isn't quite accurate when exceptions are thrown from earlier catch blocks.
-            // The above code is necessary to reduce exceptions thrown by resources and the main block, but doesn't
-            // adequately capture those thrown from catch blocks.
+            // The above getCatches scan isn't quite accurate when exceptions are thrown from earlier catch blocks.
+            // It's necessary to prune exceptions thrown by resources and the main block, but doesn't adequately
+            // capture those thrown from catch blocks.
             for (CatchTree catchTree : tree.getCatches()) {
                 ScanThrownTypes nestedScanner = new ScanThrownTypes(state);
                 catchTree.getBlock().accept(nestedScanner, null);
@@ -159,11 +202,11 @@ final class MoreASTHelpers {
         @Override
         public Void visitCatch(CatchTree tree, Void unused) {
             Type type = ASTHelpers.getType(tree.getParameter());
-            // Remove the thrown types; if they're re-thrown they'll get re-added.
+            // Remove the thrown types; if they're re-thrown they'll get re-added in visitTry
             for (Type unionMember : expandUnion(type)) {
                 getThrownTypes().removeIf(thrownType -> types.isAssignable(thrownType, unionMember));
             }
-            return super.visitCatch(tree, null);
+            return null;
         }
 
         @Override
