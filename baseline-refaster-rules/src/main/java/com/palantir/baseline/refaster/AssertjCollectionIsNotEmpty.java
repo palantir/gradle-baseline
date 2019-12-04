@@ -31,12 +31,12 @@ public final class AssertjCollectionIsNotEmpty<T> {
 
     @BeforeTemplate
     void bad1(Collection<T> things) {
-        assertThat(things.size() != 0).isTrue();
+        assertThat(things.size()).isNotEqualTo(0);
     }
 
     @BeforeTemplate
     void bad2(Collection<T> things) {
-        assertThat(things.size() == 0).isFalse();
+        assertThat(things.size()).isNotEqualTo(0);
     }
 
     @BeforeTemplate

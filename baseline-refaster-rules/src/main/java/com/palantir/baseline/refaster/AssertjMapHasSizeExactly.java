@@ -28,7 +28,7 @@ public final class AssertjMapHasSizeExactly<K, V> {
 
     @BeforeTemplate
     void before1(Map<K, V> things, int size) {
-        assertThat(things.size() == size).isTrue();
+        assertThat(things.size()).isEqualTo(size);
     }
 
     @BeforeTemplate

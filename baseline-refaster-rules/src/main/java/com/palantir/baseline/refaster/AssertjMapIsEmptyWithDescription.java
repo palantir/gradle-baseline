@@ -29,7 +29,7 @@ public final class AssertjMapIsEmptyWithDescription<K, V> {
 
     @BeforeTemplate
     void before1(Map<K, V> things, String description, @Repeated Object descriptionArgs) {
-        assertThat(things.size() == 0).describedAs(description, descriptionArgs).isTrue();
+        assertThat(things.size()).describedAs(description, descriptionArgs).isEqualTo(0);
     }
 
     @BeforeTemplate

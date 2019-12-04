@@ -28,7 +28,7 @@ public final class AssertjCollectionHasSizeGreaterThan<T> {
 
     @BeforeTemplate
     void before1(Collection<T> things, int size) {
-        assertThat(things.size() > size).isTrue();
+        assertThat(things.size()).isGreaterThan(size);
     }
 
     @BeforeTemplate
