@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: |
+    For repos that opted into palantir-java-format, the arguments of `SafeArg.of` (when it's a last argument) are no longer unexpectedly split onto the next line.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1075
