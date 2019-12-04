@@ -1,7 +1,7 @@
 type: improvement
 improvement:
   description: |-
-    Error prone ExceptionSpecificity check to avoid catching too broadly
+    Error prone `CatchSpecificity` and `ThrowSpecificity` to avoid unnecessarily broad throwables.
 
     Prefer more specific catch types than Exception and Throwable.
     When methods are updated to throw new checked exceptions they expect

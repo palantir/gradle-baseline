@@ -44,10 +44,10 @@ import javax.lang.model.element.Modifier;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.SUGGESTION,
-        summary = "Prefer more specific error types than Exception and Throwable. When methods are updated to throw "
-                + "new checked exceptions they expect callers to handle failure types explicitly. Catching broad "
-                + "types defeats the type system. By catching the most specific types possible we leverage existing "
-                + "compiler functionality to detect unreachable code.")
+        summary = "Prefer to declare more specific throws types than Exception and Throwable. When methods are "
+                + "updated to throw new checked exceptions they expect callers to handle failure types explicitly. "
+                + "Throwing broad types defeats the type system. By throwing the most specific types possible we "
+                + "leverage existing compiler functionality to detect unreachable code.")
 public final class ThrowSpecificity extends BugChecker implements BugChecker.MethodTreeMatcher {
 
     // Maximum of three checked exception types to avoid unreadable long catch statements.
