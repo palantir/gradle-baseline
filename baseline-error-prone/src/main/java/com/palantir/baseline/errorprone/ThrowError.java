@@ -57,6 +57,9 @@ public final class ThrowError extends BugChecker implements BugChecker.ThrowTree
 
     @Override
     public Description matchThrow(ThrowTree tree, VisitorState state) {
+        if (TestCheckUtils.isTestCodeQuickCheck(state)) {
+            return Description.NO_MATCH;
+        }
         ExpressionTree expression = tree.getExpression();
         if (!(expression instanceof NewClassTree)) {
             return Description.NO_MATCH;

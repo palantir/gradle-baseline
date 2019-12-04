@@ -65,7 +65,8 @@ public final class PreferSafeLoggableExceptions extends BugChecker implements Bu
     public Description matchNewClass(NewClassTree tree, VisitorState state) {
         // This is invoked for all new class creations, so we execute a fast check first to
         // rule out irrelevant code before doing more involved work.
-        if (!FAST_EXCEPTION_TYPE_CHECK.matches(tree.getIdentifier(), state)) {
+        if (TestCheckUtils.isTestCodeQuickCheck(state)
+                || !FAST_EXCEPTION_TYPE_CHECK.matches(tree.getIdentifier(), state)) {
             return Description.NO_MATCH;
         }
         List<? extends ExpressionTree> args = tree.getArguments();

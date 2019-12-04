@@ -33,6 +33,9 @@ final class TestCheckUtils {
 
     /** Note that this is a relatively expensive check and should be executed after simpler validation. */
     static boolean isTestCode(VisitorState state) {
+        if (isTestCodeQuickCheck(state)) {
+            return true;
+        }
         TreePath path = state.getPath();
         for (Tree ancestor : path) {
             if (ancestor instanceof ClassTree && hasTestCases.matches((ClassTree) ancestor, state)) {
@@ -44,6 +47,11 @@ final class TestCheckUtils {
                 .map(ImportTree::getQualifiedIdentifier)
                 .map(Object::toString)
                 .anyMatch(TestCheckUtils::isTestImport);
+    }
+
+    /** Returns true if the error-prone <code>-XepCompilingTestOnlyCode</code> option is set. */
+    static boolean isTestCodeQuickCheck(VisitorState state) {
+        return state.errorProneOptions().isTestOnlyTarget();
     }
 
     private static final Matcher<ClassTree> hasJUnit5TestCases =

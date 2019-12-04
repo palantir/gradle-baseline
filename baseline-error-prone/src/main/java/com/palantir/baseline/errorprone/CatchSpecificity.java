@@ -77,6 +77,9 @@ public final class CatchSpecificity extends BugChecker implements BugChecker.Try
     @Override
     @SuppressWarnings("CyclomaticComplexity")
     public Description matchTry(TryTree tree, VisitorState state) {
+        if (TestCheckUtils.isTestCodeQuickCheck(state)) {
+            return Description.NO_MATCH;
+        }
         List<Type> encounteredTypes = new ArrayList<>();
         for (CatchTree catchTree : tree.getCatches()) {
             Tree catchTypeTree = catchTree.getParameter().getType();

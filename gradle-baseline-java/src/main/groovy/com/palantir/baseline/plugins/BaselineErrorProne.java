@@ -216,6 +216,11 @@ public final class BaselineErrorProne implements Plugin<Project> {
             // Don't apply refaster to itself...
             return;
         }
+        // Hint to error-prone that we're compiling test code
+        if (javaCompile.getName().endsWith("compileTestJava")) {
+            errorProneOptions.getErrorproneArgumentProviders()
+                    .add(() -> ImmutableList.of("-XepCompilingTestOnlyCode"));
+        }
 
         if (isRefactoring(project)) {
             // Don't attempt to cache since it won't capture the source files that might be modified

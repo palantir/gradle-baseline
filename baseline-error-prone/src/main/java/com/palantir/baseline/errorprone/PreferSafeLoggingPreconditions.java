@@ -71,7 +71,7 @@ public final class PreferSafeLoggingPreconditions extends BugChecker implements 
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
-        if (!METHOD_MATCHER.matches(tree, state)) {
+        if (TestCheckUtils.isTestCodeQuickCheck(state) || !METHOD_MATCHER.matches(tree, state)) {
             return Description.NO_MATCH;
         }
 

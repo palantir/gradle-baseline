@@ -36,6 +36,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Set;
 import java.util.stream.Collectors;
+import javax.annotation.Nullable;
 import javax.lang.model.element.Modifier;
 
 @AutoService(BugChecker.class)
@@ -55,6 +56,9 @@ public final class ThrowSpecificity extends BugChecker implements BugChecker.Met
 
     @Override
     public Description matchMethod(MethodTree tree, VisitorState state) {
+        if (TestCheckUtils.isTestCodeQuickCheck(state)) {
+            return Description.NO_MATCH;
+        }
         List<? extends ExpressionTree> throwsExpressions = tree.getThrows();
         if (throwsExpressions.size() != 1 || !safeToModifyThrowsClause(tree)) {
             return Description.NO_MATCH;
@@ -65,7 +69,7 @@ public final class ThrowSpecificity extends BugChecker implements BugChecker.Met
         }
         ExpressionTree throwsExpression = Iterables.getOnlyElement(throwsExpressions);
         Type throwsExpressionType = ASTHelpers.getType(throwsExpression);
-        if (throwsExpressionType == null || !isBroadException(throwsExpressionType, state)) {
+        if (!isBroadException(throwsExpressionType, state)) {
             return Description.NO_MATCH;
         }
 
@@ -118,7 +122,10 @@ public final class ThrowSpecificity extends BugChecker implements BugChecker.Met
         return exceptions.stream().anyMatch(type -> isBroadException(type, state));
     }
 
-    private static boolean isBroadException(Type type, VisitorState state) {
+    private static boolean isBroadException(@Nullable Type type, VisitorState state) {
+        if (type == null) {
+            return false;
+        }
         return ASTHelpers.isSameType(state.getTypeFromString(Exception.class.getName()), type, state)
                 || ASTHelpers.isSameType(state.getTypeFromString(Throwable.class.getName()), type, state);
     }

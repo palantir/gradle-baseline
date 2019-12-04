@@ -70,7 +70,7 @@ public final class ValidateConstantMessage extends BugChecker implements BugChec
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
-        if (!VALIDATE_METHODS.matches(tree, state)) {
+        if (TestCheckUtils.isTestCodeQuickCheck(state) || !VALIDATE_METHODS.matches(tree, state)) {
             return Description.NO_MATCH;
         }
 

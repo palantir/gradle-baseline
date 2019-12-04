@@ -58,7 +58,7 @@ public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocati
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
-        if (!LOG_METHOD.matches(tree, state)) {
+        if (TestCheckUtils.isTestCodeQuickCheck(state) || !LOG_METHOD.matches(tree, state)) {
             return Description.NO_MATCH;
         }
 
