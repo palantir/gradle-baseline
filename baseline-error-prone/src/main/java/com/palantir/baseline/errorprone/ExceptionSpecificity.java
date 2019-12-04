@@ -166,34 +166,35 @@ public final class ExceptionSpecificity
         }
         ExpressionTree throwsExpression = Iterables.getOnlyElement(throwsExpressions);
         Type throwsExpressionType = ASTHelpers.getType(throwsExpression);
-        if (throwsExpressionType != null && isBroadException(throwsExpressionType, state)) {
-            ImmutableSet<Type> allThrownExceptions = MoreASTHelpers.getThrownExceptions(tree.getBody(), state);
-            ImmutableList<Type> normalizedThrownExceptions = allThrownExceptions.stream()
-                    .filter(type -> MoreASTHelpers.isCheckedException(type, state))
-                    .map(type -> normalizeAnonymousType(type, state))
-                    .collect(ImmutableList.toImmutableList());
-            ImmutableList<Type> checkedExceptions = flattenExceptionTypes(normalizedThrownExceptions, state);
-            if (checkedExceptions.size() > MAX_CHECKED_EXCEPTIONS
-                    || containsBroadException(checkedExceptions, state)
-                    // Avoid code churn in test sources for the time being.
-                    || TestCheckUtils.isTestCode(state)) {
-                return Description.NO_MATCH;
-            }
-            if (checkedExceptions.isEmpty()) {
-                return buildDescription(throwsExpression)
-                        .addFix(SuggestedFixes.deleteExceptions(tree, state, ImmutableList.of(throwsExpression)))
-                        .build();
-            }
-            SuggestedFix.Builder fix = SuggestedFix.builder();
-            return buildDescription(throwsExpression)
-                    .addFix(fix.replace(throwsExpression, checkedExceptions.stream()
-                            .map(checkedException -> SuggestedFixes.prettyType(state, fix, checkedException))
-                            .collect(Collectors.joining(", ")))
-                            .build())
-                    .build();
-
+        if (throwsExpressionType == null || !isBroadException(throwsExpressionType, state)) {
+            return Description.NO_MATCH;
         }
-        return Description.NO_MATCH;
+
+        ImmutableSet<Type> allThrownExceptions = MoreASTHelpers.getThrownExceptions(tree.getBody(), state);
+        ImmutableList<Type> normalizedThrownExceptions = allThrownExceptions.stream()
+                .filter(type -> MoreASTHelpers.isCheckedException(type, state))
+                .map(type -> normalizeAnonymousType(type, state))
+                .collect(ImmutableList.toImmutableList());
+        ImmutableList<Type> checkedExceptions = flattenExceptionTypes(normalizedThrownExceptions, state);
+        if (checkedExceptions.size() > MAX_CHECKED_EXCEPTIONS
+                || containsBroadException(checkedExceptions, state)
+                // Avoid code churn in test sources for the time being.
+                || TestCheckUtils.isTestCode(state)) {
+            return Description.NO_MATCH;
+        }
+
+        if (checkedExceptions.isEmpty()) {
+            return buildDescription(throwsExpression)
+                    .addFix(SuggestedFixes.deleteExceptions(tree, state, ImmutableList.of(throwsExpression)))
+                    .build();
+        }
+        SuggestedFix.Builder fix = SuggestedFix.builder();
+        return buildDescription(throwsExpression)
+                .addFix(fix.replace(throwsExpression, checkedExceptions.stream()
+                        .map(checkedException -> SuggestedFixes.prettyType(state, fix, checkedException))
+                        .collect(Collectors.joining(", ")))
+                        .build())
+                .build();
     }
 
     private static boolean safeToModifyThrowsClause(MethodTree tree) {
