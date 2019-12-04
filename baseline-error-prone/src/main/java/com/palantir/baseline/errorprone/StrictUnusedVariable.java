@@ -434,7 +434,8 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                                             ? null
                                             : state.getSourceForNode(variableTree.getModifiers()));
                     String newContent = String.format(
-                            "%s%s unused", modifiers.isEmpty() ? "" : (modifiers + " "), variableTree.getType());
+                            "%s%s unused", modifiers.isEmpty() ? "" : (modifiers + " "),
+                            state.getSourceForNode(variableTree.getType()));
                     // The new content for the second fix should be identical to the content for the first
                     // fix in this case because we can't just remove the enhanced for loop variable.
                     fix.replace(variableTree, newContent);
