@@ -29,7 +29,7 @@ public final class AssertjCollectionHasSizeExactlyWithDescription<T> {
 
     @BeforeTemplate
     void bad1(Collection<T> things, int size, String description, @Repeated Object descriptionArgs) {
-        assertThat(things.size()).describedAs(description, descriptionArgs).isEqualTo(size);
+        assertThat(things.size() == size).describedAs(description, descriptionArgs).isTrue();
     }
 
     @BeforeTemplate

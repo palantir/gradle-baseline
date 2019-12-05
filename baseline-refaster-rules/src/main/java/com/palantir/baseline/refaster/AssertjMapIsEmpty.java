@@ -28,7 +28,7 @@ public final class AssertjMapIsEmpty<K, V> {
 
     @BeforeTemplate
     void before1(Map<K, V> things) {
-        assertThat(things.size()).isEqualTo(0);
+        assertThat(things.size() == 0).isTrue();
     }
 
     @BeforeTemplate

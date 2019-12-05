@@ -28,7 +28,7 @@ public final class AssertjCollectionHasSizeExactly<T> {
 
     @BeforeTemplate
     void bad1(Collection<T> things, int size) {
-        assertThat(things.size()).isEqualTo(size);
+        assertThat(things.size() == size).isTrue();
     }
 
     @BeforeTemplate

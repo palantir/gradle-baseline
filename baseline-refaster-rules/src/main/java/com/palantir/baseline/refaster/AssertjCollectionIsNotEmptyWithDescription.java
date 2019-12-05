@@ -32,12 +32,12 @@ public final class AssertjCollectionIsNotEmptyWithDescription<T> {
 
     @BeforeTemplate
     void bad1(Collection<T> things, String description, @Repeated Object descriptionArgs) {
-        assertThat(things.size()).describedAs(description, descriptionArgs).isNotEqualTo(0);
+        assertThat(things.size() != 0).describedAs(description, descriptionArgs).isTrue();
     }
 
     @BeforeTemplate
     void bad2(Collection<T> things, String description, @Repeated Object descriptionArgs) {
-        assertThat(things.size()).describedAs(description, descriptionArgs).isNotEqualTo(0);
+        assertThat(things.size() == 0).describedAs(description, descriptionArgs).isFalse();
     }
 
     @BeforeTemplate

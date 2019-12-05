@@ -28,7 +28,7 @@ public final class AssertjCollectionIsEmpty<T> {
 
     @BeforeTemplate
     void bad1(Collection<T> things) {
-        assertThat(things.size()).isEqualTo(0);
+        assertThat(things.size() == 0).isTrue();
     }
 
     @BeforeTemplate
