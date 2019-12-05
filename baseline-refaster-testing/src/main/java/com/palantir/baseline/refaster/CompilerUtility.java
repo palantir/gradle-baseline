@@ -53,7 +53,7 @@ final class CompilerUtility {
         try {
             trees = task.parse();
             task.analyze();
-        } catch (Exception e) {
+        } catch (RuntimeException e) {
             throw new RuntimeException(e);
         }
 
