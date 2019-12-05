@@ -1,7 +1,7 @@
 type: fix
 fix:
-  description: When building with Java13, two more error-prone checks are turned off
-    to avoid NoSuchMethodErrors in the compiler. They still run if your project builds
-    on Java8 or 11.
+  description: When building with Java13, two more error-prone checks (`UnnecessaryLambda`
+    and `ThrowSpecificity`) are turned off to avoid NoSuchMethodErrors in the compiler.
+    They still run if your project builds on Java8 or 11.
   links:
   - https://github.com/palantir/gradle-baseline/pull/1095
