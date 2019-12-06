@@ -25,7 +25,8 @@ public class BaselineErrorProneExtension {
             // Baseline checks
             "AssertjPrimitiveComparison",
             "CatchBlockLogException",
-            "CatchSpecificity",
+            // TODO(ckozak): re-enable pending scala check
+            //"CatchSpecificity",
             "ExecutorSubmitRunnableFutureIgnored",
             "FinalClass",
             "LambdaMethodReference",
@@ -45,7 +46,8 @@ public class BaselineErrorProneExtension {
             "StrictUnusedVariable",
             "StringBuilderConstantParameters",
             "ThrowError",
-            "ThrowSpecificity",
+            // TODO(ckozak): re-enable pending scala check
+            //"ThrowSpecificity",
 
             // Built-in checks
             "ArrayEquals",
