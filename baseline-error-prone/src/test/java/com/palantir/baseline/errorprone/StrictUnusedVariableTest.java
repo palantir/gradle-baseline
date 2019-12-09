@@ -18,6 +18,8 @@ package com.palantir.baseline.errorprone;
 
 import com.google.errorprone.BugCheckerRefactoringTestHelper.TestMode;
 import com.google.errorprone.CompilationTestHelper;
+import com.google.errorprone.bugpatterns.CheckReturnValue;
+import com.google.errorprone.scanner.ScannerSupplier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.parallel.Execution;
@@ -130,20 +132,22 @@ public class StrictUnusedVariableTest {
 
     @Test
     public void fails_suppressed_but_used_variables() {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "class Test {",
-                "  // BUG: Diagnostic contains: Unused",
-                "  private static final String _field = \"\";",
-                "  // BUG: Diagnostic contains: Unused",
-                "  public static void privateMethod(String _value) {",
-                "    System.out.println(_value);",
-                "  // BUG: Diagnostic contains: Unused",
-                "    String _bar = \"bar\";",
-                "    System.out.println(_bar);",
-                "    System.out.println(_field);",
-                "  }",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "class Test {",
+                        "  // BUG: Diagnostic contains: Unused",
+                        "  private static final String _field = \"\";",
+                        "  // BUG: Diagnostic contains: Unused",
+                        "  public static void privateMethod(String _value) {",
+                        "    System.out.println(_value);",
+                        "  // BUG: Diagnostic contains: Unused",
+                        "    String _bar = \"bar\";",
+                        "    System.out.println(_bar);",
+                        "    System.out.println(_field);",
+                        "  }",
+                        "}")
+                .doTest();
     }
 
     @Test
@@ -215,4 +219,22 @@ public class StrictUnusedVariableTest {
                         "}"
                 ).doTest(TestMode.TEXT_MATCH);
     }
+
+    @Test
+    void exempts_StrictUnusedVariable_call() {
+        CompilationTestHelper.newInstance(
+                        ScannerSupplier.fromBugCheckerClasses(StrictUnusedVariable.class, CheckReturnValue.class),
+                        getClass())
+                .addSourceLines(
+                        "Test.java",
+                        "import com.google.errorprone.annotations.CheckReturnValue;",
+                        "class Test {",
+                        "  public static void method() {",
+                        "    int _unused = checkMe();",
+                        "  }",
+                        "  @CheckReturnValue public static int checkMe() { return 1; }",
+                        "}")
+                .doTest();
+    }
 }
+
