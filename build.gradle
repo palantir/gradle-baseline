@@ -36,15 +36,16 @@ allprojects {
     // snippet forces the version to be the version originally resolved by gradle and not the force that nebula forced
     // it to.
     configurations.all { c ->
-        c.incoming.beforeResolve {
-            c.resolutionStrategy.dependencySubstitution {
-                all { DependencySubstitution dep ->
-                    if (dep.requested instanceof ProjectComponentSelector) {
-                        dep.useTarget dep.requested
-                    }
-                }
-            }
-        }
+        c.resolutionStrategy { preferProjectModules() }
+//        c.incoming.beforeResolve {
+//            c.resolutionStrategy.dependencySubstitution {
+//                all { DependencySubstitution dep ->
+//                    if (dep.requested instanceof ProjectComponentSelector) {
+//                        dep.useTarget dep.requested
+//                    }
+//                }
+//            }
+//        }
     }
 
     pluginManager.withPlugin('java') {
