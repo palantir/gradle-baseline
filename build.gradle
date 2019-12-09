@@ -37,15 +37,6 @@ allprojects {
     // it to.
     configurations.all { c ->
         c.resolutionStrategy { preferProjectModules() }
-//        c.incoming.beforeResolve {
-//            c.resolutionStrategy.dependencySubstitution {
-//                all { DependencySubstitution dep ->
-//                    if (dep.requested instanceof ProjectComponentSelector) {
-//                        dep.useTarget dep.requested
-//                    }
-//                }
-//            }
-//        }
     }
 
     pluginManager.withPlugin('java') {
