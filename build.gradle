@@ -8,6 +8,7 @@ buildscript {
     }
 
     dependencies {
+        classpath 'com.palantir.gradle.consistentversions:gradle-consistent-versions:1.13.1'
         classpath 'com.gradle.publish:plugin-publish-plugin:0.10.0'
         classpath 'com.jfrog.bintray.gradle:gradle-bintray-plugin:1.8.4'
         classpath 'com.netflix.nebula:nebula-publishing-plugin:14.1.1'
@@ -21,6 +22,7 @@ plugins {
     id 'org.inferred.processors' version '3.1.0'
 }
 
+apply plugin: 'com.palantir.consistent-versions'
 apply plugin: 'com.palantir.baseline'
 
 allprojects {
@@ -64,4 +66,3 @@ allprojects {
     version System.env.CIRCLE_TAG ?: gitVersion()
     description = 'A Gradle plugin for applying Baseline-recommended build and IDE settings'
 }
-
