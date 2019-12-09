@@ -29,7 +29,7 @@ public final class AssertjCollectionIsEmptyWithDescription<T> {
 
     @BeforeTemplate
     void bad1(Collection<T> things, String description, @Repeated Object descriptionArgs) {
-        assertThat(things.size() == 0).describedAs(description, descriptionArgs).isTrue();
+        assertThat(things.size()).describedAs(description, descriptionArgs).isEqualTo(0);
     }
 
     @BeforeTemplate
