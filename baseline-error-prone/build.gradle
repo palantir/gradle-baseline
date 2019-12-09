@@ -36,6 +36,7 @@ tasks.withType(JavaCompile) {
 }
 
 // This is necessary to prevent the errorprone plugin from using this very project's output directory
+// TODO(dsanduleac): this might not be necessary in gradle 6 anymore
 def originalGroup = project.group
 group = originalGroup + '-internal'
 publishing.publications.nebula {
