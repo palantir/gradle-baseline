@@ -211,6 +211,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
             // https://github.com/google/error-prone/issues/1106
             errorProneOptions.check("TypeParameterUnusedInFormals", CheckSeverity.OFF);
             errorProneOptions.check("PreferCollectionConstructors", CheckSeverity.OFF);
+            errorProneOptions.check("CatchSpecificity", CheckSeverity.OFF);
         }
 
         if (javaCompile.equals(compileRefaster)) {
