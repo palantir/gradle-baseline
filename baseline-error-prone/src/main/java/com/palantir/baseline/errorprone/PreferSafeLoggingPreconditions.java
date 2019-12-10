@@ -22,7 +22,6 @@ import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.fixes.SuggestedFix;
-import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.CompileTimeConstantExpressionMatcher;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
@@ -96,7 +95,7 @@ public final class PreferSafeLoggingPreconditions extends BugChecker implements 
         }
 
         SuggestedFix.Builder fix = SuggestedFix.builder();
-        String logSafeQualifiedClassName = SuggestedFixes.qualifyType(state, fix, "com.palantir.logsafe.Preconditions");
+        String logSafeQualifiedClassName = MoreSuggestedFixes.qualifyType(state, fix, "com.palantir.logsafe.Preconditions");
         String logSafeMethodName = getLogSafeMethodName(ASTHelpers.getSymbol(tree));
         String replacement = String.format("%s.%s", logSafeQualifiedClassName, logSafeMethodName);
 

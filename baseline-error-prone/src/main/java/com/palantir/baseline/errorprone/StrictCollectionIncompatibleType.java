@@ -299,7 +299,7 @@ public final class StrictCollectionIncompatibleType
      * state and builder, it doesn't add relevant imports.
      */
     private static String prettyType(Type type) {
-        return SuggestedFixes.prettyType(null, null, type);
+        return MoreSuggestedFixes.prettyType(null, null, type);
     }
 
     private interface IncompatibleTypeMatcher {

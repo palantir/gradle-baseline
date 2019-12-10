@@ -22,7 +22,6 @@ import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.fixes.SuggestedFix;
-import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
@@ -64,11 +63,11 @@ public final class PreferCollectionTransform extends BugChecker
                 SuggestedFix.Builder fix = SuggestedFix.builder();
                 if (LIST_MATCHER.matches(args.get(0), state)) {
                     // Fail on any 'Iterables.transform(List, Function) invocation
-                    qualifiedType = SuggestedFixes.qualifyType(state, fix, "com.google.common.collect.Lists");
+                    qualifiedType = MoreSuggestedFixes.qualifyType(state, fix, "com.google.common.collect.Lists");
                     errorMessage = "Prefer Lists.transform";
                 } else {
                     // Fail on any 'Iterables.transform(Collection, Function) invocation
-                    qualifiedType = SuggestedFixes.qualifyType(state, fix, "com.google.common.collect.Collections2");
+                    qualifiedType = MoreSuggestedFixes.qualifyType(state, fix, "com.google.common.collect.Collections2");
                     errorMessage = "Prefer Collections2.transform";
                 }
                 String method = qualifiedType + ".transform";

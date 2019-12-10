@@ -28,7 +28,6 @@ import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.fixes.SuggestedFix;
-import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
@@ -352,7 +351,7 @@ public final class PreferAssertj
                     fix.replace(tree, assertThat
                             + replacement.orElseGet(() ->
                             ".is(new "
-                            + SuggestedFixes.qualifyType(state, fix, "org.assertj.core.api.HamcrestCondition")
+                            + MoreSuggestedFixes.qualifyType(state, fix, "org.assertj.core.api.HamcrestCondition")
                             + "<>("
                             + argSource(tree, state, 1) + "))")));
         }
@@ -363,7 +362,7 @@ public final class PreferAssertj
                     fix.replace(tree, assertThat
                             + ".describedAs(" + argSource(tree, state, 0) + ")"
                             + replacement.orElseGet(() -> ".is(new "
-                            + SuggestedFixes.qualifyType(state, fix, "org.assertj.core.api.HamcrestCondition")
+                            + MoreSuggestedFixes.qualifyType(state, fix, "org.assertj.core.api.HamcrestCondition")
                             + "<>(" + argSource(tree, state, 2) + "))")));
         }
         if (ASSERT_EQUALS_CATCHALL.matches(tree, state)) {
@@ -465,7 +464,7 @@ public final class PreferAssertj
         String actualArgumentString = argSource(tree, state, actualIndex);
         ExpressionTree actualArgument = tree.getArguments().get(actualIndex);
         if (isIterableMap(actualArgument, state)) {
-            String qualifiedMap = SuggestedFixes.prettyType(
+            String qualifiedMap = MoreSuggestedFixes.prettyType(
                     state,
                     fix,
                     state.getTypes().asSuper(
@@ -486,7 +485,7 @@ public final class PreferAssertj
                     .addStaticImport("org.assertj.core.api.Assertions.assertThat");
             return "assertThat";
         } else {
-            return SuggestedFixes.qualifyType(state, fix, "org.assertj.core.api.Assertions.assertThat");
+            return MoreSuggestedFixes.qualifyType(state, fix, "org.assertj.core.api.Assertions.assertThat");
         }
     }
 
