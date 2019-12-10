@@ -19,7 +19,6 @@ package com.palantir.baseline.errorprone;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.VisitorState;
-import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.CatchTree;
 import com.sun.source.tree.ClassTree;
@@ -78,7 +77,7 @@ final class MoreASTHelpers {
                         type != item
                                 && state.getTypes().isSubtype(type, item)))
                 // Sort by pretty name
-                .sorted(Comparator.comparing(type -> SuggestedFixes.prettyType(state, null, type)))
+                .sorted(Comparator.comparing(type -> MoreSuggestedFixes.prettyType(state, null, type)))
                 .collect(ImmutableList.toImmutableList());
     }
 

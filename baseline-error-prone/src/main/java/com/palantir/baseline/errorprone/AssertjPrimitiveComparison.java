@@ -21,7 +21,6 @@ import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.fixes.SuggestedFix;
-import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
@@ -119,7 +118,7 @@ public final class AssertjPrimitiveComparison extends BugChecker implements BugC
         if (strict ? types.isSameType(resultType, targetType) : types.isAssignable(resultType, targetType)) {
             return source;
         }
-        String cast = '(' + SuggestedFixes.prettyType(state, null, targetType) + ") ";
+        String cast = '(' + MoreSuggestedFixes.prettyType(state, null, targetType) + ") ";
         if (ASTHelpers.requiresParentheses(expression, state)) {
             return cast + '(' + source + ')';
         }

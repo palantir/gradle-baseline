@@ -145,7 +145,7 @@ public final class ReadReturnValueIgnored extends AbstractReturnValueIgnored {
         }
         MemberSelectTree memberSelectTree = (MemberSelectTree) methodSelect;
         SuggestedFix.Builder fix = SuggestedFix.builder();
-        String qualifiedReference = SuggestedFixes.qualifyType(state, fix, fullyQualifiedReplacement);
+        String qualifiedReference = MoreSuggestedFixes.qualifyType(state, fix, fullyQualifiedReplacement);
         CharSequence args = sourceCode.subSequence(
                 state.getEndPosition(methodSelect) + 1,
                 state.getEndPosition(lastItem(tree.getArguments())));

@@ -23,7 +23,6 @@ import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.fixes.SuggestedFix;
-import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
@@ -280,7 +279,7 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
         }
 
         SuggestedFix.Builder fixBuilder = SuggestedFix.builder();
-        String collectionType = SuggestedFixes.qualifyType(state, fixBuilder, collectionClass.getName());
+        String collectionType = MoreSuggestedFixes.qualifyType(state, fixBuilder, collectionClass.getName());
         String typeArgs = tree.getTypeArguments()
                 .stream()
                 .map(state::getSourceForNode)
