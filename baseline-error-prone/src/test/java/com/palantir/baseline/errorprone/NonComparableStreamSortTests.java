@@ -41,7 +41,7 @@ public class NonComparableStreamSortTests {
                 "class Test {",
                 "   public static final void main(String[] args) {",
                 "       List<Object> list = new ArrayList<>();",
-                "       // BUG: Stream.sorted() should only be called on streams of Comparable types.",
+                "       // BUG: Diagnostic contains: Stream.sorted() should only be called on streams of Comparable",
                 "       list.stream().sorted();",
                 "   }",
                 "}"
@@ -59,6 +59,23 @@ public class NonComparableStreamSortTests {
                 "       List<String> list = new ArrayList<>();",
                 "       list.stream().sorted();",
                 "   }",
+                "}"
+        ).doTest();
+    }
+
+    @Test
+    public void should_fail_without_direct_types() {
+        compilationHelper.addSourceLines(
+                "Test.java",
+                "import java.util.List;",
+                "import java.util.ArrayList;",
+                "class Test {",
+                "   public static final void main(String[] args) {",
+                "       List<Iface> list = new ArrayList<>();",
+                "       // BUG: Diagnostic contains: Stream.sorted() should only be called on streams of Comparable",
+                "       list.stream().sorted();",
+                "   }",
+                "   interface Iface {}",
                 "}"
         ).doTest();
     }
