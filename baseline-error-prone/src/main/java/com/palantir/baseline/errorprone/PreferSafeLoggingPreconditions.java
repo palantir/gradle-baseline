@@ -95,7 +95,8 @@ public final class PreferSafeLoggingPreconditions extends BugChecker implements 
         }
 
         SuggestedFix.Builder fix = SuggestedFix.builder();
-        String logSafeQualifiedClassName = MoreSuggestedFixes.qualifyType(state, fix, "com.palantir.logsafe.Preconditions");
+        String logSafeQualifiedClassName = MoreSuggestedFixes.qualifyType(
+                state, fix, "com.palantir.logsafe.Preconditions");
         String logSafeMethodName = getLogSafeMethodName(ASTHelpers.getSymbol(tree));
         String replacement = String.format("%s.%s", logSafeQualifiedClassName, logSafeMethodName);
 

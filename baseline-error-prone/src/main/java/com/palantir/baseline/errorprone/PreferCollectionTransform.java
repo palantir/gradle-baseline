@@ -67,7 +67,8 @@ public final class PreferCollectionTransform extends BugChecker
                     errorMessage = "Prefer Lists.transform";
                 } else {
                     // Fail on any 'Iterables.transform(Collection, Function) invocation
-                    qualifiedType = MoreSuggestedFixes.qualifyType(state, fix, "com.google.common.collect.Collections2");
+                    qualifiedType = MoreSuggestedFixes.qualifyType(
+                            state, fix, "com.google.common.collect.Collections2");
                     errorMessage = "Prefer Collections2.transform";
                 }
                 String method = qualifiedType + ".transform";

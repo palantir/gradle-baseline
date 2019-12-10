@@ -81,8 +81,8 @@ final class MoreSuggestedFixes {
             // the output is correct in most cases, in the failures are easy for
             // humans to fix.
             for (int startOfClass = typeName.indexOf('.');
-                 startOfClass > 0;
-                 startOfClass = typeName.indexOf('.', startOfClass + 1)) {
+                    startOfClass > 0;
+                    startOfClass = typeName.indexOf('.', startOfClass + 1)) {
                 int endOfClass = typeName.indexOf('.', startOfClass + 1);
                 if (endOfClass < 0) {
                     endOfClass = typeName.length();
