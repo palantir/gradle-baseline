@@ -1,0 +1,8 @@
+type: improvement
+improvement:
+  description: |-
+    You may apply specific error-prone refactors including those which are
+    not enabled by default by providing a comma delimited list of check
+    names to the `-PerrorProneApply` option.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1109

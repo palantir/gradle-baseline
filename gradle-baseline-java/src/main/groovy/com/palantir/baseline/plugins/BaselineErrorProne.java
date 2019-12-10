@@ -18,6 +18,7 @@ package com.palantir.baseline.plugins;
 
 import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.MoreCollectors;
@@ -29,6 +30,7 @@ import java.util.AbstractList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
@@ -242,19 +244,29 @@ public final class BaselineErrorProne implements Plugin<Project> {
                         .matching(ss -> javaCompile.getName().equals(ss.getCompileJavaTaskName()))
                         .stream()
                         .collect(MoreCollectors.toOptional());
+
                 // TODO(gatesn): Is there a way to discover error-prone checks?
                 // Maybe service-load from a ClassLoader configured with annotation processor path?
                 // https://github.com/google/error-prone/pull/947
                 errorProneOptions.getErrorproneArgumentProviders().add(() -> {
                     // Don't apply checks that have been explicitly disabled
-                    Stream<String> errorProneChecks = getNotDisabledErrorproneChecks(
-                            project, errorProneExtension, javaCompile, maybeSourceSet, errorProneOptions);
+                    Stream<String> errorProneChecks = getSpecificErrorProneChecks(project)
+                            .orElseGet(() -> getNotDisabledErrorproneChecks(
+                                    project, errorProneExtension, javaCompile, maybeSourceSet, errorProneOptions));
                     return ImmutableList.of(
                             "-XepPatchChecks:" + Joiner.on(',').join(errorProneChecks.iterator()),
                             "-XepPatchLocation:IN_PLACE");
                 });
             }
         }
+    }
+
+    private static Optional<Stream<String>> getSpecificErrorProneChecks(Project project) {
+        return Optional.ofNullable(project.findProperty(PROP_ERROR_PRONE_APPLY))
+                .map(Objects::toString)
+                .flatMap(value -> Optional.ofNullable(Strings.emptyToNull(value)))
+                .map(value -> Splitter.on(',').trimResults().omitEmptyStrings().splitToList(value))
+                .flatMap(list -> list.isEmpty() ? Optional.empty() : Optional.of(list.stream()));
     }
 
     private static Stream<String> getNotDisabledErrorproneChecks(
