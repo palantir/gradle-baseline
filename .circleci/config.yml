@@ -118,6 +118,39 @@ jobs:
       - store_test_results: { path: ~/junit }
       - store_artifacts: { path: ~/artifacts }
 
+  unit-test-latest:
+    docker: [{ image: 'circleci/openjdk:11-node' }]
+    resource_class: large
+    environment:
+      CIRCLE_TEST_REPORTS: /home/circleci/junit
+      CIRCLE_ARTIFACTS: /home/circleci/artifacts
+      GRADLE_OPTS: -Dorg.gradle.jvmargs='-XX:MaxMetaspaceSize=256m' -Dorg.gradle.workers.max=4
+      _JAVA_OPTIONS: -XX:ActiveProcessorCount=4 -Xmx1177m -XX:MaxMetaspaceSize=512m  -XX:ErrorFile=/home/circleci/artifacts/hs_err_pid%p.log -XX:HeapDumpPath=/home/circleci/artifacts
+      JAVA_HOME: /opt/java/java13
+    steps:
+      - checkout
+      - run:
+          name: Install latest JDK
+          command: |
+            sudo mkdir -p /opt/java
+            cd /opt/java
+            sudo chown -R circleci:circleci .
+            FILENAME="zulu13.28.11-ca-jdk13.0.1-linux_x64.tar.gz"
+            wget -q "https://cdn.azul.com/zulu/bin/${FILENAME}"
+            tar -xzf "${FILENAME}"
+            ln -s /opt/java/*/ /opt/java/java13
+      - restore_cache: { key: 'gradle-wrapper-v2-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}' }
+      - restore_cache: { key: 'unit-test-11-gradle-cache-v2-{{ checksum "versions.props" }}-{{ checksum "build.gradle" }}' }
+      - run: ./gradlew --parallel --stacktrace --continue test
+      - save_cache:
+          key: 'unit-test-11-gradle-cache-v2-{{ checksum "versions.props" }}-{{ checksum "build.gradle" }}'
+          paths: [ ~/.gradle/caches ]
+      - run:
+          command: mkdir -p ~/junit && find . -type f -regex ".*/build/.*TEST.*xml" -exec cp --parents {} ~/junit/ \;
+          when: always
+      - store_test_results: { path: ~/junit }
+      - store_artifacts: { path: ~/artifacts }
+
   trial-publish:
     docker: [{ image: 'circleci/openjdk:8u222-stretch-node' }]
     environment:
@@ -175,6 +208,9 @@ workflows:
       - unit-test-11:
           filters: { tags: { only: /.*/ } }
 
+      - unit-test-latest:
+          filters: { tags: { only: /.*/ } }
+
       - check:
           requires: [ compile ]
           filters: { tags: { only: /.*/ } }
@@ -186,5 +222,5 @@ workflows:
           requires: [ compile ]
 
       - publish:
-          requires: [ unit-test, unit-test-11, check ]
+          requires: [ unit-test, unit-test-11, unit-test-latest, check ]
           filters: { tags: { only: /.*/ }, branches: { only: develop } }
