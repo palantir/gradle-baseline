@@ -17,7 +17,7 @@
 package com.palantir.baseline
 
 import org.gradle.api.JavaVersion
-import org.junit.Assume
+import spock.lang.IgnoreIf
 import spock.lang.Unroll
 
 class BaselineIntegrationTest extends AbstractPluginTest {
@@ -35,11 +35,8 @@ class BaselineIntegrationTest extends AbstractPluginTest {
     }
 
     @Unroll("Can apply on #gradleVersion")
+    @IgnoreIf({ gradleVersion == '5.4' && JavaVersion.current() == JavaVersion.VERSION_13 })
     def canApplyOnGradle() {
-        if (gradleVersion == '5.4') {
-            Assume.assumeTrue("5.4 can't run on Java13", JavaVersion.current() < JavaVersion.toVersion("13"))
-        }
-
         buildFile << standardBuildFile()
         multiProject.addSubproject("java-project", "apply plugin: 'java'")
         multiProject.addSubproject("other-project")

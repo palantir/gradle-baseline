@@ -43,7 +43,7 @@ class BaselineErrorProneRefasterIntegrationTest extends AbstractPluginTest {
         }
     '''.stripIndent()
 
-    @IgnoreIf({ JavaVersion.current() >= JavaVersion.toVersion("13")})
+    @IgnoreIf({ JavaVersion.current() >= JavaVersion.VERSION_13})
     def 'compileJava with refaster fixes CollectionsIsEmpty'() {
         when:
         buildFile << standardBuildFile
@@ -68,7 +68,7 @@ class BaselineErrorProneRefasterIntegrationTest extends AbstractPluginTest {
         '''.stripIndent()
     }
 
-    @IgnoreIf({ JavaVersion.current() >= JavaVersion.toVersion("13")})
+    @IgnoreIf({ JavaVersion.current() >= JavaVersion.VERSION_13})
     def 'compileJava with refaster fixes SortedFirst'() {
         when:
         buildFile << standardBuildFile

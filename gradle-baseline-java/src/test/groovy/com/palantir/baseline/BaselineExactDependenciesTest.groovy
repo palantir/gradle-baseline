@@ -22,7 +22,7 @@ import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 import spock.lang.IgnoreIf
 
-@IgnoreIf({ JavaVersion.current() >= JavaVersion.toVersion("13")}) // maven-dependency-analyzer:1.1.1 can't parse bytecode from Java13
+@IgnoreIf({ JavaVersion.current() >= JavaVersion.VERSION_13}) // maven-dependency-analyzer:1.1.1 can't parse bytecode from Java13
 class BaselineExactDependenciesTest extends AbstractPluginTest {
 
     def standardBuildFile = '''
