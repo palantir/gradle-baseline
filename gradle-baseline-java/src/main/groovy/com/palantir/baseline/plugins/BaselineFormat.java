@@ -41,6 +41,9 @@ class BaselineFormat extends AbstractBaselinePlugin {
     private static final String ECLIPSE_FORMATTING = "com.palantir.baseline-format.eclipse";
     private static final String PJF_PROPERTY = "com.palantir.baseline-format.palantir-java-format";
     private static final String GENERATED_MARKER = File.separator + "generated";
+    /** The implementation version of the palantir-java-format that we are recommending. */
+    private static final String PJF_IMPLEMENTATION_VERSION = "0.3.8";
+    private static final String PJF_IMPLEMENTATION_COORDINATES = "com.palantir.javaformat:palantir-java-format";
 
     @Override
     public void apply(Project project) {
@@ -49,6 +52,10 @@ class BaselineFormat extends AbstractBaselinePlugin {
         if (project == project.getRootProject()) {
             if (BaselineFormat.palantirJavaFormatterState(project) == FormatterState.ON) {
                 project.getPluginManager().apply(PalantirJavaFormatIdeaPlugin.class);
+                // Also, configure a specific version of this dependency.
+                // To pick up updates, users should bump this using a constraint in their versions.props.
+                project.getDependencies()
+                        .add("palantirJavaFormat", PJF_IMPLEMENTATION_COORDINATES + ":" + PJF_IMPLEMENTATION_VERSION);
             }
         }
 
