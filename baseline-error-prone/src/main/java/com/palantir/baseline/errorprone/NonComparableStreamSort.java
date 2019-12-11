@@ -28,6 +28,7 @@ import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
+import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
 import java.util.stream.Stream;
 
@@ -36,7 +37,7 @@ import java.util.stream.Stream;
         name = "NonComparableStreamSort",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        severity = SeverityLevel.ERROR,
+        severity = SeverityLevel.WARNING,
         summary = "Stream.sorted() should only be called on streams of Comparable types.")
 public final class NonComparableStreamSort extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
     private static final long serialVersionUID = 1L;
@@ -53,11 +54,19 @@ public final class NonComparableStreamSort extends BugChecker implements BugChec
             return Description.NO_MATCH;
         }
         Type returnType = ASTHelpers.getReturnType(tree);
-        if (returnType == null || returnType.getTypeArguments().size() != 1) {
+        if (returnType == null) {
             return Description.NO_MATCH;
         }
-        Type streamParameterType = Iterables.getOnlyElement(returnType.getTypeArguments());
-        if (ASTHelpers.isCastable(streamParameterType, state.getTypeFromString(Comparable.class.getName()), state)) {
+        Symbol streamSymbol = state.getSymbolFromString(Stream.class.getName());
+        if (streamSymbol == null) {
+            return Description.NO_MATCH;
+        }
+        Type streamType = state.getTypes().asSuper(returnType, streamSymbol);
+        if (streamType.getTypeArguments().size() != 1) {
+            return Description.NO_MATCH;
+        }
+        Type streamParameterType = Iterables.getOnlyElement(streamType.getTypeArguments());
+        if (ASTHelpers.isSubtype(streamParameterType, state.getTypeFromString(Comparable.class.getName()), state)) {
             return Description.NO_MATCH;
         }
         return buildDescription(tree)

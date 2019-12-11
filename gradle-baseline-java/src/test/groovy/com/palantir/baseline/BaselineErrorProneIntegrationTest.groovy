@@ -132,6 +132,62 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         '''.stripIndent()
     }
 
+    def 'compileJava applies patches when errorProneApply contains specific checks'() {
+        when:
+        buildFile << standardBuildFile
+        file('src/main/java/test/Test.java') << invalidJavaFile
+
+        then:
+        BuildResult result = with('compileJava', '-PerrorProneApply=OptionalOrElseMethodInvocation').build()
+        result.task(":compileJava").outcome == TaskOutcome.SUCCESS
+        file('src/main/java/test/Test.java').text == '''
+        package test;
+        import java.util.Optional;
+        public class Test {
+            void test() {
+                int[] a = {1, 2, 3};
+                int[] b = {1, 2, 3};
+                if (a.equals(b)) {
+                  System.out.println("arrays are equal!");
+                  Optional.of("hello").orElseGet(() -> System.getProperty("world"));
+                }
+            }
+        }
+        '''.stripIndent()
+    }
+
+    def 'compileJava applies patches when errorProneApply contains specific checks including disabled'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << """
+            tasks.withType(JavaCompile) {
+                options.errorprone.errorproneArgs += ['-Xep:OptionalOrElseMethodInvocation:OFF']
+            }
+            dependencies {
+                implementation 'org.slf4j:slf4j-api:1.7.25'
+            }
+        """.stripIndent()
+        file('src/main/java/test/Test.java') << invalidJavaFile
+
+        then:
+        BuildResult result = with('compileJava', '-PerrorProneApply=OptionalOrElseMethodInvocation').build()
+        result.task(":compileJava").outcome == TaskOutcome.SUCCESS
+        file('src/main/java/test/Test.java').text == '''
+        package test;
+        import java.util.Optional;
+        public class Test {
+            void test() {
+                int[] a = {1, 2, 3};
+                int[] b = {1, 2, 3};
+                if (a.equals(b)) {
+                  System.out.println("arrays are equal!");
+                  Optional.of("hello").orElseGet(() -> System.getProperty("world"));
+                }
+            }
+        }
+        '''.stripIndent()
+    }
+
     enum CheckConfigurationMethod { ARG, DSL }
 
     @Unroll

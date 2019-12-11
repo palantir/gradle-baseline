@@ -190,8 +190,15 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 
 There exist a number of programmatic code modifications available via [refaster](https://errorprone.info/docs/refaster). You can run these on your code to apply some refactorings automatically:
 
-```
+```bash
 ./gradlew compileJava compileTestJava -PrefasterApply -PerrorProneApply
+```
+
+You may apply specific error-prone refactors including those which are not enabled by default by providing a comma
+delimited list of check names to the `-PerrorProneApply` option.
+
+```bash
+./gradlew compileJava compileTestJava -PerrorProneApply=PreferAssertj
 ```
 
 ## com.palantir.baseline-checkstyle

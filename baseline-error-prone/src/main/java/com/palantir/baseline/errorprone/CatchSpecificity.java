@@ -23,7 +23,6 @@ import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.fixes.SuggestedFix;
-import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
@@ -131,7 +130,7 @@ public final class CatchSpecificity extends BugChecker implements BugChecker.Try
                         catchTree.accept(new ImpossibleConditionScanner(
                                 fix, replacements, parameterName), state);
                         fix.replace(catchTypeTree, replacements.stream()
-                                .map(type -> SuggestedFixes.prettyType(state, fix, type))
+                                .map(type -> MoreSuggestedFixes.prettyType(state, fix, type))
                                 .collect(Collectors.joining(" | ")));
                     }
                     state.reportMatch(buildDescription(catchTree)
