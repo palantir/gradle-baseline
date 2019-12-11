@@ -115,7 +115,7 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
             LambdaExpressionTree root,
             VisitorState state) {
         SuggestedFix.Builder builder = SuggestedFix.builder();
-        return toMethodReference(SuggestedFixes.qualifyType(state, builder, symbol))
+        return toMethodReference(MoreSuggestedFixes.qualifyType(state, builder, symbol.name.toString()))
                 .map(qualified -> builder.replace(root, qualified).build());
     }
 
