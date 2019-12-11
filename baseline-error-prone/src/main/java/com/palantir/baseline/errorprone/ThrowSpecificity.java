@@ -90,7 +90,7 @@ public final class ThrowSpecificity extends BugChecker implements BugChecker.Met
         SuggestedFix.Builder fix = SuggestedFix.builder();
         return buildDescription(throwsExpression)
                 .addFix(fix.replace(throwsExpression, checkedExceptions.stream()
-                        .map(checkedException -> SuggestedFixes.prettyType(state, fix, checkedException))
+                        .map(checkedException -> MoreSuggestedFixes.prettyType(state, fix, checkedException))
                         .collect(Collectors.joining(", ")))
                         .build())
                 .build();
