@@ -17,3 +17,11 @@ tasks.compileRefaster.enabled = false
 tasks.compileJava.onlyIf { project.properties.refasterApply == null }
 // Do not apply errorprone rules
 tasks.compileJava.options.errorprone.enabled = false
+
+tasks.test.onlyIf {
+    boolean lowEnough = JavaVersion.current() < JavaVersion.toVersion("13")
+    if (!lowEnough) {
+        println 'Disabled ' + tasks.test + ' because refaster throws NoSuchFieldErrors on Java13'
+    }
+    return lowEnough
+}
