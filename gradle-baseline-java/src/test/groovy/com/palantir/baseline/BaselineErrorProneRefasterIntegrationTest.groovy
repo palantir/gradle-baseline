@@ -16,9 +16,11 @@
 
 package com.palantir.baseline
 
-
+import org.gradle.api.JavaVersion
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
+import spock.lang.IgnoreIf
+
 /**
  * This test depends on ./gradlew :baseline-error-prone:publishToMavenLocal
  */
@@ -41,6 +43,7 @@ class BaselineErrorProneRefasterIntegrationTest extends AbstractPluginTest {
         }
     '''.stripIndent()
 
+    @IgnoreIf({ JavaVersion.current() >= JavaVersion.toVersion("13")})
     def 'compileJava with refaster fixes CollectionsIsEmpty'() {
         when:
         buildFile << standardBuildFile
@@ -65,6 +68,7 @@ class BaselineErrorProneRefasterIntegrationTest extends AbstractPluginTest {
         '''.stripIndent()
     }
 
+    @IgnoreIf({ JavaVersion.current() >= JavaVersion.toVersion("13")})
     def 'compileJava with refaster fixes SortedFirst'() {
         when:
         buildFile << standardBuildFile
