@@ -179,37 +179,43 @@ public final class PreferSafeLoggingPreconditionsTests {
 
     @Test
     public void testPreconditionsAutoFixShortNames() {
-        RefactoringValidator.of(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
-                "Test.java",
-                "import com.google.common.base.Preconditions;",
-                "class Test {",
-                "  void f(String param) {",
-                "    Preconditions.checkArgument(param != \"string\", \"constant\");",
-                "    Preconditions.checkState(param != \"string\", \"constant\");",
-                "    Preconditions.checkNotNull(param, \"constant\");",
-                "  }",
-                "}").addOutputLines(
-                "Test.java",
-                (JavaVersion.current() == JavaVersion.toVersion("13"))
-                        ? new String[] {
-                            "import com.google.common.base.Preconditions;",
-                            "class Test {",
-                            "  void f(String param) {",
-                            "    Preconditions.checkArgument(param != \"string\", \"constant\");",
-                            "    Preconditions.checkState(param != \"string\", \"constant\");",
-                            "    Preconditions.checkNotNull(param, \"constant\");",
-                            "  }"
-                        }
-                        : new String[] {
-                            "import com.google.common.base.Preconditions;",
-                            "class Test {",
-                            "  void f(String param) {",
-                            "    com.palantir.logsafe.Preconditions.checkArgument(param != \"string\", \"constant\");",
-                            "    com.palantir.logsafe.Preconditions.checkState(param != \"string\", \"constant\");",
-                            "    com.palantir.logsafe.Preconditions.checkNotNull(param, \"constant\");",
-                            "  }",
-                            "}"
-                        }).doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+        RefactoringValidator.of(new PreferSafeLoggingPreconditions(), getClass())
+                .addInputLines(
+                        "Test.java",
+                        "import com.google.common.base.Preconditions;",
+                        "class Test {",
+                        "  void f(String param) {",
+                        "    Preconditions.checkArgument(param != \"string\", \"constant\");",
+                        "    Preconditions.checkState(param != \"string\", \"constant\");",
+                        "    Preconditions.checkNotNull(param, \"constant\");",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        (JavaVersion.current() == JavaVersion.VERSION_13)
+                                ? new String[] {
+                                    "import com.google.common.base.Preconditions;",
+                                    "import com.palantir.logsafe.Preconditions;",
+                                    "",
+                                    "class Test {",
+                                    "  void f(String param) {",
+                                    "    Preconditions.checkArgument(param != \"string\", \"constant\");",
+                                    "    Preconditions.checkState(param != \"string\", \"constant\");",
+                                    "    Preconditions.checkNotNull(param, \"constant\");",
+                                    "  }",
+                                    "}"
+                                }
+                                : new String[] {
+                                    "import com.google.common.base.Preconditions;",
+                                    "class Test {",
+                                    "  void f(String param) {",
+                                    "    com.palantir.logsafe.Preconditions.checkArgument(param != \"string\", \"constant\");",
+                                    "    com.palantir.logsafe.Preconditions.checkState(param != \"string\", \"constant\");",
+                                    "    com.palantir.logsafe.Preconditions.checkNotNull(param, \"constant\");",
+                                    "  }",
+                                    "}"
+                                })
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
     @Test
@@ -561,37 +567,60 @@ public final class PreferSafeLoggingPreconditionsTests {
 
     @Test
     public void testMixedGuavaPreconditionsAndObjectsAndValidateAutoFixShortNames() {
-        RefactoringValidator.of(new PreferSafeLoggingPreconditions(), getClass()).addInputLines(
-                "Test.java",
-                "import com.google.common.base.Preconditions;",
-                "import org.apache.commons.lang3.Validate;",
-                "import java.util.Objects;",
-                "class Test {",
-                "  void f(String param) {",
-                "    Objects.requireNonNull(param, \"constant\");",
-                "    Preconditions.checkArgument(param != \"string\", \"constant\");",
-                "    Preconditions.checkState(param != \"string\", \"constant\");",
-                "    Preconditions.checkNotNull(param, \"constant\");",
-                "    Validate.isTrue(param != \"string\", \"constant\");",
-                "    Validate.validState(param != \"string\", \"constant\");",
-                "    Validate.notNull(param, \"constant\");",
-                "  }",
-                "}").addOutputLines(
-                "Test.java",
-                "import com.google.common.base.Preconditions;",
-                "import org.apache.commons.lang3.Validate;",
-                "import java.util.Objects;",
-                "class Test {",
-                "  void f(String param) {",
-                "    com.palantir.logsafe.Preconditions.checkNotNull(param, \"constant\");",
-                "    com.palantir.logsafe.Preconditions.checkArgument(param != \"string\", \"constant\");",
-                "    com.palantir.logsafe.Preconditions.checkState(param != \"string\", \"constant\");",
-                "    com.palantir.logsafe.Preconditions.checkNotNull(param, \"constant\");",
-                "    com.palantir.logsafe.Preconditions.checkArgument(param != \"string\", \"constant\");",
-                "    com.palantir.logsafe.Preconditions.checkState(param != \"string\", \"constant\");",
-                "    com.palantir.logsafe.Preconditions.checkNotNull(param, \"constant\");",
-                "  }",
-                "}").doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+        RefactoringValidator.of(new PreferSafeLoggingPreconditions(), getClass())
+                .addInputLines(
+                        "Test.java",
+                        "import com.google.common.base.Preconditions;",
+                        "import org.apache.commons.lang3.Validate;",
+                        "import java.util.Objects;",
+                        "class Test {",
+                        "  void f(String param) {",
+                        "    Objects.requireNonNull(param, \"constant\");",
+                        "    Preconditions.checkArgument(param != \"string\", \"constant\");",
+                        "    Preconditions.checkState(param != \"string\", \"constant\");",
+                        "    Preconditions.checkNotNull(param, \"constant\");",
+                        "    Validate.isTrue(param != \"string\", \"constant\");",
+                        "    Validate.validState(param != \"string\", \"constant\");",
+                        "    Validate.notNull(param, \"constant\");",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        (JavaVersion.current() == JavaVersion.VERSION_13)
+                                ? new String[] {
+                                    "import com.google.common.base.Preconditions;",
+                                    "import com.palantir.logsafe.Preconditions;",
+                                    "import java.util.Objects;",
+                                    "import org.apache.commons.lang3.Validate;",
+                                    "class Test {",
+                                    "  void f(String param) {",
+                                    "    Preconditions.checkNotNull(param, \"constant\");",
+                                    "    Preconditions.checkArgument(param != \"string\", \"constant\");",
+                                    "    Preconditions.checkState(param != \"string\", \"constant\");",
+                                    "    Preconditions.checkNotNull(param, \"constant\");",
+                                    "    Preconditions.checkArgument(param != \"string\", \"constant\");",
+                                    "    Preconditions.checkState(param != \"string\", \"constant\");",
+                                    "    Preconditions.checkNotNull(param, \"constant\");",
+                                    "  }",
+                                    "}"
+                                }
+                                : new String[] {
+                                    "import com.google.common.base.Preconditions;",
+                                    "import org.apache.commons.lang3.Validate;",
+                                    "import java.util.Objects;",
+                                    "class Test {",
+                                    "  void f(String param) {",
+                                    "    com.palantir.logsafe.Preconditions.checkNotNull(param, \"constant\");",
+                                    "    com.palantir.logsafe.Preconditions.checkArgument(param != \"string\", \"constant\");",
+                                    "    com.palantir.logsafe.Preconditions.checkState(param != \"string\", \"constant\");",
+                                    "    com.palantir.logsafe.Preconditions.checkNotNull(param, \"constant\");",
+                                    "    com.palantir.logsafe.Preconditions.checkArgument(param != \"string\", \"constant\");",
+                                    "    com.palantir.logsafe.Preconditions.checkState(param != \"string\", \"constant\");",
+                                    "    com.palantir.logsafe.Preconditions.checkNotNull(param, \"constant\");",
+                                    "  }",
+                                    "}"
+                                })
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
     private void passObjects(String precondition) {
