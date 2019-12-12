@@ -54,6 +54,15 @@ class BaselineFormat extends AbstractBaselinePlugin {
             }
         });
 
+        if (eclipseFormattingEnabled(project) && palantirJavaFormatterState(project) != FormatterState.OFF) {
+            throw new GradleException(
+                    "Can't use both eclipse and palantir-java-format at the same time, please delete one of "
+                            + ECLIPSE_FORMATTING
+                            + " or "
+                            + PJF_PROPERTY
+                            + " from your gradle.properties");
+        }
+
         project.getPluginManager().withPlugin("java", plugin -> {
             project.getPluginManager().apply("com.diffplug.gradle.spotless");
             Path eclipseXml = eclipseConfigFile(project);
@@ -70,15 +79,6 @@ class BaselineFormat extends AbstractBaselinePlugin {
                 java.removeUnusedImports();
                 // use empty string to specify one group for all non-static imports
                 java.importOrder("");
-
-                if (eclipseFormattingEnabled(project) && palantirJavaFormatterState(project) != FormatterState.OFF) {
-                    throw new GradleException(
-                            "Can't use both eclipse and palantir-java-format at the same time, please delete one of "
-                                    + ECLIPSE_FORMATTING
-                                    + " or "
-                                    + PJF_PROPERTY
-                                    + " from your gradle.properties");
-                }
 
                 if (eclipseFormattingEnabled(project)) {
                     java.eclipse().configFile(project.file(eclipseXml.toString()));
