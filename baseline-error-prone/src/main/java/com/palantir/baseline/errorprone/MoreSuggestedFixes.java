@@ -28,22 +28,17 @@ import com.sun.tools.javac.tree.JCTree;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 
-/**
- * Additional utility functionality for {@link SuggestedFix} objects.
- */
+/** Additional utility functionality for {@link SuggestedFix} objects. */
 final class MoreSuggestedFixes {
 
     /**
-     * Renames a method invocation without modifying type arguments.
-     * This differs from SuggestedFixes.renameMethodInvocation because it does not
-     * remove type arguments.
-     * Implementation is based on error-prone SuggestedFixes.renameMethodInvocation (Apache 2)
+     * Renames a method invocation without modifying type arguments. This differs from
+     * SuggestedFixes.renameMethodInvocation because it does not remove type arguments. Implementation is based on
+     * error-prone SuggestedFixes.renameMethodInvocation (Apache 2)
      * https://github.com/google/error-prone/blob/master/check_api/src/main/java/com/google/errorprone/fixes/SuggestedFixes.java#L574
      */
     static SuggestedFix renameInvocationRetainingTypeArguments(
-            MethodInvocationTree methodInvocationTree,
-            String newMethodName,
-            VisitorState state) {
+            MethodInvocationTree methodInvocationTree, String newMethodName, VisitorState state) {
         SuggestedFix.Builder fix = SuggestedFix.builder();
         Tree methodSelect = methodInvocationTree.getMethodSelect();
         int startPos;
@@ -68,8 +63,8 @@ final class MoreSuggestedFixes {
     }
 
     /**
-     * Identical to {@link SuggestedFixes#qualifyType(VisitorState, SuggestedFix.Builder, String)} unless the
-     * compiling JVM is not supported by error-prone (JDK13) in which case a fallback is attempted.
+     * Identical to {@link SuggestedFixes#qualifyType(VisitorState, SuggestedFix.Builder, String)} unless the compiling
+     * JVM is not supported by error-prone (JDK13) in which case a fallback is attempted.
      */
     static String qualifyType(VisitorState state, SuggestedFix.Builder fix, String typeName) {
         try {
@@ -99,8 +94,8 @@ final class MoreSuggestedFixes {
     }
 
     /**
-     * Identical to {@link SuggestedFixes#prettyType(VisitorState, SuggestedFix.Builder, Type)} unless the
-     * compiling JVM is not supported by error-prone (JDK13) in which case a fallback is attempted.
+     * Identical to {@link SuggestedFixes#prettyType(VisitorState, SuggestedFix.Builder, Type)} unless the compiling JVM
+     * is not supported by error-prone (JDK13) in which case a fallback is attempted.
      */
     static String prettyType(@Nullable VisitorState state, @Nullable SuggestedFix.Builder fix, Type type) {
         try {

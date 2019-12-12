@@ -33,7 +33,6 @@ import java.util.Optional;
 import java.util.function.BiFunction;
 import javax.lang.model.type.TypeKind;
 
-
 final class AssertjSingleAssertMatcher {
 
     private static final Matcher<ExpressionTree> ASSERT_THAT = MethodMatchers.staticMethod()
@@ -60,8 +59,11 @@ final class AssertjSingleAssertMatcher {
             Matchers.kindIs(Tree.Kind.EXPRESSION_STATEMENT),
             // lambda returning void
             (tree, state) -> tree instanceof LambdaExpressionTree
-                    && state.getTypes().findDescriptorType(ASTHelpers.getType(tree))
-                    .getReturnType().getKind() == TypeKind.VOID));
+                    && state.getTypes()
+                                    .findDescriptorType(ASTHelpers.getType(tree))
+                                    .getReturnType()
+                                    .getKind()
+                            == TypeKind.VOID));
 
     private final BiFunction<SingleAssertMatch, VisitorState, Description> function;
 
@@ -79,9 +81,10 @@ final class AssertjSingleAssertMatcher {
             return Description.NO_MATCH;
         }
         return matchAssertj(tree, state)
-                .flatMap(list -> list.size() == 2
-                        ? Optional.of(new SingleAssertMatch(list.get(0), list.get(1)))
-                        : Optional.empty())
+                .flatMap(list ->
+                        list.size() == 2
+                                ? Optional.of(new SingleAssertMatch(list.get(0), list.get(1)))
+                                : Optional.empty())
                 .map(result -> function.apply(result, state))
                 .orElse(Description.NO_MATCH);
     }
@@ -96,8 +99,7 @@ final class AssertjSingleAssertMatcher {
         }
         if (expressionTree instanceof MethodInvocationTree) {
             MethodInvocationTree methodInvocationTree = (MethodInvocationTree) expressionTree;
-            if (ASSERT_THAT.matches(methodInvocationTree, state)
-                    && methodInvocationTree.getArguments().size() == 1) {
+            if (ASSERT_THAT.matches(methodInvocationTree, state) && methodInvocationTree.getArguments().size() == 1) {
                 List<MethodInvocationTree> results = new ArrayList<>();
                 results.add(methodInvocationTree);
                 return Optional.of(results);

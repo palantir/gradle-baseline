@@ -88,8 +88,7 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
 
     private Description checkMethodInvocation(
             MethodInvocationTree methodInvocation, LambdaExpressionTree root, VisitorState state) {
-        if (!methodInvocation.getArguments().isEmpty()
-                || !methodInvocation.getTypeArguments().isEmpty()) {
+        if (!methodInvocation.getArguments().isEmpty() || !methodInvocation.getTypeArguments().isEmpty()) {
             return Description.NO_MATCH;
         }
         Symbol.MethodSymbol methodSymbol = ASTHelpers.getSymbol(methodInvocation);
@@ -111,9 +110,7 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
     }
 
     private static Optional<SuggestedFix> buildFix(
-            Symbol.MethodSymbol symbol,
-            LambdaExpressionTree root,
-            VisitorState state) {
+            Symbol.MethodSymbol symbol, LambdaExpressionTree root, VisitorState state) {
         SuggestedFix.Builder builder = SuggestedFix.builder();
         return toMethodReference(SuggestedFixes.qualifyType(state, builder, symbol))
                 .map(qualified -> builder.replace(root, qualified).build());
@@ -122,8 +119,8 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
     private static Optional<String> toMethodReference(String qualifiedMethodName) {
         int index = qualifiedMethodName.lastIndexOf('.');
         if (index > 0) {
-            return Optional.of(qualifiedMethodName.substring(0, index)
-                    + "::" + qualifiedMethodName.substring(index + 1));
+            return Optional.of(
+                    qualifiedMethodName.substring(0, index) + "::" + qualifiedMethodName.substring(index + 1));
         }
         return Optional.empty();
     }

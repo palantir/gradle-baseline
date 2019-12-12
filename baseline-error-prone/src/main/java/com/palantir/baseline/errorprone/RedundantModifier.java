@@ -32,9 +32,8 @@ import java.util.Locale;
 import javax.lang.model.element.Modifier;
 
 /**
- * In a future change we may want to validate against unnecessary modifiers based on encapsulating
- * component visibility, for example there's no reason to allow a public constructor for a private
- * class.
+ * In a future change we may want to validate against unnecessary modifiers based on encapsulating component visibility,
+ * for example there's no reason to allow a public constructor for a private class.
  */
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -57,8 +56,7 @@ public final class RedundantModifier extends BugChecker
             MoreMatchers.hasExplicitModifier(Modifier.PRIVATE));
 
     private static final Matcher<MethodTree> STATIC_FINAL_METHOD = Matchers.allOf(
-            MoreMatchers.hasExplicitModifier(Modifier.STATIC),
-            MoreMatchers.hasExplicitModifier(Modifier.FINAL));
+            MoreMatchers.hasExplicitModifier(Modifier.STATIC), MoreMatchers.hasExplicitModifier(Modifier.FINAL));
 
     private static final Matcher<MethodTree> UNNECESSARY_INTERFACE_METHOD_MODIFIERS = Matchers.allOf(
             Matchers.enclosingClass(Matchers.kindIs(Tree.Kind.INTERFACE)),
@@ -89,9 +87,8 @@ public final class RedundantModifier extends BugChecker
 
     private static final Matcher<MethodTree> UNNECESSARY_FINAL_METHOD_ON_FINAL_CLASS = Matchers.allOf(
             Matchers.not(Matchers.isStatic()),
-            Matchers.enclosingClass(Matchers.allOf(
-                    Matchers.kindIs(Tree.Kind.CLASS),
-                    MoreMatchers.hasExplicitModifier(Modifier.FINAL))),
+            Matchers.enclosingClass(
+                    Matchers.allOf(Matchers.kindIs(Tree.Kind.CLASS), MoreMatchers.hasExplicitModifier(Modifier.FINAL))),
             Matchers.allOf(
                     MoreMatchers.hasExplicitModifier(Modifier.FINAL),
                     Matchers.not(Matchers.hasAnnotation(SafeVarargs.class))));

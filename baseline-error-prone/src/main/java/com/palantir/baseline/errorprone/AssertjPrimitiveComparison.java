@@ -43,9 +43,10 @@ import java.util.Optional;
         linkType = BugPattern.LinkType.CUSTOM,
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = BugPattern.SeverityLevel.SUGGESTION,
-        summary = "Prefer using AssertJ fluent comparisons over logic in an assertThat statement for better "
-                + "failure output. assertThat(a == b).isTrue() failures report 'expected true' where "
-                + "assertThat(a).isEqualTo(b) provides the expected and actual values.")
+        summary =
+                "Prefer using AssertJ fluent comparisons over logic in an assertThat statement for better "
+                        + "failure output. assertThat(a == b).isTrue() failures report 'expected true' where "
+                        + "assertThat(a).isEqualTo(b) provides the expected and actual values.")
 public final class AssertjPrimitiveComparison extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final Matcher<ExpressionTree> IS_TRUE = MethodMatchers.instanceMethod()
@@ -97,13 +98,11 @@ public final class AssertjPrimitiveComparison extends BugChecker implements BugC
                 .replace(
                         state.getEndPosition(((MemberSelectTree) match.getCheck().getMethodSelect()).getExpression()),
                         state.getEndPosition(match.getCheck()),
-                        String.format(".%s(%s)", comparison.get(),
-                                getExpressionSource(expected, targetType, state, false)))
+                        String.format(
+                                ".%s(%s)", comparison.get(), getExpressionSource(expected, targetType, state, false)))
                 .replace(target, getExpressionSource(actual, targetType, state, true))
                 .build();
-        return buildDescription(match.getAssertThat())
-                .addFix(fix)
-                .build();
+        return buildDescription(match.getAssertThat()).addFix(fix).build();
     }
 
     private static String getExpressionSource(
@@ -126,13 +125,11 @@ public final class AssertjPrimitiveComparison extends BugChecker implements BugC
     }
 
     /**
-     * Returns the promotion type used to compare the results of the first and second args based on
-     * <a href=https://docs.oracle.com/javase/specs/jls/se8/html/jls-5.html#jls-5.6.2">jls-5.6.2</a>.
+     * Returns the promotion type used to compare the results of the first and second args based on <a
+     * href=https://docs.oracle.com/javase/specs/jls/se8/html/jls-5.html#jls-5.6.2">jls-5.6.2</a>.
      */
     private static Optional<Type> getPromotionType(
-            ExpressionTree firstArg,
-            ExpressionTree secondArg,
-            VisitorState state) {
+            ExpressionTree firstArg, ExpressionTree secondArg, VisitorState state) {
         Types types = state.getTypes();
         // Handle unboxing per JLS 5.6.2 item 1.
         Type firstType = types.unboxedTypeOrType(ASTHelpers.getType(firstArg));
