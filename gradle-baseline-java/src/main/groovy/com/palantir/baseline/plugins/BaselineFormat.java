@@ -84,12 +84,12 @@ class BaselineFormat extends AbstractBaselinePlugin {
                     java.eclipse().configFile(project.file(eclipseXml.toString()));
                 }
 
-                if (palantirJavaFormatterState(project) == FormatterState.ON) {
-                    project.getPlugins().apply(PalantirJavaFormatPlugin.class);
-                }
-
                 java.trimTrailingWhitespace();
             });
+
+            if (palantirJavaFormatterState(project) == FormatterState.ON) {
+                project.getPlugins().apply(PalantirJavaFormatPlugin.class);
+            }
 
             // Keep spotless from eagerly configuring all other tasks.  We do the same thing as the enforceCheck
             // property below by making the check task depend on spotlessCheck.
