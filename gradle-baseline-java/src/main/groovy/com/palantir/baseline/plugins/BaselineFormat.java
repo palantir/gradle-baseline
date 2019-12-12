@@ -17,12 +17,8 @@
 package com.palantir.baseline.plugins;
 
 import com.diffplug.gradle.spotless.SpotlessExtension;
-import com.google.common.base.Preconditions;
-import com.palantir.baseline.plugins.format.PalantirJavaFormatStep;
-import com.palantir.javaformat.gradle.JavaFormatExtension;
 import com.palantir.javaformat.gradle.PalantirJavaFormatIdeaPlugin;
 import com.palantir.javaformat.gradle.PalantirJavaFormatPlugin;
-import com.palantir.javaformat.gradle.PalantirJavaFormatProviderPlugin;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -89,13 +85,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
                 }
 
                 if (palantirJavaFormatterState(project) == FormatterState.ON) {
-                    Preconditions.checkState(
-                            project.getRootProject().getPlugins().hasPlugin(PalantirJavaFormatProviderPlugin.class),
-                            "Must apply `com.palantir.baseline-format` to root project when setting '%s'",
-                            PJF_PROPERTY);
-                    java.addStep(PalantirJavaFormatStep.create(
-                            project.getRootProject().getConfigurations().getByName("palantirJavaFormat"),
-                            project.getRootProject().getExtensions().getByType(JavaFormatExtension.class)));
+                    project.getPlugins().apply(PalantirJavaFormatPlugin.class);
                 }
 
                 java.trimTrailingWhitespace();
