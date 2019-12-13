@@ -1,0 +1,11 @@
+type: improvement
+improvement:
+  description: |-
+    Using TaggedMetricRegistry.gauge is equivalent to map.putIfAbsent, and
+    can result in subtle resource leaks. Prefer replacing existing gauge
+    values using `registerWithReplacement`.
+
+    This check doesn't apply unless a new enough version of Tritium
+    is available on the compilation classpath.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1123
