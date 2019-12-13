@@ -17,7 +17,6 @@
 package com.palantir.baseline.plugins;
 
 import com.diffplug.gradle.spotless.SpotlessExtension;
-import com.palantir.javaformat.gradle.PalantirJavaFormatPlugin;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -36,22 +35,25 @@ class BaselineFormat extends AbstractBaselinePlugin {
     private static final String ECLIPSE_FORMATTING = "com.palantir.baseline-format.eclipse";
     private static final String PJF_PROPERTY = "com.palantir.baseline-format.palantir-java-format";
     private static final String GENERATED_MARKER = File.separator + "generated";
+    private static final String PJF_PLUGIN = "com.palantir.java-format";
 
     @Override
     public void apply(Project project) {
         this.project = project;
 
         if (palantirJavaFormatterState(project) == FormatterState.ON) {
-            project.getPlugins().apply(PalantirJavaFormatPlugin.class); // provides the formatDiff task
+            project.getPlugins().apply(PJF_PLUGIN); // provides the formatDiff task
         }
 
-        if (eclipseFormattingEnabled(project) && palantirJavaFormatterState(project) != FormatterState.OFF) {
-            throw new GradleException(
-                    "Can't use both eclipse and palantir-java-format at the same time, please delete one of "
-                            + ECLIPSE_FORMATTING
-                            + " or "
-                            + PJF_PROPERTY
-                            + " from your gradle.properties");
+        if (eclipseFormattingEnabled(project)) {
+            project.getPluginManager().withPlugin(PJF_PLUGIN, plugin -> {
+                throw new GradleException(
+                        "Can't use both eclipse and palantir-java-format at the same time, please delete one of "
+                                + ECLIPSE_FORMATTING
+                                + " or "
+                                + PJF_PROPERTY
+                                + " from your gradle.properties");
+            });
         }
 
         project.getPluginManager().withPlugin("java", plugin -> {
@@ -77,10 +79,6 @@ class BaselineFormat extends AbstractBaselinePlugin {
 
                 java.trimTrailingWhitespace();
             });
-
-            if (palantirJavaFormatterState(project) == FormatterState.ON) {
-                project.getPlugins().apply(PalantirJavaFormatPlugin.class);
-            }
 
             // Keep spotless from eagerly configuring all other tasks.  We do the same thing as the enforceCheck
             // property below by making the check task depend on spotlessCheck.
