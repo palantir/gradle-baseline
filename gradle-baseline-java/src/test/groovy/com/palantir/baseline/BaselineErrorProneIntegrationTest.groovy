@@ -159,11 +159,14 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
     def 'errorprone should be disabled on generated code (especially from annotationprocessors)'() {
         when:
         buildFile << standardBuildFile
+        buildFile << """
+        compileJava.source += file "build/generated"
+        """
         def badFile = file('build/generated/sources/annotationProcessor/java/main/test/Bad.java')
         badFile << invalidJavaFile
 
         then:
-        BuildResult result = with('compileJava').build()
+        BuildResult result = with('compileJava', '-s').build()
         result.task(":compileJava").outcome == TaskOutcome.SUCCESS
         badFile.text == invalidJavaFile // remain unchanged
     }
