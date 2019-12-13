@@ -17,12 +17,6 @@
 package com.palantir.baseline.plugins;
 
 import com.diffplug.gradle.spotless.SpotlessExtension;
-import com.google.common.base.Preconditions;
-import com.palantir.baseline.plugins.format.PalantirJavaFormatStep;
-import com.palantir.javaformat.gradle.JavaFormatExtension;
-import com.palantir.javaformat.gradle.PalantirJavaFormatIdeaPlugin;
-import com.palantir.javaformat.gradle.PalantirJavaFormatPlugin;
-import com.palantir.javaformat.gradle.PalantirJavaFormatProviderPlugin;
 import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -41,22 +35,26 @@ class BaselineFormat extends AbstractBaselinePlugin {
     private static final String ECLIPSE_FORMATTING = "com.palantir.baseline-format.eclipse";
     private static final String PJF_PROPERTY = "com.palantir.baseline-format.palantir-java-format";
     private static final String GENERATED_MARKER = File.separator + "generated";
+    private static final String PJF_PLUGIN = "com.palantir.java-format";
 
     @Override
     public void apply(Project project) {
         this.project = project;
 
-        if (project == project.getRootProject()) {
-            if (BaselineFormat.palantirJavaFormatterState(project) == FormatterState.ON) {
-                project.getPluginManager().apply(PalantirJavaFormatIdeaPlugin.class);
-            }
+        if (palantirJavaFormatterState(project) == FormatterState.ON) {
+            project.getPlugins().apply(PJF_PLUGIN); // provides the formatDiff task
         }
 
-        project.getPluginManager().withPlugin("java", plugin -> {
-            if (palantirJavaFormatterState(project) == FormatterState.ON) {
-                project.getPlugins().apply(PalantirJavaFormatPlugin.class); // provides the formatDiff task
-            }
-        });
+        if (eclipseFormattingEnabled(project)) {
+            project.getPluginManager().withPlugin(PJF_PLUGIN, plugin -> {
+                throw new GradleException(
+                        "Can't use both eclipse and palantir-java-format at the same time, please delete one of "
+                                + ECLIPSE_FORMATTING
+                                + " or "
+                                + PJF_PROPERTY
+                                + " from your gradle.properties");
+            });
+        }
 
         project.getPluginManager().withPlugin("java", plugin -> {
             project.getPluginManager().apply("com.diffplug.gradle.spotless");
@@ -75,27 +73,8 @@ class BaselineFormat extends AbstractBaselinePlugin {
                 // use empty string to specify one group for all non-static imports
                 java.importOrder("");
 
-                if (eclipseFormattingEnabled(project) && palantirJavaFormatterState(project) != FormatterState.OFF) {
-                    throw new GradleException(
-                            "Can't use both eclipse and palantir-java-format at the same time, please delete one of "
-                                    + ECLIPSE_FORMATTING
-                                    + " or "
-                                    + PJF_PROPERTY
-                                    + " from your gradle.properties");
-                }
-
                 if (eclipseFormattingEnabled(project)) {
                     java.eclipse().configFile(project.file(eclipseXml.toString()));
-                }
-
-                if (palantirJavaFormatterState(project) == FormatterState.ON) {
-                    Preconditions.checkState(
-                            project.getRootProject().getPlugins().hasPlugin(PalantirJavaFormatProviderPlugin.class),
-                            "Must apply `com.palantir.baseline-format` to root project when setting '%s'",
-                            PJF_PROPERTY);
-                    java.addStep(PalantirJavaFormatStep.create(
-                            project.getRootProject().getConfigurations().getByName("palantirJavaFormat"),
-                            project.getRootProject().getExtensions().getByType(JavaFormatExtension.class)));
                 }
 
                 java.trimTrailingWhitespace();

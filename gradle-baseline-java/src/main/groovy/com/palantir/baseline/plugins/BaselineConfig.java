@@ -89,7 +89,8 @@ class BaselineConfig extends AbstractBaselinePlugin {
             });
 
             // Disable some checkstyle rules that clash with PJF
-            if (BaselineFormat.palantirJavaFormatterState(rootProject) != FormatterState.OFF) {
+            if (BaselineFormat.palantirJavaFormatterState(rootProject) != FormatterState.OFF
+                    || project.getPluginManager().hasPlugin("com.palantir.java-format")) {
                 Path checkstyleXml = configDir.resolve("checkstyle/checkstyle.xml");
 
                 try {
@@ -101,9 +102,7 @@ class BaselineConfig extends AbstractBaselinePlugin {
                                     + "            <property name=\"lineWrappingIndentation\" value=\"8\"/>\n"
                                     + "        </module>\n",
                             "");
-                    Preconditions.checkState(
-                            !contents.equals(replaced),
-                            "Patching checkstyle.xml must make a change");
+                    Preconditions.checkState(!contents.equals(replaced), "Patching checkstyle.xml must make a change");
                     Files.write(checkstyleXml, replaced.getBytes(StandardCharsets.UTF_8));
                 } catch (IOException e) {
                     throw new RuntimeException("Unable to patch " + checkstyleXml, e);

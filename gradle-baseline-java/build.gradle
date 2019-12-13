@@ -17,7 +17,8 @@ dependencies {
     compile 'org.apache.maven.shared:maven-dependency-analyzer'
     compile 'org.github.ngbinh.scalastyle:gradle-scalastyle-plugin_2.11'
     implementation 'com.palantir.javaformat:palantir-java-format-spi'
-    implementation 'com.palantir.javaformat:gradle-palantir-java-format'
+
+    runtimeOnly 'com.palantir.javaformat:gradle-palantir-java-format'
 
     testCompile gradleTestKit()
     testCompile 'com.github.stefanbirkner:system-rules'
