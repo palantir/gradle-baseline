@@ -6,7 +6,6 @@ com.google.errorprone:error_prone_refaster = 2.3.4
 com.google.errorprone:error_prone_test_helpers = 2.3.4
 com.google.guava:guava = 27.1-jre
 com.palantir.configurationresolver:gradle-configuration-resolver-plugin = 0.4.0
-com.palantir.javaformat:* = 0.3.8
 com.palantir.safe-logging:* = 1.12.2
 org.apache.maven.shared:maven-dependency-analyzer = 1.11.1
 org.github.ngbinh.scalastyle:gradle-scalastyle-plugin_2.11 = 1.0.1
@@ -34,3 +33,7 @@ net.ltgt.gradle:gradle-errorprone-plugin = 0.7.1
 
 # Updating to 9.0.1 doesn't work with latest gradle 6
 com.netflix.nebula:nebula-dependency-recommender = 9.0.0
+
+# Don't upgrade, we will remove this in a future release.
+# Users should depend on this plugin directly such that it will get updated by excavator.
+com.palantir.javaformat:gradle-palantir-java-format = 0.3.9
