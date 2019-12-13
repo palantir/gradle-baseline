@@ -41,11 +41,9 @@ class BaselineFormat extends AbstractBaselinePlugin {
     public void apply(Project project) {
         this.project = project;
 
-        project.getPluginManager().withPlugin("java", plugin -> {
-            if (palantirJavaFormatterState(project) == FormatterState.ON) {
-                project.getPlugins().apply(PalantirJavaFormatPlugin.class); // provides the formatDiff task
-            }
-        });
+        if (palantirJavaFormatterState(project) == FormatterState.ON) {
+            project.getPlugins().apply(PalantirJavaFormatPlugin.class); // provides the formatDiff task
+        }
 
         if (eclipseFormattingEnabled(project) && palantirJavaFormatterState(project) != FormatterState.OFF) {
             throw new GradleException(
