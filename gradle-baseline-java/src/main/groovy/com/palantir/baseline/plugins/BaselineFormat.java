@@ -17,7 +17,6 @@
 package com.palantir.baseline.plugins;
 
 import com.diffplug.gradle.spotless.SpotlessExtension;
-import com.palantir.javaformat.gradle.PalantirJavaFormatIdeaPlugin;
 import com.palantir.javaformat.gradle.PalantirJavaFormatPlugin;
 import java.io.File;
 import java.nio.file.Files;
@@ -41,12 +40,6 @@ class BaselineFormat extends AbstractBaselinePlugin {
     @Override
     public void apply(Project project) {
         this.project = project;
-
-        if (project == project.getRootProject()) {
-            if (BaselineFormat.palantirJavaFormatterState(project) == FormatterState.ON) {
-                project.getPluginManager().apply(PalantirJavaFormatIdeaPlugin.class);
-            }
-        }
 
         project.getPluginManager().withPlugin("java", plugin -> {
             if (palantirJavaFormatterState(project) == FormatterState.ON) {
