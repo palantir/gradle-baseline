@@ -48,6 +48,7 @@ public class BaselineErrorProneExtension {
             "ThrowError",
             // TODO(ckozak): re-enable pending scala check
             //"ThrowSpecificity",
+            "UnsafeGaugeRegistration",
 
             // Built-in checks
             "ArrayEquals",

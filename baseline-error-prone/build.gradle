@@ -20,6 +20,7 @@ dependencies {
     testCompile 'commons-lang:commons-lang'
     testCompile 'org.assertj:assertj-core'
     testCompile 'org.jooq:jooq'
+    testCompile 'com.palantir.tritium:tritium-registry'
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-migrationsupport'
 
