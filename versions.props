@@ -23,7 +23,7 @@ commons-lang:commons-lang = 2.6
 org.assertj:assertj-core = 3.14.0
 org.hamcrest:hamcrest-core = 2.2
 org.junit.jupiter:* = 5.5.2
-org.mockito:* = 3.2.0
+org.mockito:* = 3.2.4
 com.fasterxml.jackson.*:* = 2.10.1
 com.palantir.tokens:auth-tokens = 3.6.1
 
