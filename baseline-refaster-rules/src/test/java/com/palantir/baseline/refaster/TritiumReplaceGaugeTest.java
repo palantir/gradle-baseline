@@ -18,10 +18,15 @@ package com.palantir.baseline.refaster;
 
 import org.junit.Test;
 
+import static org.assertj.core.api.Assumptions.assumeThat;
+
 public class TritiumReplaceGaugeTest {
 
     @Test
     public void test() {
+        assumeThat(System.getProperty("java.specification.version"))
+                .describedAs("Refaster does not fully support java 11")
+                .isEqualTo("1.8");
         RefasterTestHelper
                 .forRefactoring(TritiumReplaceGauge.class)
                 .withInputLines(
