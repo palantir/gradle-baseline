@@ -48,6 +48,34 @@ class UnsafeGaugeRegistrationTest {
     }
 
     @Test
+    void testKnownBug() {
+        RefactoringValidator.of(new UnsafeGaugeRegistration(), getClass())
+                .addInputLines(
+                        "Test.java",
+                        "import com.codahale.metrics.Gauge;",
+                        "import com.palantir.tritium.metrics.registry.MetricName;",
+                        "import com.palantir.tritium.metrics.registry.TaggedMetricRegistry;",
+                        "class Test {",
+                        "   void f(TaggedMetricRegistry registry, MetricName name, Gauge<?> gauge) {",
+                        "       registry.gauge(name, gauge);",
+                        "   }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.codahale.metrics.Gauge;",
+                        "import com.palantir.tritium.metrics.registry.MetricName;",
+                        "import com.palantir.tritium.metrics.registry.TaggedMetricRegistry;",
+                        "class Test {",
+                        "   void f(TaggedMetricRegistry registry, MetricName name, Gauge<?> gauge) {",
+                        //      This isn't right. Filed https://github.com/google/error-prone/issues/1451
+                        "       registry.gauge(name, registerWithReplacement);",
+                        "   }",
+                        "}"
+                )
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
     void testNegative() {
         CompilationTestHelper.newInstance(UnsafeGaugeRegistration.class, getClass()).addSourceLines(
                 "Test.java",
