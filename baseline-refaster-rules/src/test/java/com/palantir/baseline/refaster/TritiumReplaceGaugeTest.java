@@ -16,9 +16,9 @@
 
 package com.palantir.baseline.refaster;
 
-import org.junit.Test;
-
 import static org.assertj.core.api.Assumptions.assumeThat;
+
+import org.junit.Test;
 
 public class TritiumReplaceGaugeTest {
 
