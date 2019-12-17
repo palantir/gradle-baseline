@@ -25,7 +25,6 @@ import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.AbstractReturnValueIgnored;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.fixes.SuggestedFix;
-import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
@@ -121,7 +120,7 @@ public final class ReadReturnValueIgnored extends AbstractReturnValueIgnored {
         }
         if (RAF_BUFFER_READ_MATCHER.matches(methodInvocationTree, state)) {
             return buildDescription(methodInvocationTree)
-                    .addFix(SuggestedFixes.renameMethodInvocation(methodInvocationTree, "readFully", state))
+                    .addFix(MoreSuggestedFixes.renameMethodInvocation(methodInvocationTree, "readFully", state))
                     .build();
         }
         if (READER_SKIP_MATCHER.matches(methodInvocationTree, state)) {

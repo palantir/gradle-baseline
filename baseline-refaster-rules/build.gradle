@@ -7,9 +7,13 @@ dependencies {
     implementation 'com.google.errorprone:error_prone_refaster'
     implementation 'org.assertj:assertj-core'
     implementation 'org.mockito:mockito-core'
+    implementation 'com.palantir.tritium:tritium-registry'
 
     testCompile 'junit:junit'
     testCompile project(':baseline-refaster-testing')
+    testCompile 'org.immutables:value::annotations'
+
+    compileOnly 'org.immutables:value::annotations'
 }
 
 // Do not apply refaster rules

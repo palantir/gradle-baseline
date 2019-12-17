@@ -16,17 +16,22 @@
 
 package com.palantir.baseline.errorprone;
 
+import com.google.common.collect.Lists;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.fixes.SuggestedFix;
 import com.google.errorprone.fixes.SuggestedFixes;
+import com.google.errorprone.util.ErrorProneToken;
 import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.Type;
+import com.sun.tools.javac.parser.Tokens;
 import com.sun.tools.javac.tree.JCTree;
+import java.util.List;
 import java.util.stream.Collectors;
 import javax.annotation.Nullable;
+import javax.lang.model.element.Name;
 
 /**
  * Additional utility functionality for {@link SuggestedFix} objects.
@@ -65,6 +70,41 @@ final class MoreSuggestedFixes {
         }
         int endPos = state.getEndPosition(methodSelect);
         return fix.replace(startPos, endPos, extra + newMethodName).build();
+    }
+
+    /**
+     * Replaces the name of the method being invoked in {@code tree} with {@code replacement}.
+     * This implementation is forked from upstream error-prone to work around a bug that results in
+     * parameters being renamed in some scenarios: https://github.com/google/error-prone/issues/1451.
+     */
+    public static SuggestedFix renameMethodInvocation(
+            MethodInvocationTree tree,
+            String replacement,
+            VisitorState state) {
+        Tree methodSelect = tree.getMethodSelect();
+        Name identifier;
+        int startPos;
+        if (methodSelect instanceof MemberSelectTree) {
+            identifier = ((MemberSelectTree) methodSelect).getIdentifier();
+            startPos = state.getEndPosition(((MemberSelectTree) methodSelect).getExpression());
+        } else if (methodSelect instanceof IdentifierTree) {
+            identifier = ((IdentifierTree) methodSelect).getName();
+            startPos = ((JCTree) tree).getStartPosition();
+        } else {
+            throw new IllegalStateException("Malformed tree:\n" + state.getSourceForNode(tree));
+        }
+        List<ErrorProneToken> tokens = state.getOffsetTokens(startPos, state.getEndPosition(tree));
+        int depth = 0;
+        for (ErrorProneToken token : Lists.reverse(tokens)) {
+            if (depth == 0 && token.kind() == Tokens.TokenKind.IDENTIFIER && token.name().equals(identifier)) {
+                return SuggestedFix.replace(token.pos(), token.endPos(), replacement);
+            } else if (token.kind() == Tokens.TokenKind.RPAREN) {
+                depth++;
+            } else if (token.kind() == Tokens.TokenKind.LPAREN) {
+                depth--;
+            }
+        }
+        throw new IllegalStateException("Malformed tree:\n" + state.getSourceForNode(tree));
     }
 
     /**

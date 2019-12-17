@@ -12,6 +12,7 @@ org.github.ngbinh.scalastyle:gradle-scalastyle-plugin_2.11 = 1.0.1
 org.inferred:freebuilder = 1.14.6
 org.jooq:jooq = 3.12.3
 org.slf4j:slf4j-api = 1.7.25
+org.immutables:* = 2.8.3
 
 # test deps
 com.netflix.nebula:nebula-test = 7.6.0
@@ -26,6 +27,7 @@ org.junit.jupiter:* = 5.5.2
 org.mockito:* = 3.2.4
 com.fasterxml.jackson.*:* = 2.10.1
 com.palantir.tokens:auth-tokens = 3.6.1
+com.palantir.tritium:tritium-registry = 0.16.2
 
 # dependency-upgrader:OFF
 # Updating to 0.8 would raise our minimum compatible version to 5.2

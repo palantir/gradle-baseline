@@ -20,7 +20,6 @@ import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
-import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
@@ -56,7 +55,7 @@ public final class ReverseDnsLookup extends BugChecker implements BugChecker.Met
                     // Suggested fix exists to provide context when compilation fails, it shouldn't be used
                     // as a drop in replacement because the unresolved string may not be sufficient in some
                     // cases, particularly involving auditing.
-                    .addFix(SuggestedFixes.renameMethodInvocation(tree, "getHostString", state))
+                    .addFix(MoreSuggestedFixes.renameMethodInvocation(tree, "getHostString", state))
                     .build();
         }
         if (INET_ADDRESS_MATCHER.matches(tree, state)) {
@@ -64,7 +63,7 @@ public final class ReverseDnsLookup extends BugChecker implements BugChecker.Met
                     // Suggested fix exists to provide context when compilation fails, it shouldn't be used
                     // as a drop in replacement because the unresolved string may not be sufficient in some
                     // cases, particularly involving auditing.
-                    .addFix(SuggestedFixes.renameMethodInvocation(tree, "getHostAddress", state))
+                    .addFix(MoreSuggestedFixes.renameMethodInvocation(tree, "getHostAddress", state))
                     .build();
         }
         return Description.NO_MATCH;
