@@ -5,7 +5,6 @@ apply from: "${rootDir}/gradle/publish-jar.gradle"
 
 dependencies {
     implementation 'com.google.errorprone:error_prone_refaster'
-    implementation 'org.assertj:assertj-core'
     implementation 'org.mockito:mockito-core'
     implementation 'com.palantir.tritium:tritium-registry'
 

@@ -1,0 +1,6 @@
+type: migration
+migration:
+  description: All assertj-related code-rewriting now lives in the https://github.com/palantir/assertj-automation
+    repo.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1125

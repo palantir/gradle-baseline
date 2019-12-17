@@ -170,7 +170,6 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `StrictUnusedVariable`: Functions shouldn't have unused parameters.
 - `StringBuilderConstantParameters`: StringBuilder with a constant number of parameters should be replaced by simple concatenation.
 - `JUnit5SuiteMisuse`: When migrating from JUnit4 -> JUnit5, classes annotated with `@RunWith(Suite.class)` are dangerous because if they reference any JUnit5 test classes, these tests will silently not run!
-- `PreferAssertj`: Prefer AssertJ fluent assertions.
 - `ThrowError`: Prefer throwing a RuntimeException rather than Error.
 - `ReverseDnsLookup`: Calling address.getHostName may result in an unexpected DNS lookup.
 - `ReadReturnValueIgnored`: The result of a read call must be checked to know if EOF has been reached or the expected number of bytes have been consumed.
@@ -182,7 +181,6 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `JooqResultStreamLeak`: Autocloseable streams and cursors from jOOQ results should be obtained in a try-with-resources statement.
 - `StreamOfEmpty`: Stream.of() should be replaced with Stream.empty() to avoid unnecessary varargs allocation.
 - `RedundantMethodReference`: Redundant method reference to the same type.
-- `AssertjPrimitiveComparison`: Prefer using AssertJ fluent comparisons over logic in an assertThat statement.
 - `ExceptionSpecificity`: Prefer more specific catch types than Exception and Throwable.
 - `ThrowSpecificity`: Prefer to declare more specific `throws` types than Exception and Throwable.
 - `UnsafeGaugeRegistration`: Use TaggedMetricRegistry.registerWithReplacement over TaggedMetricRegistry.gauge.
@@ -199,7 +197,7 @@ You may apply specific error-prone refactors including those which are not enabl
 delimited list of check names to the `-PerrorProneApply` option.
 
 ```bash
-./gradlew compileJava compileTestJava -PerrorProneApply=PreferAssertj
+./gradlew compileJava compileTestJava -PerrorProneApply=ThrowSpecificity
 ```
 
 ## com.palantir.baseline-checkstyle
