@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: Remove AssertjPrimitiveComparison from default-patch-checks because
+    it has been relocated to assertj-automation.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1128
