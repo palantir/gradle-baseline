@@ -56,6 +56,7 @@ import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradle.api.tasks.testing.Test;
+import org.gradle.process.CommandLineArgumentProvider;
 
 public final class BaselineErrorProne implements Plugin<Project> {
     private static final Logger log = Logging.getLogger(BaselineErrorProne.class);
@@ -81,7 +82,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
                     log.warn("Baseline is using 'latest.release' - beware this compromises build reproducibility");
                     return "latest.release";
                 });
-
         Configuration refasterConfiguration = project.getConfigurations().create("refaster", conf -> {
             conf.defaultDependencies(deps -> {
                 deps.add(project.getDependencies().create(
@@ -225,13 +225,17 @@ public final class BaselineErrorProne implements Plugin<Project> {
 
             if (isRefasterRefactoring(project)) {
                 javaCompile.dependsOn(compileRefaster);
-                errorProneOptions.getErrorproneArgumentProviders().add(() -> {
-                    String file = refasterRulesFile.get().getAbsolutePath();
-                    return new File(file).exists()
-                            ? ImmutableList.of(
-                            "-XepPatchChecks:refaster:" + file,
-                            "-XepPatchLocation:IN_PLACE")
-                            : Collections.emptyList();
+                errorProneOptions.getErrorproneArgumentProviders().add(new CommandLineArgumentProvider() {
+                    // intentionally not using a lambda to reduce gradle warnings
+                    @Override
+                    public Iterable<String> asArguments() {
+                        String file = refasterRulesFile.get().getAbsolutePath();
+                        return new File(file).exists()
+                                ? ImmutableList.of(
+                                "-XepPatchChecks:refaster:" + file,
+                                "-XepPatchLocation:IN_PLACE")
+                                : Collections.emptyList();
+                    }
                 });
             }
 
@@ -247,14 +251,18 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 // TODO(gatesn): Is there a way to discover error-prone checks?
                 // Maybe service-load from a ClassLoader configured with annotation processor path?
                 // https://github.com/google/error-prone/pull/947
-                errorProneOptions.getErrorproneArgumentProviders().add(() -> {
-                    // Don't apply checks that have been explicitly disabled
-                    Stream<String> errorProneChecks = getSpecificErrorProneChecks(project)
-                            .orElseGet(() -> getNotDisabledErrorproneChecks(
-                                    project, errorProneExtension, javaCompile, maybeSourceSet, errorProneOptions));
-                    return ImmutableList.of(
-                            "-XepPatchChecks:" + Joiner.on(',').join(errorProneChecks.iterator()),
-                            "-XepPatchLocation:IN_PLACE");
+                errorProneOptions.getErrorproneArgumentProviders().add(new CommandLineArgumentProvider() {
+                    // intentionally not using a lambda to reduce gradle warnings
+                    @Override
+                    public Iterable<String> asArguments() {
+                        // Don't apply checks that have been explicitly disabled
+                        Stream<String> errorProneChecks = getSpecificErrorProneChecks(project)
+                                .orElseGet(() -> getNotDisabledErrorproneChecks(
+                                        project, errorProneExtension, javaCompile, maybeSourceSet, errorProneOptions));
+                        return ImmutableList.of(
+                                "-XepPatchChecks:" + Joiner.on(',').join(errorProneChecks.iterator()),
+                                "-XepPatchLocation:IN_PLACE");
+                    }
                 });
             }
         }
