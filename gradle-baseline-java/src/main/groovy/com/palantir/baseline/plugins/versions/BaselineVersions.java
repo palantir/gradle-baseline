@@ -75,10 +75,31 @@ public final class BaselineVersions implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
-        if (project.hasProperty(DISABLE_PROPERTY)) {
-            log.info("Not configuring com.palantir.baseline-versions because " + DISABLE_PROPERTY + " was set");
-            return;
+        project.getPluginManager().apply(BasePlugin.class);
+
+        File rootVersionsPropsFile = rootVersionsPropsFile(project);
+        TaskProvider<CheckVersionsPropsTask> checkVersionsProps = project.getTasks().register(
+                "checkVersionsProps", CheckVersionsPropsTask.class);
+        project.getTasks().named("check").configure(task -> task.dependsOn("checkVersionsProps"));
+
+        TaskProvider<CheckNoUnusedPinTask> checkNoUnusedPin = project.getTasks().register(
+                "checkNoUnusedPin", CheckNoUnusedPinTask.class, task -> task.setPropsFile(rootVersionsPropsFile));
+        checkVersionsProps.configure(task -> {
+            task.dependsOn(checkNoUnusedPin);
+            checkNoUnusedPin.get().setShouldFix(task.getShouldFix());
+        });
+
+        // TODO(someone): Remove this one day
+        if (!project.hasProperty(DISABLE_PROPERTY)) {
+            configureNebula(project, rootVersionsPropsFile, checkVersionsProps, checkNoUnusedPin);
         }
+    }
+
+    private void configureNebula(
+            Project project,
+            File rootVersionsPropsFile,
+            TaskProvider<CheckVersionsPropsTask> checkVersionsProps,
+            TaskProvider<CheckNoUnusedPinTask> checkNoUnusedPin) {
         // apply plugin: "nebula.dependency-recommender"
         project.getPluginManager().apply(DependencyRecommendationsPlugin.class);
 
@@ -93,8 +114,6 @@ public final class BaselineVersions implements Plugin<Project> {
                 .getByType(RecommendationProviderContainer.class);
 
         extension.setStrategy(RecommendationStrategies.OverrideTransitives); // default is 'ConflictResolved'
-
-        File rootVersionsPropsFile = rootVersionsPropsFile(project);
         extension.propertiesFile(ImmutableMap.of("file", rootVersionsPropsFile));
 
         if (project != project.getRootProject()) {
@@ -102,25 +121,20 @@ public final class BaselineVersions implements Plugin<Project> {
             if (project.file("versions.props").exists()) {
                 extension.propertiesFile(ImmutableMap.of("file", project.file("versions.props")));
             }
-        } else {
-            TaskProvider<CheckBomConflictTask> checkBomConflict = project.getTasks().register(
-                    "checkBomConflict", CheckBomConflictTask.class, task -> task.setPropsFile(rootVersionsPropsFile));
-            TaskProvider<CheckNoUnusedPinTask> checkNoUnusedPin = project.getTasks().register(
-                    "checkNoUnusedPin", CheckNoUnusedPinTask.class, task -> task.setPropsFile(rootVersionsPropsFile));
-
-            project.getTasks().register("checkVersionsProps", CheckVersionsPropsTask.class, task -> {
-                task.dependsOn(checkBomConflict, checkNoUnusedPin);
-                // If we just run checkVersionsProps --fix, we want to propagate its option to its dependent tasks
-                checkBomConflict.get().setShouldFix(task.getShouldFix());
-                checkNoUnusedPin.get().setShouldFix(task.getShouldFix());
-            });
-            // If we run with --parallel --fix, both checkNoUnusedPin and checkBomConflict will try to overwrite the
-            // versions file at the same time. Therefore, make sure checkBomConflict runs first.
-            checkNoUnusedPin.configure(task -> task.mustRunAfter(checkBomConflict));
-
-            project.getPluginManager().apply(BasePlugin.class);
-            project.getTasks().named("check").configure(task -> task.dependsOn("checkVersionsProps"));
         }
+
+        TaskProvider<CheckBomConflictTask> checkBomConflict = project.getTasks().register(
+                "checkBomConflict", CheckBomConflictTask.class, task -> {
+                    task.setPropsFile(rootVersionsPropsFile);
+                    // If we run with --parallel --fix, both checkNoUnusedPin and checkBomConflict will try to overwrite
+                    // the versions file at the same time. Therefore, make sure checkNoUnusedPin runs first.
+                    task.mustRunAfter(checkNoUnusedPin);
+                });
+
+        checkVersionsProps.configure(task -> {
+            task.dependsOn(checkBomConflict);
+            checkBomConflict.get().setShouldFix(task.getShouldFix());
+        });
     }
 
     private static File rootVersionsPropsFile(Project project) {
@@ -182,7 +196,7 @@ public final class BaselineVersions implements Plugin<Project> {
     /**
      * The weight of a matcher in {@code versions.props} according to the disambiguation logic defined in
      * {@code nebula.dependency-recommender}.
-     *
+     * <p>
      * This matches the logic in {@link FuzzyVersionResolver}.
      */
     private static int versionsPropsMatcherWeight(String matcher) {
