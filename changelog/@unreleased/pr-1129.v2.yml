@@ -1,0 +1,7 @@
+type: improvement
+improvement:
+  description: Projects with `com.palantir.baseline-versions.disable=true` will now
+    have `checkNoUnusedPin` task run as part of check, ensuring that the `versions.props`
+    file is minimal
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1129
