@@ -89,7 +89,7 @@ public final class BaselineVersions implements Plugin<Project> {
             checkNoUnusedPin.get().setShouldFix(task.getShouldFix());
         });
 
-        // TODO(someone): Remove this one day
+        // TODO(#1131): Remove this one day
         if (!project.hasProperty(DISABLE_PROPERTY)) {
             configureNebula(project, rootVersionsPropsFile, checkVersionsProps, checkNoUnusedPin);
         }
