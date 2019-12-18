@@ -49,7 +49,12 @@ public final class BracesRequired extends BugChecker implements
     @Override
     public Description matchIf(IfTree tree, VisitorState state) {
         check(tree.getThenStatement(), state);
-        check(tree.getElseStatement(), state);
+        StatementTree elseStatement = tree.getElseStatement();
+        if (elseStatement != null
+                // Additional check for else if
+                && elseStatement.getKind() != Tree.Kind.IF) {
+            check(elseStatement, state);
+        }
         return Description.NO_MATCH;
     }
 

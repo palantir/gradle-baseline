@@ -218,6 +218,29 @@ public class BracesRequiredTest {
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
+    @Test
+    void testFix_elseIf() {
+        fix()
+                .addInputLines("Test.java",
+                        "class Test {",
+                        "  void f(boolean p0, boolean p1) {",
+                        "    if (p0) System.out.println();",
+                        "    else if (p1) System.out.println();",
+                        "  }",
+                        "}")
+                .addOutputLines("Test.java",
+                        "class Test {",
+                        "  void f(boolean p0, boolean p1) {",
+                        "    if (p0) {",
+                        "      System.out.println();",
+                        "    } else if (p1) {",
+                        "      System.out.println();",
+                        "    }",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
     private RefactoringValidator fix() {
         return RefactoringValidator.of(new BracesRequired(), getClass());
     }
