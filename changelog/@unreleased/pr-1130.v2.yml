@@ -1,0 +1,12 @@
+type: improvement
+improvement:
+  description: |-
+    Implement BracesRequired error-prone check with suggested fixes
+    ```diff
+    - if (condition) statement;
+    + if (condition) {
+    +   statement;
+    + }
+    ```
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1130
