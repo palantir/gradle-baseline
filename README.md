@@ -184,6 +184,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `ExceptionSpecificity`: Prefer more specific catch types than Exception and Throwable.
 - `ThrowSpecificity`: Prefer to declare more specific `throws` types than Exception and Throwable.
 - `UnsafeGaugeRegistration`: Use TaggedMetricRegistry.registerWithReplacement over TaggedMetricRegistry.gauge.
+- `BracesRequired`: Require braces for loops and if expressions.
 
 ### Programmatic Application
 
