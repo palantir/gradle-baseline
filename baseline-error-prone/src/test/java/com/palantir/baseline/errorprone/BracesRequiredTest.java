@@ -194,6 +194,30 @@ public class BracesRequiredTest {
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
+    @Test
+    void testFix_nested() {
+        fix()
+                .addInputLines("Test.java",
+                        "class Test {",
+                        "  void f(boolean param) {",
+                        "    if (param) if (param) {",
+                        "      System.out.println();",
+                        "    }",
+                        "  }",
+                        "}")
+                .addOutputLines("Test.java",
+                        "class Test {",
+                        "  void f(boolean param) {",
+                        "    if (param) {",
+                        "        if (param) {",
+                        "            System.out.println();",
+                        "        }",
+                        "    }",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
     private RefactoringValidator fix() {
         return RefactoringValidator.of(new BracesRequired(), getClass());
     }

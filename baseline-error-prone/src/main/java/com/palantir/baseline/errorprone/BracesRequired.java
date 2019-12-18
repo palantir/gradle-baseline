@@ -78,7 +78,9 @@ public final class BracesRequired extends BugChecker implements
     }
 
     private void check(@Nullable StatementTree tree, VisitorState state) {
-        if (tree != null && tree.getKind() == Tree.Kind.EXPRESSION_STATEMENT) {
+        if (tree != null
+                && tree.getKind() != Tree.Kind.BLOCK
+                && tree.getKind() != Tree.Kind.EMPTY_STATEMENT) {
             state.reportMatch(buildDescription(tree)
                     .addFix(SuggestedFix.replace(tree, "{" + state.getSourceForNode(tree) + "}"))
                     .build());
