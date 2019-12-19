@@ -64,7 +64,6 @@ class BaselineIdea extends AbstractBaselinePlugin {
             }
 
             // Configure Idea module
-            markResourcesDirs(ideaModuleModel)
             moveProjectReferencesToEnd(ideaModuleModel)
         }
 
@@ -279,24 +278,6 @@ class BaselineIdea extends AbstractBaselinePlugin {
         }
 
         return base.appendNode(name, attributes + defaults)
-    }
-
-    /**
-     * By default the Idea plugin marks resources dirs as source dirs.
-     */
-    private void markResourcesDirs(IdeaModel ideaModel) {
-        ideaModel.module.iml.withXml {
-            def node = it.asNode()
-            def content = node.component.find { it.'@name' == 'NewModuleRootManager' }.content[0]
-            content.sourceFolder.each { sourceFolder ->
-                if(sourceFolder.@url?.endsWith('/resources')) {
-                    sourceFolder.attributes().with {
-                        boolean isTestSource = (remove('isTestSource') == 'true')
-                        put('type', isTestSource ? 'java-test-resource' : 'java-resource')
-                    }
-                }
-            }
-        }
     }
 
     /**
