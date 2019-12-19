@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: The `baseline-idea` plugin now correctly marks test resources as test
+    resources in IntelliJ.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1134
