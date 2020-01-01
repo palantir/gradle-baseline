@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: 'Error-prone OptionalOfNullableNonNull: Prefer Optional.of over ofNullable'
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1137
