@@ -100,9 +100,10 @@ class OptionalOfNullableNonNullTest {
                         "import java.util.function.*;",
                         "import javax.annotation.*;",
                         "class Test {",
-                        "  void f(Consumer<Object> sink, Object param0, @Nullable Object param1) {",
-                        "    sink.accept(Optional.ofNullable(param0));",
-                        "    sink.accept(Optional.ofNullable(param1));",
+                        "  void f(Consumer<Object> sink, Map<String, Object> map, Object p0, @Nullable Object p1) {",
+                        "    sink.accept(Optional.ofNullable(p0));",
+                        "    sink.accept(Optional.ofNullable(p1));",
+                        "    sink.accept(Optional.ofNullable(map.get(\"a\")).orElse(\"b\"));",
                         "  }",
                         "}")
                 .expectUnchanged()
