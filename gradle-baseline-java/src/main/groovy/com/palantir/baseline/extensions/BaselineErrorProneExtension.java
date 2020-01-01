@@ -30,6 +30,7 @@ public class BaselineErrorProneExtension {
             "ExecutorSubmitRunnableFutureIgnored",
             "FinalClass",
             "LambdaMethodReference",
+            "OptionalOfNullableNonNull",
             "OptionalOrElseMethodInvocation",
             "PreferBuiltInConcurrentKeySet",
             "PreferCollectionTransform",

@@ -185,6 +185,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `ThrowSpecificity`: Prefer to declare more specific `throws` types than Exception and Throwable.
 - `UnsafeGaugeRegistration`: Use TaggedMetricRegistry.registerWithReplacement over TaggedMetricRegistry.gauge.
 - `BracesRequired`: Require braces for loops and if expressions.
+- `OptionalOfNullableNonNull`: Optional.of should be used over Optional.ofNullable for non-null values.
 
 ### Programmatic Application
 
