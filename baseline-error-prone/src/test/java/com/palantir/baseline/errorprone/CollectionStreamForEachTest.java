@@ -1,5 +1,5 @@
 /*
- * (c) Copyright 2019 Palantir Technologies Inc. All rights reserved.
+ * (c) Copyright 2020 Palantir Technologies Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,33 +14,40 @@
  * limitations under the License.
  */
 
-package com.palantir.baseline.refaster;
+package com.palantir.baseline.errorprone;
 
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
-public class CollectionStreamForEachTest {
-
+class CollectionStreamForEachTest {
     @Test
     public void test() {
-        RefasterTestHelper
-                .forRefactoring(CollectionStreamForEach.class)
-                .withInputLines(
-                        "Test",
+        fix()
+                .addInputLines(
+                        "Test.java",
                         "import java.util.List;",
                         "public class Test {",
                         "  void f(List<String> in) {",
                         "    in.stream().forEach(System.out::println);",
                         "    in.stream().forEachOrdered(System.out::println);",
+                        "    in.stream().<String>forEach(System.out::println);",
+                        "    in.stream().<String>forEachOrdered(System.out::println);",
                         "  }",
                         "}")
-                .hasOutputLines(
+                .addOutputLines(
+                        "Test.java",
                         "import java.util.List;",
                         "public class Test {",
                         "  void f(List<String> in) {",
                         "    in.forEach(System.out::println);",
                         "    in.forEach(System.out::println);",
+                        "    in.<String>forEach(System.out::println);",
+                        "    in.<String>forEach(System.out::println);",
                         "  }",
-                        "}");
+                        "}")
+                .doTest();
     }
 
+    private RefactoringValidator fix() {
+        return RefactoringValidator.of(new CollectionStreamForEach(), getClass());
+    }
 }
