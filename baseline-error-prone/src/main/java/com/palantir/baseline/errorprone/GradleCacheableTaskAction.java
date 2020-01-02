@@ -45,10 +45,9 @@ public final class GradleCacheableTaskAction extends BugChecker implements Lambd
             .onDescendantOf("org.gradle.api.Task")
             .namedAnyOf("doFirst", "doLast");
 
-    private static final Matcher<ExpressionTree> IS_TASK_ACTION =
-            Matchers.allOf(
-                    Matchers.parentNode(Matchers.toType(ExpressionTree.class, Matchers.methodInvocation(TASK_ACTION))),
-                    IS_ACTION);
+    private static final Matcher<ExpressionTree> IS_TASK_ACTION = Matchers.allOf(
+            Matchers.parentNode(Matchers.toType(ExpressionTree.class, Matchers.methodInvocation(TASK_ACTION))),
+            IS_ACTION);
 
     @Override
     public Description matchLambdaExpression(LambdaExpressionTree tree, VisitorState state) {

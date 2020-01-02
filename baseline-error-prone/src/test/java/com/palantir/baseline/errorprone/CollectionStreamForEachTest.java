@@ -21,8 +21,7 @@ import org.junit.jupiter.api.Test;
 class CollectionStreamForEachTest {
     @Test
     public void test() {
-        fix()
-                .addInputLines(
+        fix().addInputLines(
                         "Test.java",
                         "import java.util.List;",
                         "public class Test {",

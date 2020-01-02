@@ -39,12 +39,12 @@ import javax.annotation.Nullable;
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = BugPattern.SeverityLevel.WARNING,
         summary = "Braces are required for readability")
-public final class BracesRequired extends BugChecker implements
-        BugChecker.DoWhileLoopTreeMatcher,
-        BugChecker.ForLoopTreeMatcher,
-        BugChecker.EnhancedForLoopTreeMatcher,
-        BugChecker.IfTreeMatcher,
-        BugChecker.WhileLoopTreeMatcher {
+public final class BracesRequired extends BugChecker
+        implements BugChecker.DoWhileLoopTreeMatcher,
+                BugChecker.ForLoopTreeMatcher,
+                BugChecker.EnhancedForLoopTreeMatcher,
+                BugChecker.IfTreeMatcher,
+                BugChecker.WhileLoopTreeMatcher {
 
     @Override
     public Description matchIf(IfTree tree, VisitorState state) {
@@ -83,9 +83,7 @@ public final class BracesRequired extends BugChecker implements
     }
 
     private void check(@Nullable StatementTree tree, VisitorState state) {
-        if (tree != null
-                && tree.getKind() != Tree.Kind.BLOCK
-                && tree.getKind() != Tree.Kind.EMPTY_STATEMENT) {
+        if (tree != null && tree.getKind() != Tree.Kind.BLOCK && tree.getKind() != Tree.Kind.EMPTY_STATEMENT) {
             state.reportMatch(buildDescription(tree)
                     .addFix(SuggestedFix.replace(tree, "{" + state.getSourceForNode(tree) + "}"))
                     .build());

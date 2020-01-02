@@ -53,9 +53,8 @@ final class MoreASTHelpers {
     /** Removes any type that is a subtype of another type in the set. */
     @SuppressWarnings("ReferenceEquality")
     static ImmutableList<Type> flattenTypesForAssignment(ImmutableList<Type> input, VisitorState state) {
-        ImmutableList<Type> types = input.stream()
-                .map(type -> broadenAnonymousType(type, state))
-                .collect(ImmutableList.toImmutableList());
+        ImmutableList<Type> types =
+                input.stream().map(type -> broadenAnonymousType(type, state)).collect(ImmutableList.toImmutableList());
         ImmutableList.Builder<Type> deduplicatedBuilder = ImmutableList.builderWithExpectedSize(types.size());
         for (int i = 0; i < types.size(); i++) {
             Type current = types.get(i);
@@ -74,8 +73,7 @@ final class MoreASTHelpers {
         return deduplicated.stream()
                 .filter(type -> deduplicated.stream().noneMatch(item ->
                         // An item cannot deduplicate itself
-                        type != item
-                                && state.getTypes().isSubtype(type, item)))
+                        type != item && state.getTypes().isSubtype(type, item)))
                 // Sort by pretty name
                 .sorted(Comparator.comparing(type -> MoreSuggestedFixes.prettyType(state, null, type)))
                 .collect(ImmutableList.toImmutableList());
@@ -118,8 +116,8 @@ final class MoreASTHelpers {
     }
 
     /**
-     * Returns all exceptions thrown by
-     * getThrownExceptions and associated utilities are borrowed from upstream error-prone with an Apache 2 license.
+     * Returns all exceptions thrown by getThrownExceptions and associated utilities are borrowed from upstream
+     * error-prone with an Apache 2 license.
      * https://github.com/google/error-prone/blob/8df5e4bbae8368b62ec96e4563fb1f448229f3e9/core/src/main/java/com/google/errorprone/bugpatterns/InterruptedExceptionSwallowed.java
      */
     static ImmutableSet<Type> getThrownExceptions(Tree tree, VisitorState state) {
@@ -132,10 +130,9 @@ final class MoreASTHelpers {
     private static Optional<Symbol.MethodSymbol> getCloseMethod(Symbol.ClassSymbol symbol, VisitorState state) {
         Types types = state.getTypes();
         return symbol.getEnclosedElements().stream()
-                .filter(sym ->
-                        types.isAssignable(symbol.type, state.getTypeFromString(AutoCloseable.class.getName()))
-                                && sym.getSimpleName().contentEquals("close")
-                                && sym.getTypeParameters().isEmpty())
+                .filter(sym -> types.isAssignable(symbol.type, state.getTypeFromString(AutoCloseable.class.getName()))
+                        && sym.getSimpleName().contentEquals("close")
+                        && sym.getTypeParameters().isEmpty())
                 .map(e -> (Symbol.MethodSymbol) e)
                 .findFirst();
     }

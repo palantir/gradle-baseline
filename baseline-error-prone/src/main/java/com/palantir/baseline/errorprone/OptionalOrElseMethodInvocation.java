@@ -43,9 +43,8 @@ public final class OptionalOrElseMethodInvocation extends BugChecker implements 
 
     private static final long serialVersionUID = 1L;
 
-    private static final Matcher<ExpressionTree> OR_ELSE_METHOD = MethodMatchers.instanceMethod()
-            .onExactClass("java.util.Optional")
-            .named("orElse");
+    private static final Matcher<ExpressionTree> OR_ELSE_METHOD =
+            MethodMatchers.instanceMethod().onExactClass("java.util.Optional").named("orElse");
 
     private static final Matcher<ExpressionTree> METHOD_INVOCATIONS = Matchers.anyOf(
             MethodInvocationMatcher.INSTANCE,
@@ -73,14 +72,12 @@ public final class OptionalOrElseMethodInvocation extends BugChecker implements 
     }
 
     private enum MethodInvocationMatcher implements Matcher<ExpressionTree> {
-
         INSTANCE;
 
         @Override
         public boolean matches(ExpressionTree tree, VisitorState state) {
             Kind kind = tree.getKind();
-            return kind == Kind.NEW_CLASS
-                    || kind == Kind.METHOD_INVOCATION;
+            return kind == Kind.NEW_CLASS || kind == Kind.METHOD_INVOCATION;
         }
     }
 }
