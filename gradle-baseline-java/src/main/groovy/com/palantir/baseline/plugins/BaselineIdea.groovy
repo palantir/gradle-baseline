@@ -60,6 +60,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
                 ideaRootModel.workspace.iws.withXml { provider ->
                     def node = provider.asNode()
                     setRunManagerWorkingDirectory(node)
+                    addEditorSettings(node)
                 }
             }
 
@@ -235,6 +236,14 @@ class BaselineIdea extends AbstractBaselinePlugin {
             <component name="JavacSettings">
                 <option name="PREFER_TARGET_JDK_COMPILER" value="false" />
             </component>
+            """.stripIndent()))
+    }
+
+    private void addEditorSettings(node) {
+        node.append(new XmlParser().parseText("""
+            <component name="CodeInsightWorkspaceSettings">
+                <option name="optimizeImportsOnTheFly" value="true" />
+              </component>
             """.stripIndent()))
     }
 
