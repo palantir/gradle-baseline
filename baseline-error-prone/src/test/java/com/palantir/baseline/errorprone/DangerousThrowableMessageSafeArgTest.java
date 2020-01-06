@@ -36,68 +36,78 @@ public final class DangerousThrowableMessageSafeArgTest {
 
     @Test
     public void unsafe_safearg_value() {
-        compilationHelper.addSourceLines(
-                "Bean.java",
-                "import " + SafeIllegalArgumentException.class.getName() + ';',
-                "import " + SafeArg.class.getName() + ';',
-                "class Bean {",
-                "  public SafeArg<?> foo() {",
-                "    Exception foo = new SafeIllegalArgumentException(\"Foo\");",
-                "    // BUG: Diagnostic contains: Do not use throwable messages as SafeArg values",
-                "    return SafeArg.of(\"foo\", foo.getMessage());",
-                "  }",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Bean.java",
+                        "import " + SafeIllegalArgumentException.class.getName() + ';',
+                        "import " + SafeArg.class.getName() + ';',
+                        "class Bean {",
+                        "  public SafeArg<?> foo() {",
+                        "    Exception foo = new SafeIllegalArgumentException(\"Foo\");",
+                        "    // BUG: Diagnostic contains: Do not use throwable messages as SafeArg values",
+                        "    return SafeArg.of(\"foo\", foo.getMessage());",
+                        "  }",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void safe_safearg_value() {
-        compilationHelper.addSourceLines(
-                "Bean.java",
-                "import " + SafeIllegalArgumentException.class.getName() + ';',
-                "import " + SafeArg.class.getName() + ';',
-                "class Bean {",
-                "  public SafeArg<?> foo() {",
-                "    SafeIllegalArgumentException foo = new SafeIllegalArgumentException(\"Foo\");",
-                "    return SafeArg.of(\"foo\", foo.getLogMessage());",
-                "  }",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Bean.java",
+                        "import " + SafeIllegalArgumentException.class.getName() + ';',
+                        "import " + SafeArg.class.getName() + ';',
+                        "class Bean {",
+                        "  public SafeArg<?> foo() {",
+                        "    SafeIllegalArgumentException foo = new SafeIllegalArgumentException(\"Foo\");",
+                        "    return SafeArg.of(\"foo\", foo.getLogMessage());",
+                        "  }",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void unsafe_safearg_throwable() {
-        compilationHelper.addSourceLines(
-                "Bean.java",
-                "import " + SafeIllegalArgumentException.class.getName() + ';',
-                "import " + SafeArg.class.getName() + ';',
-                "class Bean {",
-                "  public SafeArg<?> foo() {",
-                "    // BUG: Diagnostic contains: Do not use throwables as SafeArg values",
-                "    return SafeArg.of(\"foo\", new SafeIllegalArgumentException(\"Foo\"));",
-                "  }",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Bean.java",
+                        "import " + SafeIllegalArgumentException.class.getName() + ';',
+                        "import " + SafeArg.class.getName() + ';',
+                        "class Bean {",
+                        "  public SafeArg<?> foo() {",
+                        "    // BUG: Diagnostic contains: Do not use throwables as SafeArg values",
+                        "    return SafeArg.of(\"foo\", new SafeIllegalArgumentException(\"Foo\"));",
+                        "  }",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void safe_null_allowed() {
-        compilationHelper.addSourceLines(
-                "Bean.java",
-                "import " + SafeArg.class.getName() + ';',
-                "class Bean {",
-                "  public SafeArg<?> foo() {",
-                "    return SafeArg.of(\"foo\", null);",
-                "  }",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Bean.java",
+                        "import " + SafeArg.class.getName() + ';',
+                        "class Bean {",
+                        "  public SafeArg<?> foo() {",
+                        "    return SafeArg.of(\"foo\", null);",
+                        "  }",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void safe_object_allowed() {
-        compilationHelper.addSourceLines(
-                "Bean.java",
-                "import " + SafeArg.class.getName() + ';',
-                "class Bean {",
-                "  public SafeArg<?> foo(Object object) {",
-                "    return SafeArg.of(\"foo\", object);",
-                "  }",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Bean.java",
+                        "import " + SafeArg.class.getName() + ';',
+                        "class Bean {",
+                        "  public SafeArg<?> foo(Object object) {",
+                        "    return SafeArg.of(\"foo\", object);",
+                        "  }",
+                        "}")
+                .doTest();
     }
 }

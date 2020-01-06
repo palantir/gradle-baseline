@@ -23,8 +23,8 @@ class CatchSpecificityTest {
 
     @Test
     void testFix_simple() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f(String param) {",
                         "    try {",
@@ -34,7 +34,8 @@ class CatchSpecificityTest {
                         "    }",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f(String param) {",
                         "    try {",
@@ -49,8 +50,8 @@ class CatchSpecificityTest {
 
     @Test
     void testFixMultipleCatchBlocks() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f(String param) {",
                         "    try {",
@@ -62,7 +63,8 @@ class CatchSpecificityTest {
                         "    }",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f(String param) {",
                         "    try {",
@@ -79,8 +81,8 @@ class CatchSpecificityTest {
 
     @Test
     void testFixMultipleCatchBlocks_unnecessaryCatch() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f(String param) {",
                         "    try {",
@@ -92,7 +94,8 @@ class CatchSpecificityTest {
                         "    }",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f(String param) {",
                         "    try {",
@@ -107,8 +110,8 @@ class CatchSpecificityTest {
 
     @Test
     void testFixMultipleCatchBlocks_unnecessaryCatch_finally() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f(String param) {",
                         "    try {",
@@ -122,7 +125,8 @@ class CatchSpecificityTest {
                         "    }",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f(String param) {",
                         "    try {",
@@ -139,8 +143,8 @@ class CatchSpecificityTest {
 
     @Test
     void testFix_resourceDoesNotThrow() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "import java.io.*;",
                         "class Test {",
                         "  void f(String param) {",
@@ -155,7 +159,8 @@ class CatchSpecificityTest {
                         "      @Override public void close() {}",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "import java.io.*;",
                         "class Test {",
                         "  void f(String param) {",
@@ -175,8 +180,8 @@ class CatchSpecificityTest {
 
     @Test
     void testFix_resourceThrowsUnchecked() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "import java.io.*;",
                         "class Test {",
                         "  void f(String param) {",
@@ -191,7 +196,8 @@ class CatchSpecificityTest {
                         "      @Override public void close() throws RuntimeException {}",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "import java.io.*;",
                         "class Test {",
                         "  void f(String param) {",
@@ -211,8 +217,8 @@ class CatchSpecificityTest {
 
     @Test
     void testFixWithUnreachableConditional() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f(String param) {",
                         "    try {",
@@ -226,7 +232,8 @@ class CatchSpecificityTest {
                         "    }",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f(String param) {",
                         "    try {",
@@ -241,8 +248,8 @@ class CatchSpecificityTest {
 
     @Test
     void testFixWithImpossibleInstanceOf() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "class Test {",
                         "  boolean f(String param) {",
                         "    try {",
@@ -254,7 +261,8 @@ class CatchSpecificityTest {
                         "    }",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "class Test {",
                         "  boolean f(String param) {",
                         "    try {",
@@ -270,8 +278,8 @@ class CatchSpecificityTest {
 
     @Test
     void testFixWithUnreachableConditional_else() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f(String param) {",
                         "    try {",
@@ -287,7 +295,8 @@ class CatchSpecificityTest {
                         "    }",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f(String param) {",
                         "    try {",
@@ -303,8 +312,8 @@ class CatchSpecificityTest {
 
     @Test
     void testResource_creationThrows() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "import java.io.*;",
                         "class Test {",
                         "  void f(String param) {",
@@ -315,7 +324,8 @@ class CatchSpecificityTest {
                         "    }",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "import java.io.*;",
                         "class Test {",
                         "  void f(String param) {",
@@ -329,11 +339,10 @@ class CatchSpecificityTest {
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
-
     @Test
     void testResource_closeThrows() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "import java.io.*;",
                         "class Test {",
                         "  void f(String param) {",
@@ -347,7 +356,8 @@ class CatchSpecificityTest {
                         "    return new ByteArrayOutputStream();",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "import java.io.*;",
                         "class Test {",
                         "  void f(String param) {",
@@ -366,8 +376,8 @@ class CatchSpecificityTest {
 
     @Test
     void testCheckedException() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "import java.io.*;",
                         "class Test {",
                         "  void f(String param) {",
@@ -378,7 +388,8 @@ class CatchSpecificityTest {
                         "    }",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "import java.io.*;",
                         "class Test {",
                         "  void f(String param) {",
@@ -394,8 +405,8 @@ class CatchSpecificityTest {
 
     @Test
     void test_testCodeNotModified() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "import static org.assertj.core.api.Assertions.assertThat;",
                         "class Test {",
                         "  void f(String param) {",
@@ -412,8 +423,8 @@ class CatchSpecificityTest {
 
     @Test
     void testCatchesExceptionAndThrowable() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "import java.io.*;",
                         "class Test {",
                         "  void f(String param) {",
@@ -426,7 +437,8 @@ class CatchSpecificityTest {
                         "    }",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "import java.io.*;",
                         "class Test {",
                         "  void f(String param) {",
@@ -444,8 +456,8 @@ class CatchSpecificityTest {
 
     @Test
     void fixAnonymousException() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "import java.io.*;",
                         "class Test {",
                         "  void f(String param) {",
@@ -456,7 +468,8 @@ class CatchSpecificityTest {
                         "    }",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "import java.io.*;",
                         "class Test {",
                         "  void f(String param) {",
@@ -472,8 +485,8 @@ class CatchSpecificityTest {
 
     @Test
     void typeParameterException() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "class Test {",
                         "  <T extends Exception> void f(ThrowingRunnable<T> in) {",
                         "    try {",
@@ -492,8 +505,8 @@ class CatchSpecificityTest {
 
     @Test
     void exceptionAssignment_singleType() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f() throws Exception {",
                         "    try {",
@@ -504,7 +517,8 @@ class CatchSpecificityTest {
                         "    }",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f() throws Exception {",
                         "    try {",
@@ -520,8 +534,8 @@ class CatchSpecificityTest {
 
     @Test
     void exceptionAssignment_unionType() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f() throws Throwable {",
                         "    try {",
@@ -540,8 +554,8 @@ class CatchSpecificityTest {
 
     @Test
     void typeParameterExceptionToRuntimeException() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "class Test {",
                         "  <T extends RuntimeException> void f(ThrowingRunnable<T> in) {",
                         "    try {",
@@ -560,8 +574,8 @@ class CatchSpecificityTest {
 
     @Test
     void typeParameterIoException() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "import java.io.*;",
                         "class Test {",
                         "  <T extends IOException> void f(ThrowingRunnable<T> in) {",
@@ -575,7 +589,8 @@ class CatchSpecificityTest {
                         "    void run() throws T;",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "import java.io.*;",
                         "class Test {",
                         "  <T extends IOException> void f(ThrowingRunnable<T> in) {",
