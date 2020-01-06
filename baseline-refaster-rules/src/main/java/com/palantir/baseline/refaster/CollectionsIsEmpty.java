@@ -33,5 +33,4 @@ public final class CollectionsIsEmpty<T> {
     boolean optimizedMethod(Collection<T> collection) {
         return collection.isEmpty();
     }
-
 }

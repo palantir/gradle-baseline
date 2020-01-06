@@ -39,20 +39,18 @@ final class TestCheckUtils {
                 return true;
             }
         }
-        return state.getPath().getCompilationUnit().getImports()
-                .stream()
+        return state.getPath().getCompilationUnit().getImports().stream()
                 .map(ImportTree::getQualifiedIdentifier)
                 .map(Object::toString)
                 .anyMatch(TestCheckUtils::isTestImport);
     }
 
-    private static final Matcher<ClassTree> hasJUnit5TestCases =
-            Matchers.hasMethod(Matchers.anyOf(
-                    Matchers.hasAnnotationOnAnyOverriddenMethod("org.junit.jupiter.api.Test"),
-                    Matchers.hasAnnotationOnAnyOverriddenMethod("org.junit.jupiter.api.TestTemplate")));
+    private static final Matcher<ClassTree> hasJUnit5TestCases = Matchers.hasMethod(Matchers.anyOf(
+            Matchers.hasAnnotationOnAnyOverriddenMethod("org.junit.jupiter.api.Test"),
+            Matchers.hasAnnotationOnAnyOverriddenMethod("org.junit.jupiter.api.TestTemplate")));
 
-    private static final Matcher<ClassTree> hasTestCases = Matchers
-            .anyOf(JUnitMatchers.hasJUnit4TestCases, hasJUnit5TestCases);
+    private static final Matcher<ClassTree> hasTestCases =
+            Matchers.anyOf(JUnitMatchers.hasJUnit4TestCases, hasJUnit5TestCases);
 
     private static boolean isTestImport(String qualifiedName) {
         return qualifiedName.startsWith("org.junit.") // junit 4 and 5

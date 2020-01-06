@@ -54,10 +54,11 @@ import javax.annotation.Nullable;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,
-        summary = "Likely programming error due to using incompatible types as "
-                + "arguments for a collection method that accepts Object.")
-public final class StrictCollectionIncompatibleType
-        extends BugChecker implements BugChecker.MethodInvocationTreeMatcher, BugChecker.MemberReferenceTreeMatcher {
+        summary =
+                "Likely programming error due to using incompatible types as "
+                        + "arguments for a collection method that accepts Object.")
+public final class StrictCollectionIncompatibleType extends BugChecker
+        implements BugChecker.MethodInvocationTreeMatcher, BugChecker.MemberReferenceTreeMatcher {
 
     // Collection Types
     private static final String COLLECTION = Collection.class.getName();
@@ -128,10 +129,7 @@ public final class StrictCollectionIncompatibleType
     }
 
     @Nullable
-    private static Type getTargetTypeAsSuper(
-            MethodInvocationTree tree,
-            String superTarget,
-            VisitorState state) {
+    private static Type getTargetTypeAsSuper(MethodInvocationTree tree, String superTarget, VisitorState state) {
         Type targetMapType = getTargetType(tree);
         if (targetMapType == null) {
             return null;
@@ -144,10 +142,7 @@ public final class StrictCollectionIncompatibleType
     }
 
     @Nullable
-    private static Type getTargetTypeAsSuper(
-            MemberReferenceTree tree,
-            String superTarget,
-            VisitorState state) {
+    private static Type getTargetTypeAsSuper(MemberReferenceTree tree, String superTarget, VisitorState state) {
         ExpressionTree targetExpressionTree = tree.getQualifierExpression();
         if (targetExpressionTree == null) {
             return null;
@@ -174,14 +169,10 @@ public final class StrictCollectionIncompatibleType
     }
 
     private IncompatibleTypeMatcher compatibleArgType(
-            String baseType,
-            String signature,
-            int typeArgumentIndex,
-            int argumentIndex) {
+            String baseType, String signature, int typeArgumentIndex, int argumentIndex) {
         // Eagerly create the matcher to avoid allocation for each check
-        Matcher<ExpressionTree> methodMatcher = MethodMatchers.instanceMethod()
-                .onDescendantOf(baseType)
-                .withSignature(signature);
+        Matcher<ExpressionTree> methodMatcher =
+                MethodMatchers.instanceMethod().onDescendantOf(baseType).withSignature(signature);
         return new IncompatibleTypeMatcher() {
 
             @Override
@@ -212,8 +203,12 @@ public final class StrictCollectionIncompatibleType
                 return Optional.of(buildDescription(argumentTree)
                         .setMessage("Likely programming error due to using incompatible types as arguments for "
                                 + "a collection method that accepts Object. Value '"
-                                + state.getSourceForNode(argumentTree) + "' of type '" + prettyType(argumentType)
-                                + "' is not compatible with the expected type '" + prettyType(typeArgumentType) + '\'')
+                                + state.getSourceForNode(argumentTree)
+                                + "' of type '"
+                                + prettyType(argumentType)
+                                + "' is not compatible with the expected type '"
+                                + prettyType(typeArgumentType)
+                                + '\'')
                         .build());
             }
 
@@ -244,8 +239,11 @@ public final class StrictCollectionIncompatibleType
                 }
                 return Optional.of(buildDescription(tree)
                         .setMessage("Likely programming error due to using incompatible types as arguments for "
-                                + "a collection method that accepts Object. Type '" + prettyType(argumentType)
-                                + "' is not compatible with the expected type '" + prettyType(typeArgumentType) + '\'')
+                                + "a collection method that accepts Object. Type '"
+                                + prettyType(argumentType)
+                                + "' is not compatible with the expected type '"
+                                + prettyType(typeArgumentType)
+                                + '\'')
                         .build());
             }
         };
@@ -265,9 +263,7 @@ public final class StrictCollectionIncompatibleType
 
     @Nullable
     private static Type getFunctionalInterfaceArgumentType(
-            MemberReferenceTree tree,
-            int argumentIndex,
-            VisitorState state) {
+            MemberReferenceTree tree, int argumentIndex, VisitorState state) {
         Type resultType = ASTHelpers.getResultType(tree);
         if (resultType == null) {
             return null;
@@ -294,9 +290,9 @@ public final class StrictCollectionIncompatibleType
     }
 
     /**
-     * Pretty prints the input type for use in description messages. This is not suitable for suggested fixes
-     * because unlike {@link SuggestedFixes#prettyType(VisitorState, SuggestedFix.Builder, Type)} with non-null
-     * state and builder, it doesn't add relevant imports.
+     * Pretty prints the input type for use in description messages. This is not suitable for suggested fixes because
+     * unlike {@link SuggestedFixes#prettyType(VisitorState, SuggestedFix.Builder, Type)} with non-null state and
+     * builder, it doesn't add relevant imports.
      */
     private static String prettyType(Type type) {
         return MoreSuggestedFixes.prettyType(null, null, type);
@@ -310,9 +306,8 @@ public final class StrictCollectionIncompatibleType
         Optional<Description> NO_MATCH = Optional.of(Description.NO_MATCH);
 
         /**
-         * Returns an empty optional if the provided {@link MethodInvocationTree} isn't matched.
-         * If the method is matched, an {@link Optional} of {@link Description#NO_MATCH} is
-         * returned for valid use.
+         * Returns an empty optional if the provided {@link MethodInvocationTree} isn't matched. If the method is
+         * matched, an {@link Optional} of {@link Description#NO_MATCH} is returned for valid use.
          */
         Optional<Description> describe(MethodInvocationTree tree, VisitorState state);
 
