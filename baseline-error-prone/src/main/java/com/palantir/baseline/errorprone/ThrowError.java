@@ -38,16 +38,17 @@ import java.util.Optional;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,
-        summary = "Prefer throwing a RuntimeException rather than Error. Errors are often handled poorly by libraries "
-                + "resulting in unexpected behavior and resource leaks. It's not obvious that "
-                + "'catch (Exception e)' does not catch Error.\n"
-                + "Errors are normally thrown by the JVM when the system, not just the application, "
-                + "is in a bad state. For example, LinkageError is thrown by the JVM when it encounters "
-                + "incompatible classes, and NoClassDefFoundError when a class cannot be found. These should be "
-                + "less common and handled differently from application failures.\n"
-                + "This check  is intended to be advisory - it's fine to @SuppressWarnings(\"ThrowError\") "
-                + "in certain cases, but is usually not recommended unless you are writing a testing library "
-                + "that throws AssertionError.")
+        summary =
+                "Prefer throwing a RuntimeException rather than Error. Errors are often handled poorly by libraries"
+                    + " resulting in unexpected behavior and resource leaks. It's not obvious that 'catch (Exception"
+                    + " e)' does not catch Error.\n"
+                    + "Errors are normally thrown by the JVM when the system, not just the application, is in a bad"
+                    + " state. For example, LinkageError is thrown by the JVM when it encounters incompatible classes,"
+                    + " and NoClassDefFoundError when a class cannot be found. These should be less common and handled"
+                    + " differently from application failures.\n"
+                    + "This check  is intended to be advisory - it's fine to @SuppressWarnings(\"ThrowError\") in"
+                    + " certain cases, but is usually not recommended unless you are writing a testing library that"
+                    + " throws AssertionError.")
 public final class ThrowError extends BugChecker implements BugChecker.ThrowTreeMatcher {
 
     private static final Matcher<ExpressionTree> compileTimeConstExpressionMatcher =
@@ -67,19 +68,14 @@ public final class ThrowError extends BugChecker implements BugChecker.ThrowTree
                 || TestCheckUtils.isTestCode(state)) {
             return Description.NO_MATCH;
         }
-        return buildDescription(tree)
-                .addFix(generateFix(newClassTree, state))
-                .build();
+        return buildDescription(tree).addFix(generateFix(newClassTree, state)).build();
     }
 
     private static Optional<SuggestedFix> generateFix(NewClassTree newClassTree, VisitorState state) {
         Type throwableType = ASTHelpers.getType(newClassTree.getIdentifier());
         // AssertionError is the most common failure case we've encountered, likely because it sounds
         // similar to IllegalStateException. In this case we suggest replacing it with IllegalStateException.
-        if (!ASTHelpers.isSameType(
-                throwableType,
-                state.getTypeFromString(AssertionError.class.getName()),
-                state)) {
+        if (!ASTHelpers.isSameType(throwableType, state.getTypeFromString(AssertionError.class.getName()), state)) {
             return Optional.empty();
         }
         List<? extends ExpressionTree> arguments = newClassTree.getArguments();
@@ -90,14 +86,14 @@ public final class ThrowError extends BugChecker implements BugChecker.ThrowTree
         }
         ExpressionTree firstArgument = arguments.get(0);
         if (ASTHelpers.isSameType(
-                ASTHelpers.getResultType(firstArgument),
-                state.getTypeFromString(String.class.getName()),
-                state)) {
+                ASTHelpers.getResultType(firstArgument), state.getTypeFromString(String.class.getName()), state)) {
             SuggestedFix.Builder fix = SuggestedFix.builder();
-            String qualifiedName = MoreSuggestedFixes.qualifyType(state, fix,
+            String qualifiedName = MoreSuggestedFixes.qualifyType(
+                    state,
+                    fix,
                     compileTimeConstExpressionMatcher.matches(firstArgument, state)
-                    ? "com.palantir.logsafe.exceptions.SafeIllegalStateException"
-                    : IllegalStateException.class.getName());
+                            ? "com.palantir.logsafe.exceptions.SafeIllegalStateException"
+                            : IllegalStateException.class.getName());
             return Optional.of(fix.replace(newClassTree.getIdentifier(), qualifiedName).build());
         }
         return Optional.empty();

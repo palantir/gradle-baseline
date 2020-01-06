@@ -96,11 +96,10 @@ public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocati
         if (lastArgIsThrowable) {
             return Optional.empty();
         }
-        return lastArg.accept(ThrowableArgVisitor.INSTANCE, state)
-                .map(node -> buildDescription(tree)
-                        .setMessage("slf4j log statement should not use logsafe wrappers for throwables")
-                        .addFix(SuggestedFix.replace(lastArg, state.getSourceForNode(node)))
-                        .build());
+        return lastArg.accept(ThrowableArgVisitor.INSTANCE, state).map(node -> buildDescription(tree)
+                .setMessage("slf4j log statement should not use logsafe wrappers for throwables")
+                .addFix(SuggestedFix.replace(lastArg, state.getSourceForNode(node)))
+                .build());
     }
 
     /** Returns the throwable argument from SafeArg.of(name, throwable) or UnsafeArg.of(name, throwable). */
@@ -112,8 +111,8 @@ public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocati
                 .named("of")
                 .withParameters(String.class.getName(), Object.class.getName());
 
-        private static final Matcher<ExpressionTree> THROWABLE_ARG = Matchers.methodInvocation(
-                ARG_FACTORY, ChildMultiMatcher.MatchType.LAST, THROWABLE);
+        private static final Matcher<ExpressionTree> THROWABLE_ARG =
+                Matchers.methodInvocation(ARG_FACTORY, ChildMultiMatcher.MatchType.LAST, THROWABLE);
 
         private ThrowableArgVisitor() {
             super(Optional.empty());

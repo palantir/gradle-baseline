@@ -40,8 +40,9 @@ import java.util.regex.Pattern;
         linkType = BugPattern.LinkType.CUSTOM,
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = SeverityLevel.WARNING,
-        summary = "Slf4j loggers require throwables to be the last parameter otherwise a stack trace is not produced. "
-                + "Documentation is available here: http://www.slf4j.org/faq.html#paramException")
+        summary =
+                "Slf4j loggers require throwables to be the last parameter otherwise a stack trace is not produced. "
+                        + "Documentation is available here: http://www.slf4j.org/faq.html#paramException")
 public final class Slf4jThrowable extends BugChecker implements MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
@@ -52,15 +53,14 @@ public final class Slf4jThrowable extends BugChecker implements MethodInvocation
             .onDescendantOf("org.slf4j.Logger")
             .withNameMatching(Pattern.compile("trace|debug|info|warn|error"));
 
-    private static final Matcher<ExpressionTree> CORRECT_THROWABLE = Matchers.methodInvocation(
-            LOG_METHOD, ChildMultiMatcher.MatchType.LAST, THROWABLE);
+    private static final Matcher<ExpressionTree> CORRECT_THROWABLE =
+            Matchers.methodInvocation(LOG_METHOD, ChildMultiMatcher.MatchType.LAST, THROWABLE);
 
-    private static final Matcher<ExpressionTree> ANY_THROWABLE = Matchers.methodInvocation(
-            LOG_METHOD, ChildMultiMatcher.MatchType.AT_LEAST_ONE, THROWABLE);
+    private static final Matcher<ExpressionTree> ANY_THROWABLE =
+            Matchers.methodInvocation(LOG_METHOD, ChildMultiMatcher.MatchType.AT_LEAST_ONE, THROWABLE);
 
-    private static final Matcher<ExpressionTree> MATCHER = Matchers.allOf(
-            Matchers.not(CORRECT_THROWABLE),
-            ANY_THROWABLE);
+    private static final Matcher<ExpressionTree> MATCHER =
+            Matchers.allOf(Matchers.not(CORRECT_THROWABLE), ANY_THROWABLE);
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
