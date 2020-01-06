@@ -1,0 +1,5 @@
+type: feature
+feature:
+  description: Configure Intellij to optimize imports on the fly
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1144
