@@ -35,21 +35,23 @@ import com.sun.source.tree.ExpressionTree;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
-        summary = "Disallow usage of Jackson's JsonTypeInfo.Id.CLASS annotation for security reasons, "
-                + "cf. https://github.com/FasterXML/jackson-databind/issues/1599")
+        summary =
+                "Disallow usage of Jackson's JsonTypeInfo.Id.CLASS annotation for security reasons, "
+                        + "cf. https://github.com/FasterXML/jackson-databind/issues/1599")
 public final class DangerousJsonTypeInfoUsage extends BugChecker implements BugChecker.AnnotationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
 
-    private static final Matcher<AnnotationTree> matcher = new AnnotationHasArgumentWithValue("use",
+    private static final Matcher<AnnotationTree> matcher = new AnnotationHasArgumentWithValue(
+            "use",
             Matchers.allOf(
                     new IsSameType<>("com.fasterxml.jackson.annotation.JsonTypeInfo$Id"),
                     Matchers.anyOf(
                             treeEqualsStringMatcher("JsonTypeInfo.Id.CLASS"),
                             treeEqualsStringMatcher("JsonTypeInfo.Id.MINIMAL_CLASS"),
                             treeEqualsStringMatcher("com.fasterxml.jackson.annotation.JsonTypeInfo.Id.CLASS"),
-                            treeEqualsStringMatcher("com.fasterxml.jackson.annotation.JsonTypeInfo.Id.MINIMAL_CLASS")
-                    )));
+                            treeEqualsStringMatcher(
+                                    "com.fasterxml.jackson.annotation.JsonTypeInfo.Id.MINIMAL_CLASS"))));
 
     private static Matcher<ExpressionTree> treeEqualsStringMatcher(String value) {
         return (expressionTree, state) -> state.getSourceForNode(expressionTree).equals(value);

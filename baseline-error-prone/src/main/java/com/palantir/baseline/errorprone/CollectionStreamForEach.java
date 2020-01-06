@@ -52,9 +52,8 @@ public final class CollectionStreamForEach extends BugChecker implements BugChec
             .named("stream")
             .withParameters();
 
-    private static final Matcher<MethodInvocationTree> matcher = Matchers.allOf(
-            STREAM_FOR_EACH,
-            Matchers.receiverOfInvocation(COLLECTION_STREAM));
+    private static final Matcher<MethodInvocationTree> matcher =
+            Matchers.allOf(STREAM_FOR_EACH, Matchers.receiverOfInvocation(COLLECTION_STREAM));
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {

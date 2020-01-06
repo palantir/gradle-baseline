@@ -36,18 +36,17 @@ import com.sun.tools.javac.code.Type;
         linkType = BugPattern.LinkType.CUSTOM,
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = BugPattern.SeverityLevel.WARNING,
-        summary = "Methods that return an autocloseable resource on jOOQ's ResultQuery should be closed using "
-                + "try-with-resources. Not doing so can result in leaked database resources (such as connections or "
-                + "cursors) in code paths that throw an exception or fail to call #close().")
+        summary =
+                "Methods that return an autocloseable resource on jOOQ's ResultQuery should be closed using"
+                    + " try-with-resources. Not doing so can result in leaked database resources (such as connections"
+                    + " or cursors) in code paths that throw an exception or fail to call #close().")
 public final class JooqResultStreamLeak extends StreamResourceLeak {
-    private static final Matcher<ExpressionTree> MATCHER =
-            MethodMatchers.instanceMethod()
-                .onDescendantOf("org.jooq.ResultQuery")
-                .withAnyName();
+    private static final Matcher<ExpressionTree> MATCHER = MethodMatchers.instanceMethod()
+            .onDescendantOf("org.jooq.ResultQuery")
+            .withAnyName();
 
     @Override
-    public Description matchMethodInvocation(
-            MethodInvocationTree tree, VisitorState state) {
+    public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
         if (!MATCHER.matches(tree, state)) {
             return Description.NO_MATCH;
         }
@@ -63,15 +62,12 @@ public final class JooqResultStreamLeak extends StreamResourceLeak {
         Type returnType = ASTHelpers.getReturnType(tree);
 
         // Most auto-closeable returns should be auto-closed.
-        boolean isAutoCloseable = ASTHelpers.isSubtype(returnType,
-                state.getTypeFromString(AutoCloseable.class.getName()),
-                state);
+        boolean isAutoCloseable =
+                ASTHelpers.isSubtype(returnType, state.getTypeFromString(AutoCloseable.class.getName()), state);
 
         // QueryParts can hold resources but usually don't, so auto-tripping and trying to fix on things
         // like SelectConditionStep is unnecessary.
-        boolean isJooqQuery = ASTHelpers.isSubtype(returnType,
-                state.getTypeFromString("org.jooq.QueryPart"),
-                state);
+        boolean isJooqQuery = ASTHelpers.isSubtype(returnType, state.getTypeFromString("org.jooq.QueryPart"), state);
 
         return isAutoCloseable && !isJooqQuery;
     }

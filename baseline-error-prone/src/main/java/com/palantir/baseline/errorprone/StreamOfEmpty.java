@@ -36,9 +36,8 @@ import java.util.stream.Stream;
         summary = "Stream.of() should be replaced with Stream.empty() to avoid unnecessary varargs allocation.")
 public final class StreamOfEmpty extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
-    private static final Matcher<ExpressionTree> MATCHER = MethodMatchers.staticMethod()
-            .onClass(Stream.class.getName())
-            .withSignature("<T>of(T...)");
+    private static final Matcher<ExpressionTree> MATCHER =
+            MethodMatchers.staticMethod().onClass(Stream.class.getName()).withSignature("<T>of(T...)");
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {

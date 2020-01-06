@@ -42,11 +42,10 @@ import java.util.stream.Stream;
 public final class NonComparableStreamSort extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
     private static final long serialVersionUID = 1L;
 
-    private static final Matcher<ExpressionTree> SORTED_CALL_ON_JAVA_STREAM_MATCHER =
-            MethodMatchers.instanceMethod()
-                    .onDescendantOf(Stream.class.getName())
-                    .named("sorted")
-                    .withParameters();
+    private static final Matcher<ExpressionTree> SORTED_CALL_ON_JAVA_STREAM_MATCHER = MethodMatchers.instanceMethod()
+            .onDescendantOf(Stream.class.getName())
+            .named("sorted")
+            .withParameters();
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
