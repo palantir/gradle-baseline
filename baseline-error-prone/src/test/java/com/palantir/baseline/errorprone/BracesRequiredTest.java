@@ -23,14 +23,15 @@ public class BracesRequiredTest {
 
     @Test
     void testFix_if_then() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f(boolean param) {",
                         "    if (param) System.out.println();",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f(boolean param) {",
                         "    if (param) {",
@@ -43,8 +44,8 @@ public class BracesRequiredTest {
 
     @Test
     void testFix_if_else() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f(boolean param) {",
                         "    if (param) {",
@@ -53,7 +54,8 @@ public class BracesRequiredTest {
                         "      System.out.println(\"else\");",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f(boolean param) {",
                         "    if (param) {",
@@ -68,8 +70,8 @@ public class BracesRequiredTest {
 
     @Test
     void testFix_if_both() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f(boolean param) {",
                         "    if (param)",
@@ -78,7 +80,8 @@ public class BracesRequiredTest {
                         "      System.out.println(\"else\");",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f(boolean param) {",
                         "    if (param) {",
@@ -93,15 +96,16 @@ public class BracesRequiredTest {
 
     @Test
     void testFix_if_emptyThen() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f(boolean param) {",
                         "    if (param); else",
                         "      System.out.println(\"else\");",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f(boolean param) {",
                         "    if (param); else {",
@@ -114,14 +118,15 @@ public class BracesRequiredTest {
 
     @Test
     void testFix_while() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f(boolean param) {",
                         "    while (param) System.out.println();",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f(boolean param) {",
                         "    while (param) {",
@@ -134,14 +139,15 @@ public class BracesRequiredTest {
 
     @Test
     void testFix_doWhile() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f(boolean param) {",
                         "    do System.out.println(); while (param);",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f(boolean param) {",
                         "    do {",
@@ -154,14 +160,15 @@ public class BracesRequiredTest {
 
     @Test
     void testFix_for() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f(boolean param) {",
                         "    for (int i = 0; i < 5; i++) System.out.println();",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f(boolean param) {",
                         "    for (int i = 0; i < 5; i++) {",
@@ -174,15 +181,16 @@ public class BracesRequiredTest {
 
     @Test
     void testFix_enhancedFor() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "import java.util.List;",
                         "class Test {",
                         "  void f(List<String> list) {",
                         "    for (String item : list) System.out.println(item);",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "import java.util.List;",
                         "class Test {",
                         "  void f(List<String> list) {",
@@ -196,8 +204,8 @@ public class BracesRequiredTest {
 
     @Test
     void testFix_nested() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f(boolean param) {",
                         "    if (param) if (param) {",
@@ -205,7 +213,8 @@ public class BracesRequiredTest {
                         "    }",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f(boolean param) {",
                         "    if (param) {",
@@ -220,15 +229,16 @@ public class BracesRequiredTest {
 
     @Test
     void testFix_elseIf() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f(boolean p0, boolean p1) {",
                         "    if (p0) System.out.println();",
                         "    else if (p1) System.out.println();",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "class Test {",
                         "  void f(boolean p0, boolean p1) {",
                         "    if (p0) {",

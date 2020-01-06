@@ -34,14 +34,15 @@ public class DangerousStringInternUsageTest {
 
     @Test
     public void should_warn_when_parallel_with_no_arguments_is_invoked_on_subclass_of_java_stream() {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "class Test {",
-                "   String f() {",
-                "       // BUG: Diagnostic contains: Should not use String.intern().",
-                "       return getClass().getName().intern();",
-                "   }",
-                "}"
-        ).doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "class Test {",
+                        "   String f() {",
+                        "       // BUG: Diagnostic contains: Should not use String.intern().",
+                        "       return getClass().getName().intern();",
+                        "   }",
+                        "}")
+                .doTest();
     }
 }

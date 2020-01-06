@@ -22,22 +22,22 @@ public final class DangerousThreadPoolExecutorUsageTests {
 
     @Test
     public void testThrowsOnThreadPoolExecutor() {
-        compilationHelper.addSourceLines(
-                "Bean.java",
-                "import java.util.concurrent.ThreadPoolExecutor;",
-                "import java.util.concurrent.ExecutorService;",
-                "class Bean {",
-                "// BUG: Diagnostic contains: Should not normally use ThreadPoolExecutor directly.",
-                "ExecutorService executor = new ThreadPoolExecutor(1, 1, 1, null, null);",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Bean.java",
+                        "import java.util.concurrent.ThreadPoolExecutor;",
+                        "import java.util.concurrent.ExecutorService;",
+                        "class Bean {",
+                        "// BUG: Diagnostic contains: Should not normally use ThreadPoolExecutor directly.",
+                        "ExecutorService executor = new ThreadPoolExecutor(1, 1, 1, null, null);",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void testDoesNotThrowWithoutThreadPoolExecutor() {
-        compilationHelper.addSourceLines(
-                "Bean.java",
-                "class Bean {",
-                "String value = null;",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines("Bean.java", "class Bean {", "String value = null;", "}")
+                .doTest();
     }
 }

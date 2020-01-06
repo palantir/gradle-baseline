@@ -27,8 +27,8 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 @Execution(ExecutionMode.CONCURRENT)
 public class CatchBlockLogExceptionTest {
 
-    private static final String errorMsg = "BUG: Diagnostic contains: "
-            + "Catch block contains log statements but thrown exception is never logged";
+    private static final String errorMsg =
+            "BUG: Diagnostic contains: " + "Catch block contains log statements but thrown exception is never logged";
 
     private CompilationTestHelper compilationHelper;
 
@@ -74,8 +74,8 @@ public class CatchBlockLogExceptionTest {
 
     @Test
     public void testFix_simple() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "import org.slf4j.Logger;",
                         "import org.slf4j.LoggerFactory;",
                         "class Test {",
@@ -88,7 +88,8 @@ public class CatchBlockLogExceptionTest {
                         "    }",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "import org.slf4j.Logger;",
                         "import org.slf4j.LoggerFactory;",
                         "class Test {",
@@ -107,8 +108,8 @@ public class CatchBlockLogExceptionTest {
     @Test
     public void testFix_ambiguous() {
         // In this case there are multiple options, no fixes should be suggested.
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "import org.slf4j.Logger;",
                         "import org.slf4j.LoggerFactory;",
                         "class Test {",
@@ -122,7 +123,8 @@ public class CatchBlockLogExceptionTest {
                         "    }",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "import org.slf4j.Logger;",
                         "import org.slf4j.LoggerFactory;",
                         "class Test {",
@@ -142,8 +144,8 @@ public class CatchBlockLogExceptionTest {
     @Test
     public void testFix_getMessage() {
         // In this case there are multiple options, no fixes should be suggested.
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "import org.slf4j.Logger;",
                         "import org.slf4j.LoggerFactory;",
                         "class Test {",
@@ -156,7 +158,8 @@ public class CatchBlockLogExceptionTest {
                         "    }",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "import org.slf4j.Logger;",
                         "import org.slf4j.LoggerFactory;",
                         "class Test {",
