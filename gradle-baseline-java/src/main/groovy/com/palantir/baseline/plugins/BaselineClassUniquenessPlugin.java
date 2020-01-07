@@ -19,11 +19,8 @@ package com.palantir.baseline.plugins;
 import com.palantir.baseline.plugins.rules.BaselineClassUniquenessRule;
 import com.palantir.baseline.tasks.ClassUniquenessLockTask;
 import org.gradle.api.Project;
-import org.gradle.api.Task;
 import org.gradle.api.plugins.JavaPlugin;
-import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.TaskProvider;
-import org.gradle.internal.impldep.org.apache.maven.lifecycle.Lifecycle;
 import org.gradle.language.base.plugins.LifecycleBasePlugin;
 
 /**

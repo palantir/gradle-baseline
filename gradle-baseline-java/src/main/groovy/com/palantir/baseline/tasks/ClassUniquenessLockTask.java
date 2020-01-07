@@ -32,13 +32,19 @@ import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.result.ResolvedComponentResult;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.specs.Spec;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputFile;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.util.GFileUtils;
 
+@CacheableTask
 public class ClassUniquenessLockTask extends DefaultTask {
-    @OutputFile public final File lockFile;
+    @PathSensitive(PathSensitivity.NONE)
+    @OutputFile
+    public final File lockFile;
 
     // not marking this as an Input, because we want to re-run if the *contents* of a configuration changes
     public final SetProperty<String> configurations;
