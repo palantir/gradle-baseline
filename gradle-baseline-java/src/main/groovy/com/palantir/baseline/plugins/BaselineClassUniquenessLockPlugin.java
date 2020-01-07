@@ -18,22 +18,24 @@ package com.palantir.baseline.plugins;
 
 import com.palantir.baseline.tasks.ClassUniquenessAnalyzer;
 import java.io.File;
-import java.nio.file.Files;
+import java.util.Collection;
+import java.util.Set;
 import org.gradle.api.Action;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.language.base.plugins.LifecycleBasePlugin;
 import org.gradle.util.GFileUtils;
 
 /**
- * This plugin is similar to https://github.com/nebula-plugins/gradle-lint-plugin/wiki/Duplicate-Classes-Rule
- * but goes one step further and actually hashes any identically named classfiles to figure out if they're
- * <i>completely</i> identical (and therefore safely interchangeable).
+ * This plugin is similar to https://github.com/nebula-plugins/gradle-lint-plugin/wiki/Duplicate-Classes-Rule but goes
+ * one step further and actually hashes any identically named classfiles to figure out if they're <i>completely</i>
+ * identical (and therefore safely interchangeable).
  *
- * The task only fails if it finds classes which have the same name but different implementations.
+ * <p>The task only fails if it finds classes which have the same name but different implementations.
  */
 public class BaselineClassUniquenessLockPlugin extends AbstractBaselinePlugin {
     @Override
@@ -53,15 +55,30 @@ public class BaselineClassUniquenessLockPlugin extends AbstractBaselinePlugin {
             public void execute(Task task) {
 
                 StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.append("# Run ./gradlew checkClassUniquenessLock --write-locks to update this file\n");
+                stringBuilder.append("# Run ./gradlew checkClassUniquenessLock --write-locks to update this file\n\n");
 
                 for (String configurationName : configurationNames.get()) {
-                    stringBuilder.append("[" + configurationName + "]\n");
+                    stringBuilder.append("## configuration: " + configurationName + "\n");
                     ClassUniquenessAnalyzer analyzer = new ClassUniquenessAnalyzer(project.getLogger());
 
                     Configuration configuration = project.getConfigurations().getByName(configurationName);
                     analyzer.analyzeConfiguration(configuration);
-                    stringBuilder.append(analyzer.getProblemJars().toString());
+                    Collection<Set<ModuleVersionIdentifier>> problemJars = analyzer.getDifferingProblemJars();
+                    for (Set<ModuleVersionIdentifier> clashingJars : problemJars) {
+                        stringBuilder
+                                .append("- ")
+                                .append(clashingJars.toString())
+                                .append('\n');
+
+                        analyzer.getDifferingSharedClassesInProblemJars(clashingJars).stream()
+                                .sorted()
+                                .forEach(className -> {
+                                    stringBuilder.append("  - ");
+                                    stringBuilder.append(className);
+                                    stringBuilder.append('\n');
+                                });
+                    }
+
                     stringBuilder.append('\n');
                     stringBuilder.append('\n');
                 }
@@ -71,10 +88,18 @@ public class BaselineClassUniquenessLockPlugin extends AbstractBaselinePlugin {
                 if (project.getGradle().getStartParameter().isWriteDependencyLocks()) {
                     // just nuke whatever was there before
                     GFileUtils.writeFile(expected, lockFile);
+                    project.getLogger().lifecycle("Updated {}", lockFile);
+                } else if (!lockFile.isFile() || !lockFile.canRead()) {
+                    project.getLogger()
+                            .warn(
+                                    "{} does not exist - please run `./gradlew "
+                                            + "checkClassUniquenessLock --write-locks` to create it",
+                                    lockFile);
                 } else {
                     String onDisk = GFileUtils.readFile(lockFile);
                     if (!onDisk.equals(expected)) {
-                        throw new GradleException(lockFile + " is out of date, please run ./gradlew "
+                        throw new GradleException(lockFile
+                                + " is out of date, please run ./gradlew "
                                 + "checkClassUniquenessLock --write-locks to update this file");
                     }
                 }
