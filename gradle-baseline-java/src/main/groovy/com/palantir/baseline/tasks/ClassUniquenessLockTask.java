@@ -41,6 +41,7 @@ import org.gradle.api.tasks.TaskAction;
 import org.gradle.util.GFileUtils;
 
 @CacheableTask
+@SuppressWarnings("VisibilityModifier")
 public class ClassUniquenessLockTask extends DefaultTask {
     @PathSensitive(PathSensitivity.NONE)
     @OutputFile
@@ -65,7 +66,7 @@ public class ClassUniquenessLockTask extends DefaultTask {
      * changes.
      */
     @Input
-    public Map<String, List<ModuleVersionIdentifier>> contentsOfAllConfigurations() {
+    public final Map<String, List<ModuleVersionIdentifier>> contentsOfAllConfigurations() {
         return configurations.get().stream().collect(Collectors.toMap(Function.identity(), name -> {
             Configuration configuration = getProject().getConfigurations().getByName(name);
             return configuration.getIncoming().getResolutionResult().getAllComponents().stream()
@@ -75,7 +76,7 @@ public class ClassUniquenessLockTask extends DefaultTask {
     }
 
     @TaskAction
-    public void doIt() {
+    public final void doIt() {
         Map<String, Optional<String>> resultsByConfiguration = configurations.get().stream()
                 .collect(Collectors.toMap(Function.identity(), configurationName -> {
                     ClassUniquenessAnalyzer analyzer = new ClassUniquenessAnalyzer(getProject().getLogger());
