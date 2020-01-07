@@ -20,6 +20,7 @@ import com.palantir.baseline.tasks.ClassUniquenessAnalyzer;
 import java.io.File;
 import java.util.Collection;
 import java.util.Set;
+import java.util.stream.Collectors;
 import org.gradle.api.Action;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
@@ -59,7 +60,7 @@ public class BaselineClassUniquenessLockPlugin extends AbstractBaselinePlugin {
 
                 Set<String> configurations = configurationNames.get();
 
-                for (String configurationName : configurations) {
+                configurations.stream().sorted().forEach(configurationName -> {
                     if (configurations.size() > 1) {
                         stringBuilder.append("\n## configuration: " + configurationName + "\n");
                     }
@@ -76,10 +77,11 @@ public class BaselineClassUniquenessLockPlugin extends AbstractBaselinePlugin {
                                 .append(".\n");
                     } else {
                         for (Set<ModuleVersionIdentifier> clashingJars : problemJars) {
-                            // TODO(dfox): maybe use a trie to provide a munch denser list of classes?
                             stringBuilder
-                                    .append("- ")
-                                    .append(clashingJars.toString())
+                                    .append(clashingJars.stream()
+                                            .map(mvi -> mvi.getGroup() + ":" + mvi.getName())
+                                            .sorted()
+                                            .collect(Collectors.joining(", ", "[", "]")))
                                     .append('\n');
 
                             analyzer.getDifferingSharedClassesInProblemJars(clashingJars).stream()
@@ -91,7 +93,7 @@ public class BaselineClassUniquenessLockPlugin extends AbstractBaselinePlugin {
                                     });
                         }
                     }
-                }
+                });
 
                 String expected = stringBuilder.toString();
 
