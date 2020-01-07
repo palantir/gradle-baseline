@@ -230,6 +230,7 @@ in `.baseline/copyright/*.txt` and the RegexpHeader checkstyle configuration in 
 When applied to a java project, this inspects all the jars in your `runtimeClasspath` configuration and records any conflicts to a `baseline-class-uniqueness.lock` file. For example:
 
 ```
+# Danger! Multiple jars contain identically named classes. This may cause different behaviour depending on classpath ordering.
 # Run ./gradlew checkClassUniqueness --write-locks to update this file
 
 ## runtimeClasspath

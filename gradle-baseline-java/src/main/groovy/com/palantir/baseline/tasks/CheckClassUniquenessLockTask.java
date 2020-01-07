@@ -40,6 +40,10 @@ import org.gradle.util.GFileUtils;
 @CacheableTask
 public class CheckClassUniquenessLockTask extends DefaultTask {
 
+    private static final String HEADER = "# Danger! Multiple jars contain identically named classes. This may "
+            + "cause different behaviour depending on classpath ordering.\n"
+            + "# Run ./gradlew checkClassUniqueness --write-locks to update this file\n\n";
+
     // not marking this as an Input, because we want to re-run if the *contents* of a configuration changes
     @SuppressWarnings("VisibilityModifier")
     public final SetProperty<Configuration> configurations;
@@ -115,7 +119,7 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
             ensureLockfileDoesNotExist();
         } else {
             StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.append("# Run ./gradlew checkClassUniqueness --write-locks to update this file\n\n");
+            stringBuilder.append(HEADER);
             // TODO(dfox): make configuration order stable!
             resultsByConfiguration.forEach((configuration, contents) -> {
                 if (contents.isPresent()) {
