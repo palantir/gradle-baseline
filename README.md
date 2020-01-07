@@ -252,7 +252,7 @@ This task can also be used to analyze other configurations in addition to `runti
 
 ```gradle
 checkClassUniqueness {
-  configurations.add 'myConf'
+  configurations.add project.configurations.myConf
 }
 ```
 

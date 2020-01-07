@@ -38,7 +38,8 @@ public class BaselineClassUniquenessPlugin extends AbstractBaselinePlugin {
         project.getTasks().getByName(LifecycleBasePlugin.CHECK_TASK_NAME).dependsOn(lockTask);
 
         project.getPlugins().withId("java", plugin -> {
-            lockTask.configure(t -> t.configurations.add(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME));
+            lockTask.configure(t -> t.configurations.add(
+                    project.getConfigurations().getByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME)));
         });
     }
 }

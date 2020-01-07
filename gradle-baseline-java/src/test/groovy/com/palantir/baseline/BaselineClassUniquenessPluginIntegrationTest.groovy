@@ -68,7 +68,7 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         }
 
         checkClassUniqueness {
-          configurations.add 'myConf'
+              configurations.add project.configurations.myConf
         }
         """.stripIndent()
         BuildResult result = with('check', '-s').buildAndFail()

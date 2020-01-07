@@ -20,9 +20,9 @@ import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
@@ -42,12 +42,12 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
 
     // not marking this as an Input, because we want to re-run if the *contents* of a configuration changes
     @SuppressWarnings("VisibilityModifier")
-    public final SetProperty<String> configurations;
+    public final SetProperty<Configuration> configurations;
 
     private final File lockFile;
 
     public CheckClassUniquenessLockTask() {
-        this.configurations = getProject().getObjects().setProperty(String.class);
+        this.configurations = getProject().getObjects().setProperty(Configuration.class);
         this.lockFile = getProject().file("baseline-class-uniqueness.lock");
         onlyIf(new Spec<Task>() {
             @Override
@@ -63,10 +63,9 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
      */
     @Input
     public final Map<String, ImmutableList<String>> getContentsOfAllConfigurations() {
-        return configurations.get().stream().collect(Collectors.toMap(Function.identity(), name -> {
-            Configuration configuration = getProject().getConfigurations().getByName(name);
+        return configurations.get().stream().collect(Collectors.toMap(Configuration::getName, configuration -> {
             return configuration.getIncoming().getResolutionResult().getAllComponents().stream()
-                    .map(resolvedComponentResult -> resolvedComponentResult.getModuleVersion().toString())
+                    .map(resolvedComponentResult -> Objects.toString(resolvedComponentResult.getModuleVersion()))
                     .collect(ImmutableList.toImmutableList()); // Gradle requires this to be Serializable
         }));
     }
@@ -79,9 +78,8 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
     @TaskAction
     public final void doIt() {
         Map<String, Optional<String>> resultsByConfiguration = configurations.get().stream()
-                .collect(Collectors.toMap(Function.identity(), configurationName -> {
+                .collect(Collectors.toMap(Configuration::getName, configuration -> {
                     ClassUniquenessAnalyzer analyzer = new ClassUniquenessAnalyzer(getProject().getLogger());
-                    Configuration configuration = getProject().getConfigurations().getByName(configurationName);
                     analyzer.analyzeConfiguration(configuration);
                     Collection<Set<ModuleVersionIdentifier>> problemJars = analyzer.getDifferingProblemJars();
 
