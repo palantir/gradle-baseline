@@ -46,6 +46,9 @@ public class BaselineClassUniquenessLockPlugin extends AbstractBaselinePlugin {
         project.getPlugins().withId("java", plugin -> {
             configurationNames.add("runtimeClasspath");
         });
+        project.getPlugins().withId("com.palantir.consistent-versions", plugin -> {
+            configurationNames.add("unifiedClasspath");
+        });
 
         File lockFile = project.file("baseline-class-uniqueness.lock");
 
@@ -57,8 +60,12 @@ public class BaselineClassUniquenessLockPlugin extends AbstractBaselinePlugin {
                 StringBuilder stringBuilder = new StringBuilder();
                 stringBuilder.append("# Run ./gradlew checkClassUniquenessLock --write-locks to update this file\n\n");
 
-                for (String configurationName : configurationNames.get()) {
-                    stringBuilder.append("## configuration: " + configurationName + "\n");
+                Set<String> configurations = configurationNames.get();
+
+                for (String configurationName : configurations) {
+                    if (configurations.size() > 1) {
+                        stringBuilder.append("## configuration: " + configurationName + "\n");
+                    }
                     ClassUniquenessAnalyzer analyzer = new ClassUniquenessAnalyzer(project.getLogger());
 
                     Configuration configuration = project.getConfigurations().getByName(configurationName);
