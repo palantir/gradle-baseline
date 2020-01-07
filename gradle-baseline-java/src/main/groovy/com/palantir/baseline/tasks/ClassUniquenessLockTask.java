@@ -16,9 +16,9 @@
 
 package com.palantir.baseline.tasks;
 
+import com.google.common.collect.ImmutableList;
 import java.io.File;
 import java.util.Collection;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -29,25 +29,20 @@ import org.gradle.api.GradleException;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
-import org.gradle.api.artifacts.result.ResolvedComponentResult;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputFile;
-import org.gradle.api.tasks.PathSensitive;
-import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.util.GFileUtils;
 
 @CacheableTask
 @SuppressWarnings("VisibilityModifier")
 public class ClassUniquenessLockTask extends DefaultTask {
-    @PathSensitive(PathSensitivity.NONE)
-    @OutputFile
-    public final File lockFile;
 
     // not marking this as an Input, because we want to re-run if the *contents* of a configuration changes
+    private final File lockFile;
     public final SetProperty<String> configurations;
 
     public ClassUniquenessLockTask() {
@@ -66,13 +61,18 @@ public class ClassUniquenessLockTask extends DefaultTask {
      * changes.
      */
     @Input
-    public final Map<String, List<ModuleVersionIdentifier>> contentsOfAllConfigurations() {
+    public final Map<String, ImmutableList<String>> getContentsOfAllConfigurations() {
         return configurations.get().stream().collect(Collectors.toMap(Function.identity(), name -> {
             Configuration configuration = getProject().getConfigurations().getByName(name);
             return configuration.getIncoming().getResolutionResult().getAllComponents().stream()
-                    .map(ResolvedComponentResult::getModuleVersion)
-                    .collect(Collectors.toList());
+                    .map(resolvedComponentResult -> resolvedComponentResult.getModuleVersion().toString())
+                    .collect(ImmutableList.toImmutableList()); // Gradle requires this to be Serializable
         }));
+    }
+
+    @OutputFile
+    public final File getLockFile() {
+        return lockFile;
     }
 
     @TaskAction
