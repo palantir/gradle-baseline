@@ -227,6 +227,27 @@ in `.baseline/copyright/*.txt` and the RegexpHeader checkstyle configuration in 
 
 
 ## com.palantir.baseline-class-uniqueness
+When applied to a java project, this inspects all the jars in your `runtimeClasspath` configuration and records any conflicts to a `baseline-class-uniqueness.lock` file. For example:
+
+```
+# Run ./gradlew checkClassUniquenessLock --write-locks to update this file
+
+## runtimeClasspath
+[jakarta.annotation:jakarta.annotation-api, javax.annotation:javax.annotation-api]
+  - javax.annotation.Resource$AuthenticationType
+[jakarta.ws.rs:jakarta.ws.rs-api, javax.ws.rs:javax.ws.rs-api]
+  - javax.ws.rs.BadRequestException
+  - javax.ws.rs.ClientErrorException
+  - javax.ws.rs.ForbiddenException
+  - javax.ws.rs.InternalServerErrorException
+  - javax.ws.rs.NotAcceptableException
+  - javax.ws.rs.NotAllowedException
+  - javax.ws.rs.NotAuthorizedException
+  - javax.ws.rs.NotFoundException
+  - javax.ws.rs.NotSupportedException
+  - javax.ws.rs.Priorities
+```
+
 Run `./gradlew checkRuntimeClassUniqueness` to scan all jars on the `runtime` classpath for identically named classes.
 This task will run automatically as part of `./gradlew build`. To run the task on other configurations, use the
 `check<Xyz>ClassUniqueness` task for the `xyz` configuration.
