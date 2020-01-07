@@ -46,48 +46,51 @@ public class BaselineClassUniquenessLockPlugin extends AbstractBaselinePlugin {
         project.getPlugins().withId("java", plugin -> {
             configurationNames.add("runtimeClasspath");
         });
-        project.getPlugins().withId("com.palantir.consistent-versions", plugin -> {
-            configurationNames.add("unifiedClasspath");
-        });
 
         File lockFile = project.file("baseline-class-uniqueness.lock");
 
+        // TODO(dfox): up-to-dateness of this task
         Task checkClassUniquenessLock = project.getTasks().create("checkClassUniquenessLock");
         checkClassUniquenessLock.doLast(new Action<Task>() {
             @Override
             public void execute(Task task) {
-
                 StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.append("# Run ./gradlew checkClassUniquenessLock --write-locks to update this file\n\n");
+                stringBuilder.append("# Run ./gradlew checkClassUniquenessLock --write-locks to update this file\n");
 
                 Set<String> configurations = configurationNames.get();
 
                 for (String configurationName : configurations) {
                     if (configurations.size() > 1) {
-                        stringBuilder.append("## configuration: " + configurationName + "\n");
+                        stringBuilder.append("\n## configuration: " + configurationName + "\n");
                     }
-                    ClassUniquenessAnalyzer analyzer = new ClassUniquenessAnalyzer(project.getLogger());
 
+                    ClassUniquenessAnalyzer analyzer = new ClassUniquenessAnalyzer(project.getLogger());
                     Configuration configuration = project.getConfigurations().getByName(configurationName);
                     analyzer.analyzeConfiguration(configuration);
                     Collection<Set<ModuleVersionIdentifier>> problemJars = analyzer.getDifferingProblemJars();
-                    for (Set<ModuleVersionIdentifier> clashingJars : problemJars) {
+
+                    if (problemJars.isEmpty()) {
                         stringBuilder
-                                .append("- ")
-                                .append(clashingJars.toString())
-                                .append('\n');
+                                .append("Zero identically named classes found in ")
+                                .append(configurationName)
+                                .append(".\n");
+                    } else {
+                        for (Set<ModuleVersionIdentifier> clashingJars : problemJars) {
+                            // TODO(dfox): maybe use a trie to provide a munch denser list of classes?
+                            stringBuilder
+                                    .append("- ")
+                                    .append(clashingJars.toString())
+                                    .append('\n');
 
-                        analyzer.getDifferingSharedClassesInProblemJars(clashingJars).stream()
-                                .sorted()
-                                .forEach(className -> {
-                                    stringBuilder.append("  - ");
-                                    stringBuilder.append(className);
-                                    stringBuilder.append('\n');
-                                });
+                            analyzer.getDifferingSharedClassesInProblemJars(clashingJars).stream()
+                                    .sorted()
+                                    .forEach(className -> {
+                                        stringBuilder.append("  - ");
+                                        stringBuilder.append(className);
+                                        stringBuilder.append('\n');
+                                    });
+                        }
                     }
-
-                    stringBuilder.append('\n');
-                    stringBuilder.append('\n');
                 }
 
                 String expected = stringBuilder.toString();
@@ -97,22 +100,22 @@ public class BaselineClassUniquenessLockPlugin extends AbstractBaselinePlugin {
                     GFileUtils.writeFile(expected, lockFile);
                     project.getLogger().lifecycle("Updated {}", lockFile);
                 } else if (!lockFile.isFile() || !lockFile.canRead()) {
+                    // TODO(dfox): relativize this path
                     project.getLogger()
                             .warn(
-                                    "{} does not exist - please run `./gradlew "
-                                            + "checkClassUniquenessLock --write-locks` to create it",
+                                    "{} does not exist - please run "
+                                            + "`./gradlew checkClassUniquenessLock --write-locks` to create it",
                                     lockFile);
                 } else {
                     String onDisk = GFileUtils.readFile(lockFile);
                     if (!onDisk.equals(expected)) {
                         throw new GradleException(lockFile
-                                + " is out of date, please run ./gradlew "
-                                + "checkClassUniquenessLock --write-locks to update this file");
+                                + " is out of date, please run `./gradlew "
+                                + "checkClassUniquenessLock --write-locks` to update this file");
                     }
                 }
             }
         });
-        // TODO(dfox): up-to-dateness
 
         project.getPlugins().apply(LifecycleBasePlugin.class);
         project.getTasks().getByName(LifecycleBasePlugin.CHECK_TASK_NAME).dependsOn(checkClassUniquenessLock);
