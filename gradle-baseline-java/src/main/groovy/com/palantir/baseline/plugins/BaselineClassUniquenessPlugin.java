@@ -16,28 +16,30 @@
 
 package com.palantir.baseline.plugins;
 
-import com.palantir.baseline.plugins.rules.BaselineClassUniquenessRule;
+import com.palantir.baseline.tasks.CheckClassUniquenessLockTask;
 import org.gradle.api.Project;
+import org.gradle.api.plugins.JavaPlugin;
+import org.gradle.api.tasks.TaskProvider;
+import org.gradle.language.base.plugins.LifecycleBasePlugin;
 
 /**
- * This plugin is similar to https://github.com/nebula-plugins/gradle-lint-plugin/wiki/Duplicate-Classes-Rule
- * but goes one step further and actually hashes any identically named classfiles to figure out if they're
- * <i>completely</i> identical (and therefore safely interchangeable).
+ * This plugin is similar to https://github.com/nebula-plugins/gradle-lint-plugin/wiki/Duplicate-Classes-Rule but goes
+ * one step further and actually hashes any identically named classfiles to figure out if they're <i>completely</i>
+ * identical (and therefore safely interchangeable).
  *
- * The task only fails if it finds classes which have the same name but different implementations.
+ * <p>The task only fails if it finds classes which have the same name but different implementations.
  */
 public class BaselineClassUniquenessPlugin extends AbstractBaselinePlugin {
     @Override
     public final void apply(Project project) {
-        BaselineClassUniquenessRule rule = new BaselineClassUniquenessRule(project);
-
-        project.getTasks().addRule(rule);
+        TaskProvider<CheckClassUniquenessLockTask> lockTask =
+                project.getTasks().register("checkClassUniqueness", CheckClassUniquenessLockTask.class);
+        project.getPlugins().apply(LifecycleBasePlugin.class);
+        project.getTasks().getByName(LifecycleBasePlugin.CHECK_TASK_NAME).dependsOn(lockTask);
 
         project.getPlugins().withId("java", plugin -> {
-            String checkRuntimeClasspathTask = "checkRuntimeClasspathClassUniqueness";
-            rule.apply(checkRuntimeClasspathTask);
-            project.getTasks().getByName("check")
-                    .dependsOn(project.getTasks().getByName(checkRuntimeClasspathTask));
+            lockTask.configure(t -> t.configurations.add(
+                    project.getConfigurations().getByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME)));
         });
     }
 }

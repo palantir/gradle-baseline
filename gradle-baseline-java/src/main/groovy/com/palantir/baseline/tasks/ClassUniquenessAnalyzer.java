@@ -121,7 +121,7 @@ public final class ClassUniquenessAnalyzer {
      * Note: may contain non-scary duplicates - class files which are 100% identical, so their
      * clashing name doesn't have any effect.
      */
-    public Collection<Set<ModuleVersionIdentifier>> getProblemJars() {
+    private Collection<Set<ModuleVersionIdentifier>> getProblemJars() {
         return jarsToClasses.keySet();
     }
 

@@ -227,9 +227,35 @@ in `.baseline/copyright/*.txt` and the RegexpHeader checkstyle configuration in 
 
 
 ## com.palantir.baseline-class-uniqueness
-Run `./gradlew checkRuntimeClassUniqueness` to scan all jars on the `runtime` classpath for identically named classes.
-This task will run automatically as part of `./gradlew build`. To run the task on other configurations, use the
-`check<Xyz>ClassUniqueness` task for the `xyz` configuration.
+When applied to a java project, this inspects all the jars in your `runtimeClasspath` configuration and records any conflicts to a `baseline-class-uniqueness.lock` file. For example:
+
+```
+# Danger! Multiple jars contain identically named classes. This may cause different behaviour depending on classpath ordering.
+# Run ./gradlew checkClassUniqueness --write-locks to update this file
+
+## runtimeClasspath
+[jakarta.annotation:jakarta.annotation-api, javax.annotation:javax.annotation-api]
+  - javax.annotation.Resource$AuthenticationType
+[jakarta.ws.rs:jakarta.ws.rs-api, javax.ws.rs:javax.ws.rs-api]
+  - javax.ws.rs.BadRequestException
+  - javax.ws.rs.ClientErrorException
+  - javax.ws.rs.ForbiddenException
+  - javax.ws.rs.InternalServerErrorException
+  - javax.ws.rs.NotAcceptableException
+  - javax.ws.rs.NotAllowedException
+  - javax.ws.rs.NotAuthorizedException
+  - javax.ws.rs.NotFoundException
+  - javax.ws.rs.NotSupportedException
+  - javax.ws.rs.Priorities
+```
+
+This task can also be used to analyze other configurations in addition to `runtimeClasspath`, e.g.:
+
+```gradle
+checkClassUniqueness {
+  configurations.add project.configurations.myConf
+}
+```
 
 If you discover multiple jars on your classpath contain clashing classes, you should ideally try to fix them upstream and then depend on the fixed version.  If this is not feasible, you may be able to tell Gradle to [use a substituted dependency instead](https://docs.gradle.org/current/userguide/customizing_dependency_resolution_behavior.html#sec:module_substitution):
 
@@ -243,7 +269,6 @@ configurations.all {
     }
 }
 ```
-
 
 ## com.palantir.baseline-circleci
 Automatically applies the following plugins:
