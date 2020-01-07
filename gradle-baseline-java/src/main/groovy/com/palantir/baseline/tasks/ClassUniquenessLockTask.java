@@ -26,10 +26,12 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
+import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.result.ResolvedComponentResult;
 import org.gradle.api.provider.SetProperty;
+import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
@@ -39,17 +41,26 @@ public class ClassUniquenessLockTask extends DefaultTask {
     @OutputFile public final File lockFile;
 
     // not marking this as an Input, because we want to re-run if the *contents* of a configuration changes
-    private final SetProperty<String> configurationNames;
+    public final SetProperty<String> configurations;
 
     public ClassUniquenessLockTask() {
-        this.configurationNames = getProject().getObjects().setProperty(String.class);
+        this.configurations = getProject().getObjects().setProperty(String.class);
         this.lockFile = getProject().file("baseline-class-uniqueness.lock");
+        onlyIf(new Spec<Task>() {
+            @Override
+            public boolean isSatisfiedBy(Task task) {
+                return !configurations.get().isEmpty();
+            }
+        });
     }
 
-    /** This method exists purely for up-to-dateness purposes. */
+    /**
+     * This method exists purely for up-to-dateness purposes - we want to re-run if the contents of a configuration
+     * changes.
+     */
     @Input
     public Map<String, List<ModuleVersionIdentifier>> contentsOfAllConfigurations() {
-        return configurationNames.get().stream().collect(Collectors.toMap(Function.identity(), name -> {
+        return configurations.get().stream().collect(Collectors.toMap(Function.identity(), name -> {
             Configuration configuration = getProject().getConfigurations().getByName(name);
             return configuration.getIncoming().getResolutionResult().getAllComponents().stream()
                     .map(ResolvedComponentResult::getModuleVersion)
@@ -59,7 +70,7 @@ public class ClassUniquenessLockTask extends DefaultTask {
 
     @TaskAction
     public void doIt() {
-        Map<String, Optional<String>> resultsByConfiguration = configurationNames.get().stream()
+        Map<String, Optional<String>> resultsByConfiguration = configurations.get().stream()
                 .collect(Collectors.toMap(Function.identity(), configurationName -> {
                     ClassUniquenessAnalyzer analyzer = new ClassUniquenessAnalyzer(getProject().getLogger());
                     Configuration configuration = getProject().getConfigurations().getByName(configurationName);
