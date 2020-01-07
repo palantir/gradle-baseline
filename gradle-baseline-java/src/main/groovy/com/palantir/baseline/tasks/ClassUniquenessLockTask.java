@@ -38,12 +38,13 @@ import org.gradle.api.tasks.TaskAction;
 import org.gradle.util.GFileUtils;
 
 @CacheableTask
-@SuppressWarnings("VisibilityModifier")
 public class ClassUniquenessLockTask extends DefaultTask {
 
     // not marking this as an Input, because we want to re-run if the *contents* of a configuration changes
-    private final File lockFile;
+    @SuppressWarnings("VisibilityModifier")
     public final SetProperty<String> configurations;
+
+    private final File lockFile;
 
     public ClassUniquenessLockTask() {
         this.configurations = getProject().getObjects().setProperty(String.class);
@@ -132,13 +133,20 @@ public class ClassUniquenessLockTask extends DefaultTask {
         if (getProject().getGradle().getStartParameter().isWriteDependencyLocks()) {
             GFileUtils.writeFile(expected, lockFile);
             getLogger().lifecycle("Updated {}", getProject().getRootDir().toPath().relativize(lockFile.toPath()));
-        } else {
-            String onDisk = GFileUtils.readFile(lockFile);
-            if (!onDisk.equals(expected)) {
-                throw new GradleException(lockFile
-                        + " is out of date, please run `./gradlew "
-                        + "checkClassUniquenessLock --write-locks` to update this file");
-            }
+            return;
+        }
+
+        if (!lockFile.exists()) {
+            throw new GradleException("baseline-class-uniqueness detected multiple jars containing identically named "
+                    + "classes. Please resolve these problems, or run `./gradlew checkClassUniquenessLock "
+                    + "--write-locks` to accept them:\n\n" + expected);
+        }
+
+        String onDisk = GFileUtils.readFile(lockFile);
+        if (!onDisk.equals(expected)) {
+            throw new GradleException(lockFile
+                    + " is out of date, please run `./gradlew "
+                    + "checkClassUniquenessLock --write-locks` to update this file");
         }
     }
 
