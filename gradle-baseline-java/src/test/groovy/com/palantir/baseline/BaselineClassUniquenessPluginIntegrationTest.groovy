@@ -61,7 +61,7 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         lockfile.exists()
 
         File expected = new File("src/test/resources/com/palantir/baseline/baseline-class-uniqueness.expected.lock")
-        if (true || Boolean.getBoolean("recreate")) {
+        if (Boolean.getBoolean("recreate")) {
             GFileUtils.writeFile(lockfile.text, expected)
         }
         lockfile.text == expected.text
