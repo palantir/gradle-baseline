@@ -1,0 +1,30 @@
+# Run ./gradlew checkClassUniqueness --write-locks to update this file
+
+## runtimeClasspath
+[javax.el:javax.el-api, javax.servlet.jsp:jsp-api]
+  - javax.el.ArrayELResolver
+  - javax.el.BeanELResolver
+  - javax.el.BeanELResolver$BeanProperties
+  - javax.el.BeanELResolver$BeanProperty
+  - javax.el.CompositeELResolver
+  - javax.el.CompositeELResolver$CompositeIterator
+  - javax.el.ELContext
+  - javax.el.ELContextEvent
+  - javax.el.ELContextListener
+  - javax.el.ELException
+  - javax.el.ELResolver
+  - javax.el.ELUtil
+  - javax.el.ELUtil$1
+  - javax.el.Expression
+  - javax.el.ExpressionFactory
+  - javax.el.FunctionMapper
+  - javax.el.ListELResolver
+  - javax.el.MapELResolver
+  - javax.el.MethodExpression
+  - javax.el.MethodInfo
+  - javax.el.MethodNotFoundException
+  - javax.el.PropertyNotFoundException
+  - javax.el.PropertyNotWritableException
+  - javax.el.ResourceBundleELResolver
+  - javax.el.ValueExpression
+  - javax.el.VariableMapper

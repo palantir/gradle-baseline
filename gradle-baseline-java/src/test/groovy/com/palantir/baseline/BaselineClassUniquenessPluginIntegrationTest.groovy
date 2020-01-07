@@ -20,6 +20,7 @@ import java.nio.file.Files
 import java.util.stream.Stream
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
+import org.gradle.util.GFileUtils
 
 class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
 
@@ -37,7 +38,9 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         }
     """.stripIndent()
 
-    def 'detect duplicates in two external jars'() {
+    def 'detect duplicates in two external jars, then --write-locks captures'() {
+        File lockfile = new File(projectDir, 'baseline-class-uniqueness.lock')
+
         when:
         buildFile << standardBuildFile
         buildFile << """
@@ -52,7 +55,16 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         result.getOutput().contains("baseline-class-uniqueness detected multiple jars containing identically named classes.")
         result.getOutput().contains("[javax.el:javax.el-api, javax.servlet.jsp:jsp-api]")
         result.getOutput().contains("javax.el.ArrayELResolver");
-        println result.getOutput()
+        !lockfile.exists()
+
+        with("checkClassUniqueness", "--write-locks").build()
+        lockfile.exists()
+
+        File expected = new File("src/test/resources/com/palantir/baseline/baseline-class-uniqueness.expected.lock")
+        if (Boolean.getBoolean("recreate")) {
+            GFileUtils.writeFile(lockfile.text, expected)
+        }
+        lockfile.text == expected.text
     }
 
     def 'detect duplicates in two external jars in non-standard configuration'() {
@@ -121,6 +133,7 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         then:
         result.task(":checkClassUniqueness").outcome == TaskOutcome.SUCCESS
         println result.getOutput()
+        !new File(projectDir, "baseline-class-uniqueness.lock").exists()
     }
 
     def 'should detect duplicates from transitive dependencies'() {
