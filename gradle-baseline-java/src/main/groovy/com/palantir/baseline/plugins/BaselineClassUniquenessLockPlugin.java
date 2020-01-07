@@ -19,7 +19,10 @@ package com.palantir.baseline.plugins;
 import com.palantir.baseline.tasks.ClassUniquenessAnalyzer;
 import java.io.File;
 import java.util.Collection;
+import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 import org.gradle.api.Action;
 import org.gradle.api.GradleException;
@@ -55,65 +58,74 @@ public class BaselineClassUniquenessLockPlugin extends AbstractBaselinePlugin {
         checkClassUniquenessLock.doLast(new Action<Task>() {
             @Override
             public void execute(Task task) {
-                StringBuilder stringBuilder = new StringBuilder();
-                stringBuilder.append("# Run ./gradlew checkClassUniquenessLock --write-locks to update this file\n");
+                Map<String, Optional<String>> resultsByConfiguration = configurationNames.get().stream()
+                        .collect(Collectors.toMap(Function.identity(), configurationName -> {
+                            ClassUniquenessAnalyzer analyzer = new ClassUniquenessAnalyzer(project.getLogger());
+                            Configuration configuration = project.getConfigurations().getByName(configurationName);
+                            analyzer.analyzeConfiguration(configuration);
+                            Collection<Set<ModuleVersionIdentifier>> problemJars = analyzer.getDifferingProblemJars();
 
-                Set<String> configurations = configurationNames.get();
+                            if (problemJars.isEmpty()) {
+                                return Optional.empty();
+                            }
 
-                configurations.stream().sorted().forEach(configurationName -> {
-                    if (configurations.size() > 1) {
-                        stringBuilder.append("\n## configuration: " + configurationName + "\n");
-                    }
+                            StringBuilder stringBuilder = new StringBuilder();
+                            // TODO(dfox): ensure we iterate through problemJars in a stable order
+                            for (Set<ModuleVersionIdentifier> clashingJars : problemJars) {
+                                stringBuilder
+                                        .append(clashingJars.stream()
+                                                .map(mvi -> mvi.getGroup() + ":" + mvi.getName())
+                                                .sorted()
+                                                .collect(Collectors.joining(", ", "[", "]")))
+                                        .append('\n');
 
-                    ClassUniquenessAnalyzer analyzer = new ClassUniquenessAnalyzer(project.getLogger());
-                    Configuration configuration = project.getConfigurations().getByName(configurationName);
-                    analyzer.analyzeConfiguration(configuration);
-                    Collection<Set<ModuleVersionIdentifier>> problemJars = analyzer.getDifferingProblemJars();
+                                analyzer.getDifferingSharedClassesInProblemJars(clashingJars).stream()
+                                        .sorted()
+                                        .forEach(className -> {
+                                            stringBuilder.append("  - ");
+                                            stringBuilder.append(className);
+                                            stringBuilder.append('\n');
+                                        });
+                            }
+                            return Optional.of(stringBuilder.toString());
+                        }));
 
-                    if (problemJars.isEmpty()) {
-                        stringBuilder
-                                .append("Zero identically named classes found in ")
-                                .append(configurationName)
-                                .append(".\n");
-                    } else {
-                        for (Set<ModuleVersionIdentifier> clashingJars : problemJars) {
-                            stringBuilder
-                                    .append(clashingJars.stream()
-                                            .map(mvi -> mvi.getGroup() + ":" + mvi.getName())
-                                            .sorted()
-                                            .collect(Collectors.joining(", ", "[", "]")))
-                                    .append('\n');
-
-                            analyzer.getDifferingSharedClassesInProblemJars(clashingJars).stream()
-                                    .sorted()
-                                    .forEach(className -> {
-                                        stringBuilder.append("  - ");
-                                        stringBuilder.append(className);
-                                        stringBuilder.append('\n');
-                                    });
+                boolean conflictsFound = resultsByConfiguration.values().stream().anyMatch(Optional::isPresent);
+                if (!conflictsFound) {
+                    ensureLockfileDoesNotExist();
+                } else {
+                    StringBuilder stringBuilder = new StringBuilder();
+                    stringBuilder.append(
+                            "# Run ./gradlew checkClassUniquenessLock --write-locks to update this " + "file\n\n");
+                    resultsByConfiguration.forEach((name, contents) -> {
+                        if (contents.isPresent()) {
+                            stringBuilder.append("## ").append(name).append("\n");
+                            stringBuilder.append(contents.get());
                         }
-                    }
-                });
+                    });
+                    ensureLockfileContains(stringBuilder.toString());
+                }
+            }
 
-                String expected = stringBuilder.toString();
-
+            private void ensureLockfileContains(String expected) {
                 if (project.getGradle().getStartParameter().isWriteDependencyLocks()) {
-                    // just nuke whatever was there before
                     GFileUtils.writeFile(expected, lockFile);
-                    project.getLogger().lifecycle("Updated {}", lockFile);
-                } else if (!lockFile.isFile() || !lockFile.canRead()) {
-                    // TODO(dfox): relativize this path
-                    project.getLogger()
-                            .warn(
-                                    "{} does not exist - please run "
-                                            + "`./gradlew checkClassUniquenessLock --write-locks` to create it",
-                                    lockFile);
                 } else {
                     String onDisk = GFileUtils.readFile(lockFile);
                     if (!onDisk.equals(expected)) {
                         throw new GradleException(lockFile
                                 + " is out of date, please run `./gradlew "
                                 + "checkClassUniquenessLock --write-locks` to update this file");
+                    }
+                }
+            }
+
+            private void ensureLockfileDoesNotExist() {
+                if (project.getGradle().getStartParameter().isWriteDependencyLocks()) {
+                    GFileUtils.deleteQuietly(lockFile);
+                } else {
+                    if (!lockFile.exists()) {
+                        throw new GradleException(lockFile + " should not exist (as no problems were found).");
                     }
                 }
             }
