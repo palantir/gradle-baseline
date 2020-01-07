@@ -38,7 +38,7 @@ import org.gradle.api.tasks.TaskAction;
 import org.gradle.util.GFileUtils;
 
 @CacheableTask
-public class ClassUniquenessLockTask extends DefaultTask {
+public class CheckClassUniquenessLockTask extends DefaultTask {
 
     // not marking this as an Input, because we want to re-run if the *contents* of a configuration changes
     @SuppressWarnings("VisibilityModifier")
@@ -46,7 +46,7 @@ public class ClassUniquenessLockTask extends DefaultTask {
 
     private final File lockFile;
 
-    public ClassUniquenessLockTask() {
+    public CheckClassUniquenessLockTask() {
         this.configurations = getProject().getObjects().setProperty(String.class);
         this.lockFile = getProject().file("baseline-class-uniqueness.lock");
         onlyIf(new Spec<Task>() {
@@ -117,7 +117,7 @@ public class ClassUniquenessLockTask extends DefaultTask {
             ensureLockfileDoesNotExist();
         } else {
             StringBuilder stringBuilder = new StringBuilder();
-            stringBuilder.append("# Run ./gradlew checkClassUniquenessLock --write-locks to update this file\n\n");
+            stringBuilder.append("# Run ./gradlew checkClassUniqueness --write-locks to update this file\n\n");
             // TODO(dfox): make configuration order stable!
             resultsByConfiguration.forEach((configuration, contents) -> {
                 if (contents.isPresent()) {
@@ -138,7 +138,7 @@ public class ClassUniquenessLockTask extends DefaultTask {
 
         if (!lockFile.exists()) {
             throw new GradleException("baseline-class-uniqueness detected multiple jars containing identically named "
-                    + "classes. Please resolve these problems, or run `./gradlew checkClassUniquenessLock "
+                    + "classes. Please resolve these problems, or run `./gradlew checkClassUniqueness "
                     + "--write-locks` to accept them:\n\n" + expected);
         }
 
@@ -146,7 +146,7 @@ public class ClassUniquenessLockTask extends DefaultTask {
         if (!onDisk.equals(expected)) {
             throw new GradleException(lockFile
                     + " is out of date, please run `./gradlew "
-                    + "checkClassUniquenessLock --write-locks` to update this file");
+                    + "checkClassUniqueness --write-locks` to update this file");
         }
     }
 

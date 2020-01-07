@@ -44,7 +44,7 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         dependencies {
             compile group: 'javax.el', name: 'javax.el-api', version: '3.0.0'
             compile group: 'javax.servlet.jsp', name: 'jsp-api', version: '2.1'
-        }   
+        }
         """.stripIndent()
         BuildResult result = with('check', '-s').buildAndFail()
 
@@ -66,8 +66,8 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
             myConf group: 'javax.el', name: 'javax.el-api', version: '3.0.0'
             myConf group: 'javax.servlet.jsp', name: 'jsp-api', version: '2.1'
         }
-        
-        checkClassUniquenessLock {
+
+        checkClassUniqueness {
           configurations.add 'myConf'
         }
         """.stripIndent()
@@ -86,11 +86,11 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         dependencies {
             compile 'com.palantir.tritium:tritium-api:0.9.0'
             compile 'com.palantir.tritium:tritium-core:0.9.0'
-        }   
+        }
         """.stripIndent()
 
         then:
-        with('checkClassUniquenessLock', '-s').build()
+        with('checkClassUniqueness', '-s').build()
     }
 
     def 'task should be up-to-date when classpath is unchanged'() {
@@ -98,11 +98,11 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         buildFile << standardBuildFile
 
         then:
-        BuildResult result1 = with('checkClassUniquenessLock').build()
-        result1.task(':checkClassUniquenessLock').outcome == TaskOutcome.SUCCESS
+        BuildResult result1 = with('checkClassUniqueness').build()
+        result1.task(':checkClassUniqueness').outcome == TaskOutcome.SUCCESS
 
-        BuildResult result = with('checkClassUniquenessLock').build()
-        result.task(':checkClassUniquenessLock').outcome == TaskOutcome.UP_TO_DATE
+        BuildResult result = with('checkClassUniqueness').build()
+        result.task(':checkClassUniqueness').outcome == TaskOutcome.UP_TO_DATE
     }
 
     def 'passes when no duplicates are present'() {
@@ -116,10 +116,10 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
             compile 'com.netflix.nebula:nebula-test:6.4.2'
         }
         """.stripIndent()
-        BuildResult result = with('checkClassUniquenessLock', '--info').build()
+        BuildResult result = with('checkClassUniqueness', '--info').build()
 
         then:
-        result.task(":checkClassUniquenessLock").outcome == TaskOutcome.SUCCESS
+        result.task(":checkClassUniqueness").outcome == TaskOutcome.SUCCESS
         println result.getOutput()
     }
 
@@ -145,7 +145,7 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         """.stripIndent()
 
         then:
-        BuildResult result = with('checkClassUniquenessLock', '-s').buildAndFail()
+        BuildResult result = with('checkClassUniqueness', '-s').buildAndFail()
         result.output.contains("baseline-class-uniqueness detected multiple jars containing identically named classes")
     }
 
@@ -166,8 +166,8 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         """.stripIndent()
 
         then:
-        BuildResult result = with('checkClassUniquenessLock', '--info').build()
+        BuildResult result = with('checkClassUniqueness', '--info').build()
         println result.getOutput()
-        result.task(":checkClassUniquenessLock").outcome == TaskOutcome.SUCCESS // ideally should should say failed!
+        result.task(":checkClassUniqueness").outcome == TaskOutcome.SUCCESS // ideally should should say failed!
     }
 }

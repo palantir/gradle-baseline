@@ -16,7 +16,7 @@
 
 package com.palantir.baseline.plugins;
 
-import com.palantir.baseline.tasks.ClassUniquenessLockTask;
+import com.palantir.baseline.tasks.CheckClassUniquenessLockTask;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.TaskProvider;
@@ -32,8 +32,8 @@ import org.gradle.language.base.plugins.LifecycleBasePlugin;
 public class BaselineClassUniquenessPlugin extends AbstractBaselinePlugin {
     @Override
     public final void apply(Project project) {
-        TaskProvider<ClassUniquenessLockTask> lockTask =
-                project.getTasks().register("checkClassUniquenessLock", ClassUniquenessLockTask.class);
+        TaskProvider<CheckClassUniquenessLockTask> lockTask =
+                project.getTasks().register("checkClassUniqueness", CheckClassUniquenessLockTask.class);
         project.getPlugins().apply(LifecycleBasePlugin.class);
         project.getTasks().getByName(LifecycleBasePlugin.CHECK_TASK_NAME).dependsOn(lockTask);
 

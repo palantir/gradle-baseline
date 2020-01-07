@@ -230,7 +230,7 @@ in `.baseline/copyright/*.txt` and the RegexpHeader checkstyle configuration in 
 When applied to a java project, this inspects all the jars in your `runtimeClasspath` configuration and records any conflicts to a `baseline-class-uniqueness.lock` file. For example:
 
 ```
-# Run ./gradlew checkClassUniquenessLock --write-locks to update this file
+# Run ./gradlew checkClassUniqueness --write-locks to update this file
 
 ## runtimeClasspath
 [jakarta.annotation:jakarta.annotation-api, javax.annotation:javax.annotation-api]
@@ -251,7 +251,7 @@ When applied to a java project, this inspects all the jars in your `runtimeClass
 This task can also be used to analyze other configurations in addition to `runtimeClasspath`, e.g.:
 
 ```gradle
-checkClassUniquenessLock {
+checkClassUniqueness {
   configurations.add 'myConf'
 }
 ```
