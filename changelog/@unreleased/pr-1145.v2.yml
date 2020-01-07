@@ -1,0 +1,8 @@
+type: feature
+feature:
+  description: The `com.palantir.baseline-class-uniqueness` plugin now records conflicts
+    in a `baseline-class-uniqueness.lock` file. This should be checked-in to git and
+    makes it easier to incrementally improve projects, rather than requiring a big-bang
+    migration.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1145
