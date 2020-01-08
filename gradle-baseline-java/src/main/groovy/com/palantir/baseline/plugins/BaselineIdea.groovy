@@ -167,8 +167,8 @@ class BaselineIdea extends AbstractBaselinePlugin {
                 </option>
               </component>
             """))
-        def externalDependencies = matchOrCreateChild(node, 'component', [name: 'ExternalDependencies'])
-        matchOrCreateChild(externalDependencies, 'plugin', [id: 'EclipseCodeFormatter'])
+        def externalDependencies = XmlUtils.matchOrCreateChild(node, 'component', [name: 'ExternalDependencies'])
+        XmlUtils.matchOrCreateChild(externalDependencies, 'plugin', [id: 'EclipseCodeFormatter'])
     }
 
     private void addCheckstyle(node) {
@@ -196,8 +196,8 @@ class BaselineIdea extends AbstractBaselinePlugin {
               </option>
             </component>
             """.stripIndent()))
-        def externalDependencies = matchOrCreateChild(node, 'component', [name: 'ExternalDependencies'])
-        matchOrCreateChild(externalDependencies, 'plugin', [id: 'CheckStyle-IDEA'])
+        def externalDependencies = XmlUtils.matchOrCreateChild(node, 'component', [name: 'ExternalDependencies'])
+        XmlUtils.matchOrCreateChild(externalDependencies, 'plugin', [id: 'CheckStyle-IDEA'])
     }
 
     /**
@@ -270,23 +270,14 @@ class BaselineIdea extends AbstractBaselinePlugin {
     private static void setRunManagerWorkingDirectory(Node node) {
         def runTypes = ['Application', 'JUnit'] as Set
 
-        def runManager = matchOrCreateChild(node, 'component', [name: 'RunManager'])
+        def runManager = XmlUtils.matchOrCreateChild(node, 'component', [name: 'RunManager'])
         runTypes.each { runType ->
-            def configuration = matchOrCreateChild(runManager, 'configuration',
+            def configuration = XmlUtils.matchOrCreateChild(runManager, 'configuration',
                     [default: 'true', type: runType],
                     [factoryName: runType])
-            def workingDirectory = matchOrCreateChild(configuration, 'option', [name: 'WORKING_DIRECTORY'])
+            def workingDirectory = XmlUtils.matchOrCreateChild(configuration, 'option', [name: 'WORKING_DIRECTORY'])
             workingDirectory.'@value' = 'file://$MODULE_DIR$'
         }
-    }
-
-    private static Node matchOrCreateChild(Node base, String name, Map attributes = [:], Map defaults = [:]) {
-        def child = base[name].find { it.attributes().entrySet().containsAll(attributes.entrySet()) }
-        if (child) {
-            return child
-        }
-
-        return base.appendNode(name, attributes + defaults)
     }
 
     /**
