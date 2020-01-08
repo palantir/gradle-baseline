@@ -86,4 +86,12 @@ class AbstractPluginTest extends Specification {
             return it
         }
     }
+
+    /**
+     * Copied from {@link nebula.test.BaseIntegrationSpec#findModuleName()}, we really should just use that class
+     * instead.
+     */
+    protected String getModuleName() {
+        return getProjectDir().getName().replaceAll(/_\d+/, '')
+    }
 }

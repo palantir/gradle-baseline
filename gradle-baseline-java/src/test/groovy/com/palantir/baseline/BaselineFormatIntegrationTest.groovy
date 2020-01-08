@@ -269,4 +269,21 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         }
         '''.stripIndent()
     }
+
+    def "idea_configuresIpr"() {
+        buildFile << standardBuildFile
+        buildFile << """
+            apply plugin: 'com.palantir.java-format'
+            apply plugin: 'idea'
+        """.stripIndent()
+
+        when:
+        with('idea', '-s').build()
+
+        then:
+        def iprFile = new File(projectDir, "${moduleName}.ipr")
+        def ipr = new XmlSlurper().parse(iprFile)
+        ipr.component.find { it.@name == "ExternalDependencies" }
+        ipr.component.find { it.@name == "SaveActionSettings" }
+    }
 }
