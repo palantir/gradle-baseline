@@ -116,11 +116,13 @@ class BaselineFormat extends AbstractBaselinePlugin {
     }
 
     private static void configureLegacyIdea(Project project) {
-        IdeaModel ideaModel = project.getExtensions().getByType(IdeaModel.class);
-        ideaModel.getProject().getIpr().withXml(xmlProvider -> {
-            // this block is lazy
-            BaselineFormatIntellijConfiguration.configureSaveActions(xmlProvider.asNode());
-            BaselineFormatIntellijConfiguration.configureExternalDependencies(xmlProvider.asNode());
+        project.getPluginManager().withPlugin("idea", plugin -> {
+            IdeaModel ideaModel = project.getExtensions().getByType(IdeaModel.class);
+            ideaModel.getProject().getIpr().withXml(xmlProvider -> {
+                // this block is lazy
+                BaselineFormatIntellijConfiguration.configureSaveActions(xmlProvider.asNode());
+                BaselineFormatIntellijConfiguration.configureExternalDependencies(xmlProvider.asNode());
+            });
         });
     }
 
