@@ -16,7 +16,7 @@
 
 package com.palantir.baseline.plugins
 
-import static com.palantir.baseline.plugins.XmlUtils.matchOrCreateChild
+import static GroovyXmlUtils.matchOrCreateChild
 
 final class BaselineFormatIntellijConfiguration {
     private BaselineFormatIntellijConfiguration() {}

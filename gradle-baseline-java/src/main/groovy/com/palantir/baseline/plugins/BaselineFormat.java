@@ -129,9 +129,11 @@ class BaselineFormat extends AbstractBaselinePlugin {
             return;
         }
         XmlUtils.createOrUpdateXmlFile(
-                project.file(".idea/externalDependencies.xml"), BaselineFormatIntellijConfiguration::configureSaveActions);
-        XmlUtils.createOrUpdateXmlFile(project.file(".idea/saveactions_settings.xml"), BaselineFormatIntellijConfiguration
-                ::configureExternalDependencies);
+                project.file(".idea/externalDependencies.xml"),
+                BaselineFormatIntellijConfiguration::configureSaveActions);
+        XmlUtils.createOrUpdateXmlFile(
+                project.file(".idea/saveactions_settings.xml"),
+                BaselineFormatIntellijConfiguration::configureExternalDependencies);
     }
 
     static boolean eclipseFormattingEnabled(Project project) {

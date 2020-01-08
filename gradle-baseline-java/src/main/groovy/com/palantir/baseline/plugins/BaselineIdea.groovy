@@ -167,8 +167,8 @@ class BaselineIdea extends AbstractBaselinePlugin {
                 </option>
               </component>
             """))
-        def externalDependencies = XmlUtils.matchOrCreateChild(node, 'component', [name: 'ExternalDependencies'])
-        XmlUtils.matchOrCreateChild(externalDependencies, 'plugin', [id: 'EclipseCodeFormatter'])
+        def externalDependencies = GroovyXmlUtils.matchOrCreateChild(node, 'component', [name: 'ExternalDependencies'])
+        GroovyXmlUtils.matchOrCreateChild(externalDependencies, 'plugin', [id: 'EclipseCodeFormatter'])
     }
 
     private void addCheckstyle(node) {
@@ -196,8 +196,8 @@ class BaselineIdea extends AbstractBaselinePlugin {
               </option>
             </component>
             """.stripIndent()))
-        def externalDependencies = XmlUtils.matchOrCreateChild(node, 'component', [name: 'ExternalDependencies'])
-        XmlUtils.matchOrCreateChild(externalDependencies, 'plugin', [id: 'CheckStyle-IDEA'])
+        def externalDependencies = GroovyXmlUtils.matchOrCreateChild(node, 'component', [name: 'ExternalDependencies'])
+        GroovyXmlUtils.matchOrCreateChild(externalDependencies, 'plugin', [id: 'CheckStyle-IDEA'])
     }
 
     /**
@@ -270,12 +270,12 @@ class BaselineIdea extends AbstractBaselinePlugin {
     private static void setRunManagerWorkingDirectory(Node node) {
         def runTypes = ['Application', 'JUnit'] as Set
 
-        def runManager = XmlUtils.matchOrCreateChild(node, 'component', [name: 'RunManager'])
+        def runManager = GroovyXmlUtils.matchOrCreateChild(node, 'component', [name: 'RunManager'])
         runTypes.each { runType ->
-            def configuration = XmlUtils.matchOrCreateChild(runManager, 'configuration',
+            def configuration = GroovyXmlUtils.matchOrCreateChild(runManager, 'configuration',
                     [default: 'true', type: runType],
                     [factoryName: runType])
-            def workingDirectory = XmlUtils.matchOrCreateChild(configuration, 'option', [name: 'WORKING_DIRECTORY'])
+            def workingDirectory = GroovyXmlUtils.matchOrCreateChild(configuration, 'option', [name: 'WORKING_DIRECTORY'])
             workingDirectory.'@value' = 'file://$MODULE_DIR$'
         }
     }
