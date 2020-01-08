@@ -351,6 +351,9 @@ class BaselineIdea extends AbstractBaselinePlugin {
 
     private static void configureExternalDependencies(Node rootNode) {
         def externalDependencies = GroovyXmlUtils.matchOrCreateChild(rootNode, 'component', [name: 'ExternalDependencies'])
-        GroovyXmlUtils.matchOrCreateChild(externalDependencies, 'plugin', [id: 'save-actions'])
+        // I kid you not, this is the id for the save actions plugin:
+        // https://github.com/dubreuia/intellij-plugin-save-actions/blob/v1.9.0/src/main/resources/META-INF/plugin.xml#L5
+        // https://plugins.jetbrains.com/plugin/7642-save-actions/
+        GroovyXmlUtils.matchOrCreateChild(externalDependencies, 'plugin', [id: 'com.dubreuia'], ['min-version': '1.9.0'])
     }
 }
