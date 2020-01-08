@@ -119,8 +119,8 @@ class BaselineFormat extends AbstractBaselinePlugin {
         IdeaModel ideaModel = project.getExtensions().getByType(IdeaModel.class);
         ideaModel.getProject().getIpr().withXml(xmlProvider -> {
             // this block is lazy
-            BaselineFormatConfigureXml.configureSaveActions(xmlProvider.asNode());
-            BaselineFormatConfigureXml.configureExternalDependencies(xmlProvider.asNode());
+            BaselineFormatIntellijConfiguration.configureSaveActions(xmlProvider.asNode());
+            BaselineFormatIntellijConfiguration.configureExternalDependencies(xmlProvider.asNode());
         });
     }
 
@@ -129,8 +129,8 @@ class BaselineFormat extends AbstractBaselinePlugin {
             return;
         }
         XmlUtils.createOrUpdateXmlFile(
-                project.file(".idea/externalDependencies.xml"), BaselineFormatConfigureXml::configureSaveActions);
-        XmlUtils.createOrUpdateXmlFile(project.file(".idea/saveactions_settings.xml"), BaselineFormatConfigureXml
+                project.file(".idea/externalDependencies.xml"), BaselineFormatIntellijConfiguration::configureSaveActions);
+        XmlUtils.createOrUpdateXmlFile(project.file(".idea/saveactions_settings.xml"), BaselineFormatIntellijConfiguration
                 ::configureExternalDependencies);
     }
 

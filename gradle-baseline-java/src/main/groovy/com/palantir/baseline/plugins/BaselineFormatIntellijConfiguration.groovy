@@ -18,8 +18,8 @@ package com.palantir.baseline.plugins
 
 import static com.palantir.baseline.plugins.XmlUtils.matchOrCreateChild
 
-final class BaselineFormatConfigureXml {
-    private BaselineFormatConfigureXml() {}
+final class BaselineFormatIntellijConfiguration {
+    private BaselineFormatIntellijConfiguration() {}
 
     /**
      * Configures some defaults on the save-actions plugin, but only if it hasn't been configured before.
