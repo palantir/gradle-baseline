@@ -270,7 +270,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         '''.stripIndent()
     }
 
-    def "idea_configuresIpr"() {
+    def "idea configures ipr when PJF is enabled"() {
         buildFile << standardBuildFile
         buildFile << """
             apply plugin: 'com.palantir.java-format'
@@ -285,5 +285,21 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         def ipr = new XmlSlurper().parse(iprFile)
         ipr.component.find { it.@name == "ExternalDependencies" }
         ipr.component.find { it.@name == "SaveActionSettings" }
+    }
+
+    def "idea does not configure ipr when PJF is not enabled"() {
+        buildFile << standardBuildFile
+        buildFile << """
+            apply plugin: 'idea'
+        """.stripIndent()
+
+        when:
+        with('idea', '-s').build()
+
+        then:
+        def iprFile = new File(projectDir, "${moduleName}.ipr")
+        def ipr = new XmlSlurper().parse(iprFile)
+        !ipr.component.find { it.@name == "ExternalDependencies" }
+        !ipr.component.find { it.@name == "SaveActionSettings" }
     }
 }
