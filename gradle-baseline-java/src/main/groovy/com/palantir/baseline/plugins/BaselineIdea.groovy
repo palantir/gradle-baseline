@@ -46,7 +46,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
             IdeaModel ideaRootModel = project.rootProject.extensions.findByType(IdeaModel)
             if (ideaRootModel) {
                 ideaRootModel.project.ipr.withXml { provider ->
-                    def node = provider.asNode()
+                    Node node = provider.asNode()
                     addCodeStyle(node)
                     addCopyright(node)
                     addCheckstyle(node)
@@ -66,6 +66,21 @@ class BaselineIdea extends AbstractBaselinePlugin {
 
             // Configure Idea module
             moveProjectReferencesToEnd(ideaModuleModel)
+        }
+
+        // Suggest and configure the "save actions" plugin if Palantir Java Format is turned on.
+        if (project == project.rootProject) {
+            IdeaModel ideaRootModel = project.extensions.findByType(IdeaModel)
+            // This plugin can only be applied to the root project, and it applied as a side-effect of applying
+            // 'com.palantir.java-format' to any subproject.
+            project.getPluginManager().withPlugin("com.palantir.java-format-idea") {
+                ideaRootModel.project.ipr.withXml { provider ->
+                    Node node = provider.asNode()
+                    configureSaveActions(node)
+                    configureExternalDependencies(node)
+                }
+                configureSaveActionsForIntellijImport(project)
+            }
         }
 
         // If someone renames a project, leftover {ipr,iml,ipr} files may still exist on disk and
@@ -264,6 +279,18 @@ class BaselineIdea extends AbstractBaselinePlugin {
         }
     }
 
+    private static void configureSaveActionsForIntellijImport(Project project) {
+        if (!Boolean.getBoolean("idea.active")) {
+            return
+        }
+        XmlUtils.createOrUpdateXmlFile(
+                project.file(".idea/externalDependencies.xml"),
+                BaselineIdea.&configureExternalDependencies)
+        XmlUtils.createOrUpdateXmlFile(
+                project.file(".idea/saveactions_settings.xml"),
+                BaselineIdea.&configureSaveActions)
+    }
+
     /**
      * Configure the default working directory of RunManager configurations to be the module directory.
      */
@@ -301,5 +328,29 @@ class BaselineIdea extends AbstractBaselinePlugin {
             module.dependencies.removeAll(projectRefs)
             module.dependencies.addAll(projectRefs)
         }
+    }
+
+    /**
+     * Configures some defaults on the save-actions plugin, but only if it hasn't been configured before.
+     */
+    private static void configureSaveActions(Node rootNode) {
+        GroovyXmlUtils.matchOrCreateChild(rootNode, 'component', [name: 'SaveActionSettings'], [:]) {
+            // Configure defaults if this plugin is configured for the first time only
+            appendNode('option', [name: 'actions']).appendNode('set').with {
+                appendNode('option', [value: 'activate'])
+                appendNode('option', [value: 'noActionIfCompileErrors'])
+                appendNode('option', [value: 'organizeImports'])
+                appendNode('option', [value: 'reformat'])
+            }
+            appendNode('option', [name: 'configurationPath', value: ''])
+            appendNode('inclusions').appendNode('set').with {
+                appendNode('option', [value: 'src/.*\\.java'])
+            }
+        }
+    }
+
+    private static void configureExternalDependencies(Node rootNode) {
+        def externalDependencies = GroovyXmlUtils.matchOrCreateChild(rootNode, 'component', [name: 'ExternalDependencies'])
+        GroovyXmlUtils.matchOrCreateChild(externalDependencies, 'plugin', [id: 'save-actions'])
     }
 }

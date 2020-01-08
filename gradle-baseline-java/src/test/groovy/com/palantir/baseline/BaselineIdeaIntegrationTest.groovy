@@ -30,6 +30,10 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         }
         allprojects {
             apply plugin: 'com.palantir.baseline-idea'
+            repositories {
+                maven { url 'https://dl.bintray.com/palantir/releases' }
+                jcenter()
+            }
         }
     '''.stripIndent()
 
@@ -263,5 +267,34 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
 
         then:
         !otherSubprojectIml.exists()
+    }
+
+    def "idea configures the save-action plugin when PJF is enabled on a subproject"() {
+        buildFile << standardBuildFile
+        multiProject.addSubproject('formatted-project', """
+            apply plugin: 'com.palantir.java-format'
+        """.stripIndent())
+
+        when:
+        with('idea').build()
+
+        then:
+        def iprFile = new File(projectDir, "${moduleName}.ipr")
+        def ipr = new XmlSlurper().parse(iprFile)
+        ipr.component.find { it.@name == "ExternalDependencies" }
+        ipr.component.find { it.@name == "SaveActionSettings" }
+    }
+
+    def "idea does not configure the save-action plugin when PJF is not enabled"() {
+        buildFile << standardBuildFile
+
+        when:
+        with('idea').build()
+
+        then:
+        def iprFile = new File(projectDir, "${moduleName}.ipr")
+        def ipr = new XmlSlurper().parse(iprFile)
+        !ipr.component.find { it.@name == "ExternalDependencies" }
+        !ipr.component.find { it.@name == "SaveActionSettings" }
     }
 }

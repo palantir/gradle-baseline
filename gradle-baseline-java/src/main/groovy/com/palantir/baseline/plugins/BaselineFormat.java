@@ -28,7 +28,6 @@ import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
-import org.gradle.plugins.ide.idea.model.IdeaModel;
 
 class BaselineFormat extends AbstractBaselinePlugin {
 
@@ -56,12 +55,6 @@ class BaselineFormat extends AbstractBaselinePlugin {
                                 + " from your gradle.properties");
             });
         }
-
-        // Suggest and configure the "save actions" plugin if Palantir Java Format is turned on.
-        project.getPluginManager().withPlugin(PJF_PLUGIN, plugin -> {
-            configureLegacyIdea(project);
-            configureIntelliJImport(project);
-        });
 
         project.getPluginManager().withPlugin("java", plugin -> {
             project.getPluginManager().apply("com.diffplug.gradle.spotless");
@@ -113,29 +106,6 @@ class BaselineFormat extends AbstractBaselinePlugin {
                 });
             });
         });
-    }
-
-    private static void configureLegacyIdea(Project project) {
-        project.getPluginManager().withPlugin("idea", plugin -> {
-            IdeaModel ideaModel = project.getExtensions().getByType(IdeaModel.class);
-            ideaModel.getProject().getIpr().withXml(xmlProvider -> {
-                // this block is lazy
-                BaselineFormatIntellijConfiguration.configureSaveActions(xmlProvider.asNode());
-                BaselineFormatIntellijConfiguration.configureExternalDependencies(xmlProvider.asNode());
-            });
-        });
-    }
-
-    private static void configureIntelliJImport(Project project) {
-        if (!Boolean.getBoolean("idea.active")) {
-            return;
-        }
-        XmlUtils.createOrUpdateXmlFile(
-                project.file(".idea/externalDependencies.xml"),
-                BaselineFormatIntellijConfiguration::configureSaveActions);
-        XmlUtils.createOrUpdateXmlFile(
-                project.file(".idea/saveactions_settings.xml"),
-                BaselineFormatIntellijConfiguration::configureExternalDependencies);
     }
 
     static boolean eclipseFormattingEnabled(Project project) {
