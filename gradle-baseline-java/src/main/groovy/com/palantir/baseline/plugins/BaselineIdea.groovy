@@ -91,10 +91,12 @@ class BaselineIdea extends AbstractBaselinePlugin {
             addGitHubIssueNavigation(node)
         }
 
-        ideaRootModel.workspace.iws.withXml { provider ->
-            Node node = provider.asNode()
-            setRunManagerWorkingDirectory(node)
-            addEditorSettings(node)
+        project.afterEvaluate {
+            ideaRootModel.workspace.iws.withXml { provider ->
+                Node node = provider.asNode()
+                setRunManagerWorkingDirectory(node)
+                addEditorSettings(node)
+            }
         }
 
         // Suggest and configure the "save actions" plugin if Palantir Java Format is turned on.
