@@ -42,6 +42,9 @@ class BaselineIdea extends AbstractBaselinePlugin {
 
         if (project == project.rootProject) {
             applyToRootProject(project)
+        } else {
+            // Be defensive - it never makes sense to apply this project to only a subproject but not to the root.
+            project.rootProject.pluginManager.apply(BaselineIdea)
         }
 
         // Configure Idea module
