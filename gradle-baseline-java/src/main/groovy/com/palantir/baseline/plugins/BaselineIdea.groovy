@@ -32,8 +32,11 @@ import org.gradle.plugins.ide.idea.GenerateIdeaProject
 import org.gradle.plugins.ide.idea.GenerateIdeaWorkspace
 import org.gradle.plugins.ide.idea.IdeaPlugin
 import org.gradle.plugins.ide.idea.model.IdeaModel
+import org.gradle.plugins.ide.idea.model.ModuleDependency
 
 class BaselineIdea extends AbstractBaselinePlugin {
+
+    static SAVE_ACTIONS_PLUGIN_MINIMUM_VERSION = '1.9.0'
 
     void apply(Project project) {
         this.project = project
@@ -326,7 +329,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
      */
     private static void moveProjectReferencesToEnd(IdeaModel ideaModel) {
         ideaModel.module.iml.whenMerged { module ->
-            def projectRefs = module.dependencies.findAll { it instanceof org.gradle.plugins.ide.idea.model.ModuleDependency }
+            def projectRefs = module.dependencies.findAll { it instanceof ModuleDependency }
             module.dependencies.removeAll(projectRefs)
             module.dependencies.addAll(projectRefs)
         }
@@ -352,10 +355,15 @@ class BaselineIdea extends AbstractBaselinePlugin {
     }
 
     private static void configureExternalDependencies(Node rootNode) {
-        def externalDependencies = GroovyXmlUtils.matchOrCreateChild(rootNode, 'component', [name: 'ExternalDependencies'])
+        def externalDependencies =
+                GroovyXmlUtils.matchOrCreateChild(rootNode, 'component', [name: 'ExternalDependencies'])
         // I kid you not, this is the id for the save actions plugin:
         // https://github.com/dubreuia/intellij-plugin-save-actions/blob/v1.9.0/src/main/resources/META-INF/plugin.xml#L5
         // https://plugins.jetbrains.com/plugin/7642-save-actions/
-        GroovyXmlUtils.matchOrCreateChild(externalDependencies, 'plugin', [id: 'com.dubreuia'], ['min-version': '1.9.0'])
+        GroovyXmlUtils.matchOrCreateChild(
+                externalDependencies,
+                'plugin',
+                [id: 'com.dubreuia'],
+                ['min-version': SAVE_ACTIONS_PLUGIN_MINIMUM_VERSION])
     }
 }
