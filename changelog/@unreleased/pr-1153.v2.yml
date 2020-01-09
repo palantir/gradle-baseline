@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: Running `./gradlew --write-locks` will now update the baseline-class-uniqueness.lock
+    file.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1153
