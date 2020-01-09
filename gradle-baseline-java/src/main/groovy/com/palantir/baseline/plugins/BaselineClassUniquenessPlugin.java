@@ -16,7 +16,10 @@
 
 package com.palantir.baseline.plugins;
 
+import com.google.common.collect.ImmutableList;
 import com.palantir.baseline.tasks.CheckClassUniquenessLockTask;
+import java.util.List;
+import org.gradle.StartParameter;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.TaskProvider;
@@ -32,14 +35,25 @@ import org.gradle.language.base.plugins.LifecycleBasePlugin;
 public class BaselineClassUniquenessPlugin extends AbstractBaselinePlugin {
     @Override
     public final void apply(Project project) {
-        TaskProvider<CheckClassUniquenessLockTask> lockTask =
+        TaskProvider<CheckClassUniquenessLockTask> checkClassUniqueness =
                 project.getTasks().register("checkClassUniqueness", CheckClassUniquenessLockTask.class);
         project.getPlugins().apply(LifecycleBasePlugin.class);
-        project.getTasks().getByName(LifecycleBasePlugin.CHECK_TASK_NAME).dependsOn(lockTask);
+        project.getTasks().getByName(LifecycleBasePlugin.CHECK_TASK_NAME).dependsOn(checkClassUniqueness);
 
         project.getPlugins().withId("java", plugin -> {
-            lockTask.configure(t -> t.configurations.add(
+            checkClassUniqueness.configure(t -> t.configurations.add(
                     project.getConfigurations().getByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME)));
         });
+
+        // Wire up dependencies so running `./gradlew --write-locks` will update the lock file
+        StartParameter startParam = project.getGradle().getStartParameter();
+        if (startParam.isWriteDependencyLocks()
+                && !startParam.getTaskNames().contains(checkClassUniqueness.getName())) {
+            List<String> taskNames = ImmutableList.<String>builder()
+                    .addAll(startParam.getTaskNames())
+                    .add(checkClassUniqueness.getName())
+                    .build();
+            startParam.setTaskNames(taskNames);
+        }
     }
 }
