@@ -32,41 +32,27 @@ import org.gradle.plugins.ide.idea.GenerateIdeaProject
 import org.gradle.plugins.ide.idea.GenerateIdeaWorkspace
 import org.gradle.plugins.ide.idea.IdeaPlugin
 import org.gradle.plugins.ide.idea.model.IdeaModel
+import org.gradle.plugins.ide.idea.model.ModuleDependency
 
 class BaselineIdea extends AbstractBaselinePlugin {
+
+    static SAVE_ACTIONS_PLUGIN_MINIMUM_VERSION = '1.9.0'
 
     void apply(Project project) {
         this.project = project
 
         project.plugins.apply IdeaPlugin
-        IdeaModel ideaModuleModel = project.extensions.getByType(IdeaModel)
 
-        project.afterEvaluate {
-            // Configure Idea project
-            IdeaModel ideaRootModel = project.rootProject.extensions.findByType(IdeaModel)
-            if (ideaRootModel) {
-                ideaRootModel.project.ipr.withXml { provider ->
-                    def node = provider.asNode()
-                    addCodeStyle(node)
-                    addCopyright(node)
-                    addCheckstyle(node)
-                    addEclipseFormat(node)
-                    addGit(node)
-                    addInspectionProjectProfile(node)
-                    addJavacSettings(node)
-                    addGitHubIssueNavigation(node)
-                }
-
-                ideaRootModel.workspace.iws.withXml { provider ->
-                    def node = provider.asNode()
-                    setRunManagerWorkingDirectory(node)
-                    addEditorSettings(node)
-                }
-            }
-
-            // Configure Idea module
-            moveProjectReferencesToEnd(ideaModuleModel)
+        if (project == project.rootProject) {
+            applyToRootProject(project)
+        } else {
+            // Be defensive - it never makes sense to apply this project to only a subproject but not to the root.
+            project.rootProject.pluginManager.apply(BaselineIdea)
         }
+
+        // Configure Idea module
+        IdeaModel ideaModuleModel = project.extensions.getByType(IdeaModel)
+        moveProjectReferencesToEnd(ideaModuleModel)
 
         // If someone renames a project, leftover {ipr,iml,ipr} files may still exist on disk and
         // confuse users, so we proactively clean them up. Intentionally using an Action<Task> to allow up-to-dateness.
@@ -88,6 +74,42 @@ class BaselineIdea extends AbstractBaselinePlugin {
         }
 
         project.getTasks().findByName("idea").doLast(cleanup)
+    }
+
+    void applyToRootProject(Project project) {
+        // Configure Idea project
+        IdeaModel ideaRootModel = project.extensions.findByType(IdeaModel)
+        ideaRootModel.project.ipr.withXml { provider ->
+            Node node = provider.asNode()
+            addCodeStyle(node)
+            addCopyright(node)
+            addCheckstyle(node)
+            addEclipseFormat(node)
+            addGit(node)
+            addInspectionProjectProfile(node)
+            addJavacSettings(node)
+            addGitHubIssueNavigation(node)
+        }
+
+        project.afterEvaluate {
+            ideaRootModel.workspace.iws.withXml { provider ->
+                Node node = provider.asNode()
+                setRunManagerWorkingDirectory(node)
+                addEditorSettings(node)
+            }
+        }
+
+        // Suggest and configure the "save actions" plugin if Palantir Java Format is turned on.
+        // This plugin can only be applied to the root project, and it applied as a side-effect of applying
+        // 'com.palantir.java-format' to any subproject.
+        project.getPluginManager().withPlugin("com.palantir.java-format-idea") {
+            ideaRootModel.project.ipr.withXml { provider ->
+                Node node = provider.asNode()
+                configureSaveActions(node)
+                configureExternalDependencies(node)
+            }
+            configureSaveActionsForIntellijImport(project)
+        }
     }
 
     @CompileStatic
@@ -167,8 +189,8 @@ class BaselineIdea extends AbstractBaselinePlugin {
                 </option>
               </component>
             """))
-        def externalDependencies = matchOrCreateChild(node, 'component', [name: 'ExternalDependencies'])
-        matchOrCreateChild(externalDependencies, 'plugin', [id: 'EclipseCodeFormatter'])
+        def externalDependencies = GroovyXmlUtils.matchOrCreateChild(node, 'component', [name: 'ExternalDependencies'])
+        GroovyXmlUtils.matchOrCreateChild(externalDependencies, 'plugin', [id: 'EclipseCodeFormatter'])
     }
 
     private void addCheckstyle(node) {
@@ -196,8 +218,8 @@ class BaselineIdea extends AbstractBaselinePlugin {
               </option>
             </component>
             """.stripIndent()))
-        def externalDependencies = matchOrCreateChild(node, 'component', [name: 'ExternalDependencies'])
-        matchOrCreateChild(externalDependencies, 'plugin', [id: 'CheckStyle-IDEA'])
+        def externalDependencies = GroovyXmlUtils.matchOrCreateChild(node, 'component', [name: 'ExternalDependencies'])
+        GroovyXmlUtils.matchOrCreateChild(externalDependencies, 'plugin', [id: 'CheckStyle-IDEA'])
     }
 
     /**
@@ -216,7 +238,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
             '''.stripIndent()))
     }
 
-    private void addInspectionProjectProfile(node) {
+    private static void addInspectionProjectProfile(node) {
         node.append(new XmlParser().parseText("""
             <component name="InspectionProjectProfileManager">
                 <profile version="1.0">
@@ -231,7 +253,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
             """.stripIndent()))
     }
 
-    private void addJavacSettings(node) {
+    private static void addJavacSettings(node) {
         node.append(new XmlParser().parseText("""
             <component name="JavacSettings">
                 <option name="PREFER_TARGET_JDK_COMPILER" value="false" />
@@ -239,7 +261,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
             """.stripIndent()))
     }
 
-    private void addEditorSettings(node) {
+    private static void addEditorSettings(node) {
         node.append(new XmlParser().parseText("""
             <component name="CodeInsightWorkspaceSettings">
                 <option name="optimizeImportsOnTheFly" value="true" />
@@ -247,7 +269,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
             """.stripIndent()))
     }
 
-    private void addGitHubIssueNavigation(node) {
+    private static void addGitHubIssueNavigation(node) {
         GitUtils.maybeGitHubUri().ifPresent { githubUri ->
             node.append(new XmlParser().parseText("""
              <component name="IssueNavigationConfiguration">
@@ -264,29 +286,32 @@ class BaselineIdea extends AbstractBaselinePlugin {
         }
     }
 
+    private static void configureSaveActionsForIntellijImport(Project project) {
+        if (!Boolean.getBoolean("idea.active")) {
+            return
+        }
+        XmlUtils.createOrUpdateXmlFile(
+                project.file(".idea/externalDependencies.xml"),
+                BaselineIdea.&configureExternalDependencies)
+        XmlUtils.createOrUpdateXmlFile(
+                project.file(".idea/saveactions_settings.xml"),
+                BaselineIdea.&configureSaveActions)
+    }
+
     /**
      * Configure the default working directory of RunManager configurations to be the module directory.
      */
     private static void setRunManagerWorkingDirectory(Node node) {
         def runTypes = ['Application', 'JUnit'] as Set
 
-        def runManager = matchOrCreateChild(node, 'component', [name: 'RunManager'])
+        def runManager = GroovyXmlUtils.matchOrCreateChild(node, 'component', [name: 'RunManager'])
         runTypes.each { runType ->
-            def configuration = matchOrCreateChild(runManager, 'configuration',
+            def configuration = GroovyXmlUtils.matchOrCreateChild(runManager, 'configuration',
                     [default: 'true', type: runType],
                     [factoryName: runType])
-            def workingDirectory = matchOrCreateChild(configuration, 'option', [name: 'WORKING_DIRECTORY'])
+            def workingDirectory = GroovyXmlUtils.matchOrCreateChild(configuration, 'option', [name: 'WORKING_DIRECTORY'])
             workingDirectory.'@value' = 'file://$MODULE_DIR$'
         }
-    }
-
-    private static Node matchOrCreateChild(Node base, String name, Map attributes = [:], Map defaults = [:]) {
-        def child = base[name].find { it.attributes().entrySet().containsAll(attributes.entrySet()) }
-        if (child) {
-            return child
-        }
-
-        return base.appendNode(name, attributes + defaults)
     }
 
     /**
@@ -304,11 +329,43 @@ class BaselineIdea extends AbstractBaselinePlugin {
      * This moves all project references to the end of the dependencies list, which unifies behaviour
      * between Gradle and IntelliJ.
      */
-    private void moveProjectReferencesToEnd(IdeaModel ideaModel) {
+    private static void moveProjectReferencesToEnd(IdeaModel ideaModel) {
         ideaModel.module.iml.whenMerged { module ->
-            def projectRefs = module.dependencies.findAll { it instanceof org.gradle.plugins.ide.idea.model.ModuleDependency }
+            def projectRefs = module.dependencies.findAll { it instanceof ModuleDependency }
             module.dependencies.removeAll(projectRefs)
             module.dependencies.addAll(projectRefs)
         }
+    }
+
+    /**
+     * Configures some defaults on the save-actions plugin, but only if it hasn't been configured before.
+     */
+    private static void configureSaveActions(Node rootNode) {
+        GroovyXmlUtils.matchOrCreateChild(rootNode, 'component', [name: 'SaveActionSettings'], [:]) {
+            // Configure defaults if this plugin is configured for the first time only
+            appendNode('option', [name: 'actions']).appendNode('set').with {
+                appendNode('option', [value: 'activate'])
+                appendNode('option', [value: 'noActionIfCompileErrors'])
+                appendNode('option', [value: 'organizeImports'])
+                appendNode('option', [value: 'reformat'])
+            }
+            appendNode('option', [name: 'configurationPath', value: ''])
+            appendNode('inclusions').appendNode('set').with {
+                appendNode('option', [value: 'src/.*\\.java'])
+            }
+        }
+    }
+
+    private static void configureExternalDependencies(Node rootNode) {
+        def externalDependencies =
+                GroovyXmlUtils.matchOrCreateChild(rootNode, 'component', [name: 'ExternalDependencies'])
+        // I kid you not, this is the id for the save actions plugin:
+        // https://github.com/dubreuia/intellij-plugin-save-actions/blob/v1.9.0/src/main/resources/META-INF/plugin.xml#L5
+        // https://plugins.jetbrains.com/plugin/7642-save-actions/
+        GroovyXmlUtils.matchOrCreateChild(
+                externalDependencies,
+                'plugin',
+                [id: 'com.dubreuia'],
+                ['min-version': SAVE_ACTIONS_PLUGIN_MINIMUM_VERSION])
     }
 }
