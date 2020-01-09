@@ -73,7 +73,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
         project.getTasks().findByName("idea").doLast(cleanup)
     }
 
-    static void applyToRootProject(Project project) {
+    void applyToRootProject(Project project) {
         // Configure Idea project
         IdeaModel ideaRootModel = project.extensions.findByType(IdeaModel)
         ideaRootModel.project.ipr.withXml { provider ->
