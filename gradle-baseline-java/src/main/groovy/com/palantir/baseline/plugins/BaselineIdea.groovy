@@ -39,49 +39,14 @@ class BaselineIdea extends AbstractBaselinePlugin {
         this.project = project
 
         project.plugins.apply IdeaPlugin
-        IdeaModel ideaModuleModel = project.extensions.getByType(IdeaModel)
 
-        project.afterEvaluate {
-            // Configure Idea project
-            IdeaModel ideaRootModel = project.rootProject.extensions.findByType(IdeaModel)
-            if (ideaRootModel) {
-                ideaRootModel.project.ipr.withXml { provider ->
-                    Node node = provider.asNode()
-                    addCodeStyle(node)
-                    addCopyright(node)
-                    addCheckstyle(node)
-                    addEclipseFormat(node)
-                    addGit(node)
-                    addInspectionProjectProfile(node)
-                    addJavacSettings(node)
-                    addGitHubIssueNavigation(node)
-                }
-
-                ideaRootModel.workspace.iws.withXml { provider ->
-                    def node = provider.asNode()
-                    setRunManagerWorkingDirectory(node)
-                    addEditorSettings(node)
-                }
-            }
-
-            // Configure Idea module
-            moveProjectReferencesToEnd(ideaModuleModel)
-        }
-
-        // Suggest and configure the "save actions" plugin if Palantir Java Format is turned on.
         if (project == project.rootProject) {
-            IdeaModel ideaRootModel = project.extensions.findByType(IdeaModel)
-            // This plugin can only be applied to the root project, and it applied as a side-effect of applying
-            // 'com.palantir.java-format' to any subproject.
-            project.getPluginManager().withPlugin("com.palantir.java-format-idea") {
-                ideaRootModel.project.ipr.withXml { provider ->
-                    Node node = provider.asNode()
-                    configureSaveActions(node)
-                    configureExternalDependencies(node)
-                }
-                configureSaveActionsForIntellijImport(project)
-            }
+            applyToRootProject(project)
         }
+
+        // Configure Idea module
+        IdeaModel ideaModuleModel = project.extensions.getByType(IdeaModel)
+        moveProjectReferencesToEnd(ideaModuleModel)
 
         // If someone renames a project, leftover {ipr,iml,ipr} files may still exist on disk and
         // confuse users, so we proactively clean them up. Intentionally using an Action<Task> to allow up-to-dateness.
@@ -103,6 +68,40 @@ class BaselineIdea extends AbstractBaselinePlugin {
         }
 
         project.getTasks().findByName("idea").doLast(cleanup)
+    }
+
+    static void applyToRootProject(Project project) {
+        // Configure Idea project
+        IdeaModel ideaRootModel = project.extensions.findByType(IdeaModel)
+        ideaRootModel.project.ipr.withXml { provider ->
+            Node node = provider.asNode()
+            addCodeStyle(node)
+            addCopyright(node)
+            addCheckstyle(node)
+            addEclipseFormat(node)
+            addGit(node)
+            addInspectionProjectProfile(node)
+            addJavacSettings(node)
+            addGitHubIssueNavigation(node)
+        }
+
+        ideaRootModel.workspace.iws.withXml { provider ->
+            Node node = provider.asNode()
+            setRunManagerWorkingDirectory(node)
+            addEditorSettings(node)
+        }
+
+        // Suggest and configure the "save actions" plugin if Palantir Java Format is turned on.
+        // This plugin can only be applied to the root project, and it applied as a side-effect of applying
+        // 'com.palantir.java-format' to any subproject.
+        project.getPluginManager().withPlugin("com.palantir.java-format-idea") {
+            ideaRootModel.project.ipr.withXml { provider ->
+                Node node = provider.asNode()
+                configureSaveActions(node)
+                configureExternalDependencies(node)
+            }
+            configureSaveActionsForIntellijImport(project)
+        }
     }
 
     @CompileStatic
@@ -231,7 +230,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
             '''.stripIndent()))
     }
 
-    private void addInspectionProjectProfile(node) {
+    private static void addInspectionProjectProfile(node) {
         node.append(new XmlParser().parseText("""
             <component name="InspectionProjectProfileManager">
                 <profile version="1.0">
@@ -246,7 +245,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
             """.stripIndent()))
     }
 
-    private void addJavacSettings(node) {
+    private static void addJavacSettings(node) {
         node.append(new XmlParser().parseText("""
             <component name="JavacSettings">
                 <option name="PREFER_TARGET_JDK_COMPILER" value="false" />
@@ -254,7 +253,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
             """.stripIndent()))
     }
 
-    private void addEditorSettings(node) {
+    private static void addEditorSettings(node) {
         node.append(new XmlParser().parseText("""
             <component name="CodeInsightWorkspaceSettings">
                 <option name="optimizeImportsOnTheFly" value="true" />
@@ -262,7 +261,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
             """.stripIndent()))
     }
 
-    private void addGitHubIssueNavigation(node) {
+    private static void addGitHubIssueNavigation(node) {
         GitUtils.maybeGitHubUri().ifPresent { githubUri ->
             node.append(new XmlParser().parseText("""
              <component name="IssueNavigationConfiguration">
@@ -322,7 +321,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
      * This moves all project references to the end of the dependencies list, which unifies behaviour
      * between Gradle and IntelliJ.
      */
-    private void moveProjectReferencesToEnd(IdeaModel ideaModel) {
+    private static void moveProjectReferencesToEnd(IdeaModel ideaModel) {
         ideaModel.module.iml.whenMerged { module ->
             def projectRefs = module.dependencies.findAll { it instanceof org.gradle.plugins.ide.idea.model.ModuleDependency }
             module.dependencies.removeAll(projectRefs)
