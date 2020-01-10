@@ -39,7 +39,7 @@ subset of *representative cases*.
 The examples in this section are written in Java using the standard
 [JUnit](http://junit.org/) and
 [AssertJ](http://joel-costigliola.github.io/assertj/) libraries for which a
-plethora of [tutorials](http://www.vogella.com/tutorials/JUnit/article.html) are
+plethora of tutorials are
 available. Conceptually similar approaches exist in other languages.
 
 Unit tests validate that all code paths of small code units work as
