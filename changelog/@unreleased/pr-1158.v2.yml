@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: Fix a bug in the Save Actions plugin configuration where it would format
+    any file on save, instead of just java files.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1158
