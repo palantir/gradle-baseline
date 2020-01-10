@@ -350,8 +350,8 @@ class BaselineIdea extends AbstractBaselinePlugin {
                 appendNode('option', [value: 'reformat'])
             }
             appendNode('option', [name: 'configurationPath', value: ''])
-            appendNode('inclusions').appendNode('set').with {
-                appendNode('option', [value: 'src/.*\\.java'])
+            appendNode('option', [name: 'inclusions']).appendNode('set').with {
+                appendNode('option', [value: "src${File.separator}.*\\.java"])
             }
         }
     }
