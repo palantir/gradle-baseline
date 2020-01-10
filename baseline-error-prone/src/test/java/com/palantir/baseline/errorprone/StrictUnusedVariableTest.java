@@ -215,4 +215,19 @@ public class StrictUnusedVariableTest {
                         "}"
                 ).doTest(TestMode.TEXT_MATCH);
     }
+
+    @Test
+    public void testSuppression() {
+        refactoringTestHelper
+                .addInputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  public static void a(@SuppressWarnings(\"StrictUnusedVariable\") int val) {}",
+                        "  public static void b(@SuppressWarnings(\"UnusedVariable\") int val) {}",
+                        "  public static void c(@SuppressWarnings(\"unused\") int val) {}",
+                        "  public static void d(int _val) {}",
+                        "}")
+                .expectUnchanged()
+                .doTest(TestMode.TEXT_MATCH);
+    }
 }
