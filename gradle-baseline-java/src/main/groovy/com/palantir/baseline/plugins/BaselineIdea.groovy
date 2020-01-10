@@ -351,7 +351,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
             }
             appendNode('option', [name: 'configurationPath', value: ''])
             appendNode('option', [name: 'inclusions']).appendNode('set').with {
-                appendNode('option', [value: "src${File.pathSeparator}.*\\.java"])
+                appendNode('option', [value: "src${File.separator}.*\\.java"])
             }
         }
     }
