@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: Add error prone LoggerEnclosingClass check. Loggers created using getLogger(Class<?>)
+    must reference their enclosing class.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1163
