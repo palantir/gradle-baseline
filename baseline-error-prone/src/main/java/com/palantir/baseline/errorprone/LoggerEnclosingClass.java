@@ -44,28 +44,22 @@ import com.sun.tools.javac.code.Symbol;
         summary = "Loggers created using getLogger(Class<?>) must reference their enclosing class.")
 public final class LoggerEnclosingClass extends BugChecker implements BugChecker.VariableTreeMatcher {
 
-    private static final Matcher<ExpressionTree> getLoggerMatcher = MethodMatchers.staticMethod()
-            .onClass("org.slf4j.LoggerFactory")
-            .named("getLogger")
-            // Only match the 'class' constructor
-            .withParameters(Class.class.getName());
-
-    private static final Matcher<VariableTree> fieldMatcher = Matchers.isField();
+    private static final Matcher<VariableTree> matcher = Matchers.allOf(
+            Matchers.isField(),
+            Matchers.isSubtypeOf("org.slf4j.Logger"),
+            Matchers.variableInitializer(MethodMatchers.staticMethod()
+                    .onClass("org.slf4j.LoggerFactory")
+                    .named("getLogger")
+                    // Only match the 'class' constructor
+                    .withParameters(Class.class.getName())));
 
     @Override
     public Description matchVariable(VariableTree tree, VisitorState state) {
-        if (!fieldMatcher.matches(tree, state)) {
-            return Description.NO_MATCH;
-        }
-        ExpressionTree initializer = tree.getInitializer();
-        if (initializer == null) {
-            return Description.NO_MATCH;
-        }
-        if (!getLoggerMatcher.matches(initializer, state)) {
+        if (!matcher.matches(tree, state)) {
             return Description.NO_MATCH;
         }
 
-        MethodInvocationTree getLoggerInvocation = (MethodInvocationTree) initializer;
+        MethodInvocationTree getLoggerInvocation = (MethodInvocationTree) tree.getInitializer();
         ExpressionTree classArgument = getLoggerInvocation.getArguments().get(0);
 
         if (!(classArgument instanceof MemberSelectTree)) {

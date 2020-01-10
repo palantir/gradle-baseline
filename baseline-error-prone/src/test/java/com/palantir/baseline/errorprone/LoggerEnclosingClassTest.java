@@ -38,6 +38,44 @@ class LoggerEnclosingClassTest {
     }
 
     @Test
+    void testFix_interface() {
+        fix().addInputLines(
+                "Test.java",
+                "import org.slf4j.*;",
+                "interface Test {",
+                "    Logger log = LoggerFactory.getLogger(String.class);",
+                "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import org.slf4j.*;",
+                        "interface Test {",
+                        "    Logger log = LoggerFactory.getLogger(Test.class);",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testFix_nested() {
+        fix().addInputLines(
+                "Test.java",
+                "import org.slf4j.*;",
+                "class Test {",
+                "    interface Nested {",
+                "        Logger log = LoggerFactory.getLogger(Test.class);",
+                "    }",
+                "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import org.slf4j.*;",
+                        "class Test {",
+                        "    interface Nested {",
+                        "        Logger log = LoggerFactory.getLogger(Nested.class);",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     void testNegative() {
         fix().addInputLines(
                 "Test.java",
