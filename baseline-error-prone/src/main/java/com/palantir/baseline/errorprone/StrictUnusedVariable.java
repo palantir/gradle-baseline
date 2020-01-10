@@ -106,7 +106,7 @@ import javax.lang.model.element.Name;
 @AutoService(BugChecker.class)
 @BugPattern(
         name = "StrictUnusedVariable",
-        altNames = {"unused", "StrictUnusedVariable"},
+        altNames = {"unused", "UnusedVariable"},
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         summary = "Unused.",
