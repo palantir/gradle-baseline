@@ -187,11 +187,11 @@ public final class BaselineErrorProne implements Plugin<Project> {
             ErrorProneOptions errorProneOptions) {
         JavaVersion jdkVersion = JavaVersion.toVersion(javaCompile.getToolChain().getVersion());
 
-        errorProneOptions.setEnabled(true);
-        errorProneOptions.setDisableWarningsInGeneratedCode(true);
+        errorProneOptions.getEnabled().set(true);
+        errorProneOptions.getDisableWarningsInGeneratedCode().set(true);
         String projectPath = project.getProjectDir().getPath();
         String separator = Pattern.quote(Paths.get(projectPath).getFileSystem().getSeparator());
-        errorProneOptions.setExcludedPaths(String.format(
+        errorProneOptions.getExcludedPaths().set(String.format(
                 "%s%s(build|src%sgenerated.*)%s.*", Pattern.quote(projectPath), separator, separator, separator));
         errorProneOptions.check("UnusedVariable", CheckSeverity.OFF);
         errorProneOptions.check("PreferJavaTimeOverload", CheckSeverity.OFF); // https://github.com/google/error-prone/issues/1435, https://github.com/google/error-prone/issues/1437
@@ -353,9 +353,10 @@ public final class BaselineErrorProne implements Plugin<Project> {
     }
 
     private static boolean checkExplicitlyDisabled(ErrorProneOptions errorProneOptions, String check) {
-        Map<String, CheckSeverity> checks = errorProneOptions.getChecks();
+        Map<String, CheckSeverity> checks = errorProneOptions.getChecks().getOrElse(Collections.emptyMap());
         return checks.get(check) == CheckSeverity.OFF
-                || errorProneOptions.getErrorproneArgs().contains(String.format("-Xep:%s:OFF", check));
+                || errorProneOptions.getErrorproneArgs().getOrElse(Collections.emptyList())
+                .contains(String.format("-Xep:%s:OFF", check));
     }
 
     private static final class LazyConfigurationList extends AbstractList<File> {
