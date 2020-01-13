@@ -31,7 +31,7 @@ com.palantir.tritium:tritium-registry = 0.16.3
 
 # dependency-upgrader:OFF
 # Updating to 0.8 would raise our minimum compatible version to 5.2
-net.ltgt.gradle:gradle-errorprone-plugin = 0.7.1
+net.ltgt.gradle:gradle-errorprone-plugin = 1.1.1
 
 # Updating to 9.0.1 doesn't work with latest gradle 6
 com.netflix.nebula:nebula-dependency-recommender = 9.0.0
