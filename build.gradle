@@ -4,7 +4,7 @@ buildscript {
     repositories {
         jcenter()
         gradlePluginPortal()
-        maven { url  "http://palantir.bintray.com/releases" }
+        maven { url  'https://palantir.bintray.com/releases'}
     }
 
     dependencies {
@@ -30,7 +30,7 @@ allprojects {
     repositories {
         jcenter()
         gradlePluginPortal()
-        maven { url  "http://palantir.bintray.com/releases" }
+        maven { url  'https://palantir.bintray.com/releases'}
     }
 
     // Since we are using gradle-baseline in gradle-baseline we need to undo forces on project dependencies. Following
