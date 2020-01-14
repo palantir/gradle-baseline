@@ -11,7 +11,6 @@ dependencies {
     compile 'com.diffplug.spotless:spotless-plugin-gradle'
     compile 'com.google.errorprone:error_prone_refaster'
     compile 'com.google.guava:guava'
-    compile 'com.netflix.nebula:nebula-dependency-recommender'
     compile 'com.palantir.configurationresolver:gradle-configuration-resolver-plugin'
     compile 'net.ltgt.gradle:gradle-errorprone-plugin'
     compile 'org.apache.maven.shared:maven-dependency-analyzer'
