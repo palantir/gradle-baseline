@@ -47,7 +47,6 @@ class BaselineTest extends Specification {
         assert p.pluginManager.hasPlugin('com.palantir.baseline-eclipse')
         assert p.pluginManager.hasPlugin('com.palantir.baseline-error-prone')
         assert p.pluginManager.hasPlugin('com.palantir.baseline-idea')
-        assert p.pluginManager.hasPlugin('com.palantir.baseline-versions')
         assert p.pluginManager.hasPlugin('com.palantir.baseline-release-compatibility')
     }
 
