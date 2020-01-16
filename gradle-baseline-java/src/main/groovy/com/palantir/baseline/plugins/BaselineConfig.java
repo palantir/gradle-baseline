@@ -95,15 +95,19 @@ class BaselineConfig extends AbstractBaselinePlugin {
 
                 try {
                     String contents = new String(Files.readAllBytes(checkstyleXml), StandardCharsets.UTF_8);
-                    String replaced = contents.replace(
-                            "        <module name=\"Indentation\"> "
-                                    + "<!-- Java Style Guide: Block indentation: +4 spaces -->\n"
-                                    + "            <property name=\"arrayInitIndent\" value=\"8\"/>\n"
-                                    + "            <property name=\"lineWrappingIndentation\" value=\"8\"/>\n"
-                                    + "        </module>\n",
-                            "");
-                    Preconditions.checkState(!contents.equals(replaced), "Patching checkstyle.xml must make a change");
-                    Files.write(checkstyleXml, replaced.getBytes(StandardCharsets.UTF_8));
+                    contents = assertReplace(contents, ""
+                            + "        <module name=\"Indentation\"> "
+                            + "<!-- Java Style Guide: Block indentation: +4 spaces -->\n"
+                            + "            <property name=\"arrayInitIndent\" value=\"8\"/>\n"
+                            + "            <property name=\"lineWrappingIndentation\" value=\"8\"/>\n"
+                            + "        </module>\n");
+                    contents = assertReplace(contents, ""
+                            + "        <module name=\"LineLength\"> <!-- Java Style Guide: No line-wrapping -->\n"
+                            + "            <property name=\"max\" value=\"120\"/>\n"
+                            + "            <property name=\"ignorePattern\" value=\"^package.*|^import.*|a "
+                            + "href|href|http://|https://|ftp://\"/>\n"
+                            + "        </module>\n");
+                    Files.write(checkstyleXml, contents.getBytes(StandardCharsets.UTF_8));
                 } catch (IOException e) {
                     throw new RuntimeException("Unable to patch " + checkstyleXml, e);
                 }
@@ -125,6 +129,12 @@ class BaselineConfig extends AbstractBaselinePlugin {
                     copySpec.setIncludeEmptyDirs(false);
                 });
             }
+        }
+
+        private String assertReplace(String contents, String target) {
+            String replaced = contents.replace(target, "");
+            Preconditions.checkState(!contents.equals(replaced), "Patching checkstyle.xml must make a change");
+            return replaced;
         }
     }
 }

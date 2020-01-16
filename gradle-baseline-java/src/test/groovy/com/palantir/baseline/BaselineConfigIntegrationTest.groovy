@@ -147,7 +147,7 @@ class BaselineConfigIntegrationTest extends AbstractPluginTest {
 
         then:
         !new File(projectDir, '.baseline/checkstyle/checkstyle.xml').readLines().any {
-            it.contains '<module name="Indentation">'
+            it.contains('<module name="Indentation">') || it.contains('<module name="LineLength">')
         }
     }
 }
