@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Stop enforcing 120 character limit for repos which enrolled in palantir-java-format.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1172
