@@ -21,7 +21,6 @@ import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.fixes.SuggestedFix;
-import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
@@ -72,7 +71,8 @@ public final class LoggerEnclosingClass extends BugChecker implements BugChecker
         }
 
         Symbol targetSymbol = ASTHelpers.getSymbol(memberSelectTree.getExpression());
-        Symbol.ClassSymbol enclosingClassSymbol = ASTHelpers.enclosingClass(ASTHelpers.getSymbol(tree));
+        Symbol.ClassSymbol enclosingClassSymbol =
+                enclosingConcreteClass(ASTHelpers.enclosingClass(ASTHelpers.getSymbol(tree)));
         if (targetSymbol == null || enclosingClassSymbol == null) {
             return Description.NO_MATCH;
         }
@@ -83,8 +83,16 @@ public final class LoggerEnclosingClass extends BugChecker implements BugChecker
         return buildDescription(classArgument)
                 .addFix(fix.replace(
                         classArgument,
-                        SuggestedFixes.prettyType(state, fix, enclosingClassSymbol.type) + ".class")
+                        enclosingClassSymbol.name + ".class")
                         .build())
                 .build();
+    }
+
+    private static Symbol.ClassSymbol enclosingConcreteClass(Symbol.ClassSymbol input) {
+        Symbol.ClassSymbol current = input;
+        while (current != null && current.isAnonymous()) {
+            current = ASTHelpers.enclosingClass(current);
+        }
+        return current;
     }
 }
