@@ -38,6 +38,23 @@ class LoggerEnclosingClassTest {
     }
 
     @Test
+    void testFix_generic() {
+        fix().addInputLines(
+                "Test.java",
+                "import org.slf4j.*;",
+                "class Test<T> {",
+                "    private static final Logger log = LoggerFactory.getLogger(String.class);",
+                "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import org.slf4j.*;",
+                        "class Test<T> {",
+                        "    private static final Logger log = LoggerFactory.getLogger(Test.class);",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     void testFix_interface() {
         fix().addInputLines(
                 "Test.java",
@@ -71,6 +88,29 @@ class LoggerEnclosingClassTest {
                         "    interface Nested {",
                         "        Logger log = LoggerFactory.getLogger(Nested.class);",
                         "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testFix_anonymous() {
+        fix().addInputLines(
+                "Test.java",
+                "import org.slf4j.*;",
+                "class Test {",
+                "    Runnable run = new Runnable() {",
+                "        private final Logger log = LoggerFactory.getLogger(String.class);",
+                "        @Override public void run() {}",
+                "    };",
+                "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import org.slf4j.*;",
+                        "class Test {",
+                        "    Runnable run = new Runnable() {",
+                        "        private final Logger log = LoggerFactory.getLogger(Test.class);",
+                        "        @Override public void run() {}",
+                        "    };",
                         "}")
                 .doTest();
     }
