@@ -20,7 +20,7 @@ buildscript {
 
 plugins {
     id 'com.palantir.git-version' version '0.12.2'
-    id 'org.inferred.processors' version '3.2.0'
+    id 'org.inferred.processors' version '3.3.0'
 }
 
 apply plugin: 'com.palantir.consistent-versions'
