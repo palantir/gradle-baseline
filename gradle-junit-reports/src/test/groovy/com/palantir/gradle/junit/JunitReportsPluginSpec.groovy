@@ -21,7 +21,7 @@ import spock.lang.Unroll
 
 @Unroll
 class JunitReportsPluginSpec extends IntegrationSpec {
-    private static final List<String> GRADLE_TEST_VERSIONS = ['6.1']
+    private static final List<String> GRADLE_TEST_VERSIONS = ['5.6.4', '6.1']
 
     def '#gradleVersionNumber: applies correctly'() {
         setup:
@@ -30,10 +30,22 @@ class JunitReportsPluginSpec extends IntegrationSpec {
         when:
         buildFile << '''
             apply plugin: 'java'
+            apply plugin: 'checkstyle'
             apply plugin: 'com.palantir.junit-reports'
-        '''
+            
+            repositories {
+                jcenter()
+            }    
+        '''.stripIndent()
 
-        runTasksSuccessfully('-DignoreDeprecations', 'test')
+        file('src/main/java/foo/FailsCheckstyle.java') << '''
+            package foo;            
+            public class FailsCheckstyle {
+                public void bad_method_name() {}
+            }
+        '''.stripIndent()
+
+        println runTasksSuccessfully('checkstyleMain').standardOutput
 
         then:
         true
