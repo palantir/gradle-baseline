@@ -11,7 +11,7 @@ org.apache.maven.shared:maven-dependency-analyzer = 1.11.1
 org.github.ngbinh.scalastyle:gradle-scalastyle-plugin_2.11 = 1.0.1
 org.inferred:freebuilder = 1.14.6
 org.jooq:jooq = 3.12.3
-org.slf4j:slf4j-api = 1.7.25
+org.slf4j:slf4j-api = 1.7.30
 org.immutables:* = 2.8.3
 
 # test deps
@@ -23,7 +23,7 @@ org.apache.commons:commons-lang3 = 3.9
 commons-lang:commons-lang = 2.6
 org.assertj:assertj-core = 3.14.0
 org.hamcrest:hamcrest-core = 2.2
-org.junit.jupiter:* = 5.5.2
+org.junit.jupiter:* = 5.6.0
 org.mockito:* = 3.2.4
 com.fasterxml.jackson.*:* = 2.10.2
 com.palantir.tokens:auth-tokens = 3.6.1
