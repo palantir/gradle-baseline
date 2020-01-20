@@ -17,13 +17,14 @@
 package com.palantir.gradle.junit
 
 import nebula.test.IntegrationSpec
+import nebula.test.functional.ExecutionResult
 import spock.lang.Unroll
 
 @Unroll
 class JunitReportsPluginSpec extends IntegrationSpec {
     private static final List<String> GRADLE_TEST_VERSIONS = ['5.6.4', '6.1']
 
-    def '#gradleVersionNumber: applies correctly'() {
+    def '#gradleVersionNumber: configures the checkstlye plugin correctly'() {
         setup:
         gradleVersion = gradleVersionNumber
 
@@ -35,20 +36,22 @@ class JunitReportsPluginSpec extends IntegrationSpec {
             
             repositories {
                 jcenter()
-            }    
-        '''.stripIndent()
-
-        file('src/main/java/foo/FailsCheckstyle.java') << '''
-            package foo;            
-            public class FailsCheckstyle {
-                public void bad_method_name() {}
             }
         '''.stripIndent()
 
-        println runTasksSuccessfully('checkstyleMain').standardOutput
+        file('src/main/java/foo/Foo.java') << '''
+            package foo;
+            public class Foo {}
+        '''.stripIndent()
+
+        ExecutionResult executionResult = runTasks('checkstyleMain')
 
         then:
-        true
+        // Running checkstyle inside nebula does not work as there are classpath problems that result in the `groovy-all`
+        // not being on Gradle's classpath. So the best we can do to verify that the checkstyle actually ran is to
+        // verify we get the classpath error that happens when the checkstyle class runs :(
+        // https://github.com/gradle/gradle/issues/3995
+        executionResult.standardError.contains 'java.lang.ClassNotFoundException: groovy.util.AntBuilder'
 
         where:
         gradleVersionNumber << GRADLE_TEST_VERSIONS
