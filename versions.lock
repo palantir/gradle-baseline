@@ -107,7 +107,7 @@ org.scala-lang.modules:scala-parser-combinators_2.11:1.0.6 (1 constraints: 960d3
 org.scala-lang.modules:scala-xml_2.11:1.0.6 (1 constraints: 960d3e43)
 org.scalariform:scalariform_2.11:0.2.0 (1 constraints: d50cb424)
 org.scalastyle:scalastyle_2.11:1.0.0 (1 constraints: 8117cd64)
-org.slf4j:slf4j-api:1.7.25 (4 constraints: e2303624)
+org.slf4j:slf4j-api:1.7.30 (4 constraints: de303722)
 
 [Test dependencies]
 cglib:cglib-nodep:3.2.2 (1 constraints: 490ded24)
