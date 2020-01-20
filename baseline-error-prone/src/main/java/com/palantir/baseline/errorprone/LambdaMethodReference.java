@@ -88,7 +88,8 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
 
     private Description checkMethodInvocation(
             MethodInvocationTree methodInvocation, LambdaExpressionTree root, VisitorState state) {
-        if (!methodInvocation.getArguments().isEmpty() || !methodInvocation.getTypeArguments().isEmpty()) {
+        if (!methodInvocation.getArguments().isEmpty()
+                || !methodInvocation.getTypeArguments().isEmpty()) {
             return Description.NO_MATCH;
         }
         Symbol.MethodSymbol methodSymbol = ASTHelpers.getSymbol(methodInvocation);

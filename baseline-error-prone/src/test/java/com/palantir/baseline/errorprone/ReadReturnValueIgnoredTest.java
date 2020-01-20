@@ -31,8 +31,7 @@ class ReadReturnValueIgnoredTest {
 
     @Test
     void testFix_stream_read() {
-        fix()
-                .addInputLines(
+        fix().addInputLines(
                         "Test.java",
                         "import " + IOException.class.getName() + ';',
                         "import " + InputStream.class.getName() + ';',
@@ -60,8 +59,7 @@ class ReadReturnValueIgnoredTest {
 
     @Test
     void testFix_stream_skip() {
-        fix()
-                .addInputLines(
+        fix().addInputLines(
                         "Test.java",
                         "import " + IOException.class.getName() + ';',
                         "import " + InputStream.class.getName() + ';',
@@ -85,8 +83,7 @@ class ReadReturnValueIgnoredTest {
 
     @Test
     void testFix_stream_complexAccessor() {
-        fix()
-                .addInputLines(
+        fix().addInputLines(
                         "Test.java",
                         "import " + ByteArrayInputStream.class.getName() + ';',
                         "import " + IOException.class.getName() + ';',
@@ -122,8 +119,7 @@ class ReadReturnValueIgnoredTest {
 
     @Test
     void testFix_randomAccessFile() {
-        fix()
-                .addInputLines(
+        fix().addInputLines(
                         "Test.java",
                         "import " + IOException.class.getName() + ';',
                         "import " + RandomAccessFile.class.getName() + ';',
@@ -150,8 +146,7 @@ class ReadReturnValueIgnoredTest {
 
     @Test
     void testFix_reader_skip() {
-        fix()
-                .addInputLines(
+        fix().addInputLines(
                         "Test.java",
                         "import " + IOException.class.getName() + ';',
                         "import " + Reader.class.getName() + ';',
@@ -176,74 +171,79 @@ class ReadReturnValueIgnoredTest {
     @Test
     void testStream_singleByte() {
         helper().addSourceLines(
-                "Test.java",
-                "import " + IOException.class.getName() + ';',
-                "import " + InputStream.class.getName() + ';',
-                "class Test {",
-                "   int getSecondByte(InputStream is) throws IOException {",
-                "       // BUG: Diagnostic contains: The result of a read call must be checked",
-                "       is.read();",
-                "       return is.read();",
-                "   }",
-                "}").doTest();
+                        "Test.java",
+                        "import " + IOException.class.getName() + ';',
+                        "import " + InputStream.class.getName() + ';',
+                        "class Test {",
+                        "   int getSecondByte(InputStream is) throws IOException {",
+                        "       // BUG: Diagnostic contains: The result of a read call must be checked",
+                        "       is.read();",
+                        "       return is.read();",
+                        "   }",
+                        "}")
+                .doTest();
     }
 
     @Test
     void testRandomAccessFile_singleByte() {
         helper().addSourceLines(
-                "Test.java",
-                "import " + IOException.class.getName() + ';',
-                "import " + RandomAccessFile.class.getName() + ';',
-                "class Test {",
-                "   int getSecondByte(RandomAccessFile raf) throws IOException {",
-                "       // BUG: Diagnostic contains: The result of a read call must be checked",
-                "       raf.read();",
-                "       return raf.read();",
-                "   }",
-                "}").doTest();
+                        "Test.java",
+                        "import " + IOException.class.getName() + ';',
+                        "import " + RandomAccessFile.class.getName() + ';',
+                        "class Test {",
+                        "   int getSecondByte(RandomAccessFile raf) throws IOException {",
+                        "       // BUG: Diagnostic contains: The result of a read call must be checked",
+                        "       raf.read();",
+                        "       return raf.read();",
+                        "   }",
+                        "}")
+                .doTest();
     }
 
     @Test
     void testReader_single() {
         helper().addSourceLines(
-                "Test.java",
-                "import " + IOException.class.getName() + ';',
-                "import " + Reader.class.getName() + ';',
-                "class Test {",
-                "   int getSecondChar(Reader reader) throws IOException {",
-                "       // BUG: Diagnostic contains: The result of a read call must be checked",
-                "       reader.read();",
-                "       return reader.read();",
-                "   }",
-                "}").doTest();
+                        "Test.java",
+                        "import " + IOException.class.getName() + ';',
+                        "import " + Reader.class.getName() + ';',
+                        "class Test {",
+                        "   int getSecondChar(Reader reader) throws IOException {",
+                        "       // BUG: Diagnostic contains: The result of a read call must be checked",
+                        "       reader.read();",
+                        "       return reader.read();",
+                        "   }",
+                        "}")
+                .doTest();
     }
 
     @Test
     void testRandomAccessFile_skipBytes() {
         helper().addSourceLines(
-                "Test.java",
-                "import " + IOException.class.getName() + ';',
-                "import " + RandomAccessFile.class.getName() + ';',
-                "class Test {",
-                "   void getSecondByte(RandomAccessFile raf) throws IOException {",
-                "       // BUG: Diagnostic contains: The result of a read call must be checked",
-                "       raf.skipBytes(3);",
-                "   }",
-                "}").doTest();
+                        "Test.java",
+                        "import " + IOException.class.getName() + ';',
+                        "import " + RandomAccessFile.class.getName() + ';',
+                        "class Test {",
+                        "   void getSecondByte(RandomAccessFile raf) throws IOException {",
+                        "       // BUG: Diagnostic contains: The result of a read call must be checked",
+                        "       raf.skipBytes(3);",
+                        "   }",
+                        "}")
+                .doTest();
     }
 
     @Test
     void testNegative() {
         helper().addSourceLines(
-                "Test.java",
-                "import " + IOException.class.getName() + ';',
-                "import " + InputStream.class.getName() + ';',
-                "class Test {",
-                "   int f(InputStream is) throws IOException {",
-                "       byte[] buf = new byte[4];",
-                "       return is.read(buf);",
-                "   }",
-                "}").doTest();
+                        "Test.java",
+                        "import " + IOException.class.getName() + ';',
+                        "import " + InputStream.class.getName() + ';',
+                        "class Test {",
+                        "   int f(InputStream is) throws IOException {",
+                        "       byte[] buf = new byte[4];",
+                        "       return is.read(buf);",
+                        "   }",
+                        "}")
+                .doTest();
     }
 
     private RefactoringValidator fix() {

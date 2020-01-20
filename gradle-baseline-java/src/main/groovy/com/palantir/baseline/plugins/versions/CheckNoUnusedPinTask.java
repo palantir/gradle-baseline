@@ -42,7 +42,9 @@ import org.gradle.api.tasks.options.Option;
 public class CheckNoUnusedPinTask extends DefaultTask {
 
     private final Property<Boolean> shouldFix = getProject().getObjects().property(Boolean.class);
-    private final RegularFileProperty propsFileProperty = getProject().getObjects().fileProperty();
+    private final RegularFileProperty propsFileProperty = getProject()
+            .getObjects()
+            .fileProperty();
 
     public CheckNoUnusedPinTask() {
         shouldFix.set(false);
@@ -76,27 +78,25 @@ public class CheckNoUnusedPinTask extends DefaultTask {
     @TaskAction
     public final void checkNoUnusedPin() {
         Set<String> artifacts = getResolvedArtifacts();
-        ParsedVersionsProps parsedVersionsProps = VersionsProps.readVersionsProps(getPropsFile().get().getAsFile());
+        ParsedVersionsProps parsedVersionsProps = VersionsProps.readVersionsProps(
+                getPropsFile().get().getAsFile());
 
-        List<Pair<String, Predicate<String>>> versionsPropToPredicate = parsedVersionsProps
-                .forces()
-                .stream()
+        List<Pair<String, Predicate<String>>> versionsPropToPredicate = parsedVersionsProps.forces().stream()
                 .map(VersionForce::name)
                 .map(propName -> {
                     Pattern pattern = Pattern.compile(propName.replaceAll("\\*", ".*"));
-                    return Pair.of(propName, (Predicate<String>) s -> pattern.matcher(s).matches());
+                    return Pair.of(propName, (Predicate<String>)
+                            s -> pattern.matcher(s).matches());
                 })
                 .collect(Collectors.toList());
 
-        Set<String> unusedForces = versionsPropToPredicate
-                .stream()
+        Set<String> unusedForces = versionsPropToPredicate.stream()
                 .map(Pair::getLeft)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
         // Remove the force that each artifact uses. This will be the most specific force.
         artifacts.forEach(artifact -> {
-            Optional<String> matching = versionsPropToPredicate
-                    .stream()
+            Optional<String> matching = versionsPropToPredicate.stream()
                     .filter(pair -> pair.getRight().test(artifact))
                     .map(Entry::getKey)
                     .max(BaselineVersions.VERSIONS_PROPS_ENTRY_SPECIFIC_COMPARATOR);
@@ -108,19 +108,22 @@ public class CheckNoUnusedPinTask extends DefaultTask {
         }
 
         if (shouldFix.get()) {
-            getProject().getLogger().lifecycle("Removing unused pins from versions.props:\n"
-                    + unusedForces.stream()
-                    .map(name -> String.format(" - '%s'", name))
-                    .collect(Collectors.joining("\n")));
+            getProject()
+                    .getLogger()
+                    .lifecycle("Removing unused pins from versions.props:\n"
+                            + unusedForces.stream()
+                                    .map(name -> String.format(" - '%s'", name))
+                                    .collect(Collectors.joining("\n")));
             VersionsProps.writeVersionsProps(
-                    parsedVersionsProps, unusedForces.stream(), getPropsFile().get().getAsFile());
+                    parsedVersionsProps,
+                    unusedForces.stream(),
+                    getPropsFile().get().getAsFile());
             return;
         }
 
-        throw new RuntimeException(
-                "There are unused pins in your versions.props: \n" + unusedForces
-                        + "\n\n"
-                        + "Rerun with --fix to remove them.");
+        throw new RuntimeException("There are unused pins in your versions.props: \n"
+                + unusedForces
+                + "\n\n"
+                + "Rerun with --fix to remove them.");
     }
-
 }

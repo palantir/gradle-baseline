@@ -36,8 +36,8 @@ public final class BuildFailureListener implements TaskExecutionListener {
     @Override
     public synchronized void afterExecute(Task task, TaskState state) {
         if (isUntracked(task)) {
-            Report.TestCase.Builder testCase = new Report.TestCase.Builder()
-                    .name(":" + task.getProject().getName() + ":" + task.getName());
+            Report.TestCase.Builder testCase =
+                    new Report.TestCase.Builder().name(":" + task.getProject().getName() + ":" + task.getName());
 
             Throwable failure = state.getFailure();
             if (failure != null && isUntracked(task)) {

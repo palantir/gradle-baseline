@@ -28,17 +28,19 @@ public class CheckstyleReportHandlerTests {
 
     @Test
     public void testNoErrors() throws IOException {
-        List<Failure> failures =
-                parseXml(new CheckstyleReportHandler(), testFile("no-failures-checkstyle.xml").openStream())
-                        .failures();
+        List<Failure> failures = parseXml(
+                        new CheckstyleReportHandler(),
+                        testFile("no-failures-checkstyle.xml").openStream())
+                .failures();
         assertThat(failures).isEmpty();
     }
 
     @Test
     public void testTwoErrors() throws IOException {
-        List<Failure> failures =
-                parseXml(new CheckstyleReportHandler(), testFile("two-namecheck-failures-checkstyle.xml").openStream())
-                        .failures();
+        List<Failure> failures = parseXml(
+                        new CheckstyleReportHandler(),
+                        testFile("two-namecheck-failures-checkstyle.xml").openStream())
+                .failures();
         assertThat(failures).containsExactlyElementsOf(CHECKSTYLE_FAILURES);
     }
 }

@@ -63,12 +63,12 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                     .getPlugin(JavaPluginConvention.class)
                     .getSourceSets()
                     .getByName(SourceSet.MAIN_SOURCE_SET_NAME);
-            Configuration compileClasspath = project.getConfigurations()
-                    .getByName(JavaPlugin.COMPILE_CLASSPATH_CONFIGURATION_NAME);
-            Configuration compileOnlyClasspath = project.getConfigurations()
-                    .getByName(JavaPlugin.COMPILE_ONLY_CONFIGURATION_NAME);
-            Configuration annotationProcessorClasspath = project.getConfigurations()
-                    .getByName(JavaPlugin.ANNOTATION_PROCESSOR_CONFIGURATION_NAME);
+            Configuration compileClasspath =
+                    project.getConfigurations().getByName(JavaPlugin.COMPILE_CLASSPATH_CONFIGURATION_NAME);
+            Configuration compileOnlyClasspath =
+                    project.getConfigurations().getByName(JavaPlugin.COMPILE_ONLY_CONFIGURATION_NAME);
+            Configuration annotationProcessorClasspath =
+                    project.getConfigurations().getByName(JavaPlugin.ANNOTATION_PROCESSOR_CONFIGURATION_NAME);
 
             project.getTasks().create("checkUnusedDependencies", CheckUnusedDependenciesTask.class, task -> {
                 task.dependsOn(JavaPlugin.CLASSES_TASK_NAME);
@@ -94,7 +94,9 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     /** Given a {@code com/palantir/product/Foo.class} file, what other classes does it import/reference. */
     public static Stream<String> referencedClasses(File classFile) {
         try {
-            return BaselineExactDependencies.CLASS_FILE_ANALYZER.analyze(classFile.toURI().toURL()).stream();
+            return BaselineExactDependencies.CLASS_FILE_ANALYZER
+                    .analyze(classFile.toURI().toURL())
+                    .stream();
         } catch (IOException e) {
             throw new RuntimeException("Unable to analyze " + classFile, e);
         }
@@ -107,9 +109,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                 .append(":")
                 .append(moduleVersionId.getName());
         if (artifact.getClassifier() != null) {
-            builder
-                    .append("::")
-                    .append(artifact.getClassifier());
+            builder.append("::").append(artifact.getClassifier());
         }
         return builder.toString();
     }
@@ -131,10 +131,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                     .append(projectComponentId.getProjectPath())
                     .append("')");
             if (withName) {
-                builder
-                    .append(" (")
-                    .append(artifact.getId().getDisplayName())
-                    .append(")");
+                builder.append(" (").append(artifact.getId().getDisplayName()).append(")");
             }
             return builder.toString();
         }
@@ -157,7 +154,8 @@ public final class BaselineExactDependencies implements Plugin<Project> {
             allArtifacts.forEach(artifact -> {
                 try {
                     File jar = artifact.getFile();
-                    Set<String> classesInArtifact = JAR_ANALYZER.analyze(jar.toURI().toURL());
+                    Set<String> classesInArtifact = JAR_ANALYZER.analyze(
+                            jar.toURI().toURL());
                     classesFromArtifact.put(artifact, classesInArtifact);
                     classesInArtifact.forEach(clazz -> classToDependency.put(clazz, artifact));
                 } catch (IOException e) {
@@ -165,8 +163,9 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                 }
             });
 
-            declaredDependencies.forEach(dependency -> dependency.getModuleArtifacts()
-                    .forEach(artifact -> artifactsFromDependency.put(artifact, dependency)));
+            declaredDependencies.forEach(
+                    dependency -> dependency.getModuleArtifacts().forEach(artifact ->
+                            artifactsFromDependency.put(artifact, dependency)));
         }
 
         /** Given a class, what dependency brought it in. */
@@ -177,14 +176,13 @@ public final class BaselineExactDependencies implements Plugin<Project> {
         /** Given an artifact, what classes does it contain. */
         public Stream<String> classesFromArtifact(ResolvedArtifact resolvedArtifact) {
             return Preconditions.checkNotNull(
-                    classesFromArtifact.get(resolvedArtifact),
-                    "Unable to find resolved artifact").stream();
+                    classesFromArtifact.get(resolvedArtifact), "Unable to find resolved artifact")
+                    .stream();
         }
 
         public ResolvedDependency artifactsFromDependency(ResolvedArtifact resolvedArtifact) {
             return Preconditions.checkNotNull(
-                    artifactsFromDependency.get(resolvedArtifact),
-                    "Unable to find resolved artifact");
+                    artifactsFromDependency.get(resolvedArtifact), "Unable to find resolved artifact");
         }
     }
 }

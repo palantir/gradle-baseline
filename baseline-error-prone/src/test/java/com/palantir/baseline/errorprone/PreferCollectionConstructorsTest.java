@@ -29,10 +29,7 @@ public final class PreferCollectionConstructorsTest {
 
     @Test
     public void testNewArrayListRewrite() {
-        testStaticFactoryMethodRewrite(
-                "Lists.newArrayList()",
-                "new ArrayList<>()",
-                "java.util.ArrayList");
+        testStaticFactoryMethodRewrite("Lists.newArrayList()", "new ArrayList<>()", "java.util.ArrayList");
     }
 
     @Test
@@ -46,17 +43,12 @@ public final class PreferCollectionConstructorsTest {
     @Test
     public void testNewArrayListWithCapacityRewrite() {
         testStaticFactoryMethodRewrite(
-                "Lists.newArrayListWithCapacity(123)",
-                "new ArrayList<>(123)",
-                "java.util.ArrayList");
+                "Lists.newArrayListWithCapacity(123)", "new ArrayList<>(123)", "java.util.ArrayList");
     }
 
     @Test
     public void testNewLinkedListRewrite() {
-        testStaticFactoryMethodRewrite(
-                "Lists.newLinkedList()",
-                "new LinkedList<>()",
-                "java.util.LinkedList");
+        testStaticFactoryMethodRewrite("Lists.newLinkedList()", "new LinkedList<>()", "java.util.LinkedList");
     }
 
     @Test
@@ -86,9 +78,7 @@ public final class PreferCollectionConstructorsTest {
     @Test
     public void testNewConcurrentMapRewrite() {
         testStaticFactoryMethodRewrite(
-                "Maps.newConcurrentMap()",
-                "new ConcurrentHashMap<>()",
-                "java.util.concurrent.ConcurrentHashMap");
+                "Maps.newConcurrentMap()", "new ConcurrentHashMap<>()", "java.util.concurrent.ConcurrentHashMap");
     }
 
     @Test
@@ -109,10 +99,7 @@ public final class PreferCollectionConstructorsTest {
 
     @Test
     public void testNewHashMapRewrite() {
-        testStaticFactoryMethodRewrite(
-                "Maps.newHashMap()",
-                "new HashMap<>()",
-                "java.util.HashMap");
+        testStaticFactoryMethodRewrite("Maps.newHashMap()", "new HashMap<>()", "java.util.HashMap");
     }
 
     @Test
@@ -126,17 +113,12 @@ public final class PreferCollectionConstructorsTest {
     @Test
     public void testNewIdentityHashMapRewrite() {
         testStaticFactoryMethodRewrite(
-                "Maps.newIdentityHashMap()",
-                "new IdentityHashMap<>()",
-                "java.util.IdentityHashMap");
+                "Maps.newIdentityHashMap()", "new IdentityHashMap<>()", "java.util.IdentityHashMap");
     }
 
     @Test
     public void testNewLinkedHashMapRewrite() {
-        testStaticFactoryMethodRewrite(
-                "Maps.newLinkedHashMap()",
-                "new LinkedHashMap<>()",
-                "java.util.LinkedHashMap");
+        testStaticFactoryMethodRewrite("Maps.newLinkedHashMap()", "new LinkedHashMap<>()", "java.util.LinkedHashMap");
     }
 
     @Test
@@ -149,10 +131,7 @@ public final class PreferCollectionConstructorsTest {
 
     @Test
     public void testNewTreeMapRewrite() {
-        testStaticFactoryMethodRewrite(
-                "Maps.newTreeMap()",
-                "new TreeMap<>()",
-                "java.util.TreeMap");
+        testStaticFactoryMethodRewrite("Maps.newTreeMap()", "new TreeMap<>()", "java.util.TreeMap");
     }
 
     @Test
@@ -189,10 +168,7 @@ public final class PreferCollectionConstructorsTest {
 
     @Test
     public void testNewHashSetRewrite() {
-        testStaticFactoryMethodRewrite(
-                "Sets.newHashSet()",
-                "new HashSet<>()",
-                "java.util.HashSet");
+        testStaticFactoryMethodRewrite("Sets.newHashSet()", "new HashSet<>()", "java.util.HashSet");
     }
 
     @Test
@@ -205,10 +181,7 @@ public final class PreferCollectionConstructorsTest {
 
     @Test
     public void testNewLinkedHashSetRewrite() {
-        testStaticFactoryMethodRewrite(
-                "Sets.newLinkedHashSet()",
-                "new LinkedHashSet<>()",
-                "java.util.LinkedHashSet");
+        testStaticFactoryMethodRewrite("Sets.newLinkedHashSet()", "new LinkedHashSet<>()", "java.util.LinkedHashSet");
     }
 
     @Test
@@ -221,10 +194,7 @@ public final class PreferCollectionConstructorsTest {
 
     @Test
     public void testNewTreeSetRewrite() {
-        testStaticFactoryMethodRewrite(
-                "Sets.newTreeSet()",
-                "new TreeSet<>()",
-                "java.util.TreeSet");
+        testStaticFactoryMethodRewrite("Sets.newTreeSet()", "new TreeSet<>()", "java.util.TreeSet");
     }
 
     @Test
@@ -245,25 +215,19 @@ public final class PreferCollectionConstructorsTest {
 
     @Test
     public void testWithOneTypeArgRewrite() {
-        testStaticFactoryMethodRewrite(
-                "Sets.<String>newHashSet()",
-                "new HashSet<String>()",
-                "java.util.HashSet");
+        testStaticFactoryMethodRewrite("Sets.<String>newHashSet()", "new HashSet<String>()", "java.util.HashSet");
     }
 
     @Test
     public void testWithTwoTypeArgsRewrite() {
         testStaticFactoryMethodRewrite(
-                "Maps.<String, Integer>newTreeMap()",
-                "new TreeMap<String, Integer>()",
-                "java.util.TreeMap");
+                "Maps.<String, Integer>newTreeMap()", "new TreeMap<String, Integer>()", "java.util.TreeMap");
     }
 
     @Test
     public void testWithVarargRewrite() {
         testStaticFactoryMethodRewrite(
-                "Lists.newArrayList(\"a\", \"b\", \"c\")",
-                "Lists.newArrayList(\"a\", \"b\", \"c\")");
+                "Lists.newArrayList(\"a\", \"b\", \"c\")", "Lists.newArrayList(\"a\", \"b\", \"c\")");
     }
 
     @Test

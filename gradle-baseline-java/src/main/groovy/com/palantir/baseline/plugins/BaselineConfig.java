@@ -29,9 +29,7 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 
-/**
- * Extracts Baseline configuration into the configuration directory.
- */
+/** Extracts Baseline configuration into the configuration directory. */
 class BaselineConfig extends AbstractBaselinePlugin {
 
     public void apply(Project rootProject) {
@@ -46,8 +44,11 @@ class BaselineConfig extends AbstractBaselinePlugin {
 
         // users can still override this default dependency, it just reduces boilerplate
         Optional<String> version = Optional.ofNullable(getClass().getPackage().getImplementationVersion());
-        configuration.defaultDependencies(d -> d.add(rootProject.getDependencies().create(String.format(
-                "com.palantir.baseline:gradle-baseline-java-config%s@zip", version.map(v -> ":" + v).orElse("")))));
+        configuration.defaultDependencies(d -> d.add(rootProject
+                .getDependencies()
+                .create(String.format(
+                        "com.palantir.baseline:gradle-baseline-java-config%s@zip",
+                        version.map(v -> ":" + v).orElse("")))));
 
         // Create task for generating configuration.
         rootProject.getTasks().register("baselineUpdateConfig", task -> {
@@ -73,7 +74,8 @@ class BaselineConfig extends AbstractBaselinePlugin {
         public void execute(Task task) {
             if (configuration.getFiles().size() != 1) {
                 throw new IllegalArgumentException("Expected to find exactly one config dependency in the "
-                        + "'baseline' configuration, found: " + configuration.getFiles());
+                        + "'baseline' configuration, found: "
+                        + configuration.getFiles());
             }
 
             Path configDir = Paths.get(BaselineConfig.this.getConfigDir());
@@ -109,18 +111,15 @@ class BaselineConfig extends AbstractBaselinePlugin {
                 }
             }
 
-            if (rootProject
-                    .getAllprojects()
-                    .stream()
-                    .anyMatch(p -> p.getPluginManager().hasPlugin("scala") && p
-                            .getPluginManager()
-                            .hasPlugin("com.palantir.baseline-scalastyle"))) {
+            if (rootProject.getAllprojects().stream()
+                    .anyMatch(p -> p.getPluginManager().hasPlugin("scala")
+                            && p.getPluginManager().hasPlugin("com.palantir.baseline-scalastyle"))) {
                 // Matches intellij scala plugin settings per
                 // https://github.com/JetBrains/intellij-scala/blob/baaa7c1dabe5222c4bca7c4dd8d80890ad2a8c6b/scala/scala-impl/src/org/jetbrains/plugins/scala/codeInspection/scalastyle/ScalastyleCodeInspection.scala#L19
                 rootProject.copy(copySpec -> {
-                    copySpec.from(rootProject
-                            .zipTree(configuration.getSingleFile())
-                            .filter(file -> file.getName().equals("scalastyle_config.xml")));
+                    copySpec.from(
+                            rootProject.zipTree(configuration.getSingleFile()).filter(file ->
+                                    file.getName().equals("scalastyle_config.xml")));
                     copySpec.into(rootProject.getRootDir().toPath().resolve("project"));
                     copySpec.setIncludeEmptyDirs(false);
                 });

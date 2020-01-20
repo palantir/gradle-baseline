@@ -42,8 +42,8 @@ public final class FailuresReportGeneratorTests {
 
     @Test
     public void testTwoErrors() {
-        Report report = failuresReport(
-                ROOT, "fooproject", "checkstyleTest", FAILED_CHECKSTYLE_TIME_NANOS, CHECKSTYLE_FAILURES);
+        Report report =
+                failuresReport(ROOT, "fooproject", "checkstyleTest", FAILED_CHECKSTYLE_TIME_NANOS, CHECKSTYLE_FAILURES);
         assertThat(report).isEqualTo(REPORT);
     }
 
@@ -64,7 +64,7 @@ public final class FailuresReportGeneratorTests {
                         .severity("ERROR")
                         .message("cannot assign a value to final variable b")
                         .details("\n        b = 2;                                                   "
-                                        + "\n        ^                                                        ")
+                                + "\n        ^                                                        ")
                         .build());
         Report report = failuresReport(ROOT, "foobar", "compileJava", 293_000, failures);
         assertThat(report).isEqualTo(new Report.Builder()
@@ -94,6 +94,5 @@ public final class FailuresReportGeneratorTests {
                                 .build())
                         .build())
                 .build());
-
     }
 }

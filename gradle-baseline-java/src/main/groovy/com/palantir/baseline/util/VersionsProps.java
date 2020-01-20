@@ -41,20 +41,20 @@ public final class VersionsProps {
     public interface ParsedVersionsProps {
         List<String> lines();
 
-        /**
-         * Map of {@link VersionForce#name} to index of line in {@link #lines} that defines the force.
-         */
+        /** Map of {@link VersionForce#name} to index of line in {@link #lines} that defines the force. */
         Map<String, Integer> namesToLocationMap();
 
         List<VersionForce> forces();
 
         VersionsProps.ParsedVersionsProps.Builder toBuilder();
-        class Builder extends VersionsProps_ParsedVersionsProps_Builder { }
+
+        class Builder extends VersionsProps_ParsedVersionsProps_Builder {}
     }
 
     @FreeBuilder
     public interface VersionForce {
         String name();
+
         String version();
 
         static VersionForce of(String name, String version) {
@@ -62,7 +62,8 @@ public final class VersionsProps {
         }
 
         VersionsProps.VersionForce.Builder toBuilder();
-        class Builder extends VersionsProps_VersionForce_Builder { }
+
+        class Builder extends VersionsProps_VersionForce_Builder {}
     }
 
     public static ParsedVersionsProps readVersionsProps(File propsFile) {
@@ -100,7 +101,10 @@ public final class VersionsProps {
             if (matcher.matches()) {
                 String propName = matcher.group(1);
                 String propVersion = matcher.group(2);
-                VersionForce force = new VersionForce.Builder().name(propName).version(propVersion).build();
+                VersionForce force = new VersionForce.Builder()
+                        .name(propName)
+                        .version(propVersion)
+                        .build();
                 builder.putNamesToLocationMap(force.name(), index);
                 builder.addForces(force);
             }
@@ -113,7 +117,7 @@ public final class VersionsProps {
      * from the file.
      *
      * @throws NullPointerException if any of the {@code forcesToRemove} weren't found in
-     * {@link ParsedVersionsProps#namesToLocationMap}.
+     *     {@link ParsedVersionsProps#namesToLocationMap}.
      */
     public static void writeVersionsProps(
             ParsedVersionsProps parsedVersionsProps, Stream<String> forcesToRemove, File propsFile) {
@@ -122,7 +126,8 @@ public final class VersionsProps {
                 .map(parsedVersionsProps.namesToLocationMap()::get)
                 .map(Preconditions::checkNotNull)
                 .collect(Collectors.toSet());
-        try (BufferedWriter writer0 = Files.newBufferedWriter(propsFile.toPath(), StandardOpenOption.TRUNCATE_EXISTING);
+        try (BufferedWriter writer0 =
+                        Files.newBufferedWriter(propsFile.toPath(), StandardOpenOption.TRUNCATE_EXISTING);
                 PrintWriter writer = new PrintWriter(writer0)) {
             for (int index = 0; index < lines.size(); index++) {
                 if (!indicesToSkip.contains(index)) {
@@ -133,6 +138,4 @@ public final class VersionsProps {
             throw new RuntimeException(e);
         }
     }
-
-
 }

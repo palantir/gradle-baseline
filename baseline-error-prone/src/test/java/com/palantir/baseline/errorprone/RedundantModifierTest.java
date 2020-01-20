@@ -27,8 +27,7 @@ class RedundantModifierTest {
 
     @Test
     void fixEnumConstructor() {
-        fix()
-                .addInputLines(
+        fix().addInputLines(
                         "Test.java",
                         "public enum Test {",
                         "  INSTANCE(\"str\");",
@@ -36,8 +35,7 @@ class RedundantModifierTest {
                         "  private Test(String str) {",
                         "    this.str = str;",
                         "  }",
-                        "}"
-                )
+                        "}")
                 .addOutputLines(
                         "Test.java",
                         "public enum Test {",
@@ -46,115 +44,86 @@ class RedundantModifierTest {
                         "  Test(String str) {",
                         "    this.str = str;",
                         "  }",
-                        "}"
-                ).doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
     @Test
     void allowEnumResult() {
         helper().addSourceLines(
-                "Test.java",
-                "public enum Test {",
-                "  INSTANCE(\"str\");",
-                "  private final String str;",
-                "  Test(String str) {",
-                "    this.str = str;",
-                "  }",
-                "}"
-        ).doTest();
+                        "Test.java",
+                        "public enum Test {",
+                        "  INSTANCE(\"str\");",
+                        "  private final String str;",
+                        "  Test(String str) {",
+                        "    this.str = str;",
+                        "  }",
+                        "}")
+                .doTest();
     }
 
     @Test
     @SuppressWarnings("checkstyle:RegexpSinglelineJava")
     void fixStaticEnum() {
-        fix()
-                .addInputLines(
+        fix().addInputLines(
                         "Enclosing.java",
                         "public class Enclosing {",
                         "  public static enum Test {",
                         "    INSTANCE",
                         "  }",
-                        "}"
-                )
+                        "}")
                 .addOutputLines(
                         "Enclosing.java",
                         "public class Enclosing {",
                         "  public enum Test {",
                         "    INSTANCE",
                         "  }",
-                        "}"
-                ).doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
     @Test
     void testAllowPrivateEnum() {
         helper().addSourceLines(
-                "Enclosing.java",
-                "public class Enclosing {",
-                "  private enum Test {",
-                "    INSTANCE",
-                "  }",
-                "}"
-        ).doTest();
+                        "Enclosing.java",
+                        "public class Enclosing {",
+                        "  private enum Test {",
+                        "    INSTANCE",
+                        "  }",
+                        "}")
+                .doTest();
     }
 
     @Test
     void testAllowInterfaceNestedEnum() {
         helper().addSourceLines(
-                "Enclosing.java",
-                "public interface Enclosing {",
-                "  enum Test {",
-                "    INSTANCE",
-                "  }",
-                "}"
-        ).doTest();
+                        "Enclosing.java", "public interface Enclosing {", "  enum Test {", "    INSTANCE", "  }", "}")
+                .doTest();
     }
 
     @Test
     void fixStaticInterface() {
-        fix()
-                .addInputLines(
-                        "Enclosing.java",
-                        "public class Enclosing {",
-                        "  public static interface Test {",
-                        "  }",
-                        "}"
-                )
-                .addOutputLines(
-                        "Enclosing.java",
-                        "public class Enclosing {",
-                        "  public interface Test {",
-                        "  }",
-                        "}"
-                ).doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+        fix().addInputLines(
+                        "Enclosing.java", "public class Enclosing {", "  public static interface Test {", "  }", "}")
+                .addOutputLines("Enclosing.java", "public class Enclosing {", "  public interface Test {", "  }", "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
     @Test
     void allowInterface() {
-        helper().addSourceLines(
-                "Enclosing.java",
-                "public class Enclosing {",
-                "  public interface Test {",
-                "  }",
-                "}"
-        ).doTest();
+        helper().addSourceLines("Enclosing.java", "public class Enclosing {", "  public interface Test {", "  }", "}")
+                .doTest();
     }
 
     @Test
     void allowNestedInterface() {
-        helper().addSourceLines(
-                "Enclosing.java",
-                "interface Enclosing {",
-                "  interface Test {",
-                "  }",
-                "}"
-        ).doTest();
+        helper().addSourceLines("Enclosing.java", "interface Enclosing {", "  interface Test {", "  }", "}")
+                .doTest();
     }
 
     @Test
     void fixInterfaceMethods() {
-        fix()
-                .addInputLines(
+        fix().addInputLines(
                         "Enclosing.java",
                         "public class Enclosing {",
                         "  public interface Test {",
@@ -163,8 +132,7 @@ class RedundantModifierTest {
                         "    abstract int c();",
                         "    public abstract int d();",
                         "  }",
-                        "}"
-                )
+                        "}")
                 .addOutputLines(
                         "Enclosing.java",
                         "public class Enclosing {",
@@ -174,37 +142,35 @@ class RedundantModifierTest {
                         "    int c();",
                         "    int d();",
                         "  }",
-                        "}"
-                ).doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
     @Test
     void allowValidInterfaceMethods() {
         helper().addSourceLines(
-                "Enclosing.java",
-                "public class Enclosing {",
-                "  public interface Test {",
-                "    int a();",
-                "    int b();",
-                "    int c();",
-                "    int d();",
-                "  }",
-                "}"
-        ).doTest();
+                        "Enclosing.java",
+                        "public class Enclosing {",
+                        "  public interface Test {",
+                        "    int a();",
+                        "    int b();",
+                        "    int c();",
+                        "    int d();",
+                        "  }",
+                        "}")
+                .doTest();
     }
 
     @Test
     void fixFinalClassModifiers() {
-        fix()
-                .addInputLines(
+        fix().addInputLines(
                         "Test.java",
                         "public final class Test {",
                         "  public final void a() {}",
                         "  private final void b() {}",
                         "  final void c() {}",
                         "  @SafeVarargs public final void d(Object... value) {}",
-                        "}"
-                )
+                        "}")
                 .addOutputLines(
                         "Test.java",
                         "public final class Test {",
@@ -213,28 +179,27 @@ class RedundantModifierTest {
                         "  void c() {}",
                         // SafeVarargs is a special case
                         "  @SafeVarargs public final void d(Object... value) {}",
-                        "}"
-                ).doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
     @Test
     void allowFinalClass() {
         helper().addSourceLines(
-                "Test.java",
-                "public final class Test {",
-                "  public void a() {}",
-                "  private void b() {}",
-                "  void c() {}",
-                // SafeVarargs is a special case
-                "  @SafeVarargs public final void d(Object... value) {}",
-                "}"
-        ).doTest();
+                        "Test.java",
+                        "public final class Test {",
+                        "  public void a() {}",
+                        "  private void b() {}",
+                        "  void c() {}",
+                        // SafeVarargs is a special case
+                        "  @SafeVarargs public final void d(Object... value) {}",
+                        "}")
+                .doTest();
     }
 
     @Test
     void fixStaticFinalMethod() {
-        fix()
-                .addInputLines(
+        fix().addInputLines(
                         "Test.java",
                         "public class Test {",
                         "  public static final int a() {",
@@ -246,8 +211,7 @@ class RedundantModifierTest {
                         "  static final int c() {",
                         "    return 1;",
                         "  }",
-                        "}"
-                )
+                        "}")
                 .addOutputLines(
                         "Test.java",
                         "public class Test {",
@@ -260,49 +224,38 @@ class RedundantModifierTest {
                         "  static int c() {",
                         "    return 1;",
                         "  }",
-                        "}"
-                ).doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
     @Test
     void allowStaticMethods() {
         helper().addSourceLines(
-                "Test.java",
-                "public class Test {",
-                "  public static int a() {",
-                "    return 1;",
-                "  }",
-                "  private static int b() {",
-                "    return 1;",
-                "  }",
-                "  static int c() {",
-                "    return 1;",
-                "  }",
-                "}"
-        ).doTest();
+                        "Test.java",
+                        "public class Test {",
+                        "  public static int a() {",
+                        "    return 1;",
+                        "  }",
+                        "  private static int b() {",
+                        "    return 1;",
+                        "  }",
+                        "  static int c() {",
+                        "    return 1;",
+                        "  }",
+                        "}")
+                .doTest();
     }
 
     @Test
     void fixInterfacePublicStaticMethod() {
-        fix()
-                .addInputLines(
-                        "Test.java",
-                        "public interface Test {",
-                        "  public static void a() {}",
-                        "}"
-                )
-                .addOutputLines(
-                        "Test.java",
-                        "public interface Test {",
-                        "  static void a() {}",
-                        "}"
-                ).doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+        fix().addInputLines("Test.java", "public interface Test {", "  public static void a() {}", "}")
+                .addOutputLines("Test.java", "public interface Test {", "  static void a() {}", "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
     @Test
     void fixInterfaceStaticFieldModifiers() {
-        fix()
-                .addInputLines(
+        fix().addInputLines(
                         "Test.java",
                         "public interface Test {",
                         "  int VALUE_0 = 0;",
@@ -311,8 +264,7 @@ class RedundantModifierTest {
                         "  public static int VALUE_3 = 3;",
                         "  final int VALUE_4 = 4;",
                         "  static int VALUE_5 = 5;",
-                        "}"
-                )
+                        "}")
                 .addOutputLines(
                         "Test.java",
                         "public interface Test {",
@@ -322,14 +274,13 @@ class RedundantModifierTest {
                         "  int VALUE_3 = 3;",
                         "  int VALUE_4 = 4;",
                         "  int VALUE_5 = 5;",
-                        "}"
-                ).doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
     @Test
     void fixInterfaceNestedPublicClass() {
-        fix()
-                .addInputLines(
+        fix().addInputLines(
                         "Test.java",
                         "public interface Test {",
                         "  public static final class Class0 {}",
@@ -337,8 +288,7 @@ class RedundantModifierTest {
                         "  static class Class2 {}",
                         "  final class Class3 {}",
                         "  public interface Interface0 {}",
-                        "}"
-                )
+                        "}")
                 .addOutputLines(
                         "Test.java",
                         "public interface Test {",
@@ -347,8 +297,8 @@ class RedundantModifierTest {
                         "  class Class2 {}",
                         "  final class Class3 {}",
                         "  interface Interface0 {}",
-                        "}"
-                ).doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
     private RefactoringValidator fix() {

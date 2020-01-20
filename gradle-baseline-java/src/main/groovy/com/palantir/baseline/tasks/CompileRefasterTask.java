@@ -31,7 +31,9 @@ import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
 
 public class CompileRefasterTask extends JavaCompile {
 
-    private final Property<Configuration> refasterSources = getProject().getObjects().property(Configuration.class);
+    private final Property<Configuration> refasterSources = getProject()
+            .getObjects()
+            .property(Configuration.class);
     private final Property<File> refasterRulesFile = getProject().getObjects().property(File.class);
 
     public CompileRefasterTask() {
@@ -48,27 +50,27 @@ public class CompileRefasterTask extends JavaCompile {
     protected final void compile(IncrementalTaskInputs inputs) {
         // Clear out the default error-prone providers
         getOptions().getCompilerArgumentProviders().clear();
-        getOptions().setCompilerArgs(ImmutableList.of(
-                "-Xplugin:BaselineRefasterCompiler --out " + refasterRulesFile.get().getAbsolutePath()));
+        getOptions()
+                .setCompilerArgs(ImmutableList.of("-Xplugin:BaselineRefasterCompiler --out "
+                        + refasterRulesFile.get().getAbsolutePath()));
 
         // Extract Java sources
-        List<File> javaSources = getRefasterSources().get().getResolvedConfiguration()
-                .getFirstLevelModuleDependencies()
-                .stream()
-                .flatMap(dep -> dep.getModuleArtifacts().stream())
-                .map(ResolvedArtifact::getFile)
-                .flatMap(file -> {
-                    if (file.getName().endsWith(".jar")) {
-                        return getProject().zipTree(file).getFiles().stream()
-                                .filter(zipFile -> zipFile.getName().endsWith(".java"));
-                    } else if (file.getName().endsWith(".java")) {
-                        return Stream.of(file);
-                    } else {
-                        getLogger().warn("Skipping refaster rule: {}", file);
-                        return Stream.empty();
-                    }
-                })
-                .collect(Collectors.toList());
+        List<File> javaSources =
+                getRefasterSources().get().getResolvedConfiguration().getFirstLevelModuleDependencies().stream()
+                        .flatMap(dep -> dep.getModuleArtifacts().stream())
+                        .map(ResolvedArtifact::getFile)
+                        .flatMap(file -> {
+                            if (file.getName().endsWith(".jar")) {
+                                return getProject().zipTree(file).getFiles().stream()
+                                        .filter(zipFile -> zipFile.getName().endsWith(".java"));
+                            } else if (file.getName().endsWith(".java")) {
+                                return Stream.of(file);
+                            } else {
+                                getLogger().warn("Skipping refaster rule: {}", file);
+                                return Stream.empty();
+                            }
+                        })
+                        .collect(Collectors.toList());
 
         if (!javaSources.isEmpty()) {
             setSource(javaSources);
@@ -77,7 +79,6 @@ public class CompileRefasterTask extends JavaCompile {
             setDidWork(false);
         }
     }
-
 
     @InputFiles
     public final Property<Configuration> getRefasterSources() {

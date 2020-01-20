@@ -73,37 +73,37 @@ public final class BaselineErrorProne implements Plugin<Project> {
     }
 
     private static void applyToJavaProject(Project project) {
-        BaselineErrorProneExtension errorProneExtension = project.getExtensions()
-                .create(EXTENSION_NAME, BaselineErrorProneExtension.class, project);
+        BaselineErrorProneExtension errorProneExtension =
+                project.getExtensions().create(EXTENSION_NAME, BaselineErrorProneExtension.class, project);
         project.getPluginManager().apply(ErrorPronePlugin.class);
 
-        String version = Optional.ofNullable(BaselineErrorProne.class.getPackage().getImplementationVersion())
+        String version = Optional.ofNullable(
+                        BaselineErrorProne.class.getPackage().getImplementationVersion())
                 .orElseGet(() -> {
                     log.warn("Baseline is using 'latest.release' - beware this compromises build reproducibility");
                     return "latest.release";
                 });
         Configuration refasterConfiguration = project.getConfigurations().create("refaster", conf -> {
             conf.defaultDependencies(deps -> {
-                deps.add(project.getDependencies().create(
-                        "com.palantir.baseline:baseline-refaster-rules:" + version + ":sources"));
+                deps.add(project.getDependencies()
+                        .create("com.palantir.baseline:baseline-refaster-rules:" + version + ":sources"));
             });
         });
         Configuration refasterCompilerConfiguration = project.getConfigurations()
                 .create("refasterCompiler", configuration -> configuration.extendsFrom(refasterConfiguration));
 
-        project.getDependencies().add(
-                ErrorPronePlugin.CONFIGURATION_NAME,
-                "com.palantir.baseline:baseline-error-prone:" + version);
-        project.getDependencies().add(
-                "refasterCompiler",
-                "com.palantir.baseline:baseline-refaster-javac-plugin:" + version);
+        project.getDependencies()
+                .add(ErrorPronePlugin.CONFIGURATION_NAME, "com.palantir.baseline:baseline-error-prone:" + version);
+        project.getDependencies()
+                .add("refasterCompiler", "com.palantir.baseline:baseline-refaster-javac-plugin:" + version);
 
-        Provider<File> refasterRulesFile = project.getLayout().getBuildDirectory()
+        Provider<File> refasterRulesFile = project.getLayout()
+                .getBuildDirectory()
                 .file("refaster/rules.refaster")
                 .map(RegularFile::getAsFile);
 
-        CompileRefasterTask compileRefaster =
-                project.getTasks().create("compileRefaster", CompileRefasterTask.class, task -> {
+        CompileRefasterTask compileRefaster = project.getTasks()
+                .create("compileRefaster", CompileRefasterTask.class, task -> {
                     task.setSource(refasterConfiguration);
                     task.getRefasterSources().set(refasterConfiguration);
                     task.setClasspath(refasterCompilerConfiguration);
@@ -111,7 +111,8 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 });
 
         project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
-            ((ExtensionAware) javaCompile.getOptions()).getExtensions()
+            ((ExtensionAware) javaCompile.getOptions())
+                    .getExtensions()
                     .configure(ErrorProneOptions.class, errorProneOptions -> {
                         configureErrorProneOptions(
                                 project,
@@ -125,26 +126,28 @@ public final class BaselineErrorProne implements Plugin<Project> {
 
         // To allow refactoring of deprecated methods, even when -Xlint:deprecation is specified, we need to remove
         // these compiler flags after all configuration has happened.
-        project.afterEvaluate(unused -> project.getTasks().withType(JavaCompile.class)
-                .configureEach(javaCompile -> {
+        project.afterEvaluate(
+                unused -> project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
                     if (javaCompile.equals(compileRefaster)) {
                         return;
                     }
                     if (isRefactoring(project)) {
                         javaCompile.getOptions().setWarnings(false);
                         javaCompile.getOptions().setDeprecation(false);
-                        javaCompile.getOptions().setCompilerArgs(javaCompile.getOptions().getCompilerArgs()
-                                .stream()
-                                .filter(arg -> !arg.equals("-Werror"))
-                                .filter(arg -> !arg.equals("-deprecation"))
-                                .filter(arg -> !arg.equals("-Xlint:deprecation"))
-                                .collect(Collectors.toList()));
+                        javaCompile
+                                .getOptions()
+                                .setCompilerArgs(javaCompile.getOptions().getCompilerArgs().stream()
+                                        .filter(arg -> !arg.equals("-Werror"))
+                                        .filter(arg -> !arg.equals("-deprecation"))
+                                        .filter(arg -> !arg.equals("-Xlint:deprecation"))
+                                        .collect(Collectors.toList()));
                     }
                 }));
 
         project.getPluginManager().withPlugin("java-gradle-plugin", appliedPlugin -> {
             project.getTasks().withType(JavaCompile.class).configureEach(javaCompile ->
-                    ((ExtensionAware) javaCompile.getOptions()).getExtensions()
+                    ((ExtensionAware) javaCompile.getOptions())
+                            .getExtensions()
                             .configure(ErrorProneOptions.class, errorProneOptions -> {
                                 errorProneOptions.check("Slf4jLogsafeArgs", CheckSeverity.OFF);
                                 errorProneOptions.check("PreferSafeLoggableExceptions", CheckSeverity.OFF);
@@ -157,23 +160,25 @@ public final class BaselineErrorProne implements Plugin<Project> {
         // compilation or code analysis. ErrorProneJavacPluginPlugin handles JavaCompile cases via errorproneJavac
         // configuration and we do similar thing for Test and Javadoc type tasks
         if (!JavaVersion.current().isJava9Compatible()) {
-            project.getDependencies().add(ErrorPronePlugin.JAVAC_CONFIGURATION_NAME,
-                    "com.google.errorprone:javac:" + ERROR_PRONE_JAVAC_VERSION);
+            project.getDependencies()
+                    .add(
+                            ErrorPronePlugin.JAVAC_CONFIGURATION_NAME,
+                            "com.google.errorprone:javac:" + ERROR_PRONE_JAVAC_VERSION);
             project.getConfigurations()
                     .named(ErrorPronePlugin.JAVAC_CONFIGURATION_NAME)
-                    .configure(conf -> {
-                        List<File> bootstrapClasspath = Splitter.on(File.pathSeparator)
-                                .splitToList(System.getProperty("sun.boot.class.path"))
-                                .stream()
-                                .map(File::new)
-                                .collect(Collectors.toList());
-                        FileCollection errorProneFiles = conf.plus(project.files(bootstrapClasspath));
-                        project.getTasks().withType(Test.class)
-                                .configureEach(test -> test.setBootstrapClasspath(errorProneFiles));
-                        project.getTasks().withType(Javadoc.class)
-                                .configureEach(javadoc -> javadoc.getOptions()
+                    .configure(
+                            conf -> {
+                                List<File> bootstrapClasspath = Splitter.on(File.pathSeparator)
+                                        .splitToList(System.getProperty("sun.boot.class.path"))
+                                        .stream()
+                                        .map(File::new)
+                                        .collect(Collectors.toList());
+                                FileCollection errorProneFiles = conf.plus(project.files(bootstrapClasspath));
+                                project.getTasks().withType(Test.class).configureEach(test ->
+                                        test.setBootstrapClasspath(errorProneFiles));
+                                project.getTasks().withType(Javadoc.class).configureEach(javadoc -> javadoc.getOptions()
                                         .setBootClasspath(new LazyConfigurationList(errorProneFiles)));
-                    });
+                            });
         }
     }
 
@@ -185,7 +190,8 @@ public final class BaselineErrorProne implements Plugin<Project> {
             BaselineErrorProneExtension errorProneExtension,
             JavaCompile javaCompile,
             ErrorProneOptions errorProneOptions) {
-        JavaVersion jdkVersion = JavaVersion.toVersion(javaCompile.getToolChain().getVersion());
+        JavaVersion jdkVersion = JavaVersion.toVersion(
+                javaCompile.getToolChain().getVersion());
 
         errorProneOptions.setEnabled(true);
         errorProneOptions.setDisableWarningsInGeneratedCode(true);
@@ -194,7 +200,9 @@ public final class BaselineErrorProne implements Plugin<Project> {
         errorProneOptions.setExcludedPaths(String.format(
                 "%s%s(build|src%sgenerated.*)%s.*", Pattern.quote(projectPath), separator, separator, separator));
         errorProneOptions.check("UnusedVariable", CheckSeverity.OFF);
-        errorProneOptions.check("PreferJavaTimeOverload", CheckSeverity.OFF); // https://github.com/google/error-prone/issues/1435, https://github.com/google/error-prone/issues/1437
+        errorProneOptions.check(
+                "PreferJavaTimeOverload", CheckSeverity.OFF); // https://github.com/google/error-prone/issues/1435,
+        // https://github.com/google/error-prone/issues/1437
         errorProneOptions.check("EqualsHashCode", CheckSeverity.ERROR);
         errorProneOptions.check("EqualsIncompatibleType", CheckSeverity.ERROR);
         errorProneOptions.check("StreamResourceLeak", CheckSeverity.ERROR);
@@ -231,9 +239,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
                     public Iterable<String> asArguments() {
                         String file = refasterRulesFile.get().getAbsolutePath();
                         return new File(file).exists()
-                                ? ImmutableList.of(
-                                "-XepPatchChecks:refaster:" + file,
-                                "-XepPatchLocation:IN_PLACE")
+                                ? ImmutableList.of("-XepPatchChecks:refaster:" + file, "-XepPatchLocation:IN_PLACE")
                                 : Collections.emptyList();
                     }
                 });
@@ -301,13 +307,11 @@ public final class BaselineErrorProne implements Plugin<Project> {
     }
 
     private static boolean hasDependenciesMatching(Configuration configuration, Spec<ModuleComponentIdentifier> spec) {
-        return !Iterables.isEmpty(
-                configuration
-                        .getIncoming()
-                        .artifactView(viewConfiguration -> viewConfiguration.componentFilter(
-                                ci -> ci instanceof ModuleComponentIdentifier
-                                        && spec.isSatisfiedBy((ModuleComponentIdentifier) ci)))
-                        .getArtifacts());
+        return !Iterables.isEmpty(configuration
+                .getIncoming()
+                .artifactView(viewConfiguration -> viewConfiguration.componentFilter(ci ->
+                        ci instanceof ModuleComponentIdentifier && spec.isSatisfiedBy((ModuleComponentIdentifier) ci)))
+                .getArtifacts());
     }
 
     /** Filters out preconditions checks if the required libraries are not on the classpath. */
@@ -337,7 +341,8 @@ public final class BaselineErrorProne implements Plugin<Project> {
     }
 
     private static boolean isSafeLoggingPreconditionsDep(ModuleComponentIdentifier mci) {
-        return mci.getGroup().equals("com.palantir.safe-logging") && mci.getModule().equals("preconditions");
+        return mci.getGroup().equals("com.palantir.safe-logging")
+                && mci.getModule().equals("preconditions");
     }
 
     private static boolean isRefactoring(Project project) {

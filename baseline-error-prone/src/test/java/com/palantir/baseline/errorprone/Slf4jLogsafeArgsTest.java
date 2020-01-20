@@ -75,7 +75,9 @@ public final class Slf4jLogsafeArgsTest {
         test("new DummyMarker(), \"constant {} {}\", \"string\", SafeArg.of(\"name\", \"string\")", "[2]");
 
         // log.<>(Marker, String, Object, Arg<T>, Throwable)"
-        test("new DummyMarker(), \"constant {} {}\", \"string\", UnsafeArg.of(\"name\", \"string\"), new Throwable()",
+        test(
+                "new DummyMarker(), \"constant {} {}\", \"string\", UnsafeArg.of(\"name\", \"string\"), new"
+                        + " Throwable()",
                 "[2]");
 
         // log.<>(String, Object, Arg<T>, Throwable)"
@@ -170,8 +172,8 @@ public final class Slf4jLogsafeArgsTest {
 
     @Test
     public void testLastArgThrowable() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "import org.slf4j.Logger;",
                         "import org.slf4j.LoggerFactory;",
                         "import com.palantir.logsafe.SafeArg;",
@@ -184,7 +186,8 @@ public final class Slf4jLogsafeArgsTest {
                         "    log.warn(\"3\", SafeArg.of(\"extra\", t), UnsafeArg.of(\"name\", t));",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "import org.slf4j.Logger;",
                         "import org.slf4j.LoggerFactory;",
                         "import com.palantir.logsafe.SafeArg;",

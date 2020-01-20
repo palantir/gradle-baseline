@@ -67,10 +67,11 @@ public final class BaselineVersions implements Plugin<Project> {
     static final String GROUP = "com.palantir.baseline-versions";
     /**
      * System property which, when true, instructs {@code nebula.dependency-recommender} to only support sourcing
-     * constraints from a BOM. In that case, nebula doesn't support sourcing recommendations from
-     * {@code versions.props} anymore.
+     * constraints from a BOM. In that case, nebula doesn't support sourcing recommendations from {@code versions.props}
+     * anymore.
      */
     public static final boolean IS_CORE_BOM_ENABLED = Boolean.getBoolean("nebula.features.coreBomSupport");
+
     public static final String DISABLE_PROPERTY = "com.palantir.baseline-versions.disable";
 
     @Override
@@ -88,9 +89,8 @@ public final class BaselineVersions implements Plugin<Project> {
         }
 
         // get dependencyRecommendations extension
-        RecommendationProviderContainer extension = project
-                .getExtensions()
-                .getByType(RecommendationProviderContainer.class);
+        RecommendationProviderContainer extension =
+                project.getExtensions().getByType(RecommendationProviderContainer.class);
 
         extension.setStrategy(RecommendationStrategies.OverrideTransitives); // default is 'ConflictResolved'
 
@@ -103,10 +103,12 @@ public final class BaselineVersions implements Plugin<Project> {
                 extension.propertiesFile(ImmutableMap.of("file", project.file("versions.props")));
             }
         } else {
-            TaskProvider<CheckBomConflictTask> checkBomConflict = project.getTasks().register(
-                    "checkBomConflict", CheckBomConflictTask.class, task -> task.setPropsFile(rootVersionsPropsFile));
-            TaskProvider<CheckNoUnusedPinTask> checkNoUnusedPin = project.getTasks().register(
-                    "checkNoUnusedPin", CheckNoUnusedPinTask.class, task -> task.setPropsFile(rootVersionsPropsFile));
+            TaskProvider<CheckBomConflictTask> checkBomConflict = project.getTasks()
+                    .register("checkBomConflict", CheckBomConflictTask.class, task ->
+                            task.setPropsFile(rootVersionsPropsFile));
+            TaskProvider<CheckNoUnusedPinTask> checkNoUnusedPin = project.getTasks()
+                    .register("checkNoUnusedPin", CheckNoUnusedPinTask.class, task ->
+                            task.setPropsFile(rootVersionsPropsFile));
 
             project.getTasks().register("checkVersionsProps", CheckVersionsPropsTask.class, task -> {
                 task.dependsOn(checkBomConflict, checkNoUnusedPin);
@@ -137,8 +139,7 @@ public final class BaselineVersions implements Plugin<Project> {
     }
 
     static Set<String> getAllProjectsResolvedModuleIdentifiers(Project project) {
-        return project.getRootProject().getAllprojects()
-                .stream()
+        return project.getRootProject().getAllprojects().stream()
                 .flatMap(project2 -> getResolvedModuleIdentifiers(project2).stream())
                 .collect(Collectors.toSet());
     }
@@ -148,30 +149,37 @@ public final class BaselineVersions implements Plugin<Project> {
                 .filter(Configuration::isCanBeResolved)
                 .flatMap(configuration -> {
                     try {
-                        ResolutionResult resolutionResult = configuration.getIncoming().getResolutionResult();
-                        return resolutionResult
-                                .getAllComponents()
-                                .stream()
+                        ResolutionResult resolutionResult = configuration
+                                .getIncoming()
+                                .getResolutionResult();
+                        return resolutionResult.getAllComponents().stream()
                                 .map(result -> result.getId())
-                                .filter(cid -> !cid.equals(resolutionResult.getRoot().getId())) // remove the project
+                                .filter(cid ->
+                                        !cid.equals(resolutionResult.getRoot().getId())) // remove the project
                                 .filter(cid -> cid instanceof ModuleComponentIdentifier)
                                 .map(mcid -> ((ModuleComponentIdentifier) mcid).getModuleIdentifier())
                                 .map(mid -> mid.getGroup() + ":" + mid.getName());
                     } catch (Exception e) {
-                        throw new RuntimeException(String.format("Error during resolution of the dependency graph of "
-                                + "configuration %s", configuration), e);
+                        throw new RuntimeException(
+                                String.format(
+                                        "Error during resolution of the dependency graph of " + "configuration %s",
+                                        configuration),
+                                e);
                     }
                 })
                 .collect(Collectors.toSet());
     }
 
     /**
-     * Compares {@code versions.props} matchers by weight. Higher weight means the matcher is more specific.
-     * For example,
+     * Compares {@code versions.props} matchers by weight. Higher weight means the matcher is more specific. For
+     * example,
+     *
      * <pre>
      *     com.google.guava:guava
      * </pre>
+     *
      * is more specific than
+     *
      * <pre>
      *     com.google.guava:*
      * </pre>
@@ -183,7 +191,7 @@ public final class BaselineVersions implements Plugin<Project> {
      * The weight of a matcher in {@code versions.props} according to the disambiguation logic defined in
      * {@code nebula.dependency-recommender}.
      *
-     * This matches the logic in {@link FuzzyVersionResolver}.
+     * <p>This matches the logic in {@link FuzzyVersionResolver}.
      */
     private static int versionsPropsMatcherWeight(String matcher) {
         return CharMatcher.isNot('*').countIn(matcher);

@@ -151,7 +151,8 @@ public final class StringBuilderConstantParameters extends BugChecker
 
         @Override
         public Optional<List<ExpressionTree>> visitMemberSelect(MemberSelectTree node, VisitorState state) {
-            if (node.getIdentifier().contentEquals("append") || node.getIdentifier().contentEquals("toString")) {
+            if (node.getIdentifier().contentEquals("append")
+                    || node.getIdentifier().contentEquals("toString")) {
                 return node.getExpression().accept(this, state);
             }
             return defaultAction(node, state);

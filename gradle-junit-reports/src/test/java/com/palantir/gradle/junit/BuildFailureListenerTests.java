@@ -51,9 +51,14 @@ public class BuildFailureListenerTests {
     public void successfulTasks() {
         listener.afterExecute(task(PROJECT_1_NAME, TASK_1_NAME), succeeded());
         listener.afterExecute(task(PROJECT_2_NAME, TASK_2_NAME), succeeded());
-        assertThat(listener.getTestCases()).containsExactly(
-                new TestCase.Builder().name(":" + PROJECT_1_NAME + ":" + TASK_1_NAME).build(),
-                new TestCase.Builder().name(":" + PROJECT_2_NAME + ":" + TASK_2_NAME).build());
+        assertThat(listener.getTestCases())
+                .containsExactly(
+                        new TestCase.Builder()
+                                .name(":" + PROJECT_1_NAME + ":" + TASK_1_NAME)
+                                .build(),
+                        new TestCase.Builder()
+                                .name(":" + PROJECT_2_NAME + ":" + TASK_2_NAME)
+                                .build());
     }
 
     @Test
@@ -67,15 +72,21 @@ public class BuildFailureListenerTests {
         assertThat(testCase1.name()).isEqualTo(":" + PROJECT_1_NAME + ":" + TASK_1_NAME);
         assertThat(testCase1.failure()).isNotNull();
         assertThat(testCase1.failure().message()).isEqualTo("RuntimeException: task 1 failed");
-        assertThat(testCase1.failure().details()).startsWith("java.lang.RuntimeException: task 1 failed\n"
-                + "\tat " + BuildFailureListenerTests.class.getName() + ".failed");
+        assertThat(testCase1.failure().details())
+                .startsWith("java.lang.RuntimeException: task 1 failed\n"
+                        + "\tat "
+                        + BuildFailureListenerTests.class.getName()
+                        + ".failed");
 
         TestCase testCase2 = listener.getTestCases().get(1);
         assertThat(testCase2.name()).isEqualTo(":" + PROJECT_2_NAME + ":" + TASK_2_NAME);
         assertThat(testCase2.failure()).isNotNull();
         assertThat(testCase2.failure().message()).isEqualTo("RuntimeException: task 2 failed");
-        assertThat(testCase2.failure().details()).startsWith("java.lang.RuntimeException: task 2 failed\n"
-                + "\tat " + BuildFailureListenerTests.class.getName() + ".failed");
+        assertThat(testCase2.failure().details())
+                .startsWith("java.lang.RuntimeException: task 2 failed\n"
+                        + "\tat "
+                        + BuildFailureListenerTests.class.getName()
+                        + ".failed");
     }
 
     private static Task task(String projectName, String taskName) {

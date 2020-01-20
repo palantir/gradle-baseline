@@ -27,14 +27,11 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * <p>
- * When using JDK 9+ to compile with a targetCompatibility less than JDK 9, this plugin adds compiler arguments
- * per <a href="https://openjdk.java.net/jeps/247">JEP 247</a> to explicitly set the target JDK platform API
- * to maintain binary compatibility.
- * </p>
- * <p>
- * See also <a href="https://github.com/gradle/gradle/issues/2510">Gradle JDK release issue</a>.
- * </p>
+ * When using JDK 9+ to compile with a targetCompatibility less than JDK 9, this plugin adds compiler arguments per <a
+ * href="https://openjdk.java.net/jeps/247">JEP 247</a> to explicitly set the target JDK platform API to maintain binary
+ * compatibility.
+ *
+ * <p>See also <a href="https://github.com/gradle/gradle/issues/2510">Gradle JDK release issue</a>.
  */
 public final class BaselineReleaseCompatibility extends AbstractBaselinePlugin {
     private static final Logger log = LoggerFactory.getLogger(BaselineReleaseCompatibility.class);
@@ -59,7 +56,8 @@ public final class BaselineReleaseCompatibility extends AbstractBaselinePlugin {
 
         @Override
         public Iterable<String> asArguments() {
-            JavaVersion jdkVersion = JavaVersion.toVersion(javaCompile.getToolChain().getVersion());
+            JavaVersion jdkVersion = JavaVersion.toVersion(
+                    javaCompile.getToolChain().getVersion());
             if (!supportsReleaseFlag(jdkVersion)) {
                 log.debug(
                         "BaselineReleaseCompatibility is a no-op for {} in {} as {} doesn't support --release",

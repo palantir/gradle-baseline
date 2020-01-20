@@ -26,9 +26,7 @@ import org.gradle.external.javadoc.StandardJavadocDocletOptions;
 import org.gradle.plugins.ide.eclipse.model.EclipseModel;
 import org.gradle.plugins.ide.eclipse.model.EclipseProject;
 
-/**
- * Configures the Gradle "checkstyle" task with Baseline settings.
- */
+/** Configures the Gradle "checkstyle" task with Baseline settings. */
 public final class BaselineCheckstyle extends AbstractBaselinePlugin {
 
     private static final String DEFAULT_CHECKSTYLE_VERSION = "8.13";
@@ -49,18 +47,20 @@ public final class BaselineCheckstyle extends AbstractBaselinePlugin {
             // We use the "JavadocMethod" module in our Checkstyle configuration, making
             // Java 8+ new doclint compiler feature redundant.
             if (javaConvention.getSourceCompatibility().isJava8Compatible()) {
-                project.getTasks().withType(Javadoc.class, javadoc ->
-                        javadoc.options(javadocOptions -> ((StandardJavadocDocletOptions) javadocOptions)
-                                .addStringOption("Xdoclint:none", "-quiet")));
+                project.getTasks().withType(Javadoc.class, javadoc -> javadoc.options(javadocOptions ->
+                        ((StandardJavadocDocletOptions) javadocOptions).addStringOption("Xdoclint:none", "-quiet")));
             }
         });
 
-        project.getExtensions().getByType(CheckstyleExtension.class)
-                .setConfigDir(this.project.file(Paths.get(getConfigDir(), "checkstyle").toString()));
+        project.getExtensions()
+                .getByType(CheckstyleExtension.class)
+                .setConfigDir(this.project.file(
+                        Paths.get(getConfigDir(), "checkstyle").toString()));
         project.getPluginManager().withPlugin("eclipse", plugin -> {
-            EclipseProject eclipseProject = project.getExtensions().getByType(EclipseModel.class).getProject();
+            EclipseProject eclipseProject = project.getExtensions()
+                    .getByType(EclipseModel.class)
+                    .getProject();
             eclipseProject.buildCommand("net.sf.eclipsecs.core.CheckstyleBuilder");
         });
     }
-
 }

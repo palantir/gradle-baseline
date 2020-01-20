@@ -22,8 +22,7 @@ import java.lang.reflect.InvocationTargetException;
 
 /**
  * {@link InvocationTargetException#getTargetException()} javadoc recommends using
- * {@link InvocationTargetException#getCause()} instead. getTargetException was added
- * before throwables had getCause.
+ * {@link InvocationTargetException#getCause()} instead. getTargetException was added before throwables had getCause.
  */
 public final class InvocationTargetExceptionCause {
 

@@ -39,11 +39,12 @@ import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.options.Option;
 
-
 public class CheckBomConflictTask extends DefaultTask {
 
     private final Property<Boolean> shouldFix = getProject().getObjects().property(Boolean.class);
-    private final RegularFileProperty propsFileProperty = getProject().getObjects().fileProperty();
+    private final RegularFileProperty propsFileProperty = getProject()
+            .getObjects()
+            .fileProperty();
 
     public CheckBomConflictTask() {
         shouldFix.set(false);
@@ -58,7 +59,8 @@ public class CheckBomConflictTask extends DefaultTask {
 
     @Input
     public final Map<String, String> getMavenBomRecommendations() {
-        return getProject().getExtensions()
+        return getProject()
+                .getExtensions()
                 .getByType(RecommendationProviderContainer.class)
                 .getMavenBomProvider()
                 .getRecommendations();
@@ -88,25 +90,23 @@ public class CheckBomConflictTask extends DefaultTask {
         List<Conflict> conflicts = Lists.newArrayList();
         Set<String> artifacts = getResolvedArtifacts();
         Map<String, String> recommendations = getMavenBomRecommendations();
-        Set<String> bomDeps = getProject().getConfigurations()
+        Set<String> bomDeps = getProject()
+                .getConfigurations()
                 .getByName(DependencyRecommendationsPlugin.NEBULA_RECOMMENDER_BOM)
                 .getAllDependencies()
                 .stream()
                 .map(dep -> dep.getGroup() + ":" + dep.getName())
                 .collect(Collectors.toSet());
 
-        ParsedVersionsProps parsedVersionsProps = VersionsProps.readVersionsProps(getPropsFile().get().getAsFile());
+        ParsedVersionsProps parsedVersionsProps = VersionsProps.readVersionsProps(
+                getPropsFile().get().getAsFile());
         // Map of (artifact name not defined from BOM) -> (version props line it 'vindicates', i.e. confirms is used)
-        Map<String, String> resolvedConflicts = parsedVersionsProps
-                .forces()
-                .stream()
+        Map<String, String> resolvedConflicts = parsedVersionsProps.forces().stream()
                 .flatMap(force -> {
                     String propName = force.name();
                     String regex = propName.replaceAll("\\*", ".*");
 
-                    Set<String> recommendationConflicts = recommendations
-                            .entrySet()
-                            .stream()
+                    Set<String> recommendationConflicts = recommendations.entrySet().stream()
                             // Don't report conflicts for artifacts that are used to configure bom recommendations
                             .filter(entry -> !bomDeps.contains(entry.getKey()))
                             .filter(entry -> entry.getKey().matches(regex))
@@ -130,8 +130,8 @@ public class CheckBomConflictTask extends DefaultTask {
 
         Set<String> versionPropsVindicatedLines = ImmutableSet.copyOf(resolvedConflicts.values());
 
-        //Critical conflicts are versions.props line that only override bom recommendations with same version
-        //so it should avoid considering the case where a wildcard also pin an artifact not present in the bom
+        // Critical conflicts are versions.props line that only override bom recommendations with same version
+        // so it should avoid considering the case where a wildcard also pin an artifact not present in the bom
         List<Conflict> critical = conflicts.stream()
                 .filter(c -> c.getBomVersion().equals(c.getPropVersion()))
                 .filter(c -> !versionPropsVindicatedLines.contains(c.getPropName()))
@@ -140,8 +140,11 @@ public class CheckBomConflictTask extends DefaultTask {
         if (conflicts.isEmpty()) {
             return;
         }
-        getProject().getLogger().info("There are conflicts between versions.props and the bom:\n{}",
-                conflictsToString(conflicts, resolvedConflicts));
+        getProject()
+                .getLogger()
+                .info(
+                        "There are conflicts between versions.props and the bom:\n{}",
+                        conflictsToString(conflicts, resolvedConflicts));
 
         if (critical.isEmpty()) {
             return;
@@ -149,44 +152,49 @@ public class CheckBomConflictTask extends DefaultTask {
 
         if (shouldFix.get()) {
             List<String> toRemove = critical.stream().map(Conflict::getPropName).collect(Collectors.toList());
-            getProject().getLogger().lifecycle("Removing critical conflicts from versions.props:\n"
-                    + toRemove.stream()
-                    .map(name -> String.format(" - '%s'", name))
-                    .collect(Collectors.joining("\n")));
-            VersionsProps.writeVersionsProps(parsedVersionsProps, toRemove.stream(), getPropsFile().get().getAsFile());
+            getProject()
+                    .getLogger()
+                    .lifecycle("Removing critical conflicts from versions.props:\n"
+                            + toRemove.stream()
+                                    .map(name -> String.format(" - '%s'", name))
+                                    .collect(Collectors.joining("\n")));
+            VersionsProps.writeVersionsProps(
+                    parsedVersionsProps, toRemove.stream(), getPropsFile().get().getAsFile());
             return;
         }
 
         throw new RuntimeException("Critical conflicts between versions.props and the bom "
-                + "(overriding with same version)\n" + conflictsToString(critical, resolvedConflicts));
+                + "(overriding with same version)\n"
+                + conflictsToString(critical, resolvedConflicts));
     }
 
     private String conflictsToString(List<Conflict> conflicts, Map<String, String> resolvedConflicts) {
-        return conflicts.stream()
-                .collect(Collectors.groupingBy(Conflict::getPropName))
-                .entrySet()
-                .stream()
+        return conflicts.stream().collect(Collectors.groupingBy(Conflict::getPropName)).entrySet().stream()
                 .map(entry -> allConflictsWithBom(entry.getKey(), entry.getValue(), resolvedConflicts))
                 .collect(Collectors.joining("\n"));
     }
 
-    private String allConflictsWithBom(String propName, List<Conflict> conflicts,
-            Map<String, String> resolvedConflicts) {
+    private String allConflictsWithBom(
+            String propName, List<Conflict> conflicts, Map<String, String> resolvedConflicts) {
         String sameVersionExplanation = resolvedConflicts.containsValue(propName)
-                ? String.format("non critical: pin required by other non recommended artifacts: %s\n",
+                ? String.format(
+                        "non critical: pin required by other non recommended artifacts: %s\n",
                         resolvedConflicts.entrySet().stream()
-                        .filter(e -> e.getValue().equals(propName))
-                        .map(Map.Entry::getKey)
-                        .collect(Collectors.joining(", ", "[", "]")))
+                                .filter(e -> e.getValue().equals(propName))
+                                .map(Map.Entry::getKey)
+                                .collect(Collectors.joining(", ", "[", "]")))
                 : "";
 
         String bomDetails = conflicts.size() == 1
                 ? String.format("  bom:            %s", conflicts.get(0).bomDetail())
-                : String.format("  bom:\n%s", conflicts.stream()
-                        .map(Conflict::bomDetail)
-                        .map(str -> "                  " + str)
-                        .collect(Collectors.joining("\n")));
-        return String.format("%s  versions.props: %s -> %s\n%s",
+                : String.format(
+                        "  bom:\n%s",
+                        conflicts.stream()
+                                .map(Conflict::bomDetail)
+                                .map(str -> "                  " + str)
+                                .collect(Collectors.joining("\n")));
+        return String.format(
+                "%s  versions.props: %s -> %s\n%s",
                 sameVersionExplanation, propName, conflicts.get(0).getPropVersion(), bomDetails);
     }
 

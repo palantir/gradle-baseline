@@ -24,21 +24,25 @@ final class JunitReportCreator {
 
     static Document reportToXml(Report report) {
         try {
-            Document xml = DocumentBuilderFactory.newInstance().newDocumentBuilder().newDocument();
+            Document xml = DocumentBuilderFactory.newInstance()
+                    .newDocumentBuilder()
+                    .newDocument();
             String elapsedTimeString = String.format("%.03f", report.elapsedTimeNanos() / 1e9);
 
             Element testSuitesXml = xml.createElement("testsuites");
             xml.appendChild(testSuitesXml);
             testSuitesXml.setAttribute("id", asId(report.name()));
             testSuitesXml.setAttribute("name", report.name());
-            testSuitesXml.setAttribute("tests", Integer.toString(report.testCases().size()));
+            testSuitesXml.setAttribute(
+                    "tests", Integer.toString(report.testCases().size()));
             testSuitesXml.setAttribute("time", elapsedTimeString);
 
             Element testSuiteXml = xml.createElement("testsuite");
             testSuitesXml.appendChild(testSuiteXml);
             testSuiteXml.setAttribute("id", asId(report.subname()));
             testSuiteXml.setAttribute("name", report.subname());
-            testSuiteXml.setAttribute("tests", Integer.toString(report.testCases().size()));
+            testSuiteXml.setAttribute(
+                    "tests", Integer.toString(report.testCases().size()));
             testSuiteXml.setAttribute("time", elapsedTimeString);
 
             int failures = 0;
@@ -72,5 +76,5 @@ final class JunitReportCreator {
         return name.replace(" - ", ".");
     }
 
-    private JunitReportCreator() { }
+    private JunitReportCreator() {}
 }

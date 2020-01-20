@@ -83,7 +83,8 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
     public final void doIt() {
         Map<String, Optional<String>> resultsByConfiguration = configurations.get().stream()
                 .collect(Collectors.toMap(Configuration::getName, configuration -> {
-                    ClassUniquenessAnalyzer analyzer = new ClassUniquenessAnalyzer(getProject().getLogger());
+                    ClassUniquenessAnalyzer analyzer = new ClassUniquenessAnalyzer(
+                            getProject().getLogger());
                     analyzer.analyzeConfiguration(configuration);
                     Collection<Set<ModuleVersionIdentifier>> problemJars = analyzer.getDifferingProblemJars();
 
@@ -134,14 +135,16 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
     private void ensureLockfileContains(String expected) {
         if (getProject().getGradle().getStartParameter().isWriteDependencyLocks()) {
             GFileUtils.writeFile(expected, lockFile);
-            getLogger().lifecycle("Updated {}", getProject().getRootDir().toPath().relativize(lockFile.toPath()));
+            getLogger()
+                    .lifecycle("Updated {}", getProject().getRootDir().toPath().relativize(lockFile.toPath()));
             return;
         }
 
         if (!lockFile.exists()) {
             throw new GradleException("baseline-class-uniqueness detected multiple jars containing identically named "
                     + "classes. Please resolve these problems, or run `./gradlew checkClassUniqueness "
-                    + "--write-locks` to accept them:\n\n" + expected);
+                    + "--write-locks` to accept them:\n\n"
+                    + expected);
         }
 
         String onDisk = GFileUtils.readFile(lockFile);
@@ -156,7 +159,9 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
         if (lockFile.exists()) {
             if (getProject().getGradle().getStartParameter().isWriteDependencyLocks()) {
                 GFileUtils.deleteQuietly(lockFile);
-                getLogger().lifecycle("Deleted {}", getProject().getRootDir().toPath().relativize(lockFile.toPath()));
+                getLogger()
+                        .lifecycle(
+                                "Deleted {}", getProject().getRootDir().toPath().relativize(lockFile.toPath()));
             } else {
                 throw new GradleException(lockFile + " should not exist (as no problems were found).");
             }

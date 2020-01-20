@@ -184,7 +184,9 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
         ImmutableListMultimap<Symbol, UnusedSpec> unusedSpecsBySymbol =
                 Multimaps.index(unusedSpecs, UnusedSpec::symbol);
 
-        for (Map.Entry<Symbol, Collection<UnusedSpec>> entry : unusedSpecsBySymbol.asMap().entrySet()) {
+        for (Map.Entry<Symbol, Collection<UnusedSpec>> entry : unusedSpecsBySymbol
+                .asMap()
+                .entrySet()) {
             Symbol unusedSymbol = entry.getKey();
             Collection<UnusedSpec> specs = entry.getValue();
 
@@ -214,7 +216,10 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                             describeVariable(symbol),
                             symbol.name))
                     .addAllFixes(fixes.stream()
-                            .map(f -> SuggestedFix.builder().merge(makeFirstAssignmentDeclaration).merge(f).build())
+                            .map(f -> SuggestedFix.builder()
+                                    .merge(makeFirstAssignmentDeclaration)
+                                    .merge(f)
+                                    .build())
                             .collect(toImmutableList()))
                     .build());
         }
@@ -303,7 +308,8 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             return SuggestedFix.builder().build();
         }
         return SuggestedFix.prefixWith(
-                reassignment.get(), state.getSourceForNode(removedVariableTree.get().getType()) + " ");
+                reassignment.get(),
+                state.getSourceForNode(removedVariableTree.get().getType()) + " ");
     }
 
     @SuppressWarnings("SwitchStatementDefaultCase")
@@ -564,14 +570,15 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
     }
 
     /**
-     * Looks at the list of {@code annotations} and see if there is any annotation which exists {@code
-     * exemptingAnnotations}.
+     * Looks at the list of {@code annotations} and see if there is any annotation which exists
+     * {@code exemptingAnnotations}.
      */
     private static boolean exemptedByAnnotation(List<? extends AnnotationTree> annotations, VisitorState unused) {
         for (AnnotationTree annotation : annotations) {
             if (((JCTree.JCAnnotation) annotation).type != null) {
                 Symbol.TypeSymbol tsym = ((JCTree.JCAnnotation) annotation).type.tsym;
-                if (EXEMPTING_VARIABLE_ANNOTATIONS.contains(tsym.getQualifiedName().toString())) {
+                if (EXEMPTING_VARIABLE_ANNOTATIONS.contains(
+                        tsym.getQualifiedName().toString())) {
                     return true;
                 }
             }
@@ -580,7 +587,8 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
     }
 
     private static boolean exemptedByName(Name name) {
-        return EXEMPT_PREFIXES.stream().anyMatch(prefix -> Ascii.toLowerCase(name.toString()).startsWith(prefix));
+        return EXEMPT_PREFIXES.stream()
+                .anyMatch(prefix -> Ascii.toLowerCase(name.toString()).startsWith(prefix));
     }
 
     private final class VariableFinder extends TreePathScanner<Void, Void> {
@@ -681,8 +689,8 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             if (isSuppressed(tree)) {
                 return null;
             }
-            if (EXEMPTING_SUPER_TYPES.stream()
-                    .anyMatch(t -> isSubtype(getType(tree), Suppliers.typeFromString(t).get(state), state))) {
+            if (EXEMPTING_SUPER_TYPES.stream().anyMatch(t ->
+                    isSubtype(getType(tree), Suppliers.typeFromString(t).get(state), state))) {
                 return null;
             }
             return super.visitClass(tree, null);
@@ -991,8 +999,8 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
         ImmutableList<TreePath> usageSites();
 
         /**
-         * If this usage chain was terminated by an unconditional reassignment, the corresponding {@link
-         * AssignmentTree}.
+         * If this usage chain was terminated by an unconditional reassignment, the corresponding
+         * {@link AssignmentTree}.
          */
         Optional<AssignmentTree> terminatingAssignment();
 

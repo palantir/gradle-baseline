@@ -35,14 +35,9 @@ import org.w3c.dom.Document;
 public class JunitReportsFinalizer extends DefaultTask {
 
     public static void registerFinalizer(
-            Task task,
-            TaskTimer timer,
-            FailuresSupplier failuresSupplier,
-            Provider<Directory> reportDir) {
+            Task task, TaskTimer timer, FailuresSupplier failuresSupplier, Provider<Directory> reportDir) {
         JunitReportsFinalizer finalizer = Tasks.createTask(
-                task.getProject().getTasks(),
-                task.getName() + "CircleFinalizer",
-                JunitReportsFinalizer.class);
+                task.getProject().getTasks(), task.getName() + "CircleFinalizer", JunitReportsFinalizer.class);
         if (finalizer == null) {
             // Already registered (happens if the user applies us to the root project and subprojects)
             return;
@@ -50,8 +45,8 @@ public class JunitReportsFinalizer extends DefaultTask {
         finalizer.setStyleTask(task);
         finalizer.setTaskTimer(timer);
         finalizer.setFailuresSupplier(failuresSupplier);
-        finalizer.getTargetFile().set(reportDir
-                .map(dir -> dir.file(task.getProject().getName() + "-" + task.getName() + ".xml")));
+        finalizer.getTargetFile().set(reportDir.map(dir ->
+                dir.file(task.getProject().getName() + "-" + task.getName() + ".xml")));
         finalizer.getReportDir().set(reportDir);
 
         task.finalizedBy(finalizer);
@@ -64,7 +59,7 @@ public class JunitReportsFinalizer extends DefaultTask {
     private final DirectoryProperty reportDir = getProject().getObjects().directoryProperty();
 
     @Inject
-    public JunitReportsFinalizer() { }
+    public JunitReportsFinalizer() {}
 
     public final Task getStyleTask() {
         return styleTask;
@@ -122,7 +117,8 @@ public class JunitReportsFinalizer extends DefaultTask {
         } catch (RuntimeException e) {
             RuntimeException modified;
             try {
-                modified = failuresSupplier.handleInternalFailure(reportDir.getAsFile().get().toPath(), e);
+                modified = failuresSupplier.handleInternalFailure(
+                        reportDir.getAsFile().get().toPath(), e);
             } catch (RuntimeException x) {
                 e.addSuppressed(x);
                 throw e;

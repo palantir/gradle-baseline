@@ -22,9 +22,7 @@ import java.util.Comparator;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-/**
- * Example refaster rule as shown at https://errorprone.info/docs/refaster.
- */
+/** Example refaster rule as shown at https://errorprone.info/docs/refaster. */
 public final class SortedFirst<T> {
 
     @BeforeTemplate
@@ -36,5 +34,4 @@ public final class SortedFirst<T> {
     Optional<T> after(Stream<T> stream, Comparator<? super T> comparator) {
         return stream.min(comparator);
     }
-
 }

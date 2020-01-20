@@ -28,7 +28,8 @@ public class AddAllArrayToBuilderTest {
         assumeThat(System.getProperty("java.specification.version")).isEqualTo("1.8");
 
         RefasterTestHelper.forRefactoring(AddAllArrayToBuilder.class)
-                .withInputLines("Test",
+                .withInputLines(
+                        "Test",
                         "import com.google.common.collect.ImmutableList;",
                         "import java.util.*;",
                         "public class Test {",
@@ -45,5 +46,4 @@ public class AddAllArrayToBuilderTest {
                         "  }",
                         "}");
     }
-
 }
