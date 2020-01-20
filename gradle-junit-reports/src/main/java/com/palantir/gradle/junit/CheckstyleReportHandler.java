@@ -19,6 +19,7 @@ import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import org.gradle.api.plugins.quality.Checkstyle;
+import org.gradle.util.GradleVersion;
 import org.xml.sax.Attributes;
 
 public final class CheckstyleReportHandler extends ReportHandler<Checkstyle> {
@@ -29,7 +30,11 @@ public final class CheckstyleReportHandler extends ReportHandler<Checkstyle> {
     @Override
     public void configureTask(Checkstyle task) {
         // Ensure XML output is enabled
-        task.getReports().findByName("xml").setEnabled(true);
+        if (GradleVersion.current().compareTo(GradleVersion.version("6.1")) >= 0) {
+            task.getReports().getXml().getRequired().convention(true);
+        } else {
+            task.getReports().findByName("xml").setEnabled(true);
+        }
     }
 
     @Override
