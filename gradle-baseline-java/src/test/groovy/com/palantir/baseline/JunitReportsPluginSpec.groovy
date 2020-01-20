@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.palantir.gradle.junit
+package com.palantir.baseline
 
 import nebula.test.IntegrationSpec
 import nebula.test.functional.ExecutionResult

@@ -28,6 +28,7 @@ public final class CheckstyleReportHandler extends ReportHandler<Checkstyle> {
 
     @Override
     public void configureTask(Checkstyle task) {
+        // Ensure XML output is enabled
         task.getReports().findByName("xml").setEnabled(true);
     }
 
