@@ -21,9 +21,7 @@ import com.google.errorprone.refaster.annotation.AfterTemplate;
 import com.google.errorprone.refaster.annotation.BeforeTemplate;
 import java.nio.charset.StandardCharsets;
 
-/**
- * Example refactoring as per https://errorprone.info/docs/refaster#anatomy-of-a-refaster-rule.
- */
+/** Example refactoring as per https://errorprone.info/docs/refaster#anatomy-of-a-refaster-rule. */
 public final class Utf8Length {
 
     @BeforeTemplate
@@ -35,5 +33,4 @@ public final class Utf8Length {
     int optimizedMethod(String string) {
         return Utf8.encodedLength(string);
     }
-
 }

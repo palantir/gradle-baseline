@@ -64,9 +64,12 @@ class BaselineFormat extends AbstractBaselinePlugin {
             spotlessExtension.java(java -> {
                 // Configure a lazy FileCollection then pass it as the target
                 ConfigurableFileCollection allJavaFiles = project.files();
-                project.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().all(
-                        sourceSet -> allJavaFiles.from(
-                                sourceSet.getAllJava().filter(file -> !file.toString().contains(GENERATED_MARKER))));
+                project.getConvention()
+                        .getPlugin(JavaPluginConvention.class)
+                        .getSourceSets()
+                        .all(sourceSet ->
+                                allJavaFiles.from(sourceSet.getAllJava().filter(file ->
+                                        !file.toString().contains(GENERATED_MARKER))));
 
                 java.target(allJavaFiles);
                 java.removeUnusedImports();
@@ -124,8 +127,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
             return FormatterState.ON;
         }
         throw new RuntimeException(String.format(
-                "Unexpected value for %s: %s.%nExpected one of [started, true].",
-                PJF_PROPERTY, propertyValue));
+                "Unexpected value for %s: %s.%nExpected one of [started, true].", PJF_PROPERTY, propertyValue));
     }
 
     enum FormatterState {

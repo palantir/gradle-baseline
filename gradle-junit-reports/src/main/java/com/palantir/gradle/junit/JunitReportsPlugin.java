@@ -37,13 +37,14 @@ public final class JunitReportsPlugin implements Plugin<Project> {
     @SuppressWarnings("Slf4jLogsafeArgs")
     public void apply(Project project) {
         if (project != project.getRootProject()) {
-            project.getLogger().warn(
-                    "com.palantir.junit-reports should be applied to the root project only, not '{}'",
-                    project.getName());
+            project.getLogger()
+                    .warn(
+                            "com.palantir.junit-reports should be applied to the root project only, not '{}'",
+                            project.getName());
         }
 
-        JunitReportsExtension reportsExtension = project.getExtensions()
-                .create(EXT_JUNIT_REPORTS, JunitReportsExtension.class, project);
+        JunitReportsExtension reportsExtension =
+                project.getExtensions().create(EXT_JUNIT_REPORTS, JunitReportsExtension.class, project);
 
         configureBuildFailureFinalizer(project.getRootProject(), reportsExtension.getReportsDirectory());
 
@@ -53,28 +54,27 @@ public final class JunitReportsPlugin implements Plugin<Project> {
         project.getRootProject().allprojects(proj -> {
             proj.getTasks().withType(Test.class, test -> {
                 test.getReports().getJunitXml().setEnabled(true);
-                test.getReports().getJunitXml().setDestination(
-                        junitPath(reportsExtension.getReportsDirectory(), test.getPath()));
+                test.getReports()
+                        .getJunitXml()
+                        .setDestination(junitPath(reportsExtension.getReportsDirectory(), test.getPath()));
             });
-            proj.getTasks().withType(Checkstyle.class, checkstyle ->
-                    JunitReportsFinalizer.registerFinalizer(
-                            checkstyle,
-                            timer,
-                            XmlReportFailuresSupplier.create(checkstyle, new CheckstyleReportHandler()),
-                            reportsExtension.getReportsDirectory().map(dir -> dir.dir("checkstyle"))));
-            proj.getTasks().withType(JavaCompile.class, javac ->
-                    JunitReportsFinalizer.registerFinalizer(
-                            javac,
-                            timer,
-                            JavacFailuresSupplier.create(javac),
-                            reportsExtension.getReportsDirectory().map(dir -> dir.dir("javac"))));
+            proj.getTasks().withType(Checkstyle.class, checkstyle -> JunitReportsFinalizer.registerFinalizer(
+                    checkstyle,
+                    timer,
+                    XmlReportFailuresSupplier.create(checkstyle, new CheckstyleReportHandler()),
+                    reportsExtension.getReportsDirectory().map(dir -> dir.dir("checkstyle"))));
+            proj.getTasks().withType(JavaCompile.class, javac -> JunitReportsFinalizer.registerFinalizer(
+                    javac,
+                    timer,
+                    JavacFailuresSupplier.create(javac),
+                    reportsExtension.getReportsDirectory().map(dir -> dir.dir("javac"))));
         });
     }
 
     private static Provider<File> junitPath(DirectoryProperty basePath, String testPath) {
-        return basePath
-                .map(dir -> dir.dir("junit"))
-                .map(dir -> dir.file(String.join(File.separator, Splitter.on(':').splitToList(testPath.substring(1)))))
+        return basePath.map(dir -> dir.dir("junit"))
+                .map(dir ->
+                        dir.file(String.join(File.separator, Splitter.on(':').splitToList(testPath.substring(1)))))
                 .map(RegularFile::getAsFile);
     }
 
@@ -93,5 +93,4 @@ public final class JunitReportsPlugin implements Plugin<Project> {
         rootProject.getGradle().addListener(listener);
         rootProject.getGradle().buildFinished(action);
     }
-
 }

@@ -22,8 +22,7 @@ public class InvocationTargetExceptionCauseTest {
 
     @Test
     public void test() {
-        RefasterTestHelper
-                .forRefactoring(InvocationTargetExceptionCause.class)
+        RefasterTestHelper.forRefactoring(InvocationTargetExceptionCause.class)
                 .withInputLines(
                         "Test",
                         "import java.lang.reflect.InvocationTargetException;",

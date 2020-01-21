@@ -28,27 +28,27 @@ class ThrowErrorTest {
     @Test
     void testAssertionError() {
         helper().addSourceLines(
-                "Test.java",
-                "class Test {",
-                "   void f() {",
-                "       // BUG: Diagnostic contains: Prefer throwing a RuntimeException",
-                "       throw new AssertionError();",
-                "   }",
-                "}"
-        ).doTest();
+                        "Test.java",
+                        "class Test {",
+                        "   void f() {",
+                        "       // BUG: Diagnostic contains: Prefer throwing a RuntimeException",
+                        "       throw new AssertionError();",
+                        "   }",
+                        "}")
+                .doTest();
     }
 
     @Test
     void testError() {
         helper().addSourceLines(
-                "Test.java",
-                "class Test {",
-                "   void f() {",
-                "       // BUG: Diagnostic contains: Prefer throwing a RuntimeException",
-                "       throw new Error();",
-                "   }",
-                "}"
-        ).doTest();
+                        "Test.java",
+                        "class Test {",
+                        "   void f() {",
+                        "       // BUG: Diagnostic contains: Prefer throwing a RuntimeException",
+                        "       throw new Error();",
+                        "   }",
+                        "}")
+                .doTest();
     }
 
     @Test
@@ -56,33 +56,26 @@ class ThrowErrorTest {
         // It's common to avoid handling Error by catching and rethrowing, this should be allowed. This check
         // is meant to dissuade developers from creating and throwing new Errors.
         helper().addSourceLines(
-                "TestCase.java",
-                "import " + Test.class.getName() + ';',
-                "class TestCase {",
-                "   @Test",
-                "   void f() {",
-                "       throw new Error();",
-                "   }",
-                "}"
-        ).doTest();
+                        "TestCase.java",
+                        "import " + Test.class.getName() + ';',
+                        "class TestCase {",
+                        "   @Test",
+                        "   void f() {",
+                        "       throw new Error();",
+                        "   }",
+                        "}")
+                .doTest();
     }
 
     @Test
     void testRethrowIsAllowed() {
-        helper().addSourceLines(
-                "Test.java",
-                "class Test {",
-                "   void f(Error e) {",
-                "       throw e;",
-                "   }",
-                "}"
-        ).doTest();
+        helper().addSourceLines("Test.java", "class Test {", "   void f(Error e) {", "       throw e;", "   }", "}")
+                .doTest();
     }
 
     @Test
     void testFix() {
-        fix()
-                .addInputLines(
+        fix().addInputLines(
                         "Test.java",
                         "class Test {",
                         "   void f1() {",

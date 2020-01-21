@@ -95,8 +95,9 @@ public final class CatchBlockLogException extends BugChecker implements BugCheck
                         lastArgument,
                         lastArgument
                                 .accept(ThrowableFromArgVisitor.INSTANCE, state)
-                                .orElseGet(() ->
-                                        state.getSourceForNode(lastArgument) + ", " + tree.getParameter().getName()))
+                                .orElseGet(() -> state.getSourceForNode(lastArgument)
+                                        + ", "
+                                        + tree.getParameter().getName()))
                 .build());
     }
 

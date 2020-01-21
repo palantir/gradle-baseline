@@ -34,49 +34,54 @@ public class NonComparableStreamSortTests {
 
     @Test
     public void should_fail_on_non_comparable_stream() {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "import java.util.List;",
-                "import java.util.ArrayList;",
-                "class Test {",
-                "   public static final void main(String[] args) {",
-                "       List<Object> list = new ArrayList<>();",
-                "       // BUG: Diagnostic contains: Stream.sorted() should only be called on streams of Comparable",
-                "       list.stream().sorted();",
-                "   }",
-                "}"
-        ).doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.List;",
+                        "import java.util.ArrayList;",
+                        "class Test {",
+                        "   public static final void main(String[] args) {",
+                        "       List<Object> list = new ArrayList<>();",
+                        "       // BUG: Diagnostic contains: Stream.sorted() should only be called on streams of"
+                                + " Comparable",
+                        "       list.stream().sorted();",
+                        "   }",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void should_on_comparable_stream() {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "import java.util.List;",
-                "import java.util.ArrayList;",
-                "class Test {",
-                "   public static final void main(String[] args) {",
-                "       List<String> list = new ArrayList<>();",
-                "       list.stream().sorted();",
-                "   }",
-                "}"
-        ).doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.List;",
+                        "import java.util.ArrayList;",
+                        "class Test {",
+                        "   public static final void main(String[] args) {",
+                        "       List<String> list = new ArrayList<>();",
+                        "       list.stream().sorted();",
+                        "   }",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void should_fail_without_direct_types() {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "import java.util.List;",
-                "import java.util.ArrayList;",
-                "class Test {",
-                "   public static final void main(String[] args) {",
-                "       List<Iface> list = new ArrayList<>();",
-                "       // BUG: Diagnostic contains: Stream.sorted() should only be called on streams of Comparable",
-                "       list.stream().sorted();",
-                "   }",
-                "   interface Iface {}",
-                "}"
-        ).doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.List;",
+                        "import java.util.ArrayList;",
+                        "class Test {",
+                        "   public static final void main(String[] args) {",
+                        "       List<Iface> list = new ArrayList<>();",
+                        "       // BUG: Diagnostic contains: Stream.sorted() should only be called on streams of"
+                                + " Comparable",
+                        "       list.stream().sorted();",
+                        "   }",
+                        "   interface Iface {}",
+                        "}")
+                .doTest();
     }
 }

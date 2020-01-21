@@ -82,7 +82,8 @@ public final class ThrowError extends BugChecker implements BugChecker.ThrowTree
         if (arguments.isEmpty()) {
             SuggestedFix.Builder fix = SuggestedFix.builder();
             String qualifiedName = MoreSuggestedFixes.qualifyType(state, fix, IllegalStateException.class.getName());
-            return Optional.of(fix.replace(newClassTree.getIdentifier(), qualifiedName).build());
+            return Optional.of(
+                    fix.replace(newClassTree.getIdentifier(), qualifiedName).build());
         }
         ExpressionTree firstArgument = arguments.get(0);
         if (ASTHelpers.isSameType(
@@ -94,7 +95,8 @@ public final class ThrowError extends BugChecker implements BugChecker.ThrowTree
                     compileTimeConstExpressionMatcher.matches(firstArgument, state)
                             ? "com.palantir.logsafe.exceptions.SafeIllegalStateException"
                             : IllegalStateException.class.getName());
-            return Optional.of(fix.replace(newClassTree.getIdentifier(), qualifiedName).build());
+            return Optional.of(
+                    fix.replace(newClassTree.getIdentifier(), qualifiedName).build());
         }
         return Optional.empty();
     }

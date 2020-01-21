@@ -115,18 +115,19 @@ public final class CatchSpecificity extends BugChecker implements BugChecker.Try
                 List<Type> replacements = deduplicateCatchTypes(
                         ImmutableList.<Type>builder()
                                 .addAll(thrown)
-                                .addAll((isThrowable ? THROWABLE_REPLACEMENTS : EXCEPTION_REPLACEMENTS)
-                                        .stream()
-                                                .map(name -> Preconditions.checkNotNull(
-                                                        state.getTypeFromString(name), "Failed to find type"))
-                                                .collect(ImmutableList.toImmutableList()))
+                                .addAll((isThrowable ? THROWABLE_REPLACEMENTS : EXCEPTION_REPLACEMENTS).stream()
+                                        .map(name -> Preconditions.checkNotNull(
+                                                state.getTypeFromString(name), "Failed to find type"))
+                                        .collect(ImmutableList.toImmutableList()))
                                 .build(),
                         encounteredTypes,
                         state);
                 if (replacements.isEmpty()) {
                     // If the replacements list is empty, this catch block isn't reachable and can be removed.
                     // Note that in this case 'encounteredTypes' is not updated.
-                    state.reportMatch(buildDescription(catchTree).addFix(SuggestedFix.replace(catchTree, "")).build());
+                    state.reportMatch(buildDescription(catchTree)
+                            .addFix(SuggestedFix.replace(catchTree, ""))
+                            .build());
                 } else {
                     Name parameterName = catchTree.getParameter().getName();
                     AssignmentScanner assignmentScanner = new AssignmentScanner(parameterName);
@@ -140,7 +141,8 @@ public final class CatchSpecificity extends BugChecker implements BugChecker.Try
                                         .map(type -> MoreSuggestedFixes.prettyType(state, fix, type))
                                         .collect(Collectors.joining(" | ")));
                     }
-                    state.reportMatch(buildDescription(catchTree).addFix(fix.build()).build());
+                    state.reportMatch(
+                            buildDescription(catchTree).addFix(fix.build()).build());
                 }
                 encounteredTypes.addAll(replacements);
             } else {

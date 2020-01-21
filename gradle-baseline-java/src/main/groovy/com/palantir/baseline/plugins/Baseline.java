@@ -20,18 +20,17 @@ import com.palantir.baseline.plugins.versions.BaselineVersions;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 
-/**
- * A Plugin that configures a project with all Baseline settings.
- */
+/** A Plugin that configures a project with all Baseline settings. */
 public final class Baseline implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
         Project rootProject = project.getRootProject();
         if (!project.equals(rootProject)) {
-            project.getLogger().warn(
-                    "com.palantir.baseline should be applied to the root project only, not '{}'",
-                    project.getName());
+            project.getLogger()
+                    .warn(
+                            "com.palantir.baseline should be applied to the root project only, not '{}'",
+                            project.getName());
         }
 
         rootProject.getPluginManager().apply(BaselineConfig.class);
@@ -53,5 +52,4 @@ public final class Baseline implements Plugin<Project> {
             // proj.getPluginManager().apply(BaselineClassUniquenessPlugin.class);
         });
     }
-
 }

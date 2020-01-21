@@ -33,16 +33,14 @@ public final class TestCommon {
             new Failure.Builder()
                     .source(SOURCE)
                     .severity("ERROR")
-                    .file(new File(
-                            ROOT, CLASSFILE))
+                    .file(new File(ROOT, CLASSFILE))
                     .line(135)
                     .message(MESSAGE_1)
                     .build(),
             new Failure.Builder()
                     .source(SOURCE)
                     .severity("ERROR")
-                    .file(new File(
-                            ROOT, CLASSFILE))
+                    .file(new File(ROOT, CLASSFILE))
                     .line(181)
                     .message(MESSAGE_2)
                     .build());
@@ -55,9 +53,15 @@ public final class TestCommon {
                     .name("ParameterNameCheck - org.example.server.FooApplication")
                     .failure(new Report.Failure.Builder()
                             .message("FooApplication.java:135: " + MESSAGE_1)
-                            .details("ERROR: " + MESSAGE_1 + "\n"
-                                    + "Category: " + SOURCE + "\n"
-                                    + "File: " + CLASSFILE + "\n"
+                            .details("ERROR: "
+                                    + MESSAGE_1
+                                    + "\n"
+                                    + "Category: "
+                                    + SOURCE
+                                    + "\n"
+                                    + "File: "
+                                    + CLASSFILE
+                                    + "\n"
                                     + "Line: 135\n")
                             .build())
                     .build())
@@ -65,9 +69,15 @@ public final class TestCommon {
                     .name("ParameterNameCheck - org.example.server.FooApplication")
                     .failure(new Report.Failure.Builder()
                             .message("FooApplication.java:181: " + MESSAGE_2)
-                            .details("ERROR: " + MESSAGE_2 + "\n"
-                                    + "Category: " + SOURCE + "\n"
-                                    + "File: " + CLASSFILE + "\n"
+                            .details("ERROR: "
+                                    + MESSAGE_2
+                                    + "\n"
+                                    + "Category: "
+                                    + SOURCE
+                                    + "\n"
+                                    + "File: "
+                                    + CLASSFILE
+                                    + "\n"
                                     + "Line: 181\n")
                             .build())
                     .build())
@@ -85,5 +95,5 @@ public final class TestCommon {
         }
     }
 
-    private TestCommon() { }
+    private TestCommon() {}
 }

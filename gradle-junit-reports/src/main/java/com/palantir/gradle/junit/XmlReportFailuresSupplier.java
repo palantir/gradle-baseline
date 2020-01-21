@@ -32,7 +32,7 @@ public final class XmlReportFailuresSupplier implements FailuresSupplier {
 
     public static <T extends Task & Reporting<? extends ReportContainer<SingleFileReport>>>
             XmlReportFailuresSupplier create(final T task, final ReportHandler<T> reportHandler) {
-            // Ensure any necessary output is enabled
+        // Ensure any necessary output is enabled
         task.doFirst(new Action<Task>() {
             @Override
             @SuppressWarnings("StrictUnusedVariable")
@@ -47,8 +47,7 @@ public final class XmlReportFailuresSupplier implements FailuresSupplier {
     private final ReportHandler<?> reportHandler;
 
     private XmlReportFailuresSupplier(
-            Reporting<? extends ReportContainer<SingleFileReport>> reporting,
-            ReportHandler<?> reportHandler) {
+            Reporting<? extends ReportContainer<SingleFileReport>> reporting, ReportHandler<?> reportHandler) {
         this.reporting = reporting;
         this.reportHandler = reportHandler;
     }
@@ -57,7 +56,8 @@ public final class XmlReportFailuresSupplier implements FailuresSupplier {
     public List<Failure> getFailures() throws IOException {
         File sourceReport = reporting.getReports().findByName("xml").getDestination();
         try {
-            return XmlUtils.parseXml(reportHandler, new FileInputStream(sourceReport)).failures();
+            return XmlUtils.parseXml(reportHandler, new FileInputStream(sourceReport))
+                    .failures();
         } catch (IOException | RuntimeException e) {
             throw new RuntimeException(String.format("Failed to parse failures XML: %s", sourceReport), e);
         }
@@ -73,11 +73,16 @@ public final class XmlReportFailuresSupplier implements FailuresSupplier {
         }
         for (SingleFileReport rawReport : reporting.getReports()) {
             if (rawReport.isEnabled()) {
-                rawReport.getDestination()
-                        .renameTo(rawReportsDir.resolve(rawReport.getDestination().getName()).toFile());
+                rawReport
+                        .getDestination()
+                        .renameTo(rawReportsDir
+                                .resolve(rawReport.getDestination().getName())
+                                .toFile());
             }
         }
         return new RuntimeException(
-                "Finalizer failed; raw report files can be found at " + rawReportsDir.getFileName().toString(), ex);
+                "Finalizer failed; raw report files can be found at "
+                        + rawReportsDir.getFileName().toString(),
+                ex);
     }
 }

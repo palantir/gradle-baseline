@@ -22,8 +22,7 @@ public class OptionalOrElseSupplierTest {
 
     @Test
     public void test() {
-        RefasterTestHelper
-                .forRefactoring(OptionalOrElseSupplier.class)
+        RefasterTestHelper.forRefactoring(OptionalOrElseSupplier.class)
                 .withInputLines(
                         "Test",
                         "import java.util.*;",
@@ -40,5 +39,4 @@ public class OptionalOrElseSupplierTest {
                         "  String s = Optional.ofNullable(\"world\").orElseGet(supplier);",
                         "}");
     }
-
 }

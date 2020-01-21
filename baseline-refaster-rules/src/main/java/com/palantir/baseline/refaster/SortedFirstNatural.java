@@ -22,9 +22,7 @@ import java.util.Comparator;
 import java.util.Optional;
 import java.util.stream.Stream;
 
-/**
- * Based on {@link SortedFirst}, but handles {@link Stream#sorted()} without a comparator.
- */
+/** Based on {@link SortedFirst}, but handles {@link Stream#sorted()} without a comparator. */
 public final class SortedFirstNatural<T extends Comparable<T>> {
 
     @BeforeTemplate
@@ -36,5 +34,4 @@ public final class SortedFirstNatural<T extends Comparable<T>> {
     Optional<T> after(Stream<T> stream) {
         return stream.min(Comparator.naturalOrder());
     }
-
 }

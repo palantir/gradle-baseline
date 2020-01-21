@@ -27,8 +27,7 @@ class Slf4jLevelCheckTest {
 
     @Test
     void testMessage() {
-        helper()
-                .addSourceLines(
+        helper().addSourceLines(
                         "Test.java",
                         "import org.slf4j.Logger;",
                         "import org.slf4j.LoggerFactory;",
@@ -46,8 +45,7 @@ class Slf4jLevelCheckTest {
 
     @Test
     void testElseNotMatched() {
-        helper()
-                .addSourceLines(
+        helper().addSourceLines(
                         "Test.java",
                         "import org.slf4j.Logger;",
                         "import org.slf4j.LoggerFactory;",
@@ -66,8 +64,7 @@ class Slf4jLevelCheckTest {
 
     @Test
     void testCatchNotMatched() {
-        helper()
-                .addSourceLines(
+        helper().addSourceLines(
                         "Test.java",
                         "import org.slf4j.Logger;",
                         "import org.slf4j.LoggerFactory;",
@@ -88,8 +85,7 @@ class Slf4jLevelCheckTest {
 
     @Test
     void testCorrectLevel() {
-        helper()
-                .addSourceLines(
+        helper().addSourceLines(
                         "Test.java",
                         "import org.slf4j.Logger;",
                         "import org.slf4j.LoggerFactory;",
@@ -106,8 +102,7 @@ class Slf4jLevelCheckTest {
 
     @Test
     void testFix_simple() {
-        fix()
-                .addInputLines(
+        fix().addInputLines(
                         "Test.java",
                         "import org.slf4j.Logger;",
                         "import org.slf4j.LoggerFactory;",
@@ -136,8 +131,7 @@ class Slf4jLevelCheckTest {
 
     @Test
     void testFix_nestedConditional() {
-        fix()
-                .addInputLines(
+        fix().addInputLines(
                         "Test.java",
                         "import org.slf4j.Logger;",
                         "import org.slf4j.LoggerFactory;",
@@ -174,8 +168,7 @@ class Slf4jLevelCheckTest {
 
     @Test
     void testFix_complexCondition() {
-        fix()
-                .addInputLines(
+        fix().addInputLines(
                         "Test.java",
                         "import org.slf4j.Logger;",
                         "import org.slf4j.LoggerFactory;",
