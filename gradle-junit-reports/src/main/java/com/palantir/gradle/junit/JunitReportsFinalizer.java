@@ -15,6 +15,14 @@
  */
 package com.palantir.gradle.junit;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.List;
+import javax.inject.Inject;
+import javax.xml.transform.TransformerException;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Task;
 import org.gradle.api.file.Directory;
@@ -24,15 +32,6 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
 import org.w3c.dom.Document;
-
-import javax.inject.Inject;
-import javax.xml.transform.TransformerException;
-import java.io.File;
-import java.io.IOException;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.util.List;
 
 public class JunitReportsFinalizer extends DefaultTask {
 
