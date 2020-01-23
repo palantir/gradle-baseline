@@ -18,7 +18,6 @@ _Baseline is a family of Gradle plugins for configuring Java projects with sensi
 | `com.palantir.baseline-scalastyle`            | Enforces formatting using [scalastyle](https://github.com/scalastyle/scalastyle)
 | `com.palantir.baseline-class-uniqueness`      | Analyses your classpath to ensure no fully-qualified class is defined more than once.
 | `com.palantir.baseline-circleci`              | [CircleCI](https://circleci.com/) integration using `$CIRCLE_ARTIFACTS` and `$CIRCLE_TEST_REPORTS` dirs
-| `com.palantir.baseline-versions`              | Source dependency versions from a `versions.props` file using [nebula dependency recommender](https://github.com/nebula-plugins/nebula-dependency-recommender-plugin)
 | `com.palantir.baseline-config`                | Config files for the above plugins
 | `com.palantir.baseline-reproducibility`       | Sensible defaults to ensure Jar, Tar and Zip tasks can be reproduced
 | `com.palantir.baseline-exact-dependencies`    | Ensures projects explicitly declare all the dependencies they rely on, no more and no less
@@ -283,53 +282,6 @@ Also, the plugin:
 ![CHECKSTYLE — 1 FAILURE](images/checkstyle-circle-failure.png?raw=true "CircleCI failure image")
 3. stores the HTML output of tests in `$CIRCLE_ARTIFACTS/junit`
 
-
-## com.palantir.baseline-versions
-Sources version numbers from a root level `versions.props` file.  This plugin should be applied in an `allprojects` block. It is effectively a shorthand for the following:
-
-```gradle
-buildscript {
-    dependencies {
-        classpath 'com.netflix.nebula:nebula-dependency-recommender:x.y.z'
-    }
-}
-
-allprojects {
-    apply plugin: 'nebula.dependency-recommender'
-    dependencyRecommendations {
-        strategy OverrideTransitives // use ConflictResolved to undo this
-        propertiesFile file: project.rootProject.file('versions.props')
-        if (file('versions.props').exists()) {
-            propertiesFile file: project.file('versions.props')
-        }
-    }
-}
-```
-
-Features from [nebula.dependency-recommender](https://github.com/nebula-plugins/nebula-dependency-recommender-plugin) are still available (for now), so you can configure BOMs:
-
-```gradle
-dependencyRecommendations {
-    mavenBom module: 'com.palantir.product:your-bom'
-}
-```
-
-Adds the following tasks:
-
-- `checkVersionsProps` - A catch-all task to lint your versions.props file.
-- `checkBomConflict` - Ensures your versions.props pins don't force the same version that is already recommended by a BOM.
-- `checkNoUnusedPin` - Ensures all versions in your versions.props correspond to an actual gradle dependency.
-
-Run `./gradlew checkVersionsProps --fix` to solve the problems flagged by the above tasks.
-
-### Turning it off
-
-When using the `com.palantir.baseline` plugin, you can disable just `com.palantir.baseline-versions` without having to stop applying the main plugin. To do this, set the following project property in `gradle.properties`:
-```diff
-+com.palantir.baseline-versions.disable = true
-```
-
-This is intended to facilitate a move towards managing versions using [gradle constraints](https://docs.gradle.org/current/userguide/managing_transitive_dependencies.html#sec:dependency_constraints), which are safer.
 
 ### Troubleshooting
 

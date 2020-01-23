@@ -1,0 +1,7 @@
+type: break
+break:
+  description: The deprecated `com.palantir.baseline-versions` plugin has been deleted,
+    as we recommended using gradle-consistent-versions instead. (Alternatively, you
+    can still manually set up nebula.dependency-recommender).
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1169
