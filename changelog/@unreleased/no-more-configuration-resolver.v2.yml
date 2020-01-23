@@ -1,0 +1,7 @@
+type: break
+break:
+  description: |+
+    baseline-circleci no longer applies the (deprecated) configuration resolver plugin which provided the `./gradlew resolveConfigurations` task. We no longer run this on CI, but if you want to keep using it, feel free to depend on the plugin directly.
+
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1184

@@ -271,32 +271,12 @@ configurations.all {
 ```
 
 ## com.palantir.baseline-circleci
-Automatically applies the following plugins:
+The plugin surfaces failures using JUnit XML which is rendered nicely by CircleCI, by
 
-- [`com.palantir.configuration-resolver`](https://github.com/palantir/gradle-configuration-resolver-plugin) - this adds a `./gradlew resolveConfigurations` task which is useful for caching on CI.
-
-Also, the plugin:
-
-1. stores junit test reports in `$CIRCLE_TEST_REPORTS/junit`
-2. Converts java compilation errors and checkstyle errors into test failures stored under `$CIRCLE_TEST_REPORTS/javac` and `$CIRCLE_TEST_REPORTS/checkstyle` respectively
+1. Storing JUnit test reports in `$CIRCLE_TEST_REPORTS/junit`
+2. Converting java compilation errors and checkstyle errors into test failures stored under `$CIRCLE_TEST_REPORTS/javac` and `$CIRCLE_TEST_REPORTS/checkstyle` respectively
 ![CHECKSTYLE — 1 FAILURE](images/checkstyle-circle-failure.png?raw=true "CircleCI failure image")
-3. stores the HTML output of tests in `$CIRCLE_ARTIFACTS/junit`
-
-
-### Troubleshooting
-
-If you declare a force in `versions.props` that you don't depend on, but query in your repo, such as:
-```groovy
-dependencyRecommendations.getRecommendedVersion('group', 'name')
-```
-
-Then `checkNoUnusedPin` will fail because it can't determine where the version is used. To work around this, you can
-put the version at the end of the file after a `# linter:OFF` line, e.g.:
-
-```properties
-# linter:OFF
-group:name = 1.0.0
-```
+3. Storeing the HTML output of tests in `$CIRCLE_ARTIFACTS/junit`
 
 ## com.palantir.baseline-format
 
