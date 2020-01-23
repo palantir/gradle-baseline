@@ -15,6 +15,13 @@
  */
 package com.palantir.gradle.junit;
 
+import org.gradle.api.Action;
+import org.gradle.api.Project;
+import org.gradle.api.Task;
+import org.gradle.api.reporting.ReportContainer;
+import org.gradle.api.reporting.Reporting;
+import org.gradle.api.reporting.SingleFileReport;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -22,12 +29,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
-import org.gradle.api.Action;
-import org.gradle.api.Project;
-import org.gradle.api.Task;
-import org.gradle.api.reporting.ReportContainer;
-import org.gradle.api.reporting.Reporting;
-import org.gradle.api.reporting.SingleFileReport;
 
 public final class XmlReportFailuresSupplier implements FailuresSupplier {
 
@@ -48,8 +49,7 @@ public final class XmlReportFailuresSupplier implements FailuresSupplier {
     private final ReportHandler<?> reportHandler;
 
     private XmlReportFailuresSupplier(
-            Reporting<? extends ReportContainer<SingleFileReport>> reporting,
-            ReportHandler<?> reportHandler) {
+            Reporting<? extends ReportContainer<SingleFileReport>> reporting, ReportHandler<?> reportHandler) {
         this.reporting = reporting;
         this.reportHandler = reportHandler;
     }
@@ -58,7 +58,8 @@ public final class XmlReportFailuresSupplier implements FailuresSupplier {
     public List<Failure> getFailures() throws IOException {
         File sourceReport = reporting.getReports().findByName("xml").getDestination();
         try {
-            return XmlUtils.parseXml(reportHandler, new FileInputStream(sourceReport)).failures();
+            return XmlUtils.parseXml(reportHandler, new FileInputStream(sourceReport))
+                    .failures();
         } catch (IOException | RuntimeException e) {
             throw new RuntimeException(String.format("Failed to parse failures XML: %s", sourceReport), e);
         }
@@ -74,7 +75,8 @@ public final class XmlReportFailuresSupplier implements FailuresSupplier {
         }
         for (SingleFileReport rawReport : reporting.getReports()) {
             if (rawReport.isEnabled()) {
-                rawReport.getDestination()
+                rawReport
+                        .getDestination()
                         .renameTo(rawReportsDir.resolve(rawReport.getDestination().getName()).toFile());
             }
         }

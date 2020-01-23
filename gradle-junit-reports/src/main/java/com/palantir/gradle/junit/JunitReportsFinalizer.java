@@ -15,14 +15,6 @@
  */
 package com.palantir.gradle.junit;
 
-import java.io.File;
-import java.io.IOException;
-import java.io.Writer;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
-import java.util.List;
-import javax.inject.Inject;
-import javax.xml.transform.TransformerException;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Task;
 import org.gradle.api.file.Directory;
@@ -33,17 +25,21 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
 import org.w3c.dom.Document;
 
+import javax.inject.Inject;
+import javax.xml.transform.TransformerException;
+import java.io.File;
+import java.io.IOException;
+import java.io.Writer;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.util.List;
+
 public class JunitReportsFinalizer extends DefaultTask {
 
     public static void registerFinalizer(
-            Task task,
-            TaskTimer timer,
-            FailuresSupplier failuresSupplier,
-            Provider<Directory> reportDir) {
+            Task task, TaskTimer timer, FailuresSupplier failuresSupplier, Provider<Directory> reportDir) {
         JunitReportsFinalizer finalizer = Tasks.createTask(
-                task.getProject().getTasks(),
-                task.getName() + "CircleFinalizer",
-                JunitReportsFinalizer.class);
+                task.getProject().getTasks(), task.getName() + "CircleFinalizer", JunitReportsFinalizer.class);
         if (finalizer == null) {
             // Already registered (happens if the user applies us to the root project and subprojects)
             return;
@@ -51,8 +47,8 @@ public class JunitReportsFinalizer extends DefaultTask {
         finalizer.setStyleTask(task);
         finalizer.setTaskTimer(timer);
         finalizer.setFailuresSupplier(failuresSupplier);
-        finalizer.getTargetFile().set(reportDir
-                .map(dir -> dir.file(task.getProject().getName() + "-" + task.getName() + ".xml")));
+        finalizer.getTargetFile().set(reportDir.map(dir ->
+                dir.file(task.getProject().getName() + "-" + task.getName() + ".xml")));
         finalizer.getReportDir().set(reportDir);
 
         task.finalizedBy(finalizer);
@@ -65,7 +61,7 @@ public class JunitReportsFinalizer extends DefaultTask {
     private final DirectoryProperty reportDir = getProject().getObjects().directoryProperty();
 
     @Inject
-    public JunitReportsFinalizer() { }
+    public JunitReportsFinalizer() {}
 
     @Input
     public final Task getStyleTask() {
