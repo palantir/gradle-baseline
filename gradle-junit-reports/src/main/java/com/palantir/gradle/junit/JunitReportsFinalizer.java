@@ -29,6 +29,7 @@ import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
 import org.w3c.dom.Document;
 
@@ -61,6 +62,7 @@ public class JunitReportsFinalizer extends DefaultTask {
     @Inject
     public JunitReportsFinalizer() {}
 
+    @Input
     public final Task getStyleTask() {
         return styleTask;
     }
@@ -69,6 +71,7 @@ public class JunitReportsFinalizer extends DefaultTask {
         this.styleTask = styleTask;
     }
 
+    @Input
     public final TaskTimer getTaskTimer() {
         return taskTimer;
     }
@@ -77,6 +80,7 @@ public class JunitReportsFinalizer extends DefaultTask {
         this.taskTimer = taskTimer;
     }
 
+    @Input
     public final FailuresSupplier getFailuresSupplier() {
         return failuresSupplier;
     }
@@ -85,10 +89,12 @@ public class JunitReportsFinalizer extends DefaultTask {
         this.failuresSupplier = failuresSupplier;
     }
 
+    @Input
     public final RegularFileProperty getTargetFile() {
         return targetFile;
     }
 
+    @Input
     public final DirectoryProperty getReportDir() {
         return reportDir;
     }

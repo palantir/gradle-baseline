@@ -1,0 +1,7 @@
+type: fix
+fix:
+  description: Errors of the form `The value for Report xml property 'required' is
+    final and cannot be changed any further.` in Gradle 6.1 are now fixed for the
+    `com.palantir.junit-reports` plugin.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1176

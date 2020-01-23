@@ -23,6 +23,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
 import org.gradle.api.Action;
+import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.reporting.ReportContainer;
 import org.gradle.api.reporting.Reporting;
@@ -33,13 +34,13 @@ public final class XmlReportFailuresSupplier implements FailuresSupplier {
     public static <T extends Task & Reporting<? extends ReportContainer<SingleFileReport>>>
             XmlReportFailuresSupplier create(final T task, final ReportHandler<T> reportHandler) {
         // Ensure any necessary output is enabled
-        task.doFirst(new Action<Task>() {
+        task.getProject().afterEvaluate(new Action<Project>() {
             @Override
-            @SuppressWarnings("StrictUnusedVariable")
-            public void execute(Task ignored) {
+            public void execute(Project _project) {
                 reportHandler.configureTask(task);
             }
         });
+
         return new XmlReportFailuresSupplier(task, reportHandler);
     }
 
