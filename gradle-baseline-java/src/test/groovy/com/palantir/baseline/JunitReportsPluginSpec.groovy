@@ -16,44 +16,63 @@
 
 package com.palantir.baseline
 
-import nebula.test.IntegrationSpec
-import nebula.test.functional.ExecutionResult
+
+import org.gradle.testkit.runner.GradleRunner
+import org.gradle.testkit.runner.TaskOutcome
+import org.junit.Rule
+import org.junit.rules.TemporaryFolder
+import spock.lang.Specification
 import spock.lang.Unroll
 
 @Unroll
-class JunitReportsPluginSpec extends IntegrationSpec {
+class JunitReportsPluginSpec extends Specification {
     private static final List<String> GRADLE_TEST_VERSIONS = ['5.6.4', '6.1']
 
-    def '#gradleVersionNumber: configures the checkstlye plugin correctly'() {
-        setup:
-        gradleVersion = gradleVersionNumber
+    @Rule final TemporaryFolder testProjectDir = new TemporaryFolder()
+    File settingsFile
+    File buildFile
 
-        when:
+    def setup() {
+        settingsFile = testProjectDir.newFile('settings.gradle')
+        buildFile = testProjectDir.newFile('build.gradle')
+    }
+
+    def '#gradleVersion: configures the checkstlye plugin correctly'() {
+        given:
         buildFile << '''
+            plugins {
+                id 'com.palantir.baseline-circleci'
+            }
+
             apply plugin: 'java'
             apply plugin: 'checkstyle'
-            apply plugin: 'com.palantir.junit-reports'
+            //  apply plugin: 'com.palantir.baseline-circleci'
             
             repositories {
                 jcenter()
             }
         '''.stripIndent()
 
-        file('src/main/java/foo/Foo.java') << '''
+        def javaCode = new File(testProjectDir.getRoot(), 'src/main/java/foo/Foo.java')
+        javaCode.getParentFile().mkdirs()
+        javaCode << '''
             package foo;
             public class Foo {}
         '''.stripIndent()
 
-        ExecutionResult executionResult = runTasks('checkstyleMain')
+        when:
+        def result = GradleRunner.create()
+                .withPluginClasspath()
+                .withGradleVersion(gradleVersion)
+                .withProjectDir(testProjectDir.root)
+                .withArguments('-s', 'checkstyleMain')
+                .withDebug(false)
+                .build()
 
         then:
-        // Running checkstyle inside nebula does not work as there are classpath problems that result in the `groovy-all`
-        // not being on Gradle's classpath. So the best we can do to verify that the checkstyle actually ran is to
-        // verify we get the classpath error that happens when the checkstyle class runs :(
-        // https://github.com/gradle/gradle/issues/3995
-        executionResult.standardError.contains 'java.lang.ClassNotFoundException: groovy.util.AntBuilder'
+        result.task('checkstyleMain').outcome == TaskOutcome.SUCCESS
 
         where:
-        gradleVersionNumber << GRADLE_TEST_VERSIONS
+        gradleVersion << GRADLE_TEST_VERSIONS
     }
 }

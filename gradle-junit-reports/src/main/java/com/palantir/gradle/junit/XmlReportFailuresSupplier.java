@@ -15,6 +15,14 @@
  */
 package com.palantir.gradle.junit;
 
+import org.gradle.api.Action;
+import org.gradle.api.Task;
+import org.gradle.api.logging.Logging;
+import org.gradle.api.reporting.ReportContainer;
+import org.gradle.api.reporting.Reporting;
+import org.gradle.api.reporting.SingleFileReport;
+import org.gradle.util.GradleVersion;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -22,17 +30,21 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
-import org.gradle.api.Task;
-import org.gradle.api.reporting.ReportContainer;
-import org.gradle.api.reporting.Reporting;
-import org.gradle.api.reporting.SingleFileReport;
 
 public final class XmlReportFailuresSupplier implements FailuresSupplier {
 
     public static <T extends Task & Reporting<? extends ReportContainer<SingleFileReport>>>
             XmlReportFailuresSupplier create(final T task, final ReportHandler<T> reportHandler) {
-            // Ensure any necessary output is enabled
-        reportHandler.configureTask(task);
+        // Ensure any necessary output is enabled
+        Logging.getLogger(XmlReportFailuresSupplier.class).warn("Gradle Version: {}", GradleVersion.current());
+
+        task.doFirst(new Action<Task>() {
+            @Override
+            @SuppressWarnings("StrictUnusedVariable")
+            public void execute(Task ignored) {
+                reportHandler.configureTask(task);
+            }
+        });
         return new XmlReportFailuresSupplier(task, reportHandler);
     }
 

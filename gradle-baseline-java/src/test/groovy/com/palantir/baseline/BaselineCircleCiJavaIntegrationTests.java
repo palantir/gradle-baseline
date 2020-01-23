@@ -15,15 +15,8 @@
  */
 package com.palantir.baseline;
 
-import static org.assertj.core.api.Assertions.assertThat;
-
 import com.google.common.io.Files;
 import com.google.common.io.Resources;
-import java.io.File;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStream;
-import java.nio.charset.StandardCharsets;
 import org.gradle.testkit.runner.BuildResult;
 import org.gradle.testkit.runner.GradleRunner;
 import org.junit.Before;
@@ -31,6 +24,14 @@ import org.junit.Rule;
 import org.junit.Test;
 import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.junit.rules.TemporaryFolder;
+
+import java.io.File;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.charset.StandardCharsets;
+
+import static org.assertj.core.api.Assertions.assertThat;
 
 public class BaselineCircleCiJavaIntegrationTests {
 
@@ -121,15 +122,27 @@ public class BaselineCircleCiJavaIntegrationTests {
     }
 
     @Test
-    public void checkstyleIntegrationTest() throws IOException {
+    public void checkstyleIntegrationTest_5_6_4() throws IOException {
+        checkstyleIntegrationTest("5.6.4");
+    }
+
+    @Test
+    public void checkstyleIntegrationTest_6_1() throws IOException {
+        checkstyleIntegrationTest("6.1");
+    }
+
+    private void checkstyleIntegrationTest(String gradleVersion) throws IOException {
         copyTestFile("checkstyle-violating-class", projectDir, "src/main/java/com/example/MyClass.java");
 
         BuildResult result = GradleRunner.create()
+                .withGradleVersion(gradleVersion)
                 .withPluginClasspath()
                 .withProjectDir(projectDir.getRoot())
-                .withArguments("--stacktrace", "checkstyleMain")
+                .withArguments("--stacktrace", "--info", "checkstyleMain")
                 .buildAndFail();
         assertThat(result.getOutput()).contains("Checkstyle rule violations were found");
+
+        System.out.println("result.getOutput() = " + result.getOutput());
 
         File report = new File(reportsDir, "checkstyle/foobar-checkstyleMain.xml");
         assertThat(report).exists();
