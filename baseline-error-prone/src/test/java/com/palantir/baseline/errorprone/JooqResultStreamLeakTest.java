@@ -32,91 +32,100 @@ public final class JooqResultStreamLeakTest {
 
     @Test
     public void test_positive() {
-        testHelper.addSourceLines("JooqStream.java",
-            "import java.util.stream.Collectors;",
-            "import java.util.stream.Stream;",
-            "import org.jooq.Record;",
-            "import org.jooq.ResultQuery;",
-            "class Test {",
-            "  void f(ResultQuery<Record> rq) {",
-            "    // BUG: Diagnostic contains: should be closed",
-            "    rq.stream().map(r -> r.getValue(0));",
-            "    // BUG: Diagnostic contains: should be closed",
-            "    rq.fetchStream().map(r -> r.getValue(0));",
-            "    // BUG: Diagnostic contains: should be closed",
-            "    rq.fetchLazy();",
-            "    try (Stream<String> stream = rq.stream().collect(Collectors.toList()).stream()) {",
-            "      stream.collect(Collectors.joining(\", \"));",
-            "    }",
-            "  }",
-            "}")
-            .doTest();
+        testHelper
+                .addSourceLines(
+                        "JooqStream.java",
+                        "import java.util.stream.Collectors;",
+                        "import java.util.stream.Stream;",
+                        "import org.jooq.Record;",
+                        "import org.jooq.ResultQuery;",
+                        "class Test {",
+                        "  void f(ResultQuery<Record> rq) {",
+                        "    // BUG: Diagnostic contains: should be closed",
+                        "    rq.stream().map(r -> r.getValue(0));",
+                        "    // BUG: Diagnostic contains: should be closed",
+                        "    rq.fetchStream().map(r -> r.getValue(0));",
+                        "    // BUG: Diagnostic contains: should be closed",
+                        "    rq.fetchLazy();",
+                        "    try (Stream<String> stream = rq.stream().collect(Collectors.toList()).stream()) {",
+                        "      stream.collect(Collectors.joining(\", \"));",
+                        "    }",
+                        "  }",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void test_query_steps_ignored() {
-        testHelper.addSourceLines("JooqStream.java",
-                "import java.util.stream.Collectors;",
-                "import java.util.stream.Stream;",
-                "import org.jooq.Record;",
-                "import org.jooq.SelectConditionStep;",
-                "class Test {",
-                "  SelectConditionStep<Record> f(SelectConditionStep<Record> select) {",
-                "    return select.and(\"some_field <> 3\");",
-                "  }",
-                "}")
+        testHelper
+                .addSourceLines(
+                        "JooqStream.java",
+                        "import java.util.stream.Collectors;",
+                        "import java.util.stream.Stream;",
+                        "import org.jooq.Record;",
+                        "import org.jooq.SelectConditionStep;",
+                        "class Test {",
+                        "  SelectConditionStep<Record> f(SelectConditionStep<Record> select) {",
+                        "    return select.and(\"some_field <> 3\");",
+                        "  }",
+                        "}")
                 .doTest();
     }
 
     @Test
     public void test_negative() {
-        testHelper.addSourceLines("JooqStream.java",
-            "import java.util.stream.Stream;",
-            "import org.jooq.Record;",
-            "import org.jooq.ResultQuery;",
-            "class Test {",
-            "  void f(ResultQuery rq) {",
-            "    try (Stream<Record> stream = rq.stream()) {",
-            "      Stream<Field<?>> newStream = stream.map(r -> r.getValue(0));",
-            "    }",
-            "    try (Stream<Record> stream = rq.fetchStream()) {",
-            "      Stream<Field<?>> newStream = stream.map(r -> r.getValue(0));",
-            "    }",
-            "  }",
-            "}")
-            .doTest();
+        testHelper
+                .addSourceLines(
+                        "JooqStream.java",
+                        "import java.util.stream.Stream;",
+                        "import org.jooq.Record;",
+                        "import org.jooq.ResultQuery;",
+                        "class Test {",
+                        "  void f(ResultQuery rq) {",
+                        "    try (Stream<Record> stream = rq.stream()) {",
+                        "      Stream<Field<?>> newStream = stream.map(r -> r.getValue(0));",
+                        "    }",
+                        "    try (Stream<Record> stream = rq.fetchStream()) {",
+                        "      Stream<Field<?>> newStream = stream.map(r -> r.getValue(0));",
+                        "    }",
+                        "  }",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void test_fix() {
         refactoringValidator
-                .addInputLines("in/JooqStream.java",
-                    "import java.util.stream.Stream;",
-                    "import org.jooq.Record;",
-                    "import org.jooq.ResultQuery;",
-                    "class Test {",
-                    "  void f(ResultQuery<Record> rq) {",
-                    "    rq.stream().map(r -> r.getValue(0));",
-                    "  }",
-                    "}")
-            .addOutputLines("out/JooqStream.java",
-                    "import java.util.stream.Stream;",
-                    "import org.jooq.Record;",
-                    "import org.jooq.ResultQuery;",
-                    "class Test {",
-                    "  void f(ResultQuery<Record> rq) {",
-                    "    try (Stream<Record> stream = rq.stream()) {",
-                    "      stream.map(r -> r.getValue(0));",
-                    "    }",
-                    "  }",
-                    "}")
-            .doTest();
+                .addInputLines(
+                        "in/JooqStream.java",
+                        "import java.util.stream.Stream;",
+                        "import org.jooq.Record;",
+                        "import org.jooq.ResultQuery;",
+                        "class Test {",
+                        "  void f(ResultQuery<Record> rq) {",
+                        "    rq.stream().map(r -> r.getValue(0));",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "out/JooqStream.java",
+                        "import java.util.stream.Stream;",
+                        "import org.jooq.Record;",
+                        "import org.jooq.ResultQuery;",
+                        "class Test {",
+                        "  void f(ResultQuery<Record> rq) {",
+                        "    try (Stream<Record> stream = rq.stream()) {",
+                        "      stream.map(r -> r.getValue(0));",
+                        "    }",
+                        "  }",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void test_fix_variable() {
         refactoringValidator
-                .addInputLines("in/JooqStream.java",
+                .addInputLines(
+                        "in/JooqStream.java",
                         "import java.util.stream.Collectors;",
                         "import java.util.stream.Stream;",
                         "import org.jooq.Record;",
@@ -126,7 +135,8 @@ public final class JooqResultStreamLeakTest {
                         "    String res = rq.stream().map(r -> r.toString()).collect(Collectors.joining(\", \"));",
                         "  }",
                         "}")
-                .addOutputLines("out/JooqStream.java",
+                .addOutputLines(
+                        "out/JooqStream.java",
                         "import java.util.stream.Collectors;",
                         "import java.util.stream.Stream;",
                         "import org.jooq.Record;",

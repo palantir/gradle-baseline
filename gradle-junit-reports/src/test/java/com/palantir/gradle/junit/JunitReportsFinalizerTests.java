@@ -40,11 +40,15 @@ import org.junit.rules.TemporaryFolder;
 
 public class JunitReportsFinalizerTests {
 
-    @Rule public final TemporaryFolder projectDir = new TemporaryFolder();
+    @Rule
+    public final TemporaryFolder projectDir = new TemporaryFolder();
 
     @Test
     public void translatesCheckstyleReport() throws IOException, TransformerException {
-        Project project = ProjectBuilder.builder().withName("fooproject").withProjectDir(projectDir.getRoot()).build();
+        Project project = ProjectBuilder.builder()
+                .withName("fooproject")
+                .withProjectDir(projectDir.getRoot())
+                .build();
         Checkstyle checkstyle = createCheckstyleTask(project);
 
         checkstyle.setDidWork(true);
@@ -54,8 +58,8 @@ public class JunitReportsFinalizerTests {
 
         File targetFile = new File(projectDir.getRoot(), "reports/report.xml");
 
-        JunitReportsFinalizer finalizer = (JunitReportsFinalizer) project
-                .task(ImmutableMap.of("type", JunitReportsFinalizer.class), "checkstyleTestCircleFinalizer");
+        JunitReportsFinalizer finalizer = (JunitReportsFinalizer)
+                project.task(ImmutableMap.of("type", JunitReportsFinalizer.class), "checkstyleTestCircleFinalizer");
         finalizer.setStyleTask(checkstyle);
         finalizer.setTaskTimer(timer);
         finalizer.setFailuresSupplier(XmlReportFailuresSupplier.create(checkstyle, new CheckstyleReportHandler()));
@@ -65,15 +69,18 @@ public class JunitReportsFinalizerTests {
 
         String report = Resources.toString(targetFile.toURI().toURL(), StandardCharsets.UTF_8)
                 .replaceAll("\\p{Blank}*(?=<)", "");
-        String expectedReport = Resources.toString(
-                testFile("two-namecheck-failures-checkstyle-report.xml"), StandardCharsets.UTF_8);
+        String expectedReport =
+                Resources.toString(testFile("two-namecheck-failures-checkstyle-report.xml"), StandardCharsets.UTF_8);
 
         assertThat(report).isEqualTo(expectedReport);
     }
 
     @Test
     public void doesNothingIfTaskSkipped() throws IOException, TransformerException {
-        Project project = ProjectBuilder.builder().withName("fooproject").withProjectDir(projectDir.getRoot()).build();
+        Project project = ProjectBuilder.builder()
+                .withName("fooproject")
+                .withProjectDir(projectDir.getRoot())
+                .build();
         Checkstyle checkstyle = createCheckstyleTask(project);
 
         checkstyle.setDidWork(false);
@@ -83,8 +90,8 @@ public class JunitReportsFinalizerTests {
 
         File targetFile = new File(projectDir.getRoot(), "reports/report.xml");
 
-        JunitReportsFinalizer finalizer = (JunitReportsFinalizer) project
-                .task(ImmutableMap.of("type", JunitReportsFinalizer.class), "checkstyleTestCircleFinalizer");
+        JunitReportsFinalizer finalizer = (JunitReportsFinalizer)
+                project.task(ImmutableMap.of("type", JunitReportsFinalizer.class), "checkstyleTestCircleFinalizer");
         finalizer.setStyleTask(checkstyle);
         finalizer.setTaskTimer(timer);
         finalizer.setFailuresSupplier(XmlReportFailuresSupplier.create(checkstyle, new CheckstyleReportHandler()));
@@ -101,8 +108,8 @@ public class JunitReportsFinalizerTests {
         SingleFileReport xmlReport = checkstyle.getReports().getByName("xml");
 
         String originalReportXml = readTestFile("two-namecheck-failures-checkstyle.xml");
-        String modifiedReportXml = originalReportXml.replace(
-                ROOT.toString(), projectDir.getRoot().getCanonicalPath());
+        String modifiedReportXml =
+                originalReportXml.replace(ROOT.toString(), projectDir.getRoot().getCanonicalPath());
         File modifiedReportFile = projectDir.newFile();
         Files.write(modifiedReportXml.getBytes(StandardCharsets.UTF_8), modifiedReportFile);
 

@@ -26,8 +26,7 @@ class RedundantMethodReferenceTest {
 
     @Test
     void testFix() {
-        fix()
-                .addInputLines(
+        fix().addInputLines(
                         "Test.java",
                         "import java.util.*;",
                         "import java.util.function.*;",
@@ -54,8 +53,7 @@ class RedundantMethodReferenceTest {
 
     @Test
     void testFunctionalInterfaceAdditionalMethod() {
-        fix()
-                .addInputLines(
+        fix().addInputLines(
                         "Test.java",
                         "import java.util.*;",
                         "import java.util.stream.*;",

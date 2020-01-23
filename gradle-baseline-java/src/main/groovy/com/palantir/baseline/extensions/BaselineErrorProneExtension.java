@@ -27,7 +27,7 @@ public class BaselineErrorProneExtension {
             "CatchBlockLogException",
             "CollectionStreamForEach",
             // TODO(ckozak): re-enable pending scala check
-            //"CatchSpecificity",
+            // "CatchSpecificity",
             "ExecutorSubmitRunnableFutureIgnored",
             "FinalClass",
             "LambdaMethodReference",
@@ -49,7 +49,7 @@ public class BaselineErrorProneExtension {
             "StringBuilderConstantParameters",
             "ThrowError",
             // TODO(ckozak): re-enable pending scala check
-            //"ThrowSpecificity",
+            // "ThrowSpecificity",
             "UnsafeGaugeRegistration",
 
             // Built-in checks

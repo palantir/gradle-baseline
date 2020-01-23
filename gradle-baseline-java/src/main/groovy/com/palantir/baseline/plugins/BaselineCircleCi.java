@@ -67,11 +67,10 @@ public final class BaselineCircleCi implements Plugin<Project> {
             throw new RuntimeException("failed to create CIRCLE_ARTIFACTS directory", e);
         }
 
-        project.getRootProject().allprojects(proj ->
-                proj.getTasks().withType(Test.class, test -> {
-                    test.getReports().getHtml().setEnabled(true);
-                    test.getReports().getHtml().setDestination(junitPath(circleArtifactsDir, test.getPath()));
-                }));
+        project.getRootProject().allprojects(proj -> proj.getTasks().withType(Test.class, test -> {
+            test.getReports().getHtml().setEnabled(true);
+            test.getReports().getHtml().setDestination(junitPath(circleArtifactsDir, test.getPath()));
+        }));
     }
 
     private void configurePluginsForReports(Project project) {
@@ -97,5 +96,4 @@ public final class BaselineCircleCi implements Plugin<Project> {
         }
         return junitReportsDir.toFile();
     }
-
 }

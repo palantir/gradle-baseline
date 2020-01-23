@@ -40,29 +40,34 @@ public final class BaselineScalastyle extends AbstractBaselinePlugin {
         this.project = project;
         project.getPluginManager().withPlugin("scala", plugin -> {
             project.getPluginManager().withPlugin("nebula.dependency-recommender", nebulaPlugin ->
-                    project.getExtensions().configure(RecommendationProviderContainer.class,
-                            recommendations -> recommendations.excludeConfigurations("zinc")));
+                    project.getExtensions().configure(RecommendationProviderContainer.class, recommendations ->
+                            recommendations.excludeConfigurations("zinc")));
             JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
-            project.getTasks().withType(ScalaCompile.class)
-                    .configureEach(scalaCompile ->
-                            scalaCompile.getScalaCompileOptions().setAdditionalParameters(ImmutableList.of(
-                                    "-target:jvm-" + javaConvention.getTargetCompatibility().toString())));
+            project.getTasks().withType(ScalaCompile.class).configureEach(scalaCompile -> scalaCompile
+                    .getScalaCompileOptions()
+                    .setAdditionalParameters(ImmutableList.of("-target:jvm-"
+                            + javaConvention.getTargetCompatibility().toString())));
             project.getRootProject().getPluginManager().withPlugin("idea", ideaPlugin ->
-                    project.getRootProject().getExtensions()
-                            .configure(IdeaModel.class, ideaModel -> configureIdeaPlugin(
+                    project.getRootProject().getExtensions().configure(IdeaModel.class, ideaModel ->
+                            configureIdeaPlugin(
                                     ideaModel,
-                                    javaConvention.getSourceSets().named(SourceSet.MAIN_SOURCE_SET_NAME).get(),
+                                    javaConvention
+                                            .getSourceSets()
+                                            .named(SourceSet.MAIN_SOURCE_SET_NAME)
+                                            .get(),
                                     javaConvention.getTargetCompatibility().toString())));
             project.getPluginManager().apply(ScalaStylePlugin.class);
             TaskCollection<ScalaStyleTask> scalaStyleTasks = project.getTasks().withType(ScalaStyleTask.class);
             scalaStyleTasks.configureEach(scalaStyleTask -> {
-                scalaStyleTask.setConfigLocation(project.getRootDir().toPath()
-                        .resolve(Paths.get("project", "scalastyle_config.xml")).toString());
+                scalaStyleTask.setConfigLocation(project.getRootDir()
+                        .toPath()
+                        .resolve(Paths.get("project", "scalastyle_config.xml"))
+                        .toString());
                 scalaStyleTask.setIncludeTestSourceDirectory(true);
                 scalaStyleTask.setFailOnWarning(true);
-                javaConvention.getSourceSets()
-                        .forEach(sourceSet -> sourceSet.getAllSource().getSrcDirs()
-                                .forEach(resourceDir -> scalaStyleTask.source(resourceDir.toString())));
+                javaConvention.getSourceSets().forEach(sourceSet ->
+                        sourceSet.getAllSource().getSrcDirs().forEach(resourceDir ->
+                                scalaStyleTask.source(resourceDir.toString())));
             });
             project.getTasks().named("check").configure(task -> task.dependsOn(scalaStyleTasks));
         });
@@ -72,39 +77,36 @@ public final class BaselineScalastyle extends AbstractBaselinePlugin {
         Convention scalaConvention = (Convention) InvokerHelper.getProperty(mainSourceSet, "convention");
         ScalaSourceSet scalaSourceSet = scalaConvention.getPlugin(ScalaSourceSet.class);
         // If scala source directory doesn't contain java files use "JavaThenScala" compilation mode
-        String compilerMode = scalaSourceSet.getScala().filter(file -> file.getName().endsWith("java")).isEmpty()
-                ? "JavaThenScala" : "Mixed";
-        ideaModel.getProject()
-                .getIpr()
-                .withXml(xmlProvider -> {
-                    // configure target jvm mode
-                    String targetJvmVersion = "-target:jvm-" + javaVersion;
-                    Node rootNode = xmlProvider.asNode();
-                    Node scalaCompilerConf = (Node) rootNode
-                            .getAt(new QName("component"))
-                            .stream()
-                            .filter(o -> ((Node) o).attributes().get("name")
-                                    .equals("ScalaCompilerConfiguration"))
-                            .findFirst()
-                            .orElseGet(() -> rootNode.appendNode(
-                                    "component", ImmutableMap.of("name", "ScalaCompilerConfiguration")));
-                    // configure scala compilation order
-                    Node compilerOrder = (Node) scalaCompilerConf.getAt(new QName("option"))
-                            .stream()
-                            .filter(o -> ((Node) o).attributes().get("name").equals("compileOrder"))
-                            .findFirst()
-                            .orElseGet(() -> scalaCompilerConf.appendNode("option"));
-                    compilerOrder.attributes().put("name", "compileOrder");
-                    compilerOrder.attributes().put("value", compilerMode);
-                    Node parametersNode = (Node) scalaCompilerConf.getAt(new QName("parameters")).stream()
-                            .findFirst()
-                            .orElseGet(() -> scalaCompilerConf.appendNode("parameters"));
-                    Node parameter = (Node) parametersNode.getAt(new QName("parameter")).stream()
-                            .filter(o -> ((Node) o).attributes().get("value").equals(targetJvmVersion))
-                            .findFirst()
-                            .orElseGet(() -> parametersNode.appendNode("parameter"));
-                    parameter.attributes().put("value", targetJvmVersion);
-                });
+        String compilerMode = scalaSourceSet
+                        .getScala()
+                        .filter(file -> file.getName().endsWith("java"))
+                        .isEmpty()
+                ? "JavaThenScala"
+                : "Mixed";
+        ideaModel.getProject().getIpr().withXml(xmlProvider -> {
+            // configure target jvm mode
+            String targetJvmVersion = "-target:jvm-" + javaVersion;
+            Node rootNode = xmlProvider.asNode();
+            Node scalaCompilerConf = (Node) rootNode.getAt(new QName("component")).stream()
+                    .filter(o -> ((Node) o).attributes().get("name").equals("ScalaCompilerConfiguration"))
+                    .findFirst()
+                    .orElseGet(() ->
+                            rootNode.appendNode("component", ImmutableMap.of("name", "ScalaCompilerConfiguration")));
+            // configure scala compilation order
+            Node compilerOrder = (Node) scalaCompilerConf.getAt(new QName("option")).stream()
+                    .filter(o -> ((Node) o).attributes().get("name").equals("compileOrder"))
+                    .findFirst()
+                    .orElseGet(() -> scalaCompilerConf.appendNode("option"));
+            compilerOrder.attributes().put("name", "compileOrder");
+            compilerOrder.attributes().put("value", compilerMode);
+            Node parametersNode = (Node) scalaCompilerConf.getAt(new QName("parameters")).stream()
+                    .findFirst()
+                    .orElseGet(() -> scalaCompilerConf.appendNode("parameters"));
+            Node parameter = (Node) parametersNode.getAt(new QName("parameter")).stream()
+                    .filter(o -> ((Node) o).attributes().get("value").equals(targetJvmVersion))
+                    .findFirst()
+                    .orElseGet(() -> parametersNode.appendNode("parameter"));
+            parameter.attributes().put("value", targetJvmVersion);
+        });
     }
-
 }

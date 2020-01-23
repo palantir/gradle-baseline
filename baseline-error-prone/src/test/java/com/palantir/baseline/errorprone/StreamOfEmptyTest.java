@@ -26,8 +26,7 @@ class StreamOfEmptyTest {
 
     @Test
     void testFix() {
-        fix()
-                .addInputLines(
+        fix().addInputLines(
                         "Test.java",
                         "import java.util.stream.Stream;",
                         "public class Test {",

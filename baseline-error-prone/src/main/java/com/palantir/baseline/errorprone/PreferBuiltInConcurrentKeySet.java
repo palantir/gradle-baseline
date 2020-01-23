@@ -55,7 +55,8 @@ public final class PreferBuiltInConcurrentKeySet extends BugChecker implements B
             String qualifiedType = MoreSuggestedFixes.qualifyType(state, fix, "java.util.concurrent.ConcurrentHashMap");
             return buildDescription(tree)
                     .setMessage(ERROR_MESSAGE)
-                    .addFix(fix.replace(tree.getMethodSelect(), qualifiedType + ".newKeySet").build())
+                    .addFix(fix.replace(tree.getMethodSelect(), qualifiedType + ".newKeySet")
+                            .build())
                     .build();
         }
 

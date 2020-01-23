@@ -53,5 +53,5 @@ final class XmlUtils {
         return writer;
     }
 
-    private XmlUtils() { }
+    private XmlUtils() {}
 }

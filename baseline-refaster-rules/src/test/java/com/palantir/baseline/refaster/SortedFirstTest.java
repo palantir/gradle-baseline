@@ -22,8 +22,7 @@ public class SortedFirstTest {
 
     @Test
     public void test() {
-        RefasterTestHelper
-                .forRefactoring(SortedFirst.class)
+        RefasterTestHelper.forRefactoring(SortedFirst.class)
                 .withInputLines(
                         "Test",
                         "import java.util.*;",
@@ -41,5 +40,4 @@ public class SortedFirstTest {
                                 + ".min(Comparator.reverseOrder());",
                         "}");
     }
-
 }

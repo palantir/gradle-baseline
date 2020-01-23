@@ -34,58 +34,68 @@ public class SafeLoggingExceptionMessageFormatTests {
 
     @Test
     public void testAttemptedSlf4jInterpolation() {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "import com.palantir.logsafe.exceptions.SafeIllegalArgumentException;",
-                "import com.palantir.logsafe.SafeArg;",
-                "class Test {",
-                "// BUG: Diagnostic contains: Do not use slf4j-style formatting in logsafe Exceptions",
-                "Exception foo = new SafeIllegalArgumentException(\"Foo {}\", SafeArg.of(\"foo\", 1));",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.exceptions.SafeIllegalArgumentException;",
+                        "import com.palantir.logsafe.SafeArg;",
+                        "class Test {",
+                        "// BUG: Diagnostic contains: Do not use slf4j-style formatting in logsafe Exceptions",
+                        "Exception foo = new SafeIllegalArgumentException(\"Foo {}\", SafeArg.of(\"foo\", 1));",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void testAttemptedSlf4jInterpolationWithCause() {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "import com.palantir.logsafe.exceptions.SafeIllegalArgumentException;",
-                "import com.palantir.logsafe.SafeArg;",
-                "class Test {",
-                "// BUG: Diagnostic contains: Do not use slf4j-style formatting in logsafe Exceptions",
-                "Exception foo = new SafeIllegalArgumentException(\"Foo {}\",",
-                "new RuntimeException(), SafeArg.of(\"foo\", 1));",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.exceptions.SafeIllegalArgumentException;",
+                        "import com.palantir.logsafe.SafeArg;",
+                        "class Test {",
+                        "// BUG: Diagnostic contains: Do not use slf4j-style formatting in logsafe Exceptions",
+                        "Exception foo = new SafeIllegalArgumentException(\"Foo {}\",",
+                        "new RuntimeException(), SafeArg.of(\"foo\", 1));",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void testAttemptedSlf4jInterpolationNoArgs() {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "import com.palantir.logsafe.exceptions.SafeIllegalArgumentException;",
-                "class Test {",
-                "// BUG: Diagnostic contains: Do not use slf4j-style formatting in logsafe Exceptions",
-                "Exception foo = new SafeIllegalArgumentException(\"Foo {}\");",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.exceptions.SafeIllegalArgumentException;",
+                        "class Test {",
+                        "// BUG: Diagnostic contains: Do not use slf4j-style formatting in logsafe Exceptions",
+                        "Exception foo = new SafeIllegalArgumentException(\"Foo {}\");",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void testNegativeWithArg() {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "import com.palantir.logsafe.exceptions.SafeIllegalArgumentException;",
-                "import com.palantir.logsafe.SafeArg;",
-                "class Test {",
-                "Exception foo = new SafeIllegalArgumentException(\"Foo\", SafeArg.of(\"foo\", 1));",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.exceptions.SafeIllegalArgumentException;",
+                        "import com.palantir.logsafe.SafeArg;",
+                        "class Test {",
+                        "Exception foo = new SafeIllegalArgumentException(\"Foo\", SafeArg.of(\"foo\", 1));",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void testNegativeNoArgs() {
-        compilationHelper.addSourceLines(
-                "Test.java",
-                "import com.palantir.logsafe.exceptions.SafeIllegalArgumentException;",
-                "class Test {",
-                "Exception foo = new SafeIllegalArgumentException();",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.exceptions.SafeIllegalArgumentException;",
+                        "class Test {",
+                        "Exception foo = new SafeIllegalArgumentException();",
+                        "}")
+                .doTest();
     }
 }

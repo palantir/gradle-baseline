@@ -55,8 +55,8 @@ public final class PreferSafeLoggableExceptions extends BugChecker implements Bu
             NullPointerException.class, "SafeNullPointerException",
             RuntimeException.class, "SafeRuntimeException");
 
-    private static final Matcher<ExpressionTree> FAST_EXCEPTION_TYPE_CHECK =
-            Matchers.anyOf(EXCEPTION_MAPPINGS.keySet().stream().map(Matchers::isSameType).collect(Collectors.toList()));
+    private static final Matcher<ExpressionTree> FAST_EXCEPTION_TYPE_CHECK = Matchers.anyOf(
+            EXCEPTION_MAPPINGS.keySet().stream().map(Matchers::isSameType).collect(Collectors.toList()));
 
     private final Matcher<ExpressionTree> compileTimeConstExpressionMatcher =
             new CompileTimeConstantExpressionMatcher();

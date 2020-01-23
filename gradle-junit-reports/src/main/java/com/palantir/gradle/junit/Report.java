@@ -25,26 +25,35 @@ interface Report {
     @FreeBuilder
     interface Failure {
         String message();
+
         String details();
 
         Builder toBuilder();
-        class Builder extends Report_Failure_Builder { }
+
+        class Builder extends Report_Failure_Builder {}
     }
 
     @FreeBuilder
     interface TestCase {
         String name();
-        @Nullable Failure failure();
+
+        @Nullable
+        Failure failure();
 
         Builder toBuilder();
-        class Builder extends Report_TestCase_Builder { }
+
+        class Builder extends Report_TestCase_Builder {}
     }
 
     String name();
+
     String subname();
+
     long elapsedTimeNanos();
+
     List<TestCase> testCases();
 
     Builder toBuilder();
-    class Builder extends Report_Builder { }
+
+    class Builder extends Report_Builder {}
 }

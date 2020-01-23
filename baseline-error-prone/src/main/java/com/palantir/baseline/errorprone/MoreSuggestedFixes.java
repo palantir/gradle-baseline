@@ -89,7 +89,9 @@ final class MoreSuggestedFixes {
         List<ErrorProneToken> tokens = state.getOffsetTokens(startPos, state.getEndPosition(tree));
         int depth = 0;
         for (ErrorProneToken token : Lists.reverse(tokens)) {
-            if (depth == 0 && token.kind() == Tokens.TokenKind.IDENTIFIER && token.name().equals(identifier)) {
+            if (depth == 0
+                    && token.kind() == Tokens.TokenKind.IDENTIFIER
+                    && token.name().equals(identifier)) {
                 return SuggestedFix.replace(token.pos(), token.endPos(), replacement);
             } else if (token.kind() == Tokens.TokenKind.RPAREN) {
                 depth++;

@@ -27,18 +27,13 @@ import java.util.Arrays;
 public final class AddAllArrayToBuilder<E> {
 
     @BeforeTemplate
-    ImmutableCollection.Builder<E> addAllAsList(
-            ImmutableCollection.Builder<E> builder, E[] elements) {
-        return builder.addAll(Refaster.anyOf(
-                Arrays.asList(elements),
-                ImmutableList.copyOf(elements),
-                Lists.newArrayList(elements)));
+    ImmutableCollection.Builder<E> addAllAsList(ImmutableCollection.Builder<E> builder, E[] elements) {
+        return builder.addAll(
+                Refaster.anyOf(Arrays.asList(elements), ImmutableList.copyOf(elements), Lists.newArrayList(elements)));
     }
 
     @AfterTemplate
-    ImmutableCollection.Builder<E> addAll(
-            ImmutableCollection.Builder<E> builder, E[] elements) {
+    ImmutableCollection.Builder<E> addAll(ImmutableCollection.Builder<E> builder, E[] elements) {
         return builder.add(elements);
     }
-
 }

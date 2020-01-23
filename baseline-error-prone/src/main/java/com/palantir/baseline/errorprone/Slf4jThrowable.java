@@ -84,7 +84,8 @@ public final class Slf4jThrowable extends BugChecker implements MethodInvocation
         }
         ExpressionTree throwableArgument = arguments.get(throwableIndex);
         return buildDescription(throwableArgument)
-                .addFix(fix.replace(arguments.get(lastIndex), state.getSourceForNode(throwableArgument)).build())
+                .addFix(fix.replace(arguments.get(lastIndex), state.getSourceForNode(throwableArgument))
+                        .build())
                 .build();
     }
 

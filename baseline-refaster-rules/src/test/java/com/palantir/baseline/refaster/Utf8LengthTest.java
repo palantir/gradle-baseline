@@ -22,11 +22,10 @@ public class Utf8LengthTest {
 
     @Test
     public void test() {
-        RefasterTestHelper
-                .forRefactoring(Utf8Length.class)
+        RefasterTestHelper.forRefactoring(Utf8Length.class)
                 .withInputLines(
                         "Test",
-                         "import java.nio.charset.StandardCharsets;",
+                        "import java.nio.charset.StandardCharsets;",
                         "public class Test {",
                         "  int i = \"hello world\".getBytes(StandardCharsets.UTF_8).length;",
                         "}")
@@ -37,5 +36,4 @@ public class Utf8LengthTest {
                         "  int i = Utf8.encodedLength(\"hello world\");",
                         "}");
     }
-
 }

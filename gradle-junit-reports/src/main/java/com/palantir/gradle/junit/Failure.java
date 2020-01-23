@@ -22,10 +22,15 @@ import org.inferred.freebuilder.FreeBuilder;
 interface Failure {
 
     String source();
+
     File file();
+
     int line();
+
     String severity();
+
     String message();
+
     String details();
 
     class Builder extends Failure_Builder {

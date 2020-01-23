@@ -42,8 +42,7 @@ class UnsafeGaugeRegistrationTest {
                         "   void f(TaggedMetricRegistry registry, MetricName name) {",
                         "       registry.registerWithReplacement(name, () -> 1);",
                         "   }",
-                        "}"
-                )
+                        "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
@@ -70,22 +69,23 @@ class UnsafeGaugeRegistrationTest {
                         //      Tests our workaround for https://github.com/google/error-prone/issues/1451
                         "       registry.registerWithReplacement(name, gauge);",
                         "   }",
-                        "}"
-                )
+                        "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
     @Test
     void testNegative() {
-        CompilationTestHelper.newInstance(UnsafeGaugeRegistration.class, getClass()).addSourceLines(
-                "Test.java",
-                "import com.codahale.metrics.Gauge;",
-                "import com.palantir.tritium.metrics.registry.MetricName;",
-                "import com.palantir.tritium.metrics.registry.TaggedMetricRegistry;",
-                "class Test {",
-                "   Gauge<?> f(TaggedMetricRegistry registry, MetricName name) {",
-                "       return registry.gauge(name, () -> 1);",
-                "   }",
-                "}").doTest();
+        CompilationTestHelper.newInstance(UnsafeGaugeRegistration.class, getClass())
+                .addSourceLines(
+                        "Test.java",
+                        "import com.codahale.metrics.Gauge;",
+                        "import com.palantir.tritium.metrics.registry.MetricName;",
+                        "import com.palantir.tritium.metrics.registry.TaggedMetricRegistry;",
+                        "class Test {",
+                        "   Gauge<?> f(TaggedMetricRegistry registry, MetricName name) {",
+                        "       return registry.gauge(name, () -> 1);",
+                        "   }",
+                        "}")
+                .doTest();
     }
 }

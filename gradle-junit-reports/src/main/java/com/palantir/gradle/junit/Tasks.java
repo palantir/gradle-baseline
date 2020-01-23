@@ -38,5 +38,5 @@ public final class Tasks {
         }
     }
 
-    private Tasks() { }
+    private Tasks() {}
 }

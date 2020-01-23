@@ -34,8 +34,11 @@ import org.junit.rules.TemporaryFolder;
 
 public class BaselineCircleCiJavaIntegrationTests {
 
-    @Rule public final EnvironmentVariables env = new EnvironmentVariables();
-    @Rule public final TemporaryFolder projectDir = new TemporaryFolder();
+    @Rule
+    public final EnvironmentVariables env = new EnvironmentVariables();
+
+    @Rule
+    public final TemporaryFolder projectDir = new TemporaryFolder();
 
     private File reportsDir;
 
@@ -199,5 +202,4 @@ public class BaselineCircleCiJavaIntegrationTests {
             throw new AssertionError(e);
         }
     }
-
 }

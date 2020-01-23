@@ -82,7 +82,5 @@ final class CompilerUtility {
         List<CompilationUnitTree> compilationUnits();
 
         List<Diagnostic<? extends JavaFileObject>> diagnostics();
-
     }
-
 }

@@ -22,8 +22,7 @@ public class CollectionsIsEmptyTest {
 
     @Test
     public void test() {
-        RefasterTestHelper
-                .forRefactoring(CollectionsIsEmpty.class)
+        RefasterTestHelper.forRefactoring(CollectionsIsEmpty.class)
                 .withInputLines(
                         "Test",
                         "import java.util.ArrayList;",
@@ -36,5 +35,4 @@ public class CollectionsIsEmptyTest {
                         "  boolean empty = new ArrayList<>().isEmpty();",
                         "}");
     }
-
 }

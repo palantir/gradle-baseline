@@ -68,7 +68,8 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
                 .collect(Collectors.toSet());
         BaselineExactDependencies.INDEXES.populateIndexes(declaredDependencies);
 
-        Set<ResolvedArtifact> necessaryArtifacts = Streams.stream(sourceClasses.get().iterator())
+        Set<ResolvedArtifact> necessaryArtifacts = Streams.stream(
+                        sourceClasses.get().iterator())
                 .flatMap(BaselineExactDependencies::referencedClasses)
                 .map(BaselineExactDependencies.INDEXES::classToDependency)
                 .filter(Optional::isPresent)
@@ -76,18 +77,20 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
                 .collect(Collectors.toSet());
         Set<ResolvedArtifact> declaredArtifacts = declaredDependencies.stream()
                 .flatMap(dependency -> dependency.getModuleArtifacts().stream())
-                .filter(dependency -> BaselineExactDependencies.VALID_ARTIFACT_EXTENSIONS
-                        .contains(dependency.getExtension()))
+                .filter(dependency ->
+                        BaselineExactDependencies.VALID_ARTIFACT_EXTENSIONS.contains(dependency.getExtension()))
                 .collect(Collectors.toSet());
 
         excludeSourceOnlyDependencies();
 
         Set<ResolvedArtifact> possiblyUnused = Sets.difference(declaredArtifacts, necessaryArtifacts);
-        getLogger().debug("Possibly unused dependencies: {}",
-                possiblyUnused.stream()
-                        .map(BaselineExactDependencies::asString)
-                        .sorted()
-                        .collect(Collectors.toList()));
+        getLogger()
+                .debug(
+                        "Possibly unused dependencies: {}",
+                        possiblyUnused.stream()
+                                .map(BaselineExactDependencies::asString)
+                                .sorted()
+                                .collect(Collectors.toList()));
         List<ResolvedArtifact> declaredButUnused = possiblyUnused.stream()
                 .filter(artifact -> !shouldIgnore(artifact))
                 .sorted(Comparator.comparing(BaselineExactDependencies::asString))
@@ -97,20 +100,20 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
             StringBuilder builder = new StringBuilder();
             builder.append(String.format(
                     "Found %s dependencies unused during compilation, please delete them from '%s' or choose one of "
-                    + "the suggested fixes:\n", declaredButUnused.size(), buildFile()));
+                            + "the suggested fixes:\n",
+                    declaredButUnused.size(), buildFile()));
             for (ResolvedArtifact resolvedArtifact : declaredButUnused) {
-                builder
-                        .append('\t')
+                builder.append('\t')
                         .append(BaselineExactDependencies.asDependencyStringWithName(resolvedArtifact))
                         .append('\n');
 
                 // Suggest fixes by looking at all transitive classes, filtering the ones we have declarations on,
                 // and mapping the remaining ones back to the jars they came from.
-                ResolvedDependency dependency = BaselineExactDependencies.INDEXES
-                        .artifactsFromDependency(resolvedArtifact);
+                ResolvedDependency dependency =
+                        BaselineExactDependencies.INDEXES.artifactsFromDependency(resolvedArtifact);
                 Set<ResolvedArtifact> didYouMean = dependency.getAllModuleArtifacts().stream()
-                        .filter(artifact -> BaselineExactDependencies.VALID_ARTIFACT_EXTENSIONS
-                                .contains(artifact.getExtension()))
+                        .filter(artifact ->
+                                BaselineExactDependencies.VALID_ARTIFACT_EXTENSIONS.contains(artifact.getExtension()))
                         .flatMap(BaselineExactDependencies.INDEXES::classesFromArtifact)
                         .filter(referencedClasses()::contains)
                         .map(BaselineExactDependencies.INDEXES::classToDependency)
@@ -124,8 +127,7 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
                     didYouMean.stream()
                             .map(BaselineExactDependencies::asDependencyStringWithoutName)
                             .sorted()
-                            .forEach(dependencyString -> builder
-                                    .append("\t\t\timplementation ")
+                            .forEach(dependencyString -> builder.append("\t\t\timplementation ")
                                     .append(dependencyString)
                                     .append("\n"));
                 }
@@ -135,8 +137,8 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
     }
 
     /**
-     * Excludes compileOnly and annotationProcessor dependencies as they would be incorrectly flagged as unused by
-     * this task due to BaselineExactDependencies use of
+     * Excludes compileOnly and annotationProcessor dependencies as they would be incorrectly flagged as unused by this
+     * task due to BaselineExactDependencies use of
      * {@link org.apache.maven.shared.dependency.analyzer.asm.ASMDependencyAnalyzer} which only looks at the
      * dependencies of the generated byte-code, not the union of compile + runtime dependencies.
      */
@@ -161,7 +163,10 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
     }
 
     private Path buildFile() {
-        return getProject().getRootDir().toPath().relativize(getProject().getBuildFile().toPath());
+        return getProject()
+                .getRootDir()
+                .toPath()
+                .relativize(getProject().getBuildFile().toPath());
     }
 
     private boolean shouldIgnore(ResolvedArtifact artifact) {

@@ -257,7 +257,9 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
         String collectionType = MoreSuggestedFixes.qualifyType(state, fixBuilder, collectionClass.getName());
         String typeArgs =
                 tree.getTypeArguments().stream().map(state::getSourceForNode).collect(Collectors.joining(", "));
-        String arg = tree.getArguments().isEmpty() ? "" : state.getSourceForNode(tree.getArguments().get(0));
+        String arg = tree.getArguments().isEmpty()
+                ? ""
+                : state.getSourceForNode(tree.getArguments().get(0));
         String replacement = "new " + collectionType + "<" + typeArgs + ">(" + arg + ")";
         return buildDescription(tree)
                 .setMessage("The factory method call should be replaced with a constructor call. See"
