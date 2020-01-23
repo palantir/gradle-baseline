@@ -21,10 +21,7 @@ import com.palantir.logsafe.SafeArg;
 import com.palantir.logsafe.exceptions.SafeIllegalArgumentException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
 
-@Execution(ExecutionMode.CONCURRENT)
 public final class DangerousThrowableMessageSafeArgTest {
 
     private CompilationTestHelper compilationHelper;

@@ -18,10 +18,7 @@ package com.palantir.baseline.errorprone;
 
 import com.google.errorprone.BugCheckerRefactoringTestHelper;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.parallel.Execution;
-import org.junit.jupiter.api.parallel.ExecutionMode;
 
-@Execution(ExecutionMode.CONCURRENT)
 class RedundantMethodReferenceTest {
 
     @Test
