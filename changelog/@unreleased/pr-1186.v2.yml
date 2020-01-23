@@ -1,0 +1,8 @@
+type: improvement
+improvement:
+  description:
+    Replace the checkstyle UnnecessaryParentheses check with error-prone. The existing upstream
+    UnnecessaryParentheses check covers most cases, a new UnnecessaryLambdaArgumentParentheses
+    check covers the rest.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1186
