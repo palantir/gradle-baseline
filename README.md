@@ -186,6 +186,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `BracesRequired`: Require braces for loops and if expressions.
 - `CollectionStreamForEach`: Collection.forEach is more efficient than Collection.stream().forEach.
 - `LoggerEnclosingClass`: Loggers created using getLogger(Class<?>) must reference their enclosing class.
+- `UnnecessaryLambdaArgumentParentheses`: Lambdas with a single parameter do not require argument parentheses.
 
 ### Programmatic Application
 
