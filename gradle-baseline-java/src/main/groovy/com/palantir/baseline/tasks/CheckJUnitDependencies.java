@@ -42,7 +42,8 @@ public class CheckJUnitDependencies extends DefaultTask {
 
     @TaskAction
     public final void validateDependencies() {
-        getProject().getConvention()
+        getProject()
+                .getConvention()
                 .getPlugin(JavaPluginConvention.class)
                 .getSourceSets()
                 .forEach(ss -> {
@@ -57,15 +58,14 @@ public class CheckJUnitDependencies extends DefaultTask {
                     }
                     Test task = maybeTestTask.get();
 
-                    getProject().getLogger().info(
-                            "Analyzing source set {} with task {}",
-                            ss.getName(), task.getName());
+                    getProject().getLogger().info("Analyzing source set {} with task {}", ss.getName(), task.getName());
                     validateSourceSet(ss, task);
                 });
     }
 
     private void validateSourceSet(SourceSet ss, Test task) {
-        Set<ResolvedComponentResult> deps = getProject().getConfigurations()
+        Set<ResolvedComponentResult> deps = getProject()
+                .getConfigurations()
                 .getByName(ss.getRuntimeClasspathConfigurationName())
                 .getIncoming()
                 .getResolutionResult()
@@ -83,10 +83,14 @@ public class CheckJUnitDependencies extends DefaultTask {
             String implementation = ss.getImplementationConfigurationName();
             Preconditions.checkState(
                     junitPlatformEnabled,
-                    "Some tests mention JUnit5, but the '" + task.getName() + "' task does not have "
+                    "Some tests mention JUnit5, but the '"
+                            + task.getName()
+                            + "' task does not have "
                             + "useJUnitPlatform() enabled. This means tests may be silently not running! Please "
                             + "add the following:\n\n"
-                            + "    " + implementation + " 'org.junit.jupiter:junit-jupiter'\n");
+                            + "    "
+                            + implementation
+                            + " 'org.junit.jupiter:junit-jupiter'\n");
         }
 
         // When doing an incremental migration to JUnit5, a project may have some JUnit4 and some JUnit5 tests at the
@@ -99,7 +103,9 @@ public class CheckJUnitDependencies extends DefaultTask {
                         "Tests may be silently not running! Some tests still use JUnit4, but Gradle has "
                                 + "been set to use JUnit Platform. "
                                 + "To ensure your old JUnit4 tests still run, please add the following:\n\n"
-                                + "    " + testRuntimeOnly + " 'org.junit.jupiter:junit-jupiter'\n\n"
+                                + "    "
+                                + testRuntimeOnly
+                                + " 'org.junit.jupiter:junit-jupiter'\n\n"
                                 + "Otherwise they will silently not run.");
 
                 Preconditions.checkState(
@@ -107,7 +113,9 @@ public class CheckJUnitDependencies extends DefaultTask {
                         "Tests may be silently not running! Some tests still use JUnit4, but Gradle has "
                                 + "been set to use JUnit Platform. "
                                 + "To ensure your old JUnit4 tests still run, please add the following:\n\n"
-                                + "    " + testRuntimeOnly + " 'org.junit.vintage:junit-vintage-engine'\n\n"
+                                + "    "
+                                + testRuntimeOnly
+                                + " 'org.junit.vintage:junit-vintage-engine'\n\n"
                                 + "Otherwise they will silently not run.");
             } else {
                 Preconditions.checkState(
@@ -124,7 +132,9 @@ public class CheckJUnitDependencies extends DefaultTask {
                     vintageEngineExists,
                     "Tests may be silently not running! Spock dependency detected (which uses "
                             + "a JUnit4 Runner under the hood). Please add the following:\n\n"
-                            + "    " + testRuntimeOnly + " 'org.junit.vintage:junit-vintage-engine'\n\n");
+                            + "    "
+                            + testRuntimeOnly
+                            + " 'org.junit.vintage:junit-vintage-engine'\n\n");
         }
     }
 
@@ -134,10 +144,9 @@ public class CheckJUnitDependencies extends DefaultTask {
 
     private boolean sourceSetMentionsJUnit4(SourceSet ss) {
         return !ss.getAllJava()
-                .filter(file -> fileContainsSubstring(file, l ->
-                        l.contains("org.junit.Test")
-                                || l.contains("org.junit.runner")
-                                || l.contains("org.junit.ClassRule")))
+                .filter(file -> fileContainsSubstring(file, l -> l.contains("org.junit.Test")
+                        || l.contains("org.junit.runner")
+                        || l.contains("org.junit.ClassRule")))
                 .isEmpty();
     }
 

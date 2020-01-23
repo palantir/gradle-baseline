@@ -81,9 +81,7 @@ public final class LoggerEnclosingClass extends BugChecker implements BugChecker
         }
         SuggestedFix.Builder fix = SuggestedFix.builder();
         return buildDescription(classArgument)
-                .addFix(fix.replace(
-                        classArgument,
-                        enclosingClassSymbol.name + ".class")
+                .addFix(fix.replace(classArgument, enclosingClassSymbol.name + ".class")
                         .build())
                 .build();
     }

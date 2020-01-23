@@ -36,10 +36,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * TaskListener that receives compilation of a Refaster rule class and outputs a combined serialized analyzer
- * to the specified path.
+ * TaskListener that receives compilation of a Refaster rule class and outputs a combined serialized analyzer to the
+ * specified path.
  *
- * Based on {@link com.google.errorprone.refaster.RefasterRuleCompilerAnalyzer}.
+ * <p>Based on {@link com.google.errorprone.refaster.RefasterRuleCompilerAnalyzer}.
  */
 public final class BaselineRefasterCompilerAnalyzer implements TaskListener {
 

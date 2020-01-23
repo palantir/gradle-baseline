@@ -27,8 +27,7 @@ public class TritiumReplaceGaugeTest {
         assumeThat(System.getProperty("java.specification.version"))
                 .describedAs("Refaster does not fully support java 11")
                 .isEqualTo("1.8");
-        RefasterTestHelper
-                .forRefactoring(TritiumReplaceGauge.class)
+        RefasterTestHelper.forRefactoring(TritiumReplaceGauge.class)
                 .withInputLines(
                         "Test",
                         "import com.codahale.metrics.Gauge;",
@@ -53,5 +52,4 @@ public class TritiumReplaceGaugeTest {
                         "  }",
                         "}");
     }
-
 }

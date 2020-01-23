@@ -22,8 +22,7 @@ public class MockitoVerifyZeroInteractionsTest {
 
     @Test
     public void testSingleArg() {
-        RefasterTestHelper
-                .forRefactoring(MockitoVerifyZeroInteractions.class)
+        RefasterTestHelper.forRefactoring(MockitoVerifyZeroInteractions.class)
                 .withInputLines(
                         "Test",
                         "import static org.mockito.Mockito.verifyZeroInteractions;",
@@ -44,8 +43,7 @@ public class MockitoVerifyZeroInteractionsTest {
 
     @Test
     public void testMultipleArgs() {
-        RefasterTestHelper
-                .forRefactoring(MockitoVerifyZeroInteractions.class)
+        RefasterTestHelper.forRefactoring(MockitoVerifyZeroInteractions.class)
                 .withInputLines(
                         "Test",
                         "import static org.mockito.Mockito.verifyZeroInteractions;",
@@ -66,8 +64,7 @@ public class MockitoVerifyZeroInteractionsTest {
 
     @Test
     public void testVarArgs() {
-        RefasterTestHelper
-                .forRefactoring(MockitoVerifyZeroInteractions.class)
+        RefasterTestHelper.forRefactoring(MockitoVerifyZeroInteractions.class)
                 .withInputLines(
                         "Test",
                         "import static org.mockito.Mockito.verifyZeroInteractions;",

@@ -26,8 +26,8 @@ import java.util.Arrays;
 import java.util.List;
 
 /**
- * A compiler plugin based on {@link com.google.errorprone.refaster.RefasterRuleCompiler} that collapses multiple
- * source files into a single refaster {@link com.google.errorprone.CodeTransformer}.
+ * A compiler plugin based on {@link com.google.errorprone.refaster.RefasterRuleCompiler} that collapses multiple source
+ * files into a single refaster {@link com.google.errorprone.CodeTransformer}.
  */
 @AutoService(Plugin.class)
 public final class BaselineRefasterCompiler implements Plugin {

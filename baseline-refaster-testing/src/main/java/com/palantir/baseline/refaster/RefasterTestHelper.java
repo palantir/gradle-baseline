@@ -44,16 +44,12 @@ public final class RefasterTestHelper {
 
     private final List<CodeTransformer> transformers;
 
-    /**
-     * The source code of the given refaster rule should exist in {@code src/main/java}.
-     */
+    /** The source code of the given refaster rule should exist in {@code src/main/java}. */
     public static RefasterTestHelper forRefactoring(Class<?> refasterRuleClass) {
         return new RefasterTestHelper(refasterRuleClass);
     }
 
-    /**
-     * The source code of the given refaster rules should exist in {@code src/main/java}.
-     */
+    /** The source code of the given refaster rules should exist in {@code src/main/java}. */
     public static RefasterTestHelper forRefactoring(Class<?>... refasterRuleClasses) {
         return new RefasterTestHelper(refasterRuleClasses);
     }
@@ -69,8 +65,7 @@ public final class RefasterTestHelper {
     }
 
     private static ImmutableList<CodeTransformer> transformersForClass(Class<?> refasterRuleClass) {
-        Path sourceFile = Paths
-                .get("src/main/java")
+        Path sourceFile = Paths.get("src/main/java")
                 .resolve(refasterRuleClass.getName().replaceAll("\\.", File.separator) + ".java");
         try {
             Iterable<String> sourceLines = Files.readAllLines(sourceFile, StandardCharsets.UTF_8);
@@ -110,7 +105,8 @@ public final class RefasterTestHelper {
             SourceFile inputSourceFile = sourceFile(input);
             diff.applyDifferences(inputSourceFile);
 
-            Assertions.assertThat(inputSourceFile.getSourceText()).isEqualTo(Joiner.on('\n').join(lines));
+            Assertions.assertThat(inputSourceFile.getSourceText())
+                    .isEqualTo(Joiner.on('\n').join(lines));
         }
     }
 
@@ -133,5 +129,4 @@ public final class RefasterTestHelper {
 
         return ImmutableList.copyOf(RefasterRuleBuilderScanner.extractRules(classTree, result.context()));
     }
-
 }

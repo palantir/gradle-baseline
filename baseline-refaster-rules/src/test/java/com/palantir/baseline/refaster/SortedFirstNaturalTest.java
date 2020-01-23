@@ -22,8 +22,7 @@ public class SortedFirstNaturalTest {
 
     @Test
     public void test() {
-        RefasterTestHelper
-                .forRefactoring(SortedFirstNatural.class)
+        RefasterTestHelper.forRefactoring(SortedFirstNatural.class)
                 .withInputLines(
                         "Test",
                         "import java.util.*;",
@@ -42,5 +41,4 @@ public class SortedFirstNaturalTest {
                                 + ".min(Comparator.naturalOrder());",
                         "}");
     }
-
 }

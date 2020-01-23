@@ -24,8 +24,8 @@ import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.bugpatterns.BugChecker;
 
 /**
- * {@link RefactoringValidator} delegates to a {@link BugCheckerRefactoringTestHelper},
- * but also validates the output passes validation.
+ * {@link RefactoringValidator} delegates to a {@link BugCheckerRefactoringTestHelper}, but also validates the output
+ * passes validation.
  */
 final class RefactoringValidator {
 
@@ -56,9 +56,7 @@ final class RefactoringValidator {
         private final RefactoringValidator helper;
         private final BugCheckerRefactoringTestHelper.ExpectOutput delegate;
 
-        private OutputStage(
-                RefactoringValidator helper,
-                BugCheckerRefactoringTestHelper.ExpectOutput delegate) {
+        private OutputStage(RefactoringValidator helper, BugCheckerRefactoringTestHelper.ExpectOutput delegate) {
             this.helper = helper;
             this.delegate = delegate;
         }
@@ -103,8 +101,8 @@ final class RefactoringValidator {
         void doTestExpectingFailure(BugCheckerRefactoringTestHelper.TestMode testMode) {
             delegate.doTest(testMode);
             assertThatThrownBy(() -> helper.compilationHelper
-                    .addSourceLines(helper.outputPath, helper.outputLines)
-                    .doTest())
+                            .addSourceLines(helper.outputPath, helper.outputLines)
+                            .doTest())
                     .describedAs("Expected the result to fail validation")
                     .isInstanceOf(AssertionError.class);
         }

@@ -124,7 +124,8 @@ public class JunitReportsFinalizer extends DefaultTask {
         } catch (RuntimeException e) {
             RuntimeException modified;
             try {
-                modified = failuresSupplier.handleInternalFailure(reportDir.getAsFile().get().toPath(), e);
+                modified = failuresSupplier.handleInternalFailure(
+                        reportDir.getAsFile().get().toPath(), e);
             } catch (RuntimeException x) {
                 e.addSuppressed(x);
                 throw e;

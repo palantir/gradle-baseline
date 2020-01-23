@@ -25,8 +25,7 @@ import org.junit.jupiter.api.parallel.ExecutionMode;
 public final class Slf4jConstantLogMessageTests {
 
     private void test(String log) {
-        helper()
-                .addSourceLines(
+        helper().addSourceLines(
                         "Test.java",
                         "import org.slf4j.Logger;",
                         "import org.slf4j.LoggerFactory;",
@@ -69,8 +68,7 @@ public final class Slf4jConstantLogMessageTests {
 
     @Test
     public void negative() {
-        helper()
-                .addSourceLines(
+        helper().addSourceLines(
                         "Test.java",
                         "import org.slf4j.Logger;",
                         "import org.slf4j.LoggerFactory;",

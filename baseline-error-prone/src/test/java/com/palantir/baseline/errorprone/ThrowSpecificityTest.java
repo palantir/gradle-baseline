@@ -23,8 +23,8 @@ class ThrowSpecificityTest {
 
     @Test
     void fixUnnecessaryThrow_finalClass() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "import java.io.*;",
                         "import java.net.*;",
                         "final class Test {",
@@ -55,7 +55,8 @@ class ThrowSpecificityTest {
                         "    }",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "import java.io.*;",
                         "import java.net.*;",
                         "final class Test {",
@@ -89,8 +90,8 @@ class ThrowSpecificityTest {
 
     @Test
     void fixUnnecessaryThrow_private() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "import java.io.*;",
                         "import java.net.*;",
                         "class Test {",
@@ -112,7 +113,8 @@ class ThrowSpecificityTest {
                         "    }",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "import java.io.*;",
                         "import java.net.*;",
                         "class Test {",
@@ -137,8 +139,8 @@ class ThrowSpecificityTest {
 
     @Test
     void fixUnnecessaryThrow_static() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "import java.io.*;",
                         "import java.net.*;",
                         "class Test {",
@@ -160,7 +162,8 @@ class ThrowSpecificityTest {
                         "    }",
                         "  }",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "import java.io.*;",
                         "import java.net.*;",
                         "class Test {",
@@ -185,8 +188,8 @@ class ThrowSpecificityTest {
 
     @Test
     void nestedCatch() {
-        fix()
-                .addInputLines("Test.java",
+        fix().addInputLines(
+                        "Test.java",
                         "import java.io.*;",
                         "import java.net.*;",
                         "abstract class Test {",
@@ -201,7 +204,8 @@ class ThrowSpecificityTest {
                         "  }",
                         "  abstract void go() throws SocketException, IOException;",
                         "}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "import java.io.*;",
                         "import java.net.*;",
                         "abstract class Test {",

@@ -35,12 +35,14 @@ public class PreferSafeLoggableExceptionsTest {
 
     @Test
     public void illegal_argument_exception() {
-        compilationHelper.addSourceLines(
-                "Bean.java",
-                "class Bean {",
-                "// BUG: Diagnostic contains: Prefer SafeIllegalArgumentException",
-                "Exception foo = new IllegalArgumentException(\"Foo\");",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Bean.java",
+                        "class Bean {",
+                        "// BUG: Diagnostic contains: Prefer SafeIllegalArgumentException",
+                        "Exception foo = new IllegalArgumentException(\"Foo\");",
+                        "}")
+                .doTest();
     }
 
     @Test
@@ -65,11 +67,13 @@ public class PreferSafeLoggableExceptionsTest {
 
     @Test
     public void illegal_argument_exception_without_message_doesnt_match() {
-        compilationHelper.addSourceLines(
-                "Bean.java",
-                "class Bean {",
-                "Exception foo = new IllegalArgumentException(new RuntimeException());",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Bean.java",
+                        "class Bean {",
+                        "Exception foo = new IllegalArgumentException(new RuntimeException());",
+                        "}")
+                .doTest();
     }
 
     @Test
@@ -94,103 +98,121 @@ public class PreferSafeLoggableExceptionsTest {
 
     @Test
     public void illegal_state_exception() {
-        compilationHelper.addSourceLines(
-                "Bean.java",
-                "class Bean {",
-                "// BUG: Diagnostic contains: Prefer SafeIllegalStateException",
-                "Exception foo = new IllegalStateException(\"Foo\");",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Bean.java",
+                        "class Bean {",
+                        "// BUG: Diagnostic contains: Prefer SafeIllegalStateException",
+                        "Exception foo = new IllegalStateException(\"Foo\");",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void illegal_state_exception_without_message_doesnt_match() {
-        compilationHelper.addSourceLines(
-                "Bean.java",
-                "class Bean {",
-                "Exception foo = new IllegalStateException(new RuntimeException());",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Bean.java",
+                        "class Bean {",
+                        "Exception foo = new IllegalStateException(new RuntimeException());",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void illegal_state_exception_with_non_constant_message_doesnt_match() {
-        compilationHelper.addSourceLines(
-                "Bean.java",
-                "class Bean {",
-                "Exception foo = new IllegalStateException(\"I am a non-constant string\" + Math.random());",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Bean.java",
+                        "class Bean {",
+                        "Exception foo = new IllegalStateException(\"I am a non-constant string\" + Math.random());",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void illegal_state_exception_in_junit4_test_method_doesnt_match() {
-        compilationHelper.addSourceLines(
-                "FooTest.java",
-                "import org.junit.Test;",
-                "class FooTest {",
-                "  @Test",
-                "  public void run_junit4_test() {",
-                "    throw new IllegalStateException(\"constant\");",
-                "  }",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "FooTest.java",
+                        "import org.junit.Test;",
+                        "class FooTest {",
+                        "  @Test",
+                        "  public void run_junit4_test() {",
+                        "    throw new IllegalStateException(\"constant\");",
+                        "  }",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void illegal_state_exception_in_junit5_test_method_doesnt_match() {
-        compilationHelper.addSourceLines(
-                "FooTest.java",
-                "import org.junit.jupiter.api.Test;",
-                "import org.junit.jupiter.api.TestTemplate;",
-                "class FooTest {",
-                "  @Test",
-                "  public void run_junit5_test() {",
-                "    throw new IllegalStateException(\"constant\");",
-                "  }",
-                "  @TestTemplate",
-                "  public void junit5_test_template() {",
-                "    throw new IllegalStateException(\"constant\");",
-                "  }",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "FooTest.java",
+                        "import org.junit.jupiter.api.Test;",
+                        "import org.junit.jupiter.api.TestTemplate;",
+                        "class FooTest {",
+                        "  @Test",
+                        "  public void run_junit5_test() {",
+                        "    throw new IllegalStateException(\"constant\");",
+                        "  }",
+                        "  @TestTemplate",
+                        "  public void junit5_test_template() {",
+                        "    throw new IllegalStateException(\"constant\");",
+                        "  }",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void illegal_state_exception_in_test_field_doesnt_match() {
-        compilationHelper.addSourceLines(
-                "FooTest.java",
-                "import org.junit.Test;",
-                "class FooTest {",
-                "  Exception foo = new IllegalStateException(\"constant\");",
-                "  @Test",
-                "  public void doSomething() {}",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "FooTest.java",
+                        "import org.junit.Test;",
+                        "class FooTest {",
+                        "  Exception foo = new IllegalStateException(\"constant\");",
+                        "  @Test",
+                        "  public void doSomething() {}",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void illegal_state_exception_with_assertj_import_doesnt_match() {
-        compilationHelper.addSourceLines(
-                "Foo.java",
-                "import static org.assertj.core.api.Assertions.assertThat;",
-                "class Foo {",
-                "  public void f() {",
-                "    throw new IllegalStateException(\"constant\");",
-                "  }",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Foo.java",
+                        "import static org.assertj.core.api.Assertions.assertThat;",
+                        "class Foo {",
+                        "  public void f() {",
+                        "    throw new IllegalStateException(\"constant\");",
+                        "  }",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void io_exception() {
-        compilationHelper.addSourceLines(
-                "Bean.java",
-                "class Bean {",
-                "// BUG: Diagnostic contains: Prefer SafeIoException",
-                "Exception foo = new java.io.IOException(\"Foo\");",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Bean.java",
+                        "class Bean {",
+                        "// BUG: Diagnostic contains: Prefer SafeIoException",
+                        "Exception foo = new java.io.IOException(\"Foo\");",
+                        "}")
+                .doTest();
     }
 
     @Test
     public void io_exception_without_message_doesnt_match() {
-        compilationHelper.addSourceLines(
-                "Bean.java",
-                "class Bean {",
-                "Exception foo = new java.io.IOException(new RuntimeException());",
-                "}").doTest();
+        compilationHelper
+                .addSourceLines(
+                        "Bean.java",
+                        "class Bean {",
+                        "Exception foo = new java.io.IOException(new RuntimeException());",
+                        "}")
+                .doTest();
     }
 }

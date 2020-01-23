@@ -26,8 +26,7 @@ class ReverseDnsLookupTest {
 
     @Test
     void testFix() {
-        fix()
-                .addInputLines(
+        fix().addInputLines(
                         "Test.java",
                         "import java.net.InetAddress;",
                         "import java.net.InetSocketAddress;",

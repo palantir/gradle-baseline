@@ -23,13 +23,10 @@ import com.palantir.tritium.metrics.registry.MetricName;
 import com.palantir.tritium.metrics.registry.TaggedMetricRegistry;
 
 /**
- * Remove unnecessary 'remove' invocation prior to a 'registerWithReplacement'.
- * This refaster rule pairs with the 'UnsafeGaugeRegistration' error-prone rule
- * to replace 'registry.remove(name); registry.gauge(name, value);' with a
- * single 'registerWithReplacement' call.
- * This refaster rule intentionally doesn't check the 'gauge' method in order to
- * avoid creating changes that don't compile when older versions of Tritium are
- * present.
+ * Remove unnecessary 'remove' invocation prior to a 'registerWithReplacement'. This refaster rule pairs with the
+ * 'UnsafeGaugeRegistration' error-prone rule to replace 'registry.remove(name); registry.gauge(name, value);' with a
+ * single 'registerWithReplacement' call. This refaster rule intentionally doesn't check the 'gauge' method in order to
+ * avoid creating changes that don't compile when older versions of Tritium are present.
  */
 public final class TritiumReplaceGauge<T> {
 
@@ -43,5 +40,4 @@ public final class TritiumReplaceGauge<T> {
     void after(TaggedMetricRegistry registry, MetricName name, Gauge<T> gauge) {
         registry.registerWithReplacement(name, gauge);
     }
-
 }
