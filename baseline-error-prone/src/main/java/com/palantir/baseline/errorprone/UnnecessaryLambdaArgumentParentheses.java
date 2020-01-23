@@ -40,7 +40,7 @@ import java.util.List;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
-        severity = BugPattern.SeverityLevel.SUGGESTION,
+        severity = BugPattern.SeverityLevel.WARNING,
         summary = "Lambdas with a single parameter do not require argument parentheses.")
 public final class UnnecessaryLambdaArgumentParentheses extends BugChecker
         implements BugChecker.LambdaExpressionTreeMatcher {
