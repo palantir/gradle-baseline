@@ -15,13 +15,6 @@
  */
 package com.palantir.gradle.junit;
 
-import org.gradle.api.Action;
-import org.gradle.api.Project;
-import org.gradle.api.Task;
-import org.gradle.api.reporting.ReportContainer;
-import org.gradle.api.reporting.Reporting;
-import org.gradle.api.reporting.SingleFileReport;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -29,6 +22,12 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.UUID;
+import org.gradle.api.Action;
+import org.gradle.api.Project;
+import org.gradle.api.Task;
+import org.gradle.api.reporting.ReportContainer;
+import org.gradle.api.reporting.Reporting;
+import org.gradle.api.reporting.SingleFileReport;
 
 public final class XmlReportFailuresSupplier implements FailuresSupplier {
 
