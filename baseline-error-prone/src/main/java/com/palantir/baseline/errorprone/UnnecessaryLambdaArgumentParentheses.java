@@ -50,32 +50,29 @@ public final class UnnecessaryLambdaArgumentParentheses extends BugChecker
         if (!quickCheck(tree, state)) {
             return Description.NO_MATCH;
         }
-        List<ErrorProneToken> tokens = state.getOffsetTokensForNode(tree);
-        if (tokens.size() <= 3) {
-            return Description.NO_MATCH;
-        }
-        ErrorProneToken firstToken = tokens.get(0);
-        if (firstToken.kind() != Tokens.TokenKind.LPAREN) {
-            return Description.NO_MATCH;
-        }
-        // skip the first token, we've already validated it
-        int depth = 1;
-        for (int i = 1; i < tokens.size(); i++) {
+        // Avoid using getOffsetTokensForNode at this point because it's significantly more expensive
+        List<ErrorProneToken> tokens = state.getTokensForNode(tree);
+        int depth = 0;
+        int identifiers = 0;
+        for (int i = 0; i < tokens.size(); i++) {
             ErrorProneToken token = tokens.get(i);
-            if (token.kind() == Tokens.TokenKind.ARROW) {
+            // parameters with types require parens
+            if (token.kind() == Tokens.TokenKind.IDENTIFIER && ++identifiers > 1) {
+                return Description.NO_MATCH;
+            } else if (token.kind() == Tokens.TokenKind.ARROW) {
                 return Description.NO_MATCH;
             } else if (token.kind() == Tokens.TokenKind.LPAREN) {
                 depth++;
-            } else if (token.kind() == Tokens.TokenKind.RPAREN) {
-                depth--;
-                if (depth == 0) {
-                    return buildDescription(tree.getParameters().get(0))
-                            .addFix(SuggestedFix.builder()
-                                    .replace(firstToken.pos(), firstToken.endPos(), "")
-                                    .replace(token.pos(), token.endPos(), "")
-                                    .build())
-                            .build();
-                }
+            } else if (token.kind() == Tokens.TokenKind.RPAREN && --depth == 0) {
+                List<ErrorProneToken> offsetTokens = state.getOffsetTokensForNode(tree);
+                ErrorProneToken firstToken = offsetTokens.get(0);
+                ErrorProneToken offsetToken = offsetTokens.get(i);
+                return buildDescription(tree.getParameters().get(0))
+                        .addFix(SuggestedFix.builder()
+                                .replace(firstToken.pos(), firstToken.endPos(), "")
+                                .replace(offsetToken.pos(), offsetToken.endPos(), "")
+                                .build())
+                        .build();
             }
         }
         return Description.NO_MATCH;

@@ -55,6 +55,7 @@ class UnnecessaryLambdaArgumentParenthesesTest {
                         "    Predicate<Object> b =  value  -> value == null;",
                         "    Predicate<Object> c = /* (value) -> value*/value -> value == null;",
                         "    Predicate<Object> d = value /*(value) -> value*/ -> value == null;",
+                        "    Predicate<?> e = (String value) -> value == null;",
                         "}")
                 .expectUnchanged()
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
