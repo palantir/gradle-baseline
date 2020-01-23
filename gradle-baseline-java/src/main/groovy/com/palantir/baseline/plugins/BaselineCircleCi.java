@@ -18,7 +18,6 @@ package com.palantir.baseline.plugins;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.palantir.configurationresolver.ConfigurationResolverPlugin;
 import com.palantir.gradle.junit.JunitReportsExtension;
 import com.palantir.gradle.junit.JunitReportsPlugin;
 import java.io.File;
@@ -41,9 +40,6 @@ public final class BaselineCircleCi implements Plugin<Project> {
     @Override
     public void apply(Project project) {
         project.getPluginManager().apply(JunitReportsPlugin.class);
-
-        // the `./gradlew resolveConfigurations` task is used on CI to download all jars for convenient caching
-        project.getRootProject().allprojects(p -> p.getPluginManager().apply(ConfigurationResolverPlugin.class));
 
         configurePluginsForReports(project);
         configurePluginsForArtifacts(project);
