@@ -54,8 +54,8 @@ public final class BaselineCheckstyle extends AbstractBaselinePlugin {
 
         project.getExtensions()
                 .getByType(CheckstyleExtension.class)
-                .setConfigDir(this.project.file(
-                        Paths.get(getConfigDir(), "checkstyle").toString()));
+                .getConfigDirectory()
+                .set(this.project.file(Paths.get(getConfigDir(), "checkstyle").toString()));
         project.getPluginManager().withPlugin("eclipse", plugin -> {
             EclipseProject eclipseProject =
                     project.getExtensions().getByType(EclipseModel.class).getProject();
