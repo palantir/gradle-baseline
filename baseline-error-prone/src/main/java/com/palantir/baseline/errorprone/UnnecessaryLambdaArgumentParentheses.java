@@ -57,10 +57,10 @@ public final class UnnecessaryLambdaArgumentParentheses extends BugChecker
         for (int i = 0; i < tokens.size(); i++) {
             ErrorProneToken token = tokens.get(i);
             // parameters with types require parens
-            if (token.kind() == Tokens.TokenKind.IDENTIFIER && ++identifiers > 1) {
-                return Description.NO_MATCH;
-            } else if (token.kind() == Tokens.TokenKind.ARROW) {
-                return Description.NO_MATCH;
+            if (token.kind() == Tokens.TokenKind.IDENTIFIER) {
+                if (++identifiers > 1) {
+                    return Description.NO_MATCH;
+                }
             } else if (token.kind() == Tokens.TokenKind.LPAREN) {
                 depth++;
             } else if (token.kind() == Tokens.TokenKind.RPAREN && --depth == 0) {
@@ -73,6 +73,9 @@ public final class UnnecessaryLambdaArgumentParentheses extends BugChecker
                                 .replace(offsetToken.pos(), offsetToken.endPos(), "")
                                 .build())
                         .build();
+            } else {
+                // Bail when any unknown token types are encountered
+                return Description.NO_MATCH;
             }
         }
         return Description.NO_MATCH;
