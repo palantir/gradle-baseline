@@ -17,6 +17,7 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.errorprone.BugCheckerRefactoringTestHelper;
+import java.util.function.LongPredicate;
 import java.util.function.Predicate;
 import org.junit.jupiter.api.Test;
 
@@ -50,12 +51,14 @@ class UnnecessaryLambdaArgumentParenthesesTest {
         fix().addInputLines(
                         "Test.java",
                         "import " + Predicate.class.getName() + ';',
+                        "import " + LongPredicate.class.getName() + ';',
                         "class Test {",
                         "    Predicate<Object> a = value -> value == null;",
                         "    Predicate<Object> b =  value  -> value == null;",
                         "    Predicate<Object> c = /* (value) -> value*/value -> value == null;",
                         "    Predicate<Object> d = value /*(value) -> value*/ -> value == null;",
                         "    Predicate<?> e = (String value) -> value == null;",
+                        "    LongPredicate f = (LongPredicate) (long value) -> value == 0L;",
                         "}")
                 .expectUnchanged()
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
