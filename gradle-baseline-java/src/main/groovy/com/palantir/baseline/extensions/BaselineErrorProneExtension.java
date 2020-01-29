@@ -38,6 +38,7 @@ public class BaselineErrorProneExtension {
             "PreferListsPartition",
             "PreferSafeLoggableExceptions",
             "PreferSafeLoggingPreconditions",
+            "RawTypes",
             "ReadReturnValueIgnored",
             "RedundantMethodReference",
             "RedundantModifier",

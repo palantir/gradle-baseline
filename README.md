@@ -187,6 +187,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `CollectionStreamForEach`: Collection.forEach is more efficient than Collection.stream().forEach.
 - `LoggerEnclosingClass`: Loggers created using getLogger(Class<?>) must reference their enclosing class.
 - `UnnecessaryLambdaArgumentParentheses`: Lambdas with a single parameter do not require argument parentheses.
+- `RawTypes`: Avoid raw types; add appropriate type parameters if possible.
 
 ### Programmatic Application
 
