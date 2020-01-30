@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Allow leading underscores in local variable names
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1200
