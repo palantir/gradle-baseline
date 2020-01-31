@@ -111,6 +111,38 @@ class RawTypesTest {
     }
 
     @Test
+    void testCast1() {
+        helper().addSourceLines(
+                "Test.java",
+                "import " + ArrayList.class.getName() + ";",
+                "class Test {",
+                "    int f() {",
+                "        ArrayList<String> list = new ArrayList<String>();",
+                "        // BUG: Diagnostic contains: Avoid raw types",
+                "        Object obj = (ArrayList) list;",
+                "        return obj.hashCode();",
+                "    }",
+                "}")
+                .doTest();
+    }
+
+    @Test
+    void testCast2() {
+        helper().addSourceLines(
+                "Test.java",
+                "import " + ArrayList.class.getName() + ";",
+                "class Test {",
+                "    int f() {",
+                "        ArrayList<String> list = new ArrayList<String>();",
+                "        // BUG: Diagnostic contains: Avoid raw types",
+                "        ArrayList<Integer> list2 = (ArrayList<Integer>) (ArrayList) list;",
+                "        return list2.hashCode();",
+                "    }",
+                "}")
+                .doTest();
+    }
+
+    @Test
     void testExtends() {
         helper().addSourceLines(
                         "Test.java",
@@ -125,7 +157,6 @@ class RawTypesTest {
     void testImplements1() {
         helper().addSourceLines(
                         "Test.java",
-                        "import " + List.class.getName() + ";",
                         "interface A<T> {}",
                         "// BUG: Diagnostic contains: Avoid raw types",
                         "class MyClass implements A {",
@@ -149,8 +180,6 @@ class RawTypesTest {
     void testImplements3() {
         helper().addSourceLines(
                         "Test.java",
-                        "import " + List.class.getName() + ";",
-                        "import " + Set.class.getName() + ";",
                         "interface A<T> {}",
                         "interface B<T> {}",
                         "// BUG: Diagnostic contains: Avoid raw types",
@@ -237,6 +266,22 @@ class RawTypesTest {
                         "        return new ArrayList<String>();",
                         "    }",
                         "}")
+                .doTest();
+    }
+
+    @Test
+    void testNegativeCast() {
+        helper().addSourceLines(
+                "Test.java",
+                "import " + ArrayList.class.getName() + ";",
+                "import " + List.class.getName() + ";",
+                "class Test {",
+                "    int f() {",
+                "        List<String> list = new ArrayList<String>();",
+                "        ArrayList<String> list2 = (ArrayList<String>) list;",
+                "        return list2.hashCode();",
+                "    }",
+                "}")
                 .doTest();
     }
 

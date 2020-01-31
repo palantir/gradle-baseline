@@ -27,10 +27,9 @@ import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.NewClassTree;
 import com.sun.source.tree.ParameterizedTypeTree;
 import com.sun.source.tree.Tree;
+import com.sun.source.tree.TypeCastTree;
 import com.sun.source.tree.VariableTree;
 import com.sun.tools.javac.code.Type;
-import java.util.ArrayList;
-import java.util.List;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -45,10 +44,11 @@ import java.util.List;
                         + "This can be suppressed with @SuppressWarnings(\"rawtypes\") where necessary, such as when "
                         + "interacting with older library code.")
 public final class RawTypes extends BugChecker
-        implements BugChecker.VariableTreeMatcher,
+        implements BugChecker.ClassTreeMatcher,
+                BugChecker.MethodTreeMatcher,
                 BugChecker.NewClassTreeMatcher,
-                BugChecker.ClassTreeMatcher,
-                BugChecker.MethodTreeMatcher {
+                BugChecker.TypeCastTreeMatcher,
+                BugChecker.VariableTreeMatcher {
     @Override
     public Description matchVariable(VariableTree tree, VisitorState state) {
         return testType(tree.getType());
@@ -71,6 +71,11 @@ public final class RawTypes extends BugChecker
     @Override
     public Description matchMethod(MethodTree tree, VisitorState state) {
         return testType(tree.getReturnType());
+    }
+
+    @Override
+    public Description matchTypeCast(TypeCastTree tree, VisitorState state) {
+        return testType(tree.getType());
     }
 
     private Description testTypes(Iterable<? extends Tree> types) {
