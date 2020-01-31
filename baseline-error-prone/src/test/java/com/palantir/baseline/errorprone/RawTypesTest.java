@@ -20,7 +20,6 @@ import com.google.common.collect.Lists;
 import com.google.errorprone.CompilationTestHelper;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 class RawTypesTest {
@@ -113,32 +112,32 @@ class RawTypesTest {
     @Test
     void testCast1() {
         helper().addSourceLines(
-                "Test.java",
-                "import " + ArrayList.class.getName() + ";",
-                "class Test {",
-                "    int f() {",
-                "        ArrayList<String> list = new ArrayList<String>();",
-                "        // BUG: Diagnostic contains: Avoid raw types",
-                "        Object obj = (ArrayList) list;",
-                "        return obj.hashCode();",
-                "    }",
-                "}")
+                        "Test.java",
+                        "import " + ArrayList.class.getName() + ";",
+                        "class Test {",
+                        "    int f() {",
+                        "        ArrayList<String> list = new ArrayList<String>();",
+                        "        // BUG: Diagnostic contains: Avoid raw types",
+                        "        Object obj = (ArrayList) list;",
+                        "        return obj.hashCode();",
+                        "    }",
+                        "}")
                 .doTest();
     }
 
     @Test
     void testCast2() {
         helper().addSourceLines(
-                "Test.java",
-                "import " + ArrayList.class.getName() + ";",
-                "class Test {",
-                "    int f() {",
-                "        ArrayList<String> list = new ArrayList<String>();",
-                "        // BUG: Diagnostic contains: Avoid raw types",
-                "        ArrayList<Integer> list2 = (ArrayList<Integer>) (ArrayList) list;",
-                "        return list2.hashCode();",
-                "    }",
-                "}")
+                        "Test.java",
+                        "import " + ArrayList.class.getName() + ";",
+                        "class Test {",
+                        "    int f() {",
+                        "        ArrayList<String> list = new ArrayList<String>();",
+                        "        // BUG: Diagnostic contains: Avoid raw types",
+                        "        ArrayList<Integer> list2 = (ArrayList<Integer>) (ArrayList) list;",
+                        "        return list2.hashCode();",
+                        "    }",
+                        "}")
                 .doTest();
     }
 
@@ -272,16 +271,16 @@ class RawTypesTest {
     @Test
     void testNegativeCast() {
         helper().addSourceLines(
-                "Test.java",
-                "import " + ArrayList.class.getName() + ";",
-                "import " + List.class.getName() + ";",
-                "class Test {",
-                "    int f() {",
-                "        List<String> list = new ArrayList<String>();",
-                "        ArrayList<String> list2 = (ArrayList<String>) list;",
-                "        return list2.hashCode();",
-                "    }",
-                "}")
+                        "Test.java",
+                        "import " + ArrayList.class.getName() + ";",
+                        "import " + List.class.getName() + ";",
+                        "class Test {",
+                        "    int f() {",
+                        "        List<String> list = new ArrayList<String>();",
+                        "        ArrayList<String> list2 = (ArrayList<String>) list;",
+                        "        return list2.hashCode();",
+                        "    }",
+                        "}")
                 .doTest();
     }
 
