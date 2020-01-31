@@ -61,10 +61,11 @@ public final class RawTypes extends BugChecker
 
     @Override
     public Description matchClass(ClassTree tree, VisitorState state) {
-        List<Tree> types = new ArrayList<>();
-        types.add(tree.getExtendsClause());
-        types.addAll(tree.getImplementsClause());
-        return testTypes(types);
+        Description extendsResult = testType(tree.getExtendsClause());
+        if (extendsResult != Description.NO_MATCH) {
+            return extendsResult;
+        }
+        return testTypes(tree.getImplementsClause());
     }
 
     @Override
