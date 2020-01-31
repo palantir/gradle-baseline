@@ -91,7 +91,7 @@ public final class RawTypes extends BugChecker
             return buildDescription(type)
                     .setMessage("Avoid raw types; add appropriate type parameters if possible. "
                             + "The type was: "
-                            + realType
+                            + MoreSuggestedFixes.prettyType(null, null, realType)
                             + "\nThis can be suppressed with @SuppressWarnings(\"rawtypes\") "
                             + "where necessary, such as when interacting with older library code.")
                     .build();
