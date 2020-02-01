@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Add an ErrorProne check for raw types
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1197
