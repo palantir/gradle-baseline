@@ -105,7 +105,8 @@ class BaselineConfig extends AbstractBaselinePlugin {
                                             + "        </module>\n",
                                     "")
                             .replace(
-                                    "        <module name=\"ParenPad\"/> <!-- Java Style Guide: Horizontal whitespace -->\n",
+                                    "        <module name=\"ParenPad\"/> <!-- Java Style Guide: Horizontal whitespace"
+                                            + " -->\n",
                                     "");
                     Preconditions.checkState(!contents.equals(replaced), "Patching checkstyle.xml must make a change");
                     Files.write(checkstyleXml, replaced.getBytes(StandardCharsets.UTF_8));
