@@ -149,5 +149,8 @@ class BaselineConfigIntegrationTest extends AbstractPluginTest {
         !new File(projectDir, '.baseline/checkstyle/checkstyle.xml').readLines().any {
             it.contains '<module name="Indentation">'
         }
+        !new File(projectDir, '.baseline/checkstyle/checkstyle.xml').readLines().any {
+            it.contains '<module name="ParenPad">'
+        }
     }
 }
