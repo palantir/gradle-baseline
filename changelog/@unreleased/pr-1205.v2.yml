@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: Checkstyle's `ParenPad` rule is turned off when using palantir-java-format,
+    to avoid disagreements that can't be fixed by the user.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1205
