@@ -156,6 +156,17 @@ public final class BaselineErrorProne implements Plugin<Project> {
                             }));
         });
 
+        project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
+            ((ExtensionAware) javaCompile.getOptions())
+                    .getExtensions()
+                    .configure(ErrorProneOptions.class, errorProneOptions -> {
+                        // Relax some checks for test code
+                        if (errorProneOptions.isCompilingTestOnlyCode()) {
+                            errorProneOptions.check("UnnecessaryLambda", CheckSeverity.OFF);
+                        }
+                    });
+        });
+
         // In case of java 8 we need to add errorprone javac compiler to bootstrap classpath of tasks that perform
         // compilation or code analysis. ErrorProneJavacPluginPlugin handles JavaCompile cases via errorproneJavac
         // configuration and we do similar thing for Test and Javadoc type tasks
