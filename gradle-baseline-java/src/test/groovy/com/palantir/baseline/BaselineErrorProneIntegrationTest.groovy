@@ -97,6 +97,15 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         result.output.contains("[ArrayEquals] Reference equality used to compare arrays")
     }
 
+    def 'error-prone can be suppressed using property'() {
+        when:
+        buildFile << standardBuildFile
+        file('src/main/java/test/Test.java') << invalidJavaFile
+
+        then:
+        BuildResult result = with('compileJava', '-Pcom.palantir.baseline-error-prone.disable').build()
+    }
+
     def 'compileJava succeeds when error-prone finds no errors'() {
         when:
         buildFile << standardBuildFile
