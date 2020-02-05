@@ -1,0 +1,7 @@
+type: improvement
+improvement:
+  description: '`./gradlew compileJava -Pcom.palantir.baseline-error-prone.disable`
+    turns off error-prone, to allow compilation on Java 13 which is not yet supported
+    by error-prone.'
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1213
