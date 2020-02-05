@@ -136,20 +136,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
                             });
         }
 
-        if (project.hasProperty(DISABLE_PROPERY)) {
-            log.info("Disabling baseline-error-prone for {} due to {}", project, DISABLE_PROPERY);
-            return;
-        }
-
-        configureCompileTasks(project, errorProneExtension, refasterRulesFile, compileRefaster);
-    }
-
-    private static void configureCompileTasks(
-            Project project,
-            BaselineErrorProneExtension errorProneExtension,
-            Provider<File> refasterRulesFile,
-            CompileRefasterTask compileRefaster) {
-
         project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
             ((ExtensionAware) javaCompile.getOptions())
                     .getExtensions()
@@ -208,7 +194,13 @@ public final class BaselineErrorProne implements Plugin<Project> {
         JavaVersion jdkVersion =
                 JavaVersion.toVersion(javaCompile.getToolChain().getVersion());
 
-        errorProneOptions.setEnabled(true);
+        if (project.hasProperty(DISABLE_PROPERY)) {
+            log.info("Disabling baseline-error-prone for {} due to {}", project, DISABLE_PROPERY);
+            errorProneOptions.setEnabled(false);
+        } else {
+            errorProneOptions.setEnabled(true);
+        }
+
         errorProneOptions.setDisableWarningsInGeneratedCode(true);
         String projectPath = project.getProjectDir().getPath();
         String separator = Pattern.quote(Paths.get(projectPath).getFileSystem().getSeparator());
