@@ -64,6 +64,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
     private static final String ERROR_PRONE_JAVAC_VERSION = "9+181-r4173-1";
     private static final String PROP_ERROR_PRONE_APPLY = "errorProneApply";
     private static final String PROP_REFASTER_APPLY = "refasterApply";
+    private static final String DISABLE_PROPERY = "com.palantir.baseline-error-prone.disable";
 
     @Override
     public void apply(Project project) {
@@ -110,6 +111,45 @@ public final class BaselineErrorProne implements Plugin<Project> {
                     task.getRefasterRulesFile().set(refasterRulesFile);
                 });
 
+        // In case of java 8 we need to add errorprone javac compiler to bootstrap classpath of tasks that perform
+        // compilation or code analysis. ErrorProneJavacPluginPlugin handles JavaCompile cases via errorproneJavac
+        // configuration and we do similar thing for Test and Javadoc type tasks
+        if (!JavaVersion.current().isJava9Compatible()) {
+            project.getDependencies()
+                    .add(
+                            ErrorPronePlugin.JAVAC_CONFIGURATION_NAME,
+                            "com.google.errorprone:javac:" + ERROR_PRONE_JAVAC_VERSION);
+            project.getConfigurations()
+                    .named(ErrorPronePlugin.JAVAC_CONFIGURATION_NAME)
+                    .configure(
+                            conf -> {
+                                List<File> bootstrapClasspath = Splitter.on(File.pathSeparator)
+                                        .splitToList(System.getProperty("sun.boot.class.path"))
+                                        .stream()
+                                        .map(File::new)
+                                        .collect(Collectors.toList());
+                                FileCollection errorProneFiles = conf.plus(project.files(bootstrapClasspath));
+                                project.getTasks().withType(Test.class).configureEach(test ->
+                                        test.setBootstrapClasspath(errorProneFiles));
+                                project.getTasks().withType(Javadoc.class).configureEach(javadoc -> javadoc.getOptions()
+                                        .setBootClasspath(new LazyConfigurationList(errorProneFiles)));
+                            });
+        }
+
+        if (project.hasProperty(DISABLE_PROPERY)) {
+            log.info("Disabling baseline-error-prone for {} due to {}", project, DISABLE_PROPERY);
+            return;
+        }
+
+        configureCompileTasks(project, errorProneExtension, refasterRulesFile, compileRefaster);
+    }
+
+    private static void configureCompileTasks(
+            Project project,
+            BaselineErrorProneExtension errorProneExtension,
+            Provider<File> refasterRulesFile,
+            CompileRefasterTask compileRefaster) {
+
         project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
             ((ExtensionAware) javaCompile.getOptions())
                     .getExtensions()
@@ -155,42 +195,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
                                 errorProneOptions.check("PreconditionsConstantMessage", CheckSeverity.OFF);
                             }));
         });
-
-        project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
-            ((ExtensionAware) javaCompile.getOptions())
-                    .getExtensions()
-                    .configure(ErrorProneOptions.class, errorProneOptions -> {
-                        // Relax some checks for test code
-                        if (errorProneOptions.isCompilingTestOnlyCode()) {
-                            errorProneOptions.check("UnnecessaryLambda", CheckSeverity.OFF);
-                        }
-                    });
-        });
-
-        // In case of java 8 we need to add errorprone javac compiler to bootstrap classpath of tasks that perform
-        // compilation or code analysis. ErrorProneJavacPluginPlugin handles JavaCompile cases via errorproneJavac
-        // configuration and we do similar thing for Test and Javadoc type tasks
-        if (!JavaVersion.current().isJava9Compatible()) {
-            project.getDependencies()
-                    .add(
-                            ErrorPronePlugin.JAVAC_CONFIGURATION_NAME,
-                            "com.google.errorprone:javac:" + ERROR_PRONE_JAVAC_VERSION);
-            project.getConfigurations()
-                    .named(ErrorPronePlugin.JAVAC_CONFIGURATION_NAME)
-                    .configure(
-                            conf -> {
-                                List<File> bootstrapClasspath = Splitter.on(File.pathSeparator)
-                                        .splitToList(System.getProperty("sun.boot.class.path"))
-                                        .stream()
-                                        .map(File::new)
-                                        .collect(Collectors.toList());
-                                FileCollection errorProneFiles = conf.plus(project.files(bootstrapClasspath));
-                                project.getTasks().withType(Test.class).configureEach(test ->
-                                        test.setBootstrapClasspath(errorProneFiles));
-                                project.getTasks().withType(Javadoc.class).configureEach(javadoc -> javadoc.getOptions()
-                                        .setBootClasspath(new LazyConfigurationList(errorProneFiles)));
-                            });
-        }
     }
 
     @SuppressWarnings("UnstableApiUsage")
@@ -220,6 +224,11 @@ public final class BaselineErrorProne implements Plugin<Project> {
         errorProneOptions.check("InputStreamSlowMultibyteRead", CheckSeverity.ERROR);
         errorProneOptions.check("JavaDurationGetSecondsGetNano", CheckSeverity.ERROR);
         errorProneOptions.check("URLEqualsHashCode", CheckSeverity.ERROR);
+
+        // Relax some checks for test code
+        if (errorProneOptions.isCompilingTestOnlyCode()) {
+            errorProneOptions.check("UnnecessaryLambda", CheckSeverity.OFF);
+        }
 
         if (jdkVersion.compareTo(JavaVersion.toVersion("12.0.1")) >= 0) {
             // As of version 2.3.4, Errorprone isn't officially compatible with Java12, but in practise everything
