@@ -17,15 +17,20 @@
 package com.palantir.baseline.plugins;
 
 import com.diffplug.gradle.spotless.SpotlessExtension;
+import com.diffplug.spotless.FormatterStep;
+import com.diffplug.spotless.generic.LicenseHeaderStep;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.google.common.base.Suppliers;
 import com.google.common.collect.Streams;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
+import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -76,6 +81,14 @@ class BaselineFormat extends AbstractBaselinePlugin {
             project.getTasks().named(JavaBasePlugin.CHECK_TASK_NAME).configure(t -> {
                 t.dependsOn(project.getTasks().named("spotlessCheck"));
             });
+
+            // The copyright step configures itself lazily to allow for baselineUpdateConfig to potentially create the
+            // right files. Therefore, also make sure that these will run in the right order.
+            project.getPluginManager().withPlugin("com.palantir.baseline-config", baselineConfig -> {
+                project.getTasks()
+                        .matching(t -> t.getName().startsWith("spotless"))
+                        .configureEach(t -> t.mustRunAfter("baselineUpdateConfig"));
+            });
         });
 
         project.getPluginManager().withPlugin("java", plugin -> {
@@ -83,9 +96,40 @@ class BaselineFormat extends AbstractBaselinePlugin {
         });
     }
 
+    /**
+     * Necessary in order to not fail right away if the copyright folder doesn't exist yet, because it would be created
+     * by {@code baselineUpdateConfig}.
+     */
+    private FormatterStep createLazyLicenseHeaderStep(Project project) {
+        // Spotless will consider the license header to be the file prefix up to the first line starting with delimiter
+        String delimiter = "(?! \\*|/\\*| \\*/)";
+
+        // Compute the copyright lazily
+        Supplier<FormatterStep> realStep = Suppliers.memoize(() -> {
+            String header = computeCopyrightHeader(project);
+            return LicenseHeaderStep.createFromHeader(header, delimiter);
+        });
+
+        return (FormatterStep) Proxy.newProxyInstance(
+                Thread.currentThread().getContextClassLoader(),
+                new Class[] {FormatterStep.class},
+                (_proxy, method, args) -> method.invoke(realStep.get(), args));
+    }
+
     private void configureCopyrightStep(Project project, SpotlessExtension spotlessExtension) {
+        spotlessExtension.java(java -> java.addStep(createLazyLicenseHeaderStep(project)));
+
+        // This is tricky as configuring this naively yields the following error:
+        // > You must apply the groovy plugin before the spotless plugin if you are using the groovy extension.
+        project.getPluginManager().withPlugin("groovy", groovyPlugin -> {
+            spotlessExtension.groovy(groovy -> groovy.addStep(createLazyLicenseHeaderStep(project)));
+        });
+    }
+
+    private String computeCopyrightHeader(Project project) {
         File copyrightDir = project.getRootProject().file(getConfigDir() + "/copyright");
-        Path copyrightFile = Arrays.stream(Preconditions.checkNotNull(copyrightDir.list()))
+        Path copyrightFile = Arrays.stream(Preconditions.checkNotNull(
+                        copyrightDir.list(), "Expected some files inside the copyright directory: " + copyrightDir))
                 .sorted()
                 .findFirst()
                 .map(name -> copyrightDir.toPath().resolve(name))
@@ -101,21 +145,11 @@ class BaselineFormat extends AbstractBaselinePlugin {
                 .replaceAll(Pattern.quote("${today.year}"), "\\$YEAR")
                 .trim();
         // Spotless expects the literal header so we have to add the Java comment guard and prefixes
-        String copyrightComment = Streams.concat(
+        return Streams.concat(
                         Stream.of("/*"),
                         Streams.stream(Splitter.on('\n').split(copyright)).map(line -> " *" + " " + line),
                         Stream.of(" */"))
                 .collect(Collectors.joining("\n"));
-
-        // Spotless will consider the license header to be the file prefix up to the first line starting with delimiter
-        String delimiter = "(?! \\*|/\\*| \\*/)";
-        spotlessExtension.java(java -> java.licenseHeader(copyrightComment, delimiter));
-
-        // This is tricky as configuring this naively yields the following error:
-        // > You must apply the groovy plugin before the spotless plugin if you are using the groovy extension.
-        project.getPluginManager().withPlugin("groovy", groovyPlugin -> {
-            spotlessExtension.groovy(groovy -> groovy.licenseHeader(copyrightComment, delimiter));
-        });
     }
 
     private static void configureSpotlessJava(Project project, SpotlessExtension spotlessExtension) {
