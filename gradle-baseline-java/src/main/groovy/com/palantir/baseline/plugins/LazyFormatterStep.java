@@ -27,15 +27,17 @@ import javax.annotation.Nullable;
 
 /** A lazy {@link FormatterStep} that instantiates its delegate only when methods are called. */
 class LazyFormatterStep implements FormatterStep {
+    private final String name;
     private transient Supplier<FormatterStep> delegate;
 
-    LazyFormatterStep(Supplier<FormatterStep> delegate) {
+    LazyFormatterStep(String name, Supplier<FormatterStep> delegate) {
+        this.name = name;
         this.delegate = Suppliers.memoize(delegate::get);
     }
 
     @Override
     public String getName() {
-        return delegate.get().getName();
+        return name;
     }
 
     @Nullable
@@ -45,10 +47,12 @@ class LazyFormatterStep implements FormatterStep {
     }
 
     public final void writeObject(ObjectOutputStream output) throws IOException {
+        output.defaultWriteObject();
         output.writeObject(delegate.get());
     }
 
     public void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
+        input.defaultReadObject();
         FormatterStep serialized = (FormatterStep) input.readObject();
         delegate = () -> serialized;
     }
