@@ -19,12 +19,15 @@ package com.palantir.baseline.plugins;
 import com.diffplug.spotless.FormatterStep;
 import com.google.common.base.Suppliers;
 import java.io.File;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.util.function.Supplier;
 import javax.annotation.Nullable;
 
 /** A lazy {@link FormatterStep} that instantiates its delegate only when methods are called. */
 class LazyFormatterStep implements FormatterStep {
-    private final Supplier<FormatterStep> delegate;
+    private transient Supplier<FormatterStep> delegate;
 
     LazyFormatterStep(Supplier<FormatterStep> delegate) {
         this.delegate = Suppliers.memoize(delegate::get);
@@ -39,5 +42,14 @@ class LazyFormatterStep implements FormatterStep {
     @Override
     public String format(String rawUnix, File file) throws Exception {
         return delegate.get().format(rawUnix, file);
+    }
+
+    public final void writeObject(ObjectOutputStream output) throws IOException {
+        output.writeObject(delegate.get());
+    }
+
+    public void readObject(ObjectInputStream input) throws IOException, ClassNotFoundException {
+        FormatterStep serialized = (FormatterStep) input.readObject();
+        delegate = () -> serialized;
     }
 }
