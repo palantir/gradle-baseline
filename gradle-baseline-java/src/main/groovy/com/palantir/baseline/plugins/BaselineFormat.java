@@ -17,9 +17,18 @@
 package com.palantir.baseline.plugins;
 
 import com.diffplug.gradle.spotless.SpotlessExtension;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Streams;
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Arrays;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -49,6 +58,11 @@ class BaselineFormat extends AbstractBaselinePlugin {
         // See  https://github.com/diffplug/spotless/issues/444
         spotlessExtension.setEnforceCheck(false);
 
+        // Allow disabling copyright for tests
+        if (!"false".equals(project.findProperty("com.palantir.baseline-format.copyright"))) {
+            configureCopyrightStep(project, spotlessExtension);
+        }
+
         // necessary because SpotlessPlugin creates tasks in an afterEvaluate block
         TaskProvider<Task> formatTask = project.getTasks().register("format", task -> {
             task.setGroup("Formatting");
@@ -67,6 +81,41 @@ class BaselineFormat extends AbstractBaselinePlugin {
 
         project.getPluginManager().withPlugin("java", plugin -> {
             configureSpotlessJava(project, spotlessExtension);
+        });
+    }
+
+    private void configureCopyrightStep(Project project, SpotlessExtension spotlessExtension) {
+        File copyrightDir = project.getRootProject().file(getConfigDir() + "/copyright");
+        Path copyrightFile = Arrays.stream(Preconditions.checkNotNull(copyrightDir.list()))
+                .sorted()
+                .findFirst()
+                .map(name -> copyrightDir.toPath().resolve(name))
+                .orElseThrow(() -> new RuntimeException("Expected to find a copyright file inside " + copyrightDir));
+        String copyrightContents;
+        try {
+            copyrightContents = new String(Files.readAllBytes(copyrightFile), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new RuntimeException("Couldn't read copyright file " + copyrightFile, e);
+        }
+        // Spotless expects '$YEAR' but our current patterns use ${today.year}
+        String copyright = copyrightContents
+                .replaceAll(Pattern.quote("${today.year}"), "\\$YEAR")
+                .trim();
+        // Spotless expects the literal header so we have to add the Java comment guard and prefixes
+        String copyrightComment = Streams.concat(
+                        Stream.of("/*"),
+                        Streams.stream(Splitter.on('\n').split(copyright)).map(line -> " *" + " " + line),
+                        Stream.of(" */"))
+                .collect(Collectors.joining("\n"));
+
+        // Spotless will consider the license header to be the file prefix up to the first line starting with delimiter
+        String delimiter = "(?! \\*|/\\*| \\*/)";
+        spotlessExtension.java(java -> java.licenseHeader(copyrightComment, delimiter));
+
+        // This is tricky as configuring this naively yields the following error:
+        // > You must apply the groovy plugin before the spotless plugin if you are using the groovy extension.
+        project.getPluginManager().withPlugin("groovy", groovyPlugin -> {
+            spotlessExtension.groovy(groovy -> groovy.licenseHeader(copyrightComment, delimiter));
         });
     }
 
@@ -93,9 +142,8 @@ class BaselineFormat extends AbstractBaselinePlugin {
             project.getConvention()
                     .getPlugin(JavaPluginConvention.class)
                     .getSourceSets()
-                    .all(sourceSet ->
-                            allJavaFiles.from(sourceSet.getAllJava().filter(file ->
-                                    !file.toString().contains(GENERATED_MARKER))));
+                    .all(sourceSet -> allJavaFiles.from(sourceSet.getAllJava().filter(file ->
+                            !file.toString().contains(GENERATED_MARKER))));
 
             java.target(allJavaFiles);
             java.removeUnusedImports();

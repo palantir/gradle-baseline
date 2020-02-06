@@ -33,6 +33,8 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         FileUtils.copyDirectory(
                 new File("../gradle-baseline-java-config/resources"),
                 new File(projectDir, ".baseline"))
+        // Disable copyright by default so we can test it individually
+        file('gradle.properties') << "com.palantir.baseline-format.copyright=false\n"
     }
 
     def standardBuildFile = '''
@@ -169,12 +171,12 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
                 new NotFileFilter(new NameFileFilter(excludedDirectories)))
     }
 
-    def 'cannot run format task when java plugin is missing'() {
+    def 'can run format task when java plugin is missing'() {
         when:
         buildFile << noJavaBuildFile
 
         then:
-        with('format', '--stacktrace').buildAndFail()
+        with('format', '--stacktrace').build()
     }
 
     def 'format task works on new source sets'() {
