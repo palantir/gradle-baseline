@@ -41,21 +41,6 @@ class BaselineFormat extends AbstractBaselinePlugin {
     public void apply(Project project) {
         this.project = project;
 
-        if (palantirJavaFormatterState(project) == FormatterState.ON) {
-            project.getPlugins().apply(PJF_PLUGIN); // provides the formatDiff task
-        }
-
-        if (eclipseFormattingEnabled(project)) {
-            project.getPluginManager().withPlugin(PJF_PLUGIN, plugin -> {
-                throw new GradleException(
-                        "Can't use both eclipse and palantir-java-format at the same time, please delete one of "
-                                + ECLIPSE_FORMATTING
-                                + " or "
-                                + PJF_PROPERTY
-                                + " from your gradle.properties");
-            });
-        }
-
         project.getPluginManager().apply("com.diffplug.gradle.spotless");
 
         SpotlessExtension spotlessExtension = project.getExtensions().getByType(SpotlessExtension.class);
@@ -86,6 +71,21 @@ class BaselineFormat extends AbstractBaselinePlugin {
     }
 
     private static void configureSpotlessJava(Project project, SpotlessExtension spotlessExtension) {
+        if (palantirJavaFormatterState(project) == FormatterState.ON) {
+            project.getPlugins().apply(PJF_PLUGIN); // provides the formatDiff task
+        }
+
+        if (eclipseFormattingEnabled(project)) {
+            project.getPluginManager().withPlugin(PJF_PLUGIN, plugin -> {
+                throw new GradleException(
+                        "Can't use both eclipse and palantir-java-format at the same time, please delete one of "
+                                + ECLIPSE_FORMATTING
+                                + " or "
+                                + PJF_PROPERTY
+                                + " from your gradle.properties");
+            });
+        }
+
         Path eclipseXml = eclipseConfigFile(project);
         spotlessExtension.java(java -> {
             // Configure a lazy FileCollection then pass it as the target
