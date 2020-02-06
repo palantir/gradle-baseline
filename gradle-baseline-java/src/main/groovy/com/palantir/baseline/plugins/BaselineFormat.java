@@ -21,16 +21,13 @@ import com.diffplug.spotless.FormatterStep;
 import com.diffplug.spotless.generic.LicenseHeaderStep;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.google.common.base.Suppliers;
 import com.google.common.collect.Streams;
 import java.io.File;
 import java.io.IOException;
-import java.lang.reflect.Proxy;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
-import java.util.function.Supplier;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -104,16 +101,10 @@ class BaselineFormat extends AbstractBaselinePlugin {
         // Spotless will consider the license header to be the file prefix up to the first line starting with delimiter
         String delimiter = "(?! \\*|/\\*| \\*/)";
 
-        // Compute the copyright lazily
-        Supplier<FormatterStep> realStep = Suppliers.memoize(() -> {
+        return new LazyFormatterStep(() -> {
             String header = computeCopyrightHeader(project);
             return LicenseHeaderStep.createFromHeader(header, delimiter);
         });
-
-        return (FormatterStep) Proxy.newProxyInstance(
-                Thread.currentThread().getContextClassLoader(),
-                new Class[] {FormatterStep.class},
-                (_proxy, method, args) -> method.invoke(realStep.get(), args));
     }
 
     private void configureCopyrightStep(Project project, SpotlessExtension spotlessExtension) {
