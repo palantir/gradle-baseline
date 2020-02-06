@@ -29,8 +29,11 @@ class BaselineFormatCopyrightIntegrationTest extends AbstractPluginTest {
                 new File("../gradle-baseline-java-config/resources"),
                 new File(projectDir, ".baseline"))
 
+        // Testing that an empty line is also OK, these can cause gotchas
         file(".baseline/copyright/000test") << '''
             (c) Copyright $YEAR Palantir
+            
+            EXTRA
         '''.stripIndent()
     }
 
@@ -38,24 +41,32 @@ class BaselineFormatCopyrightIntegrationTest extends AbstractPluginTest {
     static generatedCopyright = """\
         /*
          * (c) Copyright ${LocalDate.now().year} Palantir
+         *
+         * EXTRA
          */
     """.stripIndent()
 
     static goodCopyright = """\
         /*
          * (c) Copyright 2019 Palantir
+         *
+         * EXTRA
          */
     """.stripIndent()
 
     static goodCopyrightRange = """\
         /*
          * (c) Copyright 2015-2019 Palantir
+         *
+         * EXTRA
          */
     """.stripIndent()
 
     static badCopyright = """\
         /*
          * (c) Copyright 2015 EvilCorp
+         *
+         * EXTRA
          */
     """.stripIndent()
 
