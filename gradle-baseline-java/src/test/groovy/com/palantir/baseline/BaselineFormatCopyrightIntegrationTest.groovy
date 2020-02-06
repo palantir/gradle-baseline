@@ -31,7 +31,7 @@ class BaselineFormatCopyrightIntegrationTest extends AbstractPluginTest {
 
         // Testing that an empty line is also OK, these can cause gotchas
         file(".baseline/copyright/000test") << '''
-            (c) Copyright $YEAR Palantir
+            (c) Copyright $YEAR GoodCorp
             
             EXTRA
         '''.stripIndent()
@@ -40,7 +40,7 @@ class BaselineFormatCopyrightIntegrationTest extends AbstractPluginTest {
     /** The copyright that we expect will be generated when there isn't an existing one */
     static generatedCopyright = """\
         /*
-         * (c) Copyright ${LocalDate.now().year} Palantir
+         * (c) Copyright ${LocalDate.now().year} GoodCorp
          *
          * EXTRA
          */
@@ -48,7 +48,7 @@ class BaselineFormatCopyrightIntegrationTest extends AbstractPluginTest {
 
     static goodCopyright = """\
         /*
-         * (c) Copyright 2019 Palantir
+         * (c) Copyright 2019 GoodCorp
          *
          * EXTRA
          */
@@ -56,7 +56,7 @@ class BaselineFormatCopyrightIntegrationTest extends AbstractPluginTest {
 
     static goodCopyrightRange = """\
         /*
-         * (c) Copyright 2015-2019 Palantir
+         * (c) Copyright 2015-2019 GoodCorp
          *
          * EXTRA
          */
