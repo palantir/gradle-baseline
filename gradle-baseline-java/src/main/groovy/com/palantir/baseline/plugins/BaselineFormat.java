@@ -147,7 +147,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
         // Spotless expects the literal header so we have to add the Java comment guard and prefixes
         return Streams.concat(
                         Stream.of("/*"),
-                        Streams.stream(Splitter.on('\n').split(copyright)).map(line -> " *" + " " + line),
+                        Streams.stream(Splitter.on('\n').split(copyright)).map(line -> " " + ("* " + line).trim()),
                         Stream.of(" */"))
                 .collect(Collectors.joining("\n"));
     }
