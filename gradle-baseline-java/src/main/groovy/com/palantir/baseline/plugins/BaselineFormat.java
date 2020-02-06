@@ -68,9 +68,8 @@ class BaselineFormat extends AbstractBaselinePlugin {
             task.setGroup("Formatting");
         });
         project.afterEvaluate(p -> {
-            Task spotlessApply = project.getTasks().getByName("spotlessApply");
             formatTask.configure(t -> {
-                t.dependsOn(spotlessApply);
+                t.dependsOn("spotlessApply");
             });
 
             // re-enable spotless checking, but lazily so it doesn't eagerly configure everything else
