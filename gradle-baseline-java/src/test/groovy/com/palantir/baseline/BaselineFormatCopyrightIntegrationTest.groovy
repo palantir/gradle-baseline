@@ -62,12 +62,16 @@ class BaselineFormatCopyrightIntegrationTest extends AbstractPluginTest {
     def standardBuildFile = '''
         plugins {
             id 'java'
+            id 'groovy'
             id 'com.palantir.baseline-format'
         }
         repositories {
             // to resolve the `palantirJavaFormat` configuration
             maven { url 'https://dl.bintray.com/palantir/releases' }
             jcenter()
+        }
+        dependencies {
+            implementation localGroovy()
         }
     '''.stripIndent()
 
@@ -77,15 +81,15 @@ class BaselineFormatCopyrightIntegrationTest extends AbstractPluginTest {
     public class Test {}
     '''.stripIndent()
 
-    def 'check fails on bad or missing copyright in java project'() {
+    def 'check fails on #copyrightType copyright in #lang project'() {
         buildFile << standardBuildFile
-        def javaFile = file('src/main/java/test/Test.java')
+        def javaFile = file("src/main/$lang/test/Test.$lang")
         javaFile << copyright
         javaFile << validJavaFile
 
         expect:
         def fail = with('check').buildAndFail()
-        fail.task(":spotlessJava").outcome == TaskOutcome.FAILED
+        fail.task(":spotless${lang.capitalize()}").outcome == TaskOutcome.FAILED
         fail.output.contains("The following files had format violations")
 
         when:
@@ -95,12 +99,16 @@ class BaselineFormatCopyrightIntegrationTest extends AbstractPluginTest {
         javaFile.text.startsWith(generatedCopyright)
 
         where:
-        copyright << [badCopyright, '']
+        copyrightType | copyright
+        "bad"         | badCopyright
+        "missing"     | ''
+
+        lang << ["groovy", "java"]
     }
 
-    def 'check passes on correct copyright in java project'() {
+    def 'check passes on correct #copyrightType copyright in #lang project'() {
         buildFile << standardBuildFile
-        def javaFile = file('src/main/java/test/Test.java')
+        def javaFile = file("src/main/$lang/test/Test.$lang")
         javaFile << copyright
         javaFile << validJavaFile
 
@@ -108,6 +116,10 @@ class BaselineFormatCopyrightIntegrationTest extends AbstractPluginTest {
         with('check').build()
 
         where:
-        copyright << [goodCopyright, goodCopyrightRange]
+        copyrightType | copyright
+        "single year" | goodCopyright
+        "year range"  | goodCopyrightRange
+
+        lang << ["groovy", "java"]
     }
 }
