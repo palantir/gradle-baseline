@@ -175,5 +175,8 @@ class BaselineTestingIntegrationTest extends AbstractPluginTest {
 
         BuildResult result3 = with('test', '-Drecreate=true').build()
         result3.task(':test').getOutcome() == TaskOutcome.SUCCESS
+
+        BuildResult result4 = with('test', '-Drecreate=true').build()
+        result4.task(':test').getOutcome() == TaskOutcome.SUCCESS
     }
 }

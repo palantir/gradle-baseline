@@ -51,7 +51,9 @@ public final class BaselineTesting implements Plugin<Project> {
             // ./gradlew test -Drecreate=true
             String shouldRecreate = System.getProperty("recreate", "false");
             task.systemProperty("recreate", shouldRecreate);
-            task.getInputs().property("recreate", shouldRecreate);
+            if (Boolean.valueOf(shouldRecreate)) {
+                task.getOutputs().cacheIf(t -> false);
+            }
         });
 
         project.getPlugins().withType(JavaPlugin.class, unusedPlugin -> {
