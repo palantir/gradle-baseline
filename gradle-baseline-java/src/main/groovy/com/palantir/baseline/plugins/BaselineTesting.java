@@ -49,10 +49,10 @@ public final class BaselineTesting implements Plugin<Project> {
 
             // repos that use 'snapshot' style testing should all use one convenient task to refresh the snapshots,
             // ./gradlew test -Drecreate=true
-            String shouldRecreate = System.getProperty("recreate", "false");
-            task.systemProperty("recreate", shouldRecreate);
-            if (Boolean.valueOf(shouldRecreate)) {
-                task.getOutputs().cacheIf(t -> false);
+            boolean shouldRecreate = Boolean.getBoolean("recreate");
+            task.systemProperty("recreate", Boolean.toString(shouldRecreate));
+            if (shouldRecreate) {
+                task.getOutputs().upToDateWhen(t -> false);
             }
         });
 
