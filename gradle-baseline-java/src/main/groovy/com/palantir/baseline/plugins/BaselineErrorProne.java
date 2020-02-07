@@ -171,15 +171,15 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 }));
 
         project.getPluginManager().withPlugin("java-gradle-plugin", appliedPlugin -> {
-            project.getTasks().withType(JavaCompile.class).configureEach(javaCompile ->
-                    ((ExtensionAware) javaCompile.getOptions())
-                            .getExtensions()
-                            .configure(ErrorProneOptions.class, errorProneOptions -> {
-                                errorProneOptions.check("Slf4jLogsafeArgs", CheckSeverity.OFF);
-                                errorProneOptions.check("PreferSafeLoggableExceptions", CheckSeverity.OFF);
-                                errorProneOptions.check("PreferSafeLoggingPreconditions", CheckSeverity.OFF);
-                                errorProneOptions.check("PreconditionsConstantMessage", CheckSeverity.OFF);
-                            }));
+            project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> ((ExtensionAware)
+                            javaCompile.getOptions())
+                    .getExtensions()
+                    .configure(ErrorProneOptions.class, errorProneOptions -> {
+                        errorProneOptions.check("Slf4jLogsafeArgs", CheckSeverity.OFF);
+                        errorProneOptions.check("PreferSafeLoggableExceptions", CheckSeverity.OFF);
+                        errorProneOptions.check("PreferSafeLoggingPreconditions", CheckSeverity.OFF);
+                        errorProneOptions.check("PreconditionsConstantMessage", CheckSeverity.OFF);
+                    }));
         });
     }
 
