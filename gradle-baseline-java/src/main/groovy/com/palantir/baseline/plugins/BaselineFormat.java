@@ -18,8 +18,6 @@ package com.palantir.baseline.plugins;
 
 import com.diffplug.gradle.spotless.SpotlessExtension;
 import com.diffplug.spotless.FormatterStep;
-import com.google.common.base.Splitter;
-import com.google.common.collect.Streams;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -131,19 +129,11 @@ class BaselineFormat extends AbstractBaselinePlugin {
     }
 
     private static String computeCopyrightComment(Path copyrightFile) {
-        String copyrightContents;
         try {
-            copyrightContents = new String(Files.readAllBytes(copyrightFile), StandardCharsets.UTF_8);
+            return new String(Files.readAllBytes(copyrightFile), StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new RuntimeException("Couldn't read copyright file " + copyrightFile, e);
         }
-        String copyright = copyrightContents.trim();
-        // Spotless expects the literal header so we have to add the Java comment guard and prefixes
-        return Streams.concat(
-                        Stream.of("/*"),
-                        Streams.stream(Splitter.on('\n').split(copyright)).map(line -> " " + ("* " + line).trim()),
-                        Stream.of(" */"))
-                .collect(Collectors.joining("\n"));
     }
 
     private static void configureSpotlessJava(Project project, SpotlessExtension spotlessExtension) {
