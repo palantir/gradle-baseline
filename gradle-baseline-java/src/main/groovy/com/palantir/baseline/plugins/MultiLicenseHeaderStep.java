@@ -79,9 +79,10 @@ public final class MultiLicenseHeaderStep implements Serializable {
 
     private static class LicenseHeader implements Serializable {
         private static final long serialVersionUID = 1L;
+        private static final Pattern YEAR_RANGE = Pattern.compile("[0-9]{4}(-[0-9]{4})?");
+        private static final Pattern SINGLE_YEAR = Pattern.compile("[0-9]{4}");
 
         private final String licenseHeader;
-        private Pattern yearMatcherPattern;
         private final boolean hasYearToken;
         private String licenseHeaderBeforeYearToken;
         private String licenseHeaderAfterYearToken;
@@ -93,7 +94,6 @@ public final class MultiLicenseHeaderStep implements Serializable {
             if (this.hasYearToken) {
                 this.licenseHeaderBeforeYearToken = licenseHeader.substring(0, yearTokenIndex);
                 this.licenseHeaderAfterYearToken = licenseHeader.substring(yearTokenIndex + 5);
-                this.yearMatcherPattern = Pattern.compile("[0-9]{4}(-[0-9]{4})?");
             }
         }
 
@@ -107,7 +107,7 @@ public final class MultiLicenseHeaderStep implements Serializable {
             return startOfTheSecondPart > licenseHeaderBeforeYearToken.length()
                     && (existingHeader.startsWith(licenseHeaderBeforeYearToken)
                             && startOfTheSecondPart + licenseHeaderAfterYearToken.length() == existingHeader.length())
-                    && yearMatcherPattern
+                    && YEAR_RANGE
                             .matcher(existingHeader.substring(
                                     licenseHeaderBeforeYearToken.length(), startOfTheSecondPart))
                             .matches();
@@ -124,8 +124,12 @@ public final class MultiLicenseHeaderStep implements Serializable {
 
         private String render(String existingHeader) {
             if (hasYearToken) {
-                return licenseHeader.replace(
-                        "$YEAR", String.valueOf(YearMonth.now().getYear()));
+                Matcher singleYear = SINGLE_YEAR.matcher(existingHeader);
+                boolean existingHeaderContainsYear = singleYear.find();
+                String year = existingHeaderContainsYear
+                        ? singleYear.group(0)
+                        : String.valueOf(YearMonth.now().getYear());
+                return licenseHeader.replace("$YEAR", year);
             }
             return licenseHeader;
         }
@@ -143,7 +147,7 @@ public final class MultiLicenseHeaderStep implements Serializable {
                 .findFirst();
 
         if (matchingHeader.isPresent()) {
-            // the existing header was considered OK by one of our patterns, so we leave it untouched
+            // the existing header was considered OK by one of our known licenses, so we leave it untouched
             return raw;
         }
 
