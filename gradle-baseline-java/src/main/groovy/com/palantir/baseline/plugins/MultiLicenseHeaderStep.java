@@ -41,14 +41,16 @@ import com.google.common.collect.Streams;
 import java.io.Serializable;
 import java.time.YearMonth;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-/** Prefixes a license header before the package statement. */
-public final class MultiLicenseHeaderStep implements Serializable {
+/**
+ * Ensures java files begin with one of a number of approved copyright licenses. Inspired by spotless'
+ * {@link LicenseHeaderStep}.
+ */
+final class MultiLicenseHeaderStep implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -64,16 +66,16 @@ public final class MultiLicenseHeaderStep implements Serializable {
 
     private final List<LicenseHeader> licenseHeaders;
 
-    private MultiLicenseHeaderStep(List<String> licenseHeaders) {
-        Objects.requireNonNull(licenseHeaders, "licenseHeaders");
-        this.licenseHeaders =
-                licenseHeaders.stream().map(LicenseHeader::fromTemplate).collect(Collectors.toList());
+    private MultiLicenseHeaderStep(List<LicenseHeader> licenseHeaders) {
+        this.licenseHeaders = licenseHeaders;
     }
 
     /** Creates a spotless {@link FormatterStep} which forces the start of each file to match a license header. */
-    public static FormatterStep createFromHeaders(List<String> licenseHeaders) {
+    public static FormatterStep createFromHeaders(List<String> templates) {
+        List<LicenseHeader> headers =
+                templates.stream().map(LicenseHeader::fromTemplate).collect(Collectors.toList());
         return FormatterStep.create(
-                MultiLicenseHeaderStep.NAME, new MultiLicenseHeaderStep(licenseHeaders), step -> step::format);
+                MultiLicenseHeaderStep.NAME, new MultiLicenseHeaderStep(headers), step -> step::format);
     }
 
     public static String name() {
