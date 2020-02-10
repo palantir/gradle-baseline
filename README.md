@@ -224,9 +224,11 @@ as that file will be overridden on updates.
 
 ### Copyright Checks
 
-By default Baseline enforces Palantir copyright at the beginning of files. To change this, edit the template copyright
-in `.baseline/copyright/*.txt` and the RegexpHeader checkstyle configuration in `.baseline/checkstyle/checkstyle.xml`
+Baseline enforces Palantir copyright at the beginning of files when applying `com.palantir.baseline-format`. To change this, edit the template copyright
+in `.baseline/copyright/*.txt`.
+Note that only the first file (sorted lexicographically) is chosen as the copyright for the entire project.
 
+To automatically update all files with mismatching/missing copyrights, run `./gradlew format`.
 
 ## com.palantir.baseline-class-uniqueness
 When applied to a java project, this inspects all the jars in your `runtimeClasspath` configuration and records any conflicts to a `baseline-class-uniqueness.lock` file. For example:
