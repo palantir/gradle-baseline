@@ -166,7 +166,8 @@ class BaselineFormat extends AbstractBaselinePlugin {
             project.getConvention()
                     .getPlugin(JavaPluginConvention.class)
                     .getSourceSets()
-                    .all(sourceSet -> allJavaFiles.from(sourceSet.getAllJava().filter(file ->
+                    .all(sourceSet -> allJavaFiles.from(
+                                sourceSet.getAllJava().filter(file ->
                             !file.toString().contains(GENERATED_MARKER))));
 
             java.target(allJavaFiles);
