@@ -224,9 +224,8 @@ as that file will be overridden on updates.
 
 ### Copyright Checks
 
-Baseline enforces Palantir copyright at the beginning of files when applying `com.palantir.baseline-format`. To change this, edit the template copyright
-in `.baseline/copyright/*.txt`.
-Note that only the first file (sorted lexicographically) is chosen as the copyright for the entire project.
+Baseline enforces Palantir copyright at the beginning of files when applying `com.palantir.baseline-format`. To change this, edit the template copyrights
+in `.baseline/copyright/*.txt`. The largest file (sorted lexicographically) will be used to generate a new copyright if one is missing, or none of the existing templates match.￿
 
 To automatically update all files with mismatching/missing copyrights, run `./gradlew format`.
 

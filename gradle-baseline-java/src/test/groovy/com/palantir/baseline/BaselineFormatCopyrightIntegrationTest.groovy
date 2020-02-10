@@ -30,6 +30,7 @@ class BaselineFormatCopyrightIntegrationTest extends AbstractPluginTest {
                 new File(projectDir, ".baseline"))
 
         // Testing that an empty line is also OK, these can cause gotchas
+        file(".baseline/copyright").deleteDir()
         file(".baseline/copyright/000test") << '''
             (c) Copyright $YEAR GoodCorp
             

@@ -18,8 +18,6 @@ package com.palantir.baseline.plugins;
 
 import com.diffplug.gradle.spotless.SpotlessExtension;
 import com.diffplug.spotless.FormatterStep;
-import com.diffplug.spotless.generic.LicenseHeaderStep;
-import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.google.common.collect.Streams;
 import java.io.File;
@@ -27,7 +25,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Arrays;
+import java.util.Comparator;
+import java.util.List;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -101,9 +100,9 @@ class BaselineFormat extends AbstractBaselinePlugin {
         // Spotless will consider the license header to be the file prefix up to the first line starting with delimiter
         String delimiter = "(?! \\*|/\\*| \\*/)";
 
-        return new LazyFormatterStep(LicenseHeaderStep.name(), () -> {
-            String header = computeCopyrightHeader(project);
-            return LicenseHeaderStep.createFromHeader(header, delimiter);
+        return new LazyFormatterStep(MultiLicenseHeaderStep.name(), () -> {
+            List<String> headers = computeCopyrightHeaders(project);
+            return MultiLicenseHeaderStep.createFromHeaders(headers, delimiter);
         });
     }
 
@@ -119,14 +118,23 @@ class BaselineFormat extends AbstractBaselinePlugin {
         });
     }
 
-    private String computeCopyrightHeader(Project project) {
+    /**
+     * Computes all the copyright headers based on the files inside baseline's {@code copyright} directory. This list
+     * is sorted lexicographically by the file names.
+     */
+    private List<String> computeCopyrightHeaders(Project project) {
         File copyrightDir = project.getRootProject().file(getConfigDir() + "/copyright");
-        Path copyrightFile = Arrays.stream(Preconditions.checkNotNull(
-                        copyrightDir.list(), "Expected some files inside the copyright directory: " + copyrightDir))
-                .sorted()
-                .findFirst()
-                .map(name -> copyrightDir.toPath().resolve(name))
-                .orElseThrow(() -> new RuntimeException("Expected to find a copyright file inside " + copyrightDir));
+        Stream<Path> files;
+        try {
+            files = Files.list(copyrightDir.toPath()).sorted(Comparator.comparing(Path::getFileName));
+        } catch (IOException e) {
+            throw new RuntimeException("Couldn't list copyright directory: " + copyrightDir);
+        }
+
+        return files.map(BaselineFormat::computeCopyrightComment).collect(Collectors.toList());
+    }
+
+    private static String computeCopyrightComment(Path copyrightFile) {
         String copyrightContents;
         try {
             copyrightContents = new String(Files.readAllBytes(copyrightFile), StandardCharsets.UTF_8);
