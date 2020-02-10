@@ -31,10 +31,13 @@ class BaselineFormatCopyrightIntegrationTest extends AbstractPluginTest {
 
         // Testing that an empty line is also OK, these can cause gotchas
         file(".baseline/copyright").deleteDir()
-        file(".baseline/copyright/000test") << '''
+        file(".baseline/copyright/050-test") << '''
             (c) Copyright $YEAR GoodCorp
             
             EXTRA
+        '''.stripIndent()
+        file(".baseline/copyright/000-also-works") << '''
+            (c) Copyright $YEAR OtherCorp
         '''.stripIndent()
     }
 
@@ -60,6 +63,12 @@ class BaselineFormatCopyrightIntegrationTest extends AbstractPluginTest {
          * (c) Copyright 2015-2019 GoodCorp
          *
          * EXTRA
+         */
+    """.stripIndent()
+
+    static goodOtherCopyright = """\
+        /*
+         * (c) Copyright 2019 OtherCorp
          */
     """.stripIndent()
 
@@ -111,11 +120,11 @@ class BaselineFormatCopyrightIntegrationTest extends AbstractPluginTest {
         javaFile.text.startsWith(generatedCopyright)
 
         where:
-        copyrightType | copyright
-        "bad"         | badCopyright
-        "missing"     | ''
-
-        lang << ["groovy", "java"]
+        copyrightType | copyright    | lang
+        "bad"         | badCopyright | "java"
+        "bad"         | badCopyright | "groovy"
+        "missing"     | ''           | "java"
+        "missing"     | ''           | "groovy"
     }
 
     def 'check passes on correct #copyrightType copyright in #lang project'() {
@@ -128,10 +137,12 @@ class BaselineFormatCopyrightIntegrationTest extends AbstractPluginTest {
         with('check').build()
 
         where:
-        copyrightType | copyright
-        "single year" | goodCopyright
-        "year range"  | goodCopyrightRange
-
-        lang << ["groovy", "java"]
+        copyrightType       | copyright          | lang
+        "single year"       | goodCopyright      | "java"
+        "year range"        | goodCopyrightRange | "java"
+        "single year other" | goodOtherCopyright | "java"
+        "single year"       | goodCopyright      | "groovy"
+        "year range"        | goodCopyrightRange | "groovy"
+        "single year other" | goodOtherCopyright | "groovy"
     }
 }
