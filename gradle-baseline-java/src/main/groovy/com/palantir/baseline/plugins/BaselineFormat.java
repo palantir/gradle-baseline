@@ -18,8 +18,6 @@ package com.palantir.baseline.plugins;
 
 import com.diffplug.gradle.spotless.SpotlessExtension;
 import com.diffplug.spotless.FormatterStep;
-import com.google.common.base.Splitter;
-import com.google.common.collect.Streams;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -27,7 +25,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.gradle.api.GradleException;
@@ -97,12 +94,9 @@ class BaselineFormat extends AbstractBaselinePlugin {
      * by {@code baselineUpdateConfig}.
      */
     private FormatterStep createLazyLicenseHeaderStep(Project project) {
-        // Spotless will consider the license header to be the file prefix up to the first line starting with delimiter
-        String delimiter = "(?! \\*|/\\*| \\*/)";
-
         return new LazyFormatterStep(MultiLicenseHeaderStep.name(), () -> {
             List<String> headers = computeCopyrightHeaders(project);
-            return MultiLicenseHeaderStep.createFromHeaders(headers, delimiter);
+            return MultiLicenseHeaderStep.createFromHeaders(headers);
         });
     }
 
@@ -135,22 +129,11 @@ class BaselineFormat extends AbstractBaselinePlugin {
     }
 
     private static String computeCopyrightComment(Path copyrightFile) {
-        String copyrightContents;
         try {
-            copyrightContents = new String(Files.readAllBytes(copyrightFile), StandardCharsets.UTF_8);
+            return new String(Files.readAllBytes(copyrightFile), StandardCharsets.UTF_8);
         } catch (IOException e) {
             throw new RuntimeException("Couldn't read copyright file " + copyrightFile, e);
         }
-        // Spotless expects '$YEAR' but our current patterns use ${today.year}
-        String copyright = copyrightContents
-                .replaceAll(Pattern.quote("${today.year}"), "\\$YEAR")
-                .trim();
-        // Spotless expects the literal header so we have to add the Java comment guard and prefixes
-        return Streams.concat(
-                        Stream.of("/*"),
-                        Streams.stream(Splitter.on('\n').split(copyright)).map(line -> " " + ("* " + line).trim()),
-                        Stream.of(" */"))
-                .collect(Collectors.joining("\n"));
     }
 
     private static void configureSpotlessJava(Project project, SpotlessExtension spotlessExtension) {

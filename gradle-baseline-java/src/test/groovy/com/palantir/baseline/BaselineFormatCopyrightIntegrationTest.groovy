@@ -32,12 +32,12 @@ class BaselineFormatCopyrightIntegrationTest extends AbstractPluginTest {
         // Testing that an empty line is also OK, these can cause gotchas
         file(".baseline/copyright").deleteDir()
         file(".baseline/copyright/050-test") << '''
-            (c) Copyright $YEAR GoodCorp
+            (c) Copyright ${today.year} GoodCorp
             
             EXTRA
         '''.stripIndent()
         file(".baseline/copyright/000-also-works") << '''
-            (c) Copyright $YEAR OtherCorp
+            (c) Copyright ${today.year} OtherCorp
         '''.stripIndent()
     }
 
@@ -45,6 +45,14 @@ class BaselineFormatCopyrightIntegrationTest extends AbstractPluginTest {
     static generatedCopyright = """\
         /*
          * (c) Copyright ${LocalDate.now().year} GoodCorp
+         *
+         * EXTRA
+         */
+    """.stripIndent()
+
+    static generatedCopyright2015 = """\
+        /*
+         * (c) Copyright 2015 GoodCorp
          *
          * EXTRA
          */
@@ -105,7 +113,7 @@ class BaselineFormatCopyrightIntegrationTest extends AbstractPluginTest {
     def 'check fails on #copyrightType copyright in #lang project'() {
         buildFile << standardBuildFile
         def javaFile = file("src/main/$lang/test/Test.$lang")
-        javaFile << copyright
+        javaFile << input
         javaFile << validJavaFile
 
         expect:
@@ -117,14 +125,14 @@ class BaselineFormatCopyrightIntegrationTest extends AbstractPluginTest {
         with('format').build()
 
         then:
-        javaFile.text.startsWith(generatedCopyright)
+        javaFile.text.startsWith(expected)
 
         where:
-        copyrightType | copyright    | lang
-        "bad"         | badCopyright | "java"
-        "bad"         | badCopyright | "groovy"
-        "missing"     | ''           | "java"
-        "missing"     | ''           | "groovy"
+        copyrightType | input        | expected               | lang
+        "bad"         | badCopyright | generatedCopyright2015 | "java"
+        "bad"         | badCopyright | generatedCopyright2015 | "groovy"
+        "missing"     | ''           | generatedCopyright     | "java"
+        "missing"     | ''           | generatedCopyright     | "groovy"
     }
 
     def 'check passes on correct #copyrightType copyright in #lang project'() {

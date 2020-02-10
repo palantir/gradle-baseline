@@ -34,18 +34,23 @@ package com.palantir.baseline.plugins;
 import com.diffplug.spotless.FormatterStep;
 import com.diffplug.spotless.LineEnding;
 import com.diffplug.spotless.generic.LicenseHeaderStep;
+import com.google.common.base.Preconditions;
+import com.google.common.base.Splitter;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Streams;
 import java.io.Serializable;
 import java.time.YearMonth;
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 
-/** Prefixes a license header before the package statement. */
-public final class MultiLicenseHeaderStep implements Serializable {
+/**
+ * Ensures java files begin with one of a number of approved copyright licenses. Inspired by spotless'
+ * {@link LicenseHeaderStep}.
+ */
+final class MultiLicenseHeaderStep implements Serializable {
     private static final long serialVersionUID = 1L;
 
     /**
@@ -55,113 +60,95 @@ public final class MultiLicenseHeaderStep implements Serializable {
      */
     private static final String NAME = "licenseHeader";
 
-    private static final String DEFAULT_YEAR_DELIMITER = "-";
-
-    private final Pattern delimiterPattern;
+    /** Spotless will consider the license header to be the file prefix up to the first line starting with delimiter. */
+    private static final Pattern DELIMITER_PATTERN =
+            Pattern.compile("^(?! \\*|/\\*| \\*/)", Pattern.UNIX_LINES | Pattern.MULTILINE);
 
     private final List<LicenseHeader> licenseHeaders;
 
-    /** Creates a FormatterStep which forces the start of each file to match a license header. */
-    public static FormatterStep createFromHeaders(List<String> licenseHeaders, String delimiter) {
-        return createFromHeaders(licenseHeaders, delimiter, DEFAULT_YEAR_DELIMITER);
+    private MultiLicenseHeaderStep(List<LicenseHeader> licenseHeaders) {
+        this.licenseHeaders = licenseHeaders;
     }
 
-    private static FormatterStep createFromHeaders(
-            List<String> licenseHeaders, String delimiter, String yearSeparator) {
-        Objects.requireNonNull(licenseHeaders, "licenseHeader");
-        Objects.requireNonNull(delimiter, "delimiter");
-        Objects.requireNonNull(yearSeparator, "yearSeparator");
+    /** Creates a spotless {@link FormatterStep} which forces the start of each file to match a license header. */
+    public static FormatterStep createFromHeaders(List<String> templates) {
+        List<LicenseHeader> headers =
+                templates.stream().map(LicenseHeader::fromTemplate).collect(Collectors.toList());
         return FormatterStep.create(
-                MultiLicenseHeaderStep.NAME,
-                new MultiLicenseHeaderStep(licenseHeaders, delimiter, yearSeparator),
-                step -> step::format);
+                MultiLicenseHeaderStep.NAME, new MultiLicenseHeaderStep(headers), step -> step::format);
     }
 
     public static String name() {
         return NAME;
     }
 
-    /** The license that we'd like enforced. */
-    private MultiLicenseHeaderStep(List<String> licenseHeaders, String delimiter, String yearSeparator) {
-        this.delimiterPattern = Pattern.compile('^' + delimiter, Pattern.UNIX_LINES | Pattern.MULTILINE);
-        this.licenseHeaders = licenseHeaders.stream()
-                .map(header -> new LicenseHeader(header, delimiter, yearSeparator))
-                .collect(Collectors.toList());
-    }
-
     private static class LicenseHeader implements Serializable {
         private static final long serialVersionUID = 1L;
+        private static final Pattern YEAR_RANGE = Pattern.compile("[0-9]{4}(-[0-9]{4})?");
+        private static final String YEAR_TOKEN = "${today.year}";
 
-        private final String licenseHeader;
-        private Pattern yearMatcherPattern;
-        private final boolean hasYearToken;
-        private String licenseHeaderBeforeYearToken;
-        private String licenseHeaderAfterYearToken;
-        private String licenseHeaderWithYearTokenReplaced;
+        private final String licenseHeaderBeforeYearToken;
+        private final String licenseHeaderAfterYearToken;
 
-        LicenseHeader(String licenseHeader0, String delimiter, String yearSeparator) {
-            if (delimiter.contains("\n")) {
-                throw new IllegalArgumentException("The delimiter must not contain any newlines.");
-            }
-            // sanitize the input license
-            String licenseHeader1 = LineEnding.toUnix(licenseHeader0);
-            if (!licenseHeader1.endsWith("\n")) {
-                licenseHeader1 = licenseHeader1 + "\n";
-            }
-            this.licenseHeader = licenseHeader1;
-            this.hasYearToken = licenseHeader1.contains("$YEAR");
-            if (this.hasYearToken) {
-                int yearTokenIndex = licenseHeader1.indexOf("$YEAR");
-                this.licenseHeaderBeforeYearToken = licenseHeader1.substring(0, yearTokenIndex);
-                this.licenseHeaderAfterYearToken = licenseHeader1.substring(yearTokenIndex + 5);
-                this.licenseHeaderWithYearTokenReplaced = licenseHeader1.replace(
-                        "$YEAR", String.valueOf(YearMonth.now().getYear()));
-                this.yearMatcherPattern = Pattern.compile("[0-9]{4}(" + Pattern.quote(yearSeparator) + "[0-9]{4})?");
-            }
+        private LicenseHeader(String licenseHeader) {
+            Preconditions.checkArgument(
+                    licenseHeader.contains(YEAR_TOKEN),
+                    "License header must contain year token",
+                    YEAR_TOKEN,
+                    licenseHeader);
+            int yearTokenIndex = licenseHeader.indexOf(YEAR_TOKEN);
+            this.licenseHeaderBeforeYearToken = licenseHeader.substring(0, yearTokenIndex);
+            this.licenseHeaderAfterYearToken = licenseHeader.substring(yearTokenIndex + YEAR_TOKEN.length());
         }
 
-        private boolean matchesLicenseWithYearToken(String existingHeader) {
+        static LicenseHeader fromTemplate(String template) {
+            String unixEndings = LineEnding.toUnix(template.trim());
+            Iterable<String> lines = Splitter.on('\n').trimResults().split(unixEndings);
+            String javadocHeader = Streams.stream(lines)
+                    .map(line -> line.isEmpty() ? " *" : " * " + line)
+                    .collect(Collectors.joining("\n"));
+            return new LicenseHeader("/*\n" + javadocHeader + "\n */\n");
+        }
+
+        private boolean matches(String existingHeader) {
             int startOfTheSecondPart = existingHeader.indexOf(licenseHeaderAfterYearToken);
             return startOfTheSecondPart > licenseHeaderBeforeYearToken.length()
                     && (existingHeader.startsWith(licenseHeaderBeforeYearToken)
                             && startOfTheSecondPart + licenseHeaderAfterYearToken.length() == existingHeader.length())
-                    && yearMatcherPattern
+                    && YEAR_RANGE
                             .matcher(existingHeader.substring(
                                     licenseHeaderBeforeYearToken.length(), startOfTheSecondPart))
                             .matches();
         }
 
-        private boolean matches(String existingHeader) {
-            if (hasYearToken) {
-                // that means we have the license like `licenseHeaderBeforeYearToken 1990-2015
-                // licenseHeaderAfterYearToken`
-                return matchesLicenseWithYearToken(existingHeader);
-            }
-            return existingHeader.equals(licenseHeader);
-        }
-
-        private String render() {
-            if (hasYearToken) {
-                return licenseHeaderWithYearTokenReplaced;
-            }
-            return licenseHeader;
+        private String render(String existingHeader) {
+            Matcher yearInfo = YEAR_RANGE.matcher(existingHeader);
+            boolean existingHeaderContainsYear = yearInfo.find();
+            String year = existingHeaderContainsYear
+                    ? yearInfo.group(0)
+                    : String.valueOf(YearMonth.now().getYear());
+            return licenseHeaderBeforeYearToken + year + licenseHeaderAfterYearToken;
         }
     }
 
     /** Formats the given string. */
     public String format(String raw) {
-        Matcher matcher = delimiterPattern.matcher(raw);
-        if (!matcher.find()) {
-            throw new IllegalArgumentException("Unable to find delimiter regex " + delimiterPattern);
-        } else {
-            Optional<LicenseHeader> matchingHeader = licenseHeaders.stream()
-                    .filter(header -> header.matches(raw.substring(0, matcher.start())))
-                    .findFirst();
-            if (matchingHeader.isPresent()) {
-                return raw;
-            }
-            // Otherwise, replace with the last header.
-            return Iterables.getLast(licenseHeaders).render() + raw.substring(matcher.start());
+        Matcher matcher = DELIMITER_PATTERN.matcher(raw);
+        Preconditions.checkArgument(matcher.find(), "Raw input must match delimiter somewhere", DELIMITER_PATTERN, raw);
+        String existingHeader = raw.substring(0, matcher.start());
+        String rest = raw.substring(matcher.start());
+
+        Optional<LicenseHeader> matchingHeader = licenseHeaders.stream()
+                .filter(header -> header.matches(existingHeader))
+                .findFirst();
+
+        if (matchingHeader.isPresent()) {
+            // the existing header was considered OK by one of our known licenses, so we leave it untouched
+            return raw;
         }
+
+        // None of our license patterns matched, so we'll replace it with the preferred one
+        LicenseHeader preferredHeader = Iterables.getLast(licenseHeaders);
+        return preferredHeader.render(existingHeader) + rest;
     }
 }
