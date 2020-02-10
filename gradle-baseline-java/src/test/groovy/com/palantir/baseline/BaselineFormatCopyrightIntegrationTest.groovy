@@ -32,12 +32,12 @@ class BaselineFormatCopyrightIntegrationTest extends AbstractPluginTest {
         // Testing that an empty line is also OK, these can cause gotchas
         file(".baseline/copyright").deleteDir()
         file(".baseline/copyright/050-test") << '''
-            (c) Copyright $YEAR GoodCorp
+            (c) Copyright ${today.year} GoodCorp
             
             EXTRA
         '''.stripIndent()
         file(".baseline/copyright/000-also-works") << '''
-            (c) Copyright $YEAR OtherCorp
+            (c) Copyright ${today.year} OtherCorp
         '''.stripIndent()
     }
 

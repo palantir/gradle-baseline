@@ -27,7 +27,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Comparator;
 import java.util.List;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.gradle.api.GradleException;
@@ -138,10 +137,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
         } catch (IOException e) {
             throw new RuntimeException("Couldn't read copyright file " + copyrightFile, e);
         }
-        // Spotless expects '$YEAR' but our current patterns use ${today.year}
-        String copyright = copyrightContents
-                .replaceAll(Pattern.quote("${today.year}"), "\\$YEAR")
-                .trim();
+        String copyright = copyrightContents.trim();
         // Spotless expects the literal header so we have to add the Java comment guard and prefixes
         return Streams.concat(
                         Stream.of("/*"),
