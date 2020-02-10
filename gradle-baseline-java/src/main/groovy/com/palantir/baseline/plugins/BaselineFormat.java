@@ -17,9 +17,19 @@
 package com.palantir.baseline.plugins;
 
 import com.diffplug.gradle.spotless.SpotlessExtension;
+import com.diffplug.spotless.FormatterStep;
+import com.google.common.base.Splitter;
+import com.google.common.collect.Streams;
 import java.io.File;
+import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Comparator;
+import java.util.List;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -41,6 +51,109 @@ class BaselineFormat extends AbstractBaselinePlugin {
     public void apply(Project project) {
         this.project = project;
 
+        project.getPluginManager().apply("com.diffplug.gradle.spotless");
+
+        SpotlessExtension spotlessExtension = project.getExtensions().getByType(SpotlessExtension.class);
+        // Keep spotless from eagerly configuring all other tasks.  We do the same thing as the enforceCheck
+        // property below by making the check task depend on spotlessCheck.
+        // See  https://github.com/diffplug/spotless/issues/444
+        spotlessExtension.setEnforceCheck(false);
+
+        // Allow disabling copyright for tests
+        if (!"false".equals(project.findProperty("com.palantir.baseline-format.copyright"))) {
+            configureCopyrightStep(project, spotlessExtension);
+        }
+
+        // necessary because SpotlessPlugin creates tasks in an afterEvaluate block
+        TaskProvider<Task> formatTask = project.getTasks().register("format", task -> {
+            task.setGroup("Formatting");
+        });
+        project.afterEvaluate(p -> {
+            formatTask.configure(t -> {
+                t.dependsOn("spotlessApply");
+            });
+
+            // re-enable spotless checking, but lazily so it doesn't eagerly configure everything else
+            project.getTasks().named(JavaBasePlugin.CHECK_TASK_NAME).configure(t -> {
+                t.dependsOn(project.getTasks().named("spotlessCheck"));
+            });
+
+            // The copyright step configures itself lazily to allow for baselineUpdateConfig to potentially create the
+            // right files. Therefore, also make sure that these will run in the right order.
+            project.getPluginManager().withPlugin("com.palantir.baseline-config", baselineConfig -> {
+                project.getTasks()
+                        .matching(t -> t.getName().startsWith("spotless"))
+                        .configureEach(t -> t.mustRunAfter("baselineUpdateConfig"));
+            });
+        });
+
+        project.getPluginManager().withPlugin("java", plugin -> {
+            configureSpotlessJava(project, spotlessExtension);
+        });
+    }
+
+    /**
+     * Necessary in order to not fail right away if the copyright folder doesn't exist yet, because it would be created
+     * by {@code baselineUpdateConfig}.
+     */
+    private FormatterStep createLazyLicenseHeaderStep(Project project) {
+        // Spotless will consider the license header to be the file prefix up to the first line starting with delimiter
+        String delimiter = "(?! \\*|/\\*| \\*/)";
+
+        return new LazyFormatterStep(MultiLicenseHeaderStep.name(), () -> {
+            List<String> headers = computeCopyrightHeaders(project);
+            return MultiLicenseHeaderStep.createFromHeaders(headers, delimiter);
+        });
+    }
+
+    private void configureCopyrightStep(Project project, SpotlessExtension spotlessExtension) {
+        project.getPluginManager().withPlugin("java", javaPlugin -> {
+            spotlessExtension.java(java -> java.addStep(createLazyLicenseHeaderStep(project)));
+        });
+
+        // This is tricky as configuring this naively yields the following error:
+        // > You must apply the groovy plugin before the spotless plugin if you are using the groovy extension.
+        project.getPluginManager().withPlugin("groovy", groovyPlugin -> {
+            spotlessExtension.groovy(groovy -> groovy.addStep(createLazyLicenseHeaderStep(project)));
+        });
+    }
+
+    /**
+     * Computes all the copyright headers based on the files inside baseline's {@code copyright} directory. This list
+     * is sorted lexicographically by the file names.
+     */
+    private List<String> computeCopyrightHeaders(Project project) {
+        File copyrightDir = project.getRootProject().file(getConfigDir() + "/copyright");
+        Stream<Path> files;
+        try {
+            files = Files.list(copyrightDir.toPath()).sorted(Comparator.comparing(Path::getFileName));
+        } catch (IOException e) {
+            throw new RuntimeException("Couldn't list copyright directory: " + copyrightDir);
+        }
+
+        return files.map(BaselineFormat::computeCopyrightComment).collect(Collectors.toList());
+    }
+
+    private static String computeCopyrightComment(Path copyrightFile) {
+        String copyrightContents;
+        try {
+            copyrightContents = new String(Files.readAllBytes(copyrightFile), StandardCharsets.UTF_8);
+        } catch (IOException e) {
+            throw new RuntimeException("Couldn't read copyright file " + copyrightFile, e);
+        }
+        // Spotless expects '$YEAR' but our current patterns use ${today.year}
+        String copyright = copyrightContents
+                .replaceAll(Pattern.quote("${today.year}"), "\\$YEAR")
+                .trim();
+        // Spotless expects the literal header so we have to add the Java comment guard and prefixes
+        return Streams.concat(
+                        Stream.of("/*"),
+                        Streams.stream(Splitter.on('\n').split(copyright)).map(line -> " " + ("* " + line).trim()),
+                        Stream.of(" */"))
+                .collect(Collectors.joining("\n"));
+    }
+
+    private static void configureSpotlessJava(Project project, SpotlessExtension spotlessExtension) {
         if (palantirJavaFormatterState(project) == FormatterState.ON) {
             project.getPlugins().apply(PJF_PLUGIN); // provides the formatDiff task
         }
@@ -56,58 +169,35 @@ class BaselineFormat extends AbstractBaselinePlugin {
             });
         }
 
-        project.getPluginManager().withPlugin("java", plugin -> {
-            project.getPluginManager().apply("com.diffplug.gradle.spotless");
-            Path eclipseXml = eclipseConfigFile(project);
+        Path eclipseXml = eclipseConfigFile(project);
+        spotlessExtension.java(java -> {
+            // Configure a lazy FileCollection then pass it as the target
+            ConfigurableFileCollection allJavaFiles = project.files();
+            project.getConvention()
+                    .getPlugin(JavaPluginConvention.class)
+                    .getSourceSets()
+                    .all(sourceSet -> allJavaFiles.from(sourceSet.getAllJava().filter(file ->
+                            !file.toString().contains(GENERATED_MARKER))));
 
-            SpotlessExtension spotlessExtension = project.getExtensions().getByType(SpotlessExtension.class);
-            spotlessExtension.java(java -> {
-                // Configure a lazy FileCollection then pass it as the target
-                ConfigurableFileCollection allJavaFiles = project.files();
-                project.getConvention()
-                        .getPlugin(JavaPluginConvention.class)
-                        .getSourceSets()
-                        .all(sourceSet -> allJavaFiles.from(
-                                sourceSet.getAllJava().filter(file ->
-                                        !file.toString().contains(GENERATED_MARKER))));
+            java.target(allJavaFiles);
+            java.removeUnusedImports();
+            // use empty string to specify one group for all non-static imports
+            java.importOrder("");
 
-                java.target(allJavaFiles);
-                java.removeUnusedImports();
-                // use empty string to specify one group for all non-static imports
-                java.importOrder("");
+            if (eclipseFormattingEnabled(project)) {
+                java.eclipse().configFile(project.file(eclipseXml.toString()));
+            }
 
-                if (eclipseFormattingEnabled(project)) {
-                    java.eclipse().configFile(project.file(eclipseXml.toString()));
-                }
+            java.trimTrailingWhitespace();
+        });
 
-                java.trimTrailingWhitespace();
-            });
+        project.afterEvaluate(p -> {
+            Task spotlessJava = project.getTasks().getByName("spotlessJava");
+            if (eclipseFormattingEnabled(project) && !Files.exists(eclipseXml)) {
+                spotlessJava.dependsOn(":baselineUpdateConfig");
+            }
 
-            // Keep spotless from eagerly configuring all other tasks.  We do the same thing as the enforceCheck
-            // property below by making the check task depend on spotlessCheck.
-            // See  https://github.com/diffplug/spotless/issues/444
-            spotlessExtension.setEnforceCheck(false);
-
-            // necessary because SpotlessPlugin creates tasks in an afterEvaluate block
-            TaskProvider<Task> formatTask = project.getTasks().register("format", task -> {
-                task.setGroup("Formatting");
-            });
-            project.afterEvaluate(p -> {
-                Task spotlessJava = project.getTasks().getByName("spotlessJava");
-                Task spotlessApply = project.getTasks().getByName("spotlessApply");
-                if (eclipseFormattingEnabled(project) && !Files.exists(eclipseXml)) {
-                    spotlessJava.dependsOn(":baselineUpdateConfig");
-                }
-                formatTask.configure(t -> {
-                    t.dependsOn(spotlessApply);
-                });
-                project.getTasks().withType(JavaCompile.class).configureEach(spotlessJava::mustRunAfter);
-
-                // re-enable spotless checking, but lazily so it doesn't eagerly configure everything else
-                project.getTasks().named(JavaBasePlugin.CHECK_TASK_NAME).configure(t -> {
-                    t.dependsOn(project.getTasks().named("spotlessCheck"));
-                });
-            });
+            project.getTasks().withType(JavaCompile.class).configureEach(spotlessJava::mustRunAfter);
         });
     }
 
