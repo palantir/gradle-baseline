@@ -108,7 +108,9 @@ class BaselineFormat extends AbstractBaselinePlugin {
     }
 
     private void configureCopyrightStep(Project project, SpotlessExtension spotlessExtension) {
-        spotlessExtension.java(java -> java.addStep(createLazyLicenseHeaderStep(project)));
+        project.getPluginManager().withPlugin("java", javaPlugin -> {
+            spotlessExtension.java(java -> java.addStep(createLazyLicenseHeaderStep(project)));
+        });
 
         // This is tricky as configuring this naively yields the following error:
         // > You must apply the groovy plugin before the spotless plugin if you are using the groovy extension.
@@ -166,8 +168,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
             project.getConvention()
                     .getPlugin(JavaPluginConvention.class)
                     .getSourceSets()
-                    .all(sourceSet -> allJavaFiles.from(
-                                sourceSet.getAllJava().filter(file ->
+                    .all(sourceSet -> allJavaFiles.from(sourceSet.getAllJava().filter(file ->
                             !file.toString().contains(GENERATED_MARKER))));
 
             java.target(allJavaFiles);
