@@ -97,12 +97,9 @@ class BaselineFormat extends AbstractBaselinePlugin {
      * by {@code baselineUpdateConfig}.
      */
     private FormatterStep createLazyLicenseHeaderStep(Project project) {
-        // Spotless will consider the license header to be the file prefix up to the first line starting with delimiter
-        String delimiter = "(?! \\*|/\\*| \\*/)";
-
         return new LazyFormatterStep(MultiLicenseHeaderStep.name(), () -> {
             List<String> headers = computeCopyrightHeaders(project);
-            return MultiLicenseHeaderStep.createFromHeaders(headers, delimiter);
+            return MultiLicenseHeaderStep.createFromHeaders(headers);
         });
     }
 
