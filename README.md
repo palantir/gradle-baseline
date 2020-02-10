@@ -371,4 +371,7 @@ Configures some sensible defaults:
 
 The plugin also adds a `checkJUnitDependencies` to make the migration to JUnit5 safer.  Specifically, it should prevent cases where the tests could silently not run due to misconfigured dependencies.
 
+3. For repos that use 'snapshot' style testing, it's convenient to have a single command to accept the updated snapshots after a code change.
+This plugin ensures that if you run tests with `./gradlew test -Drecreate=true`, the system property will be passed down to the running Java process (which can be detected with `Boolean.getBoolean("recreate")`).
+
 

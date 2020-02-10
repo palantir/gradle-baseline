@@ -46,6 +46,14 @@ public final class BaselineTesting implements Plugin<Project> {
                 // Never cache test tasks, until we work out the correct inputs for ETE / integration tests
                 task.getOutputs().cacheIf(t -> false);
             }
+
+            // repos that use 'snapshot' style testing should all use one convenient task to refresh the snapshots,
+            // ./gradlew test -Drecreate=true
+            boolean shouldRecreate = Boolean.getBoolean("recreate");
+            task.systemProperty("recreate", Boolean.toString(shouldRecreate));
+            if (shouldRecreate) {
+                task.getOutputs().upToDateWhen(t -> false);
+            }
         });
 
         project.getPlugins().withType(JavaPlugin.class, unusedPlugin -> {

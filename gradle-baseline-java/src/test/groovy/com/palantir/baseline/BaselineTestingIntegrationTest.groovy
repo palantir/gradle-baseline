@@ -160,4 +160,23 @@ class BaselineTestingIntegrationTest extends AbstractPluginTest {
         BuildResult result = with('checkJUnitDependencies').buildAndFail()
         result.output.contains 'Tests may be silently not running! Spock dependency detected'
     }
+
+    def 'running -Drecreate=true will re-run tests even if no code changes'() {
+        when:
+        buildFile << standardBuildFile
+        file('src/test/java/test/TestClass4.java') << junit4Test
+
+        then:
+        BuildResult result = with('test').build()
+        result.task(':test').getOutcome() == TaskOutcome.SUCCESS
+
+        BuildResult result2 = with('test').build()
+        result2.task(':test').getOutcome() == TaskOutcome.UP_TO_DATE
+
+        BuildResult result3 = with('test', '-Drecreate=true').build()
+        result3.task(':test').getOutcome() == TaskOutcome.SUCCESS
+
+        BuildResult result4 = with('test', '-Drecreate=true').build()
+        result4.task(':test').getOutcome() == TaskOutcome.SUCCESS
+    }
 }
