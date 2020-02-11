@@ -103,7 +103,7 @@ final class MultiLicenseHeaderStep implements Serializable {
 
         static LicenseHeader fromTemplate(String template) {
             String unixEndings = LineEnding.toUnix(template.trim());
-            Iterable<String> lines = Splitter.on('\n').trimResults().split(unixEndings);
+            Iterable<String> lines = Splitter.on('\n').split(unixEndings);
             String javadocHeader = Streams.stream(lines)
                     .map(line -> line.isEmpty() ? " *" : " * " + line)
                     .collect(Collectors.joining("\n"));

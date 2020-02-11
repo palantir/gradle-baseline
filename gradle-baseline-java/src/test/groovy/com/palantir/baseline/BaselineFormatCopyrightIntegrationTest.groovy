@@ -5,7 +5,7 @@
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
- *     http://www.apache.org/licenses/LICENSE-2.0
+ *     http://url-to-some-license
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the License is distributed on an "AS IS" BASIS,
@@ -34,7 +34,7 @@ class BaselineFormatCopyrightIntegrationTest extends AbstractPluginTest {
         file(".baseline/copyright/050-test") << '''
             (c) Copyright ${today.year} GoodCorp
             
-            EXTRA
+                http://url-to-some-license
         '''.stripIndent()
         file(".baseline/copyright/000-also-works") << '''
             (c) Copyright ${today.year} OtherCorp
@@ -46,7 +46,7 @@ class BaselineFormatCopyrightIntegrationTest extends AbstractPluginTest {
         /*
          * (c) Copyright ${LocalDate.now().year} GoodCorp
          *
-         * EXTRA
+         *     http://url-to-some-license
          */
     """.stripIndent()
 
@@ -54,7 +54,7 @@ class BaselineFormatCopyrightIntegrationTest extends AbstractPluginTest {
         /*
          * (c) Copyright 2015 GoodCorp
          *
-         * EXTRA
+         *     http://url-to-some-license
          */
     """.stripIndent()
 
@@ -62,7 +62,7 @@ class BaselineFormatCopyrightIntegrationTest extends AbstractPluginTest {
         /*
          * (c) Copyright 2019 GoodCorp
          *
-         * EXTRA
+         *     http://url-to-some-license
          */
     """.stripIndent()
 
@@ -70,7 +70,7 @@ class BaselineFormatCopyrightIntegrationTest extends AbstractPluginTest {
         /*
          * (c) Copyright 2015-2019 GoodCorp
          *
-         * EXTRA
+         *     http://url-to-some-license
          */
     """.stripIndent()
 
@@ -84,7 +84,7 @@ class BaselineFormatCopyrightIntegrationTest extends AbstractPluginTest {
         /*
          * (c) Copyright 2015 EvilCorp
          *
-         * EXTRA
+         *     http://url-to-some-license
          */
     """.stripIndent()
 
