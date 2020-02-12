@@ -115,10 +115,11 @@ public final class CatchSpecificity extends BugChecker implements BugChecker.Try
                 List<Type> replacements = deduplicateCatchTypes(
                         ImmutableList.<Type>builder()
                                 .addAll(thrown)
-                                .addAll((isThrowable ? THROWABLE_REPLACEMENTS : EXCEPTION_REPLACEMENTS).stream()
-                                        .map(name -> Preconditions.checkNotNull(
-                                                state.getTypeFromString(name), "Failed to find type"))
-                                        .collect(ImmutableList.toImmutableList()))
+                                .addAll((isThrowable ? THROWABLE_REPLACEMENTS : EXCEPTION_REPLACEMENTS)
+                                        .stream()
+                                                .map(name -> Preconditions.checkNotNull(
+                                                        state.getTypeFromString(name), "Failed to find type"))
+                                                .collect(ImmutableList.toImmutableList()))
                                 .build(),
                         encounteredTypes,
                         state);

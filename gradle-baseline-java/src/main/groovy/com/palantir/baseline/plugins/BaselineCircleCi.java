@@ -81,8 +81,9 @@ public final class BaselineCircleCi implements Plugin<Project> {
             throw new RuntimeException("failed to create CIRCLE_TEST_REPORTS directory", e);
         }
 
-        project.getExtensions().configure(JunitReportsExtension.class, junitReports ->
-                junitReports.getReportsDirectory().set(new File(circleReportsDir)));
+        project.getExtensions().configure(JunitReportsExtension.class, junitReports -> junitReports
+                .getReportsDirectory()
+                .set(new File(circleReportsDir)));
     }
 
     private static File junitPath(String basePath, String testPath) {

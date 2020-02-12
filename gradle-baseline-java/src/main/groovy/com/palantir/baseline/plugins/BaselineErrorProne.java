@@ -129,8 +129,9 @@ public final class BaselineErrorProne implements Plugin<Project> {
                                         .map(File::new)
                                         .collect(Collectors.toList());
                                 FileCollection errorProneFiles = conf.plus(project.files(bootstrapClasspath));
-                                project.getTasks().withType(Test.class).configureEach(test ->
-                                        test.setBootstrapClasspath(errorProneFiles));
+                                project.getTasks()
+                                        .withType(Test.class)
+                                        .configureEach(test -> test.setBootstrapClasspath(errorProneFiles));
                                 project.getTasks().withType(Javadoc.class).configureEach(javadoc -> javadoc.getOptions()
                                         .setBootClasspath(new LazyConfigurationList(errorProneFiles)));
                             });

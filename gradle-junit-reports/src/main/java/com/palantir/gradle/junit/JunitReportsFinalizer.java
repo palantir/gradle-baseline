@@ -46,8 +46,9 @@ public class JunitReportsFinalizer extends DefaultTask {
         finalizer.setStyleTask(task);
         finalizer.setTaskTimer(timer);
         finalizer.setFailuresSupplier(failuresSupplier);
-        finalizer.getTargetFile().set(reportDir.map(dir ->
-                dir.file(task.getProject().getName() + "-" + task.getName() + ".xml")));
+        finalizer
+                .getTargetFile()
+                .set(reportDir.map(dir -> dir.file(task.getProject().getName() + "-" + task.getName() + ".xml")));
         finalizer.getReportDir().set(reportDir);
 
         task.finalizedBy(finalizer);

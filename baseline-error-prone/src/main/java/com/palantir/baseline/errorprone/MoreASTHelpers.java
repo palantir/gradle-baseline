@@ -71,9 +71,10 @@ final class MoreASTHelpers {
         }
         ImmutableList<Type> deduplicated = deduplicatedBuilder.build();
         return deduplicated.stream()
-                .filter(type -> deduplicated.stream().noneMatch(item ->
-                        // An item cannot deduplicate itself
-                        type != item && state.getTypes().isSubtype(type, item)))
+                .filter(type -> deduplicated.stream()
+                        .noneMatch(item ->
+                                // An item cannot deduplicate itself
+                                type != item && state.getTypes().isSubtype(type, item)))
                 // Sort by pretty name
                 .sorted(Comparator.comparing(type -> MoreSuggestedFixes.prettyType(state, null, type)))
                 .collect(ImmutableList.toImmutableList());

@@ -292,13 +292,16 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
     }
 
     private static void renameVariable(int startPos, int endPos, String name, SuggestedFix.Builder fix) {
-        EXEMPT_PREFIXES.stream().filter(name::startsWith).findFirst().ifPresent(prefix -> fix.replace(
-                startPos,
-                endPos,
-                prefix.length() == name.length()
-                        // Fall back to a generic variable name if the prefix is the entire variable name
-                        ? "value"
-                        : CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, name.substring(prefix.length()))));
+        EXEMPT_PREFIXES.stream()
+                .filter(name::startsWith)
+                .findFirst()
+                .ifPresent(prefix -> fix.replace(
+                        startPos,
+                        endPos,
+                        prefix.length() == name.length()
+                                // Fall back to a generic variable name if the prefix is the entire variable name
+                                ? "value"
+                                : CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, name.substring(prefix.length()))));
     }
 
     private static SuggestedFix makeAssignmentDeclaration(
@@ -704,8 +707,9 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             if (isSuppressed(tree)) {
                 return null;
             }
-            if (EXEMPTING_SUPER_TYPES.stream().anyMatch(t ->
-                    isSubtype(getType(tree), Suppliers.typeFromString(t).get(state), state))) {
+            if (EXEMPTING_SUPER_TYPES.stream()
+                    .anyMatch(t ->
+                            isSubtype(getType(tree), Suppliers.typeFromString(t).get(state), state))) {
                 return null;
             }
             return super.visitClass(tree, null);

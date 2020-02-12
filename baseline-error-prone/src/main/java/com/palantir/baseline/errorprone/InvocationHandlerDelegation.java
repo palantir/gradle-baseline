@@ -96,7 +96,8 @@ public final class InvocationHandlerDelegation extends BugChecker implements Bug
             Matchers.isSubtypeOf(InvocationTargetException.class));
 
     private static final Matcher<Tree> CONTAINS_INSTANCEOF_ITE = Matchers.contains(
-            InstanceOfTree.class, (instanceOfTree, state) -> ASTHelpers.isSameType(
+            InstanceOfTree.class,
+            (instanceOfTree, state) -> ASTHelpers.isSameType(
                     ASTHelpers.getType(instanceOfTree.getType()),
                     state.getTypeFromString(InvocationTargetException.class.getName()),
                     state));
