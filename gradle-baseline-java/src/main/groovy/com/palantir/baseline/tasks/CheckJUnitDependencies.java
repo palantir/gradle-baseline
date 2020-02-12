@@ -144,9 +144,11 @@ public class CheckJUnitDependencies extends DefaultTask {
 
     private boolean sourceSetMentionsJUnit4(SourceSet ss) {
         return !ss.getAllJava()
-                .filter(file -> fileContainsSubstring(file, l -> l.contains("org.junit.Test")
-                        || l.contains("org.junit.runner")
-                        || l.contains("org.junit.ClassRule")))
+                .filter(file -> fileContainsSubstring(
+                        file,
+                        l -> l.contains("org.junit.Test")
+                                || l.contains("org.junit.runner")
+                                || l.contains("org.junit.ClassRule")))
                 .isEmpty();
     }
 

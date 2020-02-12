@@ -92,8 +92,9 @@ public final class StringBuilderConstantParameters extends BugChecker
                 .addFix(SuggestedFix.builder()
                         .replace(
                                 tree,
-                                Streams.concat(prefixStream, arguments.stream().map(node ->
-                                                getArgumentSourceString(state, node)))
+                                Streams.concat(
+                                                prefixStream,
+                                                arguments.stream().map(node -> getArgumentSourceString(state, node)))
                                         .collect(Collectors.joining(" + ")))
                         .build())
                 .build();
