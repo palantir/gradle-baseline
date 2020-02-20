@@ -86,7 +86,7 @@ topics:
     all offices)
 - Java Concurrency in Practice (copies exist in all offices)
 - [Writing Testable Code](http://misko.hevery.com/code-reviewers-guide/)
-- [How to Design a GoodAPI and Why it Matters (Bloch)](http://lcsd05.cs.tamu.edu/slides/keynote.pdf)
+- [How to Design a GoodAPI and Why it Matters (Bloch)](http://fwdinnovations.net/whitepaper/APIDesign.pdf)
 
 ## Miscellaneous
 
