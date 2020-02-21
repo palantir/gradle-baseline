@@ -19,6 +19,7 @@
         <property name="lineSeparator" value="lf"/>
     </module>
     <module name="RegexpMultiline"> <!-- Development Practices: Writing good unit tests -->
+        <property name="id" value="VisibleForTestingPackagePrivate"/>
         <property name="fileExtensions" value="java"/>
         <property name="format" value="@VisibleForTesting\s+(protected|public)"/>
         <property name="message" value="@VisibleForTesting members should be package-private."/>
