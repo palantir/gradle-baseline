@@ -37,10 +37,9 @@ import java.util.List;
         linkType = BugPattern.LinkType.CUSTOM,
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = SeverityLevel.WARNING,
-        summary =
-                "Prefer Guava's Lists.partition(List, int) instead of Iterables.partition(Iterable, int) when "
-                        + "first argument's declared type is a list for performance reasons, "
-                        + "cf. https://github.com/palantir/gradle-baseline/issues/621")
+        summary = "Prefer Guava's Lists.partition(List, int) instead of Iterables.partition(Iterable, int) when "
+                + "first argument's declared type is a list for performance reasons, "
+                + "cf. https://github.com/palantir/gradle-baseline/issues/621")
 public final class PreferListsPartition extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;

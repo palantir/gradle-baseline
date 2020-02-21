@@ -35,11 +35,10 @@ import java.util.concurrent.ExecutorService;
         linkType = BugPattern.LinkType.CUSTOM,
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = BugPattern.SeverityLevel.ERROR,
-        summary =
-                "Uncaught exceptions from ExecutorService.submit are not logged by the uncaught exception handler "
-                        + "because it is assumed that the returned future is used to watch for failures.\n"
-                        + "When the returned future is ignored, using ExecutorService.execute is preferred because "
-                        + "failures are recorded.")
+        summary = "Uncaught exceptions from ExecutorService.submit are not logged by the uncaught exception handler "
+                + "because it is assumed that the returned future is used to watch for failures.\n"
+                + "When the returned future is ignored, using ExecutorService.execute is preferred because "
+                + "failures are recorded.")
 public final class ExecutorSubmitRunnableFutureIgnored extends AbstractReturnValueIgnored {
 
     private static final Matcher<ExpressionTree> MATCHER = MethodMatchers.instanceMethod()

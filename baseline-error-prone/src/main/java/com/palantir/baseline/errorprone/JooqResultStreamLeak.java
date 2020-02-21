@@ -36,10 +36,9 @@ import com.sun.tools.javac.code.Type;
         linkType = BugPattern.LinkType.CUSTOM,
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = BugPattern.SeverityLevel.WARNING,
-        summary =
-                "Methods that return an autocloseable resource on jOOQ's ResultQuery should be closed using"
-                    + " try-with-resources. Not doing so can result in leaked database resources (such as connections"
-                    + " or cursors) in code paths that throw an exception or fail to call #close().")
+        summary = "Methods that return an autocloseable resource on jOOQ's ResultQuery should be closed using"
+                + " try-with-resources. Not doing so can result in leaked database resources (such as connections"
+                + " or cursors) in code paths that throw an exception or fail to call #close().")
 public final class JooqResultStreamLeak extends StreamResourceLeak {
     private static final Matcher<ExpressionTree> MATCHER = MethodMatchers.instanceMethod()
             .onDescendantOf("org.jooq.ResultQuery")

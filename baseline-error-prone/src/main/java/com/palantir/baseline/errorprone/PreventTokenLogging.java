@@ -33,9 +33,8 @@ import com.sun.source.tree.MethodInvocationTree;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.ERROR,
-        summary =
-                "Authentication token information should never be logged as it poses a security risk. Prevents "
-                        + "AuthHeader and BearerToken information from being passed to common logging calls.")
+        summary = "Authentication token information should never be logged as it poses a security risk. Prevents "
+                + "AuthHeader and BearerToken information from being passed to common logging calls.")
 public final class PreventTokenLogging extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final Matcher<ExpressionTree> METHOD_MATCHER = Matchers.anyOf(

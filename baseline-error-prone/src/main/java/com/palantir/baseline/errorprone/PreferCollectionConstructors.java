@@ -56,9 +56,8 @@ import java.util.stream.Collectors;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.SUGGESTION,
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
-        summary =
-                "Since Java 7 the standard collection constructors should be used instead of the static factory "
-                        + "methods provided by Guava.")
+        summary = "Since Java 7 the standard collection constructors should be used instead of the static factory "
+                + "methods provided by Guava.")
 public final class PreferCollectionConstructors extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
