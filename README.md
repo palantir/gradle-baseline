@@ -188,7 +188,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `LoggerEnclosingClass`: Loggers created using getLogger(Class<?>) must reference their enclosing class.
 - `UnnecessaryLambdaArgumentParentheses`: Lambdas with a single parameter do not require argument parentheses.
 - `RawTypes`: Avoid raw types; add appropriate type parameters if possible.
-- `VisibleForTestingPackagePrivate`: @VisibleForTesting members should be package-private.
+- `VisibleForTestingPackagePrivate`: `@VisibleForTesting` members should be package-private.
 
 ### Programmatic Application
 
