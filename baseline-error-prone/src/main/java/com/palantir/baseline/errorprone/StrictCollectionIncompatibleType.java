@@ -54,9 +54,8 @@ import javax.annotation.Nullable;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,
-        summary =
-                "Likely programming error due to using incompatible types as "
-                        + "arguments for a collection method that accepts Object.")
+        summary = "Likely programming error due to using incompatible types as "
+                + "arguments for a collection method that accepts Object.")
 public final class StrictCollectionIncompatibleType extends BugChecker
         implements BugChecker.MethodInvocationTreeMatcher, BugChecker.MemberReferenceTreeMatcher {
 

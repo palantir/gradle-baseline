@@ -35,13 +35,12 @@ import com.sun.tools.javac.code.Symbol;
         linkType = BugPattern.LinkType.CUSTOM,
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = BugPattern.SeverityLevel.WARNING,
-        summary =
-                "Using TaggedMetricRegistry.gauge is equivalent to map.putIfAbsent, and can result in subtle "
-                        + "resource leaks. Prefer replacing existing gauge values.\n"
-                        // This check may begin to fail after a version upgrade, where fixes aren't automatically
-                        // applied
-                        + "This can be fixed automatically using "
-                        + "./gradlew compileJava compileTestJava -PerrorProneApply=UnsafeGaugeRegistration")
+        summary = "Using TaggedMetricRegistry.gauge is equivalent to map.putIfAbsent, and can result in subtle "
+                + "resource leaks. Prefer replacing existing gauge values.\n"
+                // This check may begin to fail after a version upgrade, where fixes aren't automatically
+                // applied
+                + "This can be fixed automatically using "
+                + "./gradlew compileJava compileTestJava -PerrorProneApply=UnsafeGaugeRegistration")
 public final class UnsafeGaugeRegistration extends AbstractReturnValueIgnored {
 
     private static final String TAGGED_REGISTRY = "com.palantir.tritium.metrics.registry.TaggedMetricRegistry";

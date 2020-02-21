@@ -35,9 +35,8 @@ import com.sun.source.tree.ExpressionTree;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
-        summary =
-                "Disallow usage of Jackson's JsonTypeInfo.Id.CLASS annotation for security reasons, "
-                        + "cf. https://github.com/FasterXML/jackson-databind/issues/1599")
+        summary = "Disallow usage of Jackson's JsonTypeInfo.Id.CLASS annotation for security reasons, "
+                + "cf. https://github.com/FasterXML/jackson-databind/issues/1599")
 public final class DangerousJsonTypeInfoUsage extends BugChecker implements BugChecker.AnnotationTreeMatcher {
 
     private static final long serialVersionUID = 1L;

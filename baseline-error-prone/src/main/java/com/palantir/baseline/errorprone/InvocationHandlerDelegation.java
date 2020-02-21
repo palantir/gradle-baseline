@@ -47,13 +47,12 @@ import java.lang.reflect.Method;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,
-        summary =
-                "InvocationHandlers which delegate to another object must catch and unwrap "
-                        + "InvocationTargetException, otherwise an UndeclaredThrowableException will be thrown "
-                        + "each time the delegate throws an exception.\n"
-                        + "This check is intended to be advisory. It's fine to "
-                        + "@SuppressWarnings(\"InvocationHandlerDelegation\") in certain cases, "
-                        + "but is usually not recommended.")
+        summary = "InvocationHandlers which delegate to another object must catch and unwrap "
+                + "InvocationTargetException, otherwise an UndeclaredThrowableException will be thrown "
+                + "each time the delegate throws an exception.\n"
+                + "This check is intended to be advisory. It's fine to "
+                + "@SuppressWarnings(\"InvocationHandlerDelegation\") in certain cases, "
+                + "but is usually not recommended.")
 public final class InvocationHandlerDelegation extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final Matcher<MethodTree> INVOCATION_HANDLER = Matchers.anyOf(

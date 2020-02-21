@@ -34,9 +34,8 @@ import java.util.regex.Pattern;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.ERROR,
-        summary =
-                "use your webserver's managed resource functionality instead of "
-                        + "using Runtime#addShutdownHook directly.")
+        summary = "use your webserver's managed resource functionality instead of "
+                + "using Runtime#addShutdownHook directly.")
 public final class ShutdownHook extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
