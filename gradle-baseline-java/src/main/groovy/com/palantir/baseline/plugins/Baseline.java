@@ -45,6 +45,7 @@ public final class Baseline implements Plugin<Project> {
             proj.getPluginManager().apply(BaselineExactDependencies.class);
             proj.getPluginManager().apply(BaselineReleaseCompatibility.class);
             proj.getPluginManager().apply(BaselineTesting.class);
+            proj.getPluginManager().apply(BaselineFixGradleJava.class);
 
             // TODO(dfox): enable this when it has been validated on a few real projects
             // proj.getPluginManager().apply(BaselineClassUniquenessPlugin.class);
