@@ -21,6 +21,7 @@ import com.palantir.baseline.tasks.CheckClassUniquenessLockTask;
 import java.util.List;
 import org.gradle.StartParameter;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.language.base.plugins.LifecycleBasePlugin;
@@ -41,8 +42,16 @@ public class BaselineClassUniquenessPlugin extends AbstractBaselinePlugin {
         project.getTasks().getByName(LifecycleBasePlugin.CHECK_TASK_NAME).dependsOn(checkClassUniqueness);
 
         project.getPlugins().withId("java", plugin -> {
-            checkClassUniqueness.configure(t -> t.configurations.add(
-                    project.getConfigurations().getByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME)));
+            checkClassUniqueness.configure(t -> {
+                Configuration runtimeClasspath =
+                        project.getConfigurations().getByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME);
+                t.configurations.add(runtimeClasspath);
+
+                // runtimeClasspath might contain jars which are 'builtBy' other tasks, for example conjure-generated
+                // objects. This dependsOn ensures that all those pre-requisite tasks get invoked first, otherwise
+                // we see log.info warnings about missing jars e.g. 'Skipping non-existent jar foo-api-objects.jar'
+                t.dependsOn(runtimeClasspath);
+            });
         });
 
         // Wire up dependencies so running `./gradlew --write-locks` will update the lock file

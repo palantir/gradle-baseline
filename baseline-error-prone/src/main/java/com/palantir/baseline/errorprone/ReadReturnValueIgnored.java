@@ -46,9 +46,8 @@ import java.util.Optional;
         linkType = BugPattern.LinkType.CUSTOM,
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = BugPattern.SeverityLevel.ERROR,
-        summary =
-                "The result of a read call must be checked to know if EOF has been reached or the expected number "
-                        + "of bytes have been consumed.")
+        summary = "The result of a read call must be checked to know if EOF has been reached or the expected number "
+                + "of bytes have been consumed.")
 public final class ReadReturnValueIgnored extends AbstractReturnValueIgnored {
 
     // MethodMatchers does not support matching arrays

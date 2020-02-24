@@ -1,4 +1,20 @@
 /*
+ * (c) Copyright 2018 Palantir Technologies Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+/*
  * Copyright 2018 The Error Prone Authors.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -276,13 +292,16 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
     }
 
     private static void renameVariable(int startPos, int endPos, String name, SuggestedFix.Builder fix) {
-        EXEMPT_PREFIXES.stream().filter(name::startsWith).findFirst().ifPresent(prefix -> fix.replace(
-                startPos,
-                endPos,
-                prefix.length() == name.length()
-                        // Fall back to a generic variable name if the prefix is the entire variable name
-                        ? "value"
-                        : CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, name.substring(prefix.length()))));
+        EXEMPT_PREFIXES.stream()
+                .filter(name::startsWith)
+                .findFirst()
+                .ifPresent(prefix -> fix.replace(
+                        startPos,
+                        endPos,
+                        prefix.length() == name.length()
+                                // Fall back to a generic variable name if the prefix is the entire variable name
+                                ? "value"
+                                : CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, name.substring(prefix.length()))));
     }
 
     private static SuggestedFix makeAssignmentDeclaration(
@@ -688,8 +707,9 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             if (isSuppressed(tree)) {
                 return null;
             }
-            if (EXEMPTING_SUPER_TYPES.stream().anyMatch(t ->
-                    isSubtype(getType(tree), Suppliers.typeFromString(t).get(state), state))) {
+            if (EXEMPTING_SUPER_TYPES.stream()
+                    .anyMatch(t ->
+                            isSubtype(getType(tree), Suppliers.typeFromString(t).get(state), state))) {
                 return null;
             }
             return super.visitClass(tree, null);

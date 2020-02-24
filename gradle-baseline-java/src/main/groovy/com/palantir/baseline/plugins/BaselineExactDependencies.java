@@ -163,9 +163,9 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                 }
             });
 
-            declaredDependencies.forEach(
-                    dependency -> dependency.getModuleArtifacts().forEach(artifact ->
-                            artifactsFromDependency.put(artifact, dependency)));
+            declaredDependencies.forEach(dependency -> dependency
+                    .getModuleArtifacts()
+                    .forEach(artifact -> artifactsFromDependency.put(artifact, dependency)));
         }
 
         /** Given a class, what dependency brought it in. */

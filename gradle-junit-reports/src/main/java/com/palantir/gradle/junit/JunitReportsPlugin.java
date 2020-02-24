@@ -58,16 +58,22 @@ public final class JunitReportsPlugin implements Plugin<Project> {
                         .getJunitXml()
                         .setDestination(junitPath(reportsExtension.getReportsDirectory(), test.getPath()));
             });
-            proj.getTasks().withType(Checkstyle.class, checkstyle -> JunitReportsFinalizer.registerFinalizer(
-                    checkstyle,
-                    timer,
-                    XmlReportFailuresSupplier.create(checkstyle, new CheckstyleReportHandler()),
-                    reportsExtension.getReportsDirectory().map(dir -> dir.dir("checkstyle"))));
-            proj.getTasks().withType(JavaCompile.class, javac -> JunitReportsFinalizer.registerFinalizer(
-                    javac,
-                    timer,
-                    JavacFailuresSupplier.create(javac),
-                    reportsExtension.getReportsDirectory().map(dir -> dir.dir("javac"))));
+            proj.getTasks()
+                    .withType(
+                            Checkstyle.class,
+                            checkstyle -> JunitReportsFinalizer.registerFinalizer(
+                                    checkstyle,
+                                    timer,
+                                    XmlReportFailuresSupplier.create(checkstyle, new CheckstyleReportHandler()),
+                                    reportsExtension.getReportsDirectory().map(dir -> dir.dir("checkstyle"))));
+            proj.getTasks()
+                    .withType(
+                            JavaCompile.class,
+                            javac -> JunitReportsFinalizer.registerFinalizer(
+                                    javac,
+                                    timer,
+                                    JavacFailuresSupplier.create(javac),
+                                    reportsExtension.getReportsDirectory().map(dir -> dir.dir("javac"))));
         });
     }
 

@@ -45,13 +45,15 @@ public final class BaselineScalastyle extends AbstractBaselinePlugin {
                             + javaConvention.getTargetCompatibility().toString())));
             project.getRootProject().getPluginManager().withPlugin("idea", ideaPlugin -> project.getRootProject()
                     .getExtensions()
-                    .configure(IdeaModel.class, ideaModel -> configureIdeaPlugin(
-                            ideaModel,
-                            javaConvention
-                                    .getSourceSets()
-                                    .named(SourceSet.MAIN_SOURCE_SET_NAME)
-                                    .get(),
-                            javaConvention.getTargetCompatibility().toString())));
+                    .configure(
+                            IdeaModel.class,
+                            ideaModel -> configureIdeaPlugin(
+                                    ideaModel,
+                                    javaConvention
+                                            .getSourceSets()
+                                            .named(SourceSet.MAIN_SOURCE_SET_NAME)
+                                            .get(),
+                                    javaConvention.getTargetCompatibility().toString())));
             project.getPluginManager().apply(ScalaStylePlugin.class);
             TaskCollection<ScalaStyleTask> scalaStyleTasks = project.getTasks().withType(ScalaStyleTask.class);
             scalaStyleTasks.configureEach(scalaStyleTask -> {

@@ -45,12 +45,11 @@ import javax.lang.model.element.Modifier;
         linkType = BugPattern.LinkType.CUSTOM,
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = BugPattern.SeverityLevel.WARNING,
-        summary =
-                "A class should be declared final if all of its constructors are private. Utility classes -- "
-                        + "i.e., classes all of whose methods and fields are static -- have a private, empty, "
-                        + "zero-argument constructor.\n"
-                        + "https://github.com/palantir/gradle-baseline/tree/develop/docs/best-practices/"
-                        + "java-coding-guidelines#private-constructors")
+        summary = "A class should be declared final if all of its constructors are private. Utility classes -- "
+                + "i.e., classes all of whose methods and fields are static -- have a private, empty, "
+                + "zero-argument constructor.\n"
+                + "https://github.com/palantir/gradle-baseline/tree/develop/docs/best-practices/"
+                + "java-coding-guidelines#private-constructors")
 public final class FinalClass extends BugChecker implements BugChecker.ClassTreeMatcher {
 
     private static final Matcher<MethodTree> SIMPLIFIABLE_INSTANCE_METHOD = Matchers.allOf(
