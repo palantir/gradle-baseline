@@ -45,6 +45,7 @@ import org.gradle.api.attributes.Usage;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.TaskProvider;
 
 /** Validates that java projects declare exactly the dependencies they rely on, no more and no less. */
 public final class BaselineExactDependencies implements Plugin<Project> {
@@ -66,30 +67,43 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                     .getByName(SourceSet.MAIN_SOURCE_SET_NAME);
             Configuration compileClasspath =
                     project.getConfigurations().getByName(JavaPlugin.COMPILE_CLASSPATH_CONFIGURATION_NAME);
-            Configuration compileOnly =
-                    project.getConfigurations().getByName(JavaPlugin.COMPILE_ONLY_CONFIGURATION_NAME);
-            Configuration justCompileOnlyResolvable = project.getConfigurations()
-                    .create("baseline-exact-dependencies-compileOnly", conf -> {
-                        conf.setVisible(false);
-                        conf.setCanBeConsumed(false);
-                        conf.extendsFrom(compileOnly);
-                        // Important! this ensures we resolve 'compile' variants rather than 'runtime'
-                        // This is the same attribute that's being set on compileClasspath
-                        conf.getAttributes()
-                                .attribute(
-                                        Usage.USAGE_ATTRIBUTE,
-                                        project.getObjects().named(Usage.class, Usage.JAVA_API));
+
+            TaskProvider<CheckUnusedDependenciesTask> checkUnusedDependencies = project.getTasks()
+                    .register("checkUnusedDependencies", CheckUnusedDependenciesTask.class, task -> {
+                        task.dependsOn(JavaPlugin.CLASSES_TASK_NAME);
+                        task.setSourceClasses(mainSourceSet.getOutput().getClassesDirs());
+                        task.dependenciesConfiguration(compileClasspath);
+
+                        // this is liberally applied to ease the Java8 -> 11 transition
+                        task.ignore("javax.annotation", "javax.annotation-api");
                     });
 
-            project.getTasks().create("checkUnusedDependencies", CheckUnusedDependenciesTask.class, task -> {
-                task.dependsOn(JavaPlugin.CLASSES_TASK_NAME);
-                task.setSourceClasses(mainSourceSet.getOutput().getClassesDirs());
-                task.dependenciesConfiguration(compileClasspath);
-                task.sourceOnlyConfiguration(justCompileOnlyResolvable);
-
-                // this is liberally applied to ease the Java8 -> 11 transition
-                task.ignore("javax.annotation", "javax.annotation-api");
-            });
+            project.getConvention()
+                    .getPlugin(JavaPluginConvention.class)
+                    .getSourceSets()
+                    .forEach(sourceSet -> {
+                        Configuration compileOnly =
+                                project.getConfigurations().getByName(sourceSet.getCompileOnlyConfigurationName());
+                        checkUnusedDependencies.configure(task -> {
+                            task.sourceOnlyConfiguration(project.getConfigurations()
+                                    .create(
+                                            "baseline-exact-dependencies-"
+                                                    + sourceSet.getCompileOnlyConfigurationName(),
+                                            conf -> {
+                                                conf.setVisible(false);
+                                                conf.setCanBeConsumed(false);
+                                                conf.extendsFrom(compileOnly);
+                                                // Important! this ensures we resolve 'compile' variants rather than
+                                                // 'runtime'
+                                                // This is the same attribute that's being set on compileClasspath
+                                                conf.getAttributes()
+                                                        .attribute(
+                                                                Usage.USAGE_ATTRIBUTE,
+                                                                project.getObjects()
+                                                                        .named(Usage.class, Usage.JAVA_API));
+                                            }));
+                        });
+                    });
 
             project.getTasks().create("checkImplicitDependencies", CheckImplicitDependenciesTask.class, task -> {
                 task.dependsOn(JavaPlugin.CLASSES_TASK_NAME);
