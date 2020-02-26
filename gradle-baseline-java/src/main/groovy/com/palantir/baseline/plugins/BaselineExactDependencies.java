@@ -63,19 +63,13 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                     .getPlugin(JavaPluginConvention.class)
                     .getSourceSets()
                     .getByName(SourceSet.MAIN_SOURCE_SET_NAME);
-            Configuration compileClasspath =
-                    project.getConfigurations().getByName(JavaPlugin.COMPILE_CLASSPATH_CONFIGURATION_NAME);
-            Configuration compileOnlyClasspath =
-                    project.getConfigurations().getByName(JavaPlugin.COMPILE_ONLY_CONFIGURATION_NAME);
-            Configuration annotationProcessorClasspath =
-                    project.getConfigurations().getByName(JavaPlugin.ANNOTATION_PROCESSOR_CONFIGURATION_NAME);
+            Configuration runtimeClasspath =
+                    project.getConfigurations().getByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME);
 
             project.getTasks().create("checkUnusedDependencies", CheckUnusedDependenciesTask.class, task -> {
                 task.dependsOn(JavaPlugin.CLASSES_TASK_NAME);
                 task.setSourceClasses(mainSourceSet.getOutput().getClassesDirs());
-                task.dependenciesConfiguration(compileClasspath);
-                task.sourceOnlyConfiguration(compileOnlyClasspath);
-                task.sourceOnlyConfiguration(annotationProcessorClasspath);
+                task.dependenciesConfiguration(runtimeClasspath);
 
                 // this is liberally applied to ease the Java8 -> 11 transition
                 task.ignore("javax.annotation", "javax.annotation-api");
@@ -84,7 +78,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
             project.getTasks().create("checkImplicitDependencies", CheckImplicitDependenciesTask.class, task -> {
                 task.dependsOn(JavaPlugin.CLASSES_TASK_NAME);
                 task.setSourceClasses(mainSourceSet.getOutput().getClassesDirs());
-                task.dependenciesConfiguration(compileClasspath);
+                task.dependenciesConfiguration(runtimeClasspath);
 
                 task.ignore("org.slf4j", "slf4j-api");
             });
