@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Fix baseline-exact-dependencies to no longer resolve compileOnly directly.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1260
