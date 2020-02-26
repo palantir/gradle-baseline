@@ -26,6 +26,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         plugins {
             id 'java'
             id 'com.palantir.baseline-exact-dependencies'
+            id 'com.palantir.baseline' apply false
         }
     '''.stripIndent()
 
@@ -37,6 +38,22 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
     def 'both tasks vacuously pass with no dependencies'() {
         when:
         buildFile << standardBuildFile
+        file('src/main/java/pkg/Foo.java') << minimalJavaFile
+
+        then:
+        with('checkUnusedDependencies', 'checkImplicitDependencies', '--stacktrace').build()
+    }
+
+    def 'both tasks vacuously pass with no dependencies when entire baseline is applied'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << """
+            repositories {
+                jcenter()
+                mavenLocal() // for baseline-error-prone
+            }
+            apply plugin: 'com.palantir.baseline'
+        """.stripIndent()
         file('src/main/java/pkg/Foo.java') << minimalJavaFile
 
         then:
