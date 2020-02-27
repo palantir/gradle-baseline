@@ -86,8 +86,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                     conf.setVisible(false);
                     conf.setCanBeConsumed(false);
                     conf.extendsFrom(compileOnly);
-                    // Important! this ensures we resolve 'compile' variants rather than
-                    // 'runtime'
+                    // Important! this ensures we resolve 'compile' variants rather than 'runtime'
                     // This is the same attribute that's being set on compileClasspath
                     conf.getAttributes()
                             .attribute(
