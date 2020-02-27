@@ -191,7 +191,7 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
     }
 
     public final void sourceOnlyConfiguration(Configuration configuration) {
-        Preconditions.checkNotNull(configuration);
+        Preconditions.checkNotNull(configuration, "This method requires a non-null configuration");
         Preconditions.checkArgument(
                 configuration.isCanBeResolved(),
                 "May only add sourceOnlyConfiguration if it is resolvable: %s",
