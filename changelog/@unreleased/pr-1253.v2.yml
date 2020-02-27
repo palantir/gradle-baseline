@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Migrate VisibleForTesting validation from checkstyle to errorprone
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1253
