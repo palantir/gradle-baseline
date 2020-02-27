@@ -81,17 +81,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
         Configuration compileClasspath =
                 project.getConfigurations().getByName(sourceSet.getCompileClasspathConfigurationName());
         Configuration compileOnly = project.getConfigurations().getByName(sourceSet.getCompileOnlyConfigurationName());
-        Configuration resolvableCompileOnly = project.getConfigurations()
-                .create("baseline-exact-dependencies-" + sourceSet.getCompileOnlyConfigurationName(), conf -> {
-                    conf.setVisible(false);
-                    conf.setCanBeConsumed(false);
-                    conf.extendsFrom(compileOnly);
-                    // Important! this ensures we resolve 'compile' variants rather than 'runtime'
-                    // This is the same attribute that's being set on compileClasspath
-                    conf.getAttributes()
-                            .attribute(
-                                    Usage.USAGE_ATTRIBUTE, project.getObjects().named(Usage.class, Usage.JAVA_API));
-                });
+        Configuration resolvableCompileOnly = makeInternalCompileConfiguration(project, compileOnly);
         TaskProvider<CheckUnusedDependenciesTask> sourceSetUnusedDependencies = project.getTasks()
                 .register(
                         GUtil.toLowerCamelCase("checkUnusedDependencies " + sourceSet.getName()),
@@ -99,6 +89,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                         task -> {
                             task.dependsOn(sourceSet.getClassesTaskName());
                             task.setSourceClasses(sourceSet.getOutput().getClassesDirs());
+                            // Note: want to exclude 'inherited' deps from other source sets
                             task.dependenciesConfiguration(compileClasspath);
                             task.sourceOnlyConfiguration(resolvableCompileOnly);
 
@@ -118,6 +109,18 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                             task.ignore("org.slf4j", "slf4j-api");
                         });
         checkImplicitDependencies.configure(task -> task.dependsOn(sourceSetCheckImplicitDependencies));
+    }
+
+    private static Configuration makeInternalCompileConfiguration(Project project, Configuration compileOnly) {
+        return project.getConfigurations().create("baseline-exact-dependencies-" + compileOnly.getName(), conf -> {
+            conf.setVisible(false);
+            conf.setCanBeConsumed(false);
+            conf.extendsFrom(compileOnly);
+            // Important! this ensures we resolve 'compile' variants rather than 'runtime'
+            // This is the same attribute that's being set on compileClasspath
+            conf.getAttributes()
+                    .attribute(Usage.USAGE_ATTRIBUTE, project.getObjects().named(Usage.class, Usage.JAVA_API));
+        });
     }
 
     /** Given a {@code com/palantir/product/Foo.class} file, what other classes does it import/reference. */
