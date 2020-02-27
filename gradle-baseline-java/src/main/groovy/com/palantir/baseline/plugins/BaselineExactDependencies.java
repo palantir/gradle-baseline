@@ -43,7 +43,6 @@ import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.attributes.Usage;
-import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
@@ -99,7 +98,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                         GUtil.toLowerCamelCase("checkUnusedDependencies " + sourceSet.getName()),
                         CheckUnusedDependenciesTask.class,
                         task -> {
-                            task.dependsOn(JavaPlugin.CLASSES_TASK_NAME);
+                            task.dependsOn(sourceSet.getClassesTaskName());
                             task.setSourceClasses(sourceSet.getOutput().getClassesDirs());
                             task.dependenciesConfiguration(compileClasspath);
                             task.sourceOnlyConfiguration(resolvableCompileOnly);
@@ -113,7 +112,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                         GUtil.toLowerCamelCase("checkImplicitDependencies " + sourceSet.getName()),
                         CheckImplicitDependenciesTask.class,
                         task -> {
-                            task.dependsOn(JavaPlugin.CLASSES_TASK_NAME);
+                            task.dependsOn(sourceSet.getClassesTaskName());
                             task.setSourceClasses(sourceSet.getOutput().getClassesDirs());
                             task.dependenciesConfiguration(compileClasspath);
 
