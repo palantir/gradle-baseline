@@ -16,6 +16,7 @@
 
 package com.palantir.baseline.tasks;
 
+import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Streams;
 import com.palantir.baseline.plugins.BaselineExactDependencies;
@@ -190,6 +191,11 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
     }
 
     public final void sourceOnlyConfiguration(Configuration configuration) {
+        Preconditions.checkNotNull(configuration);
+        Preconditions.checkArgument(
+                configuration.isCanBeResolved(),
+                "May only add sourceOnlyConfiguration if it is resolvable: %s",
+                configuration);
         this.sourceOnlyConfigurations.add(Objects.requireNonNull(configuration));
     }
 
