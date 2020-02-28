@@ -112,6 +112,22 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         result.task(':checkUnusedDependenciesMain').getOutcome() == TaskOutcome.SUCCESS
     }
 
+    def 'checkUnusedDependencies wires up other task dependencies'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << """
+        task prerequisite
+        dependencies {
+            compile project.files().builtBy('prerequisite')
+        }
+        """
+        file('src/main/java/pkg/Foo.java') << minimalJavaFile
+
+        then:
+        def result = with('checkUnusedDependencies', '--stacktrace').build()
+        result.task(':prerequisite').getOutcome() == TaskOutcome.SUCCESS
+    }
+
     def 'checkUnusedDependenciesTest passes if dependency from main source set is not referenced in test'() {
         when:
         buildFile << standardBuildFile
