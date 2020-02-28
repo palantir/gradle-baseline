@@ -107,9 +107,14 @@ public final class BaselineExactDependencies implements Plugin<Project> {
         //  \-- testCompile       extendsFrom(compile)
         // We therefore want to look at only the dependencies _directly_ declared in the implementation and compile
         // configurations (belonging to our source set)
-        project.afterEvaluate(p -> {
+        explicitCompile.withDependencies(deps -> {
             Configuration implCopy = implementation.copy();
             Configuration compileCopy = compile.copy();
+            // Without these, explicitCompile will successfully resolve 0 files and you'll waste 1 hour trying
+            // to figure out why.
+            project.getConfigurations().add(implCopy);
+            project.getConfigurations().add(compileCopy);
+
             explicitCompile.extendsFrom(implCopy, compileCopy);
             // Mirror the transitive constraints form compileClasspath in order to pick up GCV locks.
             // We should really do this with an addAllLater but that would require Gradle 6, or a hacky workaround.
