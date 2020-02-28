@@ -87,7 +87,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         then:
         BuildResult result = with('checkUnusedDependencies', '--stacktrace').buildAndFail()
         result.task(':classes').getOutcome() == TaskOutcome.SUCCESS
-        result.task(':checkUnusedDependencies').getOutcome() == TaskOutcome.FAILED
+        result.task(':checkUnusedDependenciesMain').getOutcome() == TaskOutcome.FAILED
         result.output.contains("Found 1 dependencies unused during compilation")
     }
 
@@ -109,6 +109,32 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         BuildResult result = with('checkUnusedDependencies', '--stacktrace').build()
         result.task(':classes').getOutcome() == TaskOutcome.SUCCESS
         result.task(':checkUnusedDependencies').getOutcome() == TaskOutcome.SUCCESS
+        result.task(':checkUnusedDependenciesMain').getOutcome() == TaskOutcome.SUCCESS
+    }
+
+    def 'checkUnusedDependenciesTest passes if dependency from main source set is not referenced in test'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << """
+        repositories {
+            mavenCentral()
+        }
+        dependencies {
+            compile 'com.google.guava:guava:28.0-jre'
+        }
+        """
+        file('src/main/java/pkg/Foo.java') << '''
+        package pkg;
+        public class Foo {
+            void foo() {
+                com.google.common.collect.ImmutableList.of();
+            }
+        }
+        '''.stripIndent()
+
+        then:
+        def result = with('checkUnusedDependencies', '--stacktrace').build()
+        result.task(':checkUnusedDependenciesTest').getOutcome() == TaskOutcome.SUCCESS
     }
 
     def 'checkImplicitDependencies fails when a class is imported without being declared as a dependency'() {
@@ -134,7 +160,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         then:
         BuildResult result = with('checkImplicitDependencies', '--stacktrace').buildAndFail()
         result.task(':classes').getOutcome() == TaskOutcome.SUCCESS
-        result.task(':checkImplicitDependencies').getOutcome() == TaskOutcome.FAILED
+        result.task(':checkImplicitDependenciesMain').getOutcome() == TaskOutcome.FAILED
         result.output.contains("Found 1 implicit dependencies")
     }
 
@@ -156,7 +182,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         then:
         BuildResult result = with('checkImplicitDependencies', '--stacktrace').withDebug(true).buildAndFail()
         result.task(':classes').getOutcome() == TaskOutcome.SUCCESS
-        result.task(':checkImplicitDependencies').getOutcome() == TaskOutcome.FAILED
+        result.task(':checkImplicitDependenciesMain').getOutcome() == TaskOutcome.FAILED
         result.output.contains("Found 1 implicit dependencies")
         result.output.contains("implementation project(':sub-project-no-deps')")
     }

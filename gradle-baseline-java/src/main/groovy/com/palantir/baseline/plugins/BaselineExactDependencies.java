@@ -17,6 +17,8 @@
 package com.palantir.baseline.plugins;
 
 import com.google.common.base.Preconditions;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.ImmutableSet;
 import com.palantir.baseline.tasks.CheckImplicitDependenciesTask;
 import com.palantir.baseline.tasks.CheckUnusedDependenciesTask;
@@ -35,16 +37,19 @@ import org.apache.maven.shared.dependency.analyzer.DependencyAnalyzer;
 import org.apache.maven.shared.dependency.analyzer.asm.ASMDependencyAnalyzer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ExcludeRule;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.attributes.Usage;
-import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.TaskProvider;
+import org.gradle.util.GUtil;
 
 /** Validates that java projects declare exactly the dependencies they rely on, no more and no less. */
 public final class BaselineExactDependencies implements Plugin<Project> {
@@ -60,45 +65,100 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     @Override
     public void apply(Project project) {
         project.getPluginManager().withPlugin("java", plugin -> {
-            SourceSet mainSourceSet = project.getConvention()
+            TaskProvider<Task> checkUnusedDependencies = project.getTasks().register("checkUnusedDependencies");
+            TaskProvider<Task> checkImplicitDependencies = project.getTasks().register("checkImplicitDependencies");
+
+            project.getConvention()
                     .getPlugin(JavaPluginConvention.class)
                     .getSourceSets()
-                    .getByName(SourceSet.MAIN_SOURCE_SET_NAME);
-            Configuration compileClasspath =
-                    project.getConfigurations().getByName(JavaPlugin.COMPILE_CLASSPATH_CONFIGURATION_NAME);
-            Configuration compileOnly =
-                    project.getConfigurations().getByName(JavaPlugin.COMPILE_ONLY_CONFIGURATION_NAME);
-            Configuration justCompileOnlyResolvable = project.getConfigurations()
-                    .create("baseline-exact-dependencies-compileOnly", conf -> {
-                        conf.setVisible(false);
-                        conf.setCanBeConsumed(false);
-                        conf.extendsFrom(compileOnly);
-                        // Important! this ensures we resolve 'compile' variants rather than 'runtime'
-                        // This is the same attribute that's being set on compileClasspath
-                        conf.getAttributes()
-                                .attribute(
-                                        Usage.USAGE_ATTRIBUTE,
-                                        project.getObjects().named(Usage.class, Usage.JAVA_API));
-                    });
-
-            project.getTasks().create("checkUnusedDependencies", CheckUnusedDependenciesTask.class, task -> {
-                task.dependsOn(JavaPlugin.CLASSES_TASK_NAME);
-                task.setSourceClasses(mainSourceSet.getOutput().getClassesDirs());
-                task.dependenciesConfiguration(compileClasspath);
-                task.sourceOnlyConfiguration(justCompileOnlyResolvable);
-
-                // this is liberally applied to ease the Java8 -> 11 transition
-                task.ignore("javax.annotation", "javax.annotation-api");
-            });
-
-            project.getTasks().create("checkImplicitDependencies", CheckImplicitDependenciesTask.class, task -> {
-                task.dependsOn(JavaPlugin.CLASSES_TASK_NAME);
-                task.setSourceClasses(mainSourceSet.getOutput().getClassesDirs());
-                task.dependenciesConfiguration(compileClasspath);
-
-                task.ignore("org.slf4j", "slf4j-api");
-            });
+                    .all(sourceSet ->
+                            configureSourceSet(project, sourceSet, checkUnusedDependencies, checkImplicitDependencies));
         });
+    }
+
+    private static void configureSourceSet(
+            Project project,
+            SourceSet sourceSet,
+            TaskProvider<Task> checkUnusedDependencies,
+            TaskProvider<Task> checkImplicitDependencies) {
+        Configuration implementation =
+                project.getConfigurations().getByName(sourceSet.getImplementationConfigurationName());
+        Configuration compile = project.getConfigurations().getByName(sourceSet.getCompileConfigurationName());
+        Configuration compileClasspath =
+                project.getConfigurations().getByName(sourceSet.getCompileClasspathConfigurationName());
+
+        Configuration explicitCompile = project.getConfigurations()
+                .create("baseline-exact-dependencies-" + sourceSet.getName(), conf -> {
+                    conf.setDescription(String.format(
+                            "Tracks the explicit (not inherited) dependencies added to either %s or %s",
+                            compile.toString(), implementation.toString()));
+                    conf.setVisible(false);
+                    conf.setCanBeConsumed(false);
+                    // Important! this ensures we resolve 'compile' variants rather than 'runtime'
+                    // This is the same attribute that's being set on compileClasspath
+                    conf.getAttributes()
+                            .attribute(
+                                    Usage.USAGE_ATTRIBUTE, project.getObjects().named(Usage.class, Usage.JAVA_API));
+                });
+
+        // Figure out what our compile dependencies are while ignoring dependencies we've inherited from other source
+        // sets. For example, if we are `test`, some of our configurations extend from the `main` source set:
+        // testImplementation     extendsFrom(implementation)
+        //  \-- testCompile       extendsFrom(compile)
+        // We therefore want to look at only the dependencies _directly_ declared in the implementation and compile
+        // configurations (belonging to our source set)
+        explicitCompile.withDependencies(deps -> {
+            Configuration implCopy = implementation.copy();
+            Configuration compileCopy = compile.copy();
+            // Without these, explicitCompile will successfully resolve 0 files and you'll waste 1 hour trying
+            // to figure out why.
+            project.getConfigurations().add(implCopy);
+            project.getConfigurations().add(compileCopy);
+
+            explicitCompile.extendsFrom(implCopy, compileCopy);
+            // Mirror the transitive constraints form compileClasspath in order to pick up GCV locks.
+            // We should really do this with an addAllLater but that would require Gradle 6, or a hacky workaround.
+            explicitCompile.getDependencyConstraints().addAll(compileClasspath.getAllDependencyConstraints());
+            // Inherit the excludes from compileClasspath too (that get aggregated from all its super-configurations).
+            compileClasspath.getExcludeRules().forEach(rule -> explicitCompile.exclude(excludeRuleAsMap(rule)));
+        });
+
+        TaskProvider<CheckUnusedDependenciesTask> sourceSetUnusedDependencies = project.getTasks()
+                .register(
+                        GUtil.toLowerCamelCase("checkUnusedDependencies " + sourceSet.getName()),
+                        CheckUnusedDependenciesTask.class,
+                        task -> {
+                            task.dependsOn(sourceSet.getClassesTaskName());
+                            task.setSourceClasses(sourceSet.getOutput().getClassesDirs());
+                            task.dependenciesConfiguration(explicitCompile);
+
+                            // this is liberally applied to ease the Java8 -> 11 transition
+                            task.ignore("javax.annotation", "javax.annotation-api");
+                        });
+        checkUnusedDependencies.configure(task -> task.dependsOn(sourceSetUnusedDependencies));
+        TaskProvider<CheckImplicitDependenciesTask> sourceSetCheckImplicitDependencies = project.getTasks()
+                .register(
+                        GUtil.toLowerCamelCase("checkImplicitDependencies " + sourceSet.getName()),
+                        CheckImplicitDependenciesTask.class,
+                        task -> {
+                            task.dependsOn(sourceSet.getClassesTaskName());
+                            task.setSourceClasses(sourceSet.getOutput().getClassesDirs());
+                            task.dependenciesConfiguration(compileClasspath);
+
+                            task.ignore("org.slf4j", "slf4j-api");
+                        });
+        checkImplicitDependencies.configure(task -> task.dependsOn(sourceSetCheckImplicitDependencies));
+    }
+
+    private static Map<String, String> excludeRuleAsMap(ExcludeRule rule) {
+        Builder<String, String> excludeRule = ImmutableMap.builder();
+        if (rule.getGroup() != null) {
+            excludeRule.put("group", rule.getGroup());
+        }
+        if (rule.getModule() != null) {
+            excludeRule.put("module", rule.getModule());
+        }
+        return excludeRule.build();
     }
 
     /** Given a {@code com/palantir/product/Foo.class} file, what other classes does it import/reference. */
