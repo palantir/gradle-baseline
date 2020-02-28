@@ -18,6 +18,7 @@ package com.palantir.baseline.plugins;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.ImmutableSet;
 import com.palantir.baseline.tasks.CheckImplicitDependenciesTask;
 import com.palantir.baseline.tasks.CheckUnusedDependenciesTask;
@@ -38,6 +39,7 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.ExcludeRule;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
@@ -113,11 +115,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
             // We should really do this with an addAllLater but that would require Gradle 6, or a hacky workaround.
             explicitCompile.getDependencyConstraints().addAll(compileClasspath.getAllDependencyConstraints());
             // Inherit the excludes from compileClasspath too (that get aggregated from all its super-configurations).
-            compileClasspath
-                    .getExcludeRules()
-                    .forEach(rule -> explicitCompile.exclude(ImmutableMap.of(
-                            "group", rule.getGroup(),
-                            "module", rule.getModule())));
+            compileClasspath.getExcludeRules().forEach(rule -> explicitCompile.exclude(excludeRuleAsMap(rule)));
         });
 
         TaskProvider<CheckUnusedDependenciesTask> sourceSetUnusedDependencies = project.getTasks()
@@ -145,6 +143,17 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                             task.ignore("org.slf4j", "slf4j-api");
                         });
         checkImplicitDependencies.configure(task -> task.dependsOn(sourceSetCheckImplicitDependencies));
+    }
+
+    private static Map<String, String> excludeRuleAsMap(ExcludeRule rule) {
+        Builder<String, String> excludeRule = ImmutableMap.builder();
+        if (rule.getGroup() != null) {
+            excludeRule.put("group", rule.getGroup());
+        }
+        if (rule.getModule() != null) {
+            excludeRule.put("module", rule.getModule());
+        }
+        return excludeRule.build();
     }
 
     /** Given a {@code com/palantir/product/Foo.class} file, what other classes does it import/reference. */
