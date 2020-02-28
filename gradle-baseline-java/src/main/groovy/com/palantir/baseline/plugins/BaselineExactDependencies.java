@@ -19,8 +19,6 @@ package com.palantir.baseline.plugins;
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
-import com.google.common.collect.Sets.SetView;
 import com.palantir.baseline.tasks.CheckImplicitDependenciesTask;
 import com.palantir.baseline.tasks.CheckUnusedDependenciesTask;
 import java.io.File;
@@ -147,18 +145,6 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                             task.ignore("org.slf4j", "slf4j-api");
                         });
         checkImplicitDependencies.configure(task -> task.dependsOn(sourceSetCheckImplicitDependencies));
-    }
-
-    private static Configuration makeInternalCompileConfiguration(Project project, Configuration compileOnly) {
-        return project.getConfigurations().create("baseline-exact-dependencies-" + compileOnly.getName(), conf -> {
-            conf.setVisible(false);
-            conf.setCanBeConsumed(false);
-            conf.extendsFrom(compileOnly);
-            // Important! this ensures we resolve 'compile' variants rather than 'runtime'
-            // This is the same attribute that's being set on compileClasspath
-            conf.getAttributes()
-                    .attribute(Usage.USAGE_ATTRIBUTE, project.getObjects().named(Usage.class, Usage.JAVA_API));
-        });
     }
 
     /** Given a {@code com/palantir/product/Foo.class} file, what other classes does it import/reference. */
