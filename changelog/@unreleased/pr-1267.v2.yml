@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: Fix `checkUnusedDependencies` regression introduced in 3.7.0 where
+    it was failing when finding a dependency on another project that applies `java-library`.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1267

@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.concurrent.ThreadSafe;
@@ -45,6 +46,7 @@ import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
+import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.Usage;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
@@ -99,6 +101,19 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                     conf.getAttributes()
                             .attribute(
                                     Usage.USAGE_ATTRIBUTE, project.getObjects().named(Usage.class, Usage.JAVA_API));
+
+                    // Without this, the 'checkUnusedDependencies correctly picks up project dependency on java-library'
+                    // test fails, by not causing gradle run the jar task, but resolving the path to the jar (rather
+                    // than to the classes directory), which then doesn't exist.
+
+                    // Specifically, we need to pick up the LIBRARY_ELEMENTS_ATTRIBUTE, which is being configured on
+                    // compileClasspath in JavaBasePlugin.defineConfigurationsForSourceSet, but we can't reference it
+                    // directly because that would require us to depend on Gradle 5.6.
+                    // Instead, we just copy the attributes from compileClasspath.
+                    compileClasspath.getAttributes().keySet().forEach(attribute -> {
+                        Object value = compileClasspath.getAttributes().getAttribute(attribute);
+                        conf.getAttributes().attribute((Attribute<Object>) attribute, value);
+                    });
                 });
 
         // Figure out what our compile dependencies are while ignoring dependencies we've inherited from other source
@@ -123,11 +138,18 @@ public final class BaselineExactDependencies implements Plugin<Project> {
             compileClasspath.getExcludeRules().forEach(rule -> explicitCompile.exclude(excludeRuleAsMap(rule)));
         });
 
+        // Since we are copying configurations before resolving 'explicitCompile', make double sure that it's not
+        // being resolved (or dependencies realized via `.getIncoming().getDependencies()`) too early.
+        AtomicBoolean projectsEvaluated = new AtomicBoolean();
+        project.getGradle().projectsEvaluated(g -> projectsEvaluated.set(true));
+        explicitCompile
+                .getIncoming()
+                .beforeResolve(ir -> Preconditions.checkState(
+                        projectsEvaluated.get(), "Tried to resolve %s too early.", explicitCompile));
+
         TaskProvider<CheckUnusedDependenciesTask> sourceSetUnusedDependencies = project.getTasks()
                 .register(
-                        GUtil.toLowerCamelCase("checkUnusedDependencies " + sourceSet.getName()),
-                        CheckUnusedDependenciesTask.class,
-                        task -> {
+                        checkUnusedDependenciesNameForSourceSet(sourceSet), CheckUnusedDependenciesTask.class, task -> {
                             task.dependsOn(sourceSet.getClassesTaskName());
                             task.setSourceClasses(sourceSet.getOutput().getClassesDirs());
                             task.dependenciesConfiguration(explicitCompile);
@@ -148,6 +170,10 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                             task.ignore("org.slf4j", "slf4j-api");
                         });
         checkImplicitDependencies.configure(task -> task.dependsOn(sourceSetCheckImplicitDependencies));
+    }
+
+    static String checkUnusedDependenciesNameForSourceSet(SourceSet sourceSet) {
+        return GUtil.toLowerCamelCase("checkUnusedDependencies " + sourceSet.getName());
     }
 
     private static Map<String, String> excludeRuleAsMap(ExcludeRule rule) {
