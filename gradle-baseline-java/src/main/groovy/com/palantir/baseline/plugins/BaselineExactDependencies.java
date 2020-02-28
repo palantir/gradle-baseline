@@ -46,6 +46,7 @@ import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
+import org.gradle.api.attributes.LibraryElements;
 import org.gradle.api.attributes.Usage;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
@@ -100,6 +101,13 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                     conf.getAttributes()
                             .attribute(
                                     Usage.USAGE_ATTRIBUTE, project.getObjects().named(Usage.class, Usage.JAVA_API));
+                    // Without this, the 'checkUnusedDependencies correctly picks up project dependency on java-library'
+                    // test fails, by not causing gradle run the jar task, but resolving the path to the jar (rather
+                    // than to the classes directory), which then doesn't exist.
+                    conf.getAttributes()
+                            .attribute(
+                                    LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE,
+                                    project.getObjects().named(LibraryElements.class, LibraryElements.CLASSES));
                 });
 
         // Figure out what our compile dependencies are while ignoring dependencies we've inherited from other source
