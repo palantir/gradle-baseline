@@ -112,20 +112,34 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         result.task(':checkUnusedDependenciesMain').getOutcome() == TaskOutcome.SUCCESS
     }
 
-    def 'checkUnusedDependencies wires up other task dependencies'() {
+    def 'checkUnusedDependencies correctly picks up project dependency on java-library'() {
         when:
         buildFile << standardBuildFile
         buildFile << """
-        task prerequisite
         dependencies {
-            compile project.files().builtBy('prerequisite')
+            compile project(':needs-building-first')
         }
         """
-        file('src/main/java/pkg/Foo.java') << minimalJavaFile
+
+        multiProject.addSubproject('needs-building-first', """
+            apply plugin: 'java-library'
+        """.stripIndent())
+
+        file('needs-building-first/src/main/java/pkg/Bar.java') << """
+            package pkg;
+            public class Bar {}
+        """.stripIndent()
+        file('src/main/java/pkg/Foo.java') << """
+            package pkg;
+            class Foo {
+                // Just reference something from the other project
+                void test() { new Bar(); }
+            }
+        """.stripIndent()
 
         then:
         def result = with('checkUnusedDependencies', '--stacktrace').build()
-        result.task(':prerequisite').getOutcome() == TaskOutcome.UP_TO_DATE
+        assert result.task(':needs-building-first:compileJava').getOutcome() != null
     }
 
     def 'checkUnusedDependenciesTest passes if dependency from main source set is not referenced in test'() {
