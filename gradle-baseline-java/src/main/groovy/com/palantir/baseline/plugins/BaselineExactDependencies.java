@@ -149,9 +149,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
 
         TaskProvider<CheckUnusedDependenciesTask> sourceSetUnusedDependencies = project.getTasks()
                 .register(
-                        GUtil.toLowerCamelCase("checkUnusedDependencies " + sourceSet.getName()),
-                        CheckUnusedDependenciesTask.class,
-                        task -> {
+                        checkUnusedDependenciesNameForSourceSet(sourceSet), CheckUnusedDependenciesTask.class, task -> {
                             task.dependsOn(sourceSet.getClassesTaskName());
                             task.setSourceClasses(sourceSet.getOutput().getClassesDirs());
                             task.dependenciesConfiguration(explicitCompile);
@@ -172,6 +170,10 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                             task.ignore("org.slf4j", "slf4j-api");
                         });
         checkImplicitDependencies.configure(task -> task.dependsOn(sourceSetCheckImplicitDependencies));
+    }
+
+    static String checkUnusedDependenciesNameForSourceSet(SourceSet sourceSet) {
+        return GUtil.toLowerCamelCase("checkUnusedDependencies " + sourceSet.getName());
     }
 
     private static Map<String, String> excludeRuleAsMap(ExcludeRule rule) {

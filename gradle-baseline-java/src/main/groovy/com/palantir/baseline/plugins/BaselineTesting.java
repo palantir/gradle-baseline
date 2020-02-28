@@ -17,6 +17,7 @@
 package com.palantir.baseline.plugins;
 
 import com.palantir.baseline.tasks.CheckJUnitDependencies;
+import com.palantir.baseline.tasks.CheckUnusedDependenciesTask;
 import java.util.Objects;
 import java.util.Optional;
 import org.gradle.api.Plugin;
@@ -27,6 +28,7 @@ import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.TaskContainer;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.api.tasks.testing.junitplatform.JUnitPlatformOptions;
@@ -73,6 +75,15 @@ public final class BaselineTesting implements Plugin<Project> {
                                     "Detected 'org:junit.jupiter:junit-jupiter', enabling useJUnitPlatform() on {}",
                                     maybeTestTask.get().getName());
                             enableJunit5ForTestTask(maybeTestTask.get());
+
+                            // Also wire up a test ignore for this source set
+                            project.getPlugins().withType(BaselineExactDependencies.class, exactDeps -> {
+                                TaskContainer tasks = project.getTasks();
+                                tasks.named(
+                                        BaselineExactDependencies.checkUnusedDependenciesNameForSourceSet(ss),
+                                        CheckUnusedDependenciesTask.class,
+                                        task -> task.ignore("org.junit.jupiter", "junit-jupiter"));
+                            });
                         });
             });
 
