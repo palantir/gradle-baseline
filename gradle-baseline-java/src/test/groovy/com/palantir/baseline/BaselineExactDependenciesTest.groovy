@@ -125,7 +125,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
 
         then:
         def result = with('checkUnusedDependencies', '--stacktrace').build()
-        result.task(':prerequisite').getOutcome() == TaskOutcome.SUCCESS
+        result.task(':prerequisite').getOutcome() == TaskOutcome.UP_TO_DATE
     }
 
     def 'checkUnusedDependenciesTest passes if dependency from main source set is not referenced in test'() {
