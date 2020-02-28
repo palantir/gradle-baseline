@@ -112,6 +112,31 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         result.task(':checkUnusedDependenciesMain').getOutcome() == TaskOutcome.SUCCESS
     }
 
+    def 'checkUnusedDependenciesTest passes if dependency from main source set is not referenced in test'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << """
+        repositories {
+            mavenCentral()
+        }
+        dependencies {
+            compile 'com.google.guava:guava:28.0-jre'
+        }
+        """
+        file('src/main/java/pkg/Foo.java') << '''
+        package pkg;
+        public class Foo {
+            void foo() {
+                com.google.common.collect.ImmutableList.of();
+            }
+        }
+        '''.stripIndent()
+
+        then:
+        def result = with('checkUnusedDependencies', '--stacktrace').build()
+        result.task(':checkUnusedDependenciesTest').getOutcome() == TaskOutcome.SUCCESS
+    }
+
     def 'checkImplicitDependencies fails when a class is imported without being declared as a dependency'() {
         when:
         buildFile << standardBuildFile
