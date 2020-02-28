@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.concurrent.ThreadSafe;
@@ -122,6 +123,15 @@ public final class BaselineExactDependencies implements Plugin<Project> {
             // Inherit the excludes from compileClasspath too (that get aggregated from all its super-configurations).
             compileClasspath.getExcludeRules().forEach(rule -> explicitCompile.exclude(excludeRuleAsMap(rule)));
         });
+
+        // Since we are copying configurations before resolving 'explicitCompile', make double sure that it's not
+        // being resolved (or dependencies realized via `.getIncoming().getDependencies()`) too early.
+        AtomicBoolean projectsEvaluated = new AtomicBoolean();
+        project.getGradle().projectsEvaluated(g -> projectsEvaluated.set(true));
+        explicitCompile
+                .getIncoming()
+                .beforeResolve(ir -> Preconditions.checkState(
+                        projectsEvaluated.get(), "Tried to resolve %s too early.", explicitCompile));
 
         TaskProvider<CheckUnusedDependenciesTask> sourceSetUnusedDependencies = project.getTasks()
                 .register(
