@@ -52,6 +52,7 @@ import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.util.GUtil;
+import org.gradle.util.GradleVersion;
 
 /** Validates that java projects declare exactly the dependencies they rely on, no more and no less. */
 public final class BaselineExactDependencies implements Plugin<Project> {
@@ -63,9 +64,14 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     // contained in a particular jar are immutable.
     public static final Indexes INDEXES = new Indexes();
     public static final ImmutableSet<String> VALID_ARTIFACT_EXTENSIONS = ImmutableSet.of("jar", "");
+    private static final GradleVersion MINIMUM_GRADLE_VERSION = GradleVersion.version("5.3");
 
     @Override
     public void apply(Project project) {
+        Preconditions.checkState(
+                GradleVersion.current().compareTo(MINIMUM_GRADLE_VERSION) >= 0,
+                "Must use at least %s when using baseline-exact-dependencies",
+                MINIMUM_GRADLE_VERSION);
         project.getPluginManager().withPlugin("java", plugin -> {
             TaskProvider<Task> checkUnusedDependencies = project.getTasks().register("checkUnusedDependencies");
             TaskProvider<Task> checkImplicitDependencies = project.getTasks().register("checkImplicitDependencies");
