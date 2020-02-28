@@ -46,13 +46,12 @@ import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
-import org.gradle.api.attributes.LibraryElements;
+import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.Usage;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.util.GUtil;
-import org.gradle.util.GradleVersion;
 
 /** Validates that java projects declare exactly the dependencies they rely on, no more and no less. */
 public final class BaselineExactDependencies implements Plugin<Project> {
@@ -64,14 +63,9 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     // contained in a particular jar are immutable.
     public static final Indexes INDEXES = new Indexes();
     public static final ImmutableSet<String> VALID_ARTIFACT_EXTENSIONS = ImmutableSet.of("jar", "");
-    private static final GradleVersion MINIMUM_GRADLE_VERSION = GradleVersion.version("5.3");
 
     @Override
     public void apply(Project project) {
-        Preconditions.checkState(
-                GradleVersion.current().compareTo(MINIMUM_GRADLE_VERSION) >= 0,
-                "Must use at least %s when using baseline-exact-dependencies",
-                MINIMUM_GRADLE_VERSION);
         project.getPluginManager().withPlugin("java", plugin -> {
             TaskProvider<Task> checkUnusedDependencies = project.getTasks().register("checkUnusedDependencies");
             TaskProvider<Task> checkImplicitDependencies = project.getTasks().register("checkImplicitDependencies");
@@ -107,13 +101,19 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                     conf.getAttributes()
                             .attribute(
                                     Usage.USAGE_ATTRIBUTE, project.getObjects().named(Usage.class, Usage.JAVA_API));
+
                     // Without this, the 'checkUnusedDependencies correctly picks up project dependency on java-library'
                     // test fails, by not causing gradle run the jar task, but resolving the path to the jar (rather
                     // than to the classes directory), which then doesn't exist.
-                    conf.getAttributes()
-                            .attribute(
-                                    LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE,
-                                    project.getObjects().named(LibraryElements.class, LibraryElements.CLASSES));
+
+                    // Specifically, we need to pick up the LIBRARY_ELEMENTS_ATTRIBUTE, which is being configured on
+                    // compileClasspath in JavaBasePlugin.defineConfigurationsForSourceSet, but we can't reference it
+                    // directly because that would require us to depend on Gradle 5.6.
+                    // Instead, we just copy the attributes from compileClasspath.
+                    compileClasspath.getAttributes().keySet().forEach(attribute -> {
+                        Object value = compileClasspath.getAttributes().getAttribute(attribute);
+                        conf.getAttributes().attribute((Attribute<Object>) attribute, value);
+                    });
                 });
 
         // Figure out what our compile dependencies are while ignoring dependencies we've inherited from other source
