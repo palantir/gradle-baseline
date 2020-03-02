@@ -22,7 +22,7 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
 
-public final class CheckUnusedDependenciesParentTask extends DefaultTask {
+public class CheckUnusedDependenciesParentTask extends DefaultTask {
     private final SetProperty<String> ignore;
 
     public CheckUnusedDependenciesParentTask() {
