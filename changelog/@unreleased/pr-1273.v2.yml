@@ -1,0 +1,7 @@
+type: fix
+fix:
+  description: Bring back the `ignore(String, String)` method on the `checkUnusedDependencies`  and
+    `checkImplicitDependencies` tasks. This now ignores the coordinate for all source
+    sets.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1273

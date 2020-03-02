@@ -165,7 +165,7 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
     }
 
     public final void ignore(String group, String name) {
-        ignore.add(group + ":" + name);
+        ignore.add(BaselineExactDependencies.ignoreCoordinate(group, name));
     }
 
     @Input

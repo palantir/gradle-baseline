@@ -20,7 +20,9 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.ImmutableSet;
+import com.palantir.baseline.tasks.CheckImplicitDependenciesParentTask;
 import com.palantir.baseline.tasks.CheckImplicitDependenciesTask;
+import com.palantir.baseline.tasks.CheckUnusedDependenciesParentTask;
 import com.palantir.baseline.tasks.CheckUnusedDependenciesTask;
 import java.io.File;
 import java.io.IOException;
@@ -38,7 +40,6 @@ import org.apache.maven.shared.dependency.analyzer.DependencyAnalyzer;
 import org.apache.maven.shared.dependency.analyzer.asm.ASMDependencyAnalyzer;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ExcludeRule;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
@@ -67,8 +68,10 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     @Override
     public void apply(Project project) {
         project.getPluginManager().withPlugin("java", plugin -> {
-            TaskProvider<Task> checkUnusedDependencies = project.getTasks().register("checkUnusedDependencies");
-            TaskProvider<Task> checkImplicitDependencies = project.getTasks().register("checkImplicitDependencies");
+            TaskProvider<CheckUnusedDependenciesParentTask> checkUnusedDependencies =
+                    project.getTasks().register("checkUnusedDependencies", CheckUnusedDependenciesParentTask.class);
+            TaskProvider<CheckImplicitDependenciesParentTask> checkImplicitDependencies =
+                    project.getTasks().register("checkImplicitDependencies", CheckImplicitDependenciesParentTask.class);
 
             project.getConvention()
                     .getPlugin(JavaPluginConvention.class)
@@ -81,8 +84,8 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     private static void configureSourceSet(
             Project project,
             SourceSet sourceSet,
-            TaskProvider<Task> checkUnusedDependencies,
-            TaskProvider<Task> checkImplicitDependencies) {
+            TaskProvider<CheckUnusedDependenciesParentTask> checkUnusedDependencies,
+            TaskProvider<CheckImplicitDependenciesParentTask> checkImplicitDependencies) {
         Configuration implementation =
                 project.getConfigurations().getByName(sourceSet.getImplementationConfigurationName());
         Configuration compile = project.getConfigurations().getByName(sourceSet.getCompileConfigurationName());
@@ -156,6 +159,9 @@ public final class BaselineExactDependencies implements Plugin<Project> {
 
                             // this is liberally applied to ease the Java8 -> 11 transition
                             task.ignore("javax.annotation", "javax.annotation-api");
+
+                            // pick up ignores configured globally on the parent task
+                            task.ignore(checkUnusedDependencies.get().getIgnore());
                         });
         checkUnusedDependencies.configure(task -> task.dependsOn(sourceSetUnusedDependencies));
         TaskProvider<CheckImplicitDependenciesTask> sourceSetCheckImplicitDependencies = project.getTasks()
@@ -168,6 +174,9 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                             task.dependenciesConfiguration(compileClasspath);
 
                             task.ignore("org.slf4j", "slf4j-api");
+
+                            // pick up ignores configured globally on the parent task
+                            task.ignore(checkImplicitDependencies.get().getIgnore());
                         });
         checkImplicitDependencies.configure(task -> task.dependsOn(sourceSetCheckImplicitDependencies));
     }
@@ -280,5 +289,9 @@ public final class BaselineExactDependencies implements Plugin<Project> {
             return Preconditions.checkNotNull(
                     artifactsFromDependency.get(resolvedArtifact), "Unable to find resolved artifact");
         }
+    }
+
+    public static String ignoreCoordinate(String group, String name) {
+        return group + ":" + name;
     }
 }
