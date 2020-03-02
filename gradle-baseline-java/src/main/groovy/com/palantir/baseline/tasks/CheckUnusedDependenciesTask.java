@@ -190,6 +190,7 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
         return sourceOnlyConfigurations;
     }
 
+    @Deprecated
     public final void sourceOnlyConfiguration(Configuration configuration) {
         Preconditions.checkNotNull(configuration, "This method requires a non-null configuration");
         Preconditions.checkArgument(
@@ -209,11 +210,15 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
     }
 
     public final void ignore(Provider<Set<String>> value) {
-        ignore.set(value);
+        ignore.addAll(value);
     }
 
     public final void ignore(String group, String name) {
-        ignore.add(group + ":" + name);
+        ignore.add(ignoreCoordinate(group, name));
+    }
+
+    static String ignoreCoordinate(String group, String name) {
+        return group + ":" + name;
     }
 
     @Input

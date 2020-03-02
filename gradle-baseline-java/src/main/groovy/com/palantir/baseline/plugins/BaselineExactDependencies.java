@@ -21,6 +21,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.ImmutableSet;
 import com.palantir.baseline.tasks.CheckImplicitDependenciesTask;
+import com.palantir.baseline.tasks.CheckUnusedDependenciesParentTask;
 import com.palantir.baseline.tasks.CheckUnusedDependenciesTask;
 import java.io.File;
 import java.io.IOException;
@@ -67,7 +68,8 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     @Override
     public void apply(Project project) {
         project.getPluginManager().withPlugin("java", plugin -> {
-            TaskProvider<Task> checkUnusedDependencies = project.getTasks().register("checkUnusedDependencies");
+            TaskProvider<CheckUnusedDependenciesParentTask> checkUnusedDependencies =
+                    project.getTasks().register("checkUnusedDependencies", CheckUnusedDependenciesParentTask.class);
             TaskProvider<Task> checkImplicitDependencies = project.getTasks().register("checkImplicitDependencies");
 
             project.getConvention()
@@ -81,7 +83,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     private static void configureSourceSet(
             Project project,
             SourceSet sourceSet,
-            TaskProvider<Task> checkUnusedDependencies,
+            TaskProvider<CheckUnusedDependenciesParentTask> checkUnusedDependencies,
             TaskProvider<Task> checkImplicitDependencies) {
         Configuration implementation =
                 project.getConfigurations().getByName(sourceSet.getImplementationConfigurationName());
@@ -156,6 +158,9 @@ public final class BaselineExactDependencies implements Plugin<Project> {
 
                             // this is liberally applied to ease the Java8 -> 11 transition
                             task.ignore("javax.annotation", "javax.annotation-api");
+
+                            // pick up ignores configured globally on the parent task
+                            task.ignore(checkUnusedDependencies.get().getIgnore());
                         });
         checkUnusedDependencies.configure(task -> task.dependsOn(sourceSetUnusedDependencies));
         TaskProvider<CheckImplicitDependenciesTask> sourceSetCheckImplicitDependencies = project.getTasks()
