@@ -43,7 +43,7 @@ public class CheckImplicitDependenciesParentTask extends DefaultTask {
     }
 
     @Internal
-    public Provider<Set<String>> getIgnore() {
+    public final Provider<Set<String>> getIgnore() {
         return ignore;
     }
 }
