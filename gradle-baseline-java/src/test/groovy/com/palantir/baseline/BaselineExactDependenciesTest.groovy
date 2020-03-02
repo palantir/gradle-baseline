@@ -242,6 +242,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         buildFile << """
             apply plugin: 'com.palantir.consistent-versions'
         """.stripIndent()
+        file('versions.props').text = ''
 
         expect:
         with(':checkUnusedConstraints', '--stacktrace', '--write-locks').withDebug(true).build()
