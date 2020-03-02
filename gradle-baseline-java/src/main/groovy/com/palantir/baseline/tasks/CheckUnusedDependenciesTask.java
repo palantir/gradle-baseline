@@ -214,11 +214,7 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
     }
 
     public final void ignore(String group, String name) {
-        ignore.add(ignoreCoordinate(group, name));
-    }
-
-    static String ignoreCoordinate(String group, String name) {
-        return group + ":" + name;
+        ignore.add(BaselineExactDependencies.ignoreCoordinate(group, name));
     }
 
     @Input

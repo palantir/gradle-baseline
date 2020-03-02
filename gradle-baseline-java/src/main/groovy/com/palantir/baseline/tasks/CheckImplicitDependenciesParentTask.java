@@ -23,10 +23,10 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
 
-public class CheckUnusedDependenciesParentTask extends DefaultTask {
+public class CheckImplicitDependenciesParentTask extends DefaultTask {
     private final SetProperty<String> ignore;
 
-    public CheckUnusedDependenciesParentTask() {
+    public CheckImplicitDependenciesParentTask() {
         ignore = getProject().getObjects().setProperty(String.class);
         ignore.set(Collections.emptySet());
     }
