@@ -22,6 +22,7 @@ import java.util.Set;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
+import org.gradle.api.tasks.Internal;
 
 public class CheckImplicitDependenciesParentTask extends DefaultTask {
     private final SetProperty<String> ignore;
@@ -41,6 +42,7 @@ public class CheckImplicitDependenciesParentTask extends DefaultTask {
         ignore.add(BaselineExactDependencies.ignoreCoordinate(group, name));
     }
 
+    @Internal
     public Provider<Set<String>> getIgnore() {
         return ignore;
     }
