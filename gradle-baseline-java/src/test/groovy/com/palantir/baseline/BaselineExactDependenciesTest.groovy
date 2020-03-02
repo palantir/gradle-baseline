@@ -27,6 +27,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
             id 'java'
             id 'com.palantir.baseline-exact-dependencies'
             id 'com.palantir.baseline' apply false
+            id 'com.palantir.consistent-versions' version '1.17.3' apply false
         }
     '''.stripIndent()
 
@@ -234,6 +235,17 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         BuildResult result = with(':checkUnusedDependencies', '--stacktrace').withDebug(true).buildAndFail()
         result.output.contains "project(':sub-project-with-deps') (sub-project-with-deps.jar (project :sub-project-with-deps))"
         result.output.contains "implementation project(':sub-project-no-deps')"
+    }
+
+    def 'plugin does not cause GCV checkUnusedConstraints to fail'() {
+        setupMultiProject()
+        buildFile << """
+            apply plugin: 'com.palantir.consistent-versions'
+        """.stripIndent()
+        file('versions.props').text = ''
+
+        expect:
+        with(':checkUnusedConstraints', '--stacktrace', '--write-locks').withDebug(true).build()
     }
 
     /**
