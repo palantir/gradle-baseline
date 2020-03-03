@@ -109,7 +109,8 @@ class BaselineConfig extends AbstractBaselinePlugin {
                                             + " -->\n",
                                     "")
                             .replace(
-                                    "        <module name=\"LeftCurly\"/> <!-- Java Style Guide: Nonempty blocks: K & R style -->\n",
+                                    "        <module name=\"LeftCurly\"/> "
+                                            + "<!-- Java Style Guide: Nonempty blocks: K & R style -->\n",
                                     "");
                     Preconditions.checkState(!contents.equals(replaced), "Patching checkstyle.xml must make a change");
                     Files.write(checkstyleXml, replaced.getBytes(StandardCharsets.UTF_8));
