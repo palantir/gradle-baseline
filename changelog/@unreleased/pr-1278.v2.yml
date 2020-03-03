@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Disable `LeftCurly` CheckStyle rule when Palantir-Java-Format is applied
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1278
