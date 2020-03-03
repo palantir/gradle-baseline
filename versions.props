@@ -24,7 +24,7 @@ org.assertj:assertj-core = 3.15.0
 org.hamcrest:hamcrest-core = 2.2
 org.junit.jupiter:* = 5.6.0
 org.mockito:* = 3.3.1
-com.fasterxml.jackson.*:* = 2.10.2
+com.fasterxml.jackson.*:* = 2.10.3
 com.palantir.tokens:auth-tokens = 3.6.1
 com.palantir.tritium:tritium-registry = 0.16.6
 
