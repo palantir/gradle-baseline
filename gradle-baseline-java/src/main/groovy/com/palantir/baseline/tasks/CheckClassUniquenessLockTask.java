@@ -18,12 +18,9 @@ package com.palantir.baseline.tasks;
 
 import com.google.common.collect.ImmutableList;
 import java.io.File;
-import java.util.Collection;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.Task;
@@ -92,25 +89,18 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
                         return Optional.empty();
                     }
 
-                    StringBuilder stringBuilder = new StringBuilder();
-                    // TODO(dfox): ensure we iterate through problemJars in a stable order
-                    for (Set<ModuleVersionIdentifier> clashingJars : problemJars) {
-                        stringBuilder
-                                .append(clashingJars.stream()
-                                        .map(mvi -> mvi.getGroup() + ":" + mvi.getName())
-                                        .sorted()
-                                        .collect(Collectors.joining(", ", "[", "]")))
-                                .append('\n');
+                    Map<String, String> clashingHeadersToClasses = problemJars.stream()
+                            .collect(Collectors.toMap(
+                                    this::clashingJarHeader, clashingJars -> clashingClasses(analyzer, clashingJars)));
 
-                        analyzer.getDifferingSharedClassesInProblemJars(clashingJars).stream()
-                                .sorted()
-                                .forEach(className -> {
-                                    stringBuilder.append("  - ");
-                                    stringBuilder.append(className);
-                                    stringBuilder.append('\n');
-                                });
-                    }
-                    return Optional.of(stringBuilder.toString());
+                    return Optional.of(clashingHeadersToClasses.entrySet().stream()
+                            .sorted(Comparator.comparing(Map.Entry::getKey))
+                            .flatMap(entry -> {
+                                String clashingJarHeader = entry.getKey();
+                                String clashingClasses = entry.getValue();
+                                return Stream.of(clashingJarHeader, clashingClasses);
+                            })
+                            .collect(Collectors.joining("\n")));
                 }));
 
         boolean conflictsFound = resultsByConfiguration.values().stream().anyMatch(Optional::isPresent);
@@ -121,15 +111,34 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
         } else {
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append(HEADER);
-            // TODO(dfox): make configuration order stable!
-            resultsByConfiguration.forEach((configuration, contents) -> {
-                if (contents.isPresent()) {
-                    stringBuilder.append("## ").append(configuration).append("\n");
-                    stringBuilder.append(contents.get());
-                }
-            });
+            resultsByConfiguration.entrySet().stream()
+                    .sorted(Comparator.comparing(Map.Entry::getKey))
+                    .forEach(entry -> {
+                        String configuration = entry.getKey();
+                        Optional<String> maybeContents = entry.getValue();
+
+                        maybeContents.ifPresent(contents -> {
+                            stringBuilder.append("## ").append(configuration).append("\n");
+                            stringBuilder.append(contents);
+                        });
+                    });
+            stringBuilder.append('\n');
             ensureLockfileContains(stringBuilder.toString());
         }
+    }
+
+    private String clashingClasses(ClassUniquenessAnalyzer analyzer, Set<ModuleVersionIdentifier> clashingJars) {
+        return analyzer.getDifferingSharedClassesInProblemJars(clashingJars).stream()
+                .sorted()
+                .map(className -> String.format("  - %s", className))
+                .collect(Collectors.joining("\n"));
+    }
+
+    private String clashingJarHeader(Set<ModuleVersionIdentifier> clashingJars) {
+        return clashingJars.stream()
+                .map(mvi -> mvi.getGroup() + ":" + mvi.getName())
+                .sorted()
+                .collect(Collectors.joining(", ", "[", "]"));
     }
 
     private void ensureLockfileContains(String expected) {
