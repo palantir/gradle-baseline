@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: The `checkClassUniqueness` task will no longer spuriously fail due
+    to inconsistent ordering in the `baseline-class-uniqueness.lock` file.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1283
