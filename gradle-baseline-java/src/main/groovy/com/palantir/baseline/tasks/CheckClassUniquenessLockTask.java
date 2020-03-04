@@ -84,31 +84,32 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
 
     @TaskAction
     public final void doIt() {
-        Map<String, Optional<String>> resultsByConfiguration = configurations.get().stream()
-                .collect(Collectors.toMap(Configuration::getName, configuration -> {
-                    ClassUniquenessAnalyzer analyzer =
-                            new ClassUniquenessAnalyzer(getProject().getLogger());
-                    analyzer.analyzeConfiguration(configuration);
-                    Collection<Set<ModuleVersionIdentifier>> problemJars = analyzer.getDifferingProblemJars();
+        ImmutableSortedMap<String, Optional<String>> resultsByConfiguration = configurations.get().stream()
+                .collect(ImmutableSortedMap.toImmutableSortedMap(
+                        Comparator.naturalOrder(), Configuration::getName, configuration -> {
+                            ClassUniquenessAnalyzer analyzer =
+                                    new ClassUniquenessAnalyzer(getProject().getLogger());
+                            analyzer.analyzeConfiguration(configuration);
+                            Collection<Set<ModuleVersionIdentifier>> problemJars = analyzer.getDifferingProblemJars();
 
-                    if (problemJars.isEmpty()) {
-                        return Optional.empty();
-                    }
+                            if (problemJars.isEmpty()) {
+                                return Optional.empty();
+                            }
 
-                    ImmutableSortedMap<String, String> clashingHeadersToClasses = problemJars.stream()
-                            .collect(ImmutableSortedMap.toImmutableSortedMap(
-                                    Comparator.naturalOrder(),
-                                    this::clashingJarHeader,
-                                    clashingJars -> clashingClasses(analyzer, clashingJars)));
+                            ImmutableSortedMap<String, String> clashingHeadersToClasses = problemJars.stream()
+                                    .collect(ImmutableSortedMap.toImmutableSortedMap(
+                                            Comparator.naturalOrder(),
+                                            this::clashingJarHeader,
+                                            clashingJars -> clashingClasses(analyzer, clashingJars)));
 
-                    return Optional.of(clashingHeadersToClasses.entrySet().stream()
-                            .flatMap(entry -> {
-                                String clashingJarHeader = entry.getKey();
-                                String clashingClasses = entry.getValue();
-                                return Stream.of(clashingJarHeader, clashingClasses);
-                            })
-                            .collect(Collectors.joining("\n")));
-                }));
+                            return Optional.of(clashingHeadersToClasses.entrySet().stream()
+                                    .flatMap(entry -> {
+                                        String clashingJarHeader = entry.getKey();
+                                        String clashingClasses = entry.getValue();
+                                        return Stream.of(clashingJarHeader, clashingClasses);
+                                    })
+                                    .collect(Collectors.joining("\n")));
+                        }));
 
         boolean conflictsFound = resultsByConfiguration.values().stream().anyMatch(Optional::isPresent);
         if (!conflictsFound) {
@@ -118,17 +119,10 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
         } else {
             StringBuilder stringBuilder = new StringBuilder();
             stringBuilder.append(HEADER);
-            resultsByConfiguration.entrySet().stream()
-                    .sorted(Comparator.comparing(Map.Entry::getKey))
-                    .forEach(entry -> {
-                        String configuration = entry.getKey();
-                        Optional<String> maybeContents = entry.getValue();
-
-                        maybeContents.ifPresent(contents -> {
-                            stringBuilder.append("## ").append(configuration).append("\n");
-                            stringBuilder.append(contents);
-                        });
-                    });
+            resultsByConfiguration.forEach((configuration, maybeContents) -> maybeContents.ifPresent(contents -> {
+                stringBuilder.append("## ").append(configuration).append("\n");
+                stringBuilder.append(contents);
+            }));
             stringBuilder.append('\n');
             ensureLockfileContains(stringBuilder.toString());
         }
