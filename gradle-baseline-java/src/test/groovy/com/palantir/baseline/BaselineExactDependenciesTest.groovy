@@ -215,7 +215,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         result.task(':classes').getOutcome() == TaskOutcome.SUCCESS
         result.task(':checkImplicitDependenciesMain').getOutcome() == TaskOutcome.FAILED
         result.output.contains("Found 1 implicit dependencies")
-        result.output.contains("implementation project(':sub-project-no-deps')")
+        result.output.contains("project(':sub-project-no-deps')")
     }
 
     def 'checkImplicitDependencies should not report circular dependency on current project'() {
@@ -234,7 +234,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         then:
         BuildResult result = with(':checkUnusedDependencies', '--stacktrace').withDebug(true).buildAndFail()
         result.output.contains "project(':sub-project-with-deps') (sub-project-with-deps.jar (project :sub-project-with-deps))"
-        result.output.contains "implementation project(':sub-project-no-deps')"
+        result.output.contains "project(':sub-project-no-deps')"
     }
 
     def 'plugin does not cause GCV checkUnusedConstraints to fail'() {

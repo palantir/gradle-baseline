@@ -129,7 +129,7 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
                     didYouMean.stream()
                             .map(BaselineExactDependencies::asDependencyStringWithoutName)
                             .sorted()
-                            .forEach(dependencyString -> builder.append("\t\t\timplementation ")
+                            .forEach(dependencyString -> builder.append("\t\t\t")
                                     .append(dependencyString)
                                     .append("\n"));
                 }
