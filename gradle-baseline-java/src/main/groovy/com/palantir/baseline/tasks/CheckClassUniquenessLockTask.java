@@ -17,6 +17,7 @@
 package com.palantir.baseline.tasks;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSortedMap;
 import java.io.File;
 import java.util.Collection;
 import java.util.Comparator;
@@ -94,12 +95,13 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
                         return Optional.empty();
                     }
 
-                    Map<String, String> clashingHeadersToClasses = problemJars.stream()
-                            .collect(Collectors.toMap(
-                                    this::clashingJarHeader, clashingJars -> clashingClasses(analyzer, clashingJars)));
+                    ImmutableSortedMap<String, String> clashingHeadersToClasses = problemJars.stream()
+                            .collect(ImmutableSortedMap.toImmutableSortedMap(
+                                    Comparator.naturalOrder(),
+                                    this::clashingJarHeader,
+                                    clashingJars -> clashingClasses(analyzer, clashingJars)));
 
                     return Optional.of(clashingHeadersToClasses.entrySet().stream()
-                            .sorted(Comparator.comparing(Map.Entry::getKey))
                             .flatMap(entry -> {
                                 String clashingJarHeader = entry.getKey();
                                 String clashingClasses = entry.getValue();
