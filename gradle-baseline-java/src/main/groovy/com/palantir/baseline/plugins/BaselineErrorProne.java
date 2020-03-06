@@ -207,6 +207,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
         String separator = Pattern.quote(Paths.get(projectPath).getFileSystem().getSeparator());
         errorProneOptions.setExcludedPaths(String.format(
                 "%s%s(build|src%sgenerated.*)%s.*", Pattern.quote(projectPath), separator, separator, separator));
+        errorProneOptions.check("CatchSpecificity", CheckSeverity.OFF);
         errorProneOptions.check("UnusedVariable", CheckSeverity.OFF);
         errorProneOptions.check(
                 "PreferJavaTimeOverload", CheckSeverity.OFF); // https://github.com/google/error-prone/issues/1435,

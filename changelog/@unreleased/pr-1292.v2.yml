@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Disable `CatchSpecificity` errorprone check by default
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1292
