@@ -395,4 +395,16 @@ For more on this topic, please see Miško Hevery's *Guide: Writing Testable Code
 
 ## End-to-end (ETE) Tests
 
-(Scheduled to be available in Baseline release v2.0.0.)
+### Basic ETE Test Steps:
+
+Here are steps to run the branch version of a service on an IL allowing you to run basic ETE tests of a Github branch.
+
+1. Clone the GHE branch to your local machine
+2. Create an IL
+3. Depending on your coding environemnt run './gradlew idea' or './gradlew eclipse'
+4. run the command './gradlew build' to create a tar bundle of your branch under the 'PROJECT/build/distributions' folder of your repo
+5. transfer this tar bundle to your IL with scp. example command: 'scp PROJECT/build/distributions/TGZ_FILE palantir@HOST:/opt/palantir/'
+6. ssh to your IL and locate the tar bundle as the 'palantir' user
+7. run the command 'deployctl product import "Path/to/your/tgz"' to import your project with your IL's deployctl
+8. Go on Gemini, click on the service you want to update. The upgrade button should be enabled (if not try to refresh the page).
+Stop your service, upgrade it, start it again, and you should be good to go !
