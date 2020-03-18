@@ -22,8 +22,10 @@ import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
+import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.Tree;
+import com.sun.tools.javac.tree.JCTree;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -62,16 +64,23 @@ public final class DuplicateArgumentTypes extends BugChecker implements BugCheck
             Tree type = param.getType();
             tree.getParameters().forEach(param2 -> {
                 if (!param.equals(param2)) {
-                    Tree type2 = param.getType();
-                    bad.set((isSubtypeOf(type.getClass(), type2, state) || isSubtypeOf(type2.getClass(), type, state)));
+                    Tree type2 = param2.getType();
+                    // Matcher<Tree> m = Matchers.isSubtypeOf($ -> ASTHelpers.getType(type));
+                    bad.set(bad.get() || (isSubtypeOf(type, type2, state) || isSubtypeOf(type2,
+                            type, state)));
                 }
             });
         });
 
+        System.out.println(bad.get());
         return Description.NO_MATCH;
     }
 
-    private boolean isSubtypeOf(Class clazz, Tree tree, VisitorState state) {
-        return Matchers.isSubtypeOf(clazz).matches(tree, state);
+    private boolean isSubtypeOf(Tree clazz, Tree tree, VisitorState state) {
+        boolean x = Matchers.isSubtypeOf($ -> ASTHelpers.getType(clazz)).matches(tree, state);
+        if(x) {
+            System.out.println("madness abides");
+        }
+        return x;
     }
 }
