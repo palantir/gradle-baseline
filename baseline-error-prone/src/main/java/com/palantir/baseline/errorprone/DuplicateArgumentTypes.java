@@ -20,9 +20,13 @@ import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.matchers.Description;
+import com.google.errorprone.matchers.Matcher;
+import com.google.errorprone.matchers.Matchers;
 import com.sun.source.tree.MethodTree;
+import com.sun.source.tree.Tree;
 import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
 
 /**
@@ -37,8 +41,8 @@ import java.util.concurrent.atomic.AtomicInteger;
         summary = "Duplicate argument types")
 public final class DuplicateArgumentTypes extends BugChecker implements BugChecker.MethodTreeMatcher {
 
-    @Override
-    public Description matchMethod(MethodTree tree, VisitorState state) {
+    // @Override
+    public Description matchMethoda(MethodTree tree, VisitorState state) {
         Set<String> types = new HashSet<>();
         AtomicInteger counter = new AtomicInteger(0);
         tree.getParameters().forEach(la -> {
@@ -49,5 +53,25 @@ public final class DuplicateArgumentTypes extends BugChecker implements BugCheck
             return buildDescription(tree).build();
         }
         return Description.NO_MATCH;
+    }
+
+    @Override
+    public Description matchMethod(MethodTree tree, VisitorState state) {
+        AtomicBoolean bad = new AtomicBoolean(false);
+        tree.getParameters().forEach(param -> {
+            Tree type = param.getType();
+            tree.getParameters().forEach(param2 -> {
+                if (!param.equals(param2)) {
+                    Tree type2 = param.getType();
+                    bad.set((isSubtypeOf(type.getClass(), type2, state) || isSubtypeOf(type2.getClass(), type, state)));
+                }
+            });
+        });
+
+        return Description.NO_MATCH;
+    }
+
+    private boolean isSubtypeOf(Class clazz, Tree tree, VisitorState state) {
+        return Matchers.isSubtypeOf(clazz).matches(tree, state);
     }
 }

@@ -26,6 +26,7 @@ public final class DuplicateArgumentTypesTest {
                 "Test.java",
                 "import com.google.common.annotations.VisibleForTesting;",
                 "public class Test {",
+                "  public void myah0(Number a, Integer b) {}",
                 "  public void myah(int a, Integer b) {}",
                 "  public void myah2(int a, String b) {}",
                 "}")
