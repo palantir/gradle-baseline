@@ -20,12 +20,10 @@ import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.matchers.Description;
-import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.Tree;
-import com.sun.tools.javac.tree.JCTree;
 import java.util.HashSet;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
@@ -43,19 +41,10 @@ import java.util.concurrent.atomic.AtomicInteger;
         summary = "Duplicate argument types")
 public final class DuplicateArgumentTypes extends BugChecker implements BugChecker.MethodTreeMatcher {
 
-    // @Override
-    public Description matchMethoda(MethodTree tree, VisitorState state) {
-        Set<String> types = new HashSet<>();
-        AtomicInteger counter = new AtomicInteger(0);
-        tree.getParameters().forEach(la -> {
-            types.add(la.getType().toString());
-            counter.incrementAndGet();
-        });
-        if (counter.get() > types.size()) {
-            return buildDescription(tree).build();
-        }
-        return Description.NO_MATCH;
-    }
+    // how to check that arbitrary Tree type2 is a subtype of a fixed Class...
+    // or can just do Matchers.isSubtypeOf(Integer.class)... lol oops
+    // actually cannot when trying the other way around
+    // ASTHelpers.isSubtype(Suppliers.typeFromClass(Integer.class).get(state), ASTHelpers.getType(type2), state)
 
     @Override
     public Description matchMethod(MethodTree tree, VisitorState state) {
@@ -65,22 +54,19 @@ public final class DuplicateArgumentTypes extends BugChecker implements BugCheck
             tree.getParameters().forEach(param2 -> {
                 if (!param.equals(param2)) {
                     Tree type2 = param2.getType();
-                    // Matcher<Tree> m = Matchers.isSubtypeOf($ -> ASTHelpers.getType(type));
                     bad.set(bad.get() || (isSubtypeOf(type, type2, state) || isSubtypeOf(type2,
                             type, state)));
                 }
             });
         });
 
-        System.out.println(bad.get());
+        if (bad.get()) {
+            return buildDescription(tree).setMessage("Consider using a builder instead").build();
+        }
         return Description.NO_MATCH;
     }
 
-    private boolean isSubtypeOf(Tree clazz, Tree tree, VisitorState state) {
-        boolean x = Matchers.isSubtypeOf($ -> ASTHelpers.getType(clazz)).matches(tree, state);
-        if(x) {
-            System.out.println("madness abides");
-        }
-        return x;
+    private boolean isSubtypeOf(Tree type, Tree possibleSubType, VisitorState state) {
+        return Matchers.isSubtypeOf($ -> ASTHelpers.getType(type)).matches(possibleSubType, state);
     }
 }
