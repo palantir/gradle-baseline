@@ -29,16 +29,14 @@ public final class DuplicateArgumentTypesTest {
                 "import java.util.function.Supplier;",
                 "public class Test {",
                 "  public void myah3(Supplier<Number> a, Supplier<String> b) {}",
-                // "  public void myah0(Number a, Integer b) {}",
+                "  public void myah0(Number a, Integer b) {}",
                 "  public void myah(byte a, Number b) {}",
+                "  public void myah(byte a, int b) {}",
                 "  public void myah2(int a, String b) {}",
                 "}")
                 .doTest();
     }
 
-    // private RefactoringValidator fix() {
-    //     return RefactoringValidator.of(new DuplicateArgumentTypes(), getClass());
-    // }
     private CompilationTestHelper fix() {
         return CompilationTestHelper.newInstance(DuplicateArgumentTypes.class, getClass());
     }

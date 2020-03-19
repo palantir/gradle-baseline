@@ -41,18 +41,19 @@ import java.util.concurrent.atomic.AtomicBoolean;
         summary = "Duplicate argument types")
 public final class DuplicateArgumentTypes extends BugChecker implements BugChecker.MethodTreeMatcher {
 
-    // TODO (jshah) - sort out how to deal with multiple suppliers, even if the type params are not
+    // TODO (jshah) - sort out how to deal with multiple parameterized args, even if the type params are not
     //  subtypes of each other (maybe do type.getTypeParameters() (to that effect) and recurse?)
 
     @Override
     public Description matchMethod(MethodTree tree, VisitorState state) {
         AtomicBoolean bad = new AtomicBoolean(false);
-        tree.getParameters().forEach(param -> {
-            Tree type = param.getType();
+
+        tree.getParameters().forEach(param1 -> {
+            Tree type1 = param1.getType();
             tree.getParameters().forEach(param2 -> {
-                if (!param.equals(param2)) {
+                if (!param1.equals(param2)) {
                     Tree type2 = param2.getType();
-                    bad.set(bad.get() || isSubType(getType(type, state), getType(type2, state), state));
+                    bad.set(bad.get() || isSubType(type1, type2, state));
                 }
             });
         });
@@ -60,11 +61,8 @@ public final class DuplicateArgumentTypes extends BugChecker implements BugCheck
         if (bad.get()) {
             return buildDescription(tree).setMessage("Consider using a builder instead").build();
         }
-        return Description.NO_MATCH;
-    }
 
-    private boolean isSubtypeOf(Tree type, Tree possibleSubType, VisitorState state) {
-        return getMatcher(type, state).matches(possibleSubType, state);
+        return Description.NO_MATCH;
     }
 
     private boolean isPrimitive(Tree type, VisitorState state) {
@@ -101,34 +99,7 @@ public final class DuplicateArgumentTypes extends BugChecker implements BugCheck
         return Suppliers.typeFromClass(clazz).get(state);
     }
 
-    private boolean isSubType(Type t1, Type t2, VisitorState state) {
-        return ASTHelpers.isSubtype(t1, t2, state);
-    }
-
-    private Matcher<Tree> getMatcher(Tree type, VisitorState state) {
-        if (isPrimitive(type, state)) {
-            // System.out.println(type.toString());
-            switch (type.toString()) {
-                case "int":
-                    return Matchers.isSubtypeOf(Integer.class);
-                case "byte":
-                    return Matchers.isSubtypeOf(Byte.class);
-                case "char":
-                    return Matchers.isSubtypeOf(Character.class);
-                case "double":
-                    return Matchers.isSubtypeOf(Double.class);
-                case "long":
-                    return Matchers.isSubtypeOf(Long.class);
-                case "short":
-                    return Matchers.isSubtypeOf(Short.class);
-                case "float":
-                    return Matchers.isSubtypeOf(Float.class);
-                case "boolean":
-                    return Matchers.isSubtypeOf(Boolean.class);
-                default:
-                    break;
-            }
-        }
-        return Matchers.isSubtypeOf($ -> ASTHelpers.getType(type));
+    private boolean isSubType(Tree tree1, Tree tree2, VisitorState state) {
+        return ASTHelpers.isSubtype(getType(tree1, state), getType(tree2, state), state);
     }
 }
