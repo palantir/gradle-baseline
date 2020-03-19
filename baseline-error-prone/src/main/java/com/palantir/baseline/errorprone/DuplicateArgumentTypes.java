@@ -37,16 +37,12 @@ import java.util.concurrent.atomic.AtomicBoolean;
         name = "DuplicateArgumentTypes",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        severity = BugPattern.SeverityLevel.WARNING,
+        severity = BugPattern.SeverityLevel.SUGGESTION,
         summary = "Duplicate argument types")
 public final class DuplicateArgumentTypes extends BugChecker implements BugChecker.MethodTreeMatcher {
 
     // TODO (jshah) - sort out how to deal with multiple suppliers, even if the type params are not
-    //  subtypes of each other (maybe do type.getTypeParameters() and recurse?)
-    // how to check that arbitrary Tree type2 is a subtype of a fixed Class...
-    // or can just do Matchers.isSubtypeOf(Integer.class)... lol oops
-    // actually cannot when trying the other way around
-    // ASTHelpers.isSubtype(Suppliers.typeFromClass(Integer.class).get(state), ASTHelpers.getType(type2), state)
+    //  subtypes of each other (maybe do type.getTypeParameters() (to that effect) and recurse?)
 
     @Override
     public Description matchMethod(MethodTree tree, VisitorState state) {

@@ -16,27 +16,30 @@
 
 package com.palantir.baseline.errorprone;
 
+import com.google.errorprone.CompilationTestHelper;
 import org.junit.jupiter.api.Test;
 
 public final class DuplicateArgumentTypesTest {
 
     @Test
     void testType() {
-        fix().addInputLines(
+        fix().addSourceLines(
                 "Test.java",
                 "import com.google.common.annotations.VisibleForTesting;",
                 "import java.util.function.Supplier;",
                 "public class Test {",
+                "  public void myah3(Supplier<Number> a, Supplier<String> b) {}",
                 // "  public void myah0(Number a, Integer b) {}",
-                "  public void myah(int a, Number b) {}",
+                "  public void myah(byte a, Number b) {}",
                 "  public void myah2(int a, String b) {}",
-                // "  public void myah3(Supplier<Number> a, Supplier<String> b) {}",
                 "}")
-                .expectUnchanged()
                 .doTest();
     }
 
-    private RefactoringValidator fix() {
-        return RefactoringValidator.of(new DuplicateArgumentTypes(), getClass());
+    // private RefactoringValidator fix() {
+    //     return RefactoringValidator.of(new DuplicateArgumentTypes(), getClass());
+    // }
+    private CompilationTestHelper fix() {
+        return CompilationTestHelper.newInstance(DuplicateArgumentTypes.class, getClass());
     }
 }
