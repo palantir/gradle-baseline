@@ -20,14 +20,14 @@ import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.matchers.Description;
+import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
+import com.google.errorprone.suppliers.Suppliers;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.Tree;
-import java.util.HashSet;
-import java.util.Set;
+import com.sun.tools.javac.code.Type;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.concurrent.atomic.AtomicInteger;
 
 /**
  * Development Practices: Writing good unit tests.
@@ -41,6 +41,8 @@ import java.util.concurrent.atomic.AtomicInteger;
         summary = "Duplicate argument types")
 public final class DuplicateArgumentTypes extends BugChecker implements BugChecker.MethodTreeMatcher {
 
+    // TODO (jshah) - sort out how to deal with multiple suppliers, even if the type params are not
+    //  subtypes of each other (maybe do type.getTypeParameters() and recurse?)
     // how to check that arbitrary Tree type2 is a subtype of a fixed Class...
     // or can just do Matchers.isSubtypeOf(Integer.class)... lol oops
     // actually cannot when trying the other way around
@@ -54,8 +56,7 @@ public final class DuplicateArgumentTypes extends BugChecker implements BugCheck
             tree.getParameters().forEach(param2 -> {
                 if (!param.equals(param2)) {
                     Tree type2 = param2.getType();
-                    bad.set(bad.get() || (isSubtypeOf(type, type2, state) || isSubtypeOf(type2,
-                            type, state)));
+                    bad.set(bad.get() || isSubType(getType(type, state), getType(type2, state), state));
                 }
             });
         });
@@ -67,6 +68,71 @@ public final class DuplicateArgumentTypes extends BugChecker implements BugCheck
     }
 
     private boolean isSubtypeOf(Tree type, Tree possibleSubType, VisitorState state) {
-        return Matchers.isSubtypeOf($ -> ASTHelpers.getType(type)).matches(possibleSubType, state);
+        return getMatcher(type, state).matches(possibleSubType, state);
+    }
+
+    private boolean isPrimitive(Tree type, VisitorState state) {
+        return Matchers.isPrimitiveType().matches(type, state);
+    }
+
+    private Type getType(Tree type, VisitorState state) {
+        if (isPrimitive(type, state)) {
+            switch (type.toString()) {
+                case "int":
+                    return extractType(Integer.class, state);
+                case "byte":
+                    return extractType(Byte.class, state);
+                case "char":
+                    return extractType(Character.class, state);
+                case "double":
+                    return extractType(Double.class, state);
+                case "long":
+                    return extractType(Long.class, state);
+                case "short":
+                    return extractType(Short.class, state);
+                case "float":
+                    return extractType(Float.class, state);
+                case "boolean":
+                    return extractType(Boolean.class, state);
+                default:
+                    break;
+            }
+        }
+        return ASTHelpers.getType(type);
+    }
+
+    private Type extractType(Class clazz, VisitorState state) {
+        return Suppliers.typeFromClass(clazz).get(state);
+    }
+
+    private boolean isSubType(Type t1, Type t2, VisitorState state) {
+        return ASTHelpers.isSubtype(t1, t2, state);
+    }
+
+    private Matcher<Tree> getMatcher(Tree type, VisitorState state) {
+        if (isPrimitive(type, state)) {
+            // System.out.println(type.toString());
+            switch (type.toString()) {
+                case "int":
+                    return Matchers.isSubtypeOf(Integer.class);
+                case "byte":
+                    return Matchers.isSubtypeOf(Byte.class);
+                case "char":
+                    return Matchers.isSubtypeOf(Character.class);
+                case "double":
+                    return Matchers.isSubtypeOf(Double.class);
+                case "long":
+                    return Matchers.isSubtypeOf(Long.class);
+                case "short":
+                    return Matchers.isSubtypeOf(Short.class);
+                case "float":
+                    return Matchers.isSubtypeOf(Float.class);
+                case "boolean":
+                    return Matchers.isSubtypeOf(Boolean.class);
+                default:
+                    break;
+            }
+        }
+        return Matchers.isSubtypeOf($ -> ASTHelpers.getType(type));
     }
 }

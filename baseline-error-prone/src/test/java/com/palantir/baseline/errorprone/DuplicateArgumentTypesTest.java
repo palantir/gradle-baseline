@@ -25,10 +25,12 @@ public final class DuplicateArgumentTypesTest {
         fix().addInputLines(
                 "Test.java",
                 "import com.google.common.annotations.VisibleForTesting;",
+                "import java.util.function.Supplier;",
                 "public class Test {",
-                "  public void myah0(Number a, Integer b) {}",
-                "  public void myah(int a, Integer b) {}",
+                // "  public void myah0(Number a, Integer b) {}",
+                "  public void myah(int a, Number b) {}",
                 "  public void myah2(int a, String b) {}",
+                // "  public void myah3(Supplier<Number> a, Supplier<String> b) {}",
                 "}")
                 .expectUnchanged()
                 .doTest();
