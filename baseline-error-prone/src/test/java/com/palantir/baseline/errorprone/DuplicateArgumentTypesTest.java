@@ -33,6 +33,17 @@ public final class DuplicateArgumentTypesTest {
     }
 
     @Test
+    void testParameterizedTypes2() {
+        fix().addSourceLines(
+                "Test.java",
+                "import java.util.function.Supplier;",
+                "public class Test {",
+                "  public <T> void myah3(Supplier<T> a, Supplier<T> b) {}",
+                "}")
+                .doTest();
+    }
+
+    @Test
     void testSameType() {
         fix().addSourceLines(
                         "Test.java", "public class Test {", "  public void badMethod(Integer a, Integer b) {}", "}")
@@ -60,6 +71,7 @@ public final class DuplicateArgumentTypesTest {
                         "}")
                 .doTest();
     }
+
 
     @Test
     void testNoProblems() {

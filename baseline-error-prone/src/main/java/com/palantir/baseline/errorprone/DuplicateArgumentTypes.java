@@ -49,12 +49,14 @@ public final class DuplicateArgumentTypes extends BugChecker implements BugCheck
 
         tree.getParameters().forEach(param1 -> {
             Tree type1 = param1.getType();
-            tree.getParameters().forEach(param2 -> {
-                if (!param1.equals(param2)) {
-                    Tree type2 = param2.getType();
-                    bad.set(bad.get() || isSubType(type1, type2, state));
-                }
-            });
+            if(getType(type1, state).allparams().isEmpty()) {
+                tree.getParameters().forEach(param2 -> {
+                    if (!param1.equals(param2)) {
+                        Tree type2 = param2.getType();
+                        bad.set(bad.get() || isSubType(type1, type2, state));
+                    }
+                });
+            }
         });
 
         if (bad.get()) {
