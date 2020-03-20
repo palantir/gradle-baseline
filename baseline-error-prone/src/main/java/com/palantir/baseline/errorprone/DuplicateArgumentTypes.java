@@ -20,7 +20,6 @@ import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.matchers.Description;
-import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.suppliers.Suppliers;
 import com.google.errorprone.util.ASTHelpers;
@@ -59,7 +58,9 @@ public final class DuplicateArgumentTypes extends BugChecker implements BugCheck
         });
 
         if (bad.get()) {
-            return buildDescription(tree).setMessage("Consider using a builder instead").build();
+            return buildDescription(tree)
+                    .setMessage("Consider using a builder instead")
+                    .build();
         }
 
         return Description.NO_MATCH;
@@ -99,6 +100,7 @@ public final class DuplicateArgumentTypes extends BugChecker implements BugCheck
         return Suppliers.typeFromClass(clazz).get(state);
     }
 
+    // todo (jshah) - rather ironic to use duplicate types when this is what we are trying to detect!
     private boolean isSubType(Tree tree1, Tree tree2, VisitorState state) {
         return ASTHelpers.isSubtype(getType(tree1, state), getType(tree2, state), state);
     }

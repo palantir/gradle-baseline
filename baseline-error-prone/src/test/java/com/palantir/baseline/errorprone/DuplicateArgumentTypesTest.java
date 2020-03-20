@@ -22,18 +22,54 @@ import org.junit.jupiter.api.Test;
 public final class DuplicateArgumentTypesTest {
 
     @Test
-    void testType() {
+    void testParameterizedTypes() {
         fix().addSourceLines(
-                "Test.java",
-                "import com.google.common.annotations.VisibleForTesting;",
-                "import java.util.function.Supplier;",
-                "public class Test {",
-                "  public void myah3(Supplier<Number> a, Supplier<String> b) {}",
-                "  public void myah0(Number a, Integer b) {}",
-                "  public void myah(byte a, Number b) {}",
-                "  public void myah(byte a, int b) {}",
-                "  public void myah2(int a, String b) {}",
-                "}")
+                        "Test.java",
+                        "import java.util.function.Supplier;",
+                        "public class Test {",
+                        "  public void myah3(Supplier<Number> a, Supplier<String> b) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testSameType() {
+        fix().addSourceLines(
+                        "Test.java", "public class Test {", "  public void badMethod(Integer a, Integer b) {}", "}")
+                .doTest();
+    }
+
+    @Test
+    void testInheritedType() {
+        fix().addSourceLines("Test.java", "public class Test {", "  public void badMethod(Integer a, Number b) {}", "}")
+                .doTest();
+    }
+
+    @Test
+    void testInheritedTypeOtherOrdering() {
+        fix().addSourceLines("Test.java", "public class Test {", "  public void badMethod(Number a, Integer b) {}", "}")
+                .doTest();
+    }
+
+    @Test
+    void testMultipleArguments() {
+        fix().addSourceLines(
+                        "Test.java",
+                        "public class Test {",
+                        "  public void badMethod(Number a, String b, Double c) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testNoProblems() {
+        fix().addSourceLines("Test.java", "public class Test {", "  public void badMethod(Number a, String b) {}", "}")
+                .doTest();
+    }
+
+    @Test
+    void testPrimitives() {
+        fix().addSourceLines("Test.java", "public class Test {", "  public void badMethod(byte a, Number b) {}", "}")
                 .doTest();
     }
 
