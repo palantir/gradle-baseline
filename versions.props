@@ -1,4 +1,4 @@
-com.diffplug.spotless:spotless-plugin-gradle = 3.27.2
+com.diffplug.spotless:spotless-plugin-gradle = 3.28.0
 com.google.auto.service:auto-service = 1.0-rc4
 com.google.errorprone:error_prone_annotations = 2.3.4
 com.google.errorprone:error_prone_core = 2.3.4
@@ -22,11 +22,11 @@ org.apache.commons:commons-lang3 = 3.9
 commons-lang:commons-lang = 2.6
 org.assertj:assertj-core = 3.15.0
 org.hamcrest:hamcrest-core = 2.2
-org.junit.jupiter:* = 5.6.0
-org.mockito:* = 3.3.1
+org.junit.jupiter:* = 5.6.1
+org.mockito:* = 3.3.3
 com.fasterxml.jackson.*:* = 2.10.3
 com.palantir.tokens:auth-tokens = 3.6.1
-com.palantir.tritium:tritium-registry = 0.16.6
+com.palantir.tritium:tritium-registry = 0.16.7
 
 # dependency-upgrader:OFF
 # Updating to 0.8 would raise our minimum compatible version to 5.2
