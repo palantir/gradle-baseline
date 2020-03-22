@@ -330,7 +330,6 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                 state.getSourceForNode(removedVariableTree.get().getType()) + " ");
     }
 
-    @SuppressWarnings("SwitchStatementDefaultCase")
     private static String describeVariable(Symbol.VarSymbol symbol) {
         switch (symbol.getKind()) {
             case FIELD:

@@ -156,7 +156,6 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
     +com.palantir.logsafe.Preconditions.checkNotNull(variable, "message"); // equivalent functionality is available in the safe-logging variant
     ```
 - `ShutdownHook`: Applications should not use `Runtime#addShutdownHook`.
-- `SwitchStatementDefaultCase`: Switch statements should avoid using default cases. Default cases prevent the [MissingCasesInEnumSwitch](http://errorprone.info/bugpattern/MissingCasesInEnumSwitch.html) check from detecting when an enum value is not explicitly handled. This check is important to help avoid incorrect behavior when new enum values are introduced.
 - `GradleCacheableTaskAction`: Gradle plugins should not call `Task.doFirst` or `Task.doLast` with a lambda, as that is not cacheable. See [gradle/gradle#5510](https://github.com/gradle/gradle/issues/5510) for more details.
 - `PreferBuiltInConcurrentKeySet`: Discourage relying on Guava's `com.google.common.collect.Sets.newConcurrentHashSet()`, when Java's `java.util.concurrent.ConcurrentHashMap.newKeySet()` serves the same purpose.
 - `JUnit5RuleUsage`: Prevent accidental usage of `org.junit.Rule`/`org.junit.ClassRule` within Junit5 tests
