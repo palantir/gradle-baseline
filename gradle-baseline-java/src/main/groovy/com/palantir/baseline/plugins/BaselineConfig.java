@@ -92,7 +92,7 @@ class BaselineConfig extends AbstractBaselinePlugin {
 
             // Disable some checkstyle rules that clash with PJF
             if (BaselineFormat.palantirJavaFormatterState(rootProject) != FormatterState.OFF
-                    || project.getPluginManager().hasPlugin("com.palantir.java-format")) {
+                    || project.getPluginManager().hasPlugin("com.palantir.java-format-provider")) {
                 Path checkstyleXml = configDir.resolve("checkstyle/checkstyle.xml");
 
                 try {
