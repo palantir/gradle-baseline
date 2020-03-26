@@ -298,6 +298,42 @@ class RedundantModifierTest {
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
+    @Test
+    void fixInterfaceFinalParameters() {
+        fix().addInputLines(
+                        "Test.java",
+                        "public interface Test {",
+                        "  void foo(int a, final int b, final int c);",
+                        "  public void foo(final int a);",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "public interface Test {",
+                        "  void foo(int a, int b, int c);",
+                        "  void foo(int a);",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    void fixAbstractClassFinalParameters() {
+        fix().addInputLines(
+                        "Test.java",
+                        "public abstract class Test {",
+                        "  abstract void foo(int a, final int b, final int c);",
+                        "  public abstract void foo(final int a);",
+                        "  public void bar(final int a) {}",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "public abstract class Test {",
+                        "  abstract void foo(int a, int b, int c);",
+                        "  public abstract void foo(int a);",
+                        "  public void bar(final int a) {}",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
     private RefactoringValidator fix() {
         return RefactoringValidator.of(new RedundantModifier(), getClass());
     }
