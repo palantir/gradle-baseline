@@ -16,6 +16,7 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
+import com.google.common.collect.Streams;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
@@ -40,36 +41,48 @@ import java.util.concurrent.atomic.AtomicBoolean;
         summary = "Duplicate argument types")
 public final class DuplicateArgumentTypes extends BugChecker implements BugChecker.MethodTreeMatcher {
 
-    // TODO (jshah) - sort out how to deal with multiple parameterized args, even if the type params are not
-    //  subtypes of each other (maybe do type.getTypeParameters() (to that effect) and recurse?)
-
     @Override
     public Description matchMethod(MethodTree tree, VisitorState state) {
-        AtomicBoolean bad = new AtomicBoolean(false);
+        AtomicBoolean badMethod = new AtomicBoolean(false);
 
         tree.getParameters().forEach(param1 -> {
-            Tree type1 = param1.getType();
-            if(getType(type1, state).allparams().isEmpty()) {
-                tree.getParameters().forEach(param2 -> {
-                    if (!param1.equals(param2)) {
-                        Tree type2 = param2.getType();
-                        bad.set(bad.get() || isSubType(type1, type2, state));
-                    }
-                });
-            }
+            Tree outerTree = param1.getType();
+            tree.getParameters().forEach(param2 -> {
+                if (!param1.equals(param2)) {
+                    Tree innerTree = param2.getType();
+                    badMethod.set(badMethod.get() || isSubTypeOf(outerTree, innerTree, state));
+                }
+            });
         });
 
-        if (bad.get()) {
+        if (badMethod.get()) {
             return buildDescription(tree)
-                    .setMessage("Consider using a builder instead")
+                    .setMessage("Some argument types are equal or are subtypes of each other. Consider using a "
+                            + "builder instead.")
                     .build();
         }
 
         return Description.NO_MATCH;
     }
 
-    private boolean isPrimitive(Tree type, VisitorState state) {
-        return Matchers.isPrimitiveType().matches(type, state);
+    private boolean isSubTypeOf(Tree tree1, Tree tree2, VisitorState state) {
+        return subTypeCheck(getType(tree1, state), getType(tree2, state), state);
+    }
+
+    private boolean subTypeCheck(Type type1, Type type2, VisitorState state) {
+        if (!isSubType(type1, type2, state)) {
+            return false;
+        } else {
+            return Streams.zip(
+                            type1.allparams().stream(),
+                            type2.allparams().stream(),
+                            (left, right) -> (subTypeCheck(left, right, state) || subTypeCheck(right, left, state)))
+                    .allMatch(y -> y);
+        }
+    }
+
+    private boolean isSubType(Type type1, Type type2, VisitorState state) {
+        return ASTHelpers.isSubtype(type1, type2, state);
     }
 
     private Type getType(Tree type, VisitorState state) {
@@ -98,12 +111,11 @@ public final class DuplicateArgumentTypes extends BugChecker implements BugCheck
         return ASTHelpers.getType(type);
     }
 
-    private Type extractType(Class clazz, VisitorState state) {
-        return Suppliers.typeFromClass(clazz).get(state);
+    private boolean isPrimitive(Tree type, VisitorState state) {
+        return Matchers.isPrimitiveType().matches(type, state);
     }
 
-    // todo (jshah) - rather ironic to use duplicate types when this is what we are trying to detect!
-    private boolean isSubType(Tree tree1, Tree tree2, VisitorState state) {
-        return ASTHelpers.isSubtype(getType(tree1, state), getType(tree2, state), state);
+    private Type extractType(Class clazz, VisitorState state) {
+        return Suppliers.typeFromClass(clazz).get(state);
     }
 }

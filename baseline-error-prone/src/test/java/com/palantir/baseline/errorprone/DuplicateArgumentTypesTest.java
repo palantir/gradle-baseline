@@ -16,76 +16,141 @@
 
 package com.palantir.baseline.errorprone;
 
-import com.google.errorprone.CompilationTestHelper;
+import com.google.errorprone.BugCheckerRefactoringTestHelper;
 import org.junit.jupiter.api.Test;
 
 public final class DuplicateArgumentTypesTest {
 
-    @Test
-    void testParameterizedTypes() {
-        fix().addSourceLines(
-                        "Test.java",
-                        "import java.util.function.Supplier;",
-                        "public class Test {",
-                        "  public void myah3(Supplier<Number> a, Supplier<String> b) {}",
-                        "}")
-                .doTest();
-    }
-
-    @Test
-    void testParameterizedTypes2() {
-        fix().addSourceLines(
-                "Test.java",
-                "import java.util.function.Supplier;",
-                "public class Test {",
-                "  public <T> void myah3(Supplier<T> a, Supplier<T> b) {}",
-                "}")
-                .doTest();
-    }
+    private static final BugCheckerRefactoringTestHelper.TestMode TEST_MODE =
+            BugCheckerRefactoringTestHelper.TestMode.AST_MATCH;
 
     @Test
     void testSameType() {
-        fix().addSourceLines(
+        validator()
+                .addInputLines(
                         "Test.java", "public class Test {", "  public void badMethod(Integer a, Integer b) {}", "}")
-                .doTest();
+                .expectUnchanged()
+                .doTestExpectingFailure(TEST_MODE);
     }
 
     @Test
     void testInheritedType() {
-        fix().addSourceLines("Test.java", "public class Test {", "  public void badMethod(Integer a, Number b) {}", "}")
-                .doTest();
+        validator()
+                .addInputLines(
+                        "Test.java", "public class Test {", "  public void badMethod(Integer a, Number b) {}", "}")
+                .expectUnchanged()
+                .doTestExpectingFailure(TEST_MODE);
     }
 
     @Test
     void testInheritedTypeOtherOrdering() {
-        fix().addSourceLines("Test.java", "public class Test {", "  public void badMethod(Number a, Integer b) {}", "}")
-                .doTest();
+        validator()
+                .addInputLines(
+                        "Test.java", "public class Test {", "  public void badMethod(Number a, Integer b) {}", "}")
+                .expectUnchanged()
+                .doTestExpectingFailure(TEST_MODE);
     }
 
     @Test
     void testMultipleArguments() {
-        fix().addSourceLines(
+        validator()
+                .addInputLines(
                         "Test.java",
                         "public class Test {",
                         "  public void badMethod(Number a, String b, Double c) {}",
                         "}")
-                .doTest();
-    }
-
-
-    @Test
-    void testNoProblems() {
-        fix().addSourceLines("Test.java", "public class Test {", "  public void badMethod(Number a, String b) {}", "}")
-                .doTest();
+                .expectUnchanged()
+                .doTestExpectingFailure(TEST_MODE);
     }
 
     @Test
     void testPrimitives() {
-        fix().addSourceLines("Test.java", "public class Test {", "  public void badMethod(byte a, Number b) {}", "}")
+        validator()
+                .addInputLines("Test.java", "public class Test {", "  public void badMethod(byte a, Number b) {}", "}")
+                .expectUnchanged()
+                .doTestExpectingFailure(TEST_MODE);
+    }
+
+    @Test
+    void testParameterizedTypesWithNonSubTypedParameters() {
+        validator()
+                .addInputLines(
+                        "Test.java",
+                        "import java.util.function.Supplier;",
+                        "public class Test {",
+                        "  public void goodMethod(Supplier<Number> a, Supplier<String> b) {}",
+                        "}")
+                .expectUnchanged()
                 .doTest();
     }
 
-    private CompilationTestHelper fix() {
-        return CompilationTestHelper.newInstance(DuplicateArgumentTypes.class, getClass());
+    @Test
+    void testParameterizedTypesWithSubTypedParameters() {
+        validator()
+                .addInputLines(
+                        "Test.java",
+                        "import java.util.function.Supplier;",
+                        "public class Test {",
+                        "  public void badMethod(Supplier<Number> a, Supplier<Integer> b) {}",
+                        "}")
+                .expectUnchanged()
+                .doTestExpectingFailure(TEST_MODE);
+    }
+
+    @Test
+    void testParameterizedTypesWithParameterizedMethodType() {
+        validator()
+                .addInputLines(
+                        "Test.java",
+                        "import java.util.function.Supplier;",
+                        "public class Test {",
+                        "  public <T, U extends T> void badMethod(Supplier<U> a, Supplier<T> b) {}",
+                        "}")
+                .expectUnchanged()
+                .doTestExpectingFailure(TEST_MODE);
+    }
+
+    @Test
+    void testNestedParameterizedTypes() {
+        validator()
+                .addInputLines(
+                        "Test.java",
+                        "import java.util.function.Supplier;",
+                        "import java.util.function.Function;",
+                        "public class Test {",
+                        "  public void badMethod(Supplier<Function<Integer, Double>> a, Supplier<Function<Number,"
+                                + " Number>> b) {}",
+                        "}")
+                .expectUnchanged()
+                .doTestExpectingFailure(TEST_MODE);
+    }
+
+    @Test
+    void testNestedParameterizedTypesWithNonSubTypeParameters() {
+        validator()
+                .addInputLines(
+                        "Test.java",
+                        "import java.util.function.Supplier;",
+                        "import java.util.function.Function;",
+                        "public class Test {",
+                        "  public void goodMethod1(Supplier<Function<Integer, String>> a, Supplier<Function<String,"
+                                + " Integer>> b) {}",
+                        "  public void goodMethod2(Supplier<Function<Integer, String>> a, Supplier<Number> b) {}",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void testMethodWithNoSubTypes() {
+        validator()
+                .addInputLines(
+                        "Test.java", "public class Test {", "  public void goodMethod(Number a, String b) {}", "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    private RefactoringValidator validator() {
+        return RefactoringValidator.of(new DuplicateArgumentTypes(), getClass());
     }
 }
