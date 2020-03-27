@@ -87,25 +87,23 @@ public final class DuplicateArgumentTypes extends BugChecker implements BugCheck
 
     private Type getType(Tree type, VisitorState state) {
         if (isPrimitive(type, state)) {
-            switch (type.toString()) {
+            switch (state.getSourceForNode(type)) {
                 case "int":
-                    return extractType(Integer.class, state);
+                    return Suppliers.typeFromClass(Integer.class).get(state);
                 case "byte":
-                    return extractType(Byte.class, state);
+                    return Suppliers.typeFromClass(Byte.class).get(state);
                 case "char":
-                    return extractType(Character.class, state);
+                    return Suppliers.typeFromClass(Character.class).get(state);
                 case "double":
-                    return extractType(Double.class, state);
+                    return Suppliers.typeFromClass(Double.class).get(state);
                 case "long":
-                    return extractType(Long.class, state);
+                    return Suppliers.typeFromClass(Long.class).get(state);
                 case "short":
-                    return extractType(Short.class, state);
+                    return Suppliers.typeFromClass(Short.class).get(state);
                 case "float":
-                    return extractType(Float.class, state);
+                    return Suppliers.typeFromClass(Float.class).get(state);
                 case "boolean":
-                    return extractType(Boolean.class, state);
-                default:
-                    break;
+                    return Suppliers.typeFromClass(Boolean.class).get(state);
             }
         }
         return ASTHelpers.getType(type);
@@ -113,9 +111,5 @@ public final class DuplicateArgumentTypes extends BugChecker implements BugCheck
 
     private boolean isPrimitive(Tree type, VisitorState state) {
         return Matchers.isPrimitiveType().matches(type, state);
-    }
-
-    private Type extractType(Class clazz, VisitorState state) {
-        return Suppliers.typeFromClass(clazz).get(state);
     }
 }
