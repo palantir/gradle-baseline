@@ -1023,7 +1023,7 @@ Furthermore, suppose that:
     new features.
 
 As an example (inspired by this
-[dzone](http://java.dzone.com/articles/design-patterns-visitor)
+[dzone](https://dzone.com/articles/design-patterns-visitor)
 article), assume As a concrete example, we may have various Feeds
 message types such as DocumentFeedMessage, ObjectFeedMessage, or
 ObjectWatchMessage, all of which are implementations of the Message
