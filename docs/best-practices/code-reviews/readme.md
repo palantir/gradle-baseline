@@ -35,7 +35,7 @@ This guide covers the following topics:
 
 We perform code reviews (CRs) in order to improve code quality and benefit from
 [positive effects on team and company
-culture](https://blog.fullstory.com/what-we-learned-from-google-code-reviews-arent-just-for-catching-bugs).
+culture](https://blog.fullstory.com/what-we-learned-from-google-code-reviews-arent-just-for-catching-bugs/).
 For example:
 
 - **Committers are motivated** by the notion of a set

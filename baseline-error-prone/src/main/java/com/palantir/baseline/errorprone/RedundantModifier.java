@@ -79,6 +79,12 @@ public final class RedundantModifier extends BugChecker
                     MoreMatchers.hasExplicitModifier(Modifier.STATIC),
                     MoreMatchers.hasExplicitModifier(Modifier.FINAL)));
 
+    // Applies to both abstract class abstract methods and interface methods.
+    private static final Matcher<VariableTree> ABSTRACT_METHOD_MODIFIERS = Matchers.allOf(
+            Matchers.enclosingNode(
+                    Matchers.allOf(Matchers.kindIs(Tree.Kind.METHOD), Matchers.hasModifier(Modifier.ABSTRACT))),
+            MoreMatchers.hasExplicitModifier(Modifier.FINAL));
+
     private static final Matcher<ClassTree> INTERFACE_NESTED_CLASS_MODIFIERS = Matchers.allOf(
             MoreMatchers.classEnclosingClass(Matchers.kindIs(Tree.Kind.INTERFACE)),
             Matchers.anyOf(
@@ -155,6 +161,12 @@ public final class RedundantModifier extends BugChecker
                             + "These modifiers are unnecessary to specify.")
                     .addFix(SuggestedFixes.removeModifiers(
                             tree, state, Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL))
+                    .build();
+        }
+        if (ABSTRACT_METHOD_MODIFIERS.matches(tree, state)) {
+            return buildDescription(tree)
+                    .setMessage("The final modifier has no impact on abstract methods.")
+                    .addFix(SuggestedFixes.removeModifiers(tree, state, Modifier.FINAL))
                     .build();
         }
         return Description.NO_MATCH;
