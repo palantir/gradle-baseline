@@ -28,7 +28,10 @@ public final class DuplicateArgumentTypesTest {
     void testSameType() {
         validator()
                 .addInputLines(
-                        "Test.java", "public class Test {", "  public void badMethod(Integer a, Integer b) {}", "}")
+                        "Test.java", //
+                        "public class Test {",
+                        "  public void badMethod(Integer a, Integer b) {}",
+                        "}")
                 .expectUnchanged()
                 .doTestExpectingFailure(TEST_MODE);
     }
@@ -37,7 +40,10 @@ public final class DuplicateArgumentTypesTest {
     void testInheritedType() {
         validator()
                 .addInputLines(
-                        "Test.java", "public class Test {", "  public void badMethod(Integer a, Number b) {}", "}")
+                        "Test.java", //
+                        "public class Test {",
+                        "  public void badMethod(Integer a, Number b) {}",
+                        "}")
                 .expectUnchanged()
                 .doTestExpectingFailure(TEST_MODE);
     }
@@ -46,7 +52,10 @@ public final class DuplicateArgumentTypesTest {
     void testInheritedTypeOtherOrdering() {
         validator()
                 .addInputLines(
-                        "Test.java", "public class Test {", "  public void badMethod(Number a, Integer b) {}", "}")
+                        "Test.java", //
+                        "public class Test {",
+                        "  public void badMethod(Number a, Integer b) {}",
+                        "}")
                 .expectUnchanged()
                 .doTestExpectingFailure(TEST_MODE);
     }
@@ -66,7 +75,11 @@ public final class DuplicateArgumentTypesTest {
     @Test
     void testPrimitives() {
         validator()
-                .addInputLines("Test.java", "public class Test {", "  public void badMethod(byte a, Number b) {}", "}")
+                .addInputLines(
+                        "Test.java", //
+                        "public class Test {",
+                        "  public void badMethod(byte a, Number b) {}",
+                        "}")
                 .expectUnchanged()
                 .doTestExpectingFailure(TEST_MODE);
     }
@@ -145,7 +158,10 @@ public final class DuplicateArgumentTypesTest {
     void testMethodWithNoSubTypes() {
         validator()
                 .addInputLines(
-                        "Test.java", "public class Test {", "  public void goodMethod(Number a, String b) {}", "}")
+                        "Test.java", //
+                        "public class Test {",
+                        "  public void goodMethod(Number a, String b) {}",
+                        "}")
                 .expectUnchanged()
                 .doTest();
     }
