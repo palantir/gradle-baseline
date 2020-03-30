@@ -25,6 +25,7 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-migrationsupport'
 
     annotationProcessor 'com.google.auto.service:auto-service'
+    annotationProcessor 'org.immutables:value'
     compileOnly 'com.google.auto.service:auto-service'
 }
 

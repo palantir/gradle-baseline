@@ -28,6 +28,7 @@ import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.Type;
 import java.util.concurrent.atomic.AtomicBoolean;
+import org.immutables.value.Value;
 
 /**
  * Development Practices: Writing good unit tests.
@@ -45,15 +46,17 @@ public final class DuplicateArgumentTypes extends BugChecker implements BugCheck
     public Description matchMethod(MethodTree tree, VisitorState state) {
         AtomicBoolean badMethod = new AtomicBoolean(false);
 
-        tree.getParameters().forEach(param1 -> {
-            Tree outerTree = param1.getType();
-            tree.getParameters().forEach(param2 -> {
-                if (!param1.equals(param2)) {
-                    Tree innerTree = param2.getType();
-                    badMethod.set(badMethod.get() || isSubTypeOf(outerTree, innerTree, state));
-                }
-            });
-        });
+        tree.getParameters().forEach(param1 -> tree.getParameters().forEach(param2 -> {
+            if (!param1.equals(param2)) {
+                Type outerType = getType(param1.getType(), state);
+                Type innerType = getType(param2.getType(), state);
+                TypesToCompare typesToCompare = ImmutableTypesToCompare.builder()
+                        .subType(outerType)
+                        .superType(innerType)
+                        .build();
+                badMethod.set(badMethod.get() || subTypeCheck(typesToCompare, state));
+            }
+        }));
 
         if (badMethod.get()) {
             return buildDescription(tree).build();
@@ -62,24 +65,31 @@ public final class DuplicateArgumentTypes extends BugChecker implements BugCheck
         return Description.NO_MATCH;
     }
 
-    private boolean isSubTypeOf(Tree tree1, Tree tree2, VisitorState state) {
-        return subTypeCheck(getType(tree1, state), getType(tree2, state), state);
-    }
-
-    private boolean subTypeCheck(Type type1, Type type2, VisitorState state) {
-        if (!isSubType(type1, type2, state)) {
+    private boolean subTypeCheck(TypesToCompare typesToCompare, VisitorState state) {
+        if (!isSubType(typesToCompare, state)) {
             return false;
         } else {
             return Streams.zip(
-                            type1.allparams().stream(),
-                            type2.allparams().stream(),
-                            (left, right) -> (subTypeCheck(left, right, state) || subTypeCheck(right, left, state)))
+                            typesToCompare.subType().allparams().stream(),
+                            typesToCompare.superType().allparams().stream(),
+                            (left, right) -> (subTypeCheck(
+                                            ImmutableTypesToCompare.builder()
+                                                    .subType(left)
+                                                    .superType(right)
+                                                    .build(),
+                                            state)
+                                    || subTypeCheck(
+                                            ImmutableTypesToCompare.builder()
+                                                    .subType(right)
+                                                    .superType(left)
+                                                    .build(),
+                                            state)))
                     .allMatch(y -> y);
         }
     }
 
-    private boolean isSubType(Type type1, Type type2, VisitorState state) {
-        return ASTHelpers.isSubtype(type1, type2, state);
+    private boolean isSubType(TypesToCompare typesToCompare, VisitorState state) {
+        return ASTHelpers.isSubtype(typesToCompare.subType(), typesToCompare.superType(), state);
     }
 
     private Type getType(Tree type, VisitorState state) {
@@ -108,5 +118,13 @@ public final class DuplicateArgumentTypes extends BugChecker implements BugCheck
 
     private boolean isPrimitive(Tree type, VisitorState state) {
         return Matchers.isPrimitiveType().matches(type, state);
+    }
+
+    @Value.Immutable
+    @Value.Style(stagedBuilder = true)
+    interface TypesToCompare {
+        Type subType();
+
+        Type superType();
     }
 }
