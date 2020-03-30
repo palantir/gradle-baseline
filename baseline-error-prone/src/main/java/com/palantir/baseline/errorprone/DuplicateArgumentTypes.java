@@ -38,7 +38,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.SUGGESTION,
-        summary = "Duplicate argument types")
+        summary = "Some argument types are equal or are subtypes of each other. Consider using a builder instead.")
 public final class DuplicateArgumentTypes extends BugChecker implements BugChecker.MethodTreeMatcher {
 
     @Override
@@ -56,10 +56,7 @@ public final class DuplicateArgumentTypes extends BugChecker implements BugCheck
         });
 
         if (badMethod.get()) {
-            return buildDescription(tree)
-                    .setMessage("Some argument types are equal or are subtypes of each other. Consider using a "
-                            + "builder instead.")
-                    .build();
+            return buildDescription(tree).build();
         }
 
         return Description.NO_MATCH;
