@@ -27,6 +27,7 @@ dependencies {
     annotationProcessor 'com.google.auto.service:auto-service'
     annotationProcessor 'org.immutables:value'
     compileOnly 'com.google.auto.service:auto-service'
+    compileOnly 'org.immutables:value::annotations'
 }
 
 // Incorrectly identifies tests as junit4 usage
