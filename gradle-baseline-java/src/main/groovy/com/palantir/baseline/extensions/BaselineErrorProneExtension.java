@@ -55,6 +55,7 @@ public class BaselineErrorProneExtension {
 
             // Built-in checks
             "ArrayEquals",
+            "UnnecessaryBoxedVariable",
             "MissingOverride",
             "UnnecessaryParentheses",
             "PreferJavaTimeOverload");

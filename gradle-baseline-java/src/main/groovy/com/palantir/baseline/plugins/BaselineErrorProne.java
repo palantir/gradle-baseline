@@ -212,6 +212,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
         errorProneOptions.check(
                 "PreferJavaTimeOverload", CheckSeverity.OFF); // https://github.com/google/error-prone/issues/1435,
         // https://github.com/google/error-prone/issues/1437
+        errorProneOptions.check("UnnecessaryBoxedVariable", CheckSeverity.WARN);
         errorProneOptions.check("EqualsHashCode", CheckSeverity.ERROR);
         errorProneOptions.check("EqualsIncompatibleType", CheckSeverity.ERROR);
         errorProneOptions.check("StreamResourceLeak", CheckSeverity.ERROR);
