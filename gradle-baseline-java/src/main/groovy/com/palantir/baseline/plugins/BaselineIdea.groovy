@@ -16,6 +16,7 @@
 
 package com.palantir.baseline.plugins
 
+import com.google.common.collect.ImmutableMap
 import com.palantir.baseline.util.GitUtils
 import groovy.transform.CompileStatic
 import groovy.xml.XmlUtil
@@ -76,6 +77,10 @@ class BaselineIdea extends AbstractBaselinePlugin {
         project.getTasks().findByName("idea").doLast(cleanup)
     }
 
+    private File getIdeaStyleFile(Project project) {
+        project.file("${configDir}/idea/intellij-java-palantir-style.xml")
+    }
+
     void applyToRootProject(Project project) {
         // Configure Idea project
         IdeaModel ideaRootModel = project.extensions.findByType(IdeaModel)
@@ -110,6 +115,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
             }
             configureSaveActionsForIntellijImport(project)
         }
+        addCodeStyleForIntellijImport()
     }
 
     @CompileStatic
@@ -121,8 +127,51 @@ class BaselineIdea extends AbstractBaselinePlugin {
      * Extracts IDEA formatting configurations from Baseline directory and adds it to the Idea project XML node.
      */
     private void addCodeStyle(node) {
-        def ideaStyleFile = project.file("${configDir}/idea/intellij-java-palantir-style.xml")
-        node.append(new XmlParser().parse(ideaStyleFile).component)
+        node.append(new XmlParser().parse(getIdeaStyleFile(project)).component)
+    }
+
+    private void addCodeStyleForIntellijImport() {
+        if (!Boolean.getBoolean("idea.active")) {
+            return
+        }
+        def file = getIdeaStyleFile(project)
+        // This runs eagerly, so the file might not exist if we haven't run `baselineUpdateConfig` yet.
+        // Thus, don't do anything if the file is not there yet.
+        if (!file.exists()) {
+            return
+        }
+
+        List configurationNodes = new XmlParser().parse(file).
+                component.
+                option.
+                find { it.@name == 'PER_PROJECT_SETTINGS' }.
+                value.
+                children()
+
+        XmlUtils.createOrUpdateXmlFile(project.file(".idea/codeStyles/codeStyleConfig.xml")) {
+            def isComponent = (it.name().toString() == "component")
+            if (isComponent) {
+                // There is already a file
+                def state = GroovyXmlUtils.matchOrCreateChild(it, "state")
+                def option = GroovyXmlUtils.matchOrCreateChild(state, "option", [name: "USE_PER_PROJECT_SETTINGS"])
+                option.attributes()["value"] = "true"
+                return
+            }
+            // Otherwise, the file wasn't there (we create a <project> tag by default) so overwrite it
+            it.replaceNode(new XmlParser().parse("""
+                <component name="ProjectCodeStyleConfiguration">
+                  <state>
+                    <option name="USE_PER_PROJECT_SETTINGS" value="true" />
+                  </state>
+                </component>"""))
+        }
+
+        XmlUtils.createOrUpdateXmlFile(project.file(".idea/codeStyles/Project.xml")) {
+            def root = new Node(null, "component", ImmutableMap.of("name", "ProjectCodeStyleConfiguration"))
+            def codeScheme = root.appendNode("code_scheme", ImmutableMap.of("name", "Project", "version", "173"))
+            configurationNodes.forEach(codeScheme.&append)
+            it.replaceNode(root)
+        }
     }
 
     /**
