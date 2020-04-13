@@ -42,7 +42,7 @@ com.palantir.javaformat:gradle-palantir-java-format:0.3.9 (1 constraints: 0e05fd
 com.palantir.javaformat:palantir-java-format-spi:0.3.9 (1 constraints: 7b156abe)
 com.palantir.safe-logging:preconditions:1.13.0 (3 constraints: cd234779)
 com.palantir.safe-logging:safe-logging:1.13.0 (3 constraints: 25272fdf)
-com.palantir.tritium:tritium-registry:0.16.7 (1 constraints: 40053c3b)
+com.palantir.tritium:tritium-registry:0.16.8 (1 constraints: 41053d3b)
 com.typesafe:config:1.2.0 (1 constraints: d60cb924)
 gradle.plugin.org.jetbrains.gradle.plugin.idea-ext:gradle-idea-ext:0.7 (1 constraints: 1815b193)
 io.dropwizard.metrics:metrics-core:3.2.6 (1 constraints: 95108ba5)
