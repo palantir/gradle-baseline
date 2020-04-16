@@ -1,0 +1,5 @@
+type: feature
+feature:
+  description: Forbid implicit toString of Gradle Providers.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1322
