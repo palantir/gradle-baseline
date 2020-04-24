@@ -1,0 +1,8 @@
+type: improvement
+improvement:
+  description: The threshold for automatic on demand imports (.* imports) in IntelliJ and
+    Eclipse formatter configurations has been increased from 99 to 999. Ideally on demands imports
+    would be disabled completely as they are not allowed in the baseline Checkstyle configuration.
+    Given that's not possible, the threshold is being icreased as a workaround.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1323
