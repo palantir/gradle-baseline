@@ -98,9 +98,9 @@ org.slf4j:slf4j-api:1.7.30 (5 constraints: a2415e05)
 
 [Test dependencies]
 cglib:cglib-nodep:3.2.2 (1 constraints: 490ded24)
-com.fasterxml.jackson.core:jackson-annotations:2.10.3 (2 constraints: bd17d370)
-com.fasterxml.jackson.core:jackson-core:2.10.3 (1 constraints: 86122f21)
-com.fasterxml.jackson.core:jackson-databind:2.10.3 (1 constraints: e30d9737)
+com.fasterxml.jackson.core:jackson-annotations:2.11.0 (2 constraints: b9176970)
+com.fasterxml.jackson.core:jackson-core:2.11.0 (1 constraints: 84122f21)
+com.fasterxml.jackson.core:jackson-databind:2.11.0 (1 constraints: e30d9737)
 com.github.stefanbirkner:system-rules:1.19.0 (1 constraints: 3d05443b)
 com.netflix.nebula:nebula-test:7.8.6 (1 constraints: 17052c36)
 com.palantir.tokens:auth-tokens:3.6.1 (1 constraints: 0c050d36)
