@@ -189,6 +189,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `UnnecessaryLambdaArgumentParentheses`: Lambdas with a single parameter do not require argument parentheses.
 - `RawTypes`: Avoid raw types; add appropriate type parameters if possible.
 - `VisibleForTestingPackagePrivate`: `@VisibleForTesting` members should be package-private.
+- `OptionalFlatMapOfNullable`: Optional.map functions may return null to safely produce an empty result.
 
 ### Programmatic Application
 
