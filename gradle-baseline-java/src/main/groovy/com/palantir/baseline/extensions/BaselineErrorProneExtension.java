@@ -32,6 +32,7 @@ public class BaselineErrorProneExtension {
             "FinalClass",
             "LambdaMethodReference",
             "LoggerEnclosingClass",
+            "OptionalFlatMapOfNullable",
             "OptionalOrElseMethodInvocation",
             "PreferBuiltInConcurrentKeySet",
             "PreferCollectionTransform",
