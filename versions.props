@@ -11,7 +11,7 @@ org.github.ngbinh.scalastyle:gradle-scalastyle-plugin_2.11 = 1.0.1
 org.inferred:freebuilder = 1.14.6
 org.jooq:jooq = 3.13.1
 org.slf4j:slf4j-api = 1.7.30
-org.immutables:* = 2.8.6
+org.immutables:* = 2.8.7
 
 # test deps
 com.netflix.nebula:nebula-test = 7.8.6
