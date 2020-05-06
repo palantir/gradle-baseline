@@ -23,10 +23,12 @@ import org.junit.jupiter.api.Test;
 public class GradleProviderToStringTest {
 
     private CompilationTestHelper compilationHelper;
+    private RefactoringValidator refactoringValidator;
 
     @BeforeEach
     public void before() {
         compilationHelper = CompilationTestHelper.newInstance(GradleProviderToString.class, getClass());
+        refactoringValidator = RefactoringValidator.of(new GradleProviderToString(), getClass());
     }
 
     @Test
@@ -39,9 +41,38 @@ public class GradleProviderToStringTest {
                         "import org.gradle.api.provider.Provider;",
                         "class Foo implements Plugin<Project> {",
                         "  public final void apply(Project project) {",
+                        "    String nonProvider = \"foo\"",
                         "    Provider<String> provider = project.provider(() -> \"hello\");",
                         "    // BUG: Diagnostic contains: Calling toString on a Provider",
+                        "    String value = \"My bad provider value: \" + provider + nonProvider;",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void failsUsedInStringConcatenation_replacesWithGet() {
+        refactoringValidator
+                .addInputLines(
+                        "Foo.java",
+                        "import org.gradle.api.Project;",
+                        "import org.gradle.api.Plugin;",
+                        "import org.gradle.api.provider.Provider;",
+                        "class Foo implements Plugin<Project> {",
+                        "  public final void apply(Project project) {",
+                        "    Provider<String> provider = project.provider(() -> \"hello\");",
                         "    String value = \"My bad provider value: \" + provider;",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Foo.java",
+                        "import org.gradle.api.Project;",
+                        "import org.gradle.api.Plugin;",
+                        "import org.gradle.api.provider.Provider;",
+                        "class Foo implements Plugin<Project> {",
+                        "  public final void apply(Project project) {",
+                        "    Provider<String> provider = project.provider(() -> \"hello\");",
+                        "    String value = \"My bad provider value: \" + provider.get();",
                         "  }",
                         "}")
                 .doTest();

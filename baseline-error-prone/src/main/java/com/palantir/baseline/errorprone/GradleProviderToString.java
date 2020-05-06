@@ -22,6 +22,7 @@ import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.AbstractToString;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.fixes.Fix;
+import com.google.errorprone.fixes.SuggestedFix;
 import com.google.errorprone.predicates.TypePredicate;
 import com.google.errorprone.predicates.TypePredicates;
 import com.sun.source.tree.ExpressionTree;
@@ -44,8 +45,8 @@ public final class GradleProviderToString extends AbstractToString {
 
     @Override
     protected Optional<Fix> implicitToStringFix(ExpressionTree tree, VisitorState state) {
-        // We could automatically call Provider#get, but is that always right?
-        return Optional.empty();
+        // Note that this might not always be the right thing to do, but it's right in enough cases we should do it.
+        return Optional.of(SuggestedFix.postfixWith(tree, ".get()"));
     }
 
     @Override
