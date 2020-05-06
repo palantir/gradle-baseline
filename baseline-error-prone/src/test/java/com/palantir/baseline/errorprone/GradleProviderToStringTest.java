@@ -41,7 +41,7 @@ public class GradleProviderToStringTest {
                         "import org.gradle.api.provider.Provider;",
                         "class Foo implements Plugin<Project> {",
                         "  public final void apply(Project project) {",
-                        "    String nonProvider = \"foo\"",
+                        "    String nonProvider = \"foo\";",
                         "    Provider<String> provider = project.provider(() -> \"hello\");",
                         "    // BUG: Diagnostic contains: Calling toString on a Provider",
                         "    String value = \"My bad provider value: \" + provider + nonProvider;",
