@@ -48,12 +48,13 @@ import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.attributes.Attribute;
-import org.gradle.api.attributes.AttributeContainer;
-import org.gradle.api.plugins.JavaPlugin;
+import org.gradle.api.attributes.LibraryElements;
+import org.gradle.api.attributes.Usage;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.util.GUtil;
+import org.gradle.util.GradleVersion;
 
 /** Validates that java projects declare exactly the dependencies they rely on, no more and no less. */
 public final class BaselineExactDependencies implements Plugin<Project> {
@@ -100,13 +101,20 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                             compile.toString(), implementation.toString()));
                     conf.setVisible(false);
                     conf.setCanBeConsumed(false);
-                    // Important! this ensures we resolve 'compile' variants rather than 'runtime', and that we
-                    // resolve a classes directory rather than the 'jar' file.
-                    copyAttributes(
-                            project.getConfigurations()
-                                    .getByName(JavaPlugin.COMPILE_CLASSPATH_CONFIGURATION_NAME)
-                                    .getAttributes(),
-                            conf.getAttributes());
+
+                    conf.attributes(attributes -> {
+                        // This ensures we resolve 'compile' variants rather than 'runtime'
+                        // This is the same attribute that's being set on compileClasspath
+                        attributes.attribute(
+                                Usage.USAGE_ATTRIBUTE, project.getObjects().named(Usage.class, Usage.JAVA_API));
+                        // Ensure we resolve the classes directory for local projects where possible, rather than the
+                        // 'jar' file. We can only do this on Gradle 5.6+, otherwise do nothing.
+                        if (GradleVersion.current().compareTo(GradleVersion.version("5.6")) >= 0) {
+                            attributes.attribute(
+                                    LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE,
+                                    project.getObjects().named(LibraryElements.class, LibraryElements.CLASSES));
+                        }
+                    });
 
                     // Without this, the 'checkUnusedDependencies correctly picks up project dependency on java-library'
                     // test fails, by not causing gradle run the jar task, but resolving the path to the jar (rather
@@ -185,12 +193,6 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                             task.ignore(checkImplicitDependencies.get().getIgnore());
                         });
         checkImplicitDependencies.configure(task -> task.dependsOn(sourceSetCheckImplicitDependencies));
-    }
-
-    private static void copyAttributes(AttributeContainer source, AttributeContainer target) {
-        for (Attribute attribute : source.keySet()) {
-            target.attribute(attribute, source.getAttribute(attribute));
-        }
     }
 
     static String checkUnusedDependenciesNameForSourceSet(SourceSet sourceSet) {
