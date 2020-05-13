@@ -142,7 +142,7 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
         return ignore.get().contains(BaselineExactDependencies.asString(artifact));
     }
 
-    @Input
+    @InputFiles
     public final Provider<List<Configuration>> getDependenciesConfigurations() {
         return dependenciesConfigurations;
     }
