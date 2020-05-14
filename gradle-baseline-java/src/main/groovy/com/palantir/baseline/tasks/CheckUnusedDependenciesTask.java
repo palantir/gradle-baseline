@@ -38,8 +38,8 @@ import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
+import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.TaskAction;
 
 public class CheckUnusedDependenciesTask extends DefaultTask {
@@ -176,7 +176,7 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
         return ignore.get().contains(BaselineExactDependencies.asString(artifact));
     }
 
-    @Input
+    @Classpath
     public final Provider<List<Configuration>> getDependenciesConfigurations() {
         return dependenciesConfigurations;
     }
@@ -206,7 +206,7 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
         this.sourceOnlyConfigurations.add(Objects.requireNonNull(configuration));
     }
 
-    @InputFiles
+    @Classpath
     public final Provider<FileCollection> getSourceClasses() {
         return sourceClasses;
     }

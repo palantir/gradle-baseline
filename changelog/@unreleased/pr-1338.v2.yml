@@ -1,0 +1,7 @@
+type: fix
+fix:
+  description: Fix task dependencies onto other subprojects for `com.palantir.baseline-exact-dependencies`
+    tasks (`checkUnusedDependencies`, `checkImplicitDependencies`), so they work with
+    gradle 6.4.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1338
