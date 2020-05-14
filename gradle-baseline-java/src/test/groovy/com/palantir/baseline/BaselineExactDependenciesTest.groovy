@@ -19,6 +19,7 @@ package com.palantir.baseline
 import java.nio.file.Files
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
+import spock.lang.Unroll
 
 class BaselineExactDependenciesTest extends AbstractPluginTest {
 
@@ -113,7 +114,8 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         result.task(':checkUnusedDependenciesMain').getOutcome() == TaskOutcome.SUCCESS
     }
 
-    def 'checkUnusedDependencies correctly picks up project dependency on java-library'() {
+    @Unroll
+    def '#task correctly picks up project dependency on java-library'() {
         when:
         buildFile << standardBuildFile
         buildFile << """
@@ -139,8 +141,11 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         """.stripIndent()
 
         then:
-        def result = with('checkUnusedDependencies', '--stacktrace').build()
+        def result = with(":${task}", '--stacktrace').build()
         assert result.task(':needs-building-first:compileJava').getOutcome() != null
+
+        where:
+        task << ['checkUnusedDependencies', 'checkImplicitDependencies']
     }
 
     def 'checkUnusedDependenciesTest passes if dependency from main source set is not referenced in test'() {
