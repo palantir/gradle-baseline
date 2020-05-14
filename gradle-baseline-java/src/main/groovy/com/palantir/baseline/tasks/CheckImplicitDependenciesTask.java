@@ -38,6 +38,7 @@ import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
+import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.TaskAction;
@@ -151,7 +152,7 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
         this.dependenciesConfigurations.add(Objects.requireNonNull(dependenciesConfiguration));
     }
 
-    @InputFiles
+    @Classpath
     public final Provider<FileCollection> getSourceClasses() {
         return sourceClasses;
     }
