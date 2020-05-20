@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: Classes in common shaded packages are no longer for autocompletion/auto-import
+    recommended by IntelliJ.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1350
