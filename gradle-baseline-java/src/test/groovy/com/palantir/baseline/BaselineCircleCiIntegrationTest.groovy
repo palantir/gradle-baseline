@@ -34,6 +34,10 @@ class BaselineCircleCiIntegrationTest extends AbstractPluginTest {
         dependencies {
             testCompile 'junit:junit:4.12'
         }
+        
+        test {
+            reports.html.enabled = true
+        }
     '''.stripIndent()
 
     def javaFile = '''
