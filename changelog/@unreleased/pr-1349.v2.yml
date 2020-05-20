@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: The `baseline-circle` plugin no longer enables HTML test reports.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1349
