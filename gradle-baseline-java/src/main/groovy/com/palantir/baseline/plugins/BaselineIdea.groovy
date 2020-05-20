@@ -19,9 +19,6 @@ package com.palantir.baseline.plugins
 import com.palantir.baseline.util.GitUtils
 import groovy.transform.CompileStatic
 import groovy.xml.XmlUtil
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -33,6 +30,10 @@ import org.gradle.plugins.ide.idea.GenerateIdeaWorkspace
 import org.gradle.plugins.ide.idea.IdeaPlugin
 import org.gradle.plugins.ide.idea.model.IdeaModel
 import org.gradle.plugins.ide.idea.model.ModuleDependency
+
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 
 class BaselineIdea extends AbstractBaselinePlugin {
 
@@ -89,6 +90,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
             addInspectionProjectProfile(node)
             addJavacSettings(node)
             addGitHubIssueNavigation(node)
+            ignoreCommonShadedPackages(node)
         }
 
         project.afterEvaluate {
@@ -284,6 +286,20 @@ class BaselineIdea extends AbstractBaselinePlugin {
              </component>
             """.stripIndent()))
         }
+    }
+
+    private static void ignoreCommonShadedPackages(Node node) {
+        // language=xml
+        node.append(new XmlParser().parseText('''
+            <component name="JavaProjectCodeInsightSettings">
+              <excluded-names>
+                <name>shadow</name><!-- from gradle-shadow-jar -->
+                <name>org.gradle.internal.impldep</name>
+                <name>autovalue.shaded</name>
+                <name>org.inferred.freebuilder.shaded</name>
+              </excluded-names>
+            </component>
+        '''.stripIndent()))
     }
 
     private static void configureSaveActionsForIntellijImport(Project project) {
