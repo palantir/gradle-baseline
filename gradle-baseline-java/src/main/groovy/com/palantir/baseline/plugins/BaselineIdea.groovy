@@ -297,6 +297,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
                 <name>org.gradle.internal.impldep</name>
                 <name>autovalue.shaded</name>
                 <name>org.inferred.freebuilder.shaded</name>
+                <name>org.immutables.value.internal</name>
               </excluded-names>
             </component>
         '''.stripIndent()))
