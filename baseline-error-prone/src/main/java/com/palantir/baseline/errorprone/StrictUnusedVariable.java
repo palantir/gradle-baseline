@@ -508,7 +508,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             Symbol varSymbol, Symbol.MethodSymbol methodSymbol, List<TreePath> usagePaths, VisitorState state) {
         boolean isPrivateMethod = methodSymbol.getModifiers().contains(Modifier.PRIVATE);
         int index = methodSymbol.params.indexOf(varSymbol);
-        Preconditions.checkState(index != -1, "symbol {} must be a parameter to the owning method", varSymbol);
+        Preconditions.checkState(index != -1, "symbol %s must be a parameter to the owning method", varSymbol);
         SuggestedFix.Builder fix = SuggestedFix.builder();
         for (TreePath path : usagePaths) {
             fix.delete(path.getLeaf());
