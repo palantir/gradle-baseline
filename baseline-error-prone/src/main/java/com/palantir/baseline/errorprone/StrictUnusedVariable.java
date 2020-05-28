@@ -253,15 +253,15 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
     private void checkUsedVariables(VisitorState state, VariableFinder variableFinder) {
         VariableUsage variableUsage = new VariableUsage();
         variableUsage.scan(state.getPath(), null);
-        variableFinder.exemptedVariables.entrySet().forEach(entry -> {
-            List<TreePath> usageSites = variableUsage.usageSites.get(entry.getKey());
+        variableFinder.exemptedVariables.forEach((key, value) -> {
+            List<TreePath> usageSites = variableUsage.usageSites.get(key);
             if (usageSites.size() <= 1) {
                 return;
             }
-            state.reportMatch(buildDescription(entry.getValue())
+            state.reportMatch(buildDescription(value)
                     .setMessage(String.format(
-                            "The %s '%s' is read but has 'StrictUnusedVariable' " + "suppressed because of its name.",
-                            describeVariable((Symbol.VarSymbol) entry.getKey()), entry.getKey().name))
+                            "The %s '%s' is read but has 'StrictUnusedVariable' suppressed because of its name.",
+                            describeVariable((Symbol.VarSymbol) key), key.name))
                     .addFix(constructUsedVariableSuggestedFix(usageSites, state))
                     .build());
         });
@@ -272,19 +272,26 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
         for (TreePath usagePath : usagePaths) {
             if (usagePath.getLeaf() instanceof VariableTree) {
                 VariableTree variableTree = (VariableTree) usagePath.getLeaf();
+                String variableName = variableTree.getName().toString();
+
+                // see buildUnusedLambdaParameterFix for a similar pattern
+                if (state.getEndPosition(variableTree.getType()) == -1) {
+                    renameVariable(variableTree, variableName, fix);
+                    continue;
+                }
                 int startPos = state.getEndPosition(variableTree.getType()) + 1;
                 int endPos = state.getEndPosition(variableTree);
 
                 // Ignore the initializer if there is one
                 if (variableTree.getInitializer() != null) {
-                    endPos = startPos + variableTree.getName().toString().length();
+                    endPos = startPos + variableName.length();
                 }
                 if (startPos == Position.NOPOS || endPos == Position.NOPOS) {
                     // TODO(b/118437729): handle bogus source positions in enum declarations
                     continue;
                 }
 
-                renameVariable(startPos, endPos, variableTree.getName().toString(), fix);
+                renameVariable(startPos, endPos, variableName, fix);
             } else if (usagePath.getLeaf() instanceof IdentifierTree) {
                 JCTree.JCIdent identifierTree = (JCTree.JCIdent) usagePath.getLeaf();
                 int startPos = identifierTree.getStartPosition();
@@ -300,17 +307,22 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
         return fix.build();
     }
 
-    private static void renameVariable(int startPos, int endPos, String name, SuggestedFix.Builder fix) {
-        EXEMPT_PREFIXES.stream()
-                .filter(name::startsWith)
+    private static Optional<String> stripUnusedPrefix(String variableName) {
+        return EXEMPT_PREFIXES.stream()
+                .filter(variableName::startsWith)
                 .findFirst()
-                .ifPresent(prefix -> fix.replace(
-                        startPos,
-                        endPos,
-                        prefix.length() == name.length()
-                                // Fall back to a generic variable name if the prefix is the entire variable name
-                                ? "value"
-                                : CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, name.substring(prefix.length()))));
+                .map(prefix -> prefix.length() == variableName.length()
+                        // Fall back to a generic variable name if the prefix is the entire variable name
+                        ? "value"
+                        : CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_CAMEL, variableName.substring(prefix.length())));
+    }
+
+    private static void renameVariable(int startPos, int endPos, String name, SuggestedFix.Builder fix) {
+        stripUnusedPrefix(name).ifPresent(newName -> fix.replace(startPos, endPos, newName));
+    }
+
+    private static void renameVariable(Tree node, String name, SuggestedFix.Builder fix) {
+        stripUnusedPrefix(name).ifPresent(newName -> fix.replace(node, newName));
     }
 
     private static SuggestedFix makeAssignmentDeclaration(

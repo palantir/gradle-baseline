@@ -176,6 +176,44 @@ public class StrictUnusedVariableTest {
     }
 
     @Test
+    void renames_used_lambda_params() {
+        refactoringTestHelper
+                .addInputLines(
+                        "Test.java",
+                        "import java.util.List;",
+                        "import java.util.stream.Collectors;",
+                        "import java.util.stream.IntStream;",
+                        "import java.util.stream.Stream;",
+                        "",
+                        "public final class Test {",
+                        "    private Test() {}",
+                        "    private static String randomEvent() { return null; }",
+                        "    public static List<?> work() {",
+                        "        return IntStream.iterate(0, _i -> _i + 1).mapToObj(_i -> randomEvent())",
+                        "                .limit(1)",
+                        "                .collect(Collectors.toList());",
+                        "    }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import java.util.List;",
+                        "import java.util.stream.Collectors;",
+                        "import java.util.stream.IntStream;",
+                        "import java.util.stream.Stream;",
+                        "",
+                        "public final class Test {",
+                        "    private Test() {}",
+                        "    private static String randomEvent() { return null; }",
+                        "    public static List<?> work() {",
+                        "        return IntStream.iterate(0, i -> i + 1).mapToObj(_i -> randomEvent())",
+                        "                .limit(1)",
+                        "                .collect(Collectors.toList());",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void fails_suppressed_but_used_variables() {
         compilationHelper
                 .addSourceLines(
