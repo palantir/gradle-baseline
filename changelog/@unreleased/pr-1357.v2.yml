@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: 'Revert recent regression #1355 from 5.18.0 which broke some consumers.'
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1357
