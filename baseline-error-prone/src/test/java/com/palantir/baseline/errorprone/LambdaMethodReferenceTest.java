@@ -27,10 +27,12 @@ import org.junit.jupiter.api.Test;
 public class LambdaMethodReferenceTest {
 
     private CompilationTestHelper compilationHelper;
+    private RefactoringValidator refactoringValidator;
 
     @BeforeEach
     public void before() {
         compilationHelper = CompilationTestHelper.newInstance(LambdaMethodReference.class, getClass());
+        refactoringValidator = RefactoringValidator.of(new LambdaMethodReference(), getClass());
     }
 
     @Test
@@ -44,6 +46,21 @@ public class LambdaMethodReferenceTest {
                         "class Test {",
                         "  public List<Object> foo(Optional<List<Object>> optional) {",
                         "    return optional.orElseGet(ImmutableList::of);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testFunction() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<Integer> foo(Optional<String> optional) {",
+                        "    // BUG: Diagnostic contains: Lambda should be a method reference",
+                        "    return optional.map(v -> v.length());",
                         "  }",
                         "}")
                 .doTest();
@@ -68,7 +85,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testAutoFix_block() {
-        RefactoringValidator.of(new LambdaMethodReference(), getClass())
+        refactoringValidator
                 .addInputLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',
@@ -93,6 +110,72 @@ public class LambdaMethodReferenceTest {
     }
 
     @Test
+    void testAutoFix_instanceMethod() {
+        refactoringValidator
+                .addInputLines(
+                        "Test.java",
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<Integer> foo(Optional<String> optional) {",
+                        "    return optional.map(v -> v.length());",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<Integer> foo(Optional<String> optional) {",
+                        "    return optional.map(String::length);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testAutoFix_specificInstanceMethod() {
+        refactoringValidator
+                .addInputLines(
+                        "Test.java",
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<String> foo(Optional<Test> optional) {",
+                        "    return optional.map(v -> v.toString());",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<String> foo(Optional<Test> optional) {",
+                        "    return optional.map(Test::toString);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testAutoFix_specificInstanceMethod_withTypeParameters() {
+        refactoringValidator
+                .addInputLines(
+                        "Test.java",
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<String> foo(Optional<Optional<Test>> optional) {",
+                        "    return optional.map(v -> v.toString());",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<String> foo(Optional<Optional<Test>> optional) {",
+                        "    return optional.map(Optional::toString);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testNegative_block_localMethod() {
         compilationHelper
                 .addSourceLines(
@@ -114,7 +197,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testAutoFix_block_localMethod() {
-        RefactoringValidator.of(new LambdaMethodReference(), getClass())
+        refactoringValidator
                 .addInputLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',
@@ -180,7 +263,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testAutoFix_expression() {
-        RefactoringValidator.of(new LambdaMethodReference(), getClass())
+        refactoringValidator
                 .addInputLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',
@@ -225,8 +308,23 @@ public class LambdaMethodReferenceTest {
     }
 
     @Test
+    public void testNegative_expression_staticMethod() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import " + ImmutableList.class.getName() + ';',
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<String> foo(Optional<String> optional) {",
+                        "    return optional.flatMap(value -> Optional.empty());",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testAutoFix_expression_localMethod() {
-        RefactoringValidator.of(new LambdaMethodReference(), getClass())
+        refactoringValidator
                 .addInputLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',

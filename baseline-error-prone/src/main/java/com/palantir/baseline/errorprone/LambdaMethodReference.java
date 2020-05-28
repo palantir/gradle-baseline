@@ -17,6 +17,7 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
+import com.google.common.collect.Iterables;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
@@ -32,6 +33,7 @@ import com.sun.source.tree.ReturnTree;
 import com.sun.source.tree.StatementTree;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Type;
 import java.util.Optional;
 
 @AutoService(BugChecker.class)
@@ -50,9 +52,10 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
     public Description matchLambdaExpression(LambdaExpressionTree tree, VisitorState state) {
         // Only handle simple no-arg method references for the time being, don't worry about
         // simplifying map.forEach((k, v) -> func(k, v)) to map.forEach(this::func)
-        if (!tree.getParameters().isEmpty()) {
+        if (tree.getParameters().size() > 1) {
             return Description.NO_MATCH;
         }
+
         LambdaExpressionTree.BodyKind bodyKind = tree.getBodyKind();
         Tree body = tree.getBody();
         // n.b. These checks are meant to avoid any and all cleverness. The goal is to be confident
@@ -93,28 +96,51 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
             return Description.NO_MATCH;
         }
         Symbol.MethodSymbol methodSymbol = ASTHelpers.getSymbol(methodInvocation);
-        if (methodSymbol == null) {
-            // Should only ever occur if there are errors in the AST, allow the compiler to fail later
+        if (methodSymbol == null || shouldIgnore(methodSymbol, root, methodInvocation)) {
             return Description.NO_MATCH;
         }
-        if (!methodSymbol.isStatic()) {
-            // Only support static invocations for the time being to avoid erroneously
-            // rewriting '() -> foo()' to 'ClassName::foo' instead of 'this::foo'
-            // or suggesting '() -> foo.doWork().bar()' should be rewritten to 'foo.doWork()::bar',
-            // which executes 'doWork' eagerly, even when the supplier is not used.
-            return Description.NO_MATCH;
-        }
+
         return buildDescription(root)
                 .setMessage(MESSAGE)
-                .addFix(buildFix(methodSymbol, root, state))
+                .addFix(buildFix(methodSymbol, methodInvocation, root, state))
                 .build();
     }
 
+    private static boolean shouldIgnore(
+            Symbol.MethodSymbol methodSymbol, LambdaExpressionTree root, MethodInvocationTree methodInvocation) {
+        if (!methodSymbol.isStatic()) {
+            if (root.getParameters().size() == 1) {
+                Symbol paramSymbol = ASTHelpers.getSymbol(Iterables.getOnlyElement(root.getParameters()));
+                Symbol receiverSymbol = ASTHelpers.getSymbol(ASTHelpers.getReceiver(methodInvocation));
+                return !paramSymbol.equals(receiverSymbol);
+            }
+            return true;
+        }
+        return !root.getParameters().isEmpty();
+    }
+
     private static Optional<SuggestedFix> buildFix(
-            Symbol.MethodSymbol symbol, LambdaExpressionTree root, VisitorState state) {
+            Symbol.MethodSymbol symbol,
+            MethodInvocationTree invocation,
+            LambdaExpressionTree root,
+            VisitorState state) {
         SuggestedFix.Builder builder = SuggestedFix.builder();
-        return toMethodReference(SuggestedFixes.qualifyType(state, builder, symbol))
+        return toMethodReference(qualifyTarget(symbol, invocation, builder, state))
                 .map(qualified -> builder.replace(root, qualified).build());
+    }
+
+    private static String qualifyTarget(
+            Symbol.MethodSymbol symbol,
+            MethodInvocationTree invocation,
+            SuggestedFix.Builder builder,
+            VisitorState state) {
+        Type receiverType = ASTHelpers.getReceiverType(invocation);
+        if (receiverType == null || receiverType.getLowerBound() != null || receiverType.getUpperBound() != null) {
+            return SuggestedFixes.qualifyType(state, builder, symbol);
+        }
+        return SuggestedFixes.qualifyType(state, builder, state.getTypes().erasure(receiverType))
+                + '.'
+                + symbol.name.toString();
     }
 
     private static Optional<String> toMethodReference(String qualifiedMethodName) {
