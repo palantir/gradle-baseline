@@ -51,7 +51,6 @@ import static com.sun.source.tree.Tree.Kind.PREFIX_INCREMENT;
 import com.google.auto.service.AutoService;
 import com.google.common.base.Ascii;
 import com.google.common.base.CaseFormat;
-import com.google.common.base.Preconditions;
 import com.google.common.collect.ArrayListMultimap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
@@ -221,15 +220,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             Symbol.VarSymbol symbol = (Symbol.VarSymbol) unusedSymbol;
             ImmutableList<SuggestedFix> fixes;
             if (symbol.getKind() == ElementKind.PARAMETER && !isEverUsed.contains(unusedSymbol)) {
-                Symbol.MethodSymbol methodSymbol = (Symbol.MethodSymbol) symbol.owner;
-                int index = methodSymbol.params.indexOf(symbol);
-                // If we can not find the parameter in the owning method, then it must be a parameter to a lambda
-                // defined within the method
-                if (index == -1) {
-                    fixes = buildUnusedLambdaParameterFix(symbol, entry.getValue(), state);
-                } else {
-                    fixes = buildUnusedParameterFixes(symbol, methodSymbol, allUsageSites, state);
-                }
+                fixes = buildUnusedParameterFixes(symbol, allUsageSites, state);
             } else {
                 fixes = buildUnusedVarFixes(symbol, allUsageSites, state);
             }
@@ -481,34 +472,11 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
         return ImmutableList.of(fix.build());
     }
 
-    private static ImmutableList<SuggestedFix> buildUnusedLambdaParameterFix(
-            Symbol.VarSymbol _symbol, Collection<UnusedSpec> values, VisitorState state) {
-        SuggestedFix.Builder fix = SuggestedFix.builder();
-
-        for (UnusedSpec unusedSpec : values) {
-            Tree leaf = unusedSpec.variableTree().getLeaf();
-            if (!(leaf instanceof VariableTree)) {
-                continue;
-            }
-
-            VariableTree tree = (VariableTree) leaf;
-            if (state.getEndPosition(tree.getType()) == -1) {
-                fix.replace(tree, "_" + tree.getName());
-            } else {
-                int startPos = state.getEndPosition(tree.getType()) + 1;
-                int endPos = state.getEndPosition(tree);
-                fix.replace(startPos, endPos, "_" + tree.getName());
-            }
-        }
-
-        return ImmutableList.of(fix.build());
-    }
-
     private static ImmutableList<SuggestedFix> buildUnusedParameterFixes(
-            Symbol varSymbol, Symbol.MethodSymbol methodSymbol, List<TreePath> usagePaths, VisitorState state) {
+            Symbol varSymbol, List<TreePath> usagePaths, VisitorState state) {
+        Symbol.MethodSymbol methodSymbol = (Symbol.MethodSymbol) varSymbol.owner;
         boolean isPrivateMethod = methodSymbol.getModifiers().contains(Modifier.PRIVATE);
         int index = methodSymbol.params.indexOf(varSymbol);
-        Preconditions.checkState(index != -1, "symbol %s must be a parameter to the owning method", varSymbol);
         SuggestedFix.Builder fix = SuggestedFix.builder();
         for (TreePath path : usagePaths) {
             fix.delete(path.getLeaf());
@@ -748,9 +716,8 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
 
         @Override
         public Void visitLambdaExpression(LambdaExpressionTree node, Void unused) {
-            scan(node.getBody(), null);
-            scan(node.getParameters(), null);
-            return null;
+            // skip lambda parameters
+            return scan(node.getBody(), null);
         }
 
         @Override

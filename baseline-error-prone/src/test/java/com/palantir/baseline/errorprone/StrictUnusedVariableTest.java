@@ -96,24 +96,6 @@ public class StrictUnusedVariableTest {
     }
 
     @Test
-    void handles_lambdas() {
-        compilationHelper
-                .addSourceLines(
-                        "Test.java",
-                        "import java.util.function.BiFunction;",
-                        "import java.util.Optional;",
-                        "class Test {",
-                        "  private static BiFunction<String, String, Integer> doStuff() {",
-                        "  // BUG: Diagnostic contains: Unused",
-                        "    BiFunction<String, String, Integer> first = (String value1, String value2) -> 1;",
-                        "  // BUG: Diagnostic contains: Unused",
-                        "    return first.andThen(value3 -> 2);",
-                        "  }",
-                        "}")
-                .doTest();
-    }
-
-    @Test
     public void renames_previous_suppression() {
         refactoringTestHelper
                 .addInputLines(
@@ -149,30 +131,6 @@ public class StrictUnusedVariableTest {
                         "  public void varArgs(String _value, String... _value2) { }",
                         "}")
                 .doTest(TestMode.TEXT_MATCH);
-    }
-
-    @Test
-    void renames_unused_lambda_params() {
-        refactoringTestHelper
-                .addInputLines(
-                        "Test.java",
-                        "import java.util.function.BiFunction;",
-                        "class Test {",
-                        "  private static BiFunction<String, String, Integer> doStuff() {",
-                        "    BiFunction<String, String, Integer> first = (String value1, String value2) -> 1;",
-                        "    return first.andThen(value3 -> 2);",
-                        "  }",
-                        "}")
-                .addOutputLines(
-                        "Test.java",
-                        "import java.util.function.BiFunction;",
-                        "class Test {",
-                        "  private static BiFunction<String, String, Integer> doStuff() {",
-                        "    BiFunction<String, String, Integer> first = (String _value1, String _value2) -> 1;",
-                        "    return first.andThen(_value3 -> 2);",
-                        "  }",
-                        "}")
-                .doTest();
     }
 
     @Test
