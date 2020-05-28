@@ -17,6 +17,7 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
+import com.google.common.collect.Iterables;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
@@ -50,9 +51,10 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
     public Description matchLambdaExpression(LambdaExpressionTree tree, VisitorState state) {
         // Only handle simple no-arg method references for the time being, don't worry about
         // simplifying map.forEach((k, v) -> func(k, v)) to map.forEach(this::func)
-        if (!tree.getParameters().isEmpty()) {
+        if (tree.getParameters().size() > 1) {
             return Description.NO_MATCH;
         }
+
         LambdaExpressionTree.BodyKind bodyKind = tree.getBodyKind();
         Tree body = tree.getBody();
         // n.b. These checks are meant to avoid any and all cleverness. The goal is to be confident
@@ -93,21 +95,27 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
             return Description.NO_MATCH;
         }
         Symbol.MethodSymbol methodSymbol = ASTHelpers.getSymbol(methodInvocation);
-        if (methodSymbol == null) {
-            // Should only ever occur if there are errors in the AST, allow the compiler to fail later
+        if (methodSymbol == null || shouldIgnore(methodSymbol, root, methodInvocation)) {
             return Description.NO_MATCH;
         }
-        if (!methodSymbol.isStatic()) {
-            // Only support static invocations for the time being to avoid erroneously
-            // rewriting '() -> foo()' to 'ClassName::foo' instead of 'this::foo'
-            // or suggesting '() -> foo.doWork().bar()' should be rewritten to 'foo.doWork()::bar',
-            // which executes 'doWork' eagerly, even when the supplier is not used.
-            return Description.NO_MATCH;
-        }
+
         return buildDescription(root)
                 .setMessage(MESSAGE)
                 .addFix(buildFix(methodSymbol, root, state))
                 .build();
+    }
+
+    private static boolean shouldIgnore(
+            Symbol.MethodSymbol methodSymbol, LambdaExpressionTree root, MethodInvocationTree methodInvocation) {
+        if (!methodSymbol.isStatic()) {
+            if (root.getParameters().size() == 1) {
+                Symbol paramSymbol = ASTHelpers.getSymbol(Iterables.getOnlyElement(root.getParameters()));
+                Symbol receiverSymbol = ASTHelpers.getSymbol(ASTHelpers.getReceiver(methodInvocation));
+                return !paramSymbol.equals(receiverSymbol);
+            }
+            return true;
+        }
+        return false;
     }
 
     private static Optional<SuggestedFix> buildFix(
