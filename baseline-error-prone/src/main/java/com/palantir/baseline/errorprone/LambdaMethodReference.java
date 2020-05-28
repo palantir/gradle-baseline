@@ -138,7 +138,9 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
         if (receiverType == null || receiverType.getLowerBound() != null || receiverType.getUpperBound() != null) {
             return SuggestedFixes.qualifyType(state, builder, symbol);
         }
-        return SuggestedFixes.qualifyType(state, builder, receiverType) + '.' + symbol.name.toString();
+        return SuggestedFixes.qualifyType(state, builder, state.getTypes().erasure(receiverType))
+                + '.'
+                + symbol.name.toString();
     }
 
     private static Optional<String> toMethodReference(String qualifiedMethodName) {
