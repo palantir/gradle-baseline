@@ -132,6 +132,28 @@ public class LambdaMethodReferenceTest {
     }
 
     @Test
+    void testAutoFix_specificInstanceMethod() {
+        refactoringValidator
+                .addInputLines(
+                        "Test.java",
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<String> foo(Optional<Test> optional) {",
+                        "    return optional.map(v -> v.toString());",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<String> foo(Optional<Test> optional) {",
+                        "    return optional.map(Test::toString);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testNegative_block_localMethod() {
         compilationHelper
                 .addSourceLines(

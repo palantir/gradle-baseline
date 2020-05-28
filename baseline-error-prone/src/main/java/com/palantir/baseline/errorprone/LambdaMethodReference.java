@@ -33,6 +33,7 @@ import com.sun.source.tree.ReturnTree;
 import com.sun.source.tree.StatementTree;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Type;
 import java.util.Optional;
 
 @AutoService(BugChecker.class)
@@ -101,7 +102,7 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
 
         return buildDescription(root)
                 .setMessage(MESSAGE)
-                .addFix(buildFix(methodSymbol, root, state))
+                .addFix(buildFix(methodSymbol, methodInvocation, root, state))
                 .build();
     }
 
@@ -119,10 +120,25 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
     }
 
     private static Optional<SuggestedFix> buildFix(
-            Symbol.MethodSymbol symbol, LambdaExpressionTree root, VisitorState state) {
+            Symbol.MethodSymbol symbol,
+            MethodInvocationTree invocation,
+            LambdaExpressionTree root,
+            VisitorState state) {
         SuggestedFix.Builder builder = SuggestedFix.builder();
-        return toMethodReference(SuggestedFixes.qualifyType(state, builder, symbol))
+        return toMethodReference(qualifyTarget(symbol, invocation, builder, state))
                 .map(qualified -> builder.replace(root, qualified).build());
+    }
+
+    private static String qualifyTarget(
+            Symbol.MethodSymbol symbol,
+            MethodInvocationTree invocation,
+            SuggestedFix.Builder builder,
+            VisitorState state) {
+        Type receiverType = ASTHelpers.getReceiverType(invocation);
+        if (receiverType == null || receiverType.getLowerBound() != null || receiverType.getUpperBound() != null) {
+            return SuggestedFixes.qualifyType(state, builder, symbol);
+        }
+        return SuggestedFixes.qualifyType(state, builder, receiverType) + '.' + symbol.name.toString();
     }
 
     private static Optional<String> toMethodReference(String qualifiedMethodName) {
