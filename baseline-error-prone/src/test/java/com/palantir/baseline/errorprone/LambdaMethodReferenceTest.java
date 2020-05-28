@@ -264,6 +264,21 @@ public class LambdaMethodReferenceTest {
     }
 
     @Test
+    public void testNegative_expression_staticMethod() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import " + ImmutableList.class.getName() + ';',
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<String> foo(Optional<String> optional) {",
+                        "    return optional.flatMap(value -> Optional.empty());",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testAutoFix_expression_localMethod() {
         refactoringValidator
                 .addInputLines(
