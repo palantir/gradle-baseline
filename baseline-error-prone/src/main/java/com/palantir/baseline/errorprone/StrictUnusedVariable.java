@@ -260,7 +260,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             }
             state.reportMatch(buildDescription(entry.getValue())
                     .setMessage(String.format(
-                            "The %s '%s' is read but has 'StrictUnusedVariable' " + "suppressed because of its name.",
+                            "The %s '%s' is read but has 'StrictUnusedVariable' suppressed because of its name.",
                             describeVariable((Symbol.VarSymbol) entry.getKey()), entry.getKey().name))
                     .addFix(constructUsedVariableSuggestedFix(usageSites, state))
                     .build());
