@@ -253,15 +253,15 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
     private void checkUsedVariables(VisitorState state, VariableFinder variableFinder) {
         VariableUsage variableUsage = new VariableUsage();
         variableUsage.scan(state.getPath(), null);
-        variableFinder.exemptedVariables.entrySet().forEach(entry -> {
-            List<TreePath> usageSites = variableUsage.usageSites.get(entry.getKey());
+        variableFinder.exemptedVariables.forEach((key, value) -> {
+            List<TreePath> usageSites = variableUsage.usageSites.get(key);
             if (usageSites.size() <= 1) {
                 return;
             }
-            state.reportMatch(buildDescription(entry.getValue())
+            state.reportMatch(buildDescription(value)
                     .setMessage(String.format(
                             "The %s '%s' is read but has 'StrictUnusedVariable' suppressed because of its name.",
-                            describeVariable((Symbol.VarSymbol) entry.getKey()), entry.getKey().name))
+                            describeVariable((Symbol.VarSymbol) key), key.name))
                     .addFix(constructUsedVariableSuggestedFix(usageSites, state))
                     .build());
         });
