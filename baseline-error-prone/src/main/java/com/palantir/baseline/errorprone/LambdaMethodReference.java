@@ -115,7 +115,7 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
             }
             return true;
         }
-        return false;
+        return !root.getParameters().isEmpty();
     }
 
     private static Optional<SuggestedFix> buildFix(
