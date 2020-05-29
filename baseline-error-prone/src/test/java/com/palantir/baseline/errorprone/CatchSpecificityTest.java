@@ -560,7 +560,7 @@ class CatchSpecificityTest {
                         "  <T extends RuntimeException> void f(ThrowingRunnable<T> in) {",
                         "    try {",
                         "        in.run();",
-                        "    } catch (Exception e) {",
+                        "    } catch (RuntimeException e) {",
                         "        System.out.println(\"foo\");",
                         "    }",
                         "  }",
