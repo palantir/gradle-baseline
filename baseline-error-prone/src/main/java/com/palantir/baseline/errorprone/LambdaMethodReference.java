@@ -93,21 +93,10 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
 
     private Description checkMethodInvocation(
             MethodInvocationTree methodInvocation, LambdaExpressionTree root, VisitorState state) {
-        for (VariableTree varTree : root.getParameters()) {
-            boolean expectComma = false;
-            // Must avoid refactoring lambdas which declare explicit parameter types
-            for (ErrorProneToken token : state.getTokensForNode(varTree)) {
-                if (token.kind() == Tokens.TokenKind.EOF) {
-                    break;
-                } else if ((token.kind() == Tokens.TokenKind.IDENTIFIER && expectComma)
-                        || (token.kind() == Tokens.TokenKind.COMMA && !expectComma)) {
-                    return Description.NO_MATCH;
-                }
-                expectComma = !expectComma;
-            }
-        }
         Symbol.MethodSymbol methodSymbol = ASTHelpers.getSymbol(methodInvocation);
-        if (methodSymbol == null || !methodInvocation.getTypeArguments().isEmpty()) {
+        if (methodSymbol == null
+                || !methodInvocation.getTypeArguments().isEmpty()
+                || hasExplicitParameterTypes(root, state)) {
             return Description.NO_MATCH;
         }
 
@@ -126,6 +115,23 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
         }
 
         return Description.NO_MATCH;
+    }
+
+    private static boolean hasExplicitParameterTypes(LambdaExpressionTree lambda, VisitorState state) {
+        for (VariableTree varTree : lambda.getParameters()) {
+            boolean expectComma = false;
+            // Must avoid refactoring lambdas which declare explicit parameter types
+            for (ErrorProneToken token : state.getTokensForNode(varTree)) {
+                if (token.kind() == Tokens.TokenKind.EOF) {
+                    return false;
+                } else if ((token.kind() == Tokens.TokenKind.IDENTIFIER && expectComma)
+                        || (token.kind() == Tokens.TokenKind.COMMA && !expectComma)) {
+                    return true;
+                }
+                expectComma = !expectComma;
+            }
+        }
+        return false;
     }
 
     private Description convertVariableInstanceMethods(
