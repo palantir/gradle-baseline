@@ -26,6 +26,7 @@ import com.google.errorprone.fixes.SuggestedFix;
 import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.util.ASTHelpers;
+import com.google.errorprone.util.ErrorProneToken;
 import com.sun.source.tree.BlockTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.IdentifierTree;
@@ -34,10 +35,11 @@ import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.ReturnTree;
 import com.sun.source.tree.StatementTree;
 import com.sun.source.tree.Tree;
+import com.sun.source.tree.VariableTree;
 import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
-
+import com.sun.tools.javac.parser.Tokens;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -91,6 +93,19 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
 
     private Description checkMethodInvocation(
             MethodInvocationTree methodInvocation, LambdaExpressionTree root, VisitorState state) {
+        for (VariableTree varTree : root.getParameters()) {
+            boolean expectComma = false;
+            // Must avoid refactoring lambdas which declare explicit parameter types
+            for (ErrorProneToken token : state.getTokensForNode(varTree)) {
+                if (token.kind() == Tokens.TokenKind.EOF) {
+                    break;
+                } else if ((token.kind() == Tokens.TokenKind.IDENTIFIER && expectComma)
+                        || (token.kind() == Tokens.TokenKind.COMMA && !expectComma)) {
+                    return Description.NO_MATCH;
+                }
+                expectComma = !expectComma;
+            }
+        }
         Symbol.MethodSymbol methodSymbol = ASTHelpers.getSymbol(methodInvocation);
         if (methodSymbol == null || !methodInvocation.getTypeArguments().isEmpty()) {
             return Description.NO_MATCH;
@@ -144,10 +159,10 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
             return Description.NO_MATCH;
         }
 
-        return buildDescription(root)
-                .setMessage(MESSAGE)
-                .addFix(buildFix(methodSymbol, methodInvocation, root, state, isLocal(methodInvocation)))
-                .build();
+        return buildFix(methodSymbol, methodInvocation, root, state, isLocal(methodInvocation))
+                .map(fix ->
+                        buildDescription(root).setMessage(MESSAGE).addFix(fix).build())
+                .orElse(Description.NO_MATCH);
     }
 
     private static List<Symbol> getSymbols(List<? extends Tree> params) {
