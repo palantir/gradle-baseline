@@ -187,6 +187,32 @@ public class LambdaMethodReferenceTest {
     }
 
     @Test
+    public void testAutoFix_staticMethodWithParam() {
+        refactoringValidator
+                .addInputLines(
+                        "Test.java",
+                        "import " + ImmutableList.class.getName() + ';',
+                        "import " + List.class.getName() + ';',
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<List<Object>> foo(Optional<Object> optional) {",
+                        "    return optional.map(v -> ImmutableList.of(v));",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import " + ImmutableList.class.getName() + ';',
+                        "import " + List.class.getName() + ';',
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<List<Object>> foo(Optional<Object> optional) {",
+                        "    return optional.map(ImmutableList::of);",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
     void testAutoFix_InstanceMethod() {
         refactoringValidator
                 .addInputLines(
