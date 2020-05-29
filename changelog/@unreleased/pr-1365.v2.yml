@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: Convert multi param lambdas and local method invokations to method
+    references
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1365
