@@ -36,6 +36,7 @@ import com.sun.source.tree.StatementTree;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
+
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -162,13 +163,14 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
             VisitorState state,
             boolean isLocal) {
         SuggestedFix.Builder builder = SuggestedFix.builder();
-        return toMethodReference(qualifyTarget(symbol, invocation, builder, state, isLocal))
+        return toMethodReference(qualifyTarget(symbol, invocation, root, builder, state, isLocal))
                 .map(qualified -> builder.replace(root, qualified).build());
     }
 
     private static String qualifyTarget(
             Symbol.MethodSymbol symbol,
             MethodInvocationTree invocation,
+            LambdaExpressionTree root,
             SuggestedFix.Builder builder,
             VisitorState state,
             boolean isLocal) {
@@ -176,10 +178,17 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
             return "this." + symbol.name.toString();
         }
 
+        ExpressionTree receiver = ASTHelpers.getReceiver(invocation);
         Type receiverType = ASTHelpers.getReceiverType(invocation);
         if (receiverType == null || receiverType.getLowerBound() != null || receiverType.getUpperBound() != null) {
             return SuggestedFixes.qualifyType(state, builder, symbol);
         }
+        if (receiver instanceof IdentifierTree
+                && !Objects.equals(
+                        ImmutableList.of(ASTHelpers.getSymbol(receiver)), getSymbols(root.getParameters()))) {
+            return state.getSourceForNode(receiver) + '.' + symbol.name.toString();
+        }
+
         return SuggestedFixes.qualifyType(state, builder, state.getTypes().erasure(receiverType))
                 + '.'
                 + symbol.name.toString();

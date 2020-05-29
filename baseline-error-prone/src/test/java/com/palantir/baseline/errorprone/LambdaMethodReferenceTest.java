@@ -19,11 +19,13 @@ package com.palantir.baseline.errorprone;
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.BugCheckerRefactoringTestHelper;
 import com.google.errorprone.CompilationTestHelper;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
+import java.util.function.Supplier;
 
 public class LambdaMethodReferenceTest {
 
@@ -521,6 +523,34 @@ public class LambdaMethodReferenceTest {
                         "  }",
                         "  private List<Object> bar() {",
                         "    return ImmutableList.of();",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    public void testAutoFix_expression_referenceMethod() {
+        refactoringValidator
+                .addInputLines(
+                        "Test.java",
+                        "import " + ImmutableList.class.getName() + ';',
+                        "import " + List.class.getName() + ';',
+                        "import " + Optional.class.getName() + ';',
+                        "import " + Supplier.class.getName() + ';',
+                        "class Test {",
+                        "  public List<Object> foo(Optional<List<Object>> a, Supplier<List<Object>> b) {",
+                        "    return a.orElseGet(() -> b.get());",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import " + ImmutableList.class.getName() + ';',
+                        "import " + List.class.getName() + ';',
+                        "import " + Optional.class.getName() + ';',
+                        "import " + Supplier.class.getName() + ';',
+                        "class Test {",
+                        "  public List<Object> foo(Optional<List<Object>> a, Supplier<List<Object>> b) {",
+                        "    return a.orElseGet(b::get);",
                         "  }",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
