@@ -52,7 +52,7 @@ public class LambdaMethodReferenceTest {
     }
 
     @Test
-    void testFunction() {
+    void testInstanceMethod() {
         compilationHelper
                 .addSourceLines(
                         "Test.java",
@@ -61,6 +61,24 @@ public class LambdaMethodReferenceTest {
                         "  public Optional<Integer> foo(Optional<String> optional) {",
                         "    // BUG: Diagnostic contains: Lambda should be a method reference",
                         "    return optional.map(v -> v.length());",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testFunction() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<Integer> foo(Optional<String> optional) {",
+                        "    // BUG: Diagnostic contains: Lambda should be a method reference",
+                        "    return optional.map(v -> bar(v));",
+                        "  }",
+                        "  private Integer bar(String value) {",
+                        "    return value.length();",
                         "  }",
                         "}")
                 .doTest();
@@ -110,7 +128,7 @@ public class LambdaMethodReferenceTest {
     }
 
     @Test
-    void testAutoFix_instanceMethod() {
+    void testAutoFix_variableInstanceMethod() {
         refactoringValidator
                 .addInputLines(
                         "Test.java",
@@ -132,7 +150,7 @@ public class LambdaMethodReferenceTest {
     }
 
     @Test
-    void testAutoFix_specificInstanceMethod() {
+    void testAutoFix_variableSpecificInstanceMethod() {
         refactoringValidator
                 .addInputLines(
                         "Test.java",
@@ -154,7 +172,7 @@ public class LambdaMethodReferenceTest {
     }
 
     @Test
-    void testAutoFix_specificInstanceMethod_withTypeParameters() {
+    void testAutoFix_variableSpecificInstanceMethod_withTypeParameters() {
         refactoringValidator
                 .addInputLines(
                         "Test.java",
@@ -170,6 +188,62 @@ public class LambdaMethodReferenceTest {
                         "class Test {",
                         "  public Optional<String> foo(Optional<Optional<Test>> optional) {",
                         "    return optional.map(Optional::toString);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testAutoFix_classInstanceMethod() {
+        refactoringValidator
+                .addInputLines(
+                        "Test.java",
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<String> foo(Optional<String> optional) {",
+                        "    return optional.map(v -> bar(v));",
+                        "  }",
+                        "  private String bar(String v) {",
+                        "    return v;",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<String> foo(Optional<String> optional) {",
+                        "    return optional.map(this::bar);",
+                        "  }",
+                        "  private String bar(String v) {",
+                        "    return v;",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testAutoFix_classStaticMethod() {
+        refactoringValidator
+                .addInputLines(
+                        "Test.java",
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<String> foo(Optional<String> optional) {",
+                        "    return optional.map(v -> bar(v));",
+                        "  }",
+                        "  private static String bar(String v) {",
+                        "    return v;",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<String> foo(Optional<String> optional) {",
+                        "    return optional.map(Test::bar);",
+                        "  }",
+                        "  private static String bar(String v) {",
+                        "    return v;",
                         "  }",
                         "}")
                 .doTest();

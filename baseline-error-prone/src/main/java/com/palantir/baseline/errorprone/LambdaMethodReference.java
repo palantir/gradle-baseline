@@ -17,6 +17,7 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
@@ -34,6 +35,8 @@ import com.sun.source.tree.StatementTree;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
+import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @AutoService(BugChecker.class)
@@ -91,10 +94,13 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
 
     private Description checkMethodInvocation(
             MethodInvocationTree methodInvocation, LambdaExpressionTree root, VisitorState state) {
-        if (!methodInvocation.getArguments().isEmpty()
-                || !methodInvocation.getTypeArguments().isEmpty()) {
+        if (!methodInvocation.getTypeArguments().isEmpty()) {
             return Description.NO_MATCH;
         }
+        if (!methodInvocation.getArguments().isEmpty()) {
+            return convertParameterizedMethodInvocation(methodInvocation, root, state);
+        }
+
         Symbol.MethodSymbol methodSymbol = ASTHelpers.getSymbol(methodInvocation);
         if (methodSymbol == null || shouldIgnore(methodSymbol, root, methodInvocation)) {
             return Description.NO_MATCH;
@@ -104,6 +110,42 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
                 .setMessage(MESSAGE)
                 .addFix(buildFix(methodSymbol, methodInvocation, root, state))
                 .build();
+    }
+
+    private Description convertParameterizedMethodInvocation(
+            MethodInvocationTree methodInvocation, LambdaExpressionTree root, VisitorState state) {
+        if (methodInvocation.getArguments().size() != root.getParameters().size()) {
+            return Description.NO_MATCH;
+        }
+
+        List<Symbol> methodParams = getSymbols(methodInvocation.getArguments());
+        List<Symbol> lambdaParam = getSymbols(root.getParameters());
+        if (!methodParams.equals(lambdaParam)) {
+            return Description.NO_MATCH;
+        }
+
+        Symbol.MethodSymbol methodSymbol = ASTHelpers.getSymbol(methodInvocation);
+        if (methodSymbol == null) {
+            return Description.NO_MATCH;
+        }
+
+        if (ASTHelpers.getReceiver(methodInvocation) == null) {
+            if (methodSymbol.isStatic()) {
+                return buildDescription(root)
+                        .setMessage(MESSAGE)
+                        .addFix(buildFix(methodSymbol, methodInvocation, root, state))
+                        .build();
+            } else {
+                return buildDescription(root)
+                        .setMessage(MESSAGE)
+                        .addFix(SuggestedFix.builder()
+                                .replace(root, "this::" + methodSymbol.getSimpleName())
+                                .build())
+                        .build();
+            }
+        }
+
+        return Description.NO_MATCH;
     }
 
     private static boolean shouldIgnore(
@@ -117,6 +159,13 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
             return true;
         }
         return !root.getParameters().isEmpty();
+    }
+
+    private static List<Symbol> getSymbols(List<? extends Tree> params) {
+        return params.stream()
+                .map(ASTHelpers::getSymbol)
+                .filter(Objects::nonNull)
+                .collect(ImmutableList.toImmutableList());
     }
 
     private static Optional<SuggestedFix> buildFix(
