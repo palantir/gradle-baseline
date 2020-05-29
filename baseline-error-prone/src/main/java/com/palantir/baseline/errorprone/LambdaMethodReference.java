@@ -94,9 +94,14 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
             return Description.NO_MATCH;
         }
 
-        if (methodInvocation.getArguments().isEmpty()
-                && (root.getParameters().size() == 1 || root.getParameters().isEmpty())) {
-            return convertSuppliersAndVariableInstanceMethods(methodSymbol, methodInvocation, root, state);
+        ExpressionTree receiver = ASTHelpers.getReceiver(methodInvocation);
+        boolean isLocal = isLocal(methodInvocation);
+        if (!isLocal && !(receiver instanceof IdentifierTree)) {
+            return Description.NO_MATCH;
+        }
+
+        if (methodInvocation.getArguments().isEmpty() && root.getParameters().size() == 1) {
+            return convertVariableInstanceMethods(methodSymbol, methodInvocation, root, state);
         }
 
         if (methodInvocation.getArguments().size() == root.getParameters().size()) {
@@ -106,28 +111,20 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
         return Description.NO_MATCH;
     }
 
-    private Description convertSuppliersAndVariableInstanceMethods(
+    private Description convertVariableInstanceMethods(
             Symbol.MethodSymbol methodSymbol,
             MethodInvocationTree methodInvocation,
             LambdaExpressionTree root,
             VisitorState state) {
-        if (!root.getParameters().isEmpty()) {
-            Symbol paramSymbol = ASTHelpers.getSymbol(Iterables.getOnlyElement(root.getParameters()));
-            Symbol receiverSymbol = ASTHelpers.getSymbol(ASTHelpers.getReceiver(methodInvocation));
-            if (!paramSymbol.equals(receiverSymbol)) {
-                return Description.NO_MATCH;
-            }
-        }
-
-        ExpressionTree receiver = ASTHelpers.getReceiver(methodInvocation);
-        boolean isLocal = isLocal(methodInvocation);
-        if (!isLocal && !(receiver instanceof IdentifierTree)) {
+        Symbol paramSymbol = ASTHelpers.getSymbol(Iterables.getOnlyElement(root.getParameters()));
+        Symbol receiverSymbol = ASTHelpers.getSymbol(ASTHelpers.getReceiver(methodInvocation));
+        if (!paramSymbol.equals(receiverSymbol)) {
             return Description.NO_MATCH;
         }
 
         return buildDescription(root)
                 .setMessage(MESSAGE)
-                .addFix(buildFix(methodSymbol, methodInvocation, root, state, isLocal))
+                .addFix(buildFix(methodSymbol, methodInvocation, root, state, isLocal(methodInvocation)))
                 .build();
     }
 
