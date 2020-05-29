@@ -120,7 +120,7 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
         }
 
         ExpressionTree receiver = ASTHelpers.getReceiver(methodInvocation);
-        boolean isLocal = receiver == null;
+        boolean isLocal = isLocal(methodInvocation);
         if (!isLocal && !(receiver instanceof IdentifierTree)) {
             return Description.NO_MATCH;
         }
@@ -145,10 +145,9 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
             return Description.NO_MATCH;
         }
 
-        boolean isLocal = ASTHelpers.getReceiver(methodInvocation) == null;
         return buildDescription(root)
                 .setMessage(MESSAGE)
-                .addFix(buildFix(methodSymbol, methodInvocation, root, state, isLocal))
+                .addFix(buildFix(methodSymbol, methodInvocation, root, state, isLocal(methodInvocation)))
                 .build();
     }
 
@@ -196,5 +195,12 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
                     qualifiedMethodName.substring(0, index) + "::" + qualifiedMethodName.substring(index + 1));
         }
         return Optional.empty();
+    }
+
+    private static boolean isLocal(MethodInvocationTree methodInvocationTree) {
+        ExpressionTree receiver = ASTHelpers.getReceiver(methodInvocationTree);
+        return receiver == null
+                || (receiver instanceof IdentifierTree
+                        && "this".equals(((IdentifierTree) receiver).getName().toString()));
     }
 }

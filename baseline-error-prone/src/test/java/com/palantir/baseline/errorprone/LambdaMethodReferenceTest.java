@@ -281,6 +281,34 @@ public class LambdaMethodReferenceTest {
     }
 
     @Test
+    void testAutoFix_localInstanceMethod_explicitThis() {
+        refactoringValidator
+                .addInputLines(
+                        "Test.java",
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<String> foo(Optional<String> optional) {",
+                        "    return optional.map(v -> this.bar(v));",
+                        "  }",
+                        "  private String bar(String v) {",
+                        "    return v;",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<String> foo(Optional<String> optional) {",
+                        "    return optional.map(this::bar);",
+                        "  }",
+                        "  private String bar(String v) {",
+                        "    return v;",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     void testAutoFix_localStaticMethod() {
         refactoringValidator
                 .addInputLines(
