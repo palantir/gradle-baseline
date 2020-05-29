@@ -22,6 +22,7 @@ import com.google.errorprone.CompilationTestHelper;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Supplier;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -231,6 +232,21 @@ public class LambdaMethodReferenceTest {
                         "    return optional.map(String::length);",
                         "  }",
                         "}")
+                .doTest();
+    }
+
+    @Test
+    void testNegative_InstanceMethodWithType() {
+        refactoringValidator
+                .addInputLines(
+                        "Test.java",
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<Integer> foo(Optional<String> optional) {",
+                        "    return optional.map((String v) -> v.length());",
+                        "  }",
+                        "}")
+                .expectUnchanged()
                 .doTest();
     }
 
@@ -553,6 +569,34 @@ public class LambdaMethodReferenceTest {
     }
 
     @Test
+    public void testAutoFix_expression_referenceMethod() {
+        refactoringValidator
+                .addInputLines(
+                        "Test.java",
+                        "import " + ImmutableList.class.getName() + ';',
+                        "import " + List.class.getName() + ';',
+                        "import " + Optional.class.getName() + ';',
+                        "import " + Supplier.class.getName() + ';',
+                        "class Test {",
+                        "  public List<Object> foo(Optional<List<Object>> a, Supplier<List<Object>> b) {",
+                        "    return a.orElseGet(() -> b.get());",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import " + ImmutableList.class.getName() + ';',
+                        "import " + List.class.getName() + ';',
+                        "import " + Optional.class.getName() + ';',
+                        "import " + Supplier.class.getName() + ';',
+                        "class Test {",
+                        "  public List<Object> foo(Optional<List<Object>> a, Supplier<List<Object>> b) {",
+                        "    return a.orElseGet(b::get);",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
     void testNegative_LocalStaticMethod_multiParam() {
         compilationHelper
                 .addSourceLines(
@@ -598,6 +642,23 @@ public class LambdaMethodReferenceTest {
                         // which create a new list eagerly, and returns a supplier for the new instances 'size()'
                         // function.
                         "    return optional.orElseGet(() -> ImmutableList.of(1).size());",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testNegative_dont_eagerly_capture_reference() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import " + Supplier.class.getName() + ';',
+                        "class Test {",
+                        "  private Object mutable = null;",
+                        "  public Supplier<String> foo() {",
+                        "    mutable = Long.toString(System.nanoTime());",
+                        // mutable::toString would not take later modifications into account
+                        "    return () -> mutable.toString();",
                         "  }",
                         "}")
                 .doTest();

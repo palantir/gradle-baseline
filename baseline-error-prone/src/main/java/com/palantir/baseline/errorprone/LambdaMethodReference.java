@@ -26,6 +26,7 @@ import com.google.errorprone.fixes.SuggestedFix;
 import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.util.ASTHelpers;
+import com.google.errorprone.util.ErrorProneToken;
 import com.sun.source.tree.BlockTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.IdentifierTree;
@@ -34,8 +35,11 @@ import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.ReturnTree;
 import com.sun.source.tree.StatementTree;
 import com.sun.source.tree.Tree;
+import com.sun.source.tree.VariableTree;
+import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
+import com.sun.tools.javac.parser.Tokens;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -90,7 +94,9 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
     private Description checkMethodInvocation(
             MethodInvocationTree methodInvocation, LambdaExpressionTree root, VisitorState state) {
         Symbol.MethodSymbol methodSymbol = ASTHelpers.getSymbol(methodInvocation);
-        if (methodSymbol == null || !methodInvocation.getTypeArguments().isEmpty()) {
+        if (methodSymbol == null
+                || !methodInvocation.getTypeArguments().isEmpty()
+                || hasExplicitParameterTypes(root, state)) {
             return Description.NO_MATCH;
         }
 
@@ -109,6 +115,23 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
         }
 
         return Description.NO_MATCH;
+    }
+
+    private static boolean hasExplicitParameterTypes(LambdaExpressionTree lambda, VisitorState state) {
+        for (VariableTree varTree : lambda.getParameters()) {
+            boolean expectComma = false;
+            // Must avoid refactoring lambdas which declare explicit parameter types
+            for (ErrorProneToken token : state.getTokensForNode(varTree)) {
+                if (token.kind() == Tokens.TokenKind.EOF) {
+                    return false;
+                } else if ((token.kind() == Tokens.TokenKind.IDENTIFIER && expectComma)
+                        || (token.kind() == Tokens.TokenKind.COMMA && !expectComma)) {
+                    return true;
+                }
+                expectComma = !expectComma;
+            }
+        }
+        return false;
     }
 
     private Description convertVariableInstanceMethods(
@@ -142,10 +165,10 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
             return Description.NO_MATCH;
         }
 
-        return buildDescription(root)
-                .setMessage(MESSAGE)
-                .addFix(buildFix(methodSymbol, methodInvocation, root, state, isLocal(methodInvocation)))
-                .build();
+        return buildFix(methodSymbol, methodInvocation, root, state, isLocal(methodInvocation))
+                .map(fix ->
+                        buildDescription(root).setMessage(MESSAGE).addFix(fix).build())
+                .orElse(Description.NO_MATCH);
     }
 
     private static List<Symbol> getSymbols(List<? extends Tree> params) {
@@ -162,27 +185,42 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
             VisitorState state,
             boolean isLocal) {
         SuggestedFix.Builder builder = SuggestedFix.builder();
-        return toMethodReference(qualifyTarget(symbol, invocation, builder, state, isLocal))
+        return qualifyTarget(symbol, invocation, root, builder, state, isLocal)
+                .flatMap(LambdaMethodReference::toMethodReference)
                 .map(qualified -> builder.replace(root, qualified).build());
     }
 
-    private static String qualifyTarget(
+    private static Optional<String> qualifyTarget(
             Symbol.MethodSymbol symbol,
             MethodInvocationTree invocation,
+            LambdaExpressionTree root,
             SuggestedFix.Builder builder,
             VisitorState state,
             boolean isLocal) {
         if (!symbol.isStatic() && isLocal) {
-            return "this." + symbol.name.toString();
+            return Optional.of("this." + symbol.name.toString());
         }
 
+        ExpressionTree receiver = ASTHelpers.getReceiver(invocation);
         Type receiverType = ASTHelpers.getReceiverType(invocation);
         if (receiverType == null || receiverType.getLowerBound() != null || receiverType.getUpperBound() != null) {
-            return SuggestedFixes.qualifyType(state, builder, symbol);
+            return Optional.of(SuggestedFixes.qualifyType(state, builder, symbol));
         }
-        return SuggestedFixes.qualifyType(state, builder, state.getTypes().erasure(receiverType))
-                + '.'
-                + symbol.name.toString();
+        Symbol receiverSymbol = ASTHelpers.getSymbol(receiver);
+        if (!symbol.isStatic()
+                && receiver instanceof IdentifierTree
+                && !Objects.equals(ImmutableList.of(receiverSymbol), getSymbols(root.getParameters()))) {
+            if (!isFinal(receiverSymbol)) {
+                // Not safe to replace lambdas which lazily reference values with an eager capture.
+                return Optional.empty();
+            }
+            return Optional.of(state.getSourceForNode(receiver) + '.' + symbol.name.toString());
+        }
+
+        return Optional.of(
+                SuggestedFixes.qualifyType(state, builder, state.getTypes().erasure(receiverType))
+                        + '.'
+                        + symbol.name.toString());
     }
 
     private static Optional<String> toMethodReference(String qualifiedMethodName) {
@@ -199,5 +237,9 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
         return receiver == null
                 || (receiver instanceof IdentifierTree
                         && "this".equals(((IdentifierTree) receiver).getName().toString()));
+    }
+
+    private static boolean isFinal(Symbol symbol) {
+        return (symbol.flags() & (Flags.FINAL | Flags.EFFECTIVELY_FINAL)) != 0;
     }
 }
