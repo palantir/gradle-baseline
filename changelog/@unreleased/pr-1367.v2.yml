@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: '`checkUnusedDependencies` works with JDK14'
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1367

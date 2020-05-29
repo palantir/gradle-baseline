@@ -12,6 +12,7 @@ org.inferred:freebuilder = 1.14.6
 org.jooq:jooq = 3.13.2
 org.slf4j:slf4j-api = 1.7.30
 org.immutables:* = 2.8.8
+org.ow2.asm:asm = 7.3.1
 
 # test deps
 com.netflix.nebula:nebula-test = 7.8.6
