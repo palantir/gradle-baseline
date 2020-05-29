@@ -28,6 +28,7 @@ import com.google.errorprone.matchers.Description;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.BlockTree;
 import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.LambdaExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.ReturnTree;
@@ -53,12 +54,6 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
 
     @Override
     public Description matchLambdaExpression(LambdaExpressionTree tree, VisitorState state) {
-        // Only handle simple no-arg method references for the time being, don't worry about
-        // simplifying map.forEach((k, v) -> func(k, v)) to map.forEach(this::func)
-        if (tree.getParameters().size() > 1) {
-            return Description.NO_MATCH;
-        }
-
         LambdaExpressionTree.BodyKind bodyKind = tree.getBodyKind();
         Tree body = tree.getBody();
         // n.b. These checks are meant to avoid any and all cleverness. The goal is to be confident
@@ -94,71 +89,67 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
 
     private Description checkMethodInvocation(
             MethodInvocationTree methodInvocation, LambdaExpressionTree root, VisitorState state) {
-        if (!methodInvocation.getTypeArguments().isEmpty()) {
-            return Description.NO_MATCH;
-        }
-        if (!methodInvocation.getArguments().isEmpty()) {
-            return convertParameterizedMethodInvocation(methodInvocation, root, state);
-        }
-
         Symbol.MethodSymbol methodSymbol = ASTHelpers.getSymbol(methodInvocation);
-        if (methodSymbol == null || shouldIgnore(methodSymbol, root, methodInvocation)) {
+        if (methodSymbol == null || !methodInvocation.getTypeArguments().isEmpty()) {
             return Description.NO_MATCH;
         }
 
-        return buildDescription(root)
-                .setMessage(MESSAGE)
-                .addFix(buildFix(methodSymbol, methodInvocation, root, state))
-                .build();
-    }
-
-    private Description convertParameterizedMethodInvocation(
-            MethodInvocationTree methodInvocation, LambdaExpressionTree root, VisitorState state) {
-        if (methodInvocation.getArguments().size() != root.getParameters().size()) {
-            return Description.NO_MATCH;
+        if (methodInvocation.getArguments().isEmpty()
+                && (root.getParameters().size() == 1 || root.getParameters().isEmpty())) {
+            return convertSuppliersAndVariableInstanceMethods(methodSymbol, methodInvocation, root, state);
         }
 
-        List<Symbol> methodParams = getSymbols(methodInvocation.getArguments());
-        List<Symbol> lambdaParam = getSymbols(root.getParameters());
-        if (!methodParams.equals(lambdaParam)) {
-            return Description.NO_MATCH;
-        }
-
-        Symbol.MethodSymbol methodSymbol = ASTHelpers.getSymbol(methodInvocation);
-        if (methodSymbol == null) {
-            return Description.NO_MATCH;
-        }
-
-        if (ASTHelpers.getReceiver(methodInvocation) == null) {
-            if (methodSymbol.isStatic()) {
-                return buildDescription(root)
-                        .setMessage(MESSAGE)
-                        .addFix(buildFix(methodSymbol, methodInvocation, root, state))
-                        .build();
-            } else {
-                return buildDescription(root)
-                        .setMessage(MESSAGE)
-                        .addFix(SuggestedFix.builder()
-                                .replace(root, "this::" + methodSymbol.getSimpleName())
-                                .build())
-                        .build();
-            }
+        if (methodInvocation.getArguments().size() == root.getParameters().size()) {
+            return convertMethodInvocations(methodSymbol, methodInvocation, root, state);
         }
 
         return Description.NO_MATCH;
     }
 
-    private static boolean shouldIgnore(
-            Symbol.MethodSymbol methodSymbol, LambdaExpressionTree root, MethodInvocationTree methodInvocation) {
-        if (!methodSymbol.isStatic()) {
-            if (root.getParameters().size() == 1) {
-                Symbol paramSymbol = ASTHelpers.getSymbol(Iterables.getOnlyElement(root.getParameters()));
-                Symbol receiverSymbol = ASTHelpers.getSymbol(ASTHelpers.getReceiver(methodInvocation));
-                return !paramSymbol.equals(receiverSymbol);
+    private Description convertSuppliersAndVariableInstanceMethods(
+            Symbol.MethodSymbol methodSymbol,
+            MethodInvocationTree methodInvocation,
+            LambdaExpressionTree root,
+            VisitorState state) {
+        if (!root.getParameters().isEmpty()) {
+            Symbol paramSymbol = ASTHelpers.getSymbol(Iterables.getOnlyElement(root.getParameters()));
+            Symbol receiverSymbol = ASTHelpers.getSymbol(ASTHelpers.getReceiver(methodInvocation));
+            if (!paramSymbol.equals(receiverSymbol)) {
+                return Description.NO_MATCH;
             }
-            return true;
         }
-        return !root.getParameters().isEmpty();
+
+        ExpressionTree receiver = ASTHelpers.getReceiver(methodInvocation);
+        boolean isLocal = receiver == null;
+        if (!isLocal && !(receiver instanceof IdentifierTree)) {
+            return Description.NO_MATCH;
+        }
+
+        return buildDescription(root)
+                .setMessage(MESSAGE)
+                .addFix(buildFix(methodSymbol, methodInvocation, root, state, isLocal))
+                .build();
+    }
+
+    private Description convertMethodInvocations(
+            Symbol.MethodSymbol methodSymbol,
+            MethodInvocationTree methodInvocation,
+            LambdaExpressionTree root,
+            VisitorState state) {
+        List<Symbol> methodParams = getSymbols(methodInvocation.getArguments());
+        List<Symbol> lambdaParam = getSymbols(root.getParameters());
+
+        // We are guaranteed that all of root params are symbols so equality should handle cases where methodInvocation
+        // arguments are not symbols or are out of order
+        if (!methodParams.equals(lambdaParam)) {
+            return Description.NO_MATCH;
+        }
+
+        boolean isLocal = ASTHelpers.getReceiver(methodInvocation) == null;
+        return buildDescription(root)
+                .setMessage(MESSAGE)
+                .addFix(buildFix(methodSymbol, methodInvocation, root, state, isLocal))
+                .build();
     }
 
     private static List<Symbol> getSymbols(List<? extends Tree> params) {
@@ -172,9 +163,10 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
             Symbol.MethodSymbol symbol,
             MethodInvocationTree invocation,
             LambdaExpressionTree root,
-            VisitorState state) {
+            VisitorState state,
+            boolean isLocal) {
         SuggestedFix.Builder builder = SuggestedFix.builder();
-        return toMethodReference(qualifyTarget(symbol, invocation, builder, state))
+        return toMethodReference(qualifyTarget(symbol, invocation, builder, state, isLocal))
                 .map(qualified -> builder.replace(root, qualified).build());
     }
 
@@ -182,7 +174,12 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
             Symbol.MethodSymbol symbol,
             MethodInvocationTree invocation,
             SuggestedFix.Builder builder,
-            VisitorState state) {
+            VisitorState state,
+            boolean isLocal) {
+        if (!symbol.isStatic() && isLocal) {
+            return "this." + symbol.name.toString();
+        }
+
         Type receiverType = ASTHelpers.getReceiverType(invocation);
         if (receiverType == null || receiverType.getLowerBound() != null || receiverType.getUpperBound() != null) {
             return SuggestedFixes.qualifyType(state, builder, symbol);
