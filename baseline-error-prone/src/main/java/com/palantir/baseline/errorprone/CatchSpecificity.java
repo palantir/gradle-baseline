@@ -169,7 +169,7 @@ public final class CatchSpecificity extends BugChecker implements BugChecker.Try
 
     private static ImmutableList<Type> getThrownCheckedExceptions(TryTree tree, VisitorState state) {
         return MoreASTHelpers.getThrownExceptionsFromTryBody(tree, state).stream()
-                .filter(type -> MoreASTHelpers.isCheckedException(type, state))
+                .filter(type -> ASTHelpers.isCheckedExceptionType(type, state))
                 .collect(ImmutableList.toImmutableList());
     }
 
