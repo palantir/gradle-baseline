@@ -23,6 +23,7 @@ import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.fixes.SuggestedFix;
+import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
@@ -253,7 +254,7 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
         }
 
         SuggestedFix.Builder fixBuilder = SuggestedFix.builder();
-        String collectionType = MoreSuggestedFixes.qualifyType(state, fixBuilder, collectionClass.getName());
+        String collectionType = SuggestedFixes.qualifyType(state, fixBuilder, collectionClass.getName());
         String typeArgs =
                 tree.getTypeArguments().stream().map(state::getSourceForNode).collect(Collectors.joining(", "));
         String arg = tree.getArguments().isEmpty()
@@ -262,8 +263,8 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
         String replacement = "new " + collectionType + "<" + typeArgs + ">(" + arg + ")";
         return buildDescription(tree)
                 .setMessage("The factory method call should be replaced with a constructor call. See"
-                                + " https://github.com/palantir/gradle-baseline/blob/develop/docs/best-practices/java-coding-guidelines/readme.md#avoid-generics-clutter-where-possible"
-                                + " for more information.")
+                        + " https://github.com/palantir/gradle-baseline/blob/develop/docs/best-practices/java-coding-guidelines/readme.md#avoid-generics-clutter-where-possible"
+                        + " for more information.")
                 .addFix(fixBuilder.replace(tree, replacement).build())
                 .build();
     }

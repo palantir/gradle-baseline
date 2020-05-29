@@ -117,7 +117,7 @@ import javax.lang.model.element.Modifier;
 import javax.lang.model.element.Name;
 
 /**
- * Copy from {@Link UnusedVariable } except we consider all parameter for unused analysis. We modified the
+ * Copy from {@link UnusedVariable} except we consider all parameter for unused analysis. We modified the
  * `onlyCheckForReassignments` filter to exclude abstract methods, to check loggers
  */
 @AutoService(BugChecker.class)

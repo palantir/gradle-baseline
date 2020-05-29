@@ -21,6 +21,7 @@ import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.AbstractReturnValueIgnored;
 import com.google.errorprone.bugpatterns.BugChecker;
+import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
@@ -59,7 +60,7 @@ public final class ExecutorSubmitRunnableFutureIgnored extends AbstractReturnVal
             return description;
         }
         return buildDescription(methodInvocationTree)
-                .addFix(MoreSuggestedFixes.renameMethodInvocation(methodInvocationTree, "execute", state))
+                .addFix(SuggestedFixes.renameMethodInvocation(methodInvocationTree, "execute", state))
                 .build();
     }
 }

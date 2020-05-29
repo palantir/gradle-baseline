@@ -99,7 +99,7 @@ public final class ThrowSpecificity extends BugChecker implements BugChecker.Met
                                 throwsExpression,
                                 checkedExceptions.stream()
                                         .map(checkedException ->
-                                                MoreSuggestedFixes.prettyType(state, fix, checkedException))
+                                                SuggestedFixes.prettyType(state, fix, checkedException))
                                         .collect(Collectors.joining(", ")))
                         .build())
                 .build();

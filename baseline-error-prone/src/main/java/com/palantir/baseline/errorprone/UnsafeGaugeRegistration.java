@@ -21,6 +21,7 @@ import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.AbstractReturnValueIgnored;
 import com.google.errorprone.bugpatterns.BugChecker;
+import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
@@ -65,8 +66,7 @@ public final class UnsafeGaugeRegistration extends AbstractReturnValueIgnored {
             return Description.NO_MATCH;
         }
         return buildDescription(methodInvocationTree)
-                .addFix(MoreSuggestedFixes.renameMethodInvocation(
-                        methodInvocationTree, REGISTER_WITH_REPLACEMENT, state))
+                .addFix(SuggestedFixes.renameMethodInvocation(methodInvocationTree, REGISTER_WITH_REPLACEMENT, state))
                 .build();
     }
 

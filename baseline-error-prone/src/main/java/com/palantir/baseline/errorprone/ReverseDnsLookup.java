@@ -20,6 +20,7 @@ import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
+import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
@@ -36,9 +37,9 @@ import java.net.InetSocketAddress;
         severity = BugPattern.SeverityLevel.WARNING,
         summary =
                 "Calling address.getHostName may result in a reverse DNS lookup which is a network request, making the"
-                    + " invocation significantly more expensive than expected depending on the environment.\n"
-                    + "This check is intended to be advisory - it's fine to @SuppressWarnings(\"ReverseDnsLookup\") in"
-                    + " certain cases, but is usually not recommended.")
+                        + " invocation significantly more expensive than expected depending on the environment.\n"
+                        + "This check is intended to be advisory - it's fine to @SuppressWarnings(\"ReverseDnsLookup\") in"
+                        + " certain cases, but is usually not recommended.")
 public final class ReverseDnsLookup extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final Matcher<ExpressionTree> INET_SOCKET_ADDRESS_MATCHER = MethodMatchers.instanceMethod()
@@ -56,7 +57,7 @@ public final class ReverseDnsLookup extends BugChecker implements BugChecker.Met
                     // Suggested fix exists to provide context when compilation fails, it shouldn't be used
                     // as a drop in replacement because the unresolved string may not be sufficient in some
                     // cases, particularly involving auditing.
-                    .addFix(MoreSuggestedFixes.renameMethodInvocation(tree, "getHostString", state))
+                    .addFix(SuggestedFixes.renameMethodInvocation(tree, "getHostString", state))
                     .build();
         }
         if (INET_ADDRESS_MATCHER.matches(tree, state)) {
@@ -64,7 +65,7 @@ public final class ReverseDnsLookup extends BugChecker implements BugChecker.Met
                     // Suggested fix exists to provide context when compilation fails, it shouldn't be used
                     // as a drop in replacement because the unresolved string may not be sufficient in some
                     // cases, particularly involving auditing.
-                    .addFix(MoreSuggestedFixes.renameMethodInvocation(tree, "getHostAddress", state))
+                    .addFix(SuggestedFixes.renameMethodInvocation(tree, "getHostAddress", state))
                     .build();
         }
         return Description.NO_MATCH;
