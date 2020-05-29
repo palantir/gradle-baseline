@@ -89,10 +89,12 @@ public final class ThrowError extends BugChecker implements BugChecker.ThrowTree
         if (ASTHelpers.isSameType(
                 ASTHelpers.getResultType(firstArgument), state.getTypeFromString(String.class.getName()), state)) {
             SuggestedFix.Builder fix = SuggestedFix.builder();
-            String typeName = compileTimeConstExpressionMatcher.matches(firstArgument, state)
-                    ? "com.palantir.logsafe.exceptions.SafeIllegalStateException"
-                    : IllegalStateException.class.getName();
-            String qualifiedName = SuggestedFixes.qualifyType(state, fix, typeName);
+            String qualifiedName = SuggestedFixes.qualifyType(
+                    state,
+                    fix,
+                    compileTimeConstExpressionMatcher.matches(firstArgument, state)
+                            ? "com.palantir.logsafe.exceptions.SafeIllegalStateException"
+                            : IllegalStateException.class.getName());
             return Optional.of(
                     fix.replace(newClassTree.getIdentifier(), qualifiedName).build());
         }
