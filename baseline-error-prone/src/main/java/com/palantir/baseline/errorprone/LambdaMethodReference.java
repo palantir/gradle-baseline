@@ -144,11 +144,11 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
         if (!paramSymbol.equals(receiverSymbol)) {
             return Description.NO_MATCH;
         }
-
-        return buildDescription(root)
-                .setMessage(MESSAGE)
-                .addFix(buildFix(methodSymbol, methodInvocation, root, state, isLocal(methodInvocation)))
-                .build();
+        return buildFix(methodSymbol, methodInvocation, root, state, isLocal(methodInvocation))
+                .filter(fix -> SuggestedFixes.compilesWithFix(fix, state, ImmutableList.of(), true))
+                .map(fix ->
+                        buildDescription(root).setMessage(MESSAGE).addFix(fix).build())
+                .orElse(Description.NO_MATCH);
     }
 
     private Description convertMethodInvocations(
@@ -166,6 +166,7 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
         }
 
         return buildFix(methodSymbol, methodInvocation, root, state, isLocal(methodInvocation))
+                .filter(fix -> SuggestedFixes.compilesWithFix(fix, state, ImmutableList.of(), true))
                 .map(fix ->
                         buildDescription(root).setMessage(MESSAGE).addFix(fix).build())
                 .orElse(Description.NO_MATCH);
