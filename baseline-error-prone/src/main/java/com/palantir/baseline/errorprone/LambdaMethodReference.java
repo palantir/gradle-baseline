@@ -199,6 +199,7 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
                 .map(qualified -> builder.replace(root, qualified).build());
     }
 
+    @SuppressWarnings("checkstyle:CyclomaticComplexity")
     private static boolean isAmbiguousMethod(
             Symbol.MethodSymbol symbol, @Nullable ExpressionTree receiver, VisitorState state) {
         if (symbol.isStatic()) {
@@ -293,8 +294,7 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
     }
 
     private static boolean isParentMethod(Symbol.MethodSymbol method, VisitorState state) {
-        Tree closestClass = ASTHelpers.findPathFromEnclosingNodeToTopLevel(state.getPath(), ClassTree.class)
-                .getLeaf();
+        Tree closestClass = ASTHelpers.findEnclosingNode(state.getPath(), ClassTree.class);
         return !method.owner.equals(ASTHelpers.getSymbol(closestClass));
     }
 }
