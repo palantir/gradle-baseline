@@ -691,4 +691,22 @@ public class LambdaMethodReferenceTest {
                         "}")
                 .doTest();
     }
+
+    @Test
+    public void testNegative_ignore_nested() {
+        compile()
+                .addSourceLines(
+                        "Test.java",
+                        "import " + Optional.class.getName() + ";",
+                        "import " + Supplier.class.getName() + ';',
+                        "class Test {",
+                        "  void callback(String value) {}",
+                        "  class Inner {",
+                        "    void foo(Optional<String> value) {",
+                        "      value.ifPresent(v -> callback(v));",
+                        "    }",
+                        "  }",
+                        "}")
+                .doTest();
+    }
 }

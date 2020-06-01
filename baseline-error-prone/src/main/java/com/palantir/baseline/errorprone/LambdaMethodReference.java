@@ -28,6 +28,7 @@ import com.google.errorprone.matchers.Description;
 import com.google.errorprone.util.ASTHelpers;
 import com.google.errorprone.util.ErrorProneToken;
 import com.sun.source.tree.BlockTree;
+import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.LambdaExpressionTree;
@@ -185,6 +186,9 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
             LambdaExpressionTree root,
             VisitorState state,
             boolean isLocal) {
+        if (!symbol.isStatic() && isLocal && isParentMethod(symbol, state)) {
+            return Optional.empty();
+        }
         if (isAmbiguousMethod(symbol, ASTHelpers.getReceiver(invocation), state)) {
             return Optional.empty();
         }
@@ -286,5 +290,11 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
 
     private static boolean isFinal(Symbol symbol) {
         return (symbol.flags() & (Flags.FINAL | Flags.EFFECTIVELY_FINAL)) != 0;
+    }
+
+    private static boolean isParentMethod(Symbol.MethodSymbol method, VisitorState state) {
+        Tree closestClass = ASTHelpers.findPathFromEnclosingNodeToTopLevel(state.getPath(), ClassTree.class)
+                .getLeaf();
+        return !method.owner.equals(ASTHelpers.getSymbol(closestClass));
     }
 }
