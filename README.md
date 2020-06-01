@@ -124,11 +124,7 @@ Rules can be suppressed at the project level, or have their severity modified, b
 
 ```gradle
 tasks.withType(JavaCompile).configureEach {
-    options.errorprone.errorproneArgs += ['-Xep:Slf4jLogsafeArgs:OFF']
-    // alternatively, using the DSL:
-    options.errorprone {
-        check('Slf4jLogsafeArgs', CheckSeverity.OFF)
-    }
+    options.errorprone.disable 'Slf4jLogsafeArgs'
 }
 ```
 

@@ -170,7 +170,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         buildFile << standardBuildFile
         buildFile << """
             tasks.withType(JavaCompile) {
-                options.errorprone.errorproneArgs += ['-Xep:OptionalOrElseMethodInvocation:OFF']
+                options.errorprone.disable 'OptionalOrElseMethodInvocation'
             }
             dependencies {
                 implementation 'org.slf4j:slf4j-api:1.7.25'
@@ -203,7 +203,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
     def 'compileJava does not apply patches for error-prone checks that were turned OFF via #checkConfigurationMethod'() {
         def checkName = "Slf4jLogsafeArgs"
         def turnOffCheck = [
-                (CheckConfigurationMethod.ARG): "options.errorprone.errorproneArgs += ['-Xep:$checkName:OFF']",
+                (CheckConfigurationMethod.ARG): "options.errorprone.disable '$checkName'",
                 (CheckConfigurationMethod.DSL): """
                     options.errorprone {
                         check '$checkName', net.ltgt.gradle.errorprone.CheckSeverity.OFF

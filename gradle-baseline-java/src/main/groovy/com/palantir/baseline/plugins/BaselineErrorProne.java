@@ -197,16 +197,19 @@ public final class BaselineErrorProne implements Plugin<Project> {
 
         if (project.hasProperty(DISABLE_PROPERY)) {
             log.info("Disabling baseline-error-prone for {} due to {}", project, DISABLE_PROPERY);
-            errorProneOptions.setEnabled(false);
+            errorProneOptions.getEnabled().set(false);
         } else {
-            errorProneOptions.setEnabled(true);
+            errorProneOptions.getEnabled().set(true);
         }
 
-        errorProneOptions.setDisableWarningsInGeneratedCode(true);
+        errorProneOptions.getDisableWarningsInGeneratedCode().set(true);
         String projectPath = project.getProjectDir().getPath();
         String separator = Pattern.quote(Paths.get(projectPath).getFileSystem().getSeparator());
-        errorProneOptions.setExcludedPaths(String.format(
-                "%s%s(build|src%sgenerated.*)%s.*", Pattern.quote(projectPath), separator, separator, separator));
+        errorProneOptions
+                .getExcludedPaths()
+                .set(String.format(
+                        "%s%s(build|src%sgenerated.*)%s.*",
+                        Pattern.quote(projectPath), separator, separator, separator));
         errorProneOptions.check("CatchSpecificity", CheckSeverity.OFF);
         errorProneOptions.check("UnusedVariable", CheckSeverity.OFF);
         errorProneOptions.check("EqualsHashCode", CheckSeverity.ERROR);
@@ -217,7 +220,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
         errorProneOptions.check("URLEqualsHashCode", CheckSeverity.ERROR);
 
         // Relax some checks for test code
-        if (errorProneOptions.isCompilingTestOnlyCode()) {
+        if (errorProneOptions.getCompilingTestOnlyCode().get()) {
             errorProneOptions.check("UnnecessaryLambda", CheckSeverity.OFF);
         }
 
@@ -357,9 +360,9 @@ public final class BaselineErrorProne implements Plugin<Project> {
     }
 
     private static boolean checkExplicitlyDisabled(ErrorProneOptions errorProneOptions, String check) {
-        Map<String, CheckSeverity> checks = errorProneOptions.getChecks();
+        Map<String, CheckSeverity> checks = errorProneOptions.getChecks().get();
         return checks.get(check) == CheckSeverity.OFF
-                || errorProneOptions.getErrorproneArgs().contains(String.format("-Xep:%s:OFF", check));
+                || errorProneOptions.getErrorproneArgs().get().contains(String.format("-Xep:%s:OFF", check));
     }
 
     private static final class LazyConfigurationList extends AbstractList<File> {
