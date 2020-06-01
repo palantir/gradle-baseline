@@ -43,6 +43,8 @@ import com.sun.tools.javac.parser.Tokens;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import javax.annotation.Nullable;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -145,7 +147,6 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
             return Description.NO_MATCH;
         }
         return buildFix(methodSymbol, methodInvocation, root, state, isLocal(methodInvocation))
-                .filter(fix -> SuggestedFixes.compilesWithFix(fix, state, ImmutableList.of(), true))
                 .map(fix ->
                         buildDescription(root).setMessage(MESSAGE).addFix(fix).build())
                 .orElse(Description.NO_MATCH);
@@ -166,7 +167,6 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
         }
 
         return buildFix(methodSymbol, methodInvocation, root, state, isLocal(methodInvocation))
-                .filter(fix -> SuggestedFixes.compilesWithFix(fix, state, ImmutableList.of(), true))
                 .map(fix ->
                         buildDescription(root).setMessage(MESSAGE).addFix(fix).build())
                 .orElse(Description.NO_MATCH);
@@ -185,10 +185,54 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
             LambdaExpressionTree root,
             VisitorState state,
             boolean isLocal) {
+        if (isAmbiguousMethod(symbol, ASTHelpers.getReceiver(invocation), state)) {
+            return Optional.empty();
+        }
+
         SuggestedFix.Builder builder = SuggestedFix.builder();
         return qualifyTarget(symbol, invocation, root, builder, state, isLocal)
                 .flatMap(LambdaMethodReference::toMethodReference)
                 .map(qualified -> builder.replace(root, qualified).build());
+    }
+
+    private static boolean isAmbiguousMethod(
+            Symbol.MethodSymbol symbol, @Nullable ExpressionTree receiver, VisitorState state) {
+        if (symbol.isStatic()) {
+            if (symbol.params().size() != 1) {
+                return false;
+            }
+            Symbol.ClassSymbol classSymbol = ASTHelpers.enclosingClass(symbol);
+            if (classSymbol == null) {
+                return false;
+            }
+            Set<Symbol.MethodSymbol> matching = ASTHelpers.findMatchingMethods(
+                    symbol.name,
+                    sym -> sym != null && !sym.isStatic() && sym.getParameters().isEmpty(),
+                    classSymbol.type,
+                    state.getTypes());
+            return !matching.isEmpty();
+        } else {
+            if (!symbol.params().isEmpty()) {
+                return false;
+            }
+            if (receiver == null) {
+                return false;
+            }
+            Type receiverType = ASTHelpers.getType(receiver);
+            if (receiverType == null) {
+                return false;
+            }
+            Set<Symbol.MethodSymbol> matching = ASTHelpers.findMatchingMethods(
+                    symbol.name,
+                    sym -> sym != null
+                            && sym.isStatic()
+                            && sym.getParameters().size() == 1
+                            && state.getTypes()
+                                    .isAssignable(receiverType, sym.params().get(0).type),
+                    receiverType,
+                    state.getTypes());
+            return !matching.isEmpty();
+        }
     }
 
     private static Optional<String> qualifyTarget(
