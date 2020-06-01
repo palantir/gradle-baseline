@@ -28,6 +28,7 @@ import com.google.errorprone.matchers.Description;
 import com.google.errorprone.util.ASTHelpers;
 import com.google.errorprone.util.ErrorProneToken;
 import com.sun.source.tree.BlockTree;
+import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.LambdaExpressionTree;
@@ -54,6 +55,7 @@ import javax.annotation.Nullable;
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = BugPattern.SeverityLevel.SUGGESTION,
         summary = "Lambda should be a method reference")
+@SuppressWarnings("checkstyle:CyclomaticComplexity")
 public final class LambdaMethodReference extends BugChecker implements BugChecker.LambdaExpressionTreeMatcher {
 
     private static final String MESSAGE = "Lambda should be a method reference";
@@ -243,7 +245,17 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
             VisitorState state,
             boolean isLocal) {
         if (!symbol.isStatic() && isLocal) {
-            return Optional.of("this." + symbol.name.toString());
+            // Validate teh local method is defined in this class
+            ClassTree enclosingClass = ASTHelpers.findEnclosingNode(state.getPath(), ClassTree.class);
+            if (enclosingClass == null) {
+                return Optional.empty();
+            }
+            Type.ClassType enclosingType = ASTHelpers.getType(enclosingClass);
+            if (!ASTHelpers.findMatchingMethods(symbol.name, symbol::equals, enclosingType, state.getTypes())
+                    .isEmpty()) {
+                return Optional.of("this." + symbol.name.toString());
+            }
+            return Optional.empty();
         }
 
         ExpressionTree receiver = ASTHelpers.getReceiver(invocation);

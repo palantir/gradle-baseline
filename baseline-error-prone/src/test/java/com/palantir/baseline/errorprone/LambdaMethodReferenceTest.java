@@ -279,6 +279,27 @@ public class LambdaMethodReferenceTest {
     }
 
     @Test
+    void testNegative_ambiguousThis() {
+        refactor()
+                .addInputLines(
+                        "Test.java",
+                        "import " + Supplier.class.getName() + ';',
+                        "class Test {",
+                        "  class Inner {",
+                        "    public Supplier<String> foo() {",
+                        // this::bar is incorrect because 'this' is Inner and 'bar' is defined on 'Test'.
+                        "      return () -> bar();",
+                        "    }",
+                        "  }",
+                        "  private String bar() {",
+                        "    return \"\";",
+                        "  }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
     void testAutoFix_SpecificInstanceMethod() {
         refactor()
                 .addInputLines(
