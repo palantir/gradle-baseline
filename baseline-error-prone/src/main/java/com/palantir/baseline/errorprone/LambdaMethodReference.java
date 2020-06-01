@@ -28,6 +28,7 @@ import com.google.errorprone.matchers.Description;
 import com.google.errorprone.util.ASTHelpers;
 import com.google.errorprone.util.ErrorProneToken;
 import com.sun.source.tree.BlockTree;
+import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.LambdaExpressionTree;
@@ -43,6 +44,8 @@ import com.sun.tools.javac.parser.Tokens;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
+import javax.annotation.Nullable;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -52,6 +55,7 @@ import java.util.Optional;
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = BugPattern.SeverityLevel.SUGGESTION,
         summary = "Lambda should be a method reference")
+@SuppressWarnings("checkstyle:CyclomaticComplexity")
 public final class LambdaMethodReference extends BugChecker implements BugChecker.LambdaExpressionTreeMatcher {
 
     private static final String MESSAGE = "Lambda should be a method reference";
@@ -144,11 +148,10 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
         if (!paramSymbol.equals(receiverSymbol)) {
             return Description.NO_MATCH;
         }
-
-        return buildDescription(root)
-                .setMessage(MESSAGE)
-                .addFix(buildFix(methodSymbol, methodInvocation, root, state, isLocal(methodInvocation)))
-                .build();
+        return buildFix(methodSymbol, methodInvocation, root, state, isLocal(methodInvocation))
+                .map(fix ->
+                        buildDescription(root).setMessage(MESSAGE).addFix(fix).build())
+                .orElse(Description.NO_MATCH);
     }
 
     private Description convertMethodInvocations(
@@ -184,10 +187,57 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
             LambdaExpressionTree root,
             VisitorState state,
             boolean isLocal) {
+        if (isAmbiguousMethod(symbol, ASTHelpers.getReceiver(invocation), state)) {
+            return Optional.empty();
+        }
+
         SuggestedFix.Builder builder = SuggestedFix.builder();
         return qualifyTarget(symbol, invocation, root, builder, state, isLocal)
                 .flatMap(LambdaMethodReference::toMethodReference)
                 .map(qualified -> builder.replace(root, qualified).build());
+    }
+
+    private static boolean isAmbiguousMethod(
+            Symbol.MethodSymbol symbol, @Nullable ExpressionTree receiver, VisitorState state) {
+        if (symbol.isStatic()) {
+            if (symbol.params().size() != 1) {
+                return false;
+            }
+            Symbol.ClassSymbol classSymbol = ASTHelpers.enclosingClass(symbol);
+            if (classSymbol == null) {
+                return false;
+            }
+            Set<Symbol.MethodSymbol> matching = ASTHelpers.findMatchingMethods(
+                    symbol.name,
+                    sym -> sym != null && !sym.isStatic() && sym.getParameters().isEmpty(),
+                    classSymbol.type,
+                    state.getTypes());
+            return !matching.isEmpty();
+        } else {
+            if (!symbol.params().isEmpty()) {
+                return false;
+            }
+            if (receiver == null) {
+                return false;
+            }
+            Type receiverType = ASTHelpers.getType(receiver);
+            if (receiverType == null) {
+                return false;
+            }
+            Set<Symbol.MethodSymbol> matching = ASTHelpers.findMatchingMethods(
+                    symbol.name,
+                    sym -> sym != null
+                            && sym.isStatic()
+                            && sym.getParameters().size() == 1
+                            && state.getTypes()
+                                    .isAssignable(
+                                            state.getTypes().erasure(receiverType),
+                                            state.getTypes()
+                                                    .erasure(sym.params().get(0).type)),
+                    receiverType,
+                    state.getTypes());
+            return !matching.isEmpty();
+        }
     }
 
     private static Optional<String> qualifyTarget(
@@ -198,7 +248,17 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
             VisitorState state,
             boolean isLocal) {
         if (!symbol.isStatic() && isLocal) {
-            return Optional.of("this." + symbol.name.toString());
+            // Validate teh local method is defined in this class
+            ClassTree enclosingClass = ASTHelpers.findEnclosingNode(state.getPath(), ClassTree.class);
+            if (enclosingClass == null) {
+                return Optional.empty();
+            }
+            Type.ClassType enclosingType = ASTHelpers.getType(enclosingClass);
+            if (!ASTHelpers.findMatchingMethods(symbol.name, symbol::equals, enclosingType, state.getTypes())
+                    .isEmpty()) {
+                return Optional.of("this." + symbol.name.toString());
+            }
+            return Optional.empty();
         }
 
         ExpressionTree receiver = ASTHelpers.getReceiver(invocation);

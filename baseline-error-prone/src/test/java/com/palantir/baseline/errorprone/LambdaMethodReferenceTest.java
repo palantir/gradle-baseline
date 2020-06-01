@@ -23,23 +23,21 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.function.Supplier;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public class LambdaMethodReferenceTest {
 
-    private CompilationTestHelper compilationHelper;
-    private RefactoringValidator refactoringValidator;
+    private CompilationTestHelper compile() {
+        return CompilationTestHelper.newInstance(LambdaMethodReference.class, getClass());
+    }
 
-    @BeforeEach
-    public void before() {
-        compilationHelper = CompilationTestHelper.newInstance(LambdaMethodReference.class, getClass());
-        refactoringValidator = RefactoringValidator.of(new LambdaMethodReference(), getClass());
+    private RefactoringValidator refactor() {
+        return RefactoringValidator.of(new LambdaMethodReference(), getClass());
     }
 
     @Test
     public void testMethodReference() {
-        compilationHelper
+        compile()
                 .addSourceLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',
@@ -55,7 +53,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     void testInstanceMethod() {
-        compilationHelper
+        compile()
                 .addSourceLines(
                         "Test.java",
                         "import " + Optional.class.getName() + ';',
@@ -70,7 +68,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     void testLocalInstanceMethod() {
-        compilationHelper
+        compile()
                 .addSourceLines(
                         "Test.java",
                         "import " + Optional.class.getName() + ';',
@@ -88,7 +86,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testLocalInstanceMethodSupplier() {
-        compilationHelper
+        compile()
                 .addSourceLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',
@@ -108,7 +106,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     void testLocalStaticMethod_multiParam() {
-        compilationHelper
+        compile()
                 .addSourceLines(
                         "Test.java",
                         "import " + Map.class.getName() + ';',
@@ -126,7 +124,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testLocalMethodSupplier_block() {
-        compilationHelper
+        compile()
                 .addSourceLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',
@@ -146,7 +144,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testStaticMethod_block() {
-        compilationHelper
+        compile()
                 .addSourceLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',
@@ -163,7 +161,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testAutoFix_staticMethod_block() {
-        refactoringValidator
+        refactor()
                 .addInputLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',
@@ -189,7 +187,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testAutoFix_staticMethodWithParam() {
-        refactoringValidator
+        refactor()
                 .addInputLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',
@@ -215,7 +213,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     void testAutoFix_InstanceMethod() {
-        refactoringValidator
+        refactor()
                 .addInputLines(
                         "Test.java",
                         "import " + Optional.class.getName() + ';',
@@ -237,7 +235,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     void testNegative_InstanceMethodWithType() {
-        refactoringValidator
+        refactor()
                 .addInputLines(
                         "Test.java",
                         "import " + Optional.class.getName() + ';',
@@ -251,8 +249,59 @@ public class LambdaMethodReferenceTest {
     }
 
     @Test
+    void testNegative_ambiguousStaticReference() {
+        refactor()
+                .addInputLines(
+                        "Test.java",
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<String> foo(Optional<Long> optional) {",
+                        "    return optional.map(value -> Long.toString(value));",
+                        "  }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void testNegative_ambiguousInstanceReference() {
+        refactor()
+                .addInputLines(
+                        "Test.java",
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<String> foo(Optional<Long> optional) {",
+                        "    return optional.map(value -> value.toString());",
+                        "  }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void testNegative_ambiguousThis() {
+        refactor()
+                .addInputLines(
+                        "Test.java",
+                        "import " + Supplier.class.getName() + ';',
+                        "class Test {",
+                        "  class Inner {",
+                        "    public Supplier<String> foo() {",
+                        // this::bar is incorrect because 'this' is Inner and 'bar' is defined on 'Test'.
+                        "      return () -> bar();",
+                        "    }",
+                        "  }",
+                        "  private String bar() {",
+                        "    return \"\";",
+                        "  }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
     void testAutoFix_SpecificInstanceMethod() {
-        refactoringValidator
+        refactor()
                 .addInputLines(
                         "Test.java",
                         "import " + Optional.class.getName() + ';',
@@ -274,7 +323,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     void testAutoFix_SpecificInstanceMethod_withTypeParameters() {
-        refactoringValidator
+        refactor()
                 .addInputLines(
                         "Test.java",
                         "import " + Optional.class.getName() + ';',
@@ -296,7 +345,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     void testAutoFix_localInstanceMethod() {
-        refactoringValidator
+        refactor()
                 .addInputLines(
                         "Test.java",
                         "import " + Optional.class.getName() + ';',
@@ -324,7 +373,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     void testAutoFix_localInstanceMethod_explicitThis() {
-        refactoringValidator
+        refactor()
                 .addInputLines(
                         "Test.java",
                         "import " + Optional.class.getName() + ';',
@@ -352,7 +401,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     void testAutoFix_localStaticMethod() {
-        refactoringValidator
+        refactor()
                 .addInputLines(
                         "Test.java",
                         "import " + Optional.class.getName() + ';',
@@ -380,7 +429,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     void testAutoFix_localStaticMethod_multiParam() {
-        refactoringValidator
+        refactor()
                 .addInputLines(
                         "Test.java",
                         "import " + Map.class.getName() + ';',
@@ -408,7 +457,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     void testAutoFix_StaticMethod_multiParam() {
-        refactoringValidator
+        refactor()
                 .addInputLines(
                         "Test.java",
                         "import " + Map.class.getName() + ';',
@@ -432,7 +481,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testAutoFix_block_localMethod() {
-        refactoringValidator
+        refactor()
                 .addInputLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',
@@ -464,7 +513,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testNegative_block() {
-        compilationHelper
+        compile()
                 .addSourceLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',
@@ -480,7 +529,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testPositive_expression() {
-        compilationHelper
+        compile()
                 .addSourceLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',
@@ -497,7 +546,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testAutoFix_expression() {
-        refactoringValidator
+        refactor()
                 .addInputLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',
@@ -523,7 +572,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testNegative_expression_staticMethod() {
-        compilationHelper
+        compile()
                 .addSourceLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',
@@ -538,7 +587,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testAutoFix_expression_localMethod() {
-        refactoringValidator
+        refactor()
                 .addInputLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',
@@ -570,7 +619,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testAutoFix_expression_referenceMethod() {
-        refactoringValidator
+        refactor()
                 .addInputLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',
@@ -598,7 +647,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     void testNegative_LocalStaticMethod_multiParam() {
-        compilationHelper
+        compile()
                 .addSourceLines(
                         "Test.java",
                         "import " + Map.class.getName() + ';',
@@ -615,7 +664,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testNegative_expression() {
-        compilationHelper
+        compile()
                 .addSourceLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',
@@ -631,7 +680,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testNegative_expression_chain() {
-        compilationHelper
+        compile()
                 .addSourceLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',
@@ -649,7 +698,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testNegative_dont_eagerly_capture_reference() {
-        compilationHelper
+        compile()
                 .addSourceLines(
                         "Test.java",
                         "import " + Supplier.class.getName() + ';',
@@ -661,6 +710,21 @@ public class LambdaMethodReferenceTest {
                         "    return () -> mutable.toString();",
                         "  }",
                         "}")
+                .doTest();
+    }
+
+    @Test
+    public void testGuavaToJavaUtilOptional() {
+        refactor()
+                .addInputLines(
+                        "Test.java",
+                        "import java.util.stream.Stream;",
+                        "class Test {",
+                        "  Stream<java.util.Optional<String>> f(Stream<com.google.common.base.Optional<String>> in) {",
+                        "    return in.map(value -> value.toJavaUtil());",
+                        "  }",
+                        "}")
+                .expectUnchanged()
                 .doTest();
     }
 }
