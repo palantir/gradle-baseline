@@ -20,24 +20,24 @@ import com.google.common.collect.ImmutableList;
 import com.google.errorprone.BugCheckerRefactoringTestHelper;
 import com.google.errorprone.CompilationTestHelper;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import org.junit.jupiter.api.BeforeEach;
+import java.util.function.Supplier;
 import org.junit.jupiter.api.Test;
 
 public class LambdaMethodReferenceTest {
 
-    private CompilationTestHelper compilationHelper;
-    private RefactoringValidator refactoringValidator;
+    private CompilationTestHelper compile() {
+        return CompilationTestHelper.newInstance(LambdaMethodReference.class, getClass());
+    }
 
-    @BeforeEach
-    public void before() {
-        compilationHelper = CompilationTestHelper.newInstance(LambdaMethodReference.class, getClass());
-        refactoringValidator = RefactoringValidator.of(new LambdaMethodReference(), getClass());
+    private RefactoringValidator refactor() {
+        return RefactoringValidator.of(new LambdaMethodReference(), getClass());
     }
 
     @Test
     public void testMethodReference() {
-        compilationHelper
+        compile()
                 .addSourceLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',
@@ -52,8 +52,8 @@ public class LambdaMethodReferenceTest {
     }
 
     @Test
-    void testFunction() {
-        compilationHelper
+    void testInstanceMethod() {
+        compile()
                 .addSourceLines(
                         "Test.java",
                         "import " + Optional.class.getName() + ';',
@@ -67,8 +67,84 @@ public class LambdaMethodReferenceTest {
     }
 
     @Test
-    public void testPositive_block() {
-        compilationHelper
+    void testLocalInstanceMethod() {
+        compile()
+                .addSourceLines(
+                        "Test.java",
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<Integer> foo(Optional<String> optional) {",
+                        "    // BUG: Diagnostic contains: Lambda should be a method reference",
+                        "    return optional.map(v -> bar(v));",
+                        "  }",
+                        "  private Integer bar(String value) {",
+                        "    return value.length();",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testLocalInstanceMethodSupplier() {
+        compile()
+                .addSourceLines(
+                        "Test.java",
+                        "import " + ImmutableList.class.getName() + ';',
+                        "import " + List.class.getName() + ';',
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public List<Object> foo(Optional<List<Object>> optional) {",
+                        "    // BUG: Diagnostic contains: Lambda should be a method reference",
+                        "    return optional.orElseGet(() -> bar());",
+                        "  }",
+                        "  private List<Object> bar() {",
+                        "    return ImmutableList.of();",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testLocalStaticMethod_multiParam() {
+        compile()
+                .addSourceLines(
+                        "Test.java",
+                        "import " + Map.class.getName() + ';',
+                        "class Test {",
+                        "  public void foo(Map<String, String> map) {",
+                        "    // BUG: Diagnostic contains: Lambda should be a method reference",
+                        "    map.forEach((k, v) -> bar(k, v));",
+                        "  }",
+                        "  private static void bar(String key, String value) {",
+                        "    System.out.println(key + value);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testLocalMethodSupplier_block() {
+        compile()
+                .addSourceLines(
+                        "Test.java",
+                        "import " + ImmutableList.class.getName() + ';',
+                        "import " + List.class.getName() + ';',
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public List<Object> foo(Optional<List<Object>> optional) {",
+                        "    // BUG: Diagnostic contains: Lambda should be a method reference",
+                        "    return optional.orElseGet(() -> { return bar(); });",
+                        "  }",
+                        "  private List<Object> bar() {",
+                        "    return ImmutableList.of();",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testStaticMethod_block() {
+        compile()
                 .addSourceLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',
@@ -84,8 +160,8 @@ public class LambdaMethodReferenceTest {
     }
 
     @Test
-    public void testAutoFix_block() {
-        refactoringValidator
+    public void testAutoFix_staticMethod_block() {
+        refactor()
                 .addInputLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',
@@ -110,8 +186,34 @@ public class LambdaMethodReferenceTest {
     }
 
     @Test
-    void testAutoFix_instanceMethod() {
-        refactoringValidator
+    public void testAutoFix_staticMethodWithParam() {
+        refactor()
+                .addInputLines(
+                        "Test.java",
+                        "import " + ImmutableList.class.getName() + ';',
+                        "import " + List.class.getName() + ';',
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<List<Object>> foo(Optional<Object> optional) {",
+                        "    return optional.map(v -> ImmutableList.of(v));",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import " + ImmutableList.class.getName() + ';',
+                        "import " + List.class.getName() + ';',
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<List<Object>> foo(Optional<Object> optional) {",
+                        "    return optional.map(ImmutableList::of);",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    void testAutoFix_InstanceMethod() {
+        refactor()
                 .addInputLines(
                         "Test.java",
                         "import " + Optional.class.getName() + ';',
@@ -132,8 +234,74 @@ public class LambdaMethodReferenceTest {
     }
 
     @Test
-    void testAutoFix_specificInstanceMethod() {
-        refactoringValidator
+    void testNegative_InstanceMethodWithType() {
+        refactor()
+                .addInputLines(
+                        "Test.java",
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<Integer> foo(Optional<String> optional) {",
+                        "    return optional.map((String v) -> v.length());",
+                        "  }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void testNegative_ambiguousStaticReference() {
+        refactor()
+                .addInputLines(
+                        "Test.java",
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<String> foo(Optional<Long> optional) {",
+                        "    return optional.map(value -> Long.toString(value));",
+                        "  }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void testNegative_ambiguousInstanceReference() {
+        refactor()
+                .addInputLines(
+                        "Test.java",
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<String> foo(Optional<Long> optional) {",
+                        "    return optional.map(value -> value.toString());",
+                        "  }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void testNegative_ambiguousThis() {
+        refactor()
+                .addInputLines(
+                        "Test.java",
+                        "import " + Supplier.class.getName() + ';',
+                        "class Test {",
+                        "  class Inner {",
+                        "    public Supplier<String> foo() {",
+                        // this::bar is incorrect because 'this' is Inner and 'bar' is defined on 'Test'.
+                        "      return () -> bar();",
+                        "    }",
+                        "  }",
+                        "  private String bar() {",
+                        "    return \"\";",
+                        "  }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void testAutoFix_SpecificInstanceMethod() {
+        refactor()
                 .addInputLines(
                         "Test.java",
                         "import " + Optional.class.getName() + ';',
@@ -154,8 +322,8 @@ public class LambdaMethodReferenceTest {
     }
 
     @Test
-    void testAutoFix_specificInstanceMethod_withTypeParameters() {
-        refactoringValidator
+    void testAutoFix_SpecificInstanceMethod_withTypeParameters() {
+        refactor()
                 .addInputLines(
                         "Test.java",
                         "import " + Optional.class.getName() + ';',
@@ -176,20 +344,136 @@ public class LambdaMethodReferenceTest {
     }
 
     @Test
-    public void testNegative_block_localMethod() {
-        compilationHelper
-                .addSourceLines(
+    void testAutoFix_localInstanceMethod() {
+        refactor()
+                .addInputLines(
                         "Test.java",
-                        "import " + ImmutableList.class.getName() + ';',
-                        "import " + List.class.getName() + ';',
                         "import " + Optional.class.getName() + ';',
                         "class Test {",
-                        "  public List<Object> foo(Optional<List<Object>> optional) {",
-                        // A future improvement may rewrite the following to 'orElseGet(this::bar)'
-                        "    return optional.orElseGet(() -> { return bar(); });",
+                        "  public Optional<String> foo(Optional<String> optional) {",
+                        "    return optional.map(v -> bar(v));",
                         "  }",
-                        "  private List<Object> bar() {",
-                        "    return ImmutableList.of();",
+                        "  private String bar(String v) {",
+                        "    return v;",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<String> foo(Optional<String> optional) {",
+                        "    return optional.map(this::bar);",
+                        "  }",
+                        "  private String bar(String v) {",
+                        "    return v;",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testAutoFix_localInstanceMethod_explicitThis() {
+        refactor()
+                .addInputLines(
+                        "Test.java",
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<String> foo(Optional<String> optional) {",
+                        "    return optional.map(v -> this.bar(v));",
+                        "  }",
+                        "  private String bar(String v) {",
+                        "    return v;",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<String> foo(Optional<String> optional) {",
+                        "    return optional.map(this::bar);",
+                        "  }",
+                        "  private String bar(String v) {",
+                        "    return v;",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testAutoFix_localStaticMethod() {
+        refactor()
+                .addInputLines(
+                        "Test.java",
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<String> foo(Optional<String> optional) {",
+                        "    return optional.map(v -> bar(v));",
+                        "  }",
+                        "  private static String bar(String v) {",
+                        "    return v;",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import " + Optional.class.getName() + ';',
+                        "class Test {",
+                        "  public Optional<String> foo(Optional<String> optional) {",
+                        "    return optional.map(Test::bar);",
+                        "  }",
+                        "  private static String bar(String v) {",
+                        "    return v;",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testAutoFix_localStaticMethod_multiParam() {
+        refactor()
+                .addInputLines(
+                        "Test.java",
+                        "import " + Map.class.getName() + ';',
+                        "class Test {",
+                        "  public void foo(Map<String, String> map) {",
+                        "    map.forEach((k, v) -> bar(k, v));",
+                        "  }",
+                        "  private static void bar(String key, String value) {",
+                        "    System.out.println(key + value);",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import " + Map.class.getName() + ';',
+                        "class Test {",
+                        "  public void foo(Map<String, String> map) {",
+                        "    map.forEach(Test::bar);",
+                        "  }",
+                        "  private static void bar(String key, String value) {",
+                        "    System.out.println(key + value);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testAutoFix_StaticMethod_multiParam() {
+        refactor()
+                .addInputLines(
+                        "Test.java",
+                        "import " + Map.class.getName() + ';',
+                        "import " + ImmutableList.class.getName() + ';',
+                        "class Test {",
+                        "  public void foo(Map<String, String> map) {",
+                        "    map.forEach((k, v) -> ImmutableList.of(k, v));",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import " + Map.class.getName() + ';',
+                        "import " + ImmutableList.class.getName() + ';',
+                        "class Test {",
+                        "  public void foo(Map<String, String> map) {",
+                        "    map.forEach(ImmutableList::of);",
                         "  }",
                         "}")
                 .doTest();
@@ -197,7 +481,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testAutoFix_block_localMethod() {
-        refactoringValidator
+        refactor()
                 .addInputLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',
@@ -218,8 +502,7 @@ public class LambdaMethodReferenceTest {
                         "import " + Optional.class.getName() + ';',
                         "class Test {",
                         "  public List<Object> foo(Optional<List<Object>> optional) {",
-                        // This is not modified, may be improved later
-                        "    return optional.orElseGet(() -> { return bar(); });",
+                        "    return optional.orElseGet(this::bar);",
                         "  }",
                         "  private List<Object> bar() {",
                         "    return ImmutableList.of();",
@@ -230,7 +513,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testNegative_block() {
-        compilationHelper
+        compile()
                 .addSourceLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',
@@ -246,7 +529,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testPositive_expression() {
-        compilationHelper
+        compile()
                 .addSourceLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',
@@ -263,7 +546,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testAutoFix_expression() {
-        refactoringValidator
+        refactor()
                 .addInputLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',
@@ -288,28 +571,8 @@ public class LambdaMethodReferenceTest {
     }
 
     @Test
-    public void testNegative_expression_localMethod() {
-        compilationHelper
-                .addSourceLines(
-                        "Test.java",
-                        "import " + ImmutableList.class.getName() + ';',
-                        "import " + List.class.getName() + ';',
-                        "import " + Optional.class.getName() + ';',
-                        "class Test {",
-                        "  public List<Object> foo(Optional<List<Object>> optional) {",
-                        // A future improvement may rewrite the following to 'orElseGet(this::bar)'
-                        "    return optional.orElseGet(() -> bar());",
-                        "  }",
-                        "  private List<Object> bar() {",
-                        "    return ImmutableList.of();",
-                        "  }",
-                        "}")
-                .doTest();
-    }
-
-    @Test
     public void testNegative_expression_staticMethod() {
-        compilationHelper
+        compile()
                 .addSourceLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',
@@ -324,7 +587,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testAutoFix_expression_localMethod() {
-        refactoringValidator
+        refactor()
                 .addInputLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',
@@ -345,8 +608,7 @@ public class LambdaMethodReferenceTest {
                         "import " + Optional.class.getName() + ';',
                         "class Test {",
                         "  public List<Object> foo(Optional<List<Object>> optional) {",
-                        // This is not modified, may be improved later
-                        "    return optional.orElseGet(() -> bar());",
+                        "    return optional.orElseGet(this::bar);",
                         "  }",
                         "  private List<Object> bar() {",
                         "    return ImmutableList.of();",
@@ -356,8 +618,53 @@ public class LambdaMethodReferenceTest {
     }
 
     @Test
+    public void testAutoFix_expression_referenceMethod() {
+        refactor()
+                .addInputLines(
+                        "Test.java",
+                        "import " + ImmutableList.class.getName() + ';',
+                        "import " + List.class.getName() + ';',
+                        "import " + Optional.class.getName() + ';',
+                        "import " + Supplier.class.getName() + ';',
+                        "class Test {",
+                        "  public List<Object> foo(Optional<List<Object>> a, Supplier<List<Object>> b) {",
+                        "    return a.orElseGet(() -> b.get());",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import " + ImmutableList.class.getName() + ';',
+                        "import " + List.class.getName() + ';',
+                        "import " + Optional.class.getName() + ';',
+                        "import " + Supplier.class.getName() + ';',
+                        "class Test {",
+                        "  public List<Object> foo(Optional<List<Object>> a, Supplier<List<Object>> b) {",
+                        "    return a.orElseGet(b::get);",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    void testNegative_LocalStaticMethod_multiParam() {
+        compile()
+                .addSourceLines(
+                        "Test.java",
+                        "import " + Map.class.getName() + ';',
+                        "class Test {",
+                        "  public void foo(Map<String, Integer> map) {",
+                        "    map.forEach((k, v) -> bar(v, k));",
+                        "  }",
+                        "  private static void bar(Integer value, String key) {",
+                        "    System.out.println(key + value);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testNegative_expression() {
-        compilationHelper
+        compile()
                 .addSourceLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',
@@ -373,7 +680,7 @@ public class LambdaMethodReferenceTest {
 
     @Test
     public void testNegative_expression_chain() {
-        compilationHelper
+        compile()
                 .addSourceLines(
                         "Test.java",
                         "import " + ImmutableList.class.getName() + ';',
@@ -386,6 +693,38 @@ public class LambdaMethodReferenceTest {
                         "    return optional.orElseGet(() -> ImmutableList.of(1).size());",
                         "  }",
                         "}")
+                .doTest();
+    }
+
+    @Test
+    public void testNegative_dont_eagerly_capture_reference() {
+        compile()
+                .addSourceLines(
+                        "Test.java",
+                        "import " + Supplier.class.getName() + ';',
+                        "class Test {",
+                        "  private Object mutable = null;",
+                        "  public Supplier<String> foo() {",
+                        "    mutable = Long.toString(System.nanoTime());",
+                        // mutable::toString would not take later modifications into account
+                        "    return () -> mutable.toString();",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testGuavaToJavaUtilOptional() {
+        refactor()
+                .addInputLines(
+                        "Test.java",
+                        "import java.util.stream.Stream;",
+                        "class Test {",
+                        "  Stream<java.util.Optional<String>> f(Stream<com.google.common.base.Optional<String>> in) {",
+                        "    return in.map(value -> value.toJavaUtil());",
+                        "  }",
+                        "}")
+                .expectUnchanged()
                 .doTest();
     }
 }
