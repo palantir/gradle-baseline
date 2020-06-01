@@ -20,6 +20,7 @@ import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
+import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ClassTree;
@@ -96,7 +97,7 @@ public final class RawTypes extends BugChecker
             return buildDescription(type)
                     .setMessage("Avoid raw types; add appropriate type parameters if possible. "
                             + "The type was: "
-                            + MoreSuggestedFixes.prettyType(null, null, realType)
+                            + SuggestedFixes.prettyType(null, null, realType)
                             + "\nThis can be suppressed with @SuppressWarnings(\"rawtypes\") "
                             + "where necessary, such as when interacting with older library code.")
                     .build();

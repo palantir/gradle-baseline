@@ -20,6 +20,7 @@ import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.fixes.SuggestedFix;
+import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
@@ -77,7 +78,7 @@ public final class OptionalFlatMapOfNullable extends BugChecker implements BugCh
         ExpressionTree ofNullableArg = ofNullableInvocation.getArguments().get(0);
         return buildDescription(tree)
                 .addFix(SuggestedFix.builder()
-                        .merge(MoreSuggestedFixes.renameMethodInvocation(tree, "map", state))
+                        .merge(SuggestedFixes.renameMethodInvocation(tree, "map", state))
                         .replace(ofNullableInvocation, state.getSourceForNode(ofNullableArg))
                         .build())
                 .build();

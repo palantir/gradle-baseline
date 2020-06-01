@@ -568,7 +568,20 @@ class CatchSpecificityTest {
                         "    void run() throws T;",
                         "  }",
                         "}")
-                .expectUnchanged()
+                .addOutputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  <T extends RuntimeException> void f(ThrowingRunnable<T> in) {",
+                        "    try {",
+                        "        in.run();",
+                        "    } catch (RuntimeException e) {",
+                        "        System.out.println(\"foo\");",
+                        "    }",
+                        "  }",
+                        "  interface ThrowingRunnable<T extends Exception> {",
+                        "    void run() throws T;",
+                        "  }",
+                        "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 

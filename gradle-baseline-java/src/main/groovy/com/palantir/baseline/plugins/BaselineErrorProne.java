@@ -209,9 +209,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 "%s%s(build|src%sgenerated.*)%s.*", Pattern.quote(projectPath), separator, separator, separator));
         errorProneOptions.check("CatchSpecificity", CheckSeverity.OFF);
         errorProneOptions.check("UnusedVariable", CheckSeverity.OFF);
-        errorProneOptions.check(
-                "PreferJavaTimeOverload", CheckSeverity.OFF); // https://github.com/google/error-prone/issues/1435,
-        // https://github.com/google/error-prone/issues/1437
         errorProneOptions.check("EqualsHashCode", CheckSeverity.ERROR);
         errorProneOptions.check("EqualsIncompatibleType", CheckSeverity.ERROR);
         errorProneOptions.check("StreamResourceLeak", CheckSeverity.ERROR);
@@ -222,18 +219,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
         // Relax some checks for test code
         if (errorProneOptions.isCompilingTestOnlyCode()) {
             errorProneOptions.check("UnnecessaryLambda", CheckSeverity.OFF);
-        }
-
-        if (jdkVersion.compareTo(JavaVersion.toVersion("12.0.1")) >= 0) {
-            // As of version 2.3.4, Errorprone isn't officially compatible with Java12, but in practise everything
-            // works apart from this one check: https://github.com/google/error-prone/issues/1106
-            errorProneOptions.check("Finally", CheckSeverity.OFF);
-        }
-
-        if (jdkVersion.compareTo(JavaVersion.toVersion("13.0.0")) >= 0) {
-            // Errorprone 2.3.4 isn't officially compatible with Java13 either
-            // https://github.com/google/error-prone/issues/1106
-            errorProneOptions.check("TypeParameterUnusedInFormals", CheckSeverity.OFF);
         }
 
         if (javaCompile.equals(compileRefaster)) {

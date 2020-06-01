@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Upgarde error-prone to 2.4.0 to support latest jdks
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1370

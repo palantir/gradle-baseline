@@ -75,9 +75,9 @@ public final class ThrowSpecificity extends BugChecker implements BugChecker.Met
             return Description.NO_MATCH;
         }
 
-        ImmutableSet<Type> allThrownExceptions = MoreASTHelpers.getThrownExceptions(tree.getBody(), state);
+        ImmutableSet<Type> allThrownExceptions = ASTHelpers.getThrownExceptions(tree.getBody(), state);
         ImmutableList<Type> normalizedThrownExceptions = allThrownExceptions.stream()
-                .filter(type -> MoreASTHelpers.isCheckedException(type, state))
+                .filter(type -> ASTHelpers.isCheckedExceptionType(type, state))
                 .collect(ImmutableList.toImmutableList());
         ImmutableList<Type> checkedExceptions =
                 MoreASTHelpers.flattenTypesForAssignment(normalizedThrownExceptions, state);
@@ -99,7 +99,7 @@ public final class ThrowSpecificity extends BugChecker implements BugChecker.Met
                                 throwsExpression,
                                 checkedExceptions.stream()
                                         .map(checkedException ->
-                                                MoreSuggestedFixes.prettyType(state, fix, checkedException))
+                                                SuggestedFixes.prettyType(state, fix, checkedException))
                                         .collect(Collectors.joining(", ")))
                         .build())
                 .build();

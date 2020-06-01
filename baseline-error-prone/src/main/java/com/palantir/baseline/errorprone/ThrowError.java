@@ -21,6 +21,7 @@ import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.fixes.SuggestedFix;
+import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.CompileTimeConstantExpressionMatcher;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
@@ -80,7 +81,7 @@ public final class ThrowError extends BugChecker implements BugChecker.ThrowTree
         List<? extends ExpressionTree> arguments = newClassTree.getArguments();
         if (arguments.isEmpty()) {
             SuggestedFix.Builder fix = SuggestedFix.builder();
-            String qualifiedName = MoreSuggestedFixes.qualifyType(state, fix, IllegalStateException.class.getName());
+            String qualifiedName = SuggestedFixes.qualifyType(state, fix, IllegalStateException.class.getName());
             return Optional.of(
                     fix.replace(newClassTree.getIdentifier(), qualifiedName).build());
         }
@@ -88,7 +89,7 @@ public final class ThrowError extends BugChecker implements BugChecker.ThrowTree
         if (ASTHelpers.isSameType(
                 ASTHelpers.getResultType(firstArgument), state.getTypeFromString(String.class.getName()), state)) {
             SuggestedFix.Builder fix = SuggestedFix.builder();
-            String qualifiedName = MoreSuggestedFixes.qualifyType(
+            String qualifiedName = SuggestedFixes.qualifyType(
                     state,
                     fix,
                     compileTimeConstExpressionMatcher.matches(firstArgument, state)

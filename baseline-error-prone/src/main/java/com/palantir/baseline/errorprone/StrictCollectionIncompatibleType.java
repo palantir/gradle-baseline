@@ -294,7 +294,7 @@ public final class StrictCollectionIncompatibleType extends BugChecker
      * builder, it doesn't add relevant imports.
      */
     private static String prettyType(Type type) {
-        return MoreSuggestedFixes.prettyType(null, null, type);
+        return SuggestedFixes.prettyType(null, null, type);
     }
 
     private interface IncompatibleTypeMatcher {

@@ -21,6 +21,7 @@ import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.fixes.SuggestedFix;
+import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
@@ -51,7 +52,7 @@ public final class PreferBuiltInConcurrentKeySet extends BugChecker implements B
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
         if (MATCHER.matches(tree, state)) {
             SuggestedFix.Builder fix = SuggestedFix.builder();
-            String qualifiedType = MoreSuggestedFixes.qualifyType(state, fix, "java.util.concurrent.ConcurrentHashMap");
+            String qualifiedType = SuggestedFixes.qualifyType(state, fix, "java.util.concurrent.ConcurrentHashMap");
             return buildDescription(tree)
                     .setMessage(ERROR_MESSAGE)
                     .addFix(fix.replace(tree.getMethodSelect(), qualifiedType + ".newKeySet")

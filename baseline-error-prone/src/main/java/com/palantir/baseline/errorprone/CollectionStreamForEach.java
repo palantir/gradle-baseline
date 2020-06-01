@@ -21,6 +21,7 @@ import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.fixes.SuggestedFix;
+import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
@@ -71,7 +72,7 @@ public final class CollectionStreamForEach extends BugChecker implements BugChec
             return buildDescription(tree)
                     .addFix(SuggestedFix.builder()
                             // Replaces forEachOrdered with forEach
-                            .merge(MoreSuggestedFixes.renameInvocationRetainingTypeArguments(tree, "forEach", state))
+                            .merge(SuggestedFixes.renameMethodInvocation(tree, "forEach", state))
                             .replace(stream, state.getSourceForNode(collection))
                             .build())
                     .build();

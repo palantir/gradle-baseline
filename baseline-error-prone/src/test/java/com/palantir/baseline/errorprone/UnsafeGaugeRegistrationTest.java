@@ -66,7 +66,6 @@ class UnsafeGaugeRegistrationTest {
                         "import com.palantir.tritium.metrics.registry.TaggedMetricRegistry;",
                         "class Test {",
                         "   void f(TaggedMetricRegistry registry, MetricName name, Gauge<?> gauge) {",
-                        //      Tests our workaround for https://github.com/google/error-prone/issues/1451
                         "       registry.registerWithReplacement(name, gauge);",
                         "   }",
                         "}")

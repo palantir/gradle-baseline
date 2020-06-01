@@ -23,6 +23,7 @@ import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.bugpatterns.BugChecker.IfTreeMatcher;
+import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
@@ -85,7 +86,7 @@ public final class Slf4jLevelCheck extends BugChecker implements IfTreeMatcher {
             return Description.NO_MATCH;
         }
         return buildDescription(tree)
-                .addFix(MoreSuggestedFixes.renameMethodInvocation(
+                .addFix(SuggestedFixes.renameMethodInvocation(
                         levelCheckInvocation, mostSevere.levelCheckMethodName(), state))
                 .build();
     }
