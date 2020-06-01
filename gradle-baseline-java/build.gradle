@@ -15,6 +15,7 @@ dependencies {
     compile 'org.apache.maven.shared:maven-dependency-analyzer'
     compile 'org.github.ngbinh.scalastyle:gradle-scalastyle-plugin_2.11'
     implementation 'com.palantir.javaformat:palantir-java-format-spi'
+    // Add an explicit dependency to ensure consumers can use JDK14 source compat
     implementation 'org.ow2.asm:asm'
 
     runtimeOnly 'com.palantir.javaformat:gradle-palantir-java-format'
