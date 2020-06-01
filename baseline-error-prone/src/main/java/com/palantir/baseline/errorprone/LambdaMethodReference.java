@@ -230,7 +230,10 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
                             && sym.isStatic()
                             && sym.getParameters().size() == 1
                             && state.getTypes()
-                                    .isAssignable(receiverType, sym.params().get(0).type),
+                                    .isAssignable(
+                                            state.getTypes().erasure(receiverType),
+                                            state.getTypes()
+                                                    .erasure(sym.params().get(0).type)),
                     receiverType,
                     state.getTypes());
             return !matching.isEmpty();

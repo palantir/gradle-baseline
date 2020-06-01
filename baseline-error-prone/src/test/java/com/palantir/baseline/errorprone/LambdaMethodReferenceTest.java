@@ -712,4 +712,19 @@ public class LambdaMethodReferenceTest {
                         "}")
                 .doTest();
     }
+
+    @Test
+    public void testGuavaToJavaUtilOptional() {
+        refactor()
+                .addInputLines(
+                        "Test.java",
+                        "import java.util.stream.Stream;",
+                        "class Test {",
+                        "  Stream<java.util.Optional<String>> f(Stream<com.google.common.base.Optional<String>> in) {",
+                        "    return in.map(value -> value.toJavaUtil());",
+                        "  }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
 }
