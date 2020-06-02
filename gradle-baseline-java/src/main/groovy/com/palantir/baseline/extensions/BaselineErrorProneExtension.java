@@ -59,7 +59,8 @@ public class BaselineErrorProneExtension {
             "ArrayEquals",
             "MissingOverride",
             "UnnecessaryParentheses",
-            "PreferJavaTimeOverload");
+            "PreferJavaTimeOverload",
+            "ProtectedMembersInFinalClass");
 
     private final ListProperty<String> patchChecks;
 
