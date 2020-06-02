@@ -57,7 +57,7 @@ public final class ExtendsError extends BugChecker implements BugChecker.ClassTr
     }
 
     private static SuggestedFix buildFix(ClassTree tree, VisitorState state) {
-        Type exceptionType = Suppliers.typeFromClass(Exception.class).get(state);
+        Type exceptionType = Suppliers.typeFromClass(RuntimeException.class).get(state);
         String prettyExceptionType = SuggestedFixes.prettyType(exceptionType, state);
         return SuggestedFix.replace(tree.getExtendsClause(), prettyExceptionType);
     }

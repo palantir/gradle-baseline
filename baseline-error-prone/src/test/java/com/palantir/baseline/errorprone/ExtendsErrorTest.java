@@ -41,7 +41,7 @@ public final class ExtendsErrorTest {
     @Test
     void testFix() {
         fix().addInputLines("Test.java", "public class Test extends Error {", "  public Test() {}", "}")
-                .addOutputLines("Test.java", "public class Test extends Exception {", "  public Test() {}", "}")
+                .addOutputLines("Test.java", "public class Test extends RuntimeException {", "  public Test() {}", "}")
                 .doTest();
     }
 
