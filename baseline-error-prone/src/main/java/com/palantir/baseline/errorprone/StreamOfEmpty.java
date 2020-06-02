@@ -34,7 +34,7 @@ import java.util.stream.Stream;
         name = "StreamOfEmpty",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        severity = SeverityLevel.WARNING,
+        severity = SeverityLevel.ERROR,
         summary = "Stream.of() should be replaced with Stream.empty() to avoid unnecessary varargs allocation.")
 public final class StreamOfEmpty extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
