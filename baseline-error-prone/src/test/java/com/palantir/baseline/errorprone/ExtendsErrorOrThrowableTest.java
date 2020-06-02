@@ -25,7 +25,7 @@ public final class ExtendsErrorOrThrowableTest {
     void testSimple() {
         helper().addSourceLines(
                         "Test.java",
-                        "// BUG: Diagnostic contains: Class should not extend java.lang.Error",
+                        "// BUG: Diagnostic contains: Class should not extend Error or Throwable directly",
                         "public class Test extends Error {",
                         "  public Test() {}",
                         "}")
@@ -50,7 +50,7 @@ public final class ExtendsErrorOrThrowableTest {
     void testSpecificJavaError() {
         helper().addSourceLines(
                         "Test.java",
-                        "// BUG: Diagnostic contains: Class should not extend java.lang.Error",
+                        "// BUG: Diagnostic contains: Class should not extend Error or Throwable directly",
                         "public class Test extends OutOfMemoryError {",
                         "  public Test() {}",
                         "}")
@@ -75,7 +75,7 @@ public final class ExtendsErrorOrThrowableTest {
     void testThrowableDiagnostic() {
         helper().addSourceLines(
                         "Test.java",
-                        "// BUG: Diagnostic contains: Class should not extend java.lang.Error",
+                        "// BUG: Diagnostic contains: Class should not extend Error or Throwable directly",
                         "public class Test extends Throwable {",
                         "  public Test() {}",
                         "}")
