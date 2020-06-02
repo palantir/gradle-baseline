@@ -29,18 +29,22 @@ import com.google.errorprone.suppliers.Suppliers;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.Type;
+import java.util.Optional;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "ExtendsError",
+        name = "ExtendsErrorOrThrowable",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = BugPattern.SeverityLevel.ERROR,
-        summary = "Class should not extend java.lang.Error. While allowed by java it can lead to surprising behaviour"
-                + " if users end up catching Error.")
-public final class ExtendsError extends BugChecker implements BugChecker.ClassTreeMatcher {
-    private static final Matcher<ClassTree> ERROR_MATCHER = Matchers.isSubtypeOf(Error.class);
+        summary = "Class should not extend Error or Throwable directly. While allowed by java "
+                + "it can lead to surprising behaviour if users end up catching Error or Throwable.")
+public final class ExtendsErrorOrThrowable extends BugChecker implements BugChecker.ClassTreeMatcher {
+    private static final Matcher<ClassTree> IS_ERROR_SUBCLASS = Matchers.isSubtypeOf(Error.class);
+    private static final Matcher<Tree> IS_THROWABLE = Matchers.isSameType(Throwable.class);
+    private static final Matcher<Tree> IS_ERROR_OR_THROWABLE =
+            Matchers.anyOf(Matchers.isSameType(Error.class), Matchers.isSameType(Throwable.class));
 
     @Override
     public Description matchClass(ClassTree tree, VisitorState state) {
@@ -49,16 +53,21 @@ public final class ExtendsError extends BugChecker implements BugChecker.ClassTr
             return Description.NO_MATCH;
         }
 
-        if (!ERROR_MATCHER.matches(tree, state)) {
+        // Match only cases where we extend from any Error type or directly from Throwable
+        if (!(IS_ERROR_SUBCLASS.matches(tree, state) || IS_THROWABLE.matches(tree.getExtendsClause(), state))) {
             return Description.NO_MATCH;
         }
 
         return buildDescription(tree).addFix(buildFix(tree, state)).build();
     }
 
-    private static SuggestedFix buildFix(ClassTree tree, VisitorState state) {
-        Type exceptionType = Suppliers.typeFromClass(RuntimeException.class).get(state);
-        String prettyExceptionType = SuggestedFixes.prettyType(exceptionType, state);
-        return SuggestedFix.replace(tree.getExtendsClause(), prettyExceptionType);
+    private static Optional<SuggestedFix> buildFix(ClassTree tree, VisitorState state) {
+        if (IS_ERROR_OR_THROWABLE.matches(tree.getExtendsClause(), state)) {
+            Type exceptionType = Suppliers.typeFromClass(RuntimeException.class).get(state);
+            String prettyExceptionType = SuggestedFixes.prettyType(exceptionType, state);
+            return Optional.of(SuggestedFix.replace(tree.getExtendsClause(), prettyExceptionType));
+        } else {
+            return Optional.empty();
+        }
     }
 }
