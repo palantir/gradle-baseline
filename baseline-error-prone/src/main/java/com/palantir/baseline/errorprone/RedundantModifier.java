@@ -18,6 +18,7 @@ package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
+import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.fixes.SuggestedFixes;
@@ -41,7 +42,7 @@ import javax.lang.model.element.Modifier;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
-        severity = BugPattern.SeverityLevel.SUGGESTION,
+        severity = SeverityLevel.WARNING,
         summary = "Avoid using redundant modifiers")
 public final class RedundantModifier extends BugChecker
         implements BugChecker.ClassTreeMatcher, BugChecker.MethodTreeMatcher, BugChecker.VariableTreeMatcher {

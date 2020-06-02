@@ -18,6 +18,7 @@ package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
+import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.fixes.SuggestedFix;
@@ -35,7 +36,7 @@ import javax.lang.model.element.Modifier;
         name = "RedundantMethodReference",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        severity = BugPattern.SeverityLevel.SUGGESTION,
+        severity = SeverityLevel.WARNING,
         summary = "Redundant method reference to the same type")
 public final class RedundantMethodReference extends BugChecker implements BugChecker.MemberReferenceTreeMatcher {
 
