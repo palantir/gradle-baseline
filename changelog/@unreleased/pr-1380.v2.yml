@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: The `baseline-error-prone` plugin no longer applies `SUGGESTION` checks
+    by default.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1380

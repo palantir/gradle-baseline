@@ -18,6 +18,7 @@ package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
+import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.fixes.SuggestedFix;
@@ -34,7 +35,7 @@ import com.sun.source.tree.MethodInvocationTree;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
-        severity = BugPattern.SeverityLevel.SUGGESTION,
+        severity = SeverityLevel.WARNING,
         summary = "Prefer Java's built-in Concurrent Set implementation over Guava's ConcurrentHashSet, as it does "
                 + "the same thing with less indirection and doesn't rely on Guava")
 public final class PreferBuiltInConcurrentKeySet extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {

@@ -21,6 +21,11 @@ import org.gradle.api.Project;
 import org.gradle.api.provider.ListProperty;
 
 public class BaselineErrorProneExtension {
+
+    /*
+     * Do not add SUGGESTION checks here. Instead either increase the severity to WARNING or do not apply them by
+     * default.
+     */
     private static final ImmutableList<String> DEFAULT_PATCH_CHECKS = ImmutableList.of(
             // Baseline checks
             "BracesRequired",

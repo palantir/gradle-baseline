@@ -18,6 +18,7 @@ package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
+import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.fixes.SuggestedFixes;
@@ -33,7 +34,7 @@ import java.util.stream.Stream;
         name = "StreamOfEmpty",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        severity = BugPattern.SeverityLevel.SUGGESTION,
+        severity = SeverityLevel.ERROR,
         summary = "Stream.of() should be replaced with Stream.empty() to avoid unnecessary varargs allocation.")
 public final class StreamOfEmpty extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
