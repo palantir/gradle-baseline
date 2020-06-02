@@ -1,0 +1,7 @@
+type: improvement
+improvement:
+  description: Add error-prone check that forbids extending java.lang.Error (reports
+    ERROR). Provides a fix to replace `extends Error` with `extends RuntimeException`
+    for clearer contract to the consumers.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1379
