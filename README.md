@@ -185,6 +185,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `RawTypes`: Avoid raw types; add appropriate type parameters if possible.
 - `VisibleForTestingPackagePrivate`: `@VisibleForTesting` members should be package-private.
 - `OptionalFlatMapOfNullable`: Optional.map functions may return null to safely produce an empty result.
+- `ExtendsError`: Avoid extending java.lang.Error.
 
 ### Programmatic Application
 
