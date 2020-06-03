@@ -1,0 +1,7 @@
+type: improvement
+improvement:
+  description: Running `./gradlew --write-locks` should be faster now, as it doesn't
+    update your `baseline-class-uniqueness.lock` file implicitly anymore. To update
+    this, you need to run `./gradlew checkClassUniqueness --write-locks`.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1389
