@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: The `PreferCollectionConstructors` error-prone check is now enabled
+    by default.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1386
