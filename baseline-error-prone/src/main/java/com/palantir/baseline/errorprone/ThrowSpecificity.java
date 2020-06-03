@@ -43,7 +43,7 @@ import javax.lang.model.element.Modifier;
         name = "ThrowSpecificity",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        severity = BugPattern.SeverityLevel.SUGGESTION,
+        severity = BugPattern.SeverityLevel.WARNING,
         summary = "Prefer to declare more specific throws types than Exception and Throwable. When methods are updated"
                 + " to throw new checked exceptions they expect callers to handle failure types explicitly."
                 + " Throwing broad types defeats the type system. By throwing the most specific types possible we"

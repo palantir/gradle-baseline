@@ -57,7 +57,7 @@ import javax.lang.model.element.Name;
         name = "CatchSpecificity",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        severity = BugPattern.SeverityLevel.SUGGESTION,
+        severity = BugPattern.SeverityLevel.WARNING,
         summary = "Prefer more specific error types than Exception and Throwable. When methods are updated to throw new"
                 + " checked exceptions they expect callers to handle failure types explicitly. Catching broad"
                 + " types defeats the type system. By catching the most specific types possible we leverage"
