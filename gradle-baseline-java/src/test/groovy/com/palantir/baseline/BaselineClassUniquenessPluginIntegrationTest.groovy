@@ -57,7 +57,7 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         result.getOutput().contains("javax.el.ArrayELResolver");
         !lockfile.exists()
 
-        with("--write-locks").build()
+        with("checkClassUniqueness", "--write-locks").build()
         lockfile.exists()
 
         File expected = new File("src/test/resources/com/palantir/baseline/baseline-class-uniqueness.expected.lock")
