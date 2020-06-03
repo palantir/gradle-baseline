@@ -40,6 +40,7 @@ public class BaselineErrorProneExtension {
             "OptionalFlatMapOfNullable",
             "OptionalOrElseMethodInvocation",
             "PreferBuiltInConcurrentKeySet",
+            "PreferCollectionConstructors",
             "PreferCollectionTransform",
             "PreferListsPartition",
             "PreferSafeLoggableExceptions",

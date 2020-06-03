@@ -55,7 +55,7 @@ import java.util.stream.Collectors;
         name = "PreferCollectionConstructors",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        severity = BugPattern.SeverityLevel.SUGGESTION,
+        severity = BugPattern.SeverityLevel.WARNING,
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         summary = "Since Java 7 the standard collection constructors should be used instead of the static factory "
                 + "methods provided by Guava.")
