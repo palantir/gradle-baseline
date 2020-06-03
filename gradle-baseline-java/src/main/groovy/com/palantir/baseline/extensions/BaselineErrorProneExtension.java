@@ -28,6 +28,7 @@ public class BaselineErrorProneExtension {
             "CollectionStreamForEach",
             // TODO(ckozak): re-enable pending scala check
             // "CatchSpecificity",
+            "ExtendsErrorOrThrowable",
             "ExecutorSubmitRunnableFutureIgnored",
             "FinalClass",
             "LambdaMethodReference",
