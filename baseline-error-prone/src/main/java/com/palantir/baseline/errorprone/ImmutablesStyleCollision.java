@@ -46,9 +46,7 @@ public final class ImmutablesStyleCollision extends BugChecker implements BugChe
     @Override
     public Description matchClass(ClassTree tree, VisitorState state) {
         if (MATCHER.matches(tree, state)) {
-            return buildDescription(tree)
-                    .setMessage("Immutable type cannot have both inline @Value.Style and meta-annotation applied")
-                    .build();
+            return describeMatch(tree);
         }
         return Description.NO_MATCH;
     }
