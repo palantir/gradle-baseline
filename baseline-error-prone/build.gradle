@@ -8,6 +8,7 @@ apply from: "${rootDir}/gradle/publish-jar.gradle"
 dependencies {
     compile 'com.google.errorprone:error_prone_core'
     compile 'org.mockito:mockito-errorprone'
+    compile 'org.immutables:value::annotations'
 
     testCompile gradleApi()
     testCompile 'com.palantir.tokens:auth-tokens'
@@ -28,7 +29,6 @@ dependencies {
     annotationProcessor 'com.google.auto.service:auto-service'
     annotationProcessor 'org.immutables:value'
     compileOnly 'com.google.auto.service:auto-service'
-    compileOnly 'org.immutables:value::annotations'
 }
 
 // Incorrectly identifies tests as junit4 usage
