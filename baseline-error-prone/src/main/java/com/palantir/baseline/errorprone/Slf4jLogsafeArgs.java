@@ -17,7 +17,6 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
-import com.google.common.collect.ImmutableList;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
@@ -38,6 +37,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -58,10 +59,11 @@ public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocati
     private static final Matcher<ExpressionTree> THROWABLE = MoreMatchers.isSubtypeOf(Throwable.class);
     private static final Matcher<ExpressionTree> ARG = MoreMatchers.isSubtypeOf("com.palantir.logsafe.Arg");
     private static final Matcher<ExpressionTree> MARKER = MoreMatchers.isSubtypeOf("org.slf4j.Marker");
-    private static final Matcher<ExpressionTree> LOGSAFE_ARG_ARRAY = Matchers.isSubtypeOf(
+    private static final Matcher<ExpressionTree> ARG_ARRAY = Matchers.isSubtypeOf(
             state -> state.getType(state.getTypeFromString("com.palantir.logsafe.Arg"), true, Collections.emptyList()));
     private static final Matcher<Tree> OBJECT_ARRAY =
             Matchers.isSameType(s -> s.getType(s.getTypeFromString("java.lang.Object"), true, Collections.emptyList()));
+    private static final Matcher<TypeCastTree> ARG_CAST_TO_OBJ_ARRAY = Matchers.typeCast(OBJECT_ARRAY, ARG_ARRAY);
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
@@ -75,42 +77,40 @@ public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocati
         }
 
         List<? extends ExpressionTree> allArgs = tree.getArguments();
-        int lastIndex = allArgs.size() - 1;
-        int startArg = MARKER.matches(allArgs.get(0), state) ? 2 : 1;
-        ExpressionTree lastArg = allArgs.get(lastIndex);
+        int startArgIndex = MARKER.matches(allArgs.get(0), state) ? 2 : 1;
+        int lastArgIndex = allArgs.size() - 1;
+        ExpressionTree lastArg = allArgs.get(lastArgIndex);
 
-        // A single argument...
-        if (startArg == lastIndex) {
-            // ...that is an array of Arg
-            if (LOGSAFE_ARG_ARRAY.matches(lastArg, state)) {
-                return Description.NO_MATCH;
-            }
-
-            // ...or an array of Arg cast to Object[]
-            if (lastArg instanceof TypeCastTree) {
-                if (Matchers.typeCast(OBJECT_ARRAY, LOGSAFE_ARG_ARRAY).matches((TypeCastTree) lastArg, state)) {
-                    return Description.NO_MATCH;
-                }
-            }
+        if (startArgIndex == lastArgIndex && isArgArray(state, lastArg)) {
+            return Description.NO_MATCH;
         }
 
         boolean lastArgIsThrowable = THROWABLE.matches(lastArg, state);
-        int endArg = lastArgIsThrowable ? lastIndex - 1 : lastIndex;
+        int lastNonThrowableArgIndex = lastArgIsThrowable ? lastArgIndex - 1 : lastArgIndex;
 
-        ImmutableList.Builder<Integer> badArgsBuilder = ImmutableList.builder();
-        for (int i = startArg; i <= endArg; i++) {
-            if (!ARG.matches(allArgs.get(i), state)) {
-                badArgsBuilder.add(i);
-            }
-        }
-        List<Integer> badArgs = badArgsBuilder.build();
-        if (badArgs.isEmpty() || TestCheckUtils.isTestCode(state)) {
+        List<Integer> badArgIndices = IntStream.rangeClosed(startArgIndex, lastNonThrowableArgIndex)
+                .filter(i -> !ARG.matches(allArgs.get(i), state))
+                .boxed()
+                .collect(Collectors.toList());
+
+        if (badArgIndices.isEmpty() || TestCheckUtils.isTestCode(state)) {
             return Description.NO_MATCH;
         } else {
             return buildDescription(tree)
-                    .setMessage("slf4j log statement does not use logsafe parameters for arguments " + badArgs)
+                    .setMessage("slf4j log statement does not use logsafe parameters for arguments " + badArgIndices)
                     .build();
         }
+    }
+
+    private boolean isArgArray(VisitorState state, ExpressionTree lastArg) {
+        if (ARG_ARRAY.matches(lastArg, state)) {
+            return true;
+        }
+        // Arg array but cast as an Object array?
+        if (lastArg instanceof TypeCastTree && ARG_CAST_TO_OBJ_ARRAY.matches((TypeCastTree) lastArg, state)) {
+            return true;
+        }
+        return false;
     }
 
     private Optional<Description> checkThrowableArgumentNotWrapped(MethodInvocationTree tree, VisitorState state) {
