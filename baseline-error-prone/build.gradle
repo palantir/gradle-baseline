@@ -8,6 +8,7 @@ apply from: "${rootDir}/gradle/publish-jar.gradle"
 dependencies {
     compile 'com.google.errorprone:error_prone_core'
     compile 'org.mockito:mockito-errorprone'
+    compile 'org.immutables:value::annotations'
 
     testCompile gradleApi()
     testCompile 'com.palantir.tokens:auth-tokens'
@@ -21,10 +22,12 @@ dependencies {
     testCompile 'org.assertj:assertj-core'
     testCompile 'org.jooq:jooq'
     testCompile 'com.palantir.tritium:tritium-registry'
+    testCompileOnly 'org.immutables:value::annotations'
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-migrationsupport'
 
     annotationProcessor 'com.google.auto.service:auto-service'
+    annotationProcessor 'org.immutables:value'
     compileOnly 'com.google.auto.service:auto-service'
 }
 
