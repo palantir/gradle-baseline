@@ -31,7 +31,10 @@ import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
+import com.sun.source.tree.Tree;
+import com.sun.source.tree.TypeCastTree;
 import com.sun.source.util.SimpleTreeVisitor;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -55,6 +58,10 @@ public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocati
     private static final Matcher<ExpressionTree> THROWABLE = MoreMatchers.isSubtypeOf(Throwable.class);
     private static final Matcher<ExpressionTree> ARG = MoreMatchers.isSubtypeOf("com.palantir.logsafe.Arg");
     private static final Matcher<ExpressionTree> MARKER = MoreMatchers.isSubtypeOf("org.slf4j.Marker");
+    private static final Matcher<ExpressionTree> LOGSAFE_ARG_ARRAY = Matchers.isSubtypeOf(
+            state -> state.getType(state.getTypeFromString("com.palantir.logsafe.Arg"), true, Collections.emptyList()));
+    private static final Matcher<Tree> OBJECT_ARRAY =
+            Matchers.isSameType(s -> s.getType(s.getTypeFromString("java.lang.Object"), true, Collections.emptyList()));
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
@@ -71,6 +78,22 @@ public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocati
         int lastIndex = allArgs.size() - 1;
         int startArg = MARKER.matches(allArgs.get(0), state) ? 2 : 1;
         ExpressionTree lastArg = allArgs.get(lastIndex);
+
+        // A single argument...
+        if (startArg == lastIndex) {
+            // ...that is an array of Arg
+            if (LOGSAFE_ARG_ARRAY.matches(lastArg, state)) {
+                return Description.NO_MATCH;
+            }
+
+            // ...or an array of Arg cast to Object[]
+            if (lastArg instanceof TypeCastTree) {
+                if (Matchers.typeCast(OBJECT_ARRAY, LOGSAFE_ARG_ARRAY).matches((TypeCastTree) lastArg, state)) {
+                    return Description.NO_MATCH;
+                }
+            }
+        }
+
         boolean lastArgIsThrowable = THROWABLE.matches(lastArg, state);
         int endArg = lastArgIsThrowable ? lastIndex - 1 : lastIndex;
 
