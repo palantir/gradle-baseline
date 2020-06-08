@@ -50,7 +50,7 @@ public class ImmutablesStyleCollisionTest {
                         "import org.immutables.value.Value;",
                         "@MyMetaAnnotation",
                         "@Value.Style(with = \"with\")",
-                        "// BUG: Diagnostic contains: Immutable type cannot have both inline",
+                        "// BUG: Diagnostic contains: Immutables @Value.Style inline annotation should not be present",
                         "public interface Person {",
                         "    String name();",
                         "}")
