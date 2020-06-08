@@ -186,6 +186,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `VisibleForTestingPackagePrivate`: `@VisibleForTesting` members should be package-private.
 - `OptionalFlatMapOfNullable`: Optional.map functions may return null to safely produce an empty result.
 - `ExtendsErrorOrThrowable`: Avoid extending Error (or subclasses of it) or Throwable directly.
+- `ImmutablesStyleCollision`: Prevent unintentionally voiding immutables Style meta-annotations through the introduction of inline style annotations.
 
 ### Programmatic Application
 
