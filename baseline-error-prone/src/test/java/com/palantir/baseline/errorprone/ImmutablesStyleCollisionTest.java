@@ -22,13 +22,13 @@ public class ImmutablesStyleCollisionTest {
 
     @Test
     public void testPass() {
-        String sourceCode = ""
-                + "import org.immutables.value.Value;"
-                + "@Value.Style(with = \"with\")"
-                + "public interface Person {"
-                + "    String name();"
-                + "}";
-        helper().addSourceLines("Person.java", sourceCode).doTest();
+        helper().addSourceLines(
+                        "Person.java",
+                        "import org.immutables.value.Value;",
+                        "public interface Person {",
+                        "    String name();",
+                        "}")
+                .doTest();
     }
 
     @Test
