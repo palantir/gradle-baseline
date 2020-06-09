@@ -5,7 +5,6 @@
 [XKCD 'Code Quality', copied under CC BY-NC 2.5](https://xkcd.com/1513/)
 
 The Internet provides a wealth of material on code reviews: 
-[on the effect of code review on company culture](https://blog.fullstory.com/what-we-learned-from-google-code-reviews-arent-just-for-catching-bugs/),
 [on formal security reviews](https://www.owasp.org/images/2/2e/OWASP_Code_Review_Guide-V1_1.pdf),
 [shorter guides](https://github.com/thoughtbot/guides/tree/master/code-review),
 [longer checklists](https://www.codeproject.com/Articles/524235/Codeplusreviewplusguidelines),
