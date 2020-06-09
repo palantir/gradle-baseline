@@ -33,8 +33,7 @@ This guide covers the following topics:
 ## Motivation
 
 We perform code reviews (CRs) in order to improve code quality and benefit from
-[positive effects on team and company
-culture](https://blog.fullstory.com/what-we-learned-from-google-code-reviews-arent-just-for-catching-bugs/).
+positive effects on team and company culture.
 For example:
 
 - **Committers are motivated** by the notion of a set
@@ -49,7 +48,7 @@ For example:
     team members who can subsequently build on the work done.
 
   - The committer may use a technique or algorithm that reviewers can
-    learn from. More generally, code reviews help [raise the quality bar across the organization](https://blog.fullstory.com/what-we-learned-from-google-code-reviews-arent-just-for-catching-bugs/).
+    learn from. More generally, code reviews help raise the quality bar across the organization.
 
   - Reviewers may possess knowledge about programming techniques or the code base that can help
     improve or consolidate the change; for example, someone else may be
