@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Upgrade checkstyle to 8.33
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1404
