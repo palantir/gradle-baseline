@@ -118,7 +118,7 @@ class BaselineFormatCopyrightIntegrationTest extends AbstractPluginTest {
 
         expect:
         def fail = with('check').buildAndFail()
-        fail.task(":spotless${lang.capitalize()}").outcome == TaskOutcome.FAILED
+        fail.task(":spotless${lang.capitalize()}Check").outcome == TaskOutcome.FAILED
         fail.output.contains("The following files had format violations")
 
         when:
