@@ -31,7 +31,6 @@ import com.google.errorprone.matchers.method.MethodMatchers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.Tree;
-import com.sun.source.tree.TypeCastTree;
 import com.sun.source.util.SimpleTreeVisitor;
 import java.util.Collections;
 import java.util.List;
@@ -59,11 +58,8 @@ public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocati
     private static final Matcher<ExpressionTree> THROWABLE = MoreMatchers.isSubtypeOf(Throwable.class);
     private static final Matcher<ExpressionTree> ARG = MoreMatchers.isSubtypeOf("com.palantir.logsafe.Arg");
     private static final Matcher<ExpressionTree> MARKER = MoreMatchers.isSubtypeOf("org.slf4j.Marker");
-    private static final Matcher<ExpressionTree> ARG_ARRAY = Matchers.isSubtypeOf(
-            state -> state.getType(state.getTypeFromString("com.palantir.logsafe.Arg"), true, Collections.emptyList()));
-    private static final Matcher<Tree> OBJECT_ARRAY =
-            Matchers.isSameType(s -> s.getType(s.getTypeFromString("java.lang.Object"), true, Collections.emptyList()));
-    private static final Matcher<TypeCastTree> ARG_CAST_TO_OBJ_ARRAY = Matchers.typeCast(OBJECT_ARRAY, ARG_ARRAY);
+    private static final Matcher<Tree> OBJECT_ARRAY = Matchers.isSubtypeOf(
+            s -> s.getType(s.getTypeFromString("java.lang.Object"), true, Collections.emptyList()));
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
@@ -81,7 +77,7 @@ public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocati
         int lastArgIndex = allArgs.size() - 1;
         ExpressionTree lastArg = allArgs.get(lastArgIndex);
 
-        if (startArgIndex == lastArgIndex && isArgArray(state, lastArg)) {
+        if (startArgIndex == lastArgIndex && OBJECT_ARRAY.matches(lastArg, state)) {
             return Description.NO_MATCH;
         }
 
@@ -100,17 +96,6 @@ public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocati
                     .setMessage("slf4j log statement does not use logsafe parameters for arguments " + badArgIndices)
                     .build();
         }
-    }
-
-    private boolean isArgArray(VisitorState state, ExpressionTree lastArg) {
-        if (ARG_ARRAY.matches(lastArg, state)) {
-            return true;
-        }
-        // Arg array but cast as an Object array?
-        if (lastArg instanceof TypeCastTree && ARG_CAST_TO_OBJ_ARRAY.matches((TypeCastTree) lastArg, state)) {
-            return true;
-        }
-        return false;
     }
 
     private Optional<Description> checkThrowableArgumentNotWrapped(MethodInvocationTree tree, VisitorState state) {
