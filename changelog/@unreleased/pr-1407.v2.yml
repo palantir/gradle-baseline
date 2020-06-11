@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Upgrade google-java-format to support java 14 language features
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1407
