@@ -21,6 +21,8 @@ import com.google.errorprone.BugCheckerRefactoringTestHelper.TestMode;
 import com.google.errorprone.CompilationTestHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledForJreRange;
+import org.junit.jupiter.api.condition.JRE;
 
 public class StrictUnusedVariableTest {
 
@@ -297,6 +299,7 @@ public class StrictUnusedVariableTest {
     }
 
     @Test
+    @DisabledForJreRange(max = JRE.JAVA_13)
     public void testRecord() {
         previewCompilationHelper = CompilationTestHelper.newInstance(StrictUnusedVariable.class, getClass())
                 .setArgs(ImmutableList.of("--enable-preview", "--release", "14"));
