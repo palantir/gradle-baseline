@@ -210,18 +210,18 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 .set(String.format(
                         "%s%s(build|src%sgenerated.*)%s.*",
                         Pattern.quote(projectPath), separator, separator, separator));
-        errorProneOptions.check("CatchSpecificity", CheckSeverity.OFF);
-        errorProneOptions.check("UnusedVariable", CheckSeverity.OFF);
-        errorProneOptions.check("EqualsHashCode", CheckSeverity.ERROR);
-        errorProneOptions.check("EqualsIncompatibleType", CheckSeverity.ERROR);
-        errorProneOptions.check("StreamResourceLeak", CheckSeverity.ERROR);
-        errorProneOptions.check("InputStreamSlowMultibyteRead", CheckSeverity.ERROR);
-        errorProneOptions.check("JavaDurationGetSecondsGetNano", CheckSeverity.ERROR);
-        errorProneOptions.check("URLEqualsHashCode", CheckSeverity.ERROR);
 
+        errorProneOptions.disable("UnnecessaryParentheses", "CatchSpecificity", "UnusedVariable");
+        errorProneOptions.error(
+                "EqualsHashCode",
+                "EqualsIncompatibleType",
+                "StreamResourceLeak",
+                "InputStreamSlowMultibyteRead",
+                "JavaDurationGetSecondsGetNano",
+                "URLEqualsHashCode");
         // Relax some checks for test code
         if (errorProneOptions.getCompilingTestOnlyCode().get()) {
-            errorProneOptions.check("UnnecessaryLambda", CheckSeverity.OFF);
+            errorProneOptions.disable("UnnecessaryLambda");
         }
 
         if (javaCompile.equals(compileRefaster)) {
