@@ -86,6 +86,48 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         rootIpr.contains('<component name="CopyrightManager" default="999_palantir.txt">')
     }
 
+    def 'Idea project has copyright configuration when importing'() {
+        when:
+        buildFile << standardBuildFile
+        System.setProperty("idea.active", "true")
+
+        then:
+        with('idea').build()
+        def copyrightDir = new File(projectDir, ".idea/copyright")
+        copyrightDir.exists()
+        copyrightDir.isDirectory()
+
+        def apacheCopyright = Files.asCharSource(new File(copyrightDir, "001_apache-2.0.xml"), Charsets.UTF_8).read()
+        apacheCopyright.contains('<option name="myName" value="001_apache-2.0.txt"/>')
+
+        def palantirCopyright = Files.asCharSource(new File(copyrightDir, "999_palantir.xml"), Charsets.UTF_8).read()
+        palantirCopyright.contains('<option name="myName" value="999_palantir.txt"/>')
+
+        def copyrightSettings = Files.asCharSource(new File(copyrightDir, "profiles_settings.xml"), Charsets.UTF_8).read()
+        copyrightSettings.contains('<settings default="999_palantir.txt"/>')
+    }
+
+    def 'Idea project has style configuration when importing'() {
+        when:
+        buildFile << standardBuildFile
+        System.setProperty("idea.active", "true")
+
+        then:
+        with('idea').build()
+        def stylesDir = new File(projectDir, ".idea/codeStyles")
+        stylesDir.exists()
+        stylesDir.isDirectory()
+
+        def originalStylesDir = new File(projectDir, ".baseline/idea/codeStyles")
+
+        for (File file in originalStylesDir.listFiles()) {
+            def copiedFile = new File(stylesDir, file.getName())
+
+            copiedFile.exists()
+            copiedFile.text.contentEquals(file.text)
+        }
+    }
+
     def 'Git support is added if .git directory is present'() {
         when:
         buildFile << standardBuildFile
@@ -296,5 +338,25 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         def ipr = new XmlSlurper().parse(iprFile)
         !ipr.component.find { it.@name == "ExternalDependencies" }
         !ipr.component.find { it.@name == "SaveActionSettings" }
+    }
+
+    def "idea configures the save-action plugin for IntelliJ import"() {
+        buildFile << standardBuildFile
+        multiProject.addSubproject('formatted-project', """
+            apply plugin: 'com.palantir.java-format'
+        """.stripIndent())
+
+        when:
+        System.setProperty("idea.active", "true")
+        with('idea').build()
+
+        then:
+        def saveActionsSettingsFile = new File(projectDir, ".idea/saveactions_settings.xml")
+        def settings = new XmlSlurper().parse(saveActionsSettingsFile)
+        settings.component.find { it.@name == "SaveActionSettings" }
+
+        def externalDepsSettingsFile = new File(projectDir, ".idea/externalDependencies.xml")
+        def deps = new XmlSlurper().parse(externalDepsSettingsFile)
+        deps.component.find { it.@name == "ExternalDependencies" }
     }
 }
