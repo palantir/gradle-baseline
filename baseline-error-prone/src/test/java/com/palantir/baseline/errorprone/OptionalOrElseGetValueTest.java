@@ -21,15 +21,15 @@ import com.google.errorprone.CompilationTestHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public final class OptionalOrElseGetConstantTest {
+public final class OptionalOrElseGetValueTest {
 
     private CompilationTestHelper compilationHelper;
     private RefactoringValidator refactoringTestHelper;
 
     @BeforeEach
     public void before() {
-        compilationHelper = CompilationTestHelper.newInstance(OptionalOrElseGetConstant.class, getClass());
-        refactoringTestHelper = RefactoringValidator.of(new OptionalOrElseGetConstant(), getClass());
+        compilationHelper = CompilationTestHelper.newInstance(OptionalOrElseGetValue.class, getClass());
+        refactoringTestHelper = RefactoringValidator.of(new OptionalOrElseGetValue(), getClass());
     }
 
     @Test
@@ -39,9 +39,35 @@ public final class OptionalOrElseGetConstantTest {
                         "Test.java",
                         "import java.util.Optional;",
                         "class Test {",
-                        "    String f() { return \"hello\"; }",
                         "    // BUG: Diagnostic contains: Prefer Optional#orElse",
                         "    private final String string = Optional.of(\"hello\").orElseGet(() -> \"world\");",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testOrElseGetVariable() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.Optional;",
+                        "class Test {",
+                        "    String s = \"hello\";",
+                        "    // BUG: Diagnostic contains: Prefer Optional#orElse",
+                        "    private final String string = Optional.of(\"hello\").orElseGet(() -> s);",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testOrElseGetMethodInvocation() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.Optional;",
+                        "class Test {",
+                        "    String s = \"hello\";",
+                        "    private final String string = Optional.of(\"hello\").orElseGet(() -> s.toString());",
                         "}")
                 .doTest();
     }
@@ -56,6 +82,35 @@ public final class OptionalOrElseGetConstantTest {
                         "    private static final String constant = \"constant\";",
                         "    // BUG: Diagnostic contains: Prefer Optional#orElse",
                         "    private final String string = Optional.of(\"hello\").orElseGet(() -> constant);",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testOrElseGetThisField() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.Optional;",
+                        "class Test {",
+                        "    private static double field = Math.random();",
+                        "    // BUG: Diagnostic contains: Prefer Optional#orElse",
+                        "    private final double string = Optional.of(0.1).orElseGet(() -> this.field);",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testOrElseGetOtherField() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.Optional;",
+                        "class Test {",
+                        "    private Test test = new Test();",
+                        "    private double field = Math.random();",
+                        "    // BUG: Diagnostic contains: Prefer Optional#orElse",
+                        "    private final double string = Optional.of(0.1).orElseGet(() -> test.field);",
                         "}")
                 .doTest();
     }

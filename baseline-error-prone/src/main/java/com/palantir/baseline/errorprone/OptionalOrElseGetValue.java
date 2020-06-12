@@ -29,19 +29,22 @@ import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.LambdaExpressionTree;
+import com.sun.source.tree.LiteralTree;
+import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.Tree;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "OptionalOrElseGetConstant",
+        name = "OptionalOrElseGetValue",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
-        severity = SeverityLevel.ERROR,
-        summary = "If lambda passed to Optional#orElseGet returns a compile time constant, use Optional#orElse instead")
-public final class OptionalOrElseGetConstant extends BugChecker implements MethodInvocationTreeMatcher {
+        severity = SeverityLevel.WARNING,
+        summary = "If lambda passed to Optional#orElseGet returns a simple expression, use Optional#orElse instead")
+public final class OptionalOrElseGetValue extends BugChecker implements MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
     private static final Matcher<ExpressionTree> OR_ELSE_GET_METHOD =
@@ -70,19 +73,27 @@ public final class OptionalOrElseGetConstant extends BugChecker implements Metho
             }
 
             ExpressionTree expressionBody = (ExpressionTree) lambdaExpressionTree.getBody();
-
-            if (!COMPILE_TIME_CONSTANT.matches(expressionBody, state)) {
-                break match;
+            if (COMPILE_TIME_CONSTANT.matches(expressionBody, state)
+                    || isTrivialExpression(expressionBody)
+                    || isTrivialSelect(expressionBody)) {
+                return buildDescription(tree)
+                        .setMessage("Prefer Optional#orElse instead of Optional#orElseGet for compile time constants")
+                        .addFix(SuggestedFix.builder()
+                                .merge(SuggestedFixes.renameMethodInvocation(tree, "orElse", state))
+                                .replace(orElseGetArg, state.getSourceForNode(expressionBody))
+                                .build())
+                        .build();
             }
-
-            return buildDescription(tree)
-                    .setMessage("Prefer Optional#orElse instead of Optional#orElseGet for compile time constants")
-                    .addFix(SuggestedFix.builder()
-                            .merge(SuggestedFixes.renameMethodInvocation(tree, "orElse", state))
-                            .replace(orElseGetArg, state.getSourceForNode(expressionBody))
-                            .build())
-                    .build();
         }
         return Description.NO_MATCH;
+    }
+
+    private static boolean isTrivialExpression(ExpressionTree tree) {
+        return tree instanceof LiteralTree || tree instanceof IdentifierTree;
+    }
+
+    private static boolean isTrivialSelect(ExpressionTree tree) {
+        return tree instanceof MemberSelectTree
+                && isTrivialExpression(((MemberSelectTree) tree).getExpression());
     }
 }
