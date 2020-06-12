@@ -121,14 +121,17 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         stylesDir.exists()
         stylesDir.isDirectory()
 
-        def originalStylesDir = new File(projectDir, ".baseline/idea/codeStyles")
+        def ideaStyleConfig = new File(projectDir, ".idea/codeStyles/codeStyleConfig.xml").text
+        ideaStyleConfig.contains('<option name="USE_PER_PROJECT_SETTINGS" value="true"/>')
 
-        for (File file in originalStylesDir.listFiles()) {
-            def copiedFile = new File(stylesDir, file.getName())
-
-            copiedFile.exists()
-            copiedFile.text.contentEquals(file.text)
-        }
+        def ideaStyleSettings = new File(projectDir, ".idea/codeStyles/Project.xml").text
+        ideaStyleSettings.startsWith('<component name="ProjectCodeStyleConfiguration">')
+        ideaStyleSettings.contains('<code_scheme name="Project">')
+        ideaStyleSettings.contains('<option name="ALIGN_MULTILINE_ARRAY_INITIALIZER_EXPRESSION" value="true"/>')
+        ideaStyleSettings.endsWith("""
+              </code_scheme>
+            </component>
+        """.stripIndent())
     }
 
     def 'Git support is added if .git directory is present'() {

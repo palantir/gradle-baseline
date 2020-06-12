@@ -141,28 +141,36 @@ class BaselineIdea extends AbstractBaselinePlugin {
     }
 
     private void addCodeStyleIntellijImport() {
-        def ideaStyleDir = project.file("${configDir}/idea/codeStyles/")
+        def ideaStyleFile = project.file("${configDir}/idea/intellij-java-palantir-style.xml")
 
-        if (ideaStyleDir.exists()) {
-            def styleFiles = project.fileTree(ideaStyleDir).include("*")
-            assert styleFiles.iterator().hasNext(), "${ideaStyleDir} must contain one or more style files"
+        def ideaStyle = new XmlParser().parse(ideaStyleFile).component.find { it.'@name' == 'ProjectCodeStyleSettingsManager' }
 
-            File destDir = project.file(".idea/codeStyles/");
+        def ideaStyleConfig = ideaStyle.option.find {it.'@name' == 'USE_PER_PROJECT_SETTINGS'}
 
-            destDir.mkdirs()
+        XmlUtils.createOrUpdateXmlFile(
+                project.file(".idea/codeStyles/codeStyleConfig.xml"),
+                { node ->
+                    def state = node.appendNode("state")
+                    state.append(ideaStyleConfig)
+                },
+                {
+                    new Node(null, "component", ImmutableMap.of("name", "ProjectCodeStyleConfiguration"))
+                })
 
-            // Copy all files
-            styleFiles.each { File file ->
-                def fileName = file.getName()
-                def destFile = new File(destDir, fileName)
-                destFile << file.text
-            }
-        } else {
-            // Fall back to legacy style file for backwards compatibility
-            // This unfortunately requires to close and reopen IntelliJ after import
-            def ideaStyleFile = project.file("${configDir}/idea/intellij-java-palantir-style.xml")
-            project.file(".idea/codeStyleSettings.xml") << ideaStyleFile.text
-        }
+
+        def ideaStyleSettings = ideaStyle.option.find {it.'@name' == 'PER_PROJECT_SETTINGS'}
+
+        XmlUtils.createOrUpdateXmlFile(
+                project.file(".idea/codeStyles/Project.xml"),
+                { node ->
+                    def codeScheme = new Node(node, "code_scheme", ImmutableMap.of("name", "Project"))
+                    ideaStyleSettings.value.option.each {
+                        codeScheme.append(it)
+                    }
+                },
+                {
+                    new Node(null, "component", ImmutableMap.of("name", "ProjectCodeStyleConfiguration"))
+                })
     }
 
     /**
