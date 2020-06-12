@@ -21,6 +21,7 @@ import com.google.common.io.Files
 import org.apache.commons.io.FileUtils
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
+import spock.util.environment.RestoreSystemProperties
 
 class BaselineIdeaIntegrationTest extends AbstractPluginTest {
     def standardBuildFile = '''
@@ -86,13 +87,14 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         rootIpr.contains('<component name="CopyrightManager" default="999_palantir.txt">')
     }
 
+    @RestoreSystemProperties
     def 'Idea project has copyright configuration when importing'() {
         when:
         buildFile << standardBuildFile
         System.setProperty("idea.active", "true")
 
         then:
-        with('idea').build()
+        with().build()
         def copyrightDir = new File(projectDir, ".idea/copyright")
         copyrightDir.exists()
         copyrightDir.isDirectory()
@@ -107,13 +109,14 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         copyrightSettings.contains('<settings default="999_palantir.txt"/>')
     }
 
+    @RestoreSystemProperties
     def 'Idea project has style configuration when importing'() {
         when:
         buildFile << standardBuildFile
         System.setProperty("idea.active", "true")
 
         then:
-        with('idea').build()
+        with().build()
         def stylesDir = new File(projectDir, ".idea/codeStyles")
         stylesDir.exists()
         stylesDir.isDirectory()
@@ -340,6 +343,7 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         !ipr.component.find { it.@name == "SaveActionSettings" }
     }
 
+    @RestoreSystemProperties
     def "idea configures the save-action plugin for IntelliJ import"() {
         buildFile << standardBuildFile
         multiProject.addSubproject('formatted-project', """
@@ -348,7 +352,7 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
 
         when:
         System.setProperty("idea.active", "true")
-        with('idea').build()
+        with().build()
 
         then:
         def saveActionsSettingsFile = new File(projectDir, ".idea/saveactions_settings.xml")

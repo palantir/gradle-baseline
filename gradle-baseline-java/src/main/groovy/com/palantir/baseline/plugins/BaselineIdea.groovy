@@ -150,17 +150,13 @@ class BaselineIdea extends AbstractBaselinePlugin {
 
             File destDir = project.file(".idea/codeStyles/");
 
-            try {
-                destDir.mkdirs()
+            destDir.mkdirs()
 
-                // Copy all files
-                styleFiles.each { File file ->
-                    def fileName = file.getName()
-                    def destFile = new File(destDir, fileName)
-                    destFile << file.text
-                }
-            } catch (IOException e) {
-                e.printStackTrace();
+            // Copy all files
+            styleFiles.each { File file ->
+                def fileName = file.getName()
+                def destFile = new File(destDir, fileName)
+                destFile << file.text
             }
         } else {
             // Fall back to legacy style file for backwards compatibility
