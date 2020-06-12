@@ -16,10 +16,13 @@
 
 package com.palantir.baseline.errorprone;
 
+import com.google.common.collect.ImmutableList;
 import com.google.errorprone.BugCheckerRefactoringTestHelper.TestMode;
 import com.google.errorprone.CompilationTestHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.condition.DisabledForJreRange;
+import org.junit.jupiter.api.condition.JRE;
 
 public class StrictUnusedVariableTest {
 
@@ -293,6 +296,22 @@ public class StrictUnusedVariableTest {
                 .addOutputLines(
                         "Test.java", "class Test {", "  public static void privateMethod(int _value) {", "  }", "}")
                 .doTest(TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    @DisabledForJreRange(max = JRE.JAVA_13)
+    public void testRecord() {
+        compilationHelper = CompilationTestHelper.newInstance(StrictUnusedVariable.class, getClass())
+                .setArgs(ImmutableList.of("--enable-preview", "--release", "14"));
+
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "class Test {",
+                        "@SuppressWarnings(\"StrictUnusedVariable\")",
+                        " record Foo(int foo) {}",
+                        "}")
+                .doTest();
     }
 
     @Test
