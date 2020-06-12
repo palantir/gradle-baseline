@@ -33,11 +33,9 @@ import org.gradle.plugins.ide.idea.IdeaPlugin
 import org.gradle.plugins.ide.idea.model.IdeaModel
 import org.gradle.plugins.ide.idea.model.ModuleDependency
 
-import javax.inject.Provider
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
-import java.util.function.Consumer
 import java.util.function.Supplier
 
 class BaselineIdea extends AbstractBaselinePlugin {
