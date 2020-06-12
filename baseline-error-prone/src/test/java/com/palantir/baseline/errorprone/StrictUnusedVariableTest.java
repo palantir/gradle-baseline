@@ -16,6 +16,7 @@
 
 package com.palantir.baseline.errorprone;
 
+import com.google.common.collect.ImmutableList;
 import com.google.errorprone.BugCheckerRefactoringTestHelper.TestMode;
 import com.google.errorprone.CompilationTestHelper;
 import org.junit.jupiter.api.BeforeEach;
@@ -23,18 +24,18 @@ import org.junit.jupiter.api.Test;
 
 public class StrictUnusedVariableTest {
 
-    private CompilationTestHelper compilationHelper;
+    private CompilationTestHelper previewCompilationHelper;
     private RefactoringValidator refactoringTestHelper;
 
     @BeforeEach
     public void before() {
-        compilationHelper = CompilationTestHelper.newInstance(StrictUnusedVariable.class, getClass());
+        previewCompilationHelper = CompilationTestHelper.newInstance(StrictUnusedVariable.class, getClass());
         refactoringTestHelper = RefactoringValidator.of(new StrictUnusedVariable(), getClass());
     }
 
     @Test
     public void handles_interface() {
-        compilationHelper
+        previewCompilationHelper
                 .addSourceLines(
                         "Test.java",
                         "import java.util.Optional;",
@@ -48,7 +49,7 @@ public class StrictUnusedVariableTest {
 
     @Test
     public void handles_abstract_classes() {
-        compilationHelper
+        previewCompilationHelper
                 .addSourceLines(
                         "Test.java",
                         "import java.util.Optional;",
@@ -64,7 +65,7 @@ public class StrictUnusedVariableTest {
 
     @Test
     public void handles_classes() {
-        compilationHelper
+        previewCompilationHelper
                 .addSourceLines(
                         "Test.java",
                         "import java.util.Optional;",
@@ -81,7 +82,7 @@ public class StrictUnusedVariableTest {
 
     @Test
     public void handles_enums() {
-        compilationHelper
+        previewCompilationHelper
                 .addSourceLines(
                         "Test.java",
                         "import java.util.Optional;",
@@ -97,7 +98,7 @@ public class StrictUnusedVariableTest {
 
     @Test
     void handles_lambdas() {
-        compilationHelper
+        previewCompilationHelper
                 .addSourceLines(
                         "Test.java",
                         "import java.util.function.BiFunction;",
@@ -215,7 +216,7 @@ public class StrictUnusedVariableTest {
 
     @Test
     public void fails_suppressed_but_used_variables() {
-        compilationHelper
+        previewCompilationHelper
                 .addSourceLines(
                         "Test.java",
                         "class Test {",
@@ -293,6 +294,21 @@ public class StrictUnusedVariableTest {
                 .addOutputLines(
                         "Test.java", "class Test {", "  public static void privateMethod(int _value) {", "  }", "}")
                 .doTest(TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    public void testRecord() {
+        previewCompilationHelper = CompilationTestHelper.newInstance(StrictUnusedVariable.class, getClass())
+                .setArgs(ImmutableList.of("--enable-preview", "--release", "14"));
+
+        previewCompilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "class Test {",
+                        "@SuppressWarnings(\"StrictUnusedVariable\")",
+                        " record Foo(int foo) {}",
+                        "}")
+                .doTest();
     }
 
     @Test

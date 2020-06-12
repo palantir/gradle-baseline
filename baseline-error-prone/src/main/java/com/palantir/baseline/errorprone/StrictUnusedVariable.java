@@ -768,6 +768,9 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
 
         @Override
         public Void visitMethod(MethodTree tree, Void unused) {
+            if (state.getEndPosition(tree) < 0) {
+                return null;
+            }
             return isSuppressed(tree) ? null : super.visitMethod(tree, unused);
         }
     }
