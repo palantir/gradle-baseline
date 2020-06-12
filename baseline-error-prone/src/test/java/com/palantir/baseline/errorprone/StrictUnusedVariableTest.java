@@ -26,18 +26,18 @@ import org.junit.jupiter.api.condition.JRE;
 
 public class StrictUnusedVariableTest {
 
-    private CompilationTestHelper previewCompilationHelper;
+    private CompilationTestHelper compilationHelper;
     private RefactoringValidator refactoringTestHelper;
 
     @BeforeEach
     public void before() {
-        previewCompilationHelper = CompilationTestHelper.newInstance(StrictUnusedVariable.class, getClass());
+        compilationHelper = CompilationTestHelper.newInstance(StrictUnusedVariable.class, getClass());
         refactoringTestHelper = RefactoringValidator.of(new StrictUnusedVariable(), getClass());
     }
 
     @Test
     public void handles_interface() {
-        previewCompilationHelper
+        compilationHelper
                 .addSourceLines(
                         "Test.java",
                         "import java.util.Optional;",
@@ -51,7 +51,7 @@ public class StrictUnusedVariableTest {
 
     @Test
     public void handles_abstract_classes() {
-        previewCompilationHelper
+        compilationHelper
                 .addSourceLines(
                         "Test.java",
                         "import java.util.Optional;",
@@ -67,7 +67,7 @@ public class StrictUnusedVariableTest {
 
     @Test
     public void handles_classes() {
-        previewCompilationHelper
+        compilationHelper
                 .addSourceLines(
                         "Test.java",
                         "import java.util.Optional;",
@@ -84,7 +84,7 @@ public class StrictUnusedVariableTest {
 
     @Test
     public void handles_enums() {
-        previewCompilationHelper
+        compilationHelper
                 .addSourceLines(
                         "Test.java",
                         "import java.util.Optional;",
@@ -100,7 +100,7 @@ public class StrictUnusedVariableTest {
 
     @Test
     void handles_lambdas() {
-        previewCompilationHelper
+        compilationHelper
                 .addSourceLines(
                         "Test.java",
                         "import java.util.function.BiFunction;",
@@ -218,7 +218,7 @@ public class StrictUnusedVariableTest {
 
     @Test
     public void fails_suppressed_but_used_variables() {
-        previewCompilationHelper
+        compilationHelper
                 .addSourceLines(
                         "Test.java",
                         "class Test {",
@@ -301,10 +301,10 @@ public class StrictUnusedVariableTest {
     @Test
     @DisabledForJreRange(max = JRE.JAVA_13)
     public void testRecord() {
-        previewCompilationHelper = CompilationTestHelper.newInstance(StrictUnusedVariable.class, getClass())
+        compilationHelper = CompilationTestHelper.newInstance(StrictUnusedVariable.class, getClass())
                 .setArgs(ImmutableList.of("--enable-preview", "--release", "14"));
 
-        previewCompilationHelper
+        compilationHelper
                 .addSourceLines(
                         "Test.java",
                         "class Test {",
