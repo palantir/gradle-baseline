@@ -18,9 +18,11 @@ package com.palantir.baseline
 
 import nebula.test.IntegrationSpec
 import nebula.test.functional.ExecutionResult
+import spock.lang.IgnoreIf
 import spock.lang.Unroll
 
 @Unroll
+@IgnoreIf({ Integer.parseInt(jvm.javaSpecificationVersion) >= 14 })
 class JunitReportsPluginSpec extends IntegrationSpec {
     private static final List<String> GRADLE_TEST_VERSIONS = ['5.6.4', '6.1']
 

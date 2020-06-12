@@ -19,9 +19,11 @@ package com.palantir.baseline
 import java.time.LocalDate
 import org.apache.commons.io.FileUtils
 import org.gradle.testkit.runner.TaskOutcome
+import spock.lang.IgnoreIf
 import spock.lang.Unroll
 
 @Unroll
+@IgnoreIf({ Integer.parseInt(jvm.javaSpecificationVersion) >= 14 })
 class BaselineFormatCopyrightIntegrationTest extends AbstractPluginTest {
 
     def setup() {
@@ -125,7 +127,7 @@ class BaselineFormatCopyrightIntegrationTest extends AbstractPluginTest {
         with('format').build()
 
         then:
-        javaFile.text.startsWith(expected)
+        javaFile.text.contains(expected)
 
         where:
         copyrightType | input        | expected               | lang
