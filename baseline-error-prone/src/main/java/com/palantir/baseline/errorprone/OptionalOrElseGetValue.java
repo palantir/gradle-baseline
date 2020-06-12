@@ -53,39 +53,37 @@ public final class OptionalOrElseGetValue extends BugChecker implements MethodIn
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
-        match:
-        {
-            if (!OR_ELSE_GET_METHOD.matches(tree, state)) {
-                break match;
-            }
-
-            ExpressionTree orElseGetArg = tree.getArguments().get(0);
-
-            if (orElseGetArg.getKind() != Tree.Kind.LAMBDA_EXPRESSION) {
-                break match;
-            }
-
-            LambdaExpressionTree lambdaExpressionTree = (LambdaExpressionTree) orElseGetArg;
-            LambdaExpressionTree.BodyKind bodyKind = lambdaExpressionTree.getBodyKind();
-
-            if (bodyKind != LambdaExpressionTree.BodyKind.EXPRESSION) {
-                break match;
-            }
-
-            ExpressionTree expressionBody = (ExpressionTree) lambdaExpressionTree.getBody();
-            if (COMPILE_TIME_CONSTANT.matches(expressionBody, state)
-                    || isTrivialExpression(expressionBody)
-                    || isTrivialSelect(expressionBody)) {
-                return buildDescription(tree)
-                        .setMessage("Prefer Optional#orElse instead of Optional#orElseGet for compile time constants")
-                        .addFix(SuggestedFix.builder()
-                                .merge(SuggestedFixes.renameMethodInvocation(tree, "orElse", state))
-                                .replace(orElseGetArg, state.getSourceForNode(expressionBody))
-                                .build())
-                        .build();
-            }
+        if (!OR_ELSE_GET_METHOD.matches(tree, state)) {
+            return Description.NO_MATCH;
         }
-        return Description.NO_MATCH;
+
+        ExpressionTree orElseGetArg = tree.getArguments().get(0);
+
+        if (orElseGetArg.getKind() != Tree.Kind.LAMBDA_EXPRESSION) {
+            return Description.NO_MATCH;
+        }
+
+        LambdaExpressionTree lambdaExpressionTree = (LambdaExpressionTree) orElseGetArg;
+        LambdaExpressionTree.BodyKind bodyKind = lambdaExpressionTree.getBodyKind();
+
+        if (bodyKind != LambdaExpressionTree.BodyKind.EXPRESSION) {
+            return Description.NO_MATCH;
+        }
+
+        ExpressionTree expressionBody = (ExpressionTree) lambdaExpressionTree.getBody();
+        if (!COMPILE_TIME_CONSTANT.matches(expressionBody, state)
+                && !isTrivialExpression(expressionBody)
+                && !isTrivialSelect(expressionBody)) {
+            return Description.NO_MATCH;
+        }
+
+        return buildDescription(tree)
+                .setMessage("Prefer Optional#orElse instead of Optional#orElseGet for compile time constants")
+                .addFix(SuggestedFix.builder()
+                        .merge(SuggestedFixes.renameMethodInvocation(tree, "orElse", state))
+                        .replace(orElseGetArg, state.getSourceForNode(expressionBody))
+                        .build())
+                .build();
     }
 
     private static boolean isTrivialExpression(ExpressionTree tree) {
