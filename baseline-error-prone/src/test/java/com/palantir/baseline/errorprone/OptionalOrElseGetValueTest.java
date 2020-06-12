@@ -116,6 +116,21 @@ public final class OptionalOrElseGetValueTest {
     }
 
     @Test
+    public void testOrElseGetCompileTimeConstant() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.Optional;",
+                        "class Test {",
+                        "    private final String part1 = \"Hello \";",
+                        "    private final String part2 = \"World\";",
+                        "    // BUG: Diagnostic contains: Prefer Optional#orElse",
+                        "    private final String string = Optional.of(\"str\").orElseGet(() -> part1 + part2);",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testReplacementOfLiteral() {
         refactoringTestHelper
                 .addInputLines(
