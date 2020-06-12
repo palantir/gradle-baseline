@@ -67,7 +67,6 @@ import com.google.errorprone.bugpatterns.UnusedVariable;
 import com.google.errorprone.fixes.SuggestedFix;
 import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
-import com.google.errorprone.suppliers.Suppliers;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.AnnotationTree;
 import com.sun.source.tree.ArrayAccessTree;
@@ -112,6 +111,7 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Pattern;
 import javax.annotation.Nullable;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
@@ -145,9 +145,6 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             "org.mockito.Mock",
             "org.openqa.selenium.support.FindBy",
             "org.openqa.selenium.support.FindBys");
-
-    /** The set of types exempting a type that is extending or implementing them. */
-    private static final ImmutableSet<String> EXEMPTING_SUPER_TYPES = ImmutableSet.of();
 
     /** The set of types exempting a field of type extending them. */
     private static final ImmutableSet<String> EXEMPTING_FIELD_SUPER_TYPES =
@@ -751,11 +748,12 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             if (isSuppressed(tree)) {
                 return null;
             }
-            if (EXEMPTING_SUPER_TYPES.stream()
-                    .anyMatch(t ->
-                            isSubtype(getType(tree), Suppliers.typeFromString(t).get(state), state))) {
+
+            Pattern isRecord = Pattern.compile("record\\s+" + tree.getSimpleName() + "\\(");
+            if (isRecord.matcher(state.getSourceForNode(tree)).find()) {
                 return null;
             }
+
             return super.visitClass(tree, null);
         }
 
