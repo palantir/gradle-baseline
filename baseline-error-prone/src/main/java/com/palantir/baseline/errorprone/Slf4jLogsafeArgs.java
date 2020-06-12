@@ -17,6 +17,7 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
+import com.google.common.collect.ImmutableList;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
@@ -36,8 +37,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -46,7 +45,8 @@ import java.util.stream.IntStream;
         linkType = BugPattern.LinkType.CUSTOM,
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = SeverityLevel.WARNING,
-        summary = "Allow only com.palantir.logsafe.Arg types as parameter inputs to slf4j log messages.")
+        summary = "Allow only com.palantir.logsafe.Arg types, or vararg arrays, as parameter inputs to slf4j log "
+                + "messages.")
 public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
@@ -84,18 +84,24 @@ public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocati
         boolean lastArgIsThrowable = THROWABLE.matches(lastArg, state);
         int lastNonThrowableArgIndex = lastArgIsThrowable ? lastArgIndex - 1 : lastArgIndex;
 
-        List<Integer> badArgIndices = IntStream.rangeClosed(startArgIndex, lastNonThrowableArgIndex)
-                .filter(i -> !ARG.matches(allArgs.get(i), state))
-                .boxed()
-                .collect(Collectors.toList());
-
-        if (badArgIndices.isEmpty() || TestCheckUtils.isTestCode(state)) {
+        List<Integer> badArgs = getBadArgIndices(state, allArgs, startArgIndex, lastNonThrowableArgIndex);
+        if (badArgs.isEmpty() || TestCheckUtils.isTestCode(state)) {
             return Description.NO_MATCH;
-        } else {
-            return buildDescription(tree)
-                    .setMessage("slf4j log statement does not use logsafe parameters for arguments " + badArgIndices)
-                    .build();
         }
+
+        return buildDescription(tree)
+                .setMessage("slf4j log statement does not use logsafe parameters for arguments " + badArgs)
+                .build();
+    }
+
+    private List<Integer> getBadArgIndices(VisitorState state, List<? extends ExpressionTree> args, int from, int to) {
+        ImmutableList.Builder<Integer> badArgsBuilder = ImmutableList.builder();
+        for (int i = from; i <= to; i++) {
+            if (!ARG.matches(args.get(i), state)) {
+                badArgsBuilder.add(i);
+            }
+        }
+        return badArgsBuilder.build();
     }
 
     private Optional<Description> checkThrowableArgumentNotWrapped(MethodInvocationTree tree, VisitorState state) {
