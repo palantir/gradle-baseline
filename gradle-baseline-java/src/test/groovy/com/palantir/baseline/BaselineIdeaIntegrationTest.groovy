@@ -131,7 +131,7 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         ideaStyleSettings.endsWith("""
               </code_scheme>
             </component>
-        """.stripIndent())
+            """.stripIndent())
     }
 
     def 'Git support is added if .git directory is present'() {
