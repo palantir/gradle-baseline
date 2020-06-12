@@ -21,19 +21,27 @@ import com.google.common.io.Files;
 import groovy.util.Node;
 import groovy.util.XmlNodePrinter;
 import groovy.util.XmlParser;
+import org.xml.sax.SAXException;
+
+import javax.xml.parsers.ParserConfigurationException;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Consumer;
-import javax.xml.parsers.ParserConfigurationException;
-import org.xml.sax.SAXException;
+import java.util.function.Supplier;
 
 final class XmlUtils {
     private XmlUtils() {}
 
     static void createOrUpdateXmlFile(File configurationFile, Consumer<Node> configure) {
+        createOrUpdateXmlFile(
+                configurationFile, configure, () -> new Node(null, "project", ImmutableMap.of("version", "4")));
+    }
+
+    static void createOrUpdateXmlFile(
+            File configurationFile, Consumer<Node> configure, Supplier<Node> defaultRootNode) {
         Node rootNode;
         if (configurationFile.isFile()) {
             try {
@@ -42,10 +50,12 @@ final class XmlUtils {
                 throw new RuntimeException("Couldn't parse existing configuration file: " + configurationFile, e);
             }
         } else {
-            rootNode = new Node(null, "project", ImmutableMap.of("version", "4"));
+            rootNode = defaultRootNode.get();
         }
 
         configure.accept(rootNode);
+
+        configurationFile.getParentFile().mkdirs();
 
         try (BufferedWriter writer = Files.newWriter(configurationFile, StandardCharsets.UTF_8);
                 PrintWriter printWriter = new PrintWriter(writer)) {
