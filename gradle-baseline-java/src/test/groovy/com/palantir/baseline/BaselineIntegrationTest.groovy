@@ -16,7 +16,7 @@
 
 package com.palantir.baseline
 
-
+import spock.lang.IgnoreIf
 import spock.lang.Unroll
 
 class BaselineIntegrationTest extends AbstractPluginTest {
@@ -34,6 +34,7 @@ class BaselineIntegrationTest extends AbstractPluginTest {
     }
 
     @Unroll("Can apply on #gradleVersion")
+    @IgnoreIf({ Integer.parseInt(jvm.javaSpecificationVersion) >= 14 })
     def canApplyOnGradle() {
         buildFile << standardBuildFile()
         multiProject.addSubproject("java-project", "apply plugin: 'java'")
