@@ -21,9 +21,6 @@ import com.google.common.io.Files;
 import groovy.util.Node;
 import groovy.util.XmlNodePrinter;
 import groovy.util.XmlParser;
-import org.xml.sax.SAXException;
-
-import javax.xml.parsers.ParserConfigurationException;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
@@ -31,6 +28,8 @@ import java.io.PrintWriter;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
+import javax.xml.parsers.ParserConfigurationException;
+import org.xml.sax.SAXException;
 
 final class XmlUtils {
     private XmlUtils() {}
