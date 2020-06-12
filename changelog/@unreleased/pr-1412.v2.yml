@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: StrictUnusedVariable handles Java 14 records
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1412
