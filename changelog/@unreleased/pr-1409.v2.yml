@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Fix checkstyle config to conform to breaks made between 8.13 and 8.33
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1409
