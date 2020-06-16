@@ -1,6 +1,6 @@
 type: improvement
 improvement:
-  description: Wrap method declarations on parameters, not on modifiers and return
-    type.
+  description: When using Eclipse's built-in formatter, method declarations are now
+    wrapped on parameters, not on modifiers and return type.
   links:
   - https://github.com/palantir/gradle-baseline/pull/1416
