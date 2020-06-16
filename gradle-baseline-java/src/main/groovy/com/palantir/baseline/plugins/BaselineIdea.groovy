@@ -287,33 +287,25 @@ class BaselineIdea extends AbstractBaselinePlugin {
     }
 
     private void addCheckstyle(node) {
-        def checkstyle = project.plugins.findPlugin(BaselineCheckstyle)
-        if (checkstyle == null) {
-            project.logger.debug "Baseline: Skipping IDEA checkstyle configuration since baseline-checkstyle not applied"
-            return
+        project.plugins.withType(BaselineCheckstyle) {
+            project.logger.debug "Baseline: Configuring Checkstyle for Idea"
+
+            addCheckstyleNode(node)
+            addCheckstyleExternalDependencies(node)
         }
-
-        project.logger.debug "Baseline: Configuring Checkstyle for Idea"
-
-        addCheckstyleNode(node)
-        addCheckstyleExternalDependencies(node)
     }
 
     private static void addCheckstyleIntellijImport(project) {
-        def checkstyle = project.plugins.findPlugin(BaselineCheckstyle)
-        if (checkstyle == null) {
-            project.logger.debug "Baseline: Skipping IDEA checkstyle configuration since baseline-checkstyle not applied"
-            return
+        project.plugins.withType(BaselineCheckstyle) {
+            project.logger.debug "Baseline: Configuring Checkstyle for Idea"
+
+            XmlUtils.createOrUpdateXmlFile(
+                    project.file(".idea/checkstyle-idea.xml"),
+                    BaselineIdea.&addCheckstyleNode)
+            XmlUtils.createOrUpdateXmlFile(
+                    project.file(".idea/externalDependencies.xml"),
+                    BaselineIdea.&addCheckstyleExternalDependencies)
         }
-
-        project.logger.debug "Baseline: Configuring Checkstyle for Idea"
-
-        XmlUtils.createOrUpdateXmlFile(
-                project.file(".idea/checkstyle-idea.xml"),
-                BaselineIdea.&addCheckstyleNode)
-        XmlUtils.createOrUpdateXmlFile(
-                project.file(".idea/externalDependencies.xml"),
-                BaselineIdea.&addCheckstyleExternalDependencies)
     }
 
     private static void addCheckstyleNode(node) {
