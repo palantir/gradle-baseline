@@ -1,0 +1,14 @@
+type: improvement
+improvement:
+  description: |-
+    Adds the proper configuration files upon IntelliJ import of a gradle project for checkstyle and copyright.
+
+    This generates the following additional files:
+    - .idea/copyright/profiles_settings.xml
+    - an xml file under .idea/copyright/ per copyright file under .baseline/copyright
+    - .idea/checkstyle-idea.xml (and adds Checkstyle-IDEA to the external dependencies) if baseline-checkstyle is applied
+    - Either .idea/codeStyleSettings.xml or a .idea/codeStyles/ folder with the contents being copied from .baseline/idea
+      - If .baseline/idea/codeStyles is present, it will copy its contents, otherwise, it will fall back to .baseline/idea/intellij-java-palantir-style.xml as currently
+      - The fallback is using a legacy IntelliJ format and requires closing and reopening the project to be taken into account
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1411

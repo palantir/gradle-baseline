@@ -16,24 +16,26 @@
 
 package com.palantir.baseline.plugins
 
+import com.google.common.collect.ImmutableMap
 import com.palantir.baseline.util.GitUtils
 import groovy.transform.CompileStatic
 import groovy.xml.XmlUtil
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.util.function.Supplier
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.Task
 import org.gradle.api.file.FileTreeElement
 import org.gradle.api.specs.Spec
+import org.gradle.api.tasks.util.PatternFilterable
 import org.gradle.plugins.ide.idea.GenerateIdeaModule
 import org.gradle.plugins.ide.idea.GenerateIdeaProject
 import org.gradle.plugins.ide.idea.GenerateIdeaWorkspace
 import org.gradle.plugins.ide.idea.IdeaPlugin
 import org.gradle.plugins.ide.idea.model.IdeaModel
 import org.gradle.plugins.ide.idea.model.ModuleDependency
-
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
 
 class BaselineIdea extends AbstractBaselinePlugin {
 
@@ -92,6 +94,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
             addGitHubIssueNavigation(node)
             ignoreCommonShadedPackages(node)
         }
+        configureProjectForIntellijImport(project)
 
         project.afterEvaluate {
             ideaRootModel.workspace.iws.withXml { provider ->
@@ -119,6 +122,15 @@ class BaselineIdea extends AbstractBaselinePlugin {
         { FileTreeElement details -> details.file == file } as Spec<FileTreeElement>
     }
 
+    private void configureProjectForIntellijImport(Project project) {
+        if (!Boolean.getBoolean("idea.active")) {
+            return
+        }
+        addCodeStyleIntellijImport()
+        addCheckstyleIntellijImport(project)
+        addCopyrightIntellijImport()
+    }
+
     /**
      * Extracts IDEA formatting configurations from Baseline directory and adds it to the Idea project XML node.
      */
@@ -127,37 +139,119 @@ class BaselineIdea extends AbstractBaselinePlugin {
         node.append(new XmlParser().parse(ideaStyleFile).component)
     }
 
+    private void addCodeStyleIntellijImport() {
+        def ideaStyleFile = project.file("${configDir}/idea/intellij-java-palantir-style.xml")
+
+        def ideaStyle = new XmlParser().parse(ideaStyleFile)
+                .component
+                .find { it.'@name' == 'ProjectCodeStyleSettingsManager' }
+
+        XmlUtils.createOrUpdateXmlFile(
+                project.file(".idea/codeStyles/codeStyleConfig.xml"),
+                {
+                    def state = GroovyXmlUtils.matchOrCreateChild(it, "state")
+                    def perProjectSettings = GroovyXmlUtils.matchOrCreateChild(
+                            state, "option", [name: 'USE_PER_PROJECT_SETTINGS'])
+                    perProjectSettings.attributes().'value' = "true"
+                },
+                {
+                    new Node(null, "component", ImmutableMap.of("name", "ProjectCodeStyleConfiguration"))
+                })
+
+
+        def ideaStyleSettings = ideaStyle.option.find {it.'@name' == 'PER_PROJECT_SETTINGS'}
+
+        XmlUtils.createOrUpdateXmlFile(
+                project.file(".idea/codeStyles/Project.xml"),
+                {
+                    def codeScheme = GroovyXmlUtils.matchOrCreateChild(it, "code_scheme", [name: 'Project'])
+                    // Just add the default configuration nodes on top of whatever nodes already exist
+                    // We could be better about this, but IDEA will mostly resolve the duplicates here for us
+                    ideaStyleSettings.value.option.forEach {
+                        codeScheme.append(it)
+                    }
+                },
+                {
+                    new Node(null, "component", ImmutableMap.of("name", "ProjectCodeStyleConfiguration"))
+                })
+    }
+
     /**
      * Extracts copyright headers from Baseline directory and adds them to Idea project XML node.
      */
     private void addCopyright(node) {
         def copyrightManager = node.component.find { it.'@name' == 'CopyrightManager' }
         def copyrightDir = Paths.get("${configDir}/copyright/")
-        assert Files.exists(copyrightDir), "${copyrightDir} must exist"
-        def copyrightFiles = project.fileTree(copyrightDir.toFile()).include("*")
-        assert copyrightFiles.iterator().hasNext(), "${copyrightDir} must contain one or more copyright file"
+        def copyrightFiles = getCopyrightFiles(copyrightDir)
         copyrightFiles.each { File file ->
             def fileName = copyrightDir.relativize(file.toPath())
             def copyrightNode = copyrightManager.copyright.find {
                 it.option.find { it.@name == "myName" }?.@value == fileName
             }
             if (copyrightNode == null) {
-                    def copyrightText = XmlUtil.escapeControlCharacters(XmlUtil.escapeXml(file.text.trim()))
-                    copyrightManager.append(new XmlParser().parseText("""
-                        <copyright>
-                            <option name="notice" value="${copyrightText}" />
-                            <option name="keyword" value="Copyright" />
-                            <option name="allowReplaceKeyword" value="" />
-                            <option name="myName" value="${fileName}" />
-                            <option name="myLocal" value="true" />
-                        </copyright>
-                        """.stripIndent()
-                    ))
+                addCopyrightFile(copyrightManager, file, fileName.toString())
             }
         }
 
         def lastFileName = copyrightDir.relativize(copyrightFiles.iterator().toList().sort().last().toPath())
         copyrightManager.@default = lastFileName
+    }
+
+    private void addCopyrightIntellijImport() {
+        def copyrightDir = Paths.get("${configDir}/copyright/")
+        def copyrightFiles = getCopyrightFiles(copyrightDir)
+
+        Supplier<Node> copyrightManagerNode = {
+            return new Node(null, "component", ImmutableMap.of("name", "CopyrightManager"))
+        }
+
+        copyrightFiles.each { File file ->
+            def fileName = copyrightDir.relativize(file.toPath()).toString()
+            def extensionIndex = fileName.lastIndexOf(".")
+            if (extensionIndex == -1) {
+                extensionIndex = fileName.length()
+            }
+            def xmlFileName = fileName.substring(0, extensionIndex) + ".xml"
+
+            XmlUtils.createOrUpdateXmlFile(
+                    // Replace the extension by xml for the actual file
+                    project.file(".idea/copyright/" + xmlFileName),
+                    { node ->
+                        addCopyrightFile(node, file, fileName)
+                    },
+                    copyrightManagerNode)
+        }
+
+        def lastFileName = copyrightDir.relativize(copyrightFiles.iterator().toList().sort().last().toPath())
+
+        XmlUtils.createOrUpdateXmlFile(
+                project.file(".idea/copyright/profiles_settings.xml"),
+                { node ->
+                    GroovyXmlUtils.matchOrCreateChild(node, "settings").attributes().'default' = lastFileName
+                },
+                copyrightManagerNode)
+    }
+
+    private PatternFilterable getCopyrightFiles(copyrightDir) {
+        assert Files.exists(copyrightDir), "${copyrightDir} must exist"
+        def copyrightFiles = project.fileTree(copyrightDir.toFile()).include("*")
+        assert copyrightFiles.iterator().hasNext(), "${copyrightDir} must contain one or more copyright file"
+
+        return copyrightFiles
+    }
+
+    private static void addCopyrightFile(node, File file, String fileName) {
+        def copyrightText = XmlUtil.escapeControlCharacters(XmlUtil.escapeXml(file.text.trim()))
+        node.append(new XmlParser().parseText("""
+            <copyright>
+                <option name="notice" value="${copyrightText}" />
+                <option name="keyword" value="Copyright" />
+                <option name="allowReplaceKeyword" value="" />
+                <option name="myName" value="${fileName}" />
+                <option name="myLocal" value="true" />
+            </copyright>
+            """.stripIndent()
+        ))
     }
 
     private void addEclipseFormat(node) {
@@ -196,13 +290,28 @@ class BaselineIdea extends AbstractBaselinePlugin {
     }
 
     private void addCheckstyle(node) {
-        def checkstyle = project.plugins.findPlugin(BaselineCheckstyle)
-        if (checkstyle == null) {
-            project.logger.debug "Baseline: Skipping IDEA checkstyle configuration since baseline-checkstyle not applied"
-            return
-        }
+        project.plugins.withType(BaselineCheckstyle) {
+            project.logger.debug "Baseline: Configuring Checkstyle for Idea"
 
-        project.logger.debug "Baseline: Configuring Checkstyle for Idea"
+            addCheckstyleNode(node)
+            addCheckstyleExternalDependencies(node)
+        }
+    }
+
+    private static void addCheckstyleIntellijImport(project) {
+        project.plugins.withType(BaselineCheckstyle) {
+            project.logger.debug "Baseline: Configuring Checkstyle for Idea"
+
+            XmlUtils.createOrUpdateXmlFile(
+                    project.file(".idea/checkstyle-idea.xml"),
+                    BaselineIdea.&addCheckstyleNode)
+            XmlUtils.createOrUpdateXmlFile(
+                    project.file(".idea/externalDependencies.xml"),
+                    BaselineIdea.&addCheckstyleExternalDependencies)
+        }
+    }
+
+    private static void addCheckstyleNode(node) {
         def checkstyleFile = "LOCAL_FILE:\$PROJECT_DIR\$/.baseline/checkstyle/checkstyle.xml"
         node.append(new XmlParser().parseText("""
             <component name="CheckStyle-IDEA">
@@ -220,6 +329,9 @@ class BaselineIdea extends AbstractBaselinePlugin {
               </option>
             </component>
             """.stripIndent()))
+    }
+
+    private static void addCheckstyleExternalDependencies(node) {
         def externalDependencies = GroovyXmlUtils.matchOrCreateChild(node, 'component', [name: 'ExternalDependencies'])
         GroovyXmlUtils.matchOrCreateChild(externalDependencies, 'plugin', [id: 'CheckStyle-IDEA'])
     }
