@@ -20,6 +20,10 @@ import com.google.common.collect.ImmutableMap
 import com.palantir.baseline.util.GitUtils
 import groovy.transform.CompileStatic
 import groovy.xml.XmlUtil
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+import java.util.function.Supplier
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -32,11 +36,6 @@ import org.gradle.plugins.ide.idea.GenerateIdeaWorkspace
 import org.gradle.plugins.ide.idea.IdeaPlugin
 import org.gradle.plugins.ide.idea.model.IdeaModel
 import org.gradle.plugins.ide.idea.model.ModuleDependency
-
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-import java.util.function.Supplier
 
 class BaselineIdea extends AbstractBaselinePlugin {
 
@@ -143,14 +142,16 @@ class BaselineIdea extends AbstractBaselinePlugin {
     private void addCodeStyleIntellijImport() {
         def ideaStyleFile = project.file("${configDir}/idea/intellij-java-palantir-style.xml")
 
-        def ideaStyle = new XmlParser().parse(ideaStyleFile).component.find { it.'@name' == 'ProjectCodeStyleSettingsManager' }
+        def ideaStyle = new XmlParser().parse(ideaStyleFile)
+                .component
+                .find { it.'@name' == 'ProjectCodeStyleSettingsManager' }
 
-        def ideaStyleConfig = ideaStyle.option.find {it.'@name' == 'USE_PER_PROJECT_SETTINGS'}
+        Node ideaStyleConfig = ideaStyle.option.find { it.'@name' == 'USE_PER_PROJECT_SETTINGS' }
 
         XmlUtils.createOrUpdateXmlFile(
                 project.file(".idea/codeStyles/codeStyleConfig.xml"),
-                { node ->
-                    def state = node.appendNode("state")
+                {
+                    def state = GroovyXmlUtils.matchOrCreateChild(it, "state")
                     state.append(ideaStyleConfig)
                 },
                 {
