@@ -163,9 +163,9 @@ class BaselineIdea extends AbstractBaselinePlugin {
 
         XmlUtils.createOrUpdateXmlFile(
                 project.file(".idea/codeStyles/Project.xml"),
-                { node ->
-                    def codeScheme = new Node(node, "code_scheme", ImmutableMap.of("name", "Project"))
-                    ideaStyleSettings.value.option.each {
+                {
+                    def codeScheme = GroovyXmlUtils.matchOrCreateChild(it, "code_scheme", [name: 'Project'])
+                    ideaStyleSettings.value.option.forEach {
                         codeScheme.append(it)
                     }
                 },
