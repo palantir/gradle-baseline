@@ -47,6 +47,7 @@ public final class Slf4jLogsafeArgsTest {
                         "    public String getName() { return null; }",
                         "    public void add(Marker reference) {}",
                         "    public boolean remove(Marker reference) { return true; }",
+                        "    @SuppressWarnings(\"deprecation\")",
                         "    public boolean hasChildren() { return false; }",
                         "    public boolean hasReferences() { return false; }",
                         "    public Iterator<Marker> iterator() { return null; }",
@@ -89,6 +90,7 @@ public final class Slf4jLogsafeArgsTest {
         LOG_LEVELS.forEach(logLevel -> CompilationTestHelper.newInstance(Slf4jLogsafeArgs.class, getClass())
                 .addSourceLines(
                         "Test.java",
+                        "import com.palantir.logsafe.Arg;",
                         "import com.palantir.logsafe.SafeArg;",
                         "import com.palantir.logsafe.UnsafeArg;",
                         "import org.slf4j.Logger;",
@@ -151,12 +153,27 @@ public final class Slf4jLogsafeArgsTest {
                         "        UnsafeArg.of(\"name2\", \"string2\"),",
                         "        new Throwable());",
                         "",
+                        "    // log.<>(String, Arg<T>[])",
+                        "    log." + logLevel + "(\"constant {}\",",
+                        "                         // BUG: Diagnostic contains: varargs method with inexact argument",
+                        "                         new Arg<?>[] { SafeArg.of(\"name\", \"string\") });",
+                        "",
+                        "    // log.<>(String, SafeArg<T>[])",
+                        "    log." + logLevel + "(\"constant {}\",",
+                        "                         // BUG: Diagnostic contains: varargs method with inexact argument",
+                        "                         new SafeArg<?>[] { SafeArg.of(\"name\", \"string\") });",
+                        "",
+                        "    // log.<>(String, (Object[]) SafeArg<T>[])",
+                        "    log." + logLevel + "(\"constant {}\",",
+                        "                         (Object[]) new SafeArg<?>[] { SafeArg.of(\"name\", \"string\") });",
+                        "",
                         "  }",
                         "",
                         "  class DummyMarker implements Marker {",
                         "    public String getName() { return null; }",
                         "    public void add(Marker reference) {}",
                         "    public boolean remove(Marker reference) { return true; }",
+                        "    @SuppressWarnings(\"deprecation\")",
                         "    public boolean hasChildren() { return false; }",
                         "    public boolean hasReferences() { return false; }",
                         "    public Iterator<Marker> iterator() { return null; }",
@@ -164,6 +181,7 @@ public final class Slf4jLogsafeArgsTest {
                         "    public boolean contains(String name) { return false; }",
                         "  }",
                         "}")
+                .matchAllDiagnostics()
                 .doTest());
     }
 

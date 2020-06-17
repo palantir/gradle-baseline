@@ -31,7 +31,9 @@ import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
+import com.sun.source.tree.Tree;
 import com.sun.source.util.SimpleTreeVisitor;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.regex.Pattern;
@@ -43,7 +45,8 @@ import java.util.regex.Pattern;
         linkType = BugPattern.LinkType.CUSTOM,
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = SeverityLevel.WARNING,
-        summary = "Allow only com.palantir.logsafe.Arg types as parameter inputs to slf4j log messages.")
+        summary = "Allow only com.palantir.logsafe.Arg types, or vararg arrays, as parameter inputs to slf4j log "
+                + "messages.")
 public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
@@ -55,6 +58,8 @@ public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocati
     private static final Matcher<ExpressionTree> THROWABLE = MoreMatchers.isSubtypeOf(Throwable.class);
     private static final Matcher<ExpressionTree> ARG = MoreMatchers.isSubtypeOf("com.palantir.logsafe.Arg");
     private static final Matcher<ExpressionTree> MARKER = MoreMatchers.isSubtypeOf("org.slf4j.Marker");
+    private static final Matcher<Tree> OBJECT_ARRAY = Matchers.isSubtypeOf(
+            s -> s.getType(s.getTypeFromString("java.lang.Object"), true, Collections.emptyList()));
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
@@ -68,26 +73,35 @@ public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocati
         }
 
         List<? extends ExpressionTree> allArgs = tree.getArguments();
-        int lastIndex = allArgs.size() - 1;
-        int startArg = MARKER.matches(allArgs.get(0), state) ? 2 : 1;
-        ExpressionTree lastArg = allArgs.get(lastIndex);
-        boolean lastArgIsThrowable = THROWABLE.matches(lastArg, state);
-        int endArg = lastArgIsThrowable ? lastIndex - 1 : lastIndex;
+        int startArgIndex = MARKER.matches(allArgs.get(0), state) ? 2 : 1;
+        int lastArgIndex = allArgs.size() - 1;
+        ExpressionTree lastArg = allArgs.get(lastArgIndex);
 
+        if (startArgIndex == lastArgIndex && OBJECT_ARRAY.matches(lastArg, state)) {
+            return Description.NO_MATCH;
+        }
+
+        boolean lastArgIsThrowable = THROWABLE.matches(lastArg, state);
+        int lastNonThrowableArgIndex = lastArgIsThrowable ? lastArgIndex - 1 : lastArgIndex;
+
+        List<Integer> badArgs = getBadArgIndices(state, allArgs, startArgIndex, lastNonThrowableArgIndex);
+        if (badArgs.isEmpty() || TestCheckUtils.isTestCode(state)) {
+            return Description.NO_MATCH;
+        }
+
+        return buildDescription(tree)
+                .setMessage("slf4j log statement does not use logsafe parameters for arguments " + badArgs)
+                .build();
+    }
+
+    private List<Integer> getBadArgIndices(VisitorState state, List<? extends ExpressionTree> args, int from, int to) {
         ImmutableList.Builder<Integer> badArgsBuilder = ImmutableList.builder();
-        for (int i = startArg; i <= endArg; i++) {
-            if (!ARG.matches(allArgs.get(i), state)) {
+        for (int i = from; i <= to; i++) {
+            if (!ARG.matches(args.get(i), state)) {
                 badArgsBuilder.add(i);
             }
         }
-        List<Integer> badArgs = badArgsBuilder.build();
-        if (badArgs.isEmpty() || TestCheckUtils.isTestCode(state)) {
-            return Description.NO_MATCH;
-        } else {
-            return buildDescription(tree)
-                    .setMessage("slf4j log statement does not use logsafe parameters for arguments " + badArgs)
-                    .build();
-        }
+        return badArgsBuilder.build();
     }
 
     private Optional<Description> checkThrowableArgumentNotWrapped(MethodInvocationTree tree, VisitorState state) {
