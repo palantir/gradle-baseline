@@ -227,7 +227,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
         XmlUtils.createOrUpdateXmlFile(
                 project.file(".idea/copyright/profiles_settings.xml"),
                 { node ->
-                    node.append(new Node(null, "settings", ImmutableMap.of("default", lastFileName)))
+                    GroovyXmlUtils.matchOrCreateChild(node, "settings").attributes().'default' = lastFileName
                 },
                 copyrightManagerNode)
     }
