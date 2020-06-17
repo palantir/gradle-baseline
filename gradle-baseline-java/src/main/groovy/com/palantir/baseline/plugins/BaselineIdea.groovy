@@ -146,13 +146,13 @@ class BaselineIdea extends AbstractBaselinePlugin {
                 .component
                 .find { it.'@name' == 'ProjectCodeStyleSettingsManager' }
 
-        Node ideaStyleConfig = ideaStyle.option.find { it.'@name' == 'USE_PER_PROJECT_SETTINGS' }
-
         XmlUtils.createOrUpdateXmlFile(
                 project.file(".idea/codeStyles/codeStyleConfig.xml"),
                 {
                     def state = GroovyXmlUtils.matchOrCreateChild(it, "state")
-                    state.append(ideaStyleConfig)
+                    def perProjectSettings = GroovyXmlUtils.matchOrCreateChild(
+                            state, "option", [name: 'USE_PER_PROJECT_SETTINGS'])
+                    perProjectSettings.attributes().'value' = "true"
                 },
                 {
                     new Node(null, "component", ImmutableMap.of("name", "ProjectCodeStyleConfiguration"))
