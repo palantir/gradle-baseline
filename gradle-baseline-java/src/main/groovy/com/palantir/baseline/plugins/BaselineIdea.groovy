@@ -165,6 +165,8 @@ class BaselineIdea extends AbstractBaselinePlugin {
                 project.file(".idea/codeStyles/Project.xml"),
                 {
                     def codeScheme = GroovyXmlUtils.matchOrCreateChild(it, "code_scheme", [name: 'Project'])
+                    // Just add the default configuration nodes on top of whatever nodes already exist
+                    // We could be better about this, but IDEA will mostly resolve the duplicates here for us
                     ideaStyleSettings.value.option.forEach {
                         codeScheme.append(it)
                     }
