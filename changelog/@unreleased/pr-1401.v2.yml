@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: Adds `OptionalOrElseGetValue` error prone rule which recommends
+    using `Optional.orElse(value)` over `Optional.orElseGet(() -> value)`.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1401
