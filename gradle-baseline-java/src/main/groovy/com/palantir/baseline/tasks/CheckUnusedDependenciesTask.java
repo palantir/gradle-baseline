@@ -59,6 +59,7 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
         sourceClasses = getProject().getObjects().property(FileCollection.class);
         ignore = getProject().getObjects().setProperty(String.class);
         ignore.set(Collections.emptySet());
+        getOutputs().upToDateWhen(_task -> true);
     }
 
     @TaskAction
