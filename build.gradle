@@ -28,7 +28,6 @@ apply plugin: 'com.palantir.baseline'
 
 allprojects {
     repositories {
-        mavenCentral()
         jcenter()
         gradlePluginPortal()
         maven { url  'https://palantir.bintray.com/releases'}
