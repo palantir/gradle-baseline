@@ -41,7 +41,7 @@ import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.testing.Test;
 
 public class CheckJUnitDependencies extends DefaultTask {
-    private static final String IGNORE_MAIN_CONFIGURATION = "main"
+    private static final String IGNORE_MAIN_CONFIGURATION = "main";
 
     public CheckJUnitDependencies() {
         setGroup("Verification");
