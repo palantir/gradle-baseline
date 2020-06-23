@@ -239,7 +239,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
 
         then:
         BuildResult result = with(":sub-project-no-deps:checkUnusedDependencies").build();
-        result.task(':checkUnusedDependencies').outcome == TaskOutcome.UP_TO_DATE
+        result.task(':sub-project-no-deps:checkUnusedDependencies').outcome == TaskOutcome.UP_TO_DATE
     }
 
     def 'checkUnusedDependencies fails when a redundant project dep is present'() {
