@@ -235,10 +235,10 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
     def 'check results can be up to date'() {
         when:
         setupMultiProject()
-        with(":checkUnusedDependencies").build();
+        with(":sub-project-no-deps:checkUnusedDependencies").build();
 
         then:
-        BuildResult result = with(":checkUnusedDependencies").build();
+        BuildResult result = with(":sub-project-no-deps:checkUnusedDependencies").build();
         result.task(':checkUnusedDependencies').outcome == TaskOutcome.UP_TO_DATE
     }
 
