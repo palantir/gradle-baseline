@@ -40,7 +40,6 @@ import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.testing.Test;
 
 public class CheckJUnitDependencies extends DefaultTask {
-    private static final String IGNORE_MAIN_CONFIGURATION = "main";
 
     public CheckJUnitDependencies() {
         setGroup("Verification");
@@ -55,7 +54,7 @@ public class CheckJUnitDependencies extends DefaultTask {
                 .getPlugin(JavaPluginConvention.class)
                 .getSourceSets()
                 .forEach(ss -> {
-                    if (ss.getName().equals(IGNORE_MAIN_CONFIGURATION)) {
+                    if (ss.getName().equals(SourceSet.MAIN_SOURCE_SET_NAME)) {
                         return;
                     }
 
@@ -76,7 +75,7 @@ public class CheckJUnitDependencies extends DefaultTask {
         return getProject()
                 .provider(() ->
                         getProject().getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().stream()
-                                .filter(ss -> !ss.getName().equals(IGNORE_MAIN_CONFIGURATION))
+                                .filter(ss -> !ss.getName().equals(SourceSet.MAIN_SOURCE_SET_NAME))
                                 .map(SourceSet::getRuntimeClasspathConfigurationName)
                                 .map(getProject().getConfigurations()::getByName)
                                 .collect(toList()));
