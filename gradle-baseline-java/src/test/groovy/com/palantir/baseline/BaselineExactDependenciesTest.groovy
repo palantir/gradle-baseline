@@ -232,6 +232,16 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         result.task(':sub-project-no-deps:checkImplicitDependencies').getOutcome() == TaskOutcome.SUCCESS
     }
 
+    def 'check results can be up to date'() {
+        when:
+        setupMultiProject()
+        with(":sub-project-no-deps:checkUnusedDependencies").build();
+
+        then:
+        BuildResult result = with(":sub-project-no-deps:checkUnusedDependencies").build();
+        result.task(':sub-project-no-deps:checkUnusedDependencies').outcome == TaskOutcome.UP_TO_DATE
+    }
+
     def 'checkUnusedDependencies fails when a redundant project dep is present'() {
         when:
         setupMultiProject()
