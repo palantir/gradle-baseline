@@ -49,36 +49,30 @@ public class CheckJUnitDependencies extends DefaultTask {
 
     @TaskAction
     public final void validateDependencies() {
-        getProject()
-                .getConvention()
-                .getPlugin(JavaPluginConvention.class)
-                .getSourceSets()
-                .forEach(ss -> {
-                    if (ss.getName().equals(SourceSet.MAIN_SOURCE_SET_NAME)) {
-                        return;
-                    }
+        getProbablyTestSourceSets().forEach(ss -> {
+            Optional<Test> maybeTestTask = BaselineTesting.getTestTaskForSourceSet(getProject(), ss);
+            if (!maybeTestTask.isPresent()) {
+                // source set doesn't have a test task, e.g. 'schema'
+                return;
+            }
+            Test task = maybeTestTask.get();
 
-                    Optional<Test> maybeTestTask = BaselineTesting.getTestTaskForSourceSet(getProject(), ss);
-                    if (!maybeTestTask.isPresent()) {
-                        // source set doesn't have a test task, e.g. 'schema'
-                        return;
-                    }
-                    Test task = maybeTestTask.get();
-
-                    getProject().getLogger().info("Analyzing source set {} with task {}", ss.getName(), task.getName());
-                    validateSourceSet(ss, task);
-                });
+            getProject().getLogger().info("Analyzing source set {} with task {}", ss.getName(), task.getName());
+            validateSourceSet(ss, task);
+        });
     }
 
     @Classpath
     public final Provider<List<Configuration>> getConfigurations() {
-        return getProject()
-                .provider(() ->
-                        getProject().getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().stream()
-                                .filter(ss -> !ss.getName().equals(SourceSet.MAIN_SOURCE_SET_NAME))
-                                .map(SourceSet::getRuntimeClasspathConfigurationName)
-                                .map(getProject().getConfigurations()::getByName)
-                                .collect(toList()));
+        return getProject().provider(() -> getProbablyTestSourceSets()
+                .map(SourceSet::getRuntimeClasspathConfigurationName)
+                .map(getProject().getConfigurations()::getByName)
+                .collect(toList()));
+    }
+
+    private Stream<SourceSet> getProbablyTestSourceSets() {
+        return getProject().getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().stream()
+                .filter(ss -> !ss.getName().equals(SourceSet.MAIN_SOURCE_SET_NAME));
     }
 
     private void validateSourceSet(SourceSet ss, Test task) {
