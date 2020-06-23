@@ -16,28 +16,37 @@
 
 package com.palantir.baseline.tasks;
 
+import static java.util.stream.Collectors.toList;
+
 import com.google.common.base.Preconditions;
 import com.palantir.baseline.plugins.BaselineTesting;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.util.List;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.result.ResolvedComponentResult;
 import org.gradle.api.plugins.JavaPluginConvention;
+import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.Classpath;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.testing.Test;
 
 public class CheckJUnitDependencies extends DefaultTask {
+    private static final String IGNORE_MAIN_CONFIGURATION = "main"
 
     public CheckJUnitDependencies() {
         setGroup("Verification");
         setDescription("Ensures the correct JUnit4/5 dependencies are present, otherwise tests may silently not run");
+        getOutputs().upToDateWhen(_task -> true);
     }
 
     @TaskAction
@@ -47,7 +56,7 @@ public class CheckJUnitDependencies extends DefaultTask {
                 .getPlugin(JavaPluginConvention.class)
                 .getSourceSets()
                 .forEach(ss -> {
-                    if (ss.getName().equals("main")) {
+                    if (ss.getName().equals(IGNORE_MAIN_CONFIGURATION)) {
                         return;
                     }
 
@@ -61,6 +70,17 @@ public class CheckJUnitDependencies extends DefaultTask {
                     getProject().getLogger().info("Analyzing source set {} with task {}", ss.getName(), task.getName());
                     validateSourceSet(ss, task);
                 });
+    }
+
+    @Classpath
+    public final Provider<List<Configuration>> getConfigurations() {
+        return getProject()
+                .provider(() ->
+                        getProject().getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().stream()
+                                .filter(ss -> !ss.getName().equals(IGNORE_MAIN_CONFIGURATION))
+                                .map(SourceSet::getRuntimeClasspathConfigurationName)
+                                .map(getProject().getConfigurations()::getByName)
+                                .collect(toList()));
     }
 
     private void validateSourceSet(SourceSet ss, Test task) {
