@@ -39,7 +39,7 @@ import com.sun.tools.javac.code.Type;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,
         // Support SuppressWarnings("rawtypes"), which is already in use
-        altNames = {"rawtypes"},
+        altNames = "rawtypes",
         summary = "Avoid raw types; add appropriate type parameters if possible.\n"
                 + "This can be suppressed with @SuppressWarnings(\"rawtypes\") where necessary, such as when "
                 + "interacting with older library code.")
