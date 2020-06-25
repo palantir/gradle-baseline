@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Avoid rewriting lambdas into ambiguous references
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1432
