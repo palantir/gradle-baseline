@@ -42,11 +42,12 @@ import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.parser.Tokens;
+
+import javax.annotation.Nullable;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
-import javax.annotation.Nullable;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -58,8 +59,6 @@ import javax.annotation.Nullable;
         summary = "Lambda should be a method reference")
 @SuppressWarnings("checkstyle:CyclomaticComplexity")
 public final class LambdaMethodReference extends BugChecker implements BugChecker.LambdaExpressionTreeMatcher {
-
-    private static final String MESSAGE = "Lambda should be a method reference";
 
     @Override
     public Description matchLambdaExpression(LambdaExpressionTree tree, VisitorState state) {
@@ -150,8 +149,7 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
             return Description.NO_MATCH;
         }
         return buildFix(methodSymbol, methodInvocation, root, state, isLocal(methodInvocation))
-                .map(fix ->
-                        buildDescription(root).setMessage(MESSAGE).addFix(fix).build())
+                .map(fix -> buildDescription(root).addFix(fix).build())
                 .orElse(Description.NO_MATCH);
     }
 
@@ -170,8 +168,8 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
         }
 
         return buildFix(methodSymbol, methodInvocation, root, state, isLocal(methodInvocation))
-                .map(fix ->
-                        buildDescription(root).setMessage(MESSAGE).addFix(fix).build())
+                .filter(fix -> SuggestedFixes.compilesWithFix(fix, state))
+                .map(fix -> buildDescription(root).addFix(fix).build())
                 .orElse(Description.NO_MATCH);
     }
 
