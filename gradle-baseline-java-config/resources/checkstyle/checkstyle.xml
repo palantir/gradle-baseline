@@ -353,6 +353,11 @@
             <property name="ignoreComments" value="true"/>
         </module>
         <module name="RegexpSinglelineJava">
+            <property name="id" value="PreferInclusiveLanguage"/>
+            <property name="format" value="(whitelist|blacklist|slave)"/>
+            <property name="message" value="Prefer choosing names that don't have racial undertones, e.g. 'blocklist/allowlist' or 'server/client'"/>
+        </module>
+        <module name="RegexpSinglelineJava">
             <property name="format" value="\bCharsets\."/>
             <property name="message" value="Use JDK StandardCharsets instead of alternatives."/>
         </module>
