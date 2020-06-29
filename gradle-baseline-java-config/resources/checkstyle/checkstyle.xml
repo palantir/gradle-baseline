@@ -355,7 +355,7 @@
         <module name="RegexpSinglelineJava">
             <property name="id" value="PreferInclusiveLanguage"/>
             <property name="format" value="(whitelist|blacklist|slave)"/>
-            <property name="message" value="Prefer choosing names that don't have racial undertones, e.g. 'blocklist/allowlist' or 'server/client'"/>
+            <property name="message" value="Prefer choosing names that don't have racial undertones, e.g. 'allowlist/blocklist', 'server/client', 'leader/follower', 'primary/secondary', 'replica', 'allow/deny'"/>
         </module>
         <module name="RegexpSinglelineJava">
             <property name="format" value="\bCharsets\."/>
