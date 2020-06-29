@@ -1,0 +1,9 @@
+type: improvement
+improvement:
+  description: A new checkstyle regex 'PreferInclusiveLanguage' spots usages of the
+    words 'whitelist', 'blacklist', 'slave' and suggests words that don't have any
+    racial undertones. This check is intended to guide users when names are initially
+    chosen (as this is often easier than renaming things later) - users can add `@SuppressWarnings("PreferInclusiveLanguage")`
+    if it's not practical to fix these straight away.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1436
