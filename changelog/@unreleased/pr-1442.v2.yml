@@ -1,14 +1,5 @@
 type: improvement
 improvement:
-  description: |-
-    Disable FallThrough on Java 14 for switch expressions
-
-    ## Before this PR
-    There is a false negative with `FallThrough` on Java 14 when using switch expressions where the case arms are statements (as opposed to expressions).
-
-    See https://github.com/google/error-prone/issues/1649.
-
-    ## After this PR
-    Disable `FallThrough` on Java 14 source to avoid false positives
+  description: Disable `FallThrough` on Java 14 source to avoid false positives
   links:
   - https://github.com/palantir/gradle-baseline/pull/1442
