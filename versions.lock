@@ -96,9 +96,9 @@ org.threeten:threeten-extra:1.5.0 (1 constraints: f31027b8)
 
 [Test dependencies]
 cglib:cglib-nodep:3.2.2 (1 constraints: 490ded24)
-com.fasterxml.jackson.core:jackson-annotations:2.11.0 (2 constraints: b9176970)
-com.fasterxml.jackson.core:jackson-core:2.11.0 (1 constraints: 84122f21)
-com.fasterxml.jackson.core:jackson-databind:2.11.0 (1 constraints: 030e7d45)
+com.fasterxml.jackson.core:jackson-annotations:2.11.1 (2 constraints: bb17a070)
+com.fasterxml.jackson.core:jackson-core:2.11.1 (1 constraints: 85123021)
+com.fasterxml.jackson.core:jackson-databind:2.11.1 (1 constraints: 030e7d45)
 com.github.stefanbirkner:system-rules:1.19.0 (1 constraints: 3d05443b)
 com.netflix.nebula:nebula-test:7.8.6 (1 constraints: 17052c36)
 com.palantir.tokens:auth-tokens:3.6.2 (1 constraints: 0d050e36)
