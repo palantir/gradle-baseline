@@ -213,7 +213,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
         // UnnecessaryParentheses does not currently work with switch expressions
         errorProneOptions.check("UnnecessaryParentheses", project.provider(() -> {
             JavaPluginExtension ext = project.getExtensions().getByType(JavaPluginExtension.class);
-            return ext.getSourceCompatibility().compareTo(JavaVersion.valueOf("14")) < 0
+            return ext.getSourceCompatibility().compareTo(JavaVersion.toVersion(14)) < 0
                     ? CheckSeverity.DEFAULT
                     : CheckSeverity.OFF;
         }));
