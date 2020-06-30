@@ -50,6 +50,7 @@ import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.ExtensionAware;
 import org.gradle.api.plugins.JavaPluginConvention;
+import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.SourceSet;
@@ -192,8 +193,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
             BaselineErrorProneExtension errorProneExtension,
             JavaCompile javaCompile,
             ErrorProneOptions errorProneOptions) {
-        JavaVersion jdkVersion =
-                JavaVersion.toVersion(javaCompile.getToolChain().getVersion());
 
         if (project.hasProperty(DISABLE_PROPERY)) {
             log.info("Disabling baseline-error-prone for {} due to {}", project, DISABLE_PROPERY);
@@ -210,18 +209,26 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 .set(String.format(
                         "%s%s(build|src%sgenerated.*)%s.*",
                         Pattern.quote(projectPath), separator, separator, separator));
-        errorProneOptions.check("CatchSpecificity", CheckSeverity.OFF);
-        errorProneOptions.check("UnusedVariable", CheckSeverity.OFF);
-        errorProneOptions.check("EqualsHashCode", CheckSeverity.ERROR);
-        errorProneOptions.check("EqualsIncompatibleType", CheckSeverity.ERROR);
-        errorProneOptions.check("StreamResourceLeak", CheckSeverity.ERROR);
-        errorProneOptions.check("InputStreamSlowMultibyteRead", CheckSeverity.ERROR);
-        errorProneOptions.check("JavaDurationGetSecondsGetNano", CheckSeverity.ERROR);
-        errorProneOptions.check("URLEqualsHashCode", CheckSeverity.ERROR);
 
+        // UnnecessaryParentheses does not currently work with switch expressions
+        errorProneOptions.check("UnnecessaryParentheses", project.provider(() -> {
+            JavaPluginExtension ext = project.getExtensions().getByType(JavaPluginExtension.class);
+            return ext.getSourceCompatibility().compareTo(JavaVersion.toVersion(14)) < 0
+                    ? CheckSeverity.DEFAULT
+                    : CheckSeverity.OFF;
+        }));
+
+        errorProneOptions.disable("CatchSpecificity", "UnusedVariable");
+        errorProneOptions.error(
+                "EqualsHashCode",
+                "EqualsIncompatibleType",
+                "StreamResourceLeak",
+                "InputStreamSlowMultibyteRead",
+                "JavaDurationGetSecondsGetNano",
+                "URLEqualsHashCode");
         // Relax some checks for test code
         if (errorProneOptions.getCompilingTestOnlyCode().get()) {
-            errorProneOptions.check("UnnecessaryLambda", CheckSeverity.OFF);
+            errorProneOptions.disable("UnnecessaryLambda");
         }
 
         if (javaCompile.equals(compileRefaster)) {
