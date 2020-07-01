@@ -727,4 +727,29 @@ public class LambdaMethodReferenceTest {
                 .expectUnchanged()
                 .doTest();
     }
+
+    @Test
+    public void testSuperAmbiguous() {
+        refactor()
+                .addInputLines(
+                        "Test.java",
+                        "import java.util.function.BiConsumer;",
+                        "import java.util.function.Consumer;",
+                        "class Test {",
+                        "  interface One {",
+                        "    void call(Consumer<String> a);",
+                        "    void call(BiConsumer<String, String> a);",
+                        "  }",
+                        "  interface Two {",
+                        "    void apply(String a, String b);",
+                        "    void apply(String a);",
+                        "  }",
+                        "  void f(One one, Two two) {",
+                        // Lambda conversion requires a cast which wouldn't necessarily be cleaner.
+                        "    one.call(value -> two.apply(value));",
+                        "  }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
 }

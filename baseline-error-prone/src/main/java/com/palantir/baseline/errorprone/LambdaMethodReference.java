@@ -59,8 +59,6 @@ import javax.annotation.Nullable;
 @SuppressWarnings("checkstyle:CyclomaticComplexity")
 public final class LambdaMethodReference extends BugChecker implements BugChecker.LambdaExpressionTreeMatcher {
 
-    private static final String MESSAGE = "Lambda should be a method reference";
-
     @Override
     public Description matchLambdaExpression(LambdaExpressionTree tree, VisitorState state) {
         LambdaExpressionTree.BodyKind bodyKind = tree.getBodyKind();
@@ -150,8 +148,7 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
             return Description.NO_MATCH;
         }
         return buildFix(methodSymbol, methodInvocation, root, state, isLocal(methodInvocation))
-                .map(fix ->
-                        buildDescription(root).setMessage(MESSAGE).addFix(fix).build())
+                .map(fix -> buildDescription(root).addFix(fix).build())
                 .orElse(Description.NO_MATCH);
     }
 
@@ -170,8 +167,8 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
         }
 
         return buildFix(methodSymbol, methodInvocation, root, state, isLocal(methodInvocation))
-                .map(fix ->
-                        buildDescription(root).setMessage(MESSAGE).addFix(fix).build())
+                .filter(fix -> SuggestedFixes.compilesWithFix(fix, state))
+                .map(fix -> buildDescription(root).addFix(fix).build())
                 .orElse(Description.NO_MATCH);
     }
 
