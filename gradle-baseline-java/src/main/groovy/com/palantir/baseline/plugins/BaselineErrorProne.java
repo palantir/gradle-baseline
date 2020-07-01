@@ -210,6 +210,14 @@ public final class BaselineErrorProne implements Plugin<Project> {
                         "%s%s(build|src%sgenerated.*)%s.*",
                         Pattern.quote(projectPath), separator, separator, separator));
 
+        // FallThrough does not currently work with switch expressions
+        // See https://github.com/google/error-prone/issues/1649
+        errorProneOptions.check("FallThrough", project.provider(() -> {
+            JavaPluginExtension ext = project.getExtensions().getByType(JavaPluginExtension.class);
+            return ext.getSourceCompatibility().compareTo(JavaVersion.toVersion(14)) < 0
+                    ? CheckSeverity.DEFAULT
+                    : CheckSeverity.OFF;
+        }));
         // UnnecessaryParentheses does not currently work with switch expressions
         errorProneOptions.check("UnnecessaryParentheses", project.provider(() -> {
             JavaPluginExtension ext = project.getExtensions().getByType(JavaPluginExtension.class);
