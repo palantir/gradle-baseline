@@ -3,6 +3,11 @@ apply plugin: 'nebula.source-jar'
 apply plugin: 'java-library'
 apply from: "${rootDir}/gradle/publish-jar.gradle"
 
+pluginManager.withPlugin('java') {
+    sourceCompatibility = 10
+    targetCompatibility = 1.8
+}
+
 dependencies {
     implementation 'com.google.errorprone:error_prone_refaster'
     implementation 'org.mockito:mockito-core'

@@ -56,4 +56,19 @@ public final class DangerousCollectionCopyOfUsageTest {
                         "}")
                 .doTest();
     }
+
+    @Test
+    public void allows_guava_copy_of() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import com.google.common.collect.ImmutableMap;",
+                        "class Test {",
+                        "   public static final void main(String[] args) {",
+                        "       // this is fine, even though ImmutableMap extends Map",
+                        "       ImmutableMap.copyOf(ImmutableMap.of());",
+                        "   }",
+                        "}")
+                .doTest();
+    }
 }
