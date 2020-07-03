@@ -188,6 +188,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `OptionalFlatMapOfNullable`: Optional.map functions may return null to safely produce an empty result.
 - `ExtendsErrorOrThrowable`: Avoid extending Error (or subclasses of it) or Throwable directly.
 - `ImmutablesStyleCollision`: Prevent unintentionally voiding immutables Style meta-annotations through the introduction of inline style annotations.
+- `DangerousCollectionCopyOfUsage`: Prevent unintentional performance issues by disallowing usage of Java's linear-lookup based Set, Map implementations.
 
 ### Programmatic Application
 
