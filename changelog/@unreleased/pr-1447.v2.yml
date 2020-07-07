@@ -1,0 +1,6 @@
+type: feature
+feature:
+  description: Add `TooManyArguments` errorprone rule which prevents interfaces from
+    having more than 10 arguments
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1447
