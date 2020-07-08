@@ -56,7 +56,7 @@ public final class TooManyArguments extends BugChecker implements BugChecker.Met
         if (tree.getParameters().size() > MAX_NUM_ARGS) {
             return buildDescription(tree)
                     .setMessage("Interfaces can take at most " + MAX_NUM_ARGS
-                            + " arguments. Consider the following ways of soling the problem:\n"
+                            + " arguments. Consider the following ways of solving the problem:\n"
                             + "- Define an object with Immutables that contains all of the arguments\n"
                             + "- Expose smaller interfaces by refactorings concepts into separate interfaces")
                     .build();
