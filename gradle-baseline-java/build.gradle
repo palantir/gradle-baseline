@@ -17,6 +17,7 @@ dependencies {
     implementation 'com.palantir.javaformat:palantir-java-format-spi'
     // Add an explicit dependency to ensure consumers can use JDK14 source compat
     implementation 'org.ow2.asm:asm'
+    implementation 'com.googlecode.java-diff-utils:diffutils'
 
     runtimeOnly 'com.palantir.javaformat:gradle-palantir-java-format'
 
