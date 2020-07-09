@@ -16,11 +16,15 @@
 
 package com.palantir.baseline.tasks;
 
+import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
+import difflib.DiffUtils;
+import difflib.Patch;
 import java.io.File;
 import java.util.Collection;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -159,9 +163,26 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
 
         String onDisk = GFileUtils.readFile(lockFile);
         if (!onDisk.equals(expected)) {
-            throw new GradleException(lockFile
-                    + " is out of date, please run `./gradlew "
-                    + "checkClassUniqueness --write-locks` to update this file");
+            List<String> onDiskLines = Splitter.on('\n').splitToList(onDisk);
+            Patch<String> diff = DiffUtils.diff(onDiskLines, Splitter.on('\n').splitToList(expected));
+
+            throw new GradleException(String.join(
+                    "\n",
+                    String.format(
+                            "%s is out of date, please run `./gradlew checkClassUniqueness --write-locks` "
+                                    + "to update this file. The diff is:",
+                            lockFile),
+                    "",
+                    String.join(
+                            "\n",
+                            DiffUtils.generateUnifiedDiff("on disk", "expected", onDiskLines, diff, Integer.MAX_VALUE)),
+                    "",
+                    "On disk was:",
+                    "",
+                    onDisk,
+                    "",
+                    "Expected was:",
+                    expected));
         }
     }
 
