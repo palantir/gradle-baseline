@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: When `checkClassUniqueness` fails, it will show the difference between
+    the actual and expected lock file.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1452
