@@ -1,4 +1,4 @@
-com.diffplug.spotless:spotless-plugin-gradle = 4.4.0
+com.diffplug.spotless:spotless-plugin-gradle = 4.5.1
 com.google.auto.service:auto-service = 1.0-rc4
 com.google.errorprone:error_prone_annotations = 2.4.0
 com.google.errorprone:error_prone_core = 2.4.0
@@ -29,7 +29,7 @@ org.apache.commons:commons-lang3 = 3.9
 org.assertj:assertj-core = 3.16.1
 org.hamcrest:hamcrest-core = 2.2
 org.junit.jupiter:* = 5.6.2
-org.mockito:* = 3.3.3
+org.mockito:* = 3.4.0
 
 # dependency-upgrader:OFF
 # Don't upgrade, we will remove this in a future release.
