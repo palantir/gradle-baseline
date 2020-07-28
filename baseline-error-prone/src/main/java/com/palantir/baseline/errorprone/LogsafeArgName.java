@@ -25,6 +25,7 @@ import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.bugpatterns.BugChecker.MethodInvocationTreeMatcher;
 import com.google.errorprone.fixes.SuggestedFix;
+import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.CompileTimeConstantExpressionMatcher;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
@@ -74,11 +75,11 @@ public final class LogsafeArgName extends BugChecker implements MethodInvocation
         if (compileTimeConstExpressionMatcher.matches(argNameExpression, state)) {
             String argName = (String) ((JCTree.JCLiteral) argNameExpression).getValue();
             if (unsafeParamNames.stream().anyMatch(unsafeArgName -> unsafeArgName.equalsIgnoreCase(argName))) {
+                SuggestedFix.Builder builder = SuggestedFix.builder();
+                String unsafeArg = SuggestedFixes.qualifyType(state, builder, "com.palantir.logsafe.UnsafeArg");
                 return buildDescription(tree)
                         .setMessage("Arguments with name '" + argName + "' must be marked as unsafe.")
-                        .addFix(SuggestedFix.builder()
-                                .replace(tree.getMethodSelect(), "UnsafeArg.of")
-                                .addImport("com.palantir.logsafe.UnsafeArg")
+                        .addFix(builder.replace(tree.getMethodSelect(), unsafeArg + ".of")
                                 .build())
                         .build();
             }

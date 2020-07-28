@@ -19,27 +19,13 @@ package com.palantir.baseline.errorprone;
 import com.google.common.collect.ImmutableList;
 import com.google.errorprone.CompilationTestHelper;
 import com.google.errorprone.ErrorProneFlags;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public final class LogsafeArgNameTest {
-    private CompilationTestHelper compilationHelper;
-    private RefactoringValidator refactoringHelper;
-
-    @BeforeEach
-    public void before() {
-        compilationHelper = CompilationTestHelper.newInstance(LogsafeArgName.class, getClass())
-                .setArgs(ImmutableList.of("-XepOpt:" + LogsafeArgName.UNSAFE_ARG_NAMES_FLAG + "=foo,bar"));
-        refactoringHelper = RefactoringValidator.of(
-                new LogsafeArgName(ErrorProneFlags.builder()
-                        .putFlag(LogsafeArgName.UNSAFE_ARG_NAMES_FLAG, "foo,bar")
-                        .build()),
-                getClass());
-    }
 
     @Test
     public void catches_unsafe_arg_name() {
-        compilationHelper
+        getCompilationHelper()
                 .addSourceLines(
                         "Test.java",
                         "import com.palantir.logsafe.SafeArg;",
@@ -55,7 +41,7 @@ public final class LogsafeArgNameTest {
 
     @Test
     public void catches_case_insensitive_unsafe_arg_name() {
-        compilationHelper
+        getCompilationHelper()
                 .addSourceLines(
                         "Test.java",
                         "import com.palantir.logsafe.SafeArg;",
@@ -71,7 +57,7 @@ public final class LogsafeArgNameTest {
 
     @Test
     public void fixes_unsafe_arg_name() {
-        refactoringHelper
+        getRefactoringHelper()
                 .addInputLines(
                         "Test.java",
                         "import com.palantir.logsafe.SafeArg;",
@@ -96,7 +82,7 @@ public final class LogsafeArgNameTest {
 
     @Test
     public void ignores_safe_arg_names() {
-        compilationHelper
+        getCompilationHelper()
                 .addSourceLines(
                         "Test.java",
                         "import com.palantir.logsafe.SafeArg;",
@@ -107,5 +93,18 @@ public final class LogsafeArgNameTest {
                         "",
                         "}")
                 .doTest();
+    }
+
+    private static RefactoringValidator getRefactoringHelper() {
+        return RefactoringValidator.of(
+                new LogsafeArgName(ErrorProneFlags.builder()
+                        .putFlag(LogsafeArgName.UNSAFE_ARG_NAMES_FLAG, "foo,bar")
+                        .build()),
+                LogsafeArgNameTest.class);
+    }
+
+    private static CompilationTestHelper getCompilationHelper() {
+        return CompilationTestHelper.newInstance(LogsafeArgName.class, LogsafeArgNameTest.class)
+                .setArgs(ImmutableList.of("-XepOpt:" + LogsafeArgName.UNSAFE_ARG_NAMES_FLAG + "=foo,bar"));
     }
 }
