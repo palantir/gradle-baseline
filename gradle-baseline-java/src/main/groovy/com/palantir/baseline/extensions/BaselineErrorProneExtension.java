@@ -30,14 +30,15 @@ public class BaselineErrorProneExtension {
             // Baseline checks
             "BracesRequired",
             "CatchBlockLogException",
-            "CollectionStreamForEach",
             // TODO(ckozak): re-enable pending scala check
             // "CatchSpecificity",
-            "ExtendsErrorOrThrowable",
+            "CollectionStreamForEach",
             "ExecutorSubmitRunnableFutureIgnored",
+            "ExtendsErrorOrThrowable",
             "FinalClass",
             "LambdaMethodReference",
             "LoggerEnclosingClass",
+            "LogsafeArgName",
             "OptionalFlatMapOfNullable",
             "OptionalOrElseMethodInvocation",
             "PreferBuiltInConcurrentKeySet",
