@@ -1,0 +1,6 @@
+type: feature
+feature:
+  description: add LogsafeArgName errorprone rule which allows users to specify a
+    list of argument names that must always be tagged as unsafe.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1459
