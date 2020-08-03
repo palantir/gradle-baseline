@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: logsafe argname is resilient to static final identifiers
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1464
