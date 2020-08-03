@@ -72,7 +72,8 @@ public final class LogsafeArgName extends BugChecker implements MethodInvocation
 
         List<? extends ExpressionTree> args = tree.getArguments();
         ExpressionTree argNameExpression = args.get(0);
-        if (compileTimeConstExpressionMatcher.matches(argNameExpression, state)) {
+        if (compileTimeConstExpressionMatcher.matches(argNameExpression, state)
+                && argNameExpression instanceof JCTree.JCLiteral) {
             String argName = (String) ((JCTree.JCLiteral) argNameExpression).getValue();
             if (unsafeParamNames.stream().anyMatch(unsafeArgName -> unsafeArgName.equalsIgnoreCase(argName))) {
                 SuggestedFix.Builder builder = SuggestedFix.builder();
