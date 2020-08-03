@@ -26,7 +26,6 @@ import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.bugpatterns.BugChecker.MethodInvocationTreeMatcher;
 import com.google.errorprone.fixes.SuggestedFix;
 import com.google.errorprone.fixes.SuggestedFixes;
-import com.google.errorprone.matchers.CompileTimeConstantExpressionMatcher;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
@@ -49,8 +48,6 @@ public final class LogsafeArgName extends BugChecker implements MethodInvocation
 
     private static final Matcher<ExpressionTree> SAFE_ARG_OF =
             Matchers.staticMethod().onClass("com.palantir.logsafe.SafeArg").named("of");
-    private final Matcher<ExpressionTree> compileTimeConstExpressionMatcher =
-            new CompileTimeConstantExpressionMatcher();
 
     private final Set<String> unsafeParamNames;
 
@@ -72,8 +69,7 @@ public final class LogsafeArgName extends BugChecker implements MethodInvocation
 
         List<? extends ExpressionTree> args = tree.getArguments();
         ExpressionTree argNameExpression = args.get(0);
-        if (compileTimeConstExpressionMatcher.matches(argNameExpression, state)
-                && argNameExpression instanceof JCTree.JCLiteral) {
+        if (argNameExpression instanceof JCTree.JCLiteral) {
             String argName = (String) ((JCTree.JCLiteral) argNameExpression).getValue();
             if (unsafeParamNames.stream().anyMatch(unsafeArgName -> unsafeArgName.equalsIgnoreCase(argName))) {
                 SuggestedFix.Builder builder = SuggestedFix.builder();
