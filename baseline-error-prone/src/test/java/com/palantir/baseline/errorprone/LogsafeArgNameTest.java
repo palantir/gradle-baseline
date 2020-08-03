@@ -95,6 +95,23 @@ public final class LogsafeArgNameTest {
                 .doTest();
     }
 
+    @Test
+    public void ignores_identifier_arg_names() {
+        getCompilationHelper()
+                .addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.SafeArg;",
+                        "import java.lang.String;",
+                        "class Test {",
+                        "  static final String NAME = \"name\";",
+                        "  void f() {",
+                        "    SafeArg.of(NAME, 1);",
+                        "  }",
+                        "",
+                        "}")
+                .doTest();
+    }
+
     private static RefactoringValidator getRefactoringHelper() {
         return RefactoringValidator.of(
                 new LogsafeArgName(ErrorProneFlags.builder()

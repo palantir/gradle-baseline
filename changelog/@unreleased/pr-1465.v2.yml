@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: The `LogsafeArgName` now ignores arg names that are not literals.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1465
