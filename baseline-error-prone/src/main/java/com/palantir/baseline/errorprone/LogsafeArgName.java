@@ -73,15 +73,17 @@ public final class LogsafeArgName extends BugChecker implements MethodInvocation
         List<? extends ExpressionTree> args = tree.getArguments();
         ExpressionTree argNameExpression = args.get(0);
         if (compileTimeConstExpressionMatcher.matches(argNameExpression, state)) {
-            String argName = (String) ((JCTree.JCLiteral) argNameExpression).getValue();
-            if (unsafeParamNames.stream().anyMatch(unsafeArgName -> unsafeArgName.equalsIgnoreCase(argName))) {
-                SuggestedFix.Builder builder = SuggestedFix.builder();
-                String unsafeArg = SuggestedFixes.qualifyType(state, builder, "com.palantir.logsafe.UnsafeArg");
-                return buildDescription(tree)
-                        .setMessage("Arguments with name '" + argName + "' must be marked as unsafe.")
-                        .addFix(builder.replace(tree.getMethodSelect(), unsafeArg + ".of")
-                                .build())
-                        .build();
+            if (argNameExpression instanceof JCTree.JCLiteral) {
+                String argName = (String) ((JCTree.JCLiteral) argNameExpression).getValue();
+                if (unsafeParamNames.stream().anyMatch(unsafeArgName -> unsafeArgName.equalsIgnoreCase(argName))) {
+                    SuggestedFix.Builder builder = SuggestedFix.builder();
+                    String unsafeArg = SuggestedFixes.qualifyType(state, builder, "com.palantir.logsafe.UnsafeArg");
+                    return buildDescription(tree)
+                            .setMessage("Arguments with name '" + argName + "' must be marked as unsafe.")
+                            .addFix(builder.replace(tree.getMethodSelect(), unsafeArg + ".of")
+                                    .build())
+                            .build();
+                }
             }
         }
 
