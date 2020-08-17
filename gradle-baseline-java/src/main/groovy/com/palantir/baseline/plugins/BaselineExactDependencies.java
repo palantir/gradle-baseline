@@ -139,6 +139,11 @@ public final class BaselineExactDependencies implements Plugin<Project> {
         project.afterEvaluate(p -> {
             Configuration implCopy = implementation.copy();
             Configuration compileCopy = compile.copy();
+            // Ensure it's not resolvable, otherwise plugins that resolve all configurations might have
+            // a bad time resolving this with GCV, if you have direct dependencies without corresponding entries in
+            // versions.props, but instead rely on getting a version for them from the lock file.
+            compileCopy.setCanBeResolved(false);
+            compileCopy.setCanBeConsumed(false);
             // Without these, explicitCompile will successfully resolve 0 files and you'll waste 1 hour trying
             // to figure out why.
             project.getConfigurations().add(implCopy);
