@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Error-prone DnsLookup check to prevent unintentional resolution
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1472
