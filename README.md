@@ -166,6 +166,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `StringBuilderConstantParameters`: StringBuilder with a constant number of parameters should be replaced by simple concatenation.
 - `JUnit5SuiteMisuse`: When migrating from JUnit4 -> JUnit5, classes annotated with `@RunWith(Suite.class)` are dangerous because if they reference any JUnit5 test classes, these tests will silently not run!
 - `ThrowError`: Prefer throwing a RuntimeException rather than Error.
+- `DnsLookup`: Calling `new InetSocketAddress(host, port)` results in a DNS lookup which prevents the address from following DNS changes.
 - `ReverseDnsLookup`: Calling address.getHostName may result in an unexpected DNS lookup.
 - `ReadReturnValueIgnored`: The result of a read call must be checked to know if EOF has been reached or the expected number of bytes have been consumed.
 - `FinalClass`: A class should be declared final if all of its constructors are private.
