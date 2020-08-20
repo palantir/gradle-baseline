@@ -38,17 +38,22 @@ public class BaselineClassUniquenessPlugin extends AbstractBaselinePlugin {
         project.getPlugins().apply(LifecycleBasePlugin.class);
         project.getTasks().getByName(LifecycleBasePlugin.CHECK_TASK_NAME).dependsOn(checkClassUniqueness);
 
-        project.getPlugins().withId("java", plugin -> {
-            checkClassUniqueness.configure(t -> {
-                Configuration runtimeClasspath =
-                        project.getConfigurations().getByName(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME);
-                t.configurations.add(runtimeClasspath);
+        project.getPlugins()
+                .withId(
+                        "java",
+                        plugin -> checkClassUniqueness.configure(task -> {
+                            addConfiguration(project, task, JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME);
+                            addConfiguration(project, task, JavaPlugin.TEST_RUNTIME_CLASSPATH_CONFIGURATION_NAME);
+                        }));
+    }
 
-                // runtimeClasspath might contain jars which are 'builtBy' other tasks, for example conjure-generated
-                // objects. This dependsOn ensures that all those pre-requisite tasks get invoked first, otherwise
-                // we see log.info warnings about missing jars e.g. 'Skipping non-existent jar foo-api-objects.jar'
-                t.dependsOn(runtimeClasspath);
-            });
-        });
+    private static void addConfiguration(Project project, CheckClassUniquenessLockTask task, String configurationName) {
+        Configuration configuration = project.getConfigurations().getByName(configurationName);
+        task.configurations.add(configuration);
+
+        // runtimeClasspath might contain jars which are 'builtBy' other tasks, for example conjure-generated
+        // objects. This dependsOn ensures that all those pre-requisite tasks get invoked first, otherwise
+        // we see log.info warnings about missing jars e.g. 'Skipping non-existent jar foo-api-objects.jar'
+        task.dependsOn(configuration);
     }
 }
