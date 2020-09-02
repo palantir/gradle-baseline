@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Fix `com.palantir.baseline-exact-dependencies` to work with GCV 1.26.0+.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1487

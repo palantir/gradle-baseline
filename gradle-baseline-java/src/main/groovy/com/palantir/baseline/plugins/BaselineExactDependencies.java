@@ -153,9 +153,13 @@ public final class BaselineExactDependencies implements Plugin<Project> {
         });
 
         explicitCompile.withDependencies(deps -> {
-            // Mirror the transitive constraints form compileClasspath in order to pick up GCV locks.
-            // We should really do this with an addAllLater but that would require Gradle 6, or a hacky workaround.
-            explicitCompile.getDependencyConstraints().addAll(compileClasspath.getAllDependencyConstraints());
+            // Pick up GCV locks. We're making an internal assumption that this configuration exists,
+            // but we can rely on this since we control GCV.
+            // Alternatively, we could tell GCV to lock this configuration, at the cost of a slightly more
+            // expensive 'unifiedClasspath' resolution during lock computation.
+            if (project.getRootProject().getPluginManager().hasPlugin("com.palantir.versions-lock")) {
+                explicitCompile.extendsFrom(project.getConfigurations().getByName("lockConstraints"));
+            }
             // Inherit the excludes from compileClasspath too (that get aggregated from all its super-configurations).
             compileClasspath.getExcludeRules().forEach(rule -> explicitCompile.exclude(excludeRuleAsMap(rule)));
         });
