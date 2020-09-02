@@ -157,7 +157,9 @@ public final class BaselineExactDependencies implements Plugin<Project> {
             // but we can rely on this since we control GCV.
             // Alternatively, we could tell GCV to lock this configuration, at the cost of a slightly more
             // expensive 'unifiedClasspath' resolution during lock computation.
-            explicitCompile.extendsFrom(project.getConfigurations().getByName("lockConstraints"));
+            if (project.getRootProject().getPluginManager().hasPlugin("com.palantir.versions-lock")) {
+                explicitCompile.extendsFrom(project.getConfigurations().getByName("lockConstraints"));
+            }
             // Inherit the excludes from compileClasspath too (that get aggregated from all its super-configurations).
             compileClasspath.getExcludeRules().forEach(rule -> explicitCompile.exclude(excludeRuleAsMap(rule)));
         });
