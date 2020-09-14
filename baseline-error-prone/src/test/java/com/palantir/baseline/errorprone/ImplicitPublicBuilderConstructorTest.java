@@ -18,7 +18,7 @@ package com.palantir.baseline.errorprone;
 
 import org.junit.jupiter.api.Test;
 
-class BuilderPrivateConstructorTest {
+class ImplicitPublicBuilderConstructorTest {
 
     @Test
     void fixSimpleCase() {
@@ -130,6 +130,6 @@ class BuilderPrivateConstructorTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(new BuilderPrivateConstructor(), getClass());
+        return RefactoringValidator.of(new ImplicitPublicBuilderConstructor(), getClass());
     }
 }

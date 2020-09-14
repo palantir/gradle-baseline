@@ -37,14 +37,14 @@ import javax.lang.model.element.Modifier;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "BuilderPrivateConstructor",
+        name = "ImplicitPublicBuilderConstructor",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = BugPattern.SeverityLevel.WARNING,
         summary = "A Builder with a static factory method on the encapsulating class must have a private constructor. "
                 + "Minimizing unnecessary public API prevents future API breaks from impacting consumers. ")
-public final class BuilderPrivateConstructor extends BugChecker implements BugChecker.ClassTreeMatcher {
+public final class ImplicitPublicBuilderConstructor extends BugChecker implements BugChecker.ClassTreeMatcher {
 
     @Override
     public Description matchClass(ClassTree tree, VisitorState state) {
@@ -60,7 +60,7 @@ public final class BuilderPrivateConstructor extends BugChecker implements BugCh
             return Description.NO_MATCH;
         }
 
-        if (!hasStaticBuilderFactory(enclosingClass, state)) {
+        if (!hasStaticBuilderFactory(enclosingClass, tree, state)) {
             // No factory method, the public constructor is used
             return Description.NO_MATCH;
         }
@@ -95,12 +95,14 @@ public final class BuilderPrivateConstructor extends BugChecker implements BugCh
                 && tree.getModifiers().getFlags().contains(Modifier.STATIC);
     }
 
-    private static boolean hasStaticBuilderFactory(ClassSymbol classSymbol, VisitorState state) {
+    private static boolean hasStaticBuilderFactory(
+            ClassSymbol classSymbol, ClassTree builderClassTree, VisitorState state) {
         Set<MethodSymbol> matching = ASTHelpers.findMatchingMethods(
                 state.getName("builder"),
                 methodSymbol -> methodSymbol != null
-                        && methodSymbol.getReturnType().tsym.getSimpleName().contentEquals("Builder")
-                        && methodSymbol.isStatic(),
+                        && methodSymbol.isStatic()
+                        && ASTHelpers.isSameType(
+                                ASTHelpers.getType(builderClassTree), methodSymbol.getReturnType(), state),
                 classSymbol.type,
                 state.getTypes());
         return !matching.isEmpty();
