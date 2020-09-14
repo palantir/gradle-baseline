@@ -51,6 +51,70 @@ class BuilderPrivateConstructorTest {
     }
 
     @Test
+    void fixWithFields() {
+        fix().addInputLines(
+                        "Test.java",
+                        "public class Test {",
+                        "  public static Builder builder() {",
+                        "    return new Builder();",
+                        "  }",
+                        "  public static class Builder {",
+                        "    private int foo;",
+                        "    private String bar = \"bar\";",
+                        "    public Test build() {",
+                        "      return new Test();",
+                        "    }",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "public class Test {",
+                        "  public static Builder builder() {",
+                        "    return new Builder();",
+                        "  }",
+                        "  public static class Builder {",
+                        "    private int foo;",
+                        "    private String bar = \"bar\";",
+                        "    private Builder() {}",
+                        "    public Test build() {",
+                        "      return new Test();",
+                        "    }",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void fixWithFieldsWithoutSpacing() {
+        fix().addInputLines(
+                        "Test.java",
+                        "public class Test {",
+                        "  public static Builder builder() {",
+                        "    return new Builder();",
+                        "  }",
+                        "  public static class Builder {private int foo;public Test build() {",
+                        "      return new Test();",
+                        "    }",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "public class Test {",
+                        "  public static Builder builder() {",
+                        "    return new Builder();",
+                        "  }",
+                        "  public static class Builder {",
+                        "    private int foo;",
+                        "    private Builder() {}",
+                        "    public Test build() {",
+                        "      return new Test();",
+                        "    }",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     void testNoStaticFactory() {
         fix().addInputLines(
                         "Test.java",

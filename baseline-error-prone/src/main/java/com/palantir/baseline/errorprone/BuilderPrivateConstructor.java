@@ -26,6 +26,8 @@ import com.google.errorprone.matchers.Description;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.MethodTree;
+import com.sun.source.tree.Tree;
+import com.sun.source.tree.Tree.Kind;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.tree.JCTree;
@@ -50,12 +52,7 @@ public final class BuilderPrivateConstructor extends BugChecker implements BugCh
         if (enclosingClass == null) {
             return Description.NO_MATCH;
         }
-        if (!tree.getSimpleName().contentEquals("Builder")
-                || !tree.getModifiers().getFlags().contains(Modifier.STATIC)) {
-            return Description.NO_MATCH;
-        }
-        if (!tree.getImplementsClause().isEmpty() || tree.getExtendsClause() != null) {
-            // Builder implements or extends another component, no need to
+        if (!isValidBuilderClass(tree)) {
             return Description.NO_MATCH;
         }
         List<MethodTree> constructors = ASTHelpers.getConstructors(tree);
@@ -68,17 +65,34 @@ public final class BuilderPrivateConstructor extends BugChecker implements BugCh
             return Description.NO_MATCH;
         }
 
-        // Ideally the constructor would be placed after the last field declaration.
-        int openingCurlyIndex = ((JCTree) tree).getStartPosition()
-                + state.getSourceForNode(tree).indexOf('{');
+        // If no fields exist, the constructor is placed after the curly brace
+        int constructorPosition = ((JCTree) tree).getStartPosition()
+                + state.getSourceForNode(tree).indexOf('{')
+                + 1;
+
+        for (Tree member : tree.getMembers()) {
+            if (member.getKind() == Kind.VARIABLE) {
+                int endPosition = state.getEndPosition(member);
+                if (endPosition > constructorPosition) {
+                    constructorPosition = endPosition;
+                }
+            }
+        }
         return buildDescription(tree)
                 .addFix(SuggestedFix.builder()
                         .replace(
-                                openingCurlyIndex + 1,
-                                openingCurlyIndex + 1,
+                                constructorPosition,
+                                constructorPosition,
                                 String.format("\nprivate %s() {}", tree.getSimpleName()))
                         .build())
                 .build();
+    }
+
+    private static boolean isValidBuilderClass(ClassTree tree) {
+        return tree.getSimpleName().contentEquals("Builder")
+                && tree.getImplementsClause().isEmpty()
+                && tree.getExtendsClause() == null
+                && tree.getModifiers().getFlags().contains(Modifier.STATIC);
     }
 
     private static boolean hasStaticBuilderFactory(ClassSymbol classSymbol, VisitorState state) {
