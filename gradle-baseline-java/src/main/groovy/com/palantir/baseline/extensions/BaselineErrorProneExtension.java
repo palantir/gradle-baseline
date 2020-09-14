@@ -36,6 +36,7 @@ public class BaselineErrorProneExtension {
             "ExecutorSubmitRunnableFutureIgnored",
             "ExtendsErrorOrThrowable",
             "FinalClass",
+            "ImplicitPublicBuilderConstructor",
             "LambdaMethodReference",
             "LoggerEnclosingClass",
             "LogsafeArgName",

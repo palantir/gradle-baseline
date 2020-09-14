@@ -192,6 +192,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `TooManyArguments`: Prefer Interface that take few arguments rather than many.
 - `PreferStaticLoggers`: Prefer static loggers over instance loggers.
 - `LogsafeArgName`: Prevent certain named arguments as being logged as safe. Specify unsafe argument names using `LogsafeArgName:UnsafeArgNames` errorProne flag.
+- `ImplicitPublicBuilderConstructor`: Prevent builders from unintentionally leaking public constructors.
 
 ### Programmatic Application
 
