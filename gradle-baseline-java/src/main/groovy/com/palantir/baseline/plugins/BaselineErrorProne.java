@@ -98,11 +98,11 @@ public final class BaselineErrorProne implements Plugin<Project> {
         project.getDependencies()
                 .add(ErrorPronePlugin.CONFIGURATION_NAME, "com.palantir.baseline:baseline-error-prone:" + version);
         project.getDependencies()
-                .add("refasterCompiler", "com.palantir.baseline:baseline-refaster-javac-plugin:" + version);
-        project.getDependencies()
                 .add(
-                        "assertjErrorProne",
+                        ErrorPronePlugin.CONFIGURATION_NAME,
                         "com.palantir.assertj-automation:assertj-error-prone:" + ASSERTJ_ERROR_PRONE_VERSION);
+        project.getDependencies()
+                .add("refasterCompiler", "com.palantir.baseline:baseline-refaster-javac-plugin:" + version);
 
         Provider<File> refasterRulesFile = project.getLayout()
                 .getBuildDirectory()
