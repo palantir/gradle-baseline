@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: run error-prone checks on every build
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1494
