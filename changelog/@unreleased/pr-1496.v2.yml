@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: checkstyle 8.33 -> 8.36.1, which enables support for new language features
+    like `records`.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1496
