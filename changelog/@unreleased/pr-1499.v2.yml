@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: 'fix #1498: Fix InvocationHandlerDelegation false positive'
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1499
