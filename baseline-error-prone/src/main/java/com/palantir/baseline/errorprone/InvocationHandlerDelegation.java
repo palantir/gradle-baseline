@@ -88,10 +88,10 @@ public final class InvocationHandlerDelegation extends BugChecker implements Bug
     private static final Matcher<Tree> CONTAINS_UNWRAP_THROWABLE =
             Matchers.contains(ExpressionTree.class, UNWRAP_THROWABLE);
 
-    private static TypePredicate IS_ITE_SUBTYPE =
+    private static final TypePredicate IS_ITE_SUBTYPE =
             new DescendantOf(Suppliers.typeFromClass(InvocationTargetException.class));
 
-    private static TypePredicate IS_ITE_UNION = (TypePredicate) (type, state) -> {
+    private static final TypePredicate IS_ITE_UNION = (TypePredicate) (type, state) -> {
         if (type.isUnion()) {
             for (Type unionType : MoreASTHelpers.expandUnion(type)) {
                 if (IS_ITE_SUBTYPE.apply(unionType, state)) {
