@@ -134,6 +134,27 @@ class InvocationHandlerDelegationTest {
     }
 
     @Test
+    void testInvocationHandler_catchUnion() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import java.lang.reflect.InvocationHandler;",
+                        "import java.lang.reflect.Method;",
+                        "import java.lang.reflect.InvocationTargetException;",
+                        "import java.lang.reflect.UndeclaredThrowableException;",
+                        "final class Test implements InvocationHandler {",
+                        "  @Override",
+                        "  public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {",
+                        "    try {",
+                        "      return method.invoke(this, args);",
+                        "    } catch (InvocationTargetException | UndeclaredThrowableException e) {",
+                        "      throw e.getCause();",
+                        "    }",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     void testCorrectInvocationHandler_lambda() {
         helper().addSourceLines(
                         "Test.java",

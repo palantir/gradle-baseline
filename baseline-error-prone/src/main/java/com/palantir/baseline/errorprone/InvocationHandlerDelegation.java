@@ -26,6 +26,10 @@ import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
+import com.google.errorprone.predicates.TypePredicate;
+import com.google.errorprone.predicates.TypePredicates;
+import com.google.errorprone.predicates.type.DescendantOf;
+import com.google.errorprone.suppliers.Suppliers;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ConditionalExpressionTree;
 import com.sun.source.tree.ExpressionTree;
@@ -37,6 +41,7 @@ import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.NewClassTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.TryTree;
+import com.sun.tools.javac.code.Type;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
@@ -83,8 +88,22 @@ public final class InvocationHandlerDelegation extends BugChecker implements Bug
     private static final Matcher<Tree> CONTAINS_UNWRAP_THROWABLE =
             Matchers.contains(ExpressionTree.class, UNWRAP_THROWABLE);
 
+    private static final TypePredicate IS_ITE_SUBTYPE =
+            new DescendantOf(Suppliers.typeFromClass(InvocationTargetException.class));
+
+    private static final TypePredicate IS_ITE_UNION = (TypePredicate) (type, state) -> {
+        if (type.isUnion()) {
+            for (Type unionType : MoreASTHelpers.expandUnion(type)) {
+                if (IS_ITE_SUBTYPE.apply(unionType, state)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    };
+
     private static final Matcher<ExpressionTree> UNWRAP_ITE = MethodMatchers.instanceMethod()
-            .onDescendantOf(InvocationTargetException.class.getName())
+            .onClass(TypePredicates.anyOf(IS_ITE_SUBTYPE, IS_ITE_UNION))
             // getTargetException is deprecated, but does work correctly.
             .namedAnyOf("getCause", "getTargetException")
             .withParameters();
