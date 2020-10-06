@@ -21,7 +21,6 @@ import com.google.common.base.CaseFormat;
 import com.google.common.base.Converter;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Sets;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.BugPattern.LinkType;
 import com.google.errorprone.VisitorState;
@@ -117,17 +116,23 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
             MethodSymbol methodSymbol = ASTHelpers.getSymbol(methodInvocationTree);
             ClassSymbol classSymbol = methodSymbol.enclClass();
 
-            // If this is the builder's constructor or a builder method on the parent class, stop here; if it's another
-            // method on a different class, give up because it will quickly become impossible to track whether it's
-            // been fully initialized
             if (classSymbol == null || !classSymbol.equals(builderClass)) {
                 if (methodSymbol.getSimpleName().contentEquals("builder")
                         && methodSymbol.getParameters().isEmpty()) {
-                    // No args builder method that returns this type can be assumed to just construct the builder
+                    // A nullary method named "builder" which returns the Builder type can be assumed to just construct
+                    // the builder
                     return uninitializedInitBits;
                 }
                 // If this is any other method, there may be initialization that occurs in the method, and trying to
                 // track that down will quickly become impossible, so give up here
+                return ImmutableSet.of();
+            }
+            if (methodSymbol.getSimpleName().contentEquals("<init>")) {
+                // It's rooted at the builder constructor, so all the fields should be initialized
+                return uninitializedInitBits;
+            }
+            if (methodSymbol.getSimpleName().contentEquals("from")) {
+                // from initializes all fields
                 return ImmutableSet.of();
             }
 
@@ -156,7 +161,9 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
                     .map(identifierTree -> identifierTree.getName().toString())
                     .collect(Collectors.toSet());
 
-            Set<String> remainingInitBits = Sets.difference(uninitializedInitBits, initializedInitBits);
+            Set<String> remainingInitBits = uninitializedInitBits.stream()
+                    .filter(initBit -> !initializedInitBits.contains(initBit))
+                    .collect(Collectors.toSet());
             return checkInitialization(ASTHelpers.getReceiver(tree), remainingInitBits, state, builderClass);
         }
 
