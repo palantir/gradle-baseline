@@ -61,6 +61,36 @@ public class ImmutablesBuilderMissingInitializationTest {
     }
 
     @Test
+    public void testPassesWhenBuilderAssignedToVariable() {
+        helperWithImmutables()
+                .addSourceLines(
+                        "MyTest.java",
+                        "public class MyTest {",
+                        "    public static void main(String[] args) {",
+                        "        Person.Builder Builder = Person.builder();",
+                        "        builder.build();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testPassesWhenBuilderFromLocalMethod() {
+        helperWithImmutables()
+                .addSourceLines(
+                        "MyTest.java",
+                        "public class MyTest {",
+                        "    public static void main(String[] args) {",
+                        "        getBuilder().build();",
+                        "    }",
+                        "    private static Person.Builder getBuilder() {",
+                        "        return new Person.Builder();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testPassesWithAllFieldsPopulated_usingExtendedConstructor() {
         helperWithImmutables()
                 .addSourceLines(

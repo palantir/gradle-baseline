@@ -43,6 +43,7 @@ import com.sun.source.tree.UnaryTree;
 import com.sun.source.tree.VariableTree;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -112,59 +113,42 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
 
     private Set<String> checkInitialization(
             ExpressionTree tree, Set<String> uninitializedInitBits, VisitorState state, ClassSymbol builderClass) {
+        if (uninitializedInitBits.isEmpty()) {
+            return ImmutableSet.of();
+        }
         if (tree instanceof MethodInvocationTree) {
-            MethodInvocationTree methodInvocationTree = (MethodInvocationTree) tree;
-            MethodSymbol methodSymbol = ASTHelpers.getSymbol(methodInvocationTree);
-            ClassSymbol classSymbol = methodSymbol.enclClass();
-
-            if (classSymbol == null || !classSymbol.equals(builderClass)) {
+            MethodSymbol methodSymbol = ASTHelpers.getSymbol((MethodInvocationTree) tree);
+            if (!Objects.equals(methodSymbol.enclClass(), builderClass)) {
+                // This method belongs to a class other than the builder, so we are at the end of the chain
                 if (methodSymbol.getSimpleName().contentEquals("builder")
                         && methodSymbol.getParameters().isEmpty()) {
                     // A nullary method named "builder" which returns the Builder type can be assumed to just construct
                     // the builder
+                    // TODO(jwickham): This doesn't hold:
+                    // https://sourcegraph.palantir.build/search?q=%5C+builder%28%29%5C+%7B%5Cn.*%5Cn%5B%5E%7D%5D*%5Cn+repo:/foundry/&patternType=regexp#6
                     return uninitializedInitBits;
                 }
-                // If this is any other method, there may be initialization that occurs in the method, and trying to
-                // track that down will quickly become impossible, so give up here
+                // Otherwise, we can't rule out that the builder may be partially initialized in the method, so give
+                // up here
                 return ImmutableSet.of();
             }
             if (methodSymbol.getSimpleName().contentEquals("from")) {
-                // `from` initializes all fields
+                // `from` initializes all fields, so we can bail immediately
                 return ImmutableSet.of();
             }
 
             MethodTree methodTree = ASTHelpers.findMethod(methodSymbol, state);
-            Set<String> initializedInitBits = methodTree.getBody().getStatements().stream()
-                    .flatMap(filterByType(ExpressionStatementTree.class))
-                    .map(ExpressionStatementTree::getExpression)
-                    .flatMap(filterByType(CompoundAssignmentTree.class))
-                    .filter(assignmentTree -> {
-                        if (assignmentTree.getVariable() instanceof IdentifierTree) {
-                            return ((IdentifierTree) assignmentTree.getVariable())
-                                    .getName()
-                                    .contentEquals("initBits");
-                        }
-                        return false;
-                    })
-                    .map(CompoundAssignmentTree::getExpression)
-                    .flatMap(filterByType(UnaryTree.class))
-                    .flatMap(unaryTree -> {
-                        if (unaryTree.getKind().equals(Kind.BITWISE_COMPLEMENT)) {
-                            return Stream.of(unaryTree.getExpression());
-                        }
-                        return Stream.empty();
-                    })
-                    .flatMap(filterByType(IdentifierTree.class))
-                    .map(identifierTree -> identifierTree.getName().toString())
-                    .collect(Collectors.toSet());
+            if (methodTree == null) {
+                return ImmutableSet.of();
+            }
 
+            Set<String> initializedInitBits = initBitsInitializedBy(methodTree);
             Set<String> remainingInitBits = uninitializedInitBits.stream()
                     .filter(initBit -> !initializedInitBits.contains(initBit))
                     .collect(Collectors.toSet());
             return checkInitialization(ASTHelpers.getReceiver(tree), remainingInitBits, state, builderClass);
         } else if (tree instanceof NewClassTree) {
             NewClassTree newClassTree = (NewClassTree) tree;
-
             if (newClassTree.getArguments().isEmpty()) {
                 // The constructor returned the builder (otherwise we would have bailed out in a previous iteration), so
                 // we should have seen all the field initializations
@@ -176,6 +160,32 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
 
         // If the chain started with something other than a simple method call to create the builder, give up
         return ImmutableSet.of();
+    }
+
+    private Set<String> initBitsInitializedBy(MethodTree methodTree) {
+        return methodTree.getBody().getStatements().stream()
+                .flatMap(filterByType(ExpressionStatementTree.class))
+                .map(ExpressionStatementTree::getExpression)
+                .flatMap(filterByType(CompoundAssignmentTree.class))
+                .filter(assignmentTree -> {
+                    if (assignmentTree.getVariable() instanceof IdentifierTree) {
+                        return ((IdentifierTree) assignmentTree.getVariable())
+                                .getName()
+                                .contentEquals("initBits");
+                    }
+                    return false;
+                })
+                .map(CompoundAssignmentTree::getExpression)
+                .flatMap(filterByType(UnaryTree.class))
+                .flatMap(unaryTree -> {
+                    if (unaryTree.getKind().equals(Kind.BITWISE_COMPLEMENT)) {
+                        return Stream.of(unaryTree.getExpression());
+                    }
+                    return Stream.empty();
+                })
+                .flatMap(filterByType(IdentifierTree.class))
+                .map(identifierTree -> identifierTree.getName().toString())
+                .collect(Collectors.toSet());
     }
 
     private <I, O extends I> Function<I, Stream<O>> filterByType(Class<O> clazz) {
