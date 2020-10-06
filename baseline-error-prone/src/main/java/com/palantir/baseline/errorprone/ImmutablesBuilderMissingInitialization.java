@@ -38,6 +38,7 @@ import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.NewClassTree;
+import com.sun.source.tree.ReturnTree;
 import com.sun.source.tree.Tree.Kind;
 import com.sun.source.tree.UnaryTree;
 import com.sun.source.tree.VariableTree;
@@ -118,27 +119,21 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
         }
         if (tree instanceof MethodInvocationTree) {
             MethodSymbol methodSymbol = ASTHelpers.getSymbol((MethodInvocationTree) tree);
+            MethodTree methodTree = ASTHelpers.findMethod(methodSymbol, state);
+            if (methodTree == null) {
+                return ImmutableSet.of();
+            }
             if (!Objects.equals(methodSymbol.enclClass(), builderClass)) {
                 // This method belongs to a class other than the builder, so we are at the end of the chain
-                if (methodSymbol.getSimpleName().contentEquals("builder")
-                        && methodSymbol.getParameters().isEmpty()) {
-                    // A nullary method named "builder" which returns the Builder type can be assumed to just construct
-                    // the builder
-                    // TODO(jwickham): This doesn't hold:
-                    // https://sourcegraph.palantir.build/search?q=%5C+builder%28%29%5C+%7B%5Cn.*%5Cn%5B%5E%7D%5D*%5Cn+repo:/foundry/&patternType=regexp#6
+                // If the only thing this method does is construct and return the builder, we continue and expect
+                // everything to have been initialized at this point, but if it does anything more complex then give up
+                if (methodJustCallsConstructor(methodTree)) {
                     return uninitializedInitBits;
                 }
-                // Otherwise, we can't rule out that the builder may be partially initialized in the method, so give
-                // up here
                 return ImmutableSet.of();
             }
             if (methodSymbol.getSimpleName().contentEquals("from")) {
                 // `from` initializes all fields, so we can bail immediately
-                return ImmutableSet.of();
-            }
-
-            MethodTree methodTree = ASTHelpers.findMethod(methodSymbol, state);
-            if (methodTree == null) {
                 return ImmutableSet.of();
             }
 
@@ -186,6 +181,20 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
                 .flatMap(filterByType(IdentifierTree.class))
                 .map(identifierTree -> identifierTree.getName().toString())
                 .collect(Collectors.toSet());
+    }
+
+    /**
+     * Make sure a method only does one thing, which is to call a constructor with no arguments and return the result.
+     */
+    private boolean methodJustCallsConstructor(MethodTree methodTree) {
+        if (methodTree.getBody().getStatements().size() != 1) {
+            return false;
+        }
+        return methodTree.getBody().getStatements().stream()
+                .flatMap(filterByType(ReturnTree.class))
+                .map(ReturnTree::getExpression)
+                .flatMap(filterByType(NewClassTree.class))
+                .anyMatch(newClassTree -> newClassTree.getArguments().isEmpty());
     }
 
     private <I, O extends I> Function<I, Stream<O>> filterByType(Class<O> clazz) {

@@ -21,39 +21,39 @@ import org.junit.Test;
 public class ImmutablesBuilderMissingInitializationTest {
 
     @Test
-    public void testPassesWithAllFieldsPopulated() {
+    public void testPassesWithAllFieldsPopulated_usingBuilderMethod() {
         helperWithImmutables()
                 .addSourceLines(
                         "MyTest.java",
                         "public class MyTest {",
                         "    public static void main(String[] args) {",
-                        "        Person.builder().name(\"name\").currentAge(70).company(\"palantir\").build();",
+                        "        Person.builder().name(\"name\").age(0).company(\"palantir\").build();",
                         "    }",
                         "}")
                 .doTest();
     }
 
     @Test
-    public void testPassesWithOptionalFieldOmitted() {
+    public void testPassesWithOptionalFieldOmitted_usingBuilderMethod() {
         helperWithImmutables()
                 .addSourceLines(
                         "MyTest.java",
                         "public class MyTest {",
                         "    public static void main(String[] args) {",
-                        "        Person.builder().name(\"name\").currentAge(60).build();",
+                        "        Person.builder().name(\"name\").age(10).build();",
                         "    }",
                         "}")
                 .doTest();
     }
 
     @Test
-    public void testPassesWithFrom() {
+    public void testPassesWithFrom_usingBuilderMethod() {
         helperWithImmutables()
                 .addSourceLines(
                         "MyTest.java",
                         "public class MyTest {",
                         "    public static void main(String[] args) {",
-                        "        Person p1 = Person.builder().name(\"name\").currentAge(50).build();",
+                        "        Person p1 = Person.builder().name(\"name\").age(20).build();",
                         "        Person.builder().from(p1).build();",
                         "    }",
                         "}")
@@ -61,13 +61,13 @@ public class ImmutablesBuilderMissingInitializationTest {
     }
 
     @Test
-    public void testPassesWhenBuilderAssignedToVariable() {
+    public void testPassesWhenBuilderAssignedToVariable_usingBuilderMethod() {
         helperWithImmutables()
                 .addSourceLines(
                         "MyTest.java",
                         "public class MyTest {",
                         "    public static void main(String[] args) {",
-                        "        Person.Builder Builder = Person.builder();",
+                        "        Person.Builder builder = Person.builder();",
                         "        builder.build();",
                         "    }",
                         "}")
@@ -75,16 +75,16 @@ public class ImmutablesBuilderMissingInitializationTest {
     }
 
     @Test
-    public void testPassesWhenBuilderFromLocalMethod() {
+    public void testPassesWithUninitializedFields_whenBuilderFromMethodThatSetsSomeFields() {
         helperWithImmutables()
                 .addSourceLines(
                         "MyTest.java",
                         "public class MyTest {",
                         "    public static void main(String[] args) {",
-                        "        getBuilder().build();",
+                        "        builder().build();",
                         "    }",
-                        "    private static Person.Builder getBuilder() {",
-                        "        return new Person.Builder();",
+                        "    private static ImmutablePerson.Builder builder() {",
+                        "        return new Person.Builder().name(\"name\").age(30);",
                         "    }",
                         "}")
                 .doTest();
@@ -97,7 +97,7 @@ public class ImmutablesBuilderMissingInitializationTest {
                         "MyTest.java",
                         "public class MyTest {",
                         "    public static void main(String[] args) {",
-                        "        new Person.Builder().name(\"name\").currentAge(40).company(\"palantir\").build();",
+                        "        new Person.Builder().name(\"name\").age(40).company(\"palantir\").build();",
                         "    }",
                         "}")
                 .doTest();
@@ -110,7 +110,7 @@ public class ImmutablesBuilderMissingInitializationTest {
                         "MyTest.java",
                         "public class MyTest {",
                         "    public static void main(String[] args) {",
-                        "        new ImmutablePerson.Builder().name(\"name\").currentAge(30).build();",
+                        "        new ImmutablePerson.Builder().name(\"name\").age(50).build();",
                         "    }",
                         "}")
                 .doTest();
@@ -124,10 +124,10 @@ public class ImmutablesBuilderMissingInitializationTest {
                         "public class MyTest {",
                         "    public static void main(String[] args) {",
                         "        Person.builder()",
-                        "                .currentAge(20)",
+                        "                .age(60)",
                         "                .company(\"palantir\")",
-                        "                // BUG: Diagnostic contains: Some builder fields have not been initialized: ",
-                        "                // name",
+                        "                // BUG: Diagnostic contains: Some builder fields have not been initialized: "
+                                + "name",
                         "                .build();",
                         "    }",
                         "}")
@@ -141,8 +141,7 @@ public class ImmutablesBuilderMissingInitializationTest {
                         "MyTest.java",
                         "public class MyTest {",
                         "    public static void main(String[] args) {",
-                        "        // BUG: Diagnostic contains: Some builder fields have not been initialized: name, ",
-                        "        // currentAge",
+                        "        // BUG: Diagnostic contains: Some builder fields have not been initialized: name, age",
                         "        Person.builder().build();",
                         "    }",
                         "}")
@@ -157,7 +156,7 @@ public class ImmutablesBuilderMissingInitializationTest {
                         "public class MyTest {",
                         "    public static void main(String[] args) {",
                         "        // BUG: Diagnostic contains: Some builder fields have not been initialized: name",
-                        "        new Person.Builder().currentAge(10).build();",
+                        "        new Person.Builder().age(70).build();",
                         "    }",
                         "}")
                 .doTest();
@@ -171,7 +170,24 @@ public class ImmutablesBuilderMissingInitializationTest {
                         "public class MyTest {",
                         "    public static void main(String[] args) {",
                         "        // BUG: Diagnostic contains: Some builder fields have not been initialized: name",
-                        "        new ImmutablePerson.Builder().currentAge(0).build();",
+                        "        new ImmutablePerson.Builder().age(80).build();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testFailsWithOneFieldOmitted_fromLocalMethod() {
+        helperWithImmutables()
+                .addSourceLines(
+                        "MyTest.java",
+                        "public class MyTest {",
+                        "    public static void main(String[] args) {",
+                        "        // BUG: Diagnostic contains: Some builder fields have not been initialized: name, age",
+                        "        getBuilder().build();",
+                        "    }",
+                        "    private static Person.Builder getBuilder() {",
+                        "        return new Person.Builder();",
                         "    }",
                         "}")
                 .doTest();
@@ -231,7 +247,7 @@ public class ImmutablesBuilderMissingInitializationTest {
                         "@Value.Immutable",
                         "public interface Person {",
                         "    String name();",
-                        "    int currentAge();",
+                        "    int age();",
                         "    Optional<String> company();",
                         "    static Builder builder() {",
                         "        return new Builder();",
@@ -247,34 +263,34 @@ public class ImmutablesBuilderMissingInitializationTest {
                         "@Generated(from = \"Person\", generator = \"Immutables\")",
                         "final class ImmutablePerson implements Person {",
                         "    private final String name;",
-                        "    private final int currentAge;",
+                        "    private final int age;",
                         "    private final @Nullable String company;",
-                        "    private ImmutablePerson(String name, int currentAge, @Nullable String company) {",
-                        "        this.name = name; this.currentAge = currentAge; this.company = company;",
+                        "    private ImmutablePerson(String name, int age, @Nullable String company) {",
+                        "        this.name = name; this.age = age; this.company = company;",
                         "    }",
                         "    @Override",
                         "    public String name() { return name; }",
                         "    @Override",
-                        "    public int currentAge() { return currentAge; }",
+                        "    public int age() { return age; }",
                         "    @Override",
                         "    public Optional<String> company() { return Optional.ofNullable(company); }",
                         "",
                         "    @Generated(from = \"Person\", generator = \"Immutables\")",
                         "    public static class Builder {",
                         "        private static final long INIT_BIT_NAME = 0x1L;",
-                        "        private static final long INIT_BIT_CURRENT_AGE = 0x2L;",
+                        "        private static final long INIT_BIT_AGE = 0x2L;",
                         "        private long initBits = 0x3L;",
                         "        private @Nullable String name;",
-                        "        private @Nullable Integer currentAge;",
+                        "        private @Nullable Integer age;",
                         "        private @Nullable String company;",
                         "        public final Builder name(String name) {",
                         "            this.name = Objects.requireNonNull(name, \"name\");",
                         "            initBits &= ~INIT_BIT_NAME;",
                         "            return this;",
                         "        }",
-                        "        public final Builder currentAge(int currentAge) {",
-                        "            this.currentAge = currentAge;",
-                        "            initBits &= ~INIT_BIT_CURRENT_AGE;",
+                        "        public final Builder age(int age) {",
+                        "            this.age = age;",
+                        "            initBits &= ~INIT_BIT_AGE;",
                         "            return this;",
                         "        }",
                         "        public final Builder company(String company) {",
@@ -287,13 +303,13 @@ public class ImmutablesBuilderMissingInitializationTest {
                         "        }",
                         "        public final Builder from(Person instance) {",
                         "            name(instance.name());",
-                        "            currentAge(instance.currentAge());",
+                        "            age(instance.age());",
                         "            company(instance.company());",
                         "            return this;",
                         "        }",
                         "        public Person build() {",
                         "            if (initBits != 0) { throw new IllegalStateException(); }",
-                        "            return new ImmutablePerson(name, currentAge, company);",
+                        "            return new ImmutablePerson(name, age, company);",
                         "        }",
                         "    }",
                         "}");
