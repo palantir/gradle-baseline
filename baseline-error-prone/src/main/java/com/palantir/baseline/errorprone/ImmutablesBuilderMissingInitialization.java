@@ -37,6 +37,7 @@ import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.MethodTree;
+import com.sun.source.tree.NewClassTree;
 import com.sun.source.tree.Tree.Kind;
 import com.sun.source.tree.UnaryTree;
 import com.sun.source.tree.VariableTree;
@@ -55,7 +56,7 @@ import org.immutables.value.Generated;
         linkType = LinkType.CUSTOM,
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         severity = BugPattern.SeverityLevel.ERROR,
-        summary = "__TODO__")
+        summary = "All required fields of an Immutables builder must be initialized")
 public final class ImmutablesBuilderMissingInitialization extends BugChecker implements MethodInvocationTreeMatcher {
     private static final String FIELD_INIT_BITS_PREFIX = "INIT_BIT_";
 
@@ -111,7 +112,7 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
 
     private Set<String> checkInitialization(
             ExpressionTree tree, Set<String> uninitializedInitBits, VisitorState state, ClassSymbol builderClass) {
-        if (tree != null && tree.getKind().equals(Kind.METHOD_INVOCATION)) {
+        if (tree instanceof MethodInvocationTree) {
             MethodInvocationTree methodInvocationTree = (MethodInvocationTree) tree;
             MethodSymbol methodSymbol = ASTHelpers.getSymbol(methodInvocationTree);
             ClassSymbol classSymbol = methodSymbol.enclClass();
@@ -127,12 +128,8 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
                 // track that down will quickly become impossible, so give up here
                 return ImmutableSet.of();
             }
-            if (methodSymbol.getSimpleName().contentEquals("<init>")) {
-                // It's rooted at the builder constructor, so all the fields should be initialized
-                return uninitializedInitBits;
-            }
             if (methodSymbol.getSimpleName().contentEquals("from")) {
-                // from initializes all fields
+                // `from` initializes all fields
                 return ImmutableSet.of();
             }
 
@@ -165,9 +162,19 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
                     .filter(initBit -> !initializedInitBits.contains(initBit))
                     .collect(Collectors.toSet());
             return checkInitialization(ASTHelpers.getReceiver(tree), remainingInitBits, state, builderClass);
+        } else if (tree instanceof NewClassTree) {
+            NewClassTree newClassTree = (NewClassTree) tree;
+
+            if (newClassTree.getArguments().isEmpty()) {
+                // The constructor returned the builder (otherwise we would have bailed out in a previous iteration), so
+                // we should have seen all the field initializations
+                return uninitializedInitBits;
+            }
+            // If the constructor takes arguments, it's doing something funky
+            return ImmutableSet.of();
         }
 
-        // If the chain started with something other than a method call to create the builder, give up
+        // If the chain started with something other than a simple method call to create the builder, give up
         return ImmutableSet.of();
     }
 
