@@ -202,12 +202,9 @@ public class ImmutablesBuilderMissingInitializationTest {
                         "@Value.Immutable",
                         "public interface Bug {",
                         "    Optional<String> author();",
-                        "    static Builder builder() {",
-                        "        return new Builder();",
-                        "    }",
                         "}")
                 .addSourceLines(
-                        "ImmutablePerson.java",
+                        "ImmutableBug.java",
                         "import java.util.Objects;",
                         "import java.util.Optional;",
                         "import javax.annotation.Nullable;",
@@ -215,7 +212,7 @@ public class ImmutablesBuilderMissingInitializationTest {
                         "@Generated(from = \"Bug\", generator = \"Immutables\")",
                         "final class ImmutableBug implements Bug {",
                         "    private final @Nullable String author;",
-                        "    private ImmutablePerson(@Nullable String author) {",
+                        "    private ImmutableBug(@Nullable String author) {",
                         "        this.author = author;",
                         "    }",
                         "    @Override",
@@ -228,11 +225,71 @@ public class ImmutablesBuilderMissingInitializationTest {
                         "            this.author = Objects.requireNonNull(author, \"author\");",
                         "            return this;",
                         "        }",
-                        "        public Person build() {",
+                        "        public Bug build() {",
                         "            return new ImmutableBug(author);",
                         "        }",
                         "    }",
-                        "}");
+                        "}")
+                .addSourceLines(
+                        "MyTest.java",
+                        "public class MyTest {",
+                        "    public static void main(String[] args) {",
+                        "        new ImmutableBug.Builder().build();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testComputesMissingFieldNamesCorrectly() {
+        helper().addSourceLines(
+                        "Company.java",
+                        "import java.util.Optional;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
+                        "public interface Company {",
+                        "    int employeeCount();",
+                        "}")
+                .addSourceLines(
+                        "ImmutableCompany.java",
+                        "import java.util.Objects;",
+                        "import java.util.Optional;",
+                        "import javax.annotation.Nullable;",
+                        "import org.immutables.value.Generated;",
+                        "@Generated(from = \"Company\", generator = \"Immutables\")",
+                        "final class ImmutableCompany implements Company {",
+                        "    private final int employeeCount;",
+                        "    private ImmutableCompany(int employeeCount) {",
+                        "        this.employeeCount = employeeCount;",
+                        "    }",
+                        "    @Override",
+                        "    public int employeeCount() { return employeeCount; }",
+                        "",
+                        "    @Generated(from = \"Company\", generator = \"Immutables\")",
+                        "    public static class Builder {",
+                        "        private static final long INIT_BIT_EMPLOYEE_COUNT = 0x1L;",
+                        "        private long initBits = 0x1L;",
+                        "        private @Nullable Integer employeeCount;",
+                        "        public final Builder employeeCount(int employeeCount) {",
+                        "            this.employeeCount = employeeCount;",
+                        "            initBits &= ~INIT_BIT_EMPLOYEE_COUNT;",
+                        "            return this;",
+                        "        }",
+                        "        public Company build() {",
+                        "            return new ImmutableCompany(employeeCount);",
+                        "        }",
+                        "    }",
+                        "}")
+                .addSourceLines(
+                        "MyTest.java",
+                        "public class MyTest {",
+                        "    public static void main(String[] args) {",
+                        "        // BUG: Diagnostic contains: Some builder fields have not been initialized: "
+                                + "employeeCount",
+                        "        new ImmutableCompany.Builder().build();",
+                        "    }",
+                        "}")
+                .doTest();
     }
 
     private CompilationTestHelper helper() {
