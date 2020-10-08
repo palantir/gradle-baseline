@@ -148,13 +148,13 @@ public class ImmutablesBuilderMissingInitializationTest {
     }
 
     @Test
-    public void testPassesWhenAllFieldsPopulated_withCustomInitMethodStyle() {
+    public void testPassesWhenAllFieldsPopulated_withCustomMethodStyle() {
         helper().addSourceLines(
                         "MyTest.java",
-                        "import com.palantir.baseline.errorprone.ImmutableTypeWithCustomInitMethodStyle;",
+                        "import com.palantir.baseline.errorprone.ImmutableTypeWithCustomMethodStyle;",
                         "public class MyTest {",
                         "    public static void main(String[] args) {",
-                        "        ImmutableTypeWithCustomInitMethodStyle.builder().setValue(\"value\").build();",
+                        "        ImmutableTypeWithCustomMethodStyle.builder().setValue(\"value\").build();",
                         "    }",
                         "}")
                 .doTest();
@@ -261,14 +261,14 @@ public class ImmutablesBuilderMissingInitializationTest {
     }
 
     @Test
-    public void testFailsWhenAllOneFieldOmitted_withCustomInitMethodStyle() {
+    public void testFailsWhenAllOneFieldOmitted_withCustomMethodStyle() {
         helper().addSourceLines(
                         "MyTest.java",
-                        "import com.palantir.baseline.errorprone.ImmutableTypeWithCustomInitMethodStyle;",
+                        "import com.palantir.baseline.errorprone.ImmutableTypeWithCustomMethodStyle;",
                         "public class MyTest {",
                         "    public static void main(String[] args) {",
                         "        // BUG: Diagnostic contains: Some builder fields have not been initialized: value",
-                        "        ImmutableTypeWithCustomInitMethodStyle.builder().build();",
+                        "        ImmutableTypeWithCustomMethodStyle.builder().build();",
                         "    }",
                         "}")
                 .doTest();
@@ -333,8 +333,8 @@ public class ImmutablesBuilderMissingInitializationTest {
     }
 
     @Value.Immutable
-    @Value.Style(visibility = ImplementationVisibility.PUBLIC, init = "set*")
-    public interface TypeWithCustomInitMethodStyle {
-        String value();
+    @Value.Style(visibility = ImplementationVisibility.PUBLIC, init = "set*", get = "use*")
+    public interface TypeWithCustomMethodStyle {
+        String useValue();
     }
 }

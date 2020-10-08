@@ -39,12 +39,15 @@ import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Type;
+import java.util.Arrays;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.immutables.value.Generated;
+import org.immutables.value.Value;
 
 /**
  * Checks that all required fields in an immutables.org generated builder have been populated.
@@ -92,6 +95,26 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
             return Description.NO_MATCH;
         }
 
+        Optional<Value.Style> maybeStyle = findImmutablesStyle(interfaceClass.get());
+        Set<String> getterPrefixes;
+        if (maybeStyle.isPresent()) {
+            if (!maybeStyle.get().init().endsWith("*")) {
+                // The builder methods don't end with the field name, so this logic won't work
+                return Description.NO_MATCH;
+            }
+            if (Arrays.stream(maybeStyle.get().get()).anyMatch(getter -> !getter.endsWith("*"))) {
+                // The field names might be cut off and the end as well as the beginning, which we can't handle
+                return Description.NO_MATCH;
+            }
+            getterPrefixes = Arrays.stream(maybeStyle.get().get())
+                    .map(getter -> getter.replace("*", ""))
+                    .map(CaseFormat.LOWER_CAMEL.converterTo(CaseFormat.UPPER_UNDERSCORE))
+                    .map(prefix -> prefix + "_")
+                    .collect(Collectors.toSet());
+        } else {
+            getterPrefixes = ImmutableSet.of("GET_");
+        }
+
         // Mandatory fields have a private static final constant in the generated builder named INIT_BIT_varname, where
         // varname is the UPPER_UNDERSCORE version of the variable name. Find these fields to get the mandatory fields.
         Set<String> requiredFields = Streams.stream(builderClass.members().getSymbols())
@@ -100,7 +123,12 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
                 .filter(symbol -> symbol.getSimpleName().toString().startsWith(FIELD_INIT_BITS_PREFIX))
                 .map(Symbol::toString)
                 .map(initBitsName -> initBitsName.replace(FIELD_INIT_BITS_PREFIX, ""))
-                .map(CaseFormat.UPPER_UNDERSCORE.converterTo(CaseFormat.LOWER_CAMEL)::convert)
+                .map(fieldName -> getterPrefixes.stream()
+                        .filter(fieldName::startsWith)
+                        .findAny()
+                        .map(prefix -> fieldName.replace(prefix, ""))
+                        .orElse(fieldName))
+                .map(CaseFormat.UPPER_UNDERSCORE.converterTo(CaseFormat.LOWER_CAMEL))
                 .collect(Collectors.toSet());
 
         // Run the check
@@ -237,6 +265,38 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
                 && methodSymbol.getParameters().isEmpty());
     }
 
+    private Optional<Value.Style> findImmutablesStyle(ClassSymbol symbol) {
+        Optional<Value.Style> directAnnotation = Optional.ofNullable(symbol.getAnnotation(Value.Style.class));
+        if (directAnnotation.isPresent()) {
+            return directAnnotation;
+        }
+        return symbol.getAnnotationMirrors().stream()
+                .map(compound -> compound.type.tsym)
+                .flatMap(filterStreamByType(ClassSymbol.class))
+                .map(this::findImmutablesStyle)
+                .flatMap(Streams::stream)
+                .findAny();
+    }
+
+    /**
+     * Returns a function for use in Optional.flatMap that filters by type, and casts to that type.
+     */
+    private <I, O extends I> Function<I, Optional<O>> filterByType(Class<O> clazz) {
+        return this.<I, O>filterStreamByType(clazz).andThen(Stream::findAny);
+    }
+
+    /**
+     * Returns a function for use in Stream.flatMap that filters by type, and casts to that type.
+     */
+    private <I, O extends I> Function<I, Stream<O>> filterStreamByType(Class<O> clazz) {
+        return value -> {
+            if (clazz.isInstance(value)) {
+                return Stream.of(clazz.cast(value));
+            }
+            return Stream.empty();
+        };
+    }
+
     private static boolean extendsImmutablesGeneratedClass(Type type, VisitorState state) {
         if (type.tsym instanceof ClassSymbol) {
             return Optional.ofNullable(type.tsym.getAnnotation(Generated.class))
@@ -244,17 +304,5 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
                     .orElseGet(() -> extendsImmutablesGeneratedClass(((ClassSymbol) type.tsym).getSuperclass(), state));
         }
         return false;
-    }
-
-    /**
-     * Returns a function for use in Optional.flatMap that filters by type, and casts to that type.
-     */
-    private <I, O extends I> Function<I, Optional<O>> filterByType(Class<O> clazz) {
-        return value -> {
-            if (clazz.isInstance(value)) {
-                return Optional.of(clazz.cast(value));
-            }
-            return Optional.empty();
-        };
     }
 }
