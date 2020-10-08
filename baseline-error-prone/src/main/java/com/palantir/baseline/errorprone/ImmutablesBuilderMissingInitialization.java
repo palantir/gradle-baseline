@@ -183,7 +183,7 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
     private Set<String> removeFieldsPotentiallyInitializedBy(Set<String> uninitializedFields, String methodName) {
         String methodNameLowerCase = methodName.toLowerCase();
         return uninitializedFields.stream()
-                .filter(field -> !field.toLowerCase().endsWith(methodNameLowerCase))
+                .filter(fieldName -> !methodNameLowerCase.endsWith(fieldName.toLowerCase()))
                 .collect(Collectors.toSet());
     }
 

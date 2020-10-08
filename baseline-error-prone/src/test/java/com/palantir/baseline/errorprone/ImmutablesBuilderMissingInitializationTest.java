@@ -25,7 +25,7 @@ import org.junit.Test;
 
 public class ImmutablesBuilderMissingInitializationTest {
     @Test
-    public void testPassesWithAllFieldsPopulated() {
+    public void testPassesWhenAllFieldsPopulated() {
         helper().addSourceLines(
                         "MyTest.java",
                         "import com.palantir.baseline.errorprone.ImmutablesBuilderMissingInitializationTest.Person;",
@@ -38,7 +38,7 @@ public class ImmutablesBuilderMissingInitializationTest {
     }
 
     @Test
-    public void testPassesWithOptionalFieldOmitted() {
+    public void testPassesWhenOptionalFieldOmitted() {
         helper().addSourceLines(
                         "MyTest.java",
                         "import com.palantir.baseline.errorprone.ImmutablesBuilderMissingInitializationTest.Person;",
@@ -96,7 +96,7 @@ public class ImmutablesBuilderMissingInitializationTest {
     }
 
     @Test
-    public void testPassesWithAllFieldsPopulated_usingInterfaceBuilderMethod() {
+    public void testPassesWhenAllFieldsPopulated_usingInterfaceBuilderMethod() {
         helper().addSourceLines(
                         "MyTest.java",
                         "import com.palantir.baseline.errorprone.ImmutablesBuilderMissingInitializationTest.Person;",
@@ -109,7 +109,7 @@ public class ImmutablesBuilderMissingInitializationTest {
     }
 
     @Test
-    public void testPassesWithAllFieldsPopulated_usingImmutableBuilderMethod() {
+    public void testPassesWhenAllFieldsPopulated_usingImmutableBuilderMethod() {
         helper().addSourceLines(
                         "MyTest.java",
                         "import com.palantir.baseline.errorprone.ImmutableNotOvershadowedType;",
@@ -122,7 +122,7 @@ public class ImmutablesBuilderMissingInitializationTest {
     }
 
     @Test
-    public void testPassesWithAllFieldsPopulated_usingImmutableConstructor() {
+    public void testPassesWhenAllFieldsPopulated_usingImmutableConstructor() {
         helper().addSourceLines(
                         "MyTest.java",
                         "import com.palantir.baseline.errorprone.ImmutablePerson;",
@@ -135,7 +135,7 @@ public class ImmutablesBuilderMissingInitializationTest {
     }
 
     @Test
-    public void testPassesWithNoRequiredFields() {
+    public void testPassesWhenNoRequiredFields() {
         helper().addSourceLines(
                         "MyTest.java",
                         "import com.palantir.baseline.errorprone.ImmutableTypeWithNoMandatoryFields;",
@@ -148,7 +148,20 @@ public class ImmutablesBuilderMissingInitializationTest {
     }
 
     @Test
-    public void testFailsWithOneMandatoryFieldOmitted() {
+    public void testPassesWhenAllFieldsPopulated_withCustomInitMethodStyle() {
+        helper().addSourceLines(
+                        "MyTest.java",
+                        "import com.palantir.baseline.errorprone.ImmutableTypeWithCustomInitMethodStyle;",
+                        "public class MyTest {",
+                        "    public static void main(String[] args) {",
+                        "        ImmutableTypeWithCustomInitMethodStyle.builder().setValue(\"value\").build();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testFailsWhenOneMandatoryFieldOmitted() {
         helper().addSourceLines(
                         "MyTest.java",
                         "import com.palantir.baseline.errorprone.ImmutablesBuilderMissingInitializationTest.Person;",
@@ -166,7 +179,7 @@ public class ImmutablesBuilderMissingInitializationTest {
     }
 
     @Test
-    public void testFailsWithAllFieldsOmitted() {
+    public void testFailsWhenAllFieldsOmitted() {
         helper().addSourceLines(
                         "MyTest.java",
                         "import com.palantir.baseline.errorprone.ImmutablesBuilderMissingInitializationTest.Person;",
@@ -180,7 +193,7 @@ public class ImmutablesBuilderMissingInitializationTest {
     }
 
     @Test
-    public void testFailsWithOneFieldOmitted_usingImmutableConstructor() {
+    public void testFailsWhenOneFieldOmitted_usingImmutableConstructor() {
         helper().addSourceLines(
                         "MyTest.java",
                         "import com.palantir.baseline.errorprone.ImmutablePerson;",
@@ -194,7 +207,7 @@ public class ImmutablesBuilderMissingInitializationTest {
     }
 
     @Test
-    public void testFailsWithOneFieldOmitted_usingInterfaceBuilderMethod() {
+    public void testFailsWhenOneFieldOmitted_usingInterfaceBuilderMethod() {
         helper().addSourceLines(
                         "MyTest.java",
                         "import com.palantir.baseline.errorprone.ImmutablesBuilderMissingInitializationTest.Person;",
@@ -208,7 +221,7 @@ public class ImmutablesBuilderMissingInitializationTest {
     }
 
     @Test
-    public void testFailsWithOneFieldOmitted_usingSimulatedBuilderMethod() {
+    public void testFailsWhenOneFieldOmitted_usingSimulatedBuilderMethod() {
         // This simulates using Person.builder() which delegates to ImmutablePerson.builder(), when Person is in the
         // same compilation unit
         helper().addSourceLines(
@@ -231,7 +244,7 @@ public class ImmutablesBuilderMissingInitializationTest {
     }
 
     @Test
-    public void testFailsWithOneFieldOmitted_fromLocalMethod() {
+    public void testFailsWhenOneFieldOmitted_fromLocalMethod() {
         helper().addSourceLines(
                         "MyTest.java",
                         "import com.palantir.baseline.errorprone.ImmutablesBuilderMissingInitializationTest.Person;",
@@ -242,6 +255,20 @@ public class ImmutablesBuilderMissingInitializationTest {
                         "    }",
                         "    private static Person.Builder getBuilder() {",
                         "        return new Person.Builder();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testFailsWhenAllOneFieldOmitted_withCustomInitMethodStyle() {
+        helper().addSourceLines(
+                        "MyTest.java",
+                        "import com.palantir.baseline.errorprone.ImmutableTypeWithCustomInitMethodStyle;",
+                        "public class MyTest {",
+                        "    public static void main(String[] args) {",
+                        "        // BUG: Diagnostic contains: Some builder fields have not been initialized: value",
+                        "        ImmutableTypeWithCustomInitMethodStyle.builder().build();",
                         "    }",
                         "}")
                 .doTest();
@@ -303,5 +330,11 @@ public class ImmutablesBuilderMissingInitializationTest {
     @Value.Style(visibility = ImplementationVisibility.PUBLIC)
     public interface TypeWithLongNames {
         String mandatoryFieldWithLongName();
+    }
+
+    @Value.Immutable
+    @Value.Style(visibility = ImplementationVisibility.PUBLIC, init = "set*")
+    public interface TypeWithCustomInitMethodStyle {
+        String value();
     }
 }
