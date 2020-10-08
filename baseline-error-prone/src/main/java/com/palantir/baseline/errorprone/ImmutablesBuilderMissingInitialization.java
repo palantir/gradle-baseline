@@ -20,6 +20,7 @@ import com.google.auto.service.AutoService;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Streams;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.BugPattern.LinkType;
 import com.google.errorprone.VisitorState;
@@ -29,27 +30,20 @@ import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.util.ASTHelpers;
-import com.sun.source.tree.ClassTree;
-import com.sun.source.tree.CompoundAssignmentTree;
-import com.sun.source.tree.ExpressionStatementTree;
 import com.sun.source.tree.ExpressionTree;
-import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.NewClassTree;
 import com.sun.source.tree.ReturnTree;
-import com.sun.source.tree.Tree.Kind;
-import com.sun.source.tree.UnaryTree;
-import com.sun.source.tree.VariableTree;
+import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
-import java.util.HashSet;
+import com.sun.tools.javac.code.Type;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.immutables.value.Generated;
 
 /**
@@ -74,8 +68,10 @@ import org.immutables.value.Generated;
 public final class ImmutablesBuilderMissingInitialization extends BugChecker implements MethodInvocationTreeMatcher {
     private static final String FIELD_INIT_BITS_PREFIX = "INIT_BIT_";
 
-    private static final Matcher<ExpressionTree> builderMethodMatcher =
-            Matchers.instanceMethod().anyClass().named("build").withParameters();
+    private static final Matcher<ExpressionTree> builderMethodMatcher = Matchers.instanceMethod()
+            .onClass(ImmutablesBuilderMissingInitialization::extendsImmutablesGeneratedClass)
+            .named("build")
+            .withParameters();
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
@@ -83,85 +79,94 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
         if (!builderMethodMatcher.matches(tree, state)) {
             return Description.NO_MATCH;
         }
-        ClassSymbol classSymbol = ASTHelpers.enclosingClass(ASTHelpers.getSymbol(tree));
-        if (Optional.ofNullable(classSymbol.getAnnotation(Generated.class))
-                .map(annotation -> !annotation.generator().equals("Immutables"))
-                .orElse(true)) {
+        ClassSymbol builderClass = ASTHelpers.enclosingClass(ASTHelpers.getSymbol(tree));
+        ClassSymbol immutableClass = ASTHelpers.enclosingClass(builderClass);
+        if (immutableClass == null) {
+            return Description.NO_MATCH;
+        }
+        Optional<ClassSymbol> interfaceClass = immutableClass.getInterfaces().stream()
+                .map(type -> type.tsym)
+                .findAny()
+                .flatMap(filterByType(ClassSymbol.class));
+        if (!interfaceClass.isPresent()) {
             return Description.NO_MATCH;
         }
 
-        // Find all of the initBits in the generated builder, to determine the mandatory fields
-        ClassTree classTree = ASTHelpers.findClass(classSymbol, state);
-        if (classTree == null) {
-            return Description.NO_MATCH;
-        }
-        Set<String> initBits = classTree.getMembers().stream()
-                .flatMap(memberTree -> {
-                    if (memberTree instanceof VariableTree) {
-                        return Stream.of((VariableTree) memberTree);
-                    }
-                    return Stream.empty();
-                })
-                .filter(variableTree -> variableTree.getName().toString().startsWith(FIELD_INIT_BITS_PREFIX))
-                .map(variableTree -> variableTree.getName().toString())
+        // Mandatory fields have a private static final constant in the generated builder named INIT_BIT_varname, where
+        // varname is the UPPER_UNDERSCORE version of the variable name. Find these fields to get the mandatory fields.
+        Set<String> requiredFields = Streams.stream(builderClass.members().getSymbols())
+                .filter(Symbol::isStatic)
+                .filter(symbol -> symbol.getKind().isField())
+                .filter(symbol -> symbol.getSimpleName().toString().startsWith(FIELD_INIT_BITS_PREFIX))
+                .map(Symbol::toString)
+                .map(initBitsName -> initBitsName.replace(FIELD_INIT_BITS_PREFIX, ""))
+                .map(CaseFormat.UPPER_UNDERSCORE.converterTo(CaseFormat.LOWER_CAMEL)::convert)
                 .collect(Collectors.toSet());
 
-        // Make sure all the init bits get initialized by the preceding method chain
-        Set<String> missingInitBits = checkInitialization(ASTHelpers.getReceiver(tree), initBits, state, classSymbol);
+        // Run the check
+        Set<String> uninitializedFields = checkInitialization(
+                ASTHelpers.getReceiver(tree),
+                requiredFields,
+                state,
+                builderClass,
+                immutableClass,
+                interfaceClass.get());
 
-        if (missingInitBits.isEmpty()) {
+        if (uninitializedFields.isEmpty()) {
             return Description.NO_MATCH;
         }
         return buildDescription(tree)
                 .setMessage(String.format(
                         "Some builder fields have not been initialized: %s",
-                        Joiner.on(", ")
-                                .join(missingInitBits.stream()
-                                        .map(initBitsName -> initBitsName.replace(FIELD_INIT_BITS_PREFIX, ""))
-                                        .map(CaseFormat.UPPER_UNDERSCORE.converterTo(CaseFormat.LOWER_CAMEL)::convert)
-                                        .iterator())))
+                        Joiner.on(", ").join(uninitializedFields)))
                 .build();
     }
 
     /**
-     * Recursively check that all of the uninitializedInitBits are initialized in the expression, returning any that
+     * Recursively check that all of the uninitializedFields are initialized in the expression, returning any that
      * are not.
      */
     private Set<String> checkInitialization(
-            ExpressionTree tree, Set<String> uninitializedInitBits, VisitorState state, ClassSymbol builderClass) {
-        if (uninitializedInitBits.isEmpty()) {
+            ExpressionTree tree,
+            Set<String> uninitializedFields,
+            VisitorState state,
+            ClassSymbol builderClass,
+            ClassSymbol immutableClass,
+            ClassSymbol interfaceClass) {
+        if (uninitializedFields.isEmpty()) {
             return ImmutableSet.of();
         }
         if (tree instanceof MethodInvocationTree) {
             MethodSymbol methodSymbol = ASTHelpers.getSymbol((MethodInvocationTree) tree);
-            MethodTree methodTree = ASTHelpers.findMethod(methodSymbol, state);
-            if (methodTree == null) {
-                return ImmutableSet.of();
-            }
             if (!Objects.equals(methodSymbol.enclClass(), builderClass)) {
                 // This method belongs to a class other than the builder, so we are at the end of the chain
                 // If the only thing this method does is construct and return the builder, we continue and require
                 // everything to have been initialized at this point, but if it does anything more complex then give up
-                if (methodJustCallsConstructor(methodTree)) {
-                    return uninitializedInitBits;
+                if (methodJustConstructsBuilder(methodSymbol, state, immutableClass, interfaceClass)) {
+                    return uninitializedFields;
+                } else {
+                    return ImmutableSet.of();
                 }
-                return ImmutableSet.of();
             }
             if (methodSymbol.getSimpleName().contentEquals("from")) {
                 // `from` initializes all fields, so we don't need to continue
                 return ImmutableSet.of();
             }
 
-            Set<String> remainingInitBits = new HashSet<>(uninitializedInitBits);
-            remainingInitBits.removeAll(initBitsInitializedBy(methodTree));
-
-            return checkInitialization(ASTHelpers.getReceiver(tree), remainingInitBits, state, builderClass);
+            return checkInitialization(
+                    ASTHelpers.getReceiver(tree),
+                    removeFieldsPotentiallyInitializedBy(
+                            uninitializedFields, methodSymbol.getSimpleName().toString()),
+                    state,
+                    builderClass,
+                    immutableClass,
+                    interfaceClass);
         } else if (tree instanceof NewClassTree) {
             NewClassTree newClassTree = (NewClassTree) tree;
             if (newClassTree.getArguments().isEmpty()) {
                 // The constructor returned the builder (otherwise we would have bailed out in a previous iteration), so
                 // we should have seen all the field initializations
-                return uninitializedInitBits;
+                return uninitializedFields;
             }
             // If the constructor takes arguments, it's doing something funky
             return ImmutableSet.of();
@@ -172,33 +177,13 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
     }
 
     /**
-     * Extracts the init bits that are marked as initialized in this method.
-     *
-     * Assumes that they are used as {@code initBits &= ~INIT_BIT_VAR}.
+     * Takes a set of uninitialized fields, and returns a set containing the fields that cannot have been initialized by
+     * the method methodName.
      */
-    private Set<String> initBitsInitializedBy(MethodTree methodTree) {
-        return methodTree.getBody().getStatements().stream()
-                .flatMap(filterByType(ExpressionStatementTree.class))
-                .map(ExpressionStatementTree::getExpression)
-                .flatMap(filterByType(CompoundAssignmentTree.class))
-                .filter(assignmentTree -> {
-                    if (assignmentTree.getVariable() instanceof IdentifierTree) {
-                        return ((IdentifierTree) assignmentTree.getVariable())
-                                .getName()
-                                .contentEquals("initBits");
-                    }
-                    return false;
-                })
-                .map(CompoundAssignmentTree::getExpression)
-                .flatMap(filterByType(UnaryTree.class))
-                .flatMap(unaryTree -> {
-                    if (unaryTree.getKind().equals(Kind.BITWISE_COMPLEMENT)) {
-                        return Stream.of(unaryTree.getExpression());
-                    }
-                    return Stream.empty();
-                })
-                .flatMap(filterByType(IdentifierTree.class))
-                .map(identifierTree -> identifierTree.getName().toString())
+    private Set<String> removeFieldsPotentiallyInitializedBy(Set<String> uninitializedFields, String methodName) {
+        String methodNameLowerCase = methodName.toLowerCase();
+        return uninitializedFields.stream()
+                .filter(field -> !field.toLowerCase().endsWith(methodNameLowerCase))
                 .collect(Collectors.toSet());
     }
 
@@ -208,26 +193,68 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
      * We don't check which class's constructor because it must return something compatible with Builder for us to have
      * got this far, and that's all we care about.
      */
-    private boolean methodJustCallsConstructor(MethodTree methodTree) {
-        if (methodTree.getBody().getStatements().size() != 1) {
-            return false;
+    private boolean methodJustConstructsBuilder(
+            MethodSymbol methodSymbol, VisitorState state, ClassSymbol immutableClass, ClassSymbol interfaceClass) {
+        MethodTree methodTree = ASTHelpers.findMethod(methodSymbol, state);
+        if (methodTree != null) {
+            // Check that the method just contains one statement, which is of the form `return new Something();` or
+            // `return ImmutableType.builder();`
+            if (methodTree.getBody().getStatements().size() != 1) {
+                return false;
+            }
+            return methodTree.getBody().getStatements().stream()
+                    .findAny()
+                    .flatMap(filterByType(ReturnTree.class))
+                    .map(ReturnTree::getExpression)
+                    .map(expressionTree -> {
+                        if (expressionTree instanceof NewClassTree) {
+                            // To have got here, the return type must be compatible with ImmutableType, so we don't need
+                            // to check the class being constructed
+                            return ((NewClassTree) expressionTree)
+                                    .getArguments()
+                                    .isEmpty();
+                        } else if (expressionTree instanceof MethodInvocationTree) {
+                            return Optional.ofNullable(ASTHelpers.getSymbol(expressionTree))
+                                    .flatMap(filterByType(MethodSymbol.class))
+                                    .filter(symbol -> symbol.getParameters().isEmpty())
+                                    .filter(symbol -> symbol.getSimpleName().contentEquals("builder"))
+                                    .map(Symbol::enclClass)
+                                    .flatMap(filterByType(ClassSymbol.class))
+                                    .filter(symbol -> symbol.equals(immutableClass))
+                                    .isPresent();
+                        } else {
+                            return false;
+                        }
+                    })
+                    .orElse(false);
         }
-        return methodTree.getBody().getStatements().stream()
-                .flatMap(filterByType(ReturnTree.class))
-                .map(ReturnTree::getExpression)
-                .flatMap(filterByType(NewClassTree.class))
-                .anyMatch(newClassTree -> newClassTree.getArguments().isEmpty());
+        // The method that was called is in a different compilation unit, so we can't access the source.
+        // If the method is .builder() and it's on a trusted class (the immutable implementation or the interface that
+        // it was generated from), assume that it just constructs the builder and nothing else.
+        return ((Objects.equals(methodSymbol.enclClass(), immutableClass)
+                        || Objects.equals(methodSymbol.enclClass(), interfaceClass))
+                && methodSymbol.getSimpleName().contentEquals("builder")
+                && methodSymbol.getParameters().isEmpty());
+    }
+
+    private static boolean extendsImmutablesGeneratedClass(Type type, VisitorState state) {
+        if (type.tsym instanceof ClassSymbol) {
+            return Optional.ofNullable(type.tsym.getAnnotation(Generated.class))
+                    .map(generated -> generated.generator().equals("Immutables"))
+                    .orElseGet(() -> extendsImmutablesGeneratedClass(((ClassSymbol) type.tsym).getSuperclass(), state));
+        }
+        return false;
     }
 
     /**
-     * Returns a function for use in Stream.flatMap that filters by type, and casts to that type.
+     * Returns a function for use in Optional.flatMap that filters by type, and casts to that type.
      */
-    private <I, O extends I> Function<I, Stream<O>> filterByType(Class<O> clazz) {
+    private <I, O extends I> Function<I, Optional<O>> filterByType(Class<O> clazz) {
         return value -> {
             if (clazz.isInstance(value)) {
-                return Stream.of(clazz.cast(value));
+                return Optional.of(clazz.cast(value));
             }
-            return Stream.empty();
+            return Optional.empty();
         };
     }
 }

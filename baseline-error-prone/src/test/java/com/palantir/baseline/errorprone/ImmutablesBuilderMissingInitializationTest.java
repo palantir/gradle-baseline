@@ -16,58 +16,62 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.errorprone.CompilationTestHelper;
+import java.util.List;
+import java.util.Optional;
+import javax.annotation.Nullable;
+import org.immutables.value.Value;
+import org.immutables.value.Value.Style.ImplementationVisibility;
 import org.junit.Test;
 
 public class ImmutablesBuilderMissingInitializationTest {
-
     @Test
-    public void testPassesWithAllFieldsPopulated_usingBuilderMethod() {
-        helperWithImmutables()
-                .addSourceLines(
+    public void testPassesWithAllFieldsPopulated() {
+        helper().addSourceLines(
                         "MyTest.java",
+                        "import com.palantir.baseline.errorprone.ImmutablesBuilderMissingInitializationTest.Person;",
                         "public class MyTest {",
                         "    public static void main(String[] args) {",
-                        "        Person.builder().name(\"name\").age(0).company(\"palantir\").build();",
+                        "        new Person.Builder().name(\"name\").age(100).partner(\"partner\").build();",
                         "    }",
                         "}")
                 .doTest();
     }
 
     @Test
-    public void testPassesWithOptionalFieldOmitted_usingBuilderMethod() {
-        helperWithImmutables()
-                .addSourceLines(
+    public void testPassesWithOptionalFieldOmitted() {
+        helper().addSourceLines(
                         "MyTest.java",
+                        "import com.palantir.baseline.errorprone.ImmutablesBuilderMissingInitializationTest.Person;",
                         "public class MyTest {",
                         "    public static void main(String[] args) {",
-                        "        Person.builder().name(\"name\").age(10).build();",
+                        "        new Person.Builder().name(\"name\").age(100).build();",
                         "    }",
                         "}")
                 .doTest();
     }
 
     @Test
-    public void testPassesWithFrom_usingBuilderMethod() {
-        helperWithImmutables()
-                .addSourceLines(
+    public void testPassesWithFrom() {
+        helper().addSourceLines(
                         "MyTest.java",
+                        "import com.palantir.baseline.errorprone.ImmutablesBuilderMissingInitializationTest.Person;",
                         "public class MyTest {",
                         "    public static void main(String[] args) {",
-                        "        Person p1 = Person.builder().name(\"name\").age(20).build();",
-                        "        Person.builder().from(p1).build();",
+                        "        Person p1 = new Person.Builder().name(\"name\").age(100).build();",
+                        "        new Person.Builder().from(p1).build();",
                         "    }",
                         "}")
                 .doTest();
     }
 
     @Test
-    public void testPassesWhenBuilderAssignedToVariable_usingBuilderMethod() {
-        helperWithImmutables()
-                .addSourceLines(
+    public void testPassesWhenBuilderAssignedToVariable() {
+        helper().addSourceLines(
                         "MyTest.java",
+                        "import com.palantir.baseline.errorprone.ImmutablesBuilderMissingInitializationTest.Person;",
                         "public class MyTest {",
                         "    public static void main(String[] args) {",
-                        "        Person.Builder builder = Person.builder();",
+                        "        Person.Builder builder = new Person.Builder();",
                         "        builder.build();",
                         "    }",
                         "}")
@@ -76,28 +80,42 @@ public class ImmutablesBuilderMissingInitializationTest {
 
     @Test
     public void testPassesWithUninitializedFields_whenBuilderFromMethodThatSetsSomeFields() {
-        helperWithImmutables()
-                .addSourceLines(
+        helper().addSourceLines(
                         "MyTest.java",
+                        "import com.palantir.baseline.errorprone.ImmutablePerson;",
+                        "import com.palantir.baseline.errorprone.ImmutablesBuilderMissingInitializationTest.Person;",
                         "public class MyTest {",
                         "    public static void main(String[] args) {",
                         "        builder().build();",
                         "    }",
                         "    private static ImmutablePerson.Builder builder() {",
-                        "        return new Person.Builder().name(\"name\").age(30);",
+                        "        return new Person.Builder().name(\"name\").age(100);",
                         "    }",
                         "}")
                 .doTest();
     }
 
     @Test
-    public void testPassesWithAllFieldsPopulated_usingExtendedConstructor() {
-        helperWithImmutables()
-                .addSourceLines(
+    public void testPassesWithAllFieldsPopulated_usingInterfaceBuilderMethod() {
+        helper().addSourceLines(
                         "MyTest.java",
+                        "import com.palantir.baseline.errorprone.ImmutablesBuilderMissingInitializationTest.Person;",
                         "public class MyTest {",
                         "    public static void main(String[] args) {",
-                        "        new Person.Builder().name(\"name\").age(40).company(\"palantir\").build();",
+                        "        Person.builder().name(\"name\").age(100).partner(\"partner\").build();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testPassesWithAllFieldsPopulated_usingImmutableBuilderMethod() {
+        helper().addSourceLines(
+                        "MyTest.java",
+                        "import com.palantir.baseline.errorprone.ImmutableNotOvershadowedType;",
+                        "public class MyTest {",
+                        "    public static void main(String[] args) {",
+                        "        ImmutableNotOvershadowedType.builder().name(\"name\").build();",
                         "    }",
                         "}")
                 .doTest();
@@ -105,12 +123,25 @@ public class ImmutablesBuilderMissingInitializationTest {
 
     @Test
     public void testPassesWithAllFieldsPopulated_usingImmutableConstructor() {
-        helperWithImmutables()
-                .addSourceLines(
+        helper().addSourceLines(
                         "MyTest.java",
+                        "import com.palantir.baseline.errorprone.ImmutablePerson;",
                         "public class MyTest {",
                         "    public static void main(String[] args) {",
-                        "        new ImmutablePerson.Builder().name(\"name\").age(50).build();",
+                        "        new ImmutablePerson.Builder().name(\"name\").age(100).build();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testPassesWithNoRequiredFields() {
+        helper().addSourceLines(
+                        "MyTest.java",
+                        "import com.palantir.baseline.errorprone.ImmutableTypeWithNoMandatoryFields;",
+                        "public class MyTest {",
+                        "    public static void main(String[] args) {",
+                        "        ImmutableTypeWithNoMandatoryFields.builder().build();",
                         "    }",
                         "}")
                 .doTest();
@@ -118,14 +149,14 @@ public class ImmutablesBuilderMissingInitializationTest {
 
     @Test
     public void testFailsWithOneMandatoryFieldOmitted() {
-        helperWithImmutables()
-                .addSourceLines(
+        helper().addSourceLines(
                         "MyTest.java",
+                        "import com.palantir.baseline.errorprone.ImmutablesBuilderMissingInitializationTest.Person;",
                         "public class MyTest {",
                         "    public static void main(String[] args) {",
                         "        Person.builder()",
-                        "                .age(60)",
-                        "                .company(\"palantir\")",
+                        "                .age(100)",
+                        "                .partner(\"partner\")",
                         "                // BUG: Diagnostic contains: Some builder fields have not been initialized: "
                                 + "name",
                         "                .build();",
@@ -136,27 +167,13 @@ public class ImmutablesBuilderMissingInitializationTest {
 
     @Test
     public void testFailsWithAllFieldsOmitted() {
-        helperWithImmutables()
-                .addSourceLines(
+        helper().addSourceLines(
                         "MyTest.java",
+                        "import com.palantir.baseline.errorprone.ImmutablesBuilderMissingInitializationTest.Person;",
                         "public class MyTest {",
                         "    public static void main(String[] args) {",
                         "        // BUG: Diagnostic contains: Some builder fields have not been initialized: name, age",
-                        "        Person.builder().build();",
-                        "    }",
-                        "}")
-                .doTest();
-    }
-
-    @Test
-    public void testFailsWithOneFieldOmitted_usingExtendedConstructor() {
-        helperWithImmutables()
-                .addSourceLines(
-                        "MyTest.java",
-                        "public class MyTest {",
-                        "    public static void main(String[] args) {",
-                        "        // BUG: Diagnostic contains: Some builder fields have not been initialized: name",
-                        "        new Person.Builder().age(70).build();",
+                        "        new Person.Builder().build();",
                         "    }",
                         "}")
                 .doTest();
@@ -164,13 +181,50 @@ public class ImmutablesBuilderMissingInitializationTest {
 
     @Test
     public void testFailsWithOneFieldOmitted_usingImmutableConstructor() {
-        helperWithImmutables()
+        helper().addSourceLines(
+                        "MyTest.java",
+                        "import com.palantir.baseline.errorprone.ImmutablePerson;",
+                        "public class MyTest {",
+                        "    public static void main(String[] args) {",
+                        "        // BUG: Diagnostic contains: Some builder fields have not been initialized: name",
+                        "        new ImmutablePerson.Builder().age(100).build();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testFailsWithOneFieldOmitted_usingInterfaceBuilderMethod() {
+        helper().addSourceLines(
+                        "MyTest.java",
+                        "import com.palantir.baseline.errorprone.ImmutablesBuilderMissingInitializationTest.Person;",
+                        "public class MyTest {",
+                        "    public static void main(String[] args) {",
+                        "        // BUG: Diagnostic contains: Some builder fields have not been initialized: name",
+                        "        Person.builder().age(100).build();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testFailsWithOneFieldOmitted_usingSimulatedBuilderMethod() {
+        // This simulates using Person.builder() which delegates to ImmutablePerson.builder(), when Person is in the
+        // same compilation unit
+        helper().addSourceLines(
+                        "Helper.java",
+                        "import com.palantir.baseline.errorprone.ImmutableNotOvershadowedType;",
+                        "public class Helper {",
+                        "    public static ImmutableNotOvershadowedType.Builder builder() {",
+                        "        return ImmutableNotOvershadowedType.builder();",
+                        "    }",
+                        "}")
                 .addSourceLines(
                         "MyTest.java",
                         "public class MyTest {",
                         "    public static void main(String[] args) {",
                         "        // BUG: Diagnostic contains: Some builder fields have not been initialized: name",
-                        "        new ImmutablePerson.Builder().age(80).build();",
+                        "        Helper.builder().build();",
                         "    }",
                         "}")
                 .doTest();
@@ -178,9 +232,9 @@ public class ImmutablesBuilderMissingInitializationTest {
 
     @Test
     public void testFailsWithOneFieldOmitted_fromLocalMethod() {
-        helperWithImmutables()
-                .addSourceLines(
+        helper().addSourceLines(
                         "MyTest.java",
+                        "import com.palantir.baseline.errorprone.ImmutablesBuilderMissingInitializationTest.Person;",
                         "public class MyTest {",
                         "    public static void main(String[] args) {",
                         "        // BUG: Diagnostic contains: Some builder fields have not been initialized: name, age",
@@ -194,99 +248,15 @@ public class ImmutablesBuilderMissingInitializationTest {
     }
 
     @Test
-    public void testSucceedsWithNoRequiredFields() {
-        helper().addSourceLines(
-                        "Bug.java",
-                        "import java.util.Optional;",
-                        "import org.immutables.value.Value;",
-                        "@Value.Immutable",
-                        "public interface Bug {",
-                        "    Optional<String> author();",
-                        "}")
-                .addSourceLines(
-                        "ImmutableBug.java",
-                        "import java.util.Objects;",
-                        "import java.util.Optional;",
-                        "import javax.annotation.Nullable;",
-                        "import org.immutables.value.Generated;",
-                        "@Generated(from = \"Bug\", generator = \"Immutables\")",
-                        "final class ImmutableBug implements Bug {",
-                        "    private final @Nullable String author;",
-                        "    private ImmutableBug(@Nullable String author) {",
-                        "        this.author = author;",
-                        "    }",
-                        "    @Override",
-                        "    public Optional<String> author() { return Optional.ofNullable(author); }",
-                        "",
-                        "    @Generated(from = \"Bug\", generator = \"Immutables\")",
-                        "    public static class Builder {",
-                        "        private @Nullable String author;",
-                        "        public final Builder author(String author) {",
-                        "            this.author = Objects.requireNonNull(author, \"author\");",
-                        "            return this;",
-                        "        }",
-                        "        public Bug build() {",
-                        "            return new ImmutableBug(author);",
-                        "        }",
-                        "    }",
-                        "}")
-                .addSourceLines(
-                        "MyTest.java",
-                        "public class MyTest {",
-                        "    public static void main(String[] args) {",
-                        "        new ImmutableBug.Builder().build();",
-                        "    }",
-                        "}")
-                .doTest();
-    }
-
-    @Test
     public void testComputesMissingFieldNamesCorrectly() {
         helper().addSourceLines(
-                        "Company.java",
-                        "import java.util.Optional;",
-                        "import org.immutables.value.Value;",
-                        "@Value.Immutable",
-                        "public interface Company {",
-                        "    int employeeCount();",
-                        "}")
-                .addSourceLines(
-                        "ImmutableCompany.java",
-                        "import java.util.Objects;",
-                        "import java.util.Optional;",
-                        "import javax.annotation.Nullable;",
-                        "import org.immutables.value.Generated;",
-                        "@Generated(from = \"Company\", generator = \"Immutables\")",
-                        "final class ImmutableCompany implements Company {",
-                        "    private final int employeeCount;",
-                        "    private ImmutableCompany(int employeeCount) {",
-                        "        this.employeeCount = employeeCount;",
-                        "    }",
-                        "    @Override",
-                        "    public int employeeCount() { return employeeCount; }",
-                        "",
-                        "    @Generated(from = \"Company\", generator = \"Immutables\")",
-                        "    public static class Builder {",
-                        "        private static final long INIT_BIT_EMPLOYEE_COUNT = 0x1L;",
-                        "        private long initBits = 0x1L;",
-                        "        private @Nullable Integer employeeCount;",
-                        "        public final Builder employeeCount(int employeeCount) {",
-                        "            this.employeeCount = employeeCount;",
-                        "            initBits &= ~INIT_BIT_EMPLOYEE_COUNT;",
-                        "            return this;",
-                        "        }",
-                        "        public Company build() {",
-                        "            return new ImmutableCompany(employeeCount);",
-                        "        }",
-                        "    }",
-                        "}")
-                .addSourceLines(
                         "MyTest.java",
+                        "import com.palantir.baseline.errorprone.ImmutableTypeWithLongNames;",
                         "public class MyTest {",
                         "    public static void main(String[] args) {",
                         "        // BUG: Diagnostic contains: Some builder fields have not been initialized: "
-                                + "employeeCount",
-                        "        new ImmutableCompany.Builder().build();",
+                                + "mandatoryFieldWithLongName",
+                        "        ImmutableTypeWithLongNames.builder().build();",
                         "    }",
                         "}")
                 .doTest();
@@ -296,79 +266,42 @@ public class ImmutablesBuilderMissingInitializationTest {
         return CompilationTestHelper.newInstance(ImmutablesBuilderMissingInitialization.class, getClass());
     }
 
-    private CompilationTestHelper helperWithImmutables() {
-        return helper().addSourceLines(
-                        "Person.java",
-                        "import java.util.Optional;",
-                        "import org.immutables.value.Value;",
-                        "@Value.Immutable",
-                        "public interface Person {",
-                        "    String name();",
-                        "    int age();",
-                        "    Optional<String> company();",
-                        "    static Builder builder() {",
-                        "        return new Builder();",
-                        "    }",
-                        "    class Builder extends ImmutablePerson.Builder {}",
-                        "}")
-                .addSourceLines(
-                        "ImmutablePerson.java",
-                        "import java.util.Objects;",
-                        "import java.util.Optional;",
-                        "import javax.annotation.Nullable;",
-                        "import org.immutables.value.Generated;",
-                        "@Generated(from = \"Person\", generator = \"Immutables\")",
-                        "final class ImmutablePerson implements Person {",
-                        "    private final String name;",
-                        "    private final int age;",
-                        "    private final @Nullable String company;",
-                        "    private ImmutablePerson(String name, int age, @Nullable String company) {",
-                        "        this.name = name; this.age = age; this.company = company;",
-                        "    }",
-                        "    @Override",
-                        "    public String name() { return name; }",
-                        "    @Override",
-                        "    public int age() { return age; }",
-                        "    @Override",
-                        "    public Optional<String> company() { return Optional.ofNullable(company); }",
-                        "",
-                        "    @Generated(from = \"Person\", generator = \"Immutables\")",
-                        "    public static class Builder {",
-                        "        private static final long INIT_BIT_NAME = 0x1L;",
-                        "        private static final long INIT_BIT_AGE = 0x2L;",
-                        "        private long initBits = 0x3L;",
-                        "        private @Nullable String name;",
-                        "        private @Nullable Integer age;",
-                        "        private @Nullable String company;",
-                        "        public final Builder name(String name) {",
-                        "            this.name = Objects.requireNonNull(name, \"name\");",
-                        "            initBits &= ~INIT_BIT_NAME;",
-                        "            return this;",
-                        "        }",
-                        "        public final Builder age(int age) {",
-                        "            this.age = age;",
-                        "            initBits &= ~INIT_BIT_AGE;",
-                        "            return this;",
-                        "        }",
-                        "        public final Builder company(String company) {",
-                        "            this.company = Objects.requireNonNull(company, \"company\");",
-                        "            return this;",
-                        "        }",
-                        "        public final Builder company(Optional<String> company) {",
-                        "            this.company = company.orElse(null);",
-                        "            return this;",
-                        "        }",
-                        "        public final Builder from(Person instance) {",
-                        "            name(instance.name());",
-                        "            age(instance.age());",
-                        "            company(instance.company());",
-                        "            return this;",
-                        "        }",
-                        "        public Person build() {",
-                        "            if (initBits != 0) { throw new IllegalStateException(); }",
-                        "            return new ImmutablePerson(name, age, company);",
-                        "        }",
-                        "    }",
-                        "}");
+    @Value.Immutable
+    @Value.Style(visibility = ImplementationVisibility.PUBLIC, overshadowImplementation = true)
+    public interface Person {
+        String name();
+
+        int age();
+
+        Optional<String> partner();
+
+        class Builder extends ImmutablePerson.Builder {}
+
+        static Builder builder() {
+            return new Builder();
+        }
+    }
+
+    @Value.Immutable
+    @Value.Style(visibility = ImplementationVisibility.PUBLIC)
+    public interface NotOvershadowedType {
+        String name();
+    }
+
+    @Value.Immutable
+    @Value.Style(visibility = ImplementationVisibility.PUBLIC)
+    public interface TypeWithNoMandatoryFields {
+        Optional<String> notRequired();
+
+        List<String> list();
+
+        @Nullable
+        String maybeString();
+    }
+
+    @Value.Immutable
+    @Value.Style(visibility = ImplementationVisibility.PUBLIC)
+    public interface TypeWithLongNames {
+        String mandatoryFieldWithLongName();
     }
 }
