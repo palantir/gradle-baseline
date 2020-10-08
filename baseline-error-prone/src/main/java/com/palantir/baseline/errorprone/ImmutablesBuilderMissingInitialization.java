@@ -47,6 +47,7 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.immutables.value.Generated;
 import org.immutables.value.Value;
 
@@ -88,10 +89,13 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
         if (immutableClass == null) {
             return Description.NO_MATCH;
         }
-        Optional<ClassSymbol> interfaceClass = immutableClass.getInterfaces().stream()
+        Optional<ClassSymbol> interfaceClass = Streams.concat(
+                        immutableClass.getInterfaces().stream(), Stream.of(immutableClass.getSuperclass()))
                 .map(type -> type.tsym)
-                .findAny()
-                .flatMap(filterByType(ClassSymbol.class));
+                .map(filterByType(ClassSymbol.class))
+                .flatMap(Streams::stream)
+                .filter(classSymbol -> classSymbol.getAnnotation(Value.Immutable.class) != null)
+                .findAny();
         if (!interfaceClass.isPresent()) {
             return Description.NO_MATCH;
         }

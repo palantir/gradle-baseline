@@ -178,6 +178,19 @@ public class ImmutablesBuilderMissingInitializationTest {
     }
 
     @Test
+    public void testPassesWhenAllFieldsPopulated_withImmutableOnAbstractClass() {
+        helper().addSourceLines(
+                        "MyTest.java",
+                        importImmutable("ClassType"),
+                        "public class MyTest {",
+                        "    public static void main(String[] args) {",
+                        "        ImmutableClassType.builder().value(\"value\").build();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testFailsWhenOneMandatoryFieldOmitted() {
         helper().addSourceLines(
                         "MyTest.java",
@@ -278,7 +291,7 @@ public class ImmutablesBuilderMissingInitializationTest {
     }
 
     @Test
-    public void testFailsWhenAllOneFieldOmitted_withCustomMethodStyle() {
+    public void testFailsWhenOneFieldOmitted_withCustomMethodStyle() {
         helper().addSourceLines(
                         "MyTest.java",
                         importImmutable("TypeWithCustomMethodStyle"),
@@ -286,6 +299,20 @@ public class ImmutablesBuilderMissingInitializationTest {
                         "    public static void main(String[] args) {",
                         "        // BUG: Diagnostic contains: Some builder fields have not been initialized: value",
                         "        ImmutableTypeWithCustomMethodStyle.builder().build();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testPassesWhenOneFieldOmitted_withImmutableOnAbstractClass() {
+        helper().addSourceLines(
+                        "MyTest.java",
+                        importImmutable("ClassType"),
+                        "public class MyTest {",
+                        "    public static void main(String[] args) {",
+                        "        // BUG: Diagnostic contains: Some builder fields have not been initialized: value",
+                        "        ImmutableClassType.builder().build();",
                         "    }",
                         "}")
                 .doTest();
@@ -360,6 +387,12 @@ public class ImmutablesBuilderMissingInitializationTest {
     @DefaultImmutableStyle
     public interface TypeWithLongNames {
         String mandatoryFieldWithLongName();
+    }
+
+    @Value.Immutable
+    @DefaultImmutableStyle
+    public abstract static class ClassType {
+        public abstract String value();
     }
 
     @Value.Immutable
