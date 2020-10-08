@@ -333,8 +333,11 @@ public class ImmutablesBuilderMissingInitializationTest {
     }
 
     @Value.Immutable
-    @Value.Style(visibility = ImplementationVisibility.PUBLIC, init = "set*", get = "use*")
+    @CustomStyleAnnotation
     public interface TypeWithCustomMethodStyle {
         String useValue();
     }
+
+    @Value.Style(visibility = ImplementationVisibility.PUBLIC, init = "set*", get = "use*")
+    private @interface CustomStyleAnnotation {}
 }

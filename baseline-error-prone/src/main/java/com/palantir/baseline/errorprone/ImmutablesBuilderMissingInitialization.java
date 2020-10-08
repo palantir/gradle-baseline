@@ -95,7 +95,7 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
             return Description.NO_MATCH;
         }
 
-        Optional<Value.Style> maybeStyle = findImmutablesStyle(interfaceClass.get());
+        Optional<Value.Style> maybeStyle = findImmutablesStyle(interfaceClass.get(), ImmutableSet.of());
         Set<String> getterPrefixes;
         if (maybeStyle.isPresent()) {
             if (!maybeStyle.get().init().endsWith("*")) {
@@ -265,15 +265,20 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
                 && methodSymbol.getParameters().isEmpty());
     }
 
-    private Optional<Value.Style> findImmutablesStyle(ClassSymbol symbol) {
+    private Optional<Value.Style> findImmutablesStyle(ClassSymbol symbol, Set<ClassSymbol> encounteredClasses) {
         Optional<Value.Style> directAnnotation = Optional.ofNullable(symbol.getAnnotation(Value.Style.class));
         if (directAnnotation.isPresent()) {
             return directAnnotation;
         }
+        Set<ClassSymbol> updatedEncounteredClasses = ImmutableSet.<ClassSymbol>builder()
+                .addAll(encounteredClasses)
+                .add(symbol)
+                .build();
         return symbol.getAnnotationMirrors().stream()
                 .map(compound -> compound.type.tsym)
                 .flatMap(filterStreamByType(ClassSymbol.class))
-                .map(this::findImmutablesStyle)
+                .filter(annotationSymbol -> !updatedEncounteredClasses.contains(annotationSymbol))
+                .map(annotationSymbol -> findImmutablesStyle(annotationSymbol, updatedEncounteredClasses))
                 .flatMap(Streams::stream)
                 .findAny();
     }
