@@ -38,14 +38,15 @@ import com.sun.source.tree.ReturnTree;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
+import com.sun.tools.javac.code.Symbol.PackageSymbol;
 import com.sun.tools.javac.code.Type;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.immutables.value.Generated;
 import org.immutables.value.Value;
 
@@ -95,7 +96,8 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
             return Description.NO_MATCH;
         }
 
-        Optional<Value.Style> maybeStyle = findImmutablesStyle(interfaceClass.get(), ImmutableSet.of());
+        Optional<Value.Style> maybeStyle =
+                findImmutablesStyle(interfaceClass.get(), ImmutableSet.of(interfaceClass.get()));
         Set<String> getterPrefixes;
         if (maybeStyle.isPresent()) {
             if (!maybeStyle.get().init().endsWith("*")) {
@@ -106,6 +108,9 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
                 // The field names might be cut off and the end as well as the beginning, which we can't handle
                 return Description.NO_MATCH;
             }
+            // Get all the defined get method prefixes, and convert them into constant format for use with init bits
+            // If the getter is get*, for a method named getMyValue the builder methods will be named myValue and the
+            // init bit will be named INIT_BIT_GET_MY_VALUE, so we need to remember to strip GET_.
             getterPrefixes = Arrays.stream(maybeStyle.get().get())
                     .map(getter -> getter.replace("*", ""))
                     .map(CaseFormat.LOWER_CAMEL.converterTo(CaseFormat.UPPER_UNDERSCORE))
@@ -265,20 +270,25 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
                 && methodSymbol.getParameters().isEmpty());
     }
 
-    private Optional<Value.Style> findImmutablesStyle(ClassSymbol symbol, Set<ClassSymbol> encounteredClasses) {
-        Optional<Value.Style> directAnnotation = Optional.ofNullable(symbol.getAnnotation(Value.Style.class));
+    /**
+     * Find the closest applicable @Value.Style annotation, if it exists.
+     *
+     * Annotations can be present on the class, an enclosing class, or their parent package, as well as being annotated
+     * on another annotation that is applied in any of those places.
+     */
+    private Optional<Value.Style> findImmutablesStyle(Symbol currentSymbol, Set<Symbol> initialEncounteredClasses) {
+        Optional<Value.Style> directAnnotation = Optional.ofNullable(currentSymbol.getAnnotation(Value.Style.class));
         if (directAnnotation.isPresent()) {
             return directAnnotation;
         }
-        Set<ClassSymbol> updatedEncounteredClasses = ImmutableSet.<ClassSymbol>builder()
-                .addAll(encounteredClasses)
-                .add(symbol)
-                .build();
-        return symbol.getAnnotationMirrors().stream()
-                .map(compound -> compound.type.tsym)
-                .flatMap(filterStreamByType(ClassSymbol.class))
-                .filter(annotationSymbol -> !updatedEncounteredClasses.contains(annotationSymbol))
-                .map(annotationSymbol -> findImmutablesStyle(annotationSymbol, updatedEncounteredClasses))
+        Set<Symbol> encounteredClasses = new HashSet<>(initialEncounteredClasses);
+        return Streams.concat(
+                        currentSymbol.getAnnotationMirrors().stream().map(compound -> compound.type.tsym),
+                        Streams.stream(Optional.ofNullable(currentSymbol.owner)))
+                .filter(symbol -> symbol instanceof ClassSymbol || symbol instanceof PackageSymbol)
+                .filter(symbol -> !encounteredClasses.contains(symbol))
+                .peek(encounteredClasses::add)
+                .map(annotationSymbol -> findImmutablesStyle(annotationSymbol, encounteredClasses))
                 .flatMap(Streams::stream)
                 .findAny();
     }
@@ -287,18 +297,11 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
      * Returns a function for use in Optional.flatMap that filters by type, and casts to that type.
      */
     private <I, O extends I> Function<I, Optional<O>> filterByType(Class<O> clazz) {
-        return this.<I, O>filterStreamByType(clazz).andThen(Stream::findAny);
-    }
-
-    /**
-     * Returns a function for use in Stream.flatMap that filters by type, and casts to that type.
-     */
-    private <I, O extends I> Function<I, Stream<O>> filterStreamByType(Class<O> clazz) {
         return value -> {
             if (clazz.isInstance(value)) {
-                return Stream.of(clazz.cast(value));
+                return Optional.of(clazz.cast(value));
             }
-            return Stream.empty();
+            return Optional.empty();
         };
     }
 

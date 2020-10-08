@@ -161,6 +161,23 @@ public class ImmutablesBuilderMissingInitializationTest {
     }
 
     @Test
+    public void testPassesWhenUnsupportedGetterFormat_withCustomStyleOnPackage() {
+        helper().addSourceLines(
+                        "package-info.java",
+                        "@org.immutables.value.Value.Style(get = \"*unsupportedGetFormat\")",
+                        "package " + getClass().getPackage().getName() + ";")
+                .addSourceLines(
+                        "MyTest.java",
+                        "import com.palantir.baseline.errorprone.ImmutableTypeWithNoStyleAnnotations;",
+                        "public class MyTest {",
+                        "    public static void main(String[] args) {",
+                        "        ImmutableTypeWithNoStyleAnnotations.builder().build();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testFailsWhenOneMandatoryFieldOmitted() {
         helper().addSourceLines(
                         "MyTest.java",
@@ -330,6 +347,11 @@ public class ImmutablesBuilderMissingInitializationTest {
     @Value.Style(visibility = ImplementationVisibility.PUBLIC)
     public interface TypeWithLongNames {
         String mandatoryFieldWithLongName();
+    }
+
+    @Value.Immutable
+    public interface TypeWithNoStyleAnnotations {
+        String value();
     }
 
     @Value.Immutable
