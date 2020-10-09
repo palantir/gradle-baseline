@@ -19,8 +19,8 @@ package com.palantir.baseline.errorprone;
 import com.google.auto.service.AutoService;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.Sets;
 import com.google.common.collect.Streams;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.BugPattern.LinkType;
@@ -36,15 +36,10 @@ import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.NewClassTree;
 import com.sun.source.tree.ReturnTree;
-import com.sun.tools.javac.code.Attribute;
-import com.sun.tools.javac.code.Attribute.Compound;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
-import com.sun.tools.javac.code.Symbol.PackageSymbol;
 import com.sun.tools.javac.code.Type;
-import java.util.HashSet;
-import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -52,7 +47,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.immutables.value.Generated;
-import org.immutables.value.Value;
 
 /**
  * Checks that all required fields in an immutables.org generated builder have been populated.
@@ -75,6 +69,10 @@ import org.immutables.value.Value;
         summary = "All required fields of an Immutables builder must be initialized")
 public final class ImmutablesBuilderMissingInitialization extends BugChecker implements MethodInvocationTreeMatcher {
     private static final String FIELD_INIT_BITS_PREFIX = "INIT_BIT_";
+    // Prefixes on the interface getter methods that may be stripped by immutables - by default only GET_ is stripped,
+    // but some places set the style to remove IS_ too and we can't load the style to check what to remove. It doesn't
+    // matter if we remove too much, because we only do a suffix match on the methods.
+    private static final ImmutableSet<String> GET_PREFIXES = ImmutableSet.of("GET_", "IS_");
 
     private static final Matcher<ExpressionTree> builderMethodMatcher = Matchers.instanceMethod()
             .onClass(ImmutablesBuilderMissingInitialization::extendsImmutablesGeneratedClass)
@@ -97,44 +95,12 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
                 .map(type -> type.tsym)
                 .map(filterByType(ClassSymbol.class))
                 .flatMap(Streams::stream)
-                .filter(classSymbol -> ASTHelpers.hasAnnotation(classSymbol, Value.Immutable.class, state))
+                .filter(classSymbol ->
+                        ASTHelpers.hasAnnotation(classSymbol, "org.immutables.value.Value.Immutable", state))
                 .findAny();
         if (!interfaceClass.isPresent()) {
             return Description.NO_MATCH;
         }
-
-        // If there's an immutables style, check that it's compatible
-        Optional<Compound> maybeStyle =
-                findImmutablesStyle(interfaceClass.get(), ImmutableSet.of(interfaceClass.get()));
-        Optional<String> maybeInit = maybeStyle
-                .map(style -> style.member(state.getName("init")))
-                .map(attribute -> (String) attribute.getValue());
-        if (maybeInit.isPresent() && !maybeInit.get().endsWith("*")) {
-            // The builder methods don't end with the field name, so this logic won't work
-            return Description.NO_MATCH;
-        }
-        List<String> getters = maybeStyle
-                .map(style -> style.member(state.getName("get")))
-                .map(Attribute::getValue)
-                .map(rawValue -> ((List<?>) rawValue)
-                        .stream()
-                                .map(attribute -> (Attribute) attribute)
-                                .map(Attribute::getValue)
-                                .map(value -> (String) value)
-                                .collect(Collectors.toList()))
-                .orElseGet(() -> ImmutableList.of("get*"));
-        if (getters.stream().anyMatch(getter -> !getter.endsWith("*"))) {
-            // The field names might be cut off and the end as well as the beginning, which we can't handle
-            return Description.NO_MATCH;
-        }
-        // Get all the defined get method prefixes, and convert them into constant format for use with init bits
-        // If the getter is get*, for a method named getMyValue the builder methods will be named myValue and the
-        // init bit will be named INIT_BIT_GET_MY_VALUE, so we need to remember to strip GET_.
-        Set<String> getterPrefixes = getters.stream()
-                .map(getter -> getter.replace("*", ""))
-                .map(CaseFormat.LOWER_CAMEL.converterTo(CaseFormat.UPPER_UNDERSCORE))
-                .map(prefix -> prefix + "_")
-                .collect(Collectors.toSet());
 
         // Mandatory fields have a private static final constant in the generated builder named INIT_BIT_varname, where
         // varname is the UPPER_UNDERSCORE version of the variable name. Find these fields to get the mandatory fields.
@@ -143,14 +109,15 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
                 .filter(symbol -> symbol.getKind().isField())
                 .filter(symbol -> symbol.getSimpleName().toString().startsWith(FIELD_INIT_BITS_PREFIX))
                 .map(Symbol::toString)
-                .map(initBitsName -> initBitsName.replace(FIELD_INIT_BITS_PREFIX, ""))
-                .map(fieldName -> getterPrefixes.stream()
-                        .filter(fieldName::startsWith)
-                        .findAny()
-                        .map(prefix -> fieldName.replace(prefix, ""))
-                        .orElse(fieldName))
+                .map(initBitsName -> removeFromStart(initBitsName, FIELD_INIT_BITS_PREFIX))
+                .map(fieldName -> GET_PREFIXES.stream().reduce(fieldName, this::removeFromStart))
                 .map(CaseFormat.UPPER_UNDERSCORE.converterTo(CaseFormat.LOWER_CAMEL))
                 .collect(Collectors.toSet());
+
+        if (!checkAllFieldsCanBeInitialized(requiredFields, builderClass)) {
+            // There is likely a custom style applied that means the rules don't match
+            return Description.NO_MATCH;
+        }
 
         // Run the check
         Set<String> uninitializedFields = checkInitialization(
@@ -226,6 +193,23 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
     }
 
     /**
+     * Check that every required field has a setter method, to ensure that there are no style rules that have not been
+     * accounted for here.
+     */
+    private boolean checkAllFieldsCanBeInitialized(Set<String> fields, Symbol builderClass) {
+        return Streams.stream(builderClass.members().getSymbols())
+                .map(filterByType(MethodSymbol.class))
+                .flatMap(Streams::stream)
+                .filter(symbol -> !symbol.isStaticOrInstanceInit()
+                        && !symbol.isConstructor()
+                        && !symbol.isAnonymous()
+                        && symbol.getParameters().size() == 1)
+                .map(symbol -> symbol.getSimpleName().toString())
+                .reduce(fields, this::removeFieldsPotentiallyInitializedBy, Sets::intersection)
+                .isEmpty();
+    }
+
+    /**
      * Takes a set of uninitialized fields, and returns a set containing the fields that cannot have been initialized by
      * the method methodName.
      */
@@ -287,29 +271,13 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
     }
 
     /**
-     * Find the closest applicable @Value.Style annotation, if it exists.
-     *
-     * Annotations can be present on the class, an enclosing class, or their parent package, as well as being annotated
-     * on another annotation that is applied in any of those places.
+     * If input starts with toRemove, returns the rest of input with toRemove removed, otherwise just returns input.
      */
-    private Optional<Compound> findImmutablesStyle(Symbol currentSymbol, Set<Symbol> initialEncounteredClasses) {
-        Optional<Compound> directAnnotation = currentSymbol.getRawAttributes().stream()
-                .filter(compound ->
-                        compound.type.tsym.getQualifiedName().contentEquals("org.immutables.value.Value.Style"))
-                .findAny();
-        if (directAnnotation.isPresent()) {
-            return directAnnotation;
+    private String removeFromStart(String input, String toRemove) {
+        if (input.startsWith(toRemove)) {
+            return input.substring(toRemove.length());
         }
-        Set<Symbol> encounteredClasses = new HashSet<>(initialEncounteredClasses);
-        return Streams.concat(
-                        currentSymbol.getAnnotationMirrors().stream().map(compound -> compound.type.tsym),
-                        Streams.stream(Optional.ofNullable(currentSymbol.owner)))
-                .filter(symbol -> symbol instanceof ClassSymbol || symbol instanceof PackageSymbol)
-                .filter(symbol -> !encounteredClasses.contains(symbol))
-                .peek(encounteredClasses::add)
-                .map(annotationSymbol -> findImmutablesStyle(annotationSymbol, encounteredClasses))
-                .flatMap(Streams::stream)
-                .findAny();
+        return input;
     }
 
     /**
