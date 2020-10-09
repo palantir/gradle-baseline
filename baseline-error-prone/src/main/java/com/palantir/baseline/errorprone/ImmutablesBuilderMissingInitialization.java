@@ -68,10 +68,18 @@ import org.immutables.value.Generated;
         severity = BugPattern.SeverityLevel.ERROR,
         summary = "All required fields of an Immutables builder must be initialized")
 public final class ImmutablesBuilderMissingInitialization extends BugChecker implements MethodInvocationTreeMatcher {
+
     private static final String FIELD_INIT_BITS_PREFIX = "INIT_BIT_";
-    // Prefixes on the interface getter methods that may be stripped by immutables - by default only GET_ is stripped,
-    // but some places set the style to remove IS_ too and we can't load the style to check what to remove. It doesn't
-    // matter if we remove too much, because we only do a suffix match on the methods.
+
+    /**
+     * Prefixes on the interface getter methods that may be stripped by immutables.
+     *
+     * The default immutables style just uses get*, but some places use is* too and we can't load the style to check
+     * what to remove. It doesn't matter if we remove too much, because we only do a suffix match on the methods.
+     *
+     * This should only help when the unprefixed field name is an identifier, because in other cases immutables already
+     * uses the unprefixed name.
+     */
     private static final ImmutableSet<String> GET_PREFIXES = ImmutableSet.of("GET_", "IS_");
 
     private static final Matcher<ExpressionTree> builderMethodMatcher = Matchers.instanceMethod()
@@ -104,6 +112,7 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
 
         // Mandatory fields have a private static final constant in the generated builder named INIT_BIT_varname, where
         // varname is the UPPER_UNDERSCORE version of the variable name. Find these fields to get the mandatory fields.
+        // nb. this isn't part of any immutables API, so could break.
         Set<String> requiredFields = Streams.stream(builderClass.members().getSymbols())
                 .filter(Symbol::isStatic)
                 .filter(symbol -> symbol.getKind().isField())
@@ -115,7 +124,7 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
                 .collect(Collectors.toSet());
 
         if (!checkAllFieldsCanBeInitialized(requiredFields, builderClass)) {
-            // There is likely a custom style applied that means the rules don't match
+            // Our expectation for the method names isn't right, so it's probably using a custom style
             return Description.NO_MATCH;
         }
 

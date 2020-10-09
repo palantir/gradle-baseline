@@ -22,7 +22,7 @@ import java.util.Optional;
 import javax.annotation.Nullable;
 import org.immutables.value.Value;
 import org.immutables.value.Value.Style.ImplementationVisibility;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class ImmutablesBuilderMissingInitializationTest {
     @Test
@@ -52,7 +52,7 @@ public class ImmutablesBuilderMissingInitializationTest {
     }
 
     @Test
-    public void testPassesWithFrom() {
+    public void testPassesWhenPopulatedWithFrom() {
         helper().addSourceLines(
                         "MyTest.java",
                         importInterface("Person"),
@@ -135,6 +135,19 @@ public class ImmutablesBuilderMissingInitializationTest {
     }
 
     @Test
+    public void testPassesWhenDefaultAndDerivedFieldsOmitted() {
+        helper().addSourceLines(
+                        "MyTest.java",
+                        importImmutable("TypeWithDerivedAndDefaultFields"),
+                        "public class MyTest {",
+                        "    public static void main(String[] args) {",
+                        "        ImmutableTypeWithDerivedAndDefaultFields.builder().value(\"value\").build();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testPassesWhenNoRequiredFields() {
         helper().addSourceLines(
                         "MyTest.java",
@@ -148,30 +161,29 @@ public class ImmutablesBuilderMissingInitializationTest {
     }
 
     @Test
-    public void testPassesWhenAllFieldsPopulated_withCustomMethodStyle() {
+    public void testPassesWithAllFieldsPopulated_whenGettersAndSettersPrefixed() {
         helper().addSourceLines(
                         "MyTest.java",
-                        importImmutable("TypeWithCustomMethodStyle"),
+                        importImmutable("TypeWithGetStyle"),
                         "public class MyTest {",
                         "    public static void main(String[] args) {",
-                        "        ImmutableTypeWithCustomMethodStyle.builder().setValue(\"value\").build();",
+                        "        ImmutableTypeWithGetStyle.builder().setValue(\"value\").build();",
                         "    }",
                         "}")
                 .doTest();
     }
 
     @Test
-    public void testPassesWhenUnsupportedGetterFormat_withCustomStyleOnPackage() {
+    public void testPassesWithAllFieldsPopulated_whenGettersAndSettersPrefixedAndFieldIsIdentifier() {
+        // If there is a getter and setter prefix, and removing the prefix would leave a reserved word, immutables
+        // uses the prefixed version for the init bits. Without any special treatment, that would cause us to search for
+        // methods ending with isPublic (eg setIsPublic), so test that this edge case is handled correctly
         helper().addSourceLines(
-                        "package-info.java",
-                        "@org.immutables.value.Value.Style(get = {\"*unsupportedGetFormat\", \"get*\"})",
-                        "package " + getClass().getPackage().getName() + ";")
-                .addSourceLines(
                         "MyTest.java",
-                        "import com.palantir.baseline.errorprone.ImmutableTypeWithNoStyleAnnotations;",
+                        importImmutable("TypeWithStyleAndIdentifierFields"),
                         "public class MyTest {",
                         "    public static void main(String[] args) {",
-                        "        ImmutableTypeWithNoStyleAnnotations.builder().build();",
+                        "        ImmutableTypeWithStyleAndIdentifierFields.builder().setPublic(true).build();",
                         "    }",
                         "}")
                 .doTest();
@@ -291,21 +303,52 @@ public class ImmutablesBuilderMissingInitializationTest {
     }
 
     @Test
-    public void testFailsWhenOneFieldOmitted_withCustomMethodStyle() {
+    public void testFailsWhenMandatoryFieldsOmitted_withDefaultAndDerivedFieldsOmitted() {
         helper().addSourceLines(
                         "MyTest.java",
-                        importImmutable("TypeWithCustomMethodStyle"),
+                        importImmutable("TypeWithDerivedAndDefaultFields"),
                         "public class MyTest {",
                         "    public static void main(String[] args) {",
                         "        // BUG: Diagnostic contains: Some builder fields have not been initialized: value",
-                        "        ImmutableTypeWithCustomMethodStyle.builder().build();",
+                        "        ImmutableTypeWithDerivedAndDefaultFields.builder().build();",
                         "    }",
                         "}")
                 .doTest();
     }
 
     @Test
-    public void testPassesWhenOneFieldOmitted_withImmutableOnAbstractClass() {
+    public void testFailsWithMandatoryFieldOmitted_whenGettersAndSettersPrefixed() {
+        helper().addSourceLines(
+                        "MyTest.java",
+                        importImmutable("TypeWithGetStyle"),
+                        "public class MyTest {",
+                        "    public static void main(String[] args) {",
+                        "        // BUG: Diagnostic contains: Some builder fields have not been initialized: value",
+                        "        ImmutableTypeWithGetStyle.builder().build();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testFailsWithMandatoryFieldOmitted_whenGettersAndSettersPrefixedAndFieldIsIdentifier() {
+        // If there is a getter and setter prefix, and removing the prefix would leave a reserved word, immutables
+        // uses the prefixed version for the init bits. Without any special treatment, that would cause us to search for
+        // methods ending with isPublic (eg setIsPublic), so test that this edge case is handled correctly
+        helper().addSourceLines(
+                        "MyTest.java",
+                        importImmutable("TypeWithStyleAndIdentifierFields"),
+                        "public class MyTest {",
+                        "    public static void main(String[] args) {",
+                        "        // BUG: Diagnostic contains: Some builder fields have not been initialized: public",
+                        "        ImmutableTypeWithStyleAndIdentifierFields.builder().build();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testFailsWhenOneFieldOmitted_withImmutableOnAbstractClass() {
         helper().addSourceLines(
                         "MyTest.java",
                         importImmutable("ClassType"),
@@ -391,30 +434,53 @@ public class ImmutablesBuilderMissingInitializationTest {
 
     @Value.Immutable
     @DefaultImmutableStyle
+    public interface TypeWithDerivedAndDefaultFields {
+        String value();
+
+        @Value.Derived
+        default String derivedString() {
+            return value();
+        }
+
+        @Value.Default
+        default String defaultString() {
+            return "default";
+        }
+
+        @Value.Lazy
+        default String lazyString() {
+            return "lazy";
+        }
+    }
+
+    @Value.Immutable
+    @DefaultImmutableStyle
     public abstract static class ClassType {
         public abstract String value();
     }
 
     @Value.Immutable
-    public interface TypeWithNoStyleAnnotations {
-        String value();
+    @Value.Style(
+            visibility = ImplementationVisibility.PUBLIC,
+            packageGenerated = "*.immutablebuildersmissinginitialization",
+            get = "use*",
+            init = "set*")
+    public interface TypeWithGetStyle {
+        String useValue();
     }
 
     @Value.Immutable
-    @CustomStyleAnnotation
-    public interface TypeWithCustomMethodStyle {
-        String useValue();
+    @Value.Style(
+            visibility = ImplementationVisibility.PUBLIC,
+            packageGenerated = "*.immutablebuildersmissinginitialization",
+            get = "is*",
+            init = "set*")
+    public interface TypeWithStyleAndIdentifierFields {
+        boolean isPublic();
     }
 
     @Value.Style(
             visibility = ImplementationVisibility.PUBLIC,
             packageGenerated = "*.immutablebuildersmissinginitialization")
     private @interface DefaultImmutableStyle {}
-
-    @Value.Style(
-            visibility = ImplementationVisibility.PUBLIC,
-            init = "set*",
-            get = "use*",
-            packageGenerated = "*.immutablebuildersmissinginitialization")
-    private @interface CustomStyleAnnotation {}
 }
