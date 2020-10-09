@@ -51,14 +51,15 @@ import org.immutables.value.Generated;
 /**
  * Checks that all required fields in an immutables.org generated builder have been populated.
  *
- * To make it decidable, it is limited to builders that are constructed by calling {@code new ImmutableType.Builder()},
- * {@code new Type.Builder()} (where Type.Builder extends ImmutableType.Builder), or a method that only calls one of
- * those constructors and returns the result, and are never stored into a variable. Builders that do not meet these
+ * To make it decidable, the implementation is limited to the common case where: the builder is constructed in place
+ * using new ImmutableType.Builder() or new Type.Builder() (where Type.Builder extends ImmutableType.Builder), or using
+ * a method that does nothing other than construct and return the builder; and the builder is never stored to a
+ * variable, so the builder only lives within a single statement. Builders that do not meet these
  * conditions are assumed to populate all fields, and are ignored.
  *
- * Mandatory fields are determined by inspecting the generated builder source to find the initBits that are updated by
- * each method, to find any that do not get set. If Immutables changes the way that they check for required fields, this
- * check will stop working (but the check will probably pass).
+ * Mandatory fields are determined by inspecting the generated builder class to find fields that have INIT_BIT_
+ * constants, which are used by Immutables to track whether required fields have been initialized. Methods that end with
+ * the name of a field are assumed to initialize that field.
  */
 @AutoService(BugChecker.class)
 @BugPattern(
