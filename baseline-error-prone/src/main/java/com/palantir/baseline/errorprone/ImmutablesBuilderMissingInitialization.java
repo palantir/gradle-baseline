@@ -19,6 +19,7 @@ package com.palantir.baseline.errorprone;
 import com.google.auto.service.AutoService;
 import com.google.common.base.CaseFormat;
 import com.google.common.base.Joiner;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.Streams;
 import com.google.errorprone.BugPattern;
@@ -35,13 +36,15 @@ import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.NewClassTree;
 import com.sun.source.tree.ReturnTree;
+import com.sun.tools.javac.code.Attribute;
+import com.sun.tools.javac.code.Attribute.Compound;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Symbol.PackageSymbol;
 import com.sun.tools.javac.code.Type;
-import java.util.Arrays;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -94,35 +97,44 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
                 .map(type -> type.tsym)
                 .map(filterByType(ClassSymbol.class))
                 .flatMap(Streams::stream)
-                .filter(classSymbol -> classSymbol.getAnnotation(Value.Immutable.class) != null)
+                .filter(classSymbol -> ASTHelpers.hasAnnotation(classSymbol, Value.Immutable.class, state))
                 .findAny();
         if (!interfaceClass.isPresent()) {
             return Description.NO_MATCH;
         }
 
-        Optional<Value.Style> maybeStyle =
+        // If there's an immutables style, check that it's compatible
+        Optional<Compound> maybeStyle =
                 findImmutablesStyle(interfaceClass.get(), ImmutableSet.of(interfaceClass.get()));
-        Set<String> getterPrefixes;
-        if (maybeStyle.isPresent()) {
-            if (!maybeStyle.get().init().endsWith("*")) {
-                // The builder methods don't end with the field name, so this logic won't work
-                return Description.NO_MATCH;
-            }
-            if (Arrays.stream(maybeStyle.get().get()).anyMatch(getter -> !getter.endsWith("*"))) {
-                // The field names might be cut off and the end as well as the beginning, which we can't handle
-                return Description.NO_MATCH;
-            }
-            // Get all the defined get method prefixes, and convert them into constant format for use with init bits
-            // If the getter is get*, for a method named getMyValue the builder methods will be named myValue and the
-            // init bit will be named INIT_BIT_GET_MY_VALUE, so we need to remember to strip GET_.
-            getterPrefixes = Arrays.stream(maybeStyle.get().get())
-                    .map(getter -> getter.replace("*", ""))
-                    .map(CaseFormat.LOWER_CAMEL.converterTo(CaseFormat.UPPER_UNDERSCORE))
-                    .map(prefix -> prefix + "_")
-                    .collect(Collectors.toSet());
-        } else {
-            getterPrefixes = ImmutableSet.of("GET_");
+        Optional<String> maybeInit = maybeStyle
+                .map(style -> style.member(state.getName("init")))
+                .map(attribute -> (String) attribute.getValue());
+        if (maybeInit.isPresent() && !maybeInit.get().endsWith("*")) {
+            // The builder methods don't end with the field name, so this logic won't work
+            return Description.NO_MATCH;
         }
+        List<String> getters = maybeStyle
+                .map(style -> style.member(state.getName("get")))
+                .map(Attribute::getValue)
+                .map(rawValue -> ((List<?>) rawValue)
+                        .stream()
+                                .map(attribute -> (Attribute) attribute)
+                                .map(Attribute::getValue)
+                                .map(value -> (String) value)
+                                .collect(Collectors.toList()))
+                .orElseGet(() -> ImmutableList.of("get*"));
+        if (getters.stream().anyMatch(getter -> !getter.endsWith("*"))) {
+            // The field names might be cut off and the end as well as the beginning, which we can't handle
+            return Description.NO_MATCH;
+        }
+        // Get all the defined get method prefixes, and convert them into constant format for use with init bits
+        // If the getter is get*, for a method named getMyValue the builder methods will be named myValue and the
+        // init bit will be named INIT_BIT_GET_MY_VALUE, so we need to remember to strip GET_.
+        Set<String> getterPrefixes = getters.stream()
+                .map(getter -> getter.replace("*", ""))
+                .map(CaseFormat.LOWER_CAMEL.converterTo(CaseFormat.UPPER_UNDERSCORE))
+                .map(prefix -> prefix + "_")
+                .collect(Collectors.toSet());
 
         // Mandatory fields have a private static final constant in the generated builder named INIT_BIT_varname, where
         // varname is the UPPER_UNDERSCORE version of the variable name. Find these fields to get the mandatory fields.
@@ -280,8 +292,11 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
      * Annotations can be present on the class, an enclosing class, or their parent package, as well as being annotated
      * on another annotation that is applied in any of those places.
      */
-    private Optional<Value.Style> findImmutablesStyle(Symbol currentSymbol, Set<Symbol> initialEncounteredClasses) {
-        Optional<Value.Style> directAnnotation = Optional.ofNullable(currentSymbol.getAnnotation(Value.Style.class));
+    private Optional<Compound> findImmutablesStyle(Symbol currentSymbol, Set<Symbol> initialEncounteredClasses) {
+        Optional<Compound> directAnnotation = currentSymbol.getRawAttributes().stream()
+                .filter(compound ->
+                        compound.type.tsym.getQualifiedName().contentEquals("org.immutables.value.Value.Style"))
+                .findAny();
         if (directAnnotation.isPresent()) {
             return directAnnotation;
         }

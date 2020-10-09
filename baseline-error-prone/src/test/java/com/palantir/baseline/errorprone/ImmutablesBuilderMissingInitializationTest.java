@@ -164,7 +164,7 @@ public class ImmutablesBuilderMissingInitializationTest {
     public void testPassesWhenUnsupportedGetterFormat_withCustomStyleOnPackage() {
         helper().addSourceLines(
                         "package-info.java",
-                        "@org.immutables.value.Value.Style(get = \"*unsupportedGetFormat\")",
+                        "@org.immutables.value.Value.Style(get = {\"*unsupportedGetFormat\", \"get*\"})",
                         "package " + getClass().getPackage().getName() + ";")
                 .addSourceLines(
                         "MyTest.java",
