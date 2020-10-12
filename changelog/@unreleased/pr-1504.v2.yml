@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: Add an Errorprone rule to check that all fields in Immutables builders
+    have been initialized
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1504

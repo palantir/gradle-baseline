@@ -193,6 +193,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `PreferStaticLoggers`: Prefer static loggers over instance loggers.
 - `LogsafeArgName`: Prevent certain named arguments as being logged as safe. Specify unsafe argument names using `LogsafeArgName:UnsafeArgNames` errorProne flag.
 - `ImplicitPublicBuilderConstructor`: Prevent builders from unintentionally leaking public constructors.
+- `ImmutablesBuilderMissingInitialization`: Prevent building Immutables.org builders when not all fields have been populated.
 
 ### Programmatic Application
 

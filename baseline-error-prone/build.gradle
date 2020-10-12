@@ -28,6 +28,7 @@ dependencies {
 
     annotationProcessor 'com.google.auto.service:auto-service'
     annotationProcessor 'org.immutables:value'
+    testAnnotationProcessor 'org.immutables:value'
     compileOnly 'com.google.auto.service:auto-service'
 }
 
