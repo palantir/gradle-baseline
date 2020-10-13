@@ -19,19 +19,29 @@ package com.palantir.gradle.junit;
 import com.google.common.base.Splitter;
 import java.io.File;
 import java.nio.file.Path;
+import javax.inject.Inject;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.plugins.quality.Checkstyle;
+import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.testing.Test;
+import org.gradle.build.event.BuildEventsListenerRegistry;
 
 public final class JunitReportsPlugin implements Plugin<Project> {
 
     public static final String EXT_JUNIT_REPORTS = "junitReports";
+
+    private final BuildEventsListenerRegistry listenerRegistry;
+
+    @Inject
+    JunitReportsPlugin(BuildEventsListenerRegistry listenerRegistry) {
+        this.listenerRegistry = listenerRegistry;
+    }
 
     @Override
     @SuppressWarnings("Slf4jLogsafeArgs")
@@ -46,7 +56,14 @@ public final class JunitReportsPlugin implements Plugin<Project> {
         JunitReportsExtension reportsExtension =
                 project.getExtensions().create(EXT_JUNIT_REPORTS, JunitReportsExtension.class, project);
 
-        configureBuildFailureFinalizer(project.getRootProject(), reportsExtension.getReportsDirectory());
+        Provider<File> reportTargetFile = reportTargetFile(reportsExtension.getReportsDirectory());
+        Provider<BuildJunitReportService> listenerProvider = project.getGradle()
+                .getSharedServices()
+                .registerIfAbsent(
+                        "build-failure-listener",
+                        BuildJunitReportService.class,
+                        spec -> spec.parameters(params -> params.setReportFile(reportTargetFile.get())));
+        listenerRegistry.onTaskCompletion(listenerProvider);
 
         TaskTimer timer = new StyleTaskTimer();
         project.getRootProject().getGradle().addListener(timer);
@@ -84,19 +101,14 @@ public final class JunitReportsPlugin implements Plugin<Project> {
                 .map(RegularFile::getAsFile);
     }
 
-    private static void configureBuildFailureFinalizer(Project rootProject, Provider<Directory> reportsDir) {
-        Provider<RegularFile> targetFileProvider = reportsDir.map(dir -> {
+    private static Provider<File> reportTargetFile(Property<Directory> reportsDir) {
+        return reportsDir.map(dir -> {
             int attemptNumber = 1;
             Path targetFile = dir.getAsFile().toPath().resolve("gradle").resolve("build.xml");
             while (targetFile.toFile().exists()) {
                 targetFile = dir.getAsFile().toPath().resolve("gradle").resolve("build" + ++attemptNumber + ".xml");
             }
-            return dir.file(targetFile.toAbsolutePath().toString());
+            return dir.file(targetFile.toAbsolutePath().toString()).getAsFile();
         });
-
-        BuildFailureListener listener = new BuildFailureListener();
-        BuildFinishedAction action = new BuildFinishedAction(targetFileProvider, listener);
-        rootProject.getGradle().addListener(listener);
-        rootProject.getGradle().buildFinished(action);
     }
 }
