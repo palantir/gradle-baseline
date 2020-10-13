@@ -37,6 +37,7 @@ public class BuildJunitReportServiceTests {
     private static final String TASK_2_NAME = "task2";
 
     private final BuildJunitReportService service = new BuildJunitReportService() {
+        @SuppressWarnings("OverridesJavaxInjectableMethod")
         @Override
         public ReportFile getParameters() {
             throw new UnsupportedOperationException();
