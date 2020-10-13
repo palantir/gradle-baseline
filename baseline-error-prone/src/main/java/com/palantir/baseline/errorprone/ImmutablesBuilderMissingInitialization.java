@@ -46,7 +46,6 @@ import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.immutables.value.Generated;
 
 /**
  * Checks that all required fields in an immutables.org generated builder have been populated.
@@ -307,9 +306,15 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
      */
     private static boolean extendsImmutablesGeneratedClass(Type type, VisitorState state) {
         if (type.tsym instanceof ClassSymbol) {
-            return Optional.ofNullable(type.tsym.getAnnotation(Generated.class))
-                    .map(generated -> generated.generator().equals("Immutables"))
-                    .orElseGet(() -> extendsImmutablesGeneratedClass(((ClassSymbol) type.tsym).getSuperclass(), state));
+            return type.tsym.getRawAttributes().stream()
+                            .filter(compound -> compound.type
+                                    .tsym
+                                    .getQualifiedName()
+                                    .contentEquals("org.immutables.value.Generated"))
+                            .map(annotation -> annotation.member(state.getName("generator")))
+                            .filter(Objects::nonNull)
+                            .anyMatch(attribute -> Objects.equals(attribute.getValue(), "Immutables"))
+                    || extendsImmutablesGeneratedClass(((ClassSymbol) type.tsym).getSuperclass(), state);
         }
         return false;
     }
