@@ -311,7 +311,7 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
                                     .tsym
                                     .getQualifiedName()
                                     .contentEquals("org.immutables.value.Generated"))
-                            .flatMap(annotation -> Stream.of(annotation.member(state.getName("generator"))))
+                            .map(annotation -> annotation.member(state.getName("generator")))
                             .filter(Objects::nonNull)
                             .anyMatch(attribute -> Objects.equals(attribute.getValue(), "Immutables"))
                     || extendsImmutablesGeneratedClass(((ClassSymbol) type.tsym).getSuperclass(), state);
