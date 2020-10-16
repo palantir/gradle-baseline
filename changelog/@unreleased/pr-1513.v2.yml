@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Disable intellij's missing slf4j placeholders inspection by default.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1513
