@@ -233,7 +233,9 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 "StreamResourceLeak",
                 "InputStreamSlowMultibyteRead",
                 "JavaDurationGetSecondsGetNano",
-                "URLEqualsHashCode");
+                "URLEqualsHashCode",
+                "BoxedPrimitiveEquality",
+                "ReferenceEquality");
         // Relax some checks for test code
         if (errorProneOptions.getCompilingTestOnlyCode().get()) {
             errorProneOptions.disable("UnnecessaryLambda");
