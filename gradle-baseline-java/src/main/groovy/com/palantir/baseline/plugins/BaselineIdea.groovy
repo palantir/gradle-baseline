@@ -360,6 +360,8 @@ class BaselineIdea extends AbstractBaselinePlugin {
                         <option name="ignoreObjectMethods" value="false" />
                         <option name="ignoreAnonymousClassMethods" value="false" />
                     </inspection_tool>
+                        
+                    <inspection_tool class="PlaceholderCountMatchesArgumentCount" enabled="false" level="WARNING" enabled_by_default="false" />
                 </profile>
                 <option name="PROJECT_PROFILE" value="Default" />
                 <option name="USE_PROJECT_PROFILE" value="true" />
