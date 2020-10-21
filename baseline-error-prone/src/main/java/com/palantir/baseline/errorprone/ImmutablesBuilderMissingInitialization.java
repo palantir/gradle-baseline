@@ -238,7 +238,7 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
     private boolean methodJustConstructsBuilder(
             MethodSymbol methodSymbol, VisitorState state, ClassSymbol immutableClass, ClassSymbol interfaceClass) {
         MethodTree methodTree = ASTHelpers.findMethod(methodSymbol, state);
-        if (methodTree != null) {
+        if (methodTree != null && methodTree.getBody() != null) {
             // Check that the method just contains one statement, which is of the form `return new Something();` or
             // `return ImmutableType.builder();`
             if (methodTree.getBody().getStatements().size() != 1) {

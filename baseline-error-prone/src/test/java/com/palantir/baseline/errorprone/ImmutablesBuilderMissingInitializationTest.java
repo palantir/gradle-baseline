@@ -203,6 +203,24 @@ public class ImmutablesBuilderMissingInitializationTest {
     }
 
     @Test
+    public void testPassesWhenBuilderFromInterfaceMethod() {
+        helper().addSourceLines(
+                        "Context.java",
+                        importInterface("Person"),
+                        "public interface Context {",
+                        "    Person.Builder personBuilder();",
+                        "}")
+                .addSourceLines(
+                        "MyTest.java",
+                        "public class MyTest {",
+                        "    public void makePerson(Context context) {",
+                        "        context.personBuilder().build();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testFailsWhenOneMandatoryFieldOmitted() {
         helper().addSourceLines(
                         "MyTest.java",
