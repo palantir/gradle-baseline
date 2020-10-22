@@ -16,6 +16,7 @@
 
 package com.palantir.baseline.errorprone;
 
+import com.google.errorprone.CompilationTestHelper;
 import org.junit.jupiter.api.Test;
 
 class ObjectsHashCodeUnnecessaryVarargsTest {
@@ -26,22 +27,25 @@ class ObjectsHashCodeUnnecessaryVarargsTest {
                         "Test.java",
                         "import java.util.Objects;",
                         "public class Test {",
-                        "  void f(Object a, Object[] b, String[] c) {",
+                        "  void f(Object a, Object[] b, String[] c, String d) {",
                         "    Objects.hash(a);",
                         "    Objects.hash(a, a);",
                         "    Objects.hash(b);",
                         "    Objects.hash(c);",
+                        "    Objects.hash(d);",
                         "  }",
                         "}")
                 .addOutputLines(
                         "Test.java",
                         "import java.util.Objects;",
                         "public class Test {",
-                        "  void f(Object a, Object[] b, String[] c) {",
+                        "  void f(Object a, Object[] b, String[] c, String d) {",
                         "    Objects.hashCode(a);",
                         "    Objects.hash(a, a);",
                         "    Objects.hash(b);",
-                        "    Objects.hashCode(c);",
+                        "    // BUG: Diagnostic contains: non-varargs call of varargs method",
+                        "    Objects.hash(c);",
+                        "    Objects.hashCode(d);",
                         "  }",
                         "}")
                 .doTest();
@@ -49,5 +53,9 @@ class ObjectsHashCodeUnnecessaryVarargsTest {
 
     private RefactoringValidator fix() {
         return RefactoringValidator.of(new ObjectsHashCodeUnnecessaryVarargs(), getClass());
+    }
+
+    public CompilationTestHelper helper() {
+        return CompilationTestHelper.newInstance(ObjectsHashCodeUnnecessaryVarargs.class, getClass());
     }
 }

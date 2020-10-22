@@ -44,17 +44,13 @@ public final class ObjectsHashCodeUnnecessaryVarargs extends BugChecker
     private static final Matcher<ExpressionTree> HASH_MATCHER =
             MethodMatchers.staticMethod().onClass("java.util.Objects").named("hash");
 
-    private static final Matcher<ExpressionTree> OBJECT_ARRAY_MATCHER =
-            Matchers.typePredicateMatcher((type, state) -> state.getTypes().isArray(type)
-                    && state.getTypes()
-                            .isSameType(
-                                    state.getTypes().elemtype(type), state.getTypeFromString(Object.class.getName())));
+    private static final Matcher<ExpressionTree> ARRAY_MATCHER = Matchers.isArrayType();
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
         if (HASH_MATCHER.matches(tree, state) && tree.getArguments().size() == 1) {
             ExpressionTree argument = tree.getArguments().get(0);
-            if (!OBJECT_ARRAY_MATCHER.matches(argument, state)) {
+            if (!ARRAY_MATCHER.matches(argument, state)) {
                 return buildDescription(tree)
                         .addFix(SuggestedFixes.renameMethodInvocation(tree, "hashCode", state))
                         .build();
