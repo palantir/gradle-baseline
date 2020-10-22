@@ -33,6 +33,7 @@ public class BaselineErrorProneExtension {
             // TODO(ckozak): re-enable pending scala check
             // "CatchSpecificity",
             "CollectionStreamForEach",
+            "DeprecatedGuavaObjects",
             "ExecutorSubmitRunnableFutureIgnored",
             "ExtendsErrorOrThrowable",
             "FinalClass",
