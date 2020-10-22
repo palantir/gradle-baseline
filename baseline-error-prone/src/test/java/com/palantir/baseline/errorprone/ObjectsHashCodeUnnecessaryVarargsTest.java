@@ -37,7 +37,7 @@ class ObjectsHashCodeUnnecessaryVarargsTest {
                         "Test.java",
                         "import java.util.Objects;",
                         "public class Test {",
-                        "  void f(Object a, Object b) {",
+                        "  void f(Object a, Object[] b, String[] c) {",
                         "    Objects.hashCode(a);",
                         "    Objects.hash(a, a);",
                         "    Objects.hash(b);",
