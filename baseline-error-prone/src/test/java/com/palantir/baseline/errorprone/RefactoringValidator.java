@@ -88,6 +88,7 @@ final class RefactoringValidator {
             delegate.doTest();
             helper.compilationHelper
                     .addSourceLines(helper.outputPath, helper.outputLines)
+                    .matchAllDiagnostics()
                     .doTest();
         }
 
@@ -95,6 +96,7 @@ final class RefactoringValidator {
             delegate.doTest(testMode);
             helper.compilationHelper
                     .addSourceLines(helper.outputPath, helper.outputLines)
+                    .matchAllDiagnostics()
                     .doTest();
         }
 

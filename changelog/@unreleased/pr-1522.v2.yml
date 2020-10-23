@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Implement error-prone ObjectsHashCodeUnnecessaryVarargs migration
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1522
