@@ -72,9 +72,10 @@ public class BaselineErrorProneExtension {
             "ArrayEquals",
             "BadImport",
             "MissingOverride",
-            "UnnecessaryParentheses",
+            "ObjectsHashCodePrimitive",
             "PreferJavaTimeOverload",
-            "ProtectedMembersInFinalClass");
+            "ProtectedMembersInFinalClass",
+            "UnnecessaryParentheses");
 
     private final ListProperty<String> patchChecks;
 
