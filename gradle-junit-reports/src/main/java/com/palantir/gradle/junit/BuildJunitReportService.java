@@ -15,6 +15,7 @@
  */
 package com.palantir.gradle.junit;
 
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 import com.palantir.gradle.junit.BuildJunitReportService.ReportFile;
 import java.io.File;
 import java.io.Serializable;
@@ -38,6 +39,7 @@ import org.w3c.dom.Document;
 public abstract class BuildJunitReportService
         implements BuildService<ReportFile>, OperationCompletionListener, AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(BuildJunitReportService.class);
+    @GuardedBy("this")
     private final List<Report.TestCase> testCases = new ArrayList<>();
     private final long startTimeNanos = System.nanoTime();
 
@@ -102,7 +104,7 @@ public abstract class BuildJunitReportService
         }
     }
 
-    public final List<Report.TestCase> getTestCases() {
+    public final synchronized List<Report.TestCase> getTestCases() {
         return testCases;
     }
 }
