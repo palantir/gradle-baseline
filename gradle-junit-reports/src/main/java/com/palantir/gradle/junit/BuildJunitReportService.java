@@ -39,6 +39,7 @@ import org.w3c.dom.Document;
 public abstract class BuildJunitReportService
         implements BuildService<ReportFile>, OperationCompletionListener, AutoCloseable {
     private static final Logger log = LoggerFactory.getLogger(BuildJunitReportService.class);
+
     @GuardedBy("this")
     private final List<Report.TestCase> testCases = new ArrayList<>();
     private final long startTimeNanos = System.nanoTime();
