@@ -21,8 +21,6 @@ import org.github.ngbinh.scalastyle.ScalaStylePlugin
 import org.github.ngbinh.scalastyle.ScalaStyleTask
 import org.gradle.api.Project
 import org.gradle.api.XmlProvider
-import org.gradle.api.plugins.JavaPluginConvention
-import org.gradle.api.tasks.scala.ScalaCompile
 import org.gradle.plugins.ide.idea.model.IdeaModel
 import org.gradle.testfixtures.ProjectBuilder
 import spock.lang.Specification
@@ -67,19 +65,6 @@ final class BaselineScalastyleTest extends Specification {
         def tasks = project.tasks.withType(ScalaStyleTask.class)
         for (ScalaStyleTask task : tasks) {
             assert task.getSource().getFiles().contains(file)
-        }
-    }
-
-    def configuresTargetJvmVersion() {
-        String targetVersion = project.getConvention()
-                .getPlugin(JavaPluginConvention.class)
-                .getTargetCompatibility()
-                .toString()
-
-        expect:
-        def tasks = project.tasks.withType(ScalaCompile.class)
-        for (ScalaCompile task : tasks) {
-            assert task.getScalaCompileOptions().getAdditionalParameters().contains("-target:jvm-" + targetVersion)
         }
     }
 

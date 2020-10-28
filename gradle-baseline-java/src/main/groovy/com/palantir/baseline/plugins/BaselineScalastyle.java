@@ -16,7 +16,6 @@
 
 package com.palantir.baseline.plugins;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import groovy.util.Node;
 import groovy.xml.QName;
@@ -30,7 +29,6 @@ import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.ScalaSourceSet;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskCollection;
-import org.gradle.api.tasks.scala.ScalaCompile;
 import org.gradle.plugins.ide.idea.model.IdeaModel;
 
 public final class BaselineScalastyle extends AbstractBaselinePlugin {
@@ -39,10 +37,6 @@ public final class BaselineScalastyle extends AbstractBaselinePlugin {
         this.project = project;
         project.getPluginManager().withPlugin("scala", plugin -> {
             JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
-            project.getTasks().withType(ScalaCompile.class).configureEach(scalaCompile -> scalaCompile
-                    .getScalaCompileOptions()
-                    .setAdditionalParameters(ImmutableList.of("-target:jvm-"
-                            + javaConvention.getTargetCompatibility().toString())));
             project.getRootProject().getPluginManager().withPlugin("idea", ideaPlugin -> project.getRootProject()
                     .getExtensions()
                     .configure(
@@ -83,8 +77,6 @@ public final class BaselineScalastyle extends AbstractBaselinePlugin {
                 ? "JavaThenScala"
                 : "Mixed";
         ideaModel.getProject().getIpr().withXml(xmlProvider -> {
-            // configure target jvm mode
-            String targetJvmVersion = "-target:jvm-" + javaVersion;
             Node rootNode = xmlProvider.asNode();
             Node scalaCompilerConf = (Node) rootNode.getAt(new QName("component")).stream()
                     .filter(o -> ((Node) o).attributes().get("name").equals("ScalaCompilerConfiguration"))
@@ -98,14 +90,6 @@ public final class BaselineScalastyle extends AbstractBaselinePlugin {
                     .orElseGet(() -> scalaCompilerConf.appendNode("option"));
             compilerOrder.attributes().put("name", "compileOrder");
             compilerOrder.attributes().put("value", compilerMode);
-            Node parametersNode = (Node) scalaCompilerConf.getAt(new QName("parameters")).stream()
-                    .findFirst()
-                    .orElseGet(() -> scalaCompilerConf.appendNode("parameters"));
-            Node parameter = (Node) parametersNode.getAt(new QName("parameter")).stream()
-                    .filter(o -> ((Node) o).attributes().get("value").equals(targetJvmVersion))
-                    .findFirst()
-                    .orElseGet(() -> parametersNode.appendNode("parameter"));
-            parameter.attributes().put("value", targetJvmVersion);
         });
     }
 }
