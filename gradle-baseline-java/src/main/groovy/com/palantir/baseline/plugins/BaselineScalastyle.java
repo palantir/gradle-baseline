@@ -34,7 +34,7 @@ import org.gradle.api.tasks.scala.ScalaCompile;
 import org.gradle.plugins.ide.idea.model.IdeaModel;
 
 public final class BaselineScalastyle extends AbstractBaselinePlugin {
-    private static final String SCALA_TARGET_VERSION = "jvm-8";
+    private static final String SCALA_TARGET_VERSION = "jvm-1.8";
 
     @Override
     public void apply(Project project) {

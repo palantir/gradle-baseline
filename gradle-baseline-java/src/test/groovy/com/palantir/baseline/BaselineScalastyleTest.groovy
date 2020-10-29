@@ -73,7 +73,7 @@ final class BaselineScalastyleTest extends Specification {
         expect:
         def tasks = project.tasks.withType(ScalaCompile.class)
         for (ScalaCompile task : tasks) {
-            assert task.getScalaCompileOptions().getAdditionalParameters().contains("-target:jvm-8")
+            assert task.getScalaCompileOptions().getAdditionalParameters().contains("-target:jvm-1.8")
         }
     }
 
