@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: No longer set target version for Scala compiler to match that of Java compiler.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1524
