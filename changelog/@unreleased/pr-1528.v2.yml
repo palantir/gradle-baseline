@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Use old version-string scheme for Scala compiler target (`jvm-1.8` instead of `jvm-8`).
+  links:
+    - https://github.com/palantir/gradle-baseline/pull/1528
