@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Always set target version for Scala compiler to JVM 8.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1524
