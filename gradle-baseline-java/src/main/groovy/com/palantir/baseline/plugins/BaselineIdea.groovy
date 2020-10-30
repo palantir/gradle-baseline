@@ -363,6 +363,24 @@ class BaselineIdea extends AbstractBaselinePlugin {
                     </inspection_tool>
                         
                     <inspection_tool class="PlaceholderCountMatchesArgumentCount" enabled="false" level="WARNING" enabled_by_default="false" />
+
+                    <inspection_tool class="UnstableApiUsage" enabled="true" level="WARNING" enabled_by_default="true">
+                        <option name="unstableApiAnnotations">
+                            <set>
+                                <option value="com.google.common.annotations.Beta" />
+                                <option value="com.palantir.conjure.java.lib.internal.Incubating" />
+                                <option value="io.reactivex.annotations.Beta" />
+                                <option value="io.reactivex.annotations.Experimental" />
+                                <option value="org.apache.http.annotation.Beta" />
+                                <option value="org.gradle.api.Incubating" />
+                                <option value="org.jetbrains.annotations.ApiStatus.Experimental" />
+                                <option value="org.jetbrains.annotations.ApiStatus.Internal" />
+                                <option value="org.jetbrains.annotations.ApiStatus.ScheduledForRemoval" />
+                                <option value="rx.annotations.Beta" />
+                                <option value="rx.annotations.Experimental" />
+                            </set>
+                        </option>
+                    </inspection_tool>
                 </profile>
                 <option name="PROJECT_PROFILE" value="Project Default" />
                 <option name="USE_PROJECT_PROFILE" value="true" />
