@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Fix baseline-idea inspection configuration
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1530
