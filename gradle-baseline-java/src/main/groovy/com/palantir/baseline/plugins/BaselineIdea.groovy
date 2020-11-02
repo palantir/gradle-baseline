@@ -356,6 +356,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
         node.append(new XmlParser().parseText("""
             <component name="InspectionProjectProfileManager">
                 <profile version="1.0">
+                    <option name="myName" value="Project Default" />
                     <inspection_tool class="MissingOverrideAnnotation" enabled="true" level="WARNING" enabled_by_default="true">
                         <option name="ignoreObjectMethods" value="false" />
                         <option name="ignoreAnonymousClassMethods" value="false" />
@@ -363,7 +364,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
                         
                     <inspection_tool class="PlaceholderCountMatchesArgumentCount" enabled="false" level="WARNING" enabled_by_default="false" />
                 </profile>
-                <option name="PROJECT_PROFILE" value="Default" />
+                <option name="PROJECT_PROFILE" value="Project Default" />
                 <option name="USE_PROJECT_PROFILE" value="true" />
             </component>
             """.stripIndent()))
