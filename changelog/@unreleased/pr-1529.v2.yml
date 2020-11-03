@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Idea highlights calls to incubating conjure endpoints
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1529
