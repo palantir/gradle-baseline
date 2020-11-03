@@ -1,0 +1,6 @@
+type: feature
+feature:
+  description: Adds a `JavaTimeSystemDefaultTimeZone` error-prone check to prevent
+    uses of the system default time zone.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1531
