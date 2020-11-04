@@ -197,6 +197,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `ImmutablesBuilderMissingInitialization`: Prevent building Immutables.org builders when not all fields have been populated.
 - `UnnecessarilyQualified`: Types should not be qualified if they are also imported. 
 - `DeprecatedGuavaObjects`: `com.google.common.base.Objects` has been obviated by `java.util.Objects`.
+- `JavaTimeSystemDefaultTimeZone`: Avoid using the system default time zone.
 
 ### Programmatic Application
 
