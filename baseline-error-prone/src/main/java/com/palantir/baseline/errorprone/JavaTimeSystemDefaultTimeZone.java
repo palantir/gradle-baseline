@@ -32,7 +32,7 @@ import com.sun.source.tree.MethodInvocationTree;
         name = "JavaTimeSystemDefaultTimeZone",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        severity = BugPattern.SeverityLevel.WARNING,
+        severity = BugPattern.SeverityLevel.ERROR,
         summary = "The system default time zone should not be used, since the behavior is system dependent. "
                 + "Instead, UTC should always be used.")
 public final class JavaTimeSystemDefaultTimeZone extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
