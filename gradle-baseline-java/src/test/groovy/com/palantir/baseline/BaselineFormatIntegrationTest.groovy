@@ -138,11 +138,12 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         file('gradle.properties') << "com.palantir.baseline-format.palantir-java-format=true\n"
 
         when:
-        BuildResult result = with(':format').build()
+        BuildResult result = with(':format', '--info').build()
 
         then:
         result.task(":format").outcome == TaskOutcome.SUCCESS
         result.task(":spotlessApply").outcome == TaskOutcome.SUCCESS
+        println result.output
         assertThatFilesAreTheSame(testedDir, expectedDir)
     }
 
@@ -159,7 +160,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
                 Files.deleteIfExists(expectedFile)
                 Files.copy(path, expectedFile)
             }
-            assertThat(path).hasSameContentAs(expectedFile)
+            assertThat(path).hasSameTextualContentAs(expectedFile)
         }
     }
 
