@@ -138,7 +138,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         file('gradle.properties') << "com.palantir.baseline-format.palantir-java-format=true\n"
 
         when:
-        BuildResult result = with(':format', '--info').build()
+        BuildResult result = with(':format').build()
 
         then:
         result.task(":format").outcome == TaskOutcome.SUCCESS
