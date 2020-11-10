@@ -21,11 +21,13 @@ import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.fixes.SuggestedFix;
+import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
+import java.time.ZoneOffset;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -50,18 +52,15 @@ public final class JavaTimeSystemDefaultTimeZone extends BugChecker implements B
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
         if (CLOCK_SYSTEM_DEFAULT_ZONE_MATCHER.matches(tree, state)) {
             return buildDescription(tree)
-                    .addFix(SuggestedFix.builder()
-                            .replace(tree, "Clock.systemUTC()")
-                            .addImport("java.time.Clock")
-                            .build())
+                    .addFix(SuggestedFixes.renameMethodInvocation(tree, "systemUTC", state))
                     .build();
         }
 
         if (ZONE_ID_SYSTEM_DEFAULT_MATCHER.matches(tree, state)) {
+            SuggestedFix.Builder fix = SuggestedFix.builder();
             return buildDescription(tree)
-                    .addFix(SuggestedFix.builder()
-                            .replace(tree, "ZoneOffset.UTC")
-                            .addImport("java.time.ZoneOffset")
+                    .addFix(fix.replace(
+                                    tree, SuggestedFixes.qualifyType(state, fix, ZoneOffset.class.getName()) + ".UTC")
                             .build())
                     .build();
         }

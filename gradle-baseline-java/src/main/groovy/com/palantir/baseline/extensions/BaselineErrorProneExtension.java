@@ -38,6 +38,8 @@ public class BaselineErrorProneExtension {
             "ExtendsErrorOrThrowable",
             "FinalClass",
             "ImplicitPublicBuilderConstructor",
+            "JavaTimeDefaultTimeZone",
+            "JavaTimeSystemDefaultTimeZone",
             "LambdaMethodReference",
             "LoggerEnclosingClass",
             "LogsafeArgName",
