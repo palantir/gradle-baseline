@@ -143,7 +143,6 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         then:
         result.task(":format").outcome == TaskOutcome.SUCCESS
         result.task(":spotlessApply").outcome == TaskOutcome.SUCCESS
-        println result.output
         assertThatFilesAreTheSame(testedDir, expectedDir)
     }
 
