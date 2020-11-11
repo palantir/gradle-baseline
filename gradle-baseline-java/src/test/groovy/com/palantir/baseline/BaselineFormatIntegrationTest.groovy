@@ -159,7 +159,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
                 Files.deleteIfExists(expectedFile)
                 Files.copy(path, expectedFile)
             }
-            assertThat(path).hasSameContentAs(expectedFile)
+            assertThat(path).hasSameTextualContentAs(expectedFile)
         }
     }
 

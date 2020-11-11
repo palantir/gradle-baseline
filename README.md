@@ -298,11 +298,11 @@ Adds a `./gradlew format` task which autoformats all Java files using [Spotless]
 ```gradle
 buildscript {
     dependencies {
-        classpath 'com.diffplug.spotless:spotless-plugin-gradle:3.14.0'
+        classpath 'com.diffplug.spotless:spotless-plugin-gradle:5.7.0'
     }
 }
 
-apply plugin: 'com.diffplug.gradle.spotless'
+apply plugin: 'com.diffplug.spotless'
 
 spotless {
     java {

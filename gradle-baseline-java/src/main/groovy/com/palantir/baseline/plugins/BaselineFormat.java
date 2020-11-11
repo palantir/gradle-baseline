@@ -48,7 +48,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
     public void apply(Project project) {
         this.project = project;
 
-        project.getPluginManager().apply("com.diffplug.gradle.spotless");
+        project.getPluginManager().apply("com.diffplug.spotless");
 
         SpotlessExtension spotlessExtension = project.getExtensions().getByType(SpotlessExtension.class);
         // Keep spotless from eagerly configuring all other tasks.  We do the same thing as the enforceCheck
