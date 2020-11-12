@@ -35,16 +35,9 @@ import org.slf4j.LoggerFactory;
  */
 public final class BaselineReleaseCompatibility extends AbstractBaselinePlugin {
     private static final Logger log = LoggerFactory.getLogger(BaselineReleaseCompatibility.class);
-    private static final String DISABLE_PROPERTY = "com.palantir.baseline-release-compatibility.dangerous.disable";
 
     @Override
     public void apply(Project project) {
-        if (project.hasProperty(DISABLE_PROPERTY)) {
-            log.info(
-                    "Not configuring com.palantir.baseline-release-compatibility because {} was set", DISABLE_PROPERTY);
-            return;
-        }
-
         this.project = project;
 
         project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
@@ -71,6 +64,15 @@ public final class BaselineReleaseCompatibility extends AbstractBaselinePlugin {
                         javaCompile.getName(),
                         javaCompile.getProject(),
                         jdkVersion);
+                return Collections.emptyList();
+            }
+
+            // The java compiler does not allow using --add-exports in combination with --release
+            if (javaCompile.getOptions().getCompilerArgs().stream().anyMatch(arg -> arg.startsWith("--add-exports"))) {
+                log.debug(
+                        "BaselineReleaseCompatibility is a no-op for {} in {} as --add-exports flag is also used",
+                        javaCompile.getName(),
+                        javaCompile.getProject());
                 return Collections.emptyList();
             }
 
