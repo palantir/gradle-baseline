@@ -67,6 +67,15 @@ public final class BaselineReleaseCompatibility extends AbstractBaselinePlugin {
                 return Collections.emptyList();
             }
 
+            // The java compiler does not allow using --add-exports in combination with --release
+            if (javaCompile.getOptions().getCompilerArgs().stream().anyMatch(arg -> arg.startsWith("--add-exports"))) {
+                log.debug(
+                        "BaselineReleaseCompatibility is a no-op for {} in {} as --add-exports flag is also used",
+                        javaCompile.getName(),
+                        javaCompile.getProject());
+                return Collections.emptyList();
+            }
+
             Optional<JavaVersion> taskTarget =
                     Optional.ofNullable(javaCompile.getTargetCompatibility()).map(JavaVersion::toVersion);
 
