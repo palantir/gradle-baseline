@@ -5,7 +5,7 @@ com.google.errorprone:error_prone_core = 2.4.0
 com.google.errorprone:error_prone_refaster = 2.4.0
 com.google.errorprone:error_prone_test_helpers = 2.4.0
 com.google.guava:guava = 30.0-jre
-com.palantir.safe-logging:* = 1.13.0
+com.palantir.safe-logging:* = 1.14.0
 org.apache.maven.shared:maven-dependency-analyzer = 1.11.3
 org.github.ngbinh.scalastyle:gradle-scalastyle-plugin_2.11 = 1.0.1
 org.inferred:freebuilder = 1.14.6
@@ -28,8 +28,8 @@ net.ltgt.gradle:gradle-errorprone-plugin = 1.3.0
 org.apache.commons:commons-lang3 = 3.11
 org.assertj:assertj-core = 3.18.1
 org.hamcrest:hamcrest-core = 2.2
-org.junit.jupiter:* = 5.6.2
-org.mockito:* = 3.3.3
+org.junit.jupiter:* = 5.7.0
+org.mockito:* = 3.6.0
 
 # dependency-upgrader:OFF
 # Don't upgrade, we will remove this in a future release.
