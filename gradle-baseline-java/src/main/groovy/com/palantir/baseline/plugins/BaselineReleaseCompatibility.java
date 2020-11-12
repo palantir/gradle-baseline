@@ -35,9 +35,16 @@ import org.slf4j.LoggerFactory;
  */
 public final class BaselineReleaseCompatibility extends AbstractBaselinePlugin {
     private static final Logger log = LoggerFactory.getLogger(BaselineReleaseCompatibility.class);
+    private static final String DISABLE_PROPERTY = "com.palantir.baseline-release-compatibility.dangerous.disable";
 
     @Override
     public void apply(Project project) {
+        if (project.hasProperty(DISABLE_PROPERTY)) {
+            log.info(
+                    "Not configuring com.palantir.baseline-release-compatibility because {} was set", DISABLE_PROPERTY);
+            return;
+        }
+
         this.project = project;
 
         project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
