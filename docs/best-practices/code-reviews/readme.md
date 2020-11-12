@@ -151,7 +151,7 @@ not to waste reviewers' time and motivation:
   - Expensive human review time should be spent on the program logic
     rather than style, syntax, or formatting debates. We prefer settling
     those with automated tooling like
-    [Checkstyle](http://checkstyle.sourceforge.net/),
+    [Checkstyle](http://checkstyle.sourceforge.io/),
     [TSLint](https://github.com/palantir/tslint),
     [Baseline](https://github.com/palantir/gradle-baseline),
     [Prettier](https://github.com/prettier/prettier),
