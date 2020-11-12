@@ -1,5 +1,5 @@
 type: improvement
 improvement:
-  description: Add property to disable release compatibility
+  description: Disable --release flag when --add-exports is used
   links:
   - https://github.com/palantir/gradle-baseline/pull/1542
