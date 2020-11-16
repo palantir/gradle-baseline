@@ -16,6 +16,7 @@
 
 package com.palantir.baseline.plugins;
 
+import com.google.common.base.Preconditions;
 import com.google.common.io.Resources;
 import java.io.IOException;
 import java.net.URL;
@@ -71,11 +72,12 @@ public final class BaselineCheckstyle extends AbstractBaselinePlugin {
 
     // The idea is the checkstyle.version file can be more easily updated by excavator
     private static String getCheckstyleVersionFromResource() {
-        URL url = BaselineCheckstyle.class.getResource("checkstyle.version");
+        URL url = Resources.getResource(BaselineCheckstyle.class, "checkstyle.version");
+        Preconditions.checkNotNull(url, "Unable to find 'checkstyle.version' resource");
         try {
             return Resources.toString(url, StandardCharsets.UTF_8).trim();
         } catch (IOException e) {
-            throw new RuntimeException("Unable to lookup checkstyle version");
+            throw new RuntimeException("Unable to lookup checkstyle version", e);
         }
     }
 }
