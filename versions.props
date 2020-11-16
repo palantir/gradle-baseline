@@ -14,6 +14,7 @@ org.slf4j:slf4j-api = 1.7.30
 org.immutables:* = 2.8.8
 org.ow2.asm:asm = 9.0
 com.googlecode.java-diff-utils:diffutils = 1.3.0
+com.puppycrawl.tools:checkstyle = 8.36.1
 
 # test deps
 com.fasterxml.jackson.*:* = 2.11.1
