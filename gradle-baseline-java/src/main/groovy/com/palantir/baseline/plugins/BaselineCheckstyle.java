@@ -72,7 +72,7 @@ public final class BaselineCheckstyle extends AbstractBaselinePlugin {
 
     // The idea is the checkstyle.version file can be more easily updated by excavator
     private static String getCheckstyleVersionFromResource() {
-        URL url = Resources.getResource(BaselineCheckstyle.class, "checkstyle.version");
+        URL url = Resources.getResource(BaselineCheckstyle.class, "/checkstyle.version");
         Preconditions.checkNotNull(url, "Unable to find 'checkstyle.version' resource");
         try {
             return Resources.toString(url, StandardCharsets.UTF_8).trim();
