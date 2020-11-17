@@ -385,7 +385,7 @@ The plugin also adds a `checkJUnitDependencies` to make the migration to JUnit5 
 3. For repos that use 'snapshot' style testing, it's convenient to have a single command to accept the updated snapshots after a code change.
 This plugin ensures that if you run tests with `./gradlew test -Drecreate=true`, the system property will be passed down to the running Java process (which can be detected with `Boolean.getBoolean("recreate")`).
 
-## com.palantir.baseline-fix-gradle-java
+## com.palantir.baseline-fix-gradle-java (off by default)
 
 Fixes up all Java [SourceSets](https://docs.gradle.org/current/userguide/building_java_projects.html#sec:java_source_sets)
 by marking their deprecated [configurations](https://docs.gradle.org/current/userguide/java_plugin.html#tab:configurations)
@@ -398,3 +398,26 @@ now fulfil the "Bucket of dependencies" role described in that document, as they
 
 This will become the default in Gradle 7 and leaving these as they currently are can cause both unnecessary confusion
 (users looking in `compile` instead of `compileClasspath`) and [random crashes](https://github.com/gradle/gradle/issues/11844#issuecomment-585219427). 
+
+
+## com.palantir.baseline-enable-preview-flag (off by default)
+
+As described in [JEP 12](https://openjdk.java.net/jeps/12), Java allows you to use shiny new syntax features if you add
+the `--enable-preview` flag. Sadly gradle requires you to add it in multiple places. This plugin is a short-hand for the
+below:
+
+```gradle
+tasks.withType(JavaCompile) {
+    options.compilerArgs += "--enable-preview"
+}
+tasks.withType(Test) {
+    jvmArgs += "--enable-preview"
+}
+tasks.withType(JavaExec) {
+    jvmArgs += "--enable-preview"
+}
+```
+
+_Note that you must dial up `sourceCompatibility` to the current JVM version in order for this to work, as if you're
+compiling using a java 15 installation, it doesn't make sense to try to lock sourceCompatibility to 11 but also enable
+bleeding edge features that haven't yet stabilised in java 15._
