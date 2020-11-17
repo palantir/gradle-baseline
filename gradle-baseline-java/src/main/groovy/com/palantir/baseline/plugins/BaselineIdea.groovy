@@ -27,7 +27,9 @@ import java.util.function.Supplier
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.Task
+import org.gradle.api.XmlProvider
 import org.gradle.api.file.FileTreeElement
+import org.gradle.api.plugins.quality.CheckstyleExtension
 import org.gradle.api.specs.Spec
 import org.gradle.api.tasks.util.PatternFilterable
 import org.gradle.plugins.ide.idea.GenerateIdeaModule
@@ -37,6 +39,8 @@ import org.gradle.plugins.ide.idea.IdeaPlugin
 import org.gradle.plugins.ide.idea.model.IdeaModel
 import org.gradle.plugins.ide.idea.model.ModuleDependency
 
+// TODO(dfox): separate the xml manipulation (which really benefits from groovy syntax) from typed things
+//@CompileStatic
 class BaselineIdea extends AbstractBaselinePlugin {
 
     static SAVE_ACTIONS_PLUGIN_MINIMUM_VERSION = '1.9.0'
@@ -82,7 +86,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
     void applyToRootProject(Project project) {
         // Configure Idea project
         IdeaModel ideaRootModel = project.extensions.findByType(IdeaModel)
-        ideaRootModel.project.ipr.withXml { provider ->
+        ideaRootModel.project.ipr.withXml {XmlProvider provider ->
             Node node = provider.asNode()
             addCodeStyle(node)
             addCopyright(node)
@@ -97,7 +101,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
         configureProjectForIntellijImport(project)
 
         project.afterEvaluate {
-            ideaRootModel.workspace.iws.withXml { provider ->
+            ideaRootModel.workspace.iws.withXml {XmlProvider provider ->
                 Node node = provider.asNode()
                 setRunManagerWorkingDirectory(node)
                 addEditorSettings(node)
@@ -108,7 +112,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
         // This plugin can only be applied to the root project, and it applied as a side-effect of applying
         // 'com.palantir.java-format' to any subproject.
         project.getPluginManager().withPlugin("com.palantir.java-format-idea") {
-            ideaRootModel.project.ipr.withXml { provider ->
+            ideaRootModel.project.ipr.withXml {XmlProvider provider ->
                 Node node = provider.asNode()
                 configureSaveActions(node)
                 configureExternalDependencies(node)
@@ -179,8 +183,8 @@ class BaselineIdea extends AbstractBaselinePlugin {
     /**
      * Extracts copyright headers from Baseline directory and adds them to Idea project XML node.
      */
-    private void addCopyright(node) {
-        def copyrightManager = node.component.find { it.'@name' == 'CopyrightManager' }
+    private void addCopyright(Node node) {
+        Node copyrightManager = node.component.find {it.'@name' == 'CopyrightManager'}
         def copyrightDir = Paths.get("${configDir}/copyright/")
         def copyrightFiles = getCopyrightFiles(copyrightDir)
         copyrightFiles.each { File file ->
@@ -240,7 +244,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
         return copyrightFiles
     }
 
-    private static void addCopyrightFile(node, File file, String fileName) {
+    private static void addCopyrightFile(Node node, File file, String fileName) {
         def copyrightText = XmlUtil.escapeControlCharacters(XmlUtil.escapeXml(file.text.trim()))
         node.append(new XmlParser().parseText("""
             <copyright>
@@ -273,6 +277,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
         }
 
         project.logger.debug "Baseline: Configuring EclipseCodeFormatter plugin for Idea"
+        // language=xml
         node.append(new XmlParser().parseText("""
              <component name="EclipseCodeFormatterProjectSettings">
                 <option name="projectSpecificProfile">
@@ -289,7 +294,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
         GroovyXmlUtils.matchOrCreateChild(externalDependencies, 'plugin', [id: 'EclipseCodeFormatter'])
     }
 
-    private void addCheckstyle(node) {
+    private void addCheckstyle(Node node) {
         project.plugins.withType(BaselineCheckstyle) {
             project.logger.debug "Baseline: Configuring Checkstyle for Idea"
 
@@ -298,7 +303,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
         }
     }
 
-    private static void addCheckstyleIntellijImport(project) {
+    private static void addCheckstyleIntellijImport(Project project) {
         project.plugins.withType(BaselineCheckstyle) {
             project.logger.debug "Baseline: Configuring Checkstyle for Idea"
 
@@ -311,14 +316,15 @@ class BaselineIdea extends AbstractBaselinePlugin {
         }
     }
 
-    private static void addCheckstyleNode(node) {
+    private void addCheckstyleNode(Node node) {
         def checkstyleFile = "LOCAL_FILE:\$PROJECT_DIR\$/.baseline/checkstyle/checkstyle.xml"
+        String checkstyleVersion = project.extensions.getByType(CheckstyleExtension.class).getToolVersion();
         node.append(new XmlParser().parseText("""
             <component name="CheckStyle-IDEA">
               <option name="configuration">
                 <map>
                   <entry key="active-configuration" value="${checkstyleFile}:Baseline Checkstyle" />
-                  <entry key="checkstyle-version" value="${BaselineCheckstyle.DEFAULT_CHECKSTYLE_VERSION}" />
+                  <entry key="checkstyle-version" value="${checkstyleVersion}" />
                   <entry key="check-nonjava-files" value="false" />
                   <entry key="check-test-classes" value="true" />
                   <entry key="location-0" value="${checkstyleFile}:Baseline Checkstyle" />
@@ -345,6 +351,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
             return
         }
 
+        // language=xml
         node.append(new XmlParser().parseText('''
             <component name="VcsDirectoryMappings">
                 <mapping directory="$PROJECT_DIR$" vcs="Git" />
@@ -353,6 +360,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
     }
 
     private static void addInspectionProjectProfile(node) {
+        // language=xml
         node.append(new XmlParser().parseText("""
             <component name="InspectionProjectProfileManager">
                 <profile version="1.0">
@@ -397,6 +405,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
     }
 
     private static void addEditorSettings(node) {
+        // language=xml
         node.append(new XmlParser().parseText("""
             <component name="CodeInsightWorkspaceSettings">
                 <option name="optimizeImportsOnTheFly" value="true" />
@@ -404,8 +413,8 @@ class BaselineIdea extends AbstractBaselinePlugin {
             """.stripIndent()))
     }
 
-    private static void addGitHubIssueNavigation(node) {
-        GitUtils.maybeGitHubUri().ifPresent { githubUri ->
+    private static void addGitHubIssueNavigation(Node node) {
+        GitUtils.maybeGitHubUri().ifPresent {githubUri ->
             node.append(new XmlParser().parseText("""
              <component name="IssueNavigationConfiguration">
                <option name="links">
