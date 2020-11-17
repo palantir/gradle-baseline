@@ -25,7 +25,9 @@ import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.compile.JavaCompile;
+import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradle.api.tasks.testing.Test;
+import org.gradle.external.javadoc.CoreJavadocOptions;
 import org.gradle.process.CommandLineArgumentProvider;
 
 public final class BaselineEnablePreviewFlag implements Plugin<Project> {
@@ -48,15 +50,35 @@ public final class BaselineEnablePreviewFlag implements Plugin<Project> {
 
         project.getExtensions().getExtraProperties().set("enablePreview", enablePreview);
 
-        project.getTasks().withType(JavaCompile.class, t -> {
-            List<CommandLineArgumentProvider> args = t.getOptions().getCompilerArgumentProviders();
-            args.add(new MaybeEnablePreview(enablePreview)); // mutation is gross, but it's the gradle convention
-        });
-        project.getTasks().withType(Test.class, t -> {
-            t.getJvmArgumentProviders().add(new MaybeEnablePreview(enablePreview));
-        });
-        project.getTasks().withType(JavaExec.class, t -> {
-            t.getJvmArgumentProviders().add(new MaybeEnablePreview(enablePreview));
+        project.getPlugins().withId("java", _unused -> {
+            project.getTasks().withType(JavaCompile.class, t -> {
+                List<CommandLineArgumentProvider> args = t.getOptions().getCompilerArgumentProviders();
+                args.add(new MaybeEnablePreview(enablePreview)); // mutation is gross, but it's the gradle convention
+            });
+            project.getTasks().withType(Test.class, t -> {
+                t.getJvmArgumentProviders().add(new MaybeEnablePreview(enablePreview));
+            });
+            project.getTasks().withType(JavaExec.class, t -> {
+                t.getJvmArgumentProviders().add(new MaybeEnablePreview(enablePreview));
+            });
+
+            // sadly we have to use afterEvaluate because the Javadoc task doesn't support passing in providers
+            project.afterEvaluate(_unused2 -> {
+                if (enablePreview.get()) {
+                    JavaVersion sourceCompat = project.getConvention()
+                            .getPlugin(JavaPluginConvention.class)
+                            .getSourceCompatibility();
+                    project.getTasks().withType(Javadoc.class, t -> {
+                        CoreJavadocOptions options = (CoreJavadocOptions) t.getOptions();
+
+                        // Yes truly javadoc wants a single leading dash, other javac wants a double leading dash.
+                        // We also have to use these manual string options because they don't have first-class methods
+                        // yet (e.g. https://github.com/gradle/gradle/issues/12898)
+                        options.addBooleanOption("-enable-preview", true);
+                        options.addStringOption("source", sourceCompat.getMajorVersion());
+                    });
+                }
+            });
         });
     }
 

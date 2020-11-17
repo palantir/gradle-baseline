@@ -22,7 +22,8 @@ import nebula.test.functional.ExecutionResult
 import org.gradle.api.JavaVersion
 import spock.lang.IgnoreIf
 
-@IgnoreIf({JavaVersion.current() < JavaVersion.VERSION_14}) // this class uses records, which were introduced in java 14
+@IgnoreIf({JavaVersion.current() < JavaVersion.VERSION_14})
+// this class uses records, which were introduced in java 14
 class BaselineEnablePreviewFlagTest extends IntegrationSpec {
 
     def setupSingleProject(File dir) {
@@ -43,6 +44,7 @@ class BaselineEnablePreviewFlagTest extends IntegrationSpec {
         writeJavaSourceFile('''
             package foo;
             public class Foo {
+              /** Hello this is some javadoc. */
               public record Coordinate(int x, int y) {}
             
               public static void main(String... args) {
@@ -65,6 +67,15 @@ class BaselineEnablePreviewFlagTest extends IntegrationSpec {
         then:
         executionResult.getStandardOutput().contains('Foo$Coordinate.class')
         executionResult.getStandardOutput().contains('Foo.class')
+    }
+
+    def 'javadoc'() {
+        when:
+        setupSingleProject(projectDir)
+
+        then:
+        ExecutionResult executionResult = runTasks('javadoc', '-is')
+        assert executionResult.getSuccess() ?: executionResult.getStandardOutput()
     }
 
     def 'runs'() {
