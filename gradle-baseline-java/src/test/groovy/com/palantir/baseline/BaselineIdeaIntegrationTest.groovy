@@ -49,7 +49,23 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         buildFile << standardBuildFile
 
         then:
-        with('idea').build()
+        BuildResult result = with('idea').build()
+        assert result.task(':idea').outcome == TaskOutcome.SUCCESS ?: result.output
+    }
+
+    def 'Works with checkstyle and IntelliJ import'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << """ 
+        allprojects { 
+            apply plugin: 'com.palantir.baseline-checkstyle'
+        }
+        """
+
+        then:
+        BuildResult result = with('idea', '-Didea.active=true', '-is').build()
+        assert file(".idea/checkstyle-idea.xml").exists() ?: result.output
+        assert result.task(':idea').outcome == TaskOutcome.SUCCESS ?: result.output
     }
 
     def 'Throws error when configuration files are not present'() {
