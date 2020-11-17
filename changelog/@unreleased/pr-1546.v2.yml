@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: checkstyle 8.36 -> 8.37, to benefit from some bugfixes to do with new
+    java language features (e.g. records)
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1546

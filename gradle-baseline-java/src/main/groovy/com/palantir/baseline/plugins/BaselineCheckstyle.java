@@ -16,6 +16,11 @@
 
 package com.palantir.baseline.plugins;
 
+import com.google.common.base.Preconditions;
+import com.google.common.io.Resources;
+import java.io.IOException;
+import java.net.URL;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.JavaPluginConvention;
@@ -29,8 +34,6 @@ import org.gradle.plugins.ide.eclipse.model.EclipseProject;
 /** Configures the Gradle "checkstyle" task with Baseline settings. */
 public final class BaselineCheckstyle extends AbstractBaselinePlugin {
 
-    private static final String DEFAULT_CHECKSTYLE_VERSION = "8.36.1";
-
     @Override
     public void apply(Project project) {
         this.project = project;
@@ -39,7 +42,7 @@ public final class BaselineCheckstyle extends AbstractBaselinePlugin {
 
         // Set default version (outside afterEvaluate so it can be overridden).
         project.getExtensions()
-                .configure(CheckstyleExtension.class, ext -> ext.setToolVersion(DEFAULT_CHECKSTYLE_VERSION));
+                .configure(CheckstyleExtension.class, ext -> ext.setToolVersion(getCheckstyleVersionFromResource()));
 
         // Configure checkstyle
         project.getPluginManager().withPlugin("java", plugin -> {
@@ -65,5 +68,16 @@ public final class BaselineCheckstyle extends AbstractBaselinePlugin {
                     project.getExtensions().getByType(EclipseModel.class).getProject();
             eclipseProject.buildCommand("net.sf.eclipsecs.core.CheckstyleBuilder");
         });
+    }
+
+    // The idea is the checkstyle.version file can be more easily updated by excavator
+    private static String getCheckstyleVersionFromResource() {
+        URL url = Resources.getResource(BaselineCheckstyle.class, "/checkstyle.version");
+        Preconditions.checkNotNull(url, "Unable to find 'checkstyle.version' resource");
+        try {
+            return Resources.toString(url, StandardCharsets.UTF_8).trim();
+        } catch (IOException e) {
+            throw new RuntimeException("Unable to lookup checkstyle version", e);
+        }
     }
 }

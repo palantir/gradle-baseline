@@ -131,3 +131,21 @@ project.ext.'gradle.publish.secret' = System.env["GRADLE_SECRET"]
 tasks.withType(Test) {
     systemProperty 'recreate', System.getProperty('recreate', 'false')
 }
+
+configurations {
+    checkstyleVersion
+}
+
+dependencies {
+    checkstyleVersion 'com.puppycrawl.tools:checkstyle'
+}
+
+task writeCheckstyleVersion() {
+    doLast {
+        file('src/main/resources/checkstyle.version').text = getVersion('com.puppycrawl.tools', 'checkstyle', configurations.checkstyleVersion)
+    }
+}
+
+if (gradle.startParameter.isWriteDependencyLocks()) {
+    gradle.startParameter.taskNames += 'writeCheckstyleVersion'
+}
