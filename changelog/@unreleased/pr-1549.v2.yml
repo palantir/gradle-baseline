@@ -1,0 +1,8 @@
+type: feature
+feature:
+  description: |-
+    Add the `apply plugin: 'com.palantir.baseline-enable-preview-flag'` to your subprojects block to enable the usage of unreleased java features (e.g. records, switch expressions, var keyword etc).
+
+    Note, this plugin is a no-op on any project where you have a low sourceCompatibility.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1549
