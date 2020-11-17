@@ -195,7 +195,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `LogsafeArgName`: Prevent certain named arguments as being logged as safe. Specify unsafe argument names using `LogsafeArgName:UnsafeArgNames` errorProne flag.
 - `ImplicitPublicBuilderConstructor`: Prevent builders from unintentionally leaking public constructors.
 - `ImmutablesBuilderMissingInitialization`: Prevent building Immutables.org builders when not all fields have been populated.
-- `UnnecessarilyQualified`: Types should not be qualified if they are also imported. 
+- `UnnecessarilyQualified`: Types should not be qualified if they are also imported.
 - `DeprecatedGuavaObjects`: `com.google.common.base.Objects` has been obviated by `java.util.Objects`.
 - `JavaTimeSystemDefaultTimeZone`: Avoid using the system default time zone.
 
@@ -389,15 +389,15 @@ This plugin ensures that if you run tests with `./gradlew test -Drecreate=true`,
 
 Fixes up all Java [SourceSets](https://docs.gradle.org/current/userguide/building_java_projects.html#sec:java_source_sets)
 by marking their deprecated [configurations](https://docs.gradle.org/current/userguide/java_plugin.html#tab:configurations)
-- `compile` and `runtime` - as well as the `compileOnly` configuration as not resolvable 
+- `compile` and `runtime` - as well as the `compileOnly` configuration as not resolvable
 (can't call resolve on them) and not consumable (can't be depended on from other projects).
 
 See [here](https://docs.gradle.org/current/userguide/declaring_dependencies.html#sec:resolvable-consumable-configs)
-for a more in-depth discussion on what these terms mean. By configuring them thusly, we are saying that these configurations 
+for a more in-depth discussion on what these terms mean. By configuring them thusly, we are saying that these configurations
 now fulfil the "Bucket of dependencies" role described in that document, as they should.
 
 This will become the default in Gradle 7 and leaving these as they currently are can cause both unnecessary confusion
-(users looking in `compile` instead of `compileClasspath`) and [random crashes](https://github.com/gradle/gradle/issues/11844#issuecomment-585219427). 
+(users looking in `compile` instead of `compileClasspath`) and [random crashes](https://github.com/gradle/gradle/issues/11844#issuecomment-585219427).
 
 
 ## com.palantir.baseline-enable-preview-flag (off by default)
@@ -413,7 +413,7 @@ is undesirable to deeply couple a repo to a particular Java version as it makes 
 ```gradle
 // root build.gradle
 allprojects {
-    apply plugin: 'com.palantir.enable-preview-flag'
+    apply plugin: 'com.palantir.baseline-enable-preview-flag'
 }
 ```
 
