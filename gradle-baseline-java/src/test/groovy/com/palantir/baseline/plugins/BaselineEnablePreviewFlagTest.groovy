@@ -16,15 +16,17 @@
 
 package com.palantir.baseline.plugins
 
+
 import nebula.test.IntegrationSpec
 import nebula.test.functional.ExecutionResult
+import org.gradle.api.JavaVersion
 import spock.lang.IgnoreIf
 
-@IgnoreIf({ Integer.parseInt(jvm.javaSpecificationVersion) < 14 })
+@IgnoreIf({JavaVersion.current() < JavaVersion.VERSION_14})
 class BaselineEnablePreviewFlagTest extends IntegrationSpec {
 
-    def setup() {
-        buildFile << '''
+    def setupSingleProject(File dir) {
+        new File(dir, "build.gradle") << '''
             apply plugin: 'java-library'
             apply plugin: 'com.palantir.baseline-enable-preview-flag'
             apply plugin: 'application'
@@ -34,7 +36,11 @@ class BaselineEnablePreviewFlagTest extends IntegrationSpec {
             }  
         '''.stripIndent()
 
-        file('src/main/java/foo/Foo.java') << '''
+        writeSourceFileContainingRecord(dir);
+    }
+
+    private writeSourceFileContainingRecord(File dir) {
+        writeJavaSourceFile('''
             package foo;
             public class Foo {
               public record Coordinate(int x, int y) {}
@@ -43,11 +49,12 @@ class BaselineEnablePreviewFlagTest extends IntegrationSpec {
                 System.out.println("Hello, world: " + new Coordinate(1, 2));
               }
             }
-        '''.stripIndent()
+        '''.stripIndent(), dir)
     }
 
     def 'compiles'() {
         when:
+        setupSingleProject(projectDir)
         buildFile << '''
         tasks.classes.doLast {
           println "COMPILED:" + new File(sourceSets.main.java.outputDir, "foo").list()
@@ -62,6 +69,7 @@ class BaselineEnablePreviewFlagTest extends IntegrationSpec {
 
     def 'runs'() {
         when:
+        setupSingleProject(projectDir)
         ExecutionResult executionResult = runTasks('run', '-is')
 
         then:
@@ -70,6 +78,7 @@ class BaselineEnablePreviewFlagTest extends IntegrationSpec {
 
     def 'testing works'() {
         when:
+        setupSingleProject(projectDir)
         buildFile << '''
         repositories { mavenCentral() }
         dependencies {
@@ -95,6 +104,44 @@ class BaselineEnablePreviewFlagTest extends IntegrationSpec {
         then:
         executionResult.getStandardOutput().contains("Hello, world: Coordinate[x=1, y=2]")
         executionResult.getStandardOutput().contains("Hello, world: Whatever[x=1, y=2]")
+    }
+
+    def 'multiproject'() {
+        when:
+        File java14Dir = addSubproject("my-java-14", '''
+            apply plugin: 'java-library'
+            apply plugin: 'application'
+            
+            sourceCompatibility = 14
+            application {
+              mainClass = 'foo.Foo'
+            }
+            dependencies {
+              implementation project(':my-java-14-preview')
+            }
+            ''')
+
+        writeJavaSourceFile('''
+            package bar;
+            public class Bar {
+              public static void main(String... args) {
+                foo.Foo.main();
+              }
+            }
+            ''', java14Dir);
+
+        File java14PreviewDir = addSubproject("my-java-14-preview", '''
+            apply plugin: 'java-library'
+            apply plugin: 'com.palantir.baseline-enable-preview-flag'
+            
+            sourceCompatibility = 14
+            ''')
+
+        writeSourceFileContainingRecord(java14PreviewDir)
+
+        then:
+        ExecutionResult executionResult = runTasks('run', '-is')
+        println executionResult.getStandardError()
     }
 }
 
