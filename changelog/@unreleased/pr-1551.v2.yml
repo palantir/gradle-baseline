@@ -1,5 +1,5 @@
 type: fix
 fix:
-  description: Fix regression in ./gradlew idea introduced in baseline 3.51.1
+  description: Fix regression in ./gradlew idea introduced in baseline 3.51.0
   links:
   - https://github.com/palantir/gradle-baseline/pull/1551
