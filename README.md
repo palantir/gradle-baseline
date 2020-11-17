@@ -403,10 +403,22 @@ This will become the default in Gradle 7 and leaving these as they currently are
 ## com.palantir.baseline-enable-preview-flag (off by default)
 
 As described in [JEP 12](https://openjdk.java.net/jeps/12), Java allows you to use shiny new syntax features if you add
-the `--enable-preview` flag. Sadly gradle requires you to add it in multiple places. This plugin is a short-hand for the
-below:
+the `--enable-preview` flag. However, gradle requires you to add it in multiple places. This plugin can be applied to
+within an allprojects block and it will automatically ugprade any project which is already using the latest
+sourceCompatibility by adding the necessary `--enable-preview` flags to all of the following task types.
+
+_Note, this plugin should be used with **caution** because preview features may change or be removed, and it
+is undesirable to deeply couple a repo to a particular Java version as it makes upgrading to a new major Java version harder._
 
 ```gradle
+// root build.gradle
+allprojects {
+    apply plugin: 'com.palantir.enable-preview-flag'
+}
+```
+
+```gradle
+// shorthand for the below:
 tasks.withType(JavaCompile) {
     options.compilerArgs += "--enable-preview"
 }
@@ -418,6 +430,6 @@ tasks.withType(JavaExec) {
 }
 ```
 
-_Note that you must dial up `sourceCompatibility` to the current JVM version in order for this to work, as if you're
-compiling using a java 15 installation, it doesn't make sense to try to lock sourceCompatibility to 11 but also enable
-bleeding edge features that haven't yet stabilised in java 15._
+If you've explicitly specified a lower sourceCompatibility (e.g. for a published API jar), then this plugin is a no-op.
+In fact, Java will actually error if you try to switch on the `--enable-preview` flag to get cutting edge syntax
+features but set `sourceCompatibility` (or `--release`) to an older Java version.

@@ -22,7 +22,7 @@ import nebula.test.functional.ExecutionResult
 import org.gradle.api.JavaVersion
 import spock.lang.IgnoreIf
 
-@IgnoreIf({JavaVersion.current() < JavaVersion.VERSION_14})
+@IgnoreIf({JavaVersion.current() < JavaVersion.VERSION_14}) // this class uses records, which were introduced in java 14
 class BaselineEnablePreviewFlagTest extends IntegrationSpec {
 
     def setupSingleProject(File dir) {
@@ -73,7 +73,7 @@ class BaselineEnablePreviewFlagTest extends IntegrationSpec {
         ExecutionResult executionResult = runTasks('run', '-is')
 
         then:
-        assert executionResult.getStandardOutput().contains("Hello, world: Coordinate[x=1, y=2]")
+        executionResult.getStandardOutput().contains("Hello, world: Coordinate[x=1, y=2]")
     }
 
     def 'testing works'() {
@@ -108,11 +108,16 @@ class BaselineEnablePreviewFlagTest extends IntegrationSpec {
 
     def 'multiproject'() {
         when:
-        File java14Dir = addSubproject("my-java-14", '''
+        buildFile << '''
+        subprojects {
             apply plugin: 'java-library'
+            apply plugin: 'com.palantir.baseline-enable-preview-flag'
+        }
+        '''
+
+        File java14Dir = addSubproject("my-java-14", '''
             apply plugin: 'application'
             
-            sourceCompatibility = 14
             application {
               mainClass = 'foo.Foo'
             }
@@ -120,7 +125,6 @@ class BaselineEnablePreviewFlagTest extends IntegrationSpec {
               implementation project(':my-java-14-preview')
             }
             ''')
-
         writeJavaSourceFile('''
             package bar;
             public class Bar {
@@ -130,18 +134,30 @@ class BaselineEnablePreviewFlagTest extends IntegrationSpec {
             }
             ''', java14Dir);
 
-        File java14PreviewDir = addSubproject("my-java-14-preview", '''
-            apply plugin: 'java-library'
-            apply plugin: 'com.palantir.baseline-enable-preview-flag'
-            
-            sourceCompatibility = 14
-            ''')
-
+        File java14PreviewDir = addSubproject("my-java-14-preview")
         writeSourceFileContainingRecord(java14PreviewDir)
+
 
         then:
         ExecutionResult executionResult = runTasks('run', '-is')
-        println executionResult.getStandardError()
+        executionResult.getStandardOutput().contains 'Hello, world: Coordinate[x=1, y=2]'
+    }
+
+    def 'does not always apply'() {
+        when:
+        File java8Dir = addSubproject('my-java-8-api', "sourceCompatibility = 8")
+        buildFile << '''
+        subprojects {
+            apply plugin: 'java-library'
+            apply plugin: 'com.palantir.baseline-enable-preview-flag'
+        }
+        '''
+        writeSourceFileContainingRecord(java8Dir)
+
+        ExecutionResult result = runTasks('my-java-8-api:classes', '-is')
+
+        then:
+        result.getStandardError().contains("use --enable-preview to enable records")
     }
 }
 
