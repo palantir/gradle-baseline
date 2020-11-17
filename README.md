@@ -195,7 +195,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `LogsafeArgName`: Prevent certain named arguments as being logged as safe. Specify unsafe argument names using `LogsafeArgName:UnsafeArgNames` errorProne flag.
 - `ImplicitPublicBuilderConstructor`: Prevent builders from unintentionally leaking public constructors.
 - `ImmutablesBuilderMissingInitialization`: Prevent building Immutables.org builders when not all fields have been populated.
-- `UnnecessarilyQualified`: Types should not be qualified if they are also imported. 
+- `UnnecessarilyQualified`: Types should not be qualified if they are also imported.
 - `DeprecatedGuavaObjects`: `com.google.common.base.Objects` has been obviated by `java.util.Objects`.
 - `JavaTimeSystemDefaultTimeZone`: Avoid using the system default time zone.
 
@@ -385,16 +385,51 @@ The plugin also adds a `checkJUnitDependencies` to make the migration to JUnit5 
 3. For repos that use 'snapshot' style testing, it's convenient to have a single command to accept the updated snapshots after a code change.
 This plugin ensures that if you run tests with `./gradlew test -Drecreate=true`, the system property will be passed down to the running Java process (which can be detected with `Boolean.getBoolean("recreate")`).
 
-## com.palantir.baseline-fix-gradle-java
+## com.palantir.baseline-fix-gradle-java (off by default)
 
 Fixes up all Java [SourceSets](https://docs.gradle.org/current/userguide/building_java_projects.html#sec:java_source_sets)
 by marking their deprecated [configurations](https://docs.gradle.org/current/userguide/java_plugin.html#tab:configurations)
-- `compile` and `runtime` - as well as the `compileOnly` configuration as not resolvable 
+- `compile` and `runtime` - as well as the `compileOnly` configuration as not resolvable
 (can't call resolve on them) and not consumable (can't be depended on from other projects).
 
 See [here](https://docs.gradle.org/current/userguide/declaring_dependencies.html#sec:resolvable-consumable-configs)
-for a more in-depth discussion on what these terms mean. By configuring them thusly, we are saying that these configurations 
+for a more in-depth discussion on what these terms mean. By configuring them thusly, we are saying that these configurations
 now fulfil the "Bucket of dependencies" role described in that document, as they should.
 
 This will become the default in Gradle 7 and leaving these as they currently are can cause both unnecessary confusion
-(users looking in `compile` instead of `compileClasspath`) and [random crashes](https://github.com/gradle/gradle/issues/11844#issuecomment-585219427). 
+(users looking in `compile` instead of `compileClasspath`) and [random crashes](https://github.com/gradle/gradle/issues/11844#issuecomment-585219427).
+
+
+## com.palantir.baseline-enable-preview-flag (off by default)
+
+As described in [JEP 12](https://openjdk.java.net/jeps/12), Java allows you to use shiny new syntax features if you add
+the `--enable-preview` flag. However, gradle requires you to add it in multiple places. This plugin can be applied to
+within an allprojects block and it will automatically ugprade any project which is already using the latest
+sourceCompatibility by adding the necessary `--enable-preview` flags to all of the following task types.
+
+_Note, this plugin should be used with **caution** because preview features may change or be removed, and it
+is undesirable to deeply couple a repo to a particular Java version as it makes upgrading to a new major Java version harder._
+
+```gradle
+// root build.gradle
+allprojects {
+    apply plugin: 'com.palantir.baseline-enable-preview-flag'
+}
+```
+
+```gradle
+// shorthand for the below:
+tasks.withType(JavaCompile) {
+    options.compilerArgs += "--enable-preview"
+}
+tasks.withType(Test) {
+    jvmArgs += "--enable-preview"
+}
+tasks.withType(JavaExec) {
+    jvmArgs += "--enable-preview"
+}
+```
+
+If you've explicitly specified a lower sourceCompatibility (e.g. for a published API jar), then this plugin is a no-op.
+In fact, Java will actually error if you try to switch on the `--enable-preview` flag to get cutting edge syntax
+features but set `sourceCompatibility` (or `--release`) to an older Java version.

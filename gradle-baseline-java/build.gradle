@@ -81,6 +81,10 @@ gradlePlugin {
             id = 'com.palantir.baseline-release-compatibility'
             implementationClass = 'com.palantir.baseline.plugins.BaselineReleaseCompatibility'
         }
+        baselineEnablePreviewFlag {
+            id = 'com.palantir.baseline-enable-preview-flag'
+            implementationClass = 'com.palantir.baseline.plugins.BaselineEnablePreviewFlag'
+        }
     }
 }
 
@@ -117,6 +121,9 @@ pluginBundle {
         }
         baselineReleaseCompatibility {
             displayName = 'Palantir Baseline Release Compatibility Plugin'
+        }
+        baselineEnablePreviewFlag {
+            displayName = 'Palantir Baseline --enable-preview Flag Plugin'
         }
     }
 }
