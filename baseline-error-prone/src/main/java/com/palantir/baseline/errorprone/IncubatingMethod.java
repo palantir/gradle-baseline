@@ -21,11 +21,11 @@ import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.matchers.Description;
-import com.google.errorprone.util.ASTHelpers;
+import com.google.errorprone.matchers.Matcher;
+import com.google.errorprone.matchers.Matchers;
 import com.sun.source.tree.MemberReferenceTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.Tree;
-import com.sun.tools.javac.code.Symbol;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -38,21 +38,27 @@ import com.sun.tools.javac.code.Symbol;
 public final class IncubatingMethod extends BugChecker
         implements BugChecker.MethodInvocationTreeMatcher, BugChecker.MemberReferenceTreeMatcher {
 
-    /** The full path for the Incubating annotation. */
-    private static final String INCUBATING = "com.palantir.conjure.java.lib.internal.Incubating";
+    /** Matcher for the Incubating annotation, using the full qualified path. */
+    private static final Matcher<Tree> INCUBATING_MATCHER
+            = Matchers.hasAnnotation("com.palantir.conjure.java.lib.internal.Incubating");
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
-        return checkTree(tree, ASTHelpers.getSymbol(tree), state);
+        return checkTree(tree, state);
     }
 
     @Override
     public Description matchMemberReference(MemberReferenceTree tree, VisitorState state) {
-        return checkTree(tree, ASTHelpers.getSymbol(tree), state);
+        return checkTree(tree, state);
     }
 
-    private Description checkTree(Tree tree, Symbol.MethodSymbol method, VisitorState state) {
-        if (!ASTHelpers.hasAnnotation(method, INCUBATING, state)) {
+    private Description checkTree(Tree tree, VisitorState state) {
+        if (!INCUBATING_MATCHER.matches(tree, state)) {
+            return Description.NO_MATCH;
+        }
+
+        // Allow users to test incubating endpoints in test code without complaining.
+        if (TestCheckUtils.isTestCode(state)) {
             return Description.NO_MATCH;
         }
 

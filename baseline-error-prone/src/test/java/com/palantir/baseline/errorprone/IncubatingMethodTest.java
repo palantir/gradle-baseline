@@ -21,10 +21,6 @@ import org.junit.Test;
 
 public class IncubatingMethodTest {
 
-    // We define our own simple conjure incubating annotation at the right path:
-    private static final String[] ANNOTATION_DEFINITION =
-            new String[] {"package com.palantir.conjure.java.lib.internal;", "public @interface Incubating {}"};
-
     // A simple service with one incubating method and one non-incubating method.
     private static final String[] SERVICE_DEFINITION = new String[] {
         "package com.palantir;",
@@ -39,7 +35,6 @@ public class IncubatingMethodTest {
     @Test
     public void testIncubatingMethod() {
         CompilationTestHelper.newInstance(IncubatingMethod.class, getClass())
-                .addSourceLines("Incubating.java", ANNOTATION_DEFINITION)
                 .addSourceLines("Service.java", SERVICE_DEFINITION)
                 .addSourceLines(
                         "Main.java",
@@ -57,7 +52,6 @@ public class IncubatingMethodTest {
     @Test
     public void testIncubatingMethodReference() {
         CompilationTestHelper.newInstance(IncubatingMethod.class, getClass())
-                .addSourceLines("Incubating.java", ANNOTATION_DEFINITION)
                 .addSourceLines("Service.java", SERVICE_DEFINITION)
                 .addSourceLines(
                         "Main.java",
@@ -76,7 +70,6 @@ public class IncubatingMethodTest {
     @Test
     public void testNonIncubatingMethod() {
         CompilationTestHelper.newInstance(IncubatingMethod.class, getClass())
-                .addSourceLines("Incubating.java", ANNOTATION_DEFINITION)
                 .addSourceLines("Service.java", SERVICE_DEFINITION)
                 .addSourceLines(
                         "Main.java",
@@ -95,7 +88,6 @@ public class IncubatingMethodTest {
     @Test
     public void testSuppressedIncubatingMethod() {
         CompilationTestHelper.newInstance(IncubatingMethod.class, getClass())
-                .addSourceLines("Incubating.java", ANNOTATION_DEFINITION)
                 .addSourceLines("Service.java", SERVICE_DEFINITION)
                 .addSourceLines(
                         "Main.java",
