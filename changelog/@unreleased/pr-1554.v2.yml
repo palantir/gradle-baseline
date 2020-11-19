@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Add `IncubatingMethod` errorprone check, which prevents usage of conjure incubating APIs unless explicitly annotated.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1554
