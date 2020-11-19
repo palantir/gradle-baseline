@@ -19,7 +19,7 @@ package com.palantir.baseline.errorprone;
 import com.google.errorprone.CompilationTestHelper;
 import org.junit.Test;
 
-public class PreventUsingIncubatingMethodsTest {
+public class IncubatingMethodTest {
 
     // We define our own simple conjure incubating annotation at the right path:
     private static final String[] ANNOTATION_DEFINITION =
@@ -38,7 +38,7 @@ public class PreventUsingIncubatingMethodsTest {
 
     @Test
     public void testIncubatingMethod() {
-        CompilationTestHelper.newInstance(PreventUsingIncubatingMethods.class, getClass())
+        CompilationTestHelper.newInstance(IncubatingMethod.class, getClass())
                 .addSourceLines("Incubating.java", ANNOTATION_DEFINITION)
                 .addSourceLines("Service.java", SERVICE_DEFINITION)
                 .addSourceLines(
@@ -47,7 +47,7 @@ public class PreventUsingIncubatingMethodsTest {
                         "public final class Main {",
                         "public static void main(String[] args) {",
                         "Service service = null;",
-                        "// BUG: Diagnostic contains: You should avoid calling incubating methods",
+                        "// BUG: Diagnostic contains: You should avoid using incubating methods",
                         "service.test();",
                         "}",
                         "}")
@@ -56,7 +56,7 @@ public class PreventUsingIncubatingMethodsTest {
 
     @Test
     public void testIncubatingMethodReference() {
-        CompilationTestHelper.newInstance(PreventUsingIncubatingMethods.class, getClass())
+        CompilationTestHelper.newInstance(IncubatingMethod.class, getClass())
                 .addSourceLines("Incubating.java", ANNOTATION_DEFINITION)
                 .addSourceLines("Service.java", SERVICE_DEFINITION)
                 .addSourceLines(
@@ -66,7 +66,7 @@ public class PreventUsingIncubatingMethodsTest {
                         "public final class Main {",
                         "public static void main(String[] args) {",
                         "Service service = null;",
-                        "// BUG: Diagnostic contains: You should avoid calling incubating methods",
+                        "// BUG: Diagnostic contains: You should avoid using incubating methods",
                         "Supplier<Integer> supp = service::test;",
                         "}",
                         "}")
@@ -75,7 +75,7 @@ public class PreventUsingIncubatingMethodsTest {
 
     @Test
     public void testNonIncubatingMethod() {
-        CompilationTestHelper.newInstance(PreventUsingIncubatingMethods.class, getClass())
+        CompilationTestHelper.newInstance(IncubatingMethod.class, getClass())
                 .addSourceLines("Incubating.java", ANNOTATION_DEFINITION)
                 .addSourceLines("Service.java", SERVICE_DEFINITION)
                 .addSourceLines(
@@ -94,14 +94,14 @@ public class PreventUsingIncubatingMethodsTest {
 
     @Test
     public void testSuppressedIncubatingMethod() {
-        CompilationTestHelper.newInstance(PreventUsingIncubatingMethods.class, getClass())
+        CompilationTestHelper.newInstance(IncubatingMethod.class, getClass())
                 .addSourceLines("Incubating.java", ANNOTATION_DEFINITION)
                 .addSourceLines("Service.java", SERVICE_DEFINITION)
                 .addSourceLines(
                         "Main.java",
                         "package com.palantir;",
                         "public final class Main {",
-                        "@SuppressWarnings(\"PreventUsingIncubatingMethods\")",
+                        "@SuppressWarnings(\"IncubatingMethod\")",
                         "public static void main(String[] args) {",
                         "Service service = null;",
                         "service.test();",

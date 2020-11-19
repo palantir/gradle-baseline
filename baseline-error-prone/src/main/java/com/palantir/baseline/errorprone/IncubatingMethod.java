@@ -29,13 +29,13 @@ import com.sun.tools.javac.code.Symbol;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "PreventUsingIncubatingMethods",
+        name = "IncubatingMethod",
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = BugPattern.SeverityLevel.ERROR,
         summary = "You should avoid using incubating methods where possible, since they have very weak stability"
                 + " guarantees. You can explicitly disable this check on a case-by-case basis using"
-                + " @SuppressWarnings(\"PreventUsingIncubatingMethods\"), or disable it globally for new projects.")
-public final class PreventUsingIncubatingMethods extends BugChecker
+                + " @SuppressWarnings(\"IncubatingMethod\").")
+public final class IncubatingMethod extends BugChecker
         implements BugChecker.MethodInvocationTreeMatcher, BugChecker.MemberReferenceTreeMatcher {
 
     /** The full path for the Incubating annotation. */
@@ -56,11 +56,6 @@ public final class PreventUsingIncubatingMethods extends BugChecker
             return Description.NO_MATCH;
         }
 
-        return buildDescription(tree)
-                .setMessage("You should avoid calling incubating methods where possible in stable products, since"
-                        + " they have weak stability guarantees. You can disable this check on a case-by-case basis"
-                        + " using @SuppressWarnings(\"PreventUsingIncubatingMethods\"), or globally for new projects"
-                        + " by altering your build configuration.")
-                .build();
+        return describeMatch(tree);
     }
 }
