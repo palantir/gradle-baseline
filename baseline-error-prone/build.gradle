@@ -22,6 +22,7 @@ dependencies {
     testCompile 'org.assertj:assertj-core'
     testCompile 'org.jooq:jooq'
     testCompile 'com.palantir.tritium:tritium-registry'
+    testCompile 'com.palantir.conjure.java:conjure-lib'
     testCompileOnly 'org.immutables:value::annotations'
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-migrationsupport'
