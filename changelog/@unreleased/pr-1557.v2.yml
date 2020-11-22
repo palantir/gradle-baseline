@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Improve the DangerousJsonTypeInfoUsage check
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1557
