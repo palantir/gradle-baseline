@@ -17,17 +17,9 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.errorprone.CompilationTestHelper;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 public final class DangerousJsonTypeInfoUsageTests {
-
-    private CompilationTestHelper compilationHelper;
-
-    @BeforeEach
-    public void before() {
-        compilationHelper = CompilationTestHelper.newInstance(DangerousJsonTypeInfoUsage.class, getClass());
-    }
 
     @Test
     public void testClass() {
@@ -47,6 +39,54 @@ public final class DangerousJsonTypeInfoUsageTests {
     @Test
     public void testMinimalClass_fullyQualified() {
         positive("com.fasterxml.jackson.annotation.JsonTypeInfo.Id.MINIMAL_CLASS");
+    }
+
+    @Test
+    public void testClass_IdQualified() {
+        helper().addSourceLines(
+                        "Bean.java",
+                        "import com.fasterxml.jackson.annotation.JsonTypeInfo;",
+                        "import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;",
+                        "// BUG: Diagnostic contains: Must not use Jackson @JsonTypeInfo annotation",
+                        "@JsonTypeInfo(use = Id.CLASS)",
+                        "class Bean {}")
+                .doTest();
+    }
+
+    @Test
+    public void testMinimalClass_IdQualified() {
+        helper().addSourceLines(
+                        "Bean.java",
+                        "import com.fasterxml.jackson.annotation.JsonTypeInfo;",
+                        "import com.fasterxml.jackson.annotation.JsonTypeInfo.Id;",
+                        "// BUG: Diagnostic contains: Must not use Jackson @JsonTypeInfo annotation",
+                        "@JsonTypeInfo(use = Id.MINIMAL_CLASS)",
+                        "class Bean {}")
+                .doTest();
+    }
+
+    @Test
+    public void testClass_ClassQualified() {
+        helper().addSourceLines(
+                        "Bean.java",
+                        "import com.fasterxml.jackson.annotation.JsonTypeInfo;",
+                        "import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.CLASS;",
+                        "// BUG: Diagnostic contains: Must not use Jackson @JsonTypeInfo annotation",
+                        "@JsonTypeInfo(use = CLASS)",
+                        "class Bean {}")
+                .doTest();
+    }
+
+    @Test
+    public void testMinimalClass_MinimalClassQualified() {
+        helper().addSourceLines(
+                        "Bean.java",
+                        "import com.fasterxml.jackson.annotation.JsonTypeInfo;",
+                        "import static com.fasterxml.jackson.annotation.JsonTypeInfo.Id.MINIMAL_CLASS;",
+                        "// BUG: Diagnostic contains: Must not use Jackson @JsonTypeInfo annotation",
+                        "@JsonTypeInfo(use = MINIMAL_CLASS)",
+                        "class Bean {}")
+                .doTest();
     }
 
     @Test
@@ -79,9 +119,80 @@ public final class DangerousJsonTypeInfoUsageTests {
         negative("com.fasterxml.jackson.annotation.JsonTypeInfo.Id.CUSTOM");
     }
 
+    @Test
+    public void testObjectMapper_enableDefaultTyping() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.fasterxml.jackson.databind.ObjectMapper;",
+                        "class Test {",
+                        "// BUG: Diagnostic contains: Must not use a Jackson ObjectMapper with default typings",
+                        "  Object om = new ObjectMapper().enableDefaultTyping();",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testObjectMapper_enableDefaultTypingAsProperty() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.fasterxml.jackson.databind.ObjectMapper;",
+                        "class Test {",
+                        "  Object om = new ObjectMapper()",
+                        "// BUG: Diagnostic contains: Must not use a Jackson ObjectMapper with default typings",
+                        "    .enableDefaultTypingAsProperty(ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT, \"prop\");",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testObjectMapper_activateDefaultTyping() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.fasterxml.jackson.databind.ObjectMapper;",
+                        "import com.fasterxml.jackson.databind.jsontype.DefaultBaseTypeLimitingValidator;",
+                        "class Test {",
+                        "// BUG: Diagnostic contains: Must not use a Jackson ObjectMapper with default typings",
+                        "  Object om = new ObjectMapper().activateDefaultTyping(new"
+                                + " DefaultBaseTypeLimitingValidator());",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testObjectMapper_activateDefaultTypingAsProperty() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.fasterxml.jackson.databind.ObjectMapper;",
+                        "import com.fasterxml.jackson.databind.jsontype.DefaultBaseTypeLimitingValidator;",
+                        "class Test {",
+                        "  Object om = new ObjectMapper()",
+                        "// BUG: Diagnostic contains: Must not use a Jackson ObjectMapper with default typings",
+                        "    .activateDefaultTypingAsProperty(",
+                        "      new DefaultBaseTypeLimitingValidator(),",
+                        "      ObjectMapper.DefaultTyping.JAVA_LANG_OBJECT,",
+                        "      \"prop\");",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testObjectMapper_setDefaultTyping() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.fasterxml.jackson.databind.ObjectMapper;",
+                        "import com.fasterxml.jackson.databind.jsontype.TypeResolverBuilder;",
+                        "class Test {",
+                        "  void f(TypeResolverBuilder value) {",
+                        "    new ObjectMapper()",
+                        "// BUG: Diagnostic contains: Must not use a Jackson ObjectMapper with default typings",
+                        "      .setDefaultTyping(value);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
     private void positive(String variant) {
-        compilationHelper
-                .addSourceLines(
+        helper().addSourceLines(
                         "Bean.java",
                         "import com.fasterxml.jackson.annotation.JsonTypeInfo;",
                         "// BUG: Diagnostic contains: Must not use Jackson @JsonTypeInfo annotation",
@@ -91,12 +202,15 @@ public final class DangerousJsonTypeInfoUsageTests {
     }
 
     private void negative(String variant) {
-        compilationHelper
-                .addSourceLines(
+        helper().addSourceLines(
                         "Bean.java",
                         "import com.fasterxml.jackson.annotation.JsonTypeInfo;",
                         "@JsonTypeInfo(use = " + variant + ")",
                         "class Bean {}")
                 .doTest();
+    }
+
+    private CompilationTestHelper helper() {
+        return CompilationTestHelper.newInstance(DangerousJsonTypeInfoUsage.class, getClass());
     }
 }
