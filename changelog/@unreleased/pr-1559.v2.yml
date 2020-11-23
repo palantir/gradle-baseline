@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: Add error-prone CompileTimeConstantViolatesLiskovSubstitution check
+    to require consistent application of the `@CompileTimeConstant` annotation.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1559
