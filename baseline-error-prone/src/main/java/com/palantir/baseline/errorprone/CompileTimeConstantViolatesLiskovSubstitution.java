@@ -42,7 +42,8 @@ import javax.lang.model.element.Modifier;
         severity = BugPattern.SeverityLevel.ERROR,
         summary = "@CompileTimeConstant annotations on method parameters must also be applied to the super method. "
                 + "Similarly, if a superclass or superinterface is annotated, implementations must also be annotated.")
-public class CompileTimeConstantViolatesLiskovSubstitution extends BugChecker implements BugChecker.MethodTreeMatcher {
+public final class CompileTimeConstantViolatesLiskovSubstitution extends BugChecker
+        implements BugChecker.MethodTreeMatcher {
 
     private static final Matcher<MethodTree> INEXPENSIVE_CHECK = Matchers.anyOf(
             Matchers.methodIsConstructor(),
