@@ -1,0 +1,8 @@
+type: feature
+feature:
+  description: '`com.palantir.baseline-format` now understands how to format build.gradle
+    files. This is opt-in by default, so you need to run `./gradlew format -Pcom.palantir.baseline-format.gradle-files=true`
+    to try it, or add this property to your gradle.properties if you want to lock
+    it in.'
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1561
