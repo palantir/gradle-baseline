@@ -18,11 +18,15 @@ package com.palantir.baseline.plugins;
 
 import com.diffplug.gradle.spotless.SpotlessExtension;
 import com.diffplug.spotless.FormatterStep;
+import com.google.common.base.Preconditions;
+import com.google.common.io.Resources;
 import java.io.File;
 import java.io.IOException;
+import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.StandardOpenOption;
 import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -61,6 +65,10 @@ class BaselineFormat extends AbstractBaselinePlugin {
             configureCopyrightStep(project, spotlessExtension);
         }
 
+        if ("true".equals(project.findProperty("com.palantir.baseline-format.gradle-files"))) {
+            configureBuildGradleFormatter(project, spotlessExtension);
+        }
+
         // necessary because SpotlessPlugin creates tasks in an afterEvaluate block
         TaskProvider<Task> formatTask = project.getTasks().register("format", task -> {
             task.setGroup("Formatting");
@@ -86,6 +94,25 @@ class BaselineFormat extends AbstractBaselinePlugin {
 
         project.getPluginManager().withPlugin("java", plugin -> {
             configureSpotlessJava(project, spotlessExtension);
+        });
+    }
+
+    private static void configureBuildGradleFormatter(Project project, SpotlessExtension spotlessExtension) {
+        Path buildDir = project.getRootProject().getBuildDir().toPath();
+        Path configFile = buildDir.resolve("baseline-format").resolve("greclipse.properties");
+
+        try {
+            URL url = Resources.getResource(BaselineCheckstyle.class, "/greclipse.properties");
+            Preconditions.checkNotNull(url, "Unable to find resource");
+            Files.createDirectories(configFile.getParent());
+            // yes this will overwrite it for each subproject, maybe that's fine???
+            Files.write(configFile, Resources.toByteArray(url), StandardOpenOption.CREATE);
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to copy greclipse.properties resource to " + configFile, e);
+        }
+
+        spotlessExtension.groovyGradle(ext -> {
+            ext.greclipse().configFile(configFile.toAbsolutePath());
         });
     }
 
