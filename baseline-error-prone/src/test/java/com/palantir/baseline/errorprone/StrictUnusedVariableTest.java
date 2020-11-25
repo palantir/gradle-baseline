@@ -302,7 +302,7 @@ public class StrictUnusedVariableTest {
     @DisabledForJreRange(max = JRE.JAVA_13)
     public void testRecord() {
         compilationHelper = CompilationTestHelper.newInstance(StrictUnusedVariable.class, getClass())
-                .setArgs(ImmutableList.of("--enable-preview", "--release", "14"));
+                .setArgs(ImmutableList.of("--enable-preview", "--release", "15"));
 
         compilationHelper
                 .addSourceLines(

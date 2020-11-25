@@ -156,19 +156,38 @@ class BaselineEnablePreviewFlagTest extends IntegrationSpec {
 
     def 'does not always apply'() {
         when:
-        File java8Dir = addSubproject('my-java-8-api', "sourceCompatibility = 8")
+        File java8Dir = addSubproject('my-java-8-api', """
+        sourceCompatibility = 8
+
+        tasks.withType(JavaCompile) {
+           doFirst {
+              println "Args for for \$name are \$options.allCompilerArgs"
+           }
+        } 
+        """.stripIndent())
+
         buildFile << '''
         subprojects {
             apply plugin: 'java-library'
             apply plugin: 'com.palantir.baseline-enable-preview-flag'
         }
         '''
-        writeSourceFileContainingRecord(java8Dir)
+
+        writeJavaSourceFile('''
+            package foo;
+            public class FooSecond {
+              /** Hello this is some javadoc. */
+              public static void main(String... args) {
+                System.out.println("Hello, world");
+              }
+            }
+        '''.stripIndent(), java8Dir)
 
         ExecutionResult result = runTasks('my-java-8-api:classes', '-is')
 
         then:
-        result.getStandardError().contains("use --enable-preview to enable records")
+        result.getStandardOutput().contains("Args for for compileJava are []")
+        !result.getStandardOutput().contains("--enable-preview")
     }
 }
 

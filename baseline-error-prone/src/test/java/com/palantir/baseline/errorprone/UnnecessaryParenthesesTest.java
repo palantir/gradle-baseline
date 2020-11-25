@@ -29,7 +29,7 @@ public class UnnecessaryParenthesesTest {
     public void testSwitchExpression() {
         CompilationTestHelper compilationHelper = CompilationTestHelper.newInstance(
                         UnnecessaryParentheses.class, getClass())
-                .setArgs(ImmutableList.of("--enable-preview", "--release", "14"));
+                .setArgs(ImmutableList.of("--enable-preview", "--release", "15"));
 
         compilationHelper
                 .addSourceLines(
