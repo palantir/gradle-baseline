@@ -25,7 +25,6 @@ import com.google.common.collect.MoreCollectors;
 import com.palantir.baseline.extensions.BaselineErrorProneExtension;
 import com.palantir.baseline.tasks.CompileRefasterTask;
 import java.io.File;
-import java.nio.file.Paths;
 import java.util.AbstractList;
 import java.util.Collections;
 import java.util.List;
@@ -202,13 +201,13 @@ public final class BaselineErrorProne implements Plugin<Project> {
         }
 
         errorProneOptions.getDisableWarningsInGeneratedCode().set(true);
-        String projectPath = project.getProjectDir().getPath();
-        String separator = Pattern.quote(Paths.get(projectPath).getFileSystem().getSeparator());
+        // don't want backslashes on windows to break our regex
+        String separator = File.separatorChar == '\\' ? Pattern.quote("\\") : File.separator;
         errorProneOptions
                 .getExcludedPaths()
                 .set(String.format(
-                        "%s%s(build|src%sgenerated.*)%s.*",
-                        Pattern.quote(projectPath), separator, separator, separator));
+                        ".*(build%sgenerated%ssources|src%sgenerated.*)%s.*",
+                        separator, separator, separator, separator));
 
         // FallThrough does not currently work with switch expressions
         // See https://github.com/google/error-prone/issues/1649
