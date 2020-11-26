@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Exclude generated sources from error-prone
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1571
