@@ -201,9 +201,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
         }
 
         errorProneOptions.getDisableWarningsInGeneratedCode().set(true);
-        errorProneOptions
-                .getExcludedPaths()
-                .set(excludedPathsRegex());
+        errorProneOptions.getExcludedPaths().set(excludedPathsRegex());
 
         // FallThrough does not currently work with switch expressions
         // See https://github.com/google/error-prone/issues/1649
