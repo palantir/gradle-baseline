@@ -1,0 +1,7 @@
+type: fix
+fix:
+  description: JavaCompile tasks should now get more build cache hits irrespective
+    of the location of your repo on disk, as `baseline-errorprone` no longer injects
+    an absolute path into `errorproneOptions.excludedPaths`.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1568
