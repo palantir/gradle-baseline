@@ -51,7 +51,7 @@ public final class BaselineReproducibility implements Plugin<Project> {
             JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
 
             // just being a bit defensive because we need to cast to an internal gradle class... don't wanna block
-            // upgrades
+            // gradle upgrades
             String clazz = javaConvention.getClass().getCanonicalName();
             String expected = "org.gradle.api.plugins.internal.DefaultJavaPluginConvention";
             if (!clazz.equals(expected)) {

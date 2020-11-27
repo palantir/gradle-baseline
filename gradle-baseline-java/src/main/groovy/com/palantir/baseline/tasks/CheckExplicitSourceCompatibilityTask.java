@@ -25,9 +25,12 @@ import javax.inject.Inject;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.JavaVersion;
+import org.gradle.api.Task;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.provider.Property;
+import org.gradle.api.publish.PublishingExtension;
+import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.options.Option;
 
@@ -49,6 +52,17 @@ public class CheckExplicitSourceCompatibilityTask extends DefaultTask {
                 + " on $JAVA_HOME which is fragile.");
         this.shouldFix = objectFactory.property(Boolean.class);
         this.shouldFix.set(false);
+
+        onlyIf(new Spec<Task>() {
+            @Override
+            public boolean isSatisfiedBy(Task element) {
+                // sometimes people apply the 'java' plugin to projects that doesn't actually have any java code in it
+                // (e.g. the root project), so if they're not publishing anything, then we don't bother enforcing the
+                // sourceCompat thing
+                PublishingExtension publishing = getProject().getExtensions().findByType(PublishingExtension.class);
+                return publishing != null;
+            }
+        });
     }
 
     @Option(option = "fix", description = "Whether to apply the suggested fix to build.gradle")
@@ -70,18 +84,25 @@ public class CheckExplicitSourceCompatibilityTask extends DefaultTask {
         if (shouldFix.get()) {
             Files.write(
                     getProject().getBuildFile().toPath(),
-                    Collections.singletonList(String.format("%nsourceCompatibility = %s%n", JavaVersion.current())),
+                    Collections.singletonList(String.format("%nsourceCompatibility = %s", JavaVersion.current())),
                     StandardCharsets.UTF_8,
-                    StandardOpenOption.APPEND);
+                    StandardOpenOption.APPEND,
+                    StandardOpenOption.CREATE);
             return;
         }
 
         throw new GradleException(String.format(
-                "Project must set java 'sourceCompatibility' explicitly in %s, "
+                "%s must set sourceCompatibility explicitly in '%s', "
                         + "otherwise compilation will not be reproducible but instead depends on the Java version "
-                        + "that Gradle is currently running with (%s). Re-run ./gradlew %s --fix to automatically add "
-                        + "a suggested line (you may need to adjust the number, e.g. to '8' for maximum "
-                        + "compatibility).",
-                getProject().getBuildFile(), JavaVersion.current(), getPath()));
+                        + "that Gradle is currently running with (%s). To auto-fix, run%n"
+                        + "%n"
+                        + "     ./gradlew %s --fix%n"
+                        + "%n"
+                        + "This will automatically add a suggested line "
+                        + "(you may need to adjust the number, e.g. to '8' for maximum compatibility).",
+                getProject(),
+                getProject().getRootProject().relativePath(getProject().getBuildFile()),
+                JavaVersion.current(),
+                getPath()));
     }
 }
