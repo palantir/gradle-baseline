@@ -66,12 +66,12 @@ public class CheckExplicitSourceCompatibilityTask extends DefaultTask {
     }
 
     @Option(option = "fix", description = "Whether to apply the suggested fix to build.gradle")
-    public void setShouldFix(boolean value) {
+    public final void setShouldFix(boolean value) {
         shouldFix.set(value);
     }
 
     @TaskAction
-    public void taskAction() throws IOException {
+    public final void taskAction() throws IOException {
         // We're doing this naughty casting because we need access to the `getRawSourceCompatibility` method.
         org.gradle.api.plugins.internal.DefaultJavaPluginConvention convention =
                 (org.gradle.api.plugins.internal.DefaultJavaPluginConvention)
@@ -101,7 +101,7 @@ public class CheckExplicitSourceCompatibilityTask extends DefaultTask {
                         + "     ./gradlew %s --fix%n"
                         + "%n"
                         + "This will automatically add a suggested line "
-                        + "(you may need to adjust the number, e.g. to '8' for maximum compatibility).",
+                        + "(you may need to adjust the number, e.g. to '1.8' for maximum compatibility).",
                 getProject(),
                 getProject().getRootProject().relativePath(getProject().getBuildFile()),
                 JavaVersion.current(),
