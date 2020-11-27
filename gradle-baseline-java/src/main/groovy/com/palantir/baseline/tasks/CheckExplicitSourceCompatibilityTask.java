@@ -72,12 +72,14 @@ public class CheckExplicitSourceCompatibilityTask extends DefaultTask {
 
     @TaskAction
     public void taskAction() throws IOException {
+        // We're doing this naughty casting because we need access to the `getRawSourceCompatibility` method.
         org.gradle.api.plugins.internal.DefaultJavaPluginConvention convention =
                 (org.gradle.api.plugins.internal.DefaultJavaPluginConvention)
                         getProject().getConvention().getPlugin(JavaPluginConvention.class);
 
         if (convention.getRawSourceCompatibility() != null) {
-            // this means the user has explicitly set sourceCompatibility, which is great.
+            // In theory, users could configure the fancy new 'java toolchain' as an alternative to explicit
+            // sourceCompatibility, but there's no method to access this yet (as of Gradle 6.8).
             return;
         }
 
