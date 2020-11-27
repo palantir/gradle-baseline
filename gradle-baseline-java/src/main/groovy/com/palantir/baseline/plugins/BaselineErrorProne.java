@@ -201,13 +201,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
         }
 
         errorProneOptions.getDisableWarningsInGeneratedCode().set(true);
-        // don't want backslashes on windows to break our regex
-        String separator = File.separatorChar == '\\' ? Pattern.quote("\\") : File.separator;
-        errorProneOptions
-                .getExcludedPaths()
-                .set(String.format(
-                        ".*(build%sgenerated%ssources|src%sgenerated.*)%s.*",
-                        separator, separator, separator, separator));
+        errorProneOptions.getExcludedPaths().set(excludedPathsRegex());
 
         // FallThrough does not currently work with switch expressions
         // See https://github.com/google/error-prone/issues/1649
@@ -290,6 +284,12 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 });
             }
         }
+    }
+
+    static String excludedPathsRegex() {
+        // don't want backslashes on windows to break our regex
+        String separator = File.separator.contains("\\") ? Pattern.quote("\\") : File.separator;
+        return String.format(".*%s(build|generated_.*[sS]rc|src%sgenerated.*)%s.*", separator, separator, separator);
     }
 
     private static Optional<Stream<String>> getSpecificErrorProneChecks(Project project) {
