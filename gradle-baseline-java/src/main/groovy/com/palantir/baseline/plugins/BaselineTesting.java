@@ -16,6 +16,7 @@
 
 package com.palantir.baseline.plugins;
 
+import com.google.common.collect.ImmutableSet;
 import com.palantir.baseline.tasks.CheckJUnitDependencies;
 import com.palantir.baseline.tasks.CheckUnusedDependenciesTask;
 import java.util.Objects;
@@ -32,6 +33,7 @@ import org.gradle.api.tasks.TaskContainer;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.api.tasks.testing.junitplatform.JUnitPlatformOptions;
+import org.gradle.api.tasks.testing.logging.TestLogEvent;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -140,8 +142,17 @@ public final class BaselineTesting implements Plugin<Project> {
         // Computes the desired parallelism based on the number of available processors/cores
         task.systemProperty("junit.jupiter.execution.parallel.config.strategy", "dynamic");
 
-        // provide some stdout feedback when tests fail
-        task.testLogging(testLogging -> testLogging.events("failed"));
+        // provide some stdout feedback when tests fail when running on CI and locally
+        task.getTestLogging().getEvents().add(TestLogEvent.FAILED);
+
+        // Only on CI, print out more detailed test information to avoid hitting the circleci 10 min deadline if
+        // there are lots of tests. Don't do this locally to avoid spamming massive amount of info for people running
+        // unit tests through the command line
+        if ("true".equals(System.getenv("CI"))) {
+            task.getTestLogging()
+                    .getEvents()
+                    .addAll(ImmutableSet.of(TestLogEvent.STARTED, TestLogEvent.PASSED, TestLogEvent.SKIPPED));
+        }
     }
 
     public static boolean useJUnitPlatformEnabled(Test task) {
