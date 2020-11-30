@@ -86,7 +86,7 @@ public class CheckExplicitSourceCompatibilityTask extends DefaultTask {
         if (shouldFix.get()) {
             Files.write(
                     getProject().getBuildFile().toPath(),
-                    Collections.singletonList(String.format("%nsourceCompatibility = %s", JavaVersion.current())),
+                    Collections.singletonList(String.format("%nsourceCompatibility = %s%n", JavaVersion.current())),
                     StandardCharsets.UTF_8,
                     StandardOpenOption.APPEND,
                     StandardOpenOption.CREATE);
