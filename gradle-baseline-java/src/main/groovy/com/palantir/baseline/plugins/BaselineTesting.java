@@ -145,10 +145,11 @@ public final class BaselineTesting implements Plugin<Project> {
         // provide some stdout feedback when tests fail when running on CI and locally
         task.getTestLogging().getEvents().add(TestLogEvent.FAILED);
 
-        // Only on CI, print out more detailed test information to avoid hitting the circleci 10 min deadline if
-        // there are lots of tests. Don't do this locally to avoid spamming massive amount of info for people running
-        // unit tests through the command line
-        if ("true".equals(System.getenv("CI"))) {
+        // Only on CI and for non-unit test tasks, print out more detailed test information to avoid hitting the
+        // circleci 10 min deadline if there are lots of tests. Don't do this locally to avoid spamming massive
+        // amount of info for people running tests through the command line. Only for non unit test tasks as unit
+        // test tasks tend to be fast and avoid this issue.
+        if (!task.getName().equals("test") && "true".equals(System.getenv("CI"))) {
             task.getTestLogging()
                     .getEvents()
                     .addAll(ImmutableSet.of(TestLogEvent.STARTED, TestLogEvent.PASSED, TestLogEvent.SKIPPED));
