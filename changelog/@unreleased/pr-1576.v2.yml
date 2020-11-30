@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: Print more test logging output to avoid builds with long running tests
+    getting terminated by circle ("context deadline exceeded").
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1576
