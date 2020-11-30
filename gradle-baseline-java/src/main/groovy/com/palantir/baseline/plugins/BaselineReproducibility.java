@@ -16,10 +16,15 @@
 
 package com.palantir.baseline.plugins;
 
+import com.palantir.baseline.tasks.CheckExplicitSourceCompatibilityTask;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.file.DuplicatesStrategy;
+import org.gradle.api.plugins.JavaBasePlugin;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.bundling.AbstractArchiveTask;
+import org.gradle.language.base.plugins.LifecycleBasePlugin;
 
 /** Sensible defaults so that all Jar, Tar, Zip tasks can be deterministically reproduced. */
 public final class BaselineReproducibility implements Plugin<Project> {
@@ -38,6 +43,15 @@ public final class BaselineReproducibility implements Plugin<Project> {
                             "Please remove the 'nebula.info' plugin from {} as it breaks "
                                     + "reproducibility of jars by adding a 'Build-Date' entry to the MANIFEST.MF",
                             project);
+        });
+
+        project.getPlugins().withType(JavaBasePlugin.class, _plugin -> {
+            TaskProvider<? extends Task> checkExplicitSourceCompatibility = project.getTasks()
+                    .register("checkExplicitSourceCompatibility", CheckExplicitSourceCompatibilityTask.class);
+
+            project.getTasks().named(LifecycleBasePlugin.CHECK_TASK_NAME).configure(check -> {
+                check.dependsOn(checkExplicitSourceCompatibility);
+            });
         });
     }
 }
