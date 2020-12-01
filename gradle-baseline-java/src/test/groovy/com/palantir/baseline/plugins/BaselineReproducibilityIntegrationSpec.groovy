@@ -78,6 +78,7 @@ class BaselineReproducibilityIntegrationSpec extends IntegrationSpec {
         ${applyPlugin(BaselineReproducibility.class)}
         apply plugin: 'java'
         version '1.2.3'
+        apply plugin: 'maven-publish'
         """.stripIndent()
 
         writeHelloWorld()

@@ -58,9 +58,13 @@ public class CheckExplicitSourceCompatibilityTask extends DefaultTask {
             public boolean isSatisfiedBy(Task element) {
                 // sometimes people apply the 'java' plugin to projects that doesn't actually have any java code in it
                 // (e.g. the root project), so if they're not publishing anything, then we don't bother enforcing the
-                // sourceCompat thing
+                // sourceCompat thing. Also they might apply the publishing plugin just to get the 'publish' task.
                 PublishingExtension publishing = getProject().getExtensions().findByType(PublishingExtension.class);
-                return publishing != null;
+                if (publishing == null) {
+                    return false;
+                }
+
+                return !publishing.getPublications().isEmpty();
             }
         });
     }
