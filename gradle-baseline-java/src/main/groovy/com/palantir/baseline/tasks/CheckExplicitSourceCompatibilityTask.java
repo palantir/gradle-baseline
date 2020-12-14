@@ -78,8 +78,10 @@ public class CheckExplicitSourceCompatibilityTask extends DefaultTask {
         onlyIf(new Spec<Task>() {
             @Override
             public boolean isSatisfiedBy(Task task) {
-                return getProject().getExtensions().getByType(SourceSetContainer.class).stream()
-                        .anyMatch(sourceSet -> !sourceSet.getAllJava().isEmpty());
+                SourceSetContainer sourceSets = getProject().getExtensions().getByType(SourceSetContainer.class);
+                return sourceSets.stream()
+                        .anyMatch(
+                                sourceSet -> !sourceSet.getAllJava().getFiles().isEmpty());
             }
         });
     }
