@@ -78,8 +78,7 @@ public class CheckExplicitSourceCompatibilityTask extends DefaultTask {
         onlyIf(new Spec<Task>() {
             @Override
             public boolean isSatisfiedBy(Task task) {
-                SourceSetContainer sourceSets = getProject().getExtensions().getByType(SourceSetContainer.class);
-                return sourceSets.stream()
+                return getProject().getExtensions().getByType(SourceSetContainer.class).stream()
                         .anyMatch(
                                 sourceSet -> !sourceSet.getAllJava().getFiles().isEmpty());
             }
