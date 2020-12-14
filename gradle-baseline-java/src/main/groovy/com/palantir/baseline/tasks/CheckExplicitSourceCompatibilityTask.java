@@ -31,6 +31,7 @@ import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.provider.Property;
 import org.gradle.api.publish.PublishingExtension;
 import org.gradle.api.specs.Spec;
+import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.options.Option;
 import org.gradle.util.GradleVersion;
@@ -72,6 +73,13 @@ public class CheckExplicitSourceCompatibilityTask extends DefaultTask {
                 }
 
                 return !publishing.getPublications().isEmpty();
+            }
+        });
+        onlyIf(new Spec<Task>() {
+            @Override
+            public boolean isSatisfiedBy(Task task) {
+                return getProject().getExtensions().getByType(SourceSetContainer.class).stream()
+                        .anyMatch(sourceSet -> !sourceSet.getAllJava().isEmpty());
             }
         });
     }
