@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: Eclipse formatting rules now match the spotless format for line wrapped
+    asserts.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1582
