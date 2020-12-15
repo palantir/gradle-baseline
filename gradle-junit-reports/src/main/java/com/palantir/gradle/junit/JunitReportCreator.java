@@ -58,7 +58,7 @@ final class JunitReportCreator {
                     testCaseXml.appendChild(failureXml);
                     failureXml.setAttribute("message", failure.message());
                     failureXml.setAttribute("type", "ERROR");
-                    failureXml.setTextContent(failure.details());
+                    failureXml.appendChild(xml.createCDATASection(failure.details()));
                 }
             }
 
