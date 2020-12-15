@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: A CDATA section is used in junit reports to avoid string escaping problems.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1587
