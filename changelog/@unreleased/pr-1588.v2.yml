@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: Disable `MissingCasesInEnumSwitch` on Java 14 source to avoid false
+    positives
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1588
