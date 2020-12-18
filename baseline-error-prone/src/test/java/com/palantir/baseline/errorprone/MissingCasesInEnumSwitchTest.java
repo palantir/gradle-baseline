@@ -16,31 +16,34 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.errorprone.CompilationTestHelper;
-import com.google.errorprone.bugpatterns.FallThrough;
+import com.google.errorprone.bugpatterns.MissingCasesInEnumSwitch;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledForJreRange;
 import org.junit.jupiter.api.condition.JRE;
 
-public class FallThroughTest {
+public class MissingCasesInEnumSwitchTest {
 
     @Test
     @DisabledForJreRange(max = JRE.JAVA_13)
     public void testSwitchExpression() {
-        CompilationTestHelper compilationHelper = CompilationTestHelper.newInstance(FallThrough.class, getClass());
+        CompilationTestHelper compilationHelper =
+                CompilationTestHelper.newInstance(MissingCasesInEnumSwitch.class, getClass());
 
         compilationHelper
                 .addSourceLines(
                         "Test.java",
                         "class Test {",
-                        "  static void foo(int value) {",
+                        "  enum Enum {",
+                        "    A,",
+                        "    B,",
+                        "  }",
+                        "  static void foo(Enum value) {",
+                        "    // BUG: Diagnostic contains: Non-exhaustive switch",
                         "    switch (value) {",
-                        "      case 42 -> {}",
-                        "      // BUG: Diagnostic matches: X",
-                        "      default -> {}",
+                        "      case A, B -> {}",
                         "    };",
                         "  }",
                         "}")
-                .expectErrorMessage("X", input -> input.contains("Execution may fall through from the previous case"))
                 .doTest();
     }
 }
