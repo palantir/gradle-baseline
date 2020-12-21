@@ -47,6 +47,7 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
     private final ListProperty<Configuration> dependenciesConfigurations;
     private final Property<FileCollection> sourceClasses;
     private final SetProperty<String> ignore;
+    private final Property<String> suggestionConfigurationName;
 
     public CheckImplicitDependenciesTask() {
         setGroup("Verification");
@@ -56,6 +57,7 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
         sourceClasses = getProject().getObjects().property(FileCollection.class);
         ignore = getProject().getObjects().setProperty(String.class);
         ignore.set(Collections.emptySet());
+        suggestionConfigurationName = getProject().getObjects().property(String.class);
     }
 
     @TaskAction
@@ -102,7 +104,7 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
                         "'%s:%s'",
                         artifact.getModuleVersion().getId().getGroup(),
                         artifact.getModuleVersion().getId().getName());
-        return String.format("        %s", artifactNameString);
+        return String.format("        %s %s", suggestionConfigurationName.get(), artifactNameString);
     }
 
     /**
@@ -171,5 +173,14 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
     @Input
     public final Provider<Set<String>> getIgnored() {
         return ignore;
+    }
+
+    @Input
+    public final Provider<String> getSuggestionConfigurationName() {
+        return suggestionConfigurationName;
+    }
+
+    public final void suggestionConfigurationName(String newSuggestionConfigurationName) {
+        this.suggestionConfigurationName.set(Objects.requireNonNull(newSuggestionConfigurationName));
     }
 }

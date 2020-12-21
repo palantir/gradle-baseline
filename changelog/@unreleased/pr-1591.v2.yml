@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: The `checkImplicitDependencies` suggestion message now includes the
+    `implementation` configuration name.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1591

@@ -195,6 +195,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                             task.dependsOn(sourceSet.getClassesTaskName());
                             task.setSourceClasses(sourceSet.getOutput().getClassesDirs());
                             task.dependenciesConfiguration(compileClasspath);
+                            task.suggestionConfigurationName(sourceSet.getImplementationConfigurationName());
 
                             task.ignore("org.slf4j", "slf4j-api");
 
