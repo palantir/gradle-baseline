@@ -102,7 +102,7 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
                         "'%s:%s'",
                         artifact.getModuleVersion().getId().getGroup(),
                         artifact.getModuleVersion().getId().getName());
-        return String.format("        %s", artifactNameString);
+        return String.format("        implementation %s", artifactNameString);
     }
 
     /**
