@@ -16,7 +16,6 @@
 
 package com.palantir.baseline.tasks;
 
-import com.google.common.collect.Sets;
 import com.google.common.collect.Streams;
 import com.palantir.baseline.plugins.BaselineExactDependencies;
 import java.nio.file.Path;
@@ -24,7 +23,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
@@ -43,6 +41,9 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
 
 public class CheckImplicitDependenciesTask extends DefaultTask {
+
+    private static final Comparator<ResolvedArtifact> ARTIFACT_COMPARATOR =
+            Comparator.comparing(artifact -> artifact.getId().getDisplayName());
 
     private final ListProperty<Configuration> dependenciesConfigurations;
     private final Property<FileCollection> sourceClasses;
@@ -68,19 +69,21 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
                 .collect(Collectors.toSet());
         BaselineExactDependencies.INDEXES.populateIndexes(declaredDependencies);
 
-        Set<ResolvedArtifact> necessaryArtifacts = referencedClasses().stream()
-                .map(BaselineExactDependencies.INDEXES::classToDependency)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .filter(x -> !isArtifactFromCurrentProject(x))
+        Set<List<ResolvedArtifact>> necessaryArtifacts = referencedClasses().stream()
+                .map(c -> BaselineExactDependencies.INDEXES.classToArtifacts(c).collect(Collectors.toList()))
                 .collect(Collectors.toSet());
         Set<ResolvedArtifact> declaredArtifacts = declaredDependencies.stream()
                 .flatMap(dependency -> dependency.getModuleArtifacts().stream())
                 .collect(Collectors.toSet());
 
-        List<ResolvedArtifact> usedButUndeclared = Sets.difference(necessaryArtifacts, declaredArtifacts).stream()
-                .sorted(Comparator.comparing(artifact -> artifact.getId().getDisplayName()))
-                .filter(artifact -> !shouldIgnore(artifact))
+        List<ResolvedArtifact> usedButUndeclared = necessaryArtifacts.stream()
+                .filter(artifacts -> artifacts.stream().noneMatch(this::isArtifactFromCurrentProject))
+                .filter(artifacts -> artifacts.stream().noneMatch(this::shouldIgnore))
+                .filter(artifacts -> artifacts.stream().noneMatch(declaredArtifacts::contains))
+                // Select a single deterministic artifact for the suggestion
+                .map(artifacts -> artifacts.stream().min(ARTIFACT_COMPARATOR))
+                .flatMap(Streams::stream)
+                .sorted(ARTIFACT_COMPARATOR)
                 .collect(Collectors.toList());
         if (!usedButUndeclared.isEmpty()) {
             String suggestion = usedButUndeclared.stream()
