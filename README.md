@@ -21,6 +21,7 @@ _Baseline is a family of Gradle plugins for configuring Java projects with sensi
 | `com.palantir.baseline-config`                | Config files for the above plugins
 | `com.palantir.baseline-reproducibility`       | Sensible defaults to ensure Jar, Tar and Zip tasks can be reproduced
 | `com.palantir.baseline-exact-dependencies`    | Ensures projects explicitly declare all the dependencies they rely on, no more and no less
+| `com.palantir.baseline-encoding`              | Ensures projects use the UTF-8 encoding in compile tasks.
 | `com.palantir.baseline-release-compatibility` | Ensures projects targetting older JREs only compile against classes and methods available in those JREs.
 | `com.palantir.baseline-testing`               | Configures test tasks to dump heap dumps (hprof files) for convenient debugging
 
@@ -364,6 +365,10 @@ checkImplicitDependencies {
     ignore 'org.slf4j', 'slf4j-api'
 }
 ```
+
+## com.palantir.baseline-encoding
+
+This plugin sets the encoding for JavaCompile tasks to `UTF-8`.
 
 ## com.palantir.baseline-release-compatibility
 
