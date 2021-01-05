@@ -63,7 +63,7 @@ class ClassInitializationDeadlockTest {
 
     @Test
     void testStaticFieldNewSubtypeInstancePrivateAllowed() {
-        // This cas is handled to avoid false positives, however we don't
+        // This case is handled to avoid false positives, however we don't
         // currently handle the case in which an intermediate public type
         // exists between Base and Sub.
         helper().addSourceLines(
@@ -134,26 +134,6 @@ class ClassInitializationDeadlockTest {
                         "    new Sub();",
                         "  }",
                         "  private static class Sub extends Base {",
-                        "  }",
-                        "}")
-                .doTest();
-    }
-
-    @Test
-    void deleteMe_exampleOnly() {
-        helper().addSourceLines(
-                        "Base.java",
-                        "class Base {",
-                        "  // BUG: Diagnostic contains: deadlock",
-                        "  private static final Sub SUB = new Sub(\"val\");",
-                        "  private final String value;",
-                        "  Base(String value) {",
-                        "    this.value = value;",
-                        "  }",
-                        "  static class Sub extends Base {",
-                        "    Sub(String value) {",
-                        "      super(value);",
-                        "    }",
                         "  }",
                         "}")
                 .doTest();
