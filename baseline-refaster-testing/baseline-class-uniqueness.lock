@@ -260,9 +260,7 @@
   - com.google.common.collect.AbstractMapBasedMultiset$MapBasedMultisetIterator
   - com.google.common.collect.AbstractMapEntry
   - com.google.common.collect.AbstractMultimap
-  - com.google.common.collect.AbstractMultimap$Entries
   - com.google.common.collect.AbstractMultimap$EntrySet
-  - com.google.common.collect.AbstractMultimap$Values
   - com.google.common.collect.AbstractMultiset
   - com.google.common.collect.AbstractNavigableMap
   - com.google.common.collect.AbstractSequentialIterator
@@ -289,6 +287,7 @@
   - com.google.common.collect.CartesianList
   - com.google.common.collect.CartesianList$1
   - com.google.common.collect.ClassToInstanceMap
+  - com.google.common.collect.CollectCollectors
   - com.google.common.collect.CollectPreconditions
   - com.google.common.collect.CollectSpliterators
   - com.google.common.collect.CollectSpliterators$1
@@ -384,6 +383,7 @@
   - com.google.common.collect.HashBiMap
   - com.google.common.collect.HashBiMap$1
   - com.google.common.collect.HashBiMap$1$MapEntry
+  - com.google.common.collect.HashBiMap$BiEntry
   - com.google.common.collect.HashBiMap$Inverse
   - com.google.common.collect.HashBiMap$Inverse$1
   - com.google.common.collect.HashBiMap$Inverse$1$InverseEntry
@@ -486,8 +486,6 @@
   - com.google.common.collect.ImmutableSortedSet$SerializedForm
   - com.google.common.collect.ImmutableTable
   - com.google.common.collect.ImmutableTable$Builder
-  - com.google.common.collect.ImmutableTable$CollectorState
-  - com.google.common.collect.ImmutableTable$MutableCell
   - com.google.common.collect.ImmutableTable$SerializedForm
   - com.google.common.collect.Interner
   - com.google.common.collect.Interners$InternerImpl
@@ -613,7 +611,6 @@
   - com.google.common.collect.Maps$8
   - com.google.common.collect.Maps$9
   - com.google.common.collect.Maps$AbstractFilteredMap
-  - com.google.common.collect.Maps$Accumulator
   - com.google.common.collect.Maps$AsMapView
   - com.google.common.collect.Maps$AsMapView$1EntrySetImpl
   - com.google.common.collect.Maps$BiMapConverter
@@ -787,7 +784,6 @@
   - com.google.common.collect.Sets$5$1
   - com.google.common.collect.Sets$5$1$1
   - com.google.common.collect.Sets$5$1$1$1
-  - com.google.common.collect.Sets$Accumulator
   - com.google.common.collect.Sets$CartesianSet
   - com.google.common.collect.Sets$CartesianSet$1
   - com.google.common.collect.Sets$DescendingSet
@@ -886,9 +882,15 @@
   - com.google.common.collect.Tables
   - com.google.common.collect.Tables$1
   - com.google.common.collect.Tables$AbstractCell
+  - com.google.common.collect.Tables$ImmutableCell
   - com.google.common.collect.Tables$TransformedTable
+  - com.google.common.collect.Tables$TransformedTable$1
+  - com.google.common.collect.Tables$TransformedTable$2
+  - com.google.common.collect.Tables$TransformedTable$3
   - com.google.common.collect.Tables$TransposeTable
   - com.google.common.collect.Tables$TransposeTable$1
+  - com.google.common.collect.Tables$UnmodifiableRowSortedMap
+  - com.google.common.collect.Tables$UnmodifiableTable
   - com.google.common.collect.TopKSelector
   - com.google.common.collect.TreeBasedTable$1
   - com.google.common.collect.TreeBasedTable$2
@@ -1042,6 +1044,7 @@
   - com.google.common.hash.BloomFilterStrategies$2
   - com.google.common.hash.BloomFilterStrategies$LockFreeBitArray
   - com.google.common.hash.ChecksumHashFunction
+  - com.google.common.hash.Crc32cHashFunction$Crc32cHasher
   - com.google.common.hash.Funnel
   - com.google.common.hash.Funnels
   - com.google.common.hash.Funnels$ByteArrayFunnel
@@ -1251,9 +1254,7 @@
   - com.google.common.reflect.ClassPath
   - com.google.common.reflect.ClassPath$1
   - com.google.common.reflect.ClassPath$ClassInfo
-  - com.google.common.reflect.ClassPath$DefaultScanner
   - com.google.common.reflect.ClassPath$ResourceInfo
-  - com.google.common.reflect.ClassPath$Scanner
   - com.google.common.reflect.Element
   - com.google.common.reflect.Invokable
   - com.google.common.reflect.Invokable$ConstructorInvokable
