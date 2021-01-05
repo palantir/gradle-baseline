@@ -1,0 +1,6 @@
+type: feature
+feature:
+  description: Baseline now provides a `com.palantir.baseline-encoding` plugin to
+    force UTF-8 in compilation tasks.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1600
