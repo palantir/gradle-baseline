@@ -24,8 +24,8 @@ public final class BaselineEncoding implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
-        project.getTasks().withType(JavaCompile.class).configureEach(t -> {
-            t.getOptions().setEncoding("UTF-8");
+        project.getTasks().withType(JavaCompile.class).configureEach(javaCompileTask -> {
+            javaCompileTask.getOptions().setEncoding("UTF-8");
         });
     }
 }

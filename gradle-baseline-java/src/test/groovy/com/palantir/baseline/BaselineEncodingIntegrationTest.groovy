@@ -68,6 +68,7 @@ class BaselineEncodingIntegrationTest extends AbstractPluginTest {
         then:
         BuildResult result = with('compileJava').build()
         result.task(":compileJava").outcome == TaskOutcome.SUCCESS
+        !result.output.contains("unmappable character")
     }
 
     def 'compileJava fails with other encoding'() {
@@ -76,7 +77,8 @@ class BaselineEncodingIntegrationTest extends AbstractPluginTest {
         file('src/main/java/test/Test.java').text = javaFile
 
         then:
-        BuildResult result = with('compileJava').buildAndFail()
-        result.task(":compileJava").outcome == TaskOutcome.FAILED
+        BuildResult result = with('compileJava').build()
+        result.task(":compileJava").outcome == TaskOutcome.SUCCESS
+        result.output.contains("unmappable character")
     }
 }
