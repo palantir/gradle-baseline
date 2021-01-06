@@ -147,7 +147,9 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             "org.openqa.selenium.support.FindBys");
 
     /** The set of types exempting a type that is extending or implementing them. */
-    private static final ImmutableSet<String> EXEMPTING_SUPER_TYPES = ImmutableSet.of();
+    private static final ImmutableSet<String> EXEMPTING_SUPER_TYPES = ImmutableSet.of(
+            // Don't check record fields
+            "java.lang.Record");
 
     /** The set of types exempting a field of type extending them. */
     private static final ImmutableSet<String> EXEMPTING_FIELD_SUPER_TYPES =
@@ -768,14 +770,6 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
 
         @Override
         public Void visitMethod(MethodTree tree, Void unused) {
-            // From the perspective of an errorprone rule there are two standalone trees for a single `record`
-            // definition; A MethodTree which looks like a void function and a ClassTree which has the record fields.
-            //
-            // Its unclear why both trees are emitted, but we can identify and ignore a record's MethodTree by checking
-            // if it does not have any associated source.
-            if (state.getEndPosition(tree) < 0) {
-                return null;
-            }
             return isSuppressed(tree) ? null : super.visitMethod(tree, unused);
         }
     }
