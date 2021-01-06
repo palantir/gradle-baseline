@@ -81,14 +81,7 @@
         </module>
         <module name="AvoidStarImport"/> <!-- Java Style Guide: No wildcard imports -->
         <module name="AvoidStaticImport"> <!-- Java Style Guide: No static imports -->
-            <property name="excludes" value="
-                com.google.common.base.Preconditions.*,
-                com.palantir.logsafe.Preconditions.*,
-                java.util.Collections.*,
-                java.util.stream.Collectors.*,
-                org.apache.commons.lang3.Validate.*,
-                org.assertj.core.api.Assertions.*,
-                org.mockito.Mockito.*"/>
+            <property name="excludes" value="com.google.common.base.Preconditions.*, com.palantir.logsafe.Preconditions.*, java.util.Collections.*, java.util.stream.Collectors.*, org.apache.commons.lang3.Validate.*, org.assertj.core.api.Assertions.*, org.mockito.Mockito.*"/>
         </module>
         <module name="ClassTypeParameterName"> <!-- Java Style Guide: Type variable names -->
             <property name="format" value="(^[A-Z][0-9]?)$|([A-Z][a-zA-Z0-9]*[T]$)"/>
@@ -138,12 +131,12 @@
         <module name="IllegalImport"> <!-- Java Coding Guidelines: Import the canonical package -->
             <property name="id" value="BanShadedClasses"/>
             <property name="illegalPkgs" value=".*\.(repackaged|shaded|thirdparty)"/>
-            <property name="regexp" value="true" />
+            <property name="regexp" value="true"/>
             <message key="import.illegal" value="Must not import repackaged classes."/>
         </module>
         <module name="IllegalImport">
             <property name="illegalPkgs" value="^org\.gradle\.(internal|.*\.internal)"/>
-            <property name="regexp" value="true" />
+            <property name="regexp" value="true"/>
             <message key="import.illegal" value="Do not rely on gradle internal classes as these may change in minor releases - use org.gradle.api versions instead."/>
         </module>
         <module name="IllegalImport">
@@ -397,7 +390,7 @@
         <module name="SuppressWarnings">
             <property name="format" value="serial"/>
         </module>
-        <module name="SuppressWarningsHolder" />  <!-- Required for SuppressWarningsFilter -->
+        <module name="SuppressWarningsHolder"/>  <!-- Required for SuppressWarningsFilter -->
         <module name="TypeName"> <!-- Java Style Guide: Class names -->
             <message key="name.invalidPattern" value="Type name ''{0}'' must match pattern ''{1}''."/>
         </module>

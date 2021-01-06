@@ -16,18 +16,30 @@
 
 package com.palantir.baseline.plugins;
 
-import com.google.common.base.Preconditions;
 import com.palantir.baseline.plugins.BaselineFormat.FormatterState;
-import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.OutputKeys;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
+import javax.xml.xpath.XPath;
+import javax.xml.xpath.XPathConstants;
+import javax.xml.xpath.XPathExpressionException;
+import javax.xml.xpath.XPathFactory;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
+import org.w3c.dom.Document;
+import org.w3c.dom.Node;
+import org.xml.sax.InputSource;
 
 /** Extracts Baseline configuration into the configuration directory. */
 class BaselineConfig extends AbstractBaselinePlugin {
@@ -96,25 +108,29 @@ class BaselineConfig extends AbstractBaselinePlugin {
                 Path checkstyleXml = configDir.resolve("checkstyle/checkstyle.xml");
 
                 try {
-                    String contents = new String(Files.readAllBytes(checkstyleXml), StandardCharsets.UTF_8);
-                    String replaced = contents.replace(
-                                    "        <module name=\"Indentation\"> "
-                                            + "<!-- Java Style Guide: Block indentation: +4 spaces -->\n"
-                                            + "            <property name=\"arrayInitIndent\" value=\"8\"/>\n"
-                                            + "            <property name=\"lineWrappingIndentation\" value=\"8\"/>\n"
-                                            + "        </module>\n",
-                                    "")
-                            .replace(
-                                    "        <module name=\"ParenPad\"/> <!-- Java Style Guide: Horizontal whitespace"
-                                            + " -->\n",
-                                    "")
-                            .replace(
-                                    "        <module name=\"LeftCurly\"/> "
-                                            + "<!-- Java Style Guide: Nonempty blocks: K & R style -->\n",
-                                    "");
-                    Preconditions.checkState(!contents.equals(replaced), "Patching checkstyle.xml must make a change");
-                    Files.write(checkstyleXml, replaced.getBytes(StandardCharsets.UTF_8));
-                } catch (IOException e) {
+                    DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
+                    DocumentBuilder builder = builderFactory.newDocumentBuilder();
+
+                    InputSource inputSource = new InputSource(new FileReader(checkstyleXml.toFile()));
+                    inputSource.setEncoding("UTF-8");
+                    Document document = builder.parse(inputSource);
+
+                    XPathFactory xPathFactory = XPathFactory.newInstance();
+                    XPath xPath = xPathFactory.newXPath();
+
+                    removeNode(document, xPath, "//module[@name='Indentation']");
+                    removeNode(document, xPath, "//module[@name='ParenPad']");
+                    removeNode(document, xPath, "//module[@name='LeftCurly']");
+                    removeNode(document, xPath, "//module[@name='WhitespaceAround']");
+
+                    TransformerFactory transformerFactory = TransformerFactory.newInstance();
+                    Transformer transformer = transformerFactory.newTransformer();
+                    transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+
+                    DOMSource source = new DOMSource(document);
+                    StreamResult result = new StreamResult(new FileWriter(checkstyleXml.toFile()));
+                    transformer.transform(source, result);
+                } catch (Exception e) {
                     throw new RuntimeException("Unable to patch " + checkstyleXml, e);
                 }
             }
@@ -132,6 +148,12 @@ class BaselineConfig extends AbstractBaselinePlugin {
                     copySpec.setIncludeEmptyDirs(false);
                 });
             }
+        }
+
+        private void removeNode(Document document, XPath xPath, String expression) throws XPathExpressionException {
+            xPath.reset();
+            Node node = (Node) xPath.compile(expression).evaluate(document, XPathConstants.NODE);
+            node.getParentNode().removeChild(node);
         }
     }
 }

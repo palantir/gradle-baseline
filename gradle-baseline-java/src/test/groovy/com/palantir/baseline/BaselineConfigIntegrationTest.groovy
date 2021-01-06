@@ -152,5 +152,11 @@ class BaselineConfigIntegrationTest extends AbstractPluginTest {
         !new File(projectDir, '.baseline/checkstyle/checkstyle.xml').readLines().any {
             it.contains '<module name="ParenPad">'
         }
+        !new File(projectDir, '.baseline/checkstyle/checkstyle.xml').readLines().any {
+            it.contains '<module name="LeftCurly">'
+        }
+        !new File(projectDir, '.baseline/checkstyle/checkstyle.xml').readLines().any {
+            it.contains '<module name="WhitespaceAround">'
+        }
     }
 }
