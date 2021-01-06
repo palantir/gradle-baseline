@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: Disable `WhitespaceAround` Checkstyle rule when palantir-java-format
+    is applied.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1603
