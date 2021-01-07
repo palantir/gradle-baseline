@@ -305,12 +305,7 @@ public class StrictUnusedVariableTest {
                 .setArgs(ImmutableList.of("--enable-preview", "--release", "15"));
 
         compilationHelper
-                .addSourceLines(
-                        "Test.java",
-                        "class Test {",
-                        "@SuppressWarnings(\"StrictUnusedVariable\")",
-                        " record Foo(int foo) {}",
-                        "}")
+                .addSourceLines("Test.java", "class Test {", "  record Foo(int bar) {}", "}")
                 .doTest();
     }
 

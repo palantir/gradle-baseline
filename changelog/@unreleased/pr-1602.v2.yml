@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Let StrictUnusedVariable ignore record fields
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1602
