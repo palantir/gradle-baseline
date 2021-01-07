@@ -126,6 +126,10 @@ class BaselineConfig extends AbstractBaselinePlugin {
                     TransformerFactory transformerFactory = TransformerFactory.newInstance();
                     Transformer transformer = transformerFactory.newTransformer();
                     transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+                    transformer.setOutputProperty(
+                            OutputKeys.DOCTYPE_PUBLIC, document.getDoctype().getPublicId());
+                    transformer.setOutputProperty(
+                            OutputKeys.DOCTYPE_SYSTEM, document.getDoctype().getSystemId());
 
                     DOMSource source = new DOMSource(document);
                     StreamResult result = new StreamResult(new FileWriter(checkstyleXml.toFile()));

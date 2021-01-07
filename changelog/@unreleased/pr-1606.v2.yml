@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Baseline correctly preserves the DOCTYPE when generating checkstyle.xml.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1606
