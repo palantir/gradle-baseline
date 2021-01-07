@@ -19,7 +19,7 @@ com.puppycrawl.tools:checkstyle = 8.39
 # test deps
 com.fasterxml.jackson.*:* = 2.11.1
 com.github.stefanbirkner:system-rules = 1.19.0
-com.netflix.nebula:nebula-test = 7.9.4
+com.netflix.nebula:nebula-test = 7.10.1
 com.palantir.tokens:auth-tokens = 3.6.2
 com.palantir.conjure.java:conjure-lib = 5.40.1
 com.palantir.tritium:tritium-registry = 0.18.4
