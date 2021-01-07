@@ -1,10 +1,10 @@
-com.diffplug.spotless:spotless-plugin-gradle = 5.8.2
+com.diffplug.spotless:spotless-plugin-gradle = 5.9.0
 com.google.auto.service:auto-service = 1.0-rc4
 com.google.errorprone:error_prone_annotations = 2.4.0
 com.google.errorprone:error_prone_core = 2.4.0
 com.google.errorprone:error_prone_refaster = 2.4.0
 com.google.errorprone:error_prone_test_helpers = 2.4.0
-com.google.guava:guava = 30.0-jre
+com.google.guava:guava = 30.1-jre
 com.palantir.safe-logging:* = 1.14.0
 org.apache.maven.shared:maven-dependency-analyzer = 1.11.3
 org.github.ngbinh.scalastyle:gradle-scalastyle-plugin_2.11 = 1.0.1
@@ -14,7 +14,7 @@ org.slf4j:slf4j-api = 1.7.30
 org.immutables:* = 2.8.8
 org.ow2.asm:asm = 9.0
 com.googlecode.java-diff-utils:diffutils = 1.3.0
-com.puppycrawl.tools:checkstyle = 8.38
+com.puppycrawl.tools:checkstyle = 8.39
 
 # test deps
 com.fasterxml.jackson.*:* = 2.11.1
@@ -31,7 +31,7 @@ org.apache.commons:commons-lang3 = 3.11
 org.assertj:assertj-core = 3.18.1
 org.hamcrest:hamcrest-core = 2.2
 org.junit.jupiter:* = 5.7.0
-org.mockito:* = 3.6.28
+org.mockito:* = 3.7.0
 
 # dependency-upgrader:OFF
 # Don't upgrade, we will remove this in a future release.
