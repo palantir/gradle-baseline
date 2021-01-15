@@ -3,6 +3,15 @@
 
 ## runtimeClasspath
 [org.checkerframework:checker-qual, org.checkerframework:dataflow-shaded]
+  - org.checkerframework.checker.builder.qual.CalledMethods
+  - org.checkerframework.checker.builder.qual.NotCalledMethods
+  - org.checkerframework.checker.builder.qual.ReturnsReceiver
+  - org.checkerframework.checker.calledmethods.qual.CalledMethods
+  - org.checkerframework.checker.calledmethods.qual.CalledMethodsBottom
+  - org.checkerframework.checker.calledmethods.qual.CalledMethodsPredicate
+  - org.checkerframework.checker.calledmethods.qual.EnsuresCalledMethods
+  - org.checkerframework.checker.calledmethods.qual.EnsuresCalledMethodsIf
+  - org.checkerframework.checker.calledmethods.qual.EnsuresCalledMethodsIf$List
   - org.checkerframework.checker.compilermsgs.qual.CompilerMessageKey
   - org.checkerframework.checker.compilermsgs.qual.CompilerMessageKeyBottom
   - org.checkerframework.checker.compilermsgs.qual.UnknownCompilerMessageKey
@@ -63,7 +72,9 @@
   - org.checkerframework.checker.i18nformatter.qual.I18nUnknownFormat
   - org.checkerframework.checker.i18nformatter.qual.I18nValidFormat
   - org.checkerframework.checker.index.qual.EnsuresLTLengthOf
+  - org.checkerframework.checker.index.qual.EnsuresLTLengthOf$List
   - org.checkerframework.checker.index.qual.EnsuresLTLengthOfIf
+  - org.checkerframework.checker.index.qual.EnsuresLTLengthOfIf$List
   - org.checkerframework.checker.index.qual.GTENegativeOne
   - org.checkerframework.checker.index.qual.HasSubsequence
   - org.checkerframework.checker.index.qual.IndexFor
@@ -102,6 +113,9 @@
   - org.checkerframework.checker.initialization.qual.NotOnlyInitialized
   - org.checkerframework.checker.initialization.qual.UnderInitialization
   - org.checkerframework.checker.initialization.qual.UnknownInitialization
+  - org.checkerframework.checker.interning.qual.CompareToMethod
+  - org.checkerframework.checker.interning.qual.EqualsMethod
+  - org.checkerframework.checker.interning.qual.FindDistinct
   - org.checkerframework.checker.interning.qual.InternMethod
   - org.checkerframework.checker.interning.qual.Interned
   - org.checkerframework.checker.interning.qual.InternedDistinct
@@ -109,7 +123,9 @@
   - org.checkerframework.checker.interning.qual.UnknownInterned
   - org.checkerframework.checker.interning.qual.UsesObjectEquals
   - org.checkerframework.checker.lock.qual.EnsuresLockHeld
+  - org.checkerframework.checker.lock.qual.EnsuresLockHeld$List
   - org.checkerframework.checker.lock.qual.EnsuresLockHeldIf
+  - org.checkerframework.checker.lock.qual.EnsuresLockHeldIf$List
   - org.checkerframework.checker.lock.qual.GuardSatisfied
   - org.checkerframework.checker.lock.qual.GuardedBy
   - org.checkerframework.checker.lock.qual.GuardedByBottom
@@ -124,9 +140,13 @@
   - org.checkerframework.checker.nullness.Opt
   - org.checkerframework.checker.nullness.qual.AssertNonNullIfNonNull
   - org.checkerframework.checker.nullness.qual.EnsuresKeyFor
+  - org.checkerframework.checker.nullness.qual.EnsuresKeyFor$List
   - org.checkerframework.checker.nullness.qual.EnsuresKeyForIf
+  - org.checkerframework.checker.nullness.qual.EnsuresKeyForIf$List
   - org.checkerframework.checker.nullness.qual.EnsuresNonNull
+  - org.checkerframework.checker.nullness.qual.EnsuresNonNull$List
   - org.checkerframework.checker.nullness.qual.EnsuresNonNullIf
+  - org.checkerframework.checker.nullness.qual.EnsuresNonNullIf$List
   - org.checkerframework.checker.nullness.qual.KeyFor
   - org.checkerframework.checker.nullness.qual.KeyForBottom
   - org.checkerframework.checker.nullness.qual.MonotonicNonNull
@@ -149,24 +169,35 @@
   - org.checkerframework.checker.regex.qual.Regex
   - org.checkerframework.checker.regex.qual.RegexBottom
   - org.checkerframework.checker.regex.qual.UnknownRegex
+  - org.checkerframework.checker.signature.qual.ArrayWithoutPackage
   - org.checkerframework.checker.signature.qual.BinaryName
+  - org.checkerframework.checker.signature.qual.BinaryNameOrPrimitiveType
+  - org.checkerframework.checker.signature.qual.BinaryNameWithoutPackage
+  - org.checkerframework.checker.signature.qual.CanonicalName
+  - org.checkerframework.checker.signature.qual.CanonicalNameOrEmpty
   - org.checkerframework.checker.signature.qual.ClassGetName
   - org.checkerframework.checker.signature.qual.ClassGetSimpleName
   - org.checkerframework.checker.signature.qual.DotSeparatedIdentifiers
+  - org.checkerframework.checker.signature.qual.DotSeparatedIdentifiersOrPrimitiveType
   - org.checkerframework.checker.signature.qual.FieldDescriptor
   - org.checkerframework.checker.signature.qual.FieldDescriptorForPrimitive
+  - org.checkerframework.checker.signature.qual.FieldDescriptorWithoutPackage
   - org.checkerframework.checker.signature.qual.FqBinaryName
   - org.checkerframework.checker.signature.qual.FullyQualifiedName
   - org.checkerframework.checker.signature.qual.Identifier
+  - org.checkerframework.checker.signature.qual.IdentifierOrPrimitiveType
   - org.checkerframework.checker.signature.qual.InternalForm
   - org.checkerframework.checker.signature.qual.MethodDescriptor
   - org.checkerframework.checker.signature.qual.PolySignature
+  - org.checkerframework.checker.signature.qual.PrimitiveType
   - org.checkerframework.checker.signature.qual.SignatureBottom
   - org.checkerframework.checker.signature.qual.SignatureUnknown
   - org.checkerframework.checker.signedness.SignednessUtil
+  - org.checkerframework.checker.signedness.SignednessUtilExtra
   - org.checkerframework.checker.signedness.qual.PolySigned
   - org.checkerframework.checker.signedness.qual.Signed
   - org.checkerframework.checker.signedness.qual.SignedPositive
+  - org.checkerframework.checker.signedness.qual.SignedPositiveFromUnsigned
   - org.checkerframework.checker.signedness.qual.SignednessBottom
   - org.checkerframework.checker.signedness.qual.SignednessGlb
   - org.checkerframework.checker.signedness.qual.UnknownSignedness
@@ -232,6 +263,9 @@
   - org.checkerframework.common.reflection.qual.NewInstance
   - org.checkerframework.common.reflection.qual.UnknownClass
   - org.checkerframework.common.reflection.qual.UnknownMethod
+  - org.checkerframework.common.returnsreceiver.qual.BottomThis
+  - org.checkerframework.common.returnsreceiver.qual.This
+  - org.checkerframework.common.returnsreceiver.qual.UnknownThis
   - org.checkerframework.common.subtyping.qual.Bottom
   - org.checkerframework.common.subtyping.qual.Unqualified
   - org.checkerframework.common.util.report.qual.ReportCall
@@ -248,11 +282,14 @@
   - org.checkerframework.common.value.qual.BottomVal
   - org.checkerframework.common.value.qual.DoubleVal
   - org.checkerframework.common.value.qual.EnsuresMinLenIf
+  - org.checkerframework.common.value.qual.EnsuresMinLenIf$List
+  - org.checkerframework.common.value.qual.EnumVal
   - org.checkerframework.common.value.qual.IntRange
   - org.checkerframework.common.value.qual.IntRangeFromGTENegativeOne
   - org.checkerframework.common.value.qual.IntRangeFromNonNegative
   - org.checkerframework.common.value.qual.IntRangeFromPositive
   - org.checkerframework.common.value.qual.IntVal
+  - org.checkerframework.common.value.qual.MatchesRegex
   - org.checkerframework.common.value.qual.MinLen
   - org.checkerframework.common.value.qual.MinLenFieldInvariant
   - org.checkerframework.common.value.qual.PolyValue
@@ -265,13 +302,17 @@
   - org.checkerframework.framework.qual.Covariant
   - org.checkerframework.framework.qual.DefaultFor
   - org.checkerframework.framework.qual.DefaultQualifier
+  - org.checkerframework.framework.qual.DefaultQualifier$List
   - org.checkerframework.framework.qual.DefaultQualifierForUse
   - org.checkerframework.framework.qual.DefaultQualifierInHierarchy
   - org.checkerframework.framework.qual.EnsuresQualifier
+  - org.checkerframework.framework.qual.EnsuresQualifier$List
   - org.checkerframework.framework.qual.EnsuresQualifierIf
+  - org.checkerframework.framework.qual.EnsuresQualifierIf$List
   - org.checkerframework.framework.qual.FieldInvariant
   - org.checkerframework.framework.qual.FromByteCode
   - org.checkerframework.framework.qual.FromStubFile
+  - org.checkerframework.framework.qual.HasQualifierParameter
   - org.checkerframework.framework.qual.IgnoreInWholeProgramInference
   - org.checkerframework.framework.qual.InheritedAnnotation
   - org.checkerframework.framework.qual.InvisibleQualifier
@@ -279,6 +320,7 @@
   - org.checkerframework.framework.qual.LiteralKind
   - org.checkerframework.framework.qual.MonotonicQualifier
   - org.checkerframework.framework.qual.NoDefaultQualifierForUse
+  - org.checkerframework.framework.qual.NoQualifierParameter
   - org.checkerframework.framework.qual.PolymorphicQualifier
   - org.checkerframework.framework.qual.PostconditionAnnotation
   - org.checkerframework.framework.qual.PreconditionAnnotation
@@ -286,6 +328,7 @@
   - org.checkerframework.framework.qual.QualifierForLiterals
   - org.checkerframework.framework.qual.RelevantJavaTypes
   - org.checkerframework.framework.qual.RequiresQualifier
+  - org.checkerframework.framework.qual.RequiresQualifier$List
   - org.checkerframework.framework.qual.StubFiles
   - org.checkerframework.framework.qual.SubtypeOf
   - org.checkerframework.framework.qual.TargetLocations

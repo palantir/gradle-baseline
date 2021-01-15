@@ -130,6 +130,7 @@ public final class InvocationHandlerDelegation extends BugChecker implements Bug
                     (ifExpression, state) -> CONTAINS_INSTANCEOF_ITE.matches(ifExpression.getCondition(), state)
                             && CONTAINS_UNWRAP_THROWABLE.matches(ifExpression.getTrueExpression(), state)));
 
+    @SuppressWarnings("UnnecessaryMethodReference")
     private static final Matcher<MethodTree> HANDLES_ITE = Matchers.anyOf(
             Matchers.contains(TryTree.class, (Matcher<TryTree>)
                     (tree, state) -> CONTAINS_METHOD_INVOKE.matches(tree.getBlock(), state)

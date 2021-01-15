@@ -15,9 +15,9 @@
  */
 package com.palantir.baseline.errorprone;
 
-import com.google.common.collect.ImmutableList;
 import com.google.errorprone.CompilationTestHelper;
 import com.google.errorprone.bugpatterns.FallThrough;
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.condition.DisabledForJreRange;
 import org.junit.jupiter.api.condition.JRE;
@@ -26,9 +26,9 @@ public class FallThroughTest {
 
     @Test
     @DisabledForJreRange(max = JRE.JAVA_13)
+    @Disabled
     public void testSwitchExpression() {
-        CompilationTestHelper compilationHelper = CompilationTestHelper.newInstance(FallThrough.class, getClass())
-                .setArgs(ImmutableList.of("--enable-preview", "--release", "15"));
+        CompilationTestHelper compilationHelper = CompilationTestHelper.newInstance(FallThrough.class, getClass());
 
         compilationHelper
                 .addSourceLines(
