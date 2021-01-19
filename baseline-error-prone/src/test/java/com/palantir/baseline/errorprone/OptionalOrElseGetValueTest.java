@@ -147,4 +147,19 @@ public final class OptionalOrElseGetValueTest {
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
+
+    @Test
+    public void testNegativeCollection() {
+        refactoringTestHelper
+                .addInputLines(
+                        "Test.java",
+                        "import com.google.common.collect.ImmutableList;",
+                        "import java.util.Optional;",
+                        "class Test {",
+                        "    private final ImmutableList<String> l = Optional.of(ImmutableList.<String>of())",
+                        "        .orElseGet(() -> ImmutableList.of(\"str\"));",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
 }
