@@ -78,7 +78,8 @@ public class BaselineErrorProneExtension {
             "ObjectsHashCodePrimitive",
             "PreferJavaTimeOverload",
             "ProtectedMembersInFinalClass",
-            "UnnecessaryParentheses");
+            "UnnecessaryParentheses",
+            "ZoneIdOfZ");
 
     private final ListProperty<String> patchChecks;
 
