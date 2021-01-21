@@ -25,7 +25,6 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
@@ -81,9 +80,7 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
         Set<ResolvedArtifact> necessaryArtifacts = Streams.stream(
                         sourceClasses.get().iterator())
                 .flatMap(BaselineExactDependencies::referencedClasses)
-                .map(BaselineExactDependencies.INDEXES::classToDependency)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
+                .flatMap(BaselineExactDependencies.INDEXES::classToArtifacts)
                 .collect(Collectors.toSet());
 
         Set<ResolvedArtifact> possiblyUnused = Sets.difference(declaredArtifacts, necessaryArtifacts);
@@ -119,9 +116,7 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
                                 BaselineExactDependencies.VALID_ARTIFACT_EXTENSIONS.contains(artifact.getExtension()))
                         .flatMap(BaselineExactDependencies.INDEXES::classesFromArtifact)
                         .filter(referencedClasses()::contains)
-                        .map(BaselineExactDependencies.INDEXES::classToDependency)
-                        .filter(Optional::isPresent)
-                        .map(Optional::get)
+                        .flatMap(BaselineExactDependencies.INDEXES::classToArtifacts)
                         .filter(artifact -> !declaredArtifacts.contains(artifact))
                         .collect(Collectors.toSet());
 
