@@ -43,7 +43,7 @@ import java.util.regex.Pattern;
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = BugPattern.SeverityLevel.WARNING,
         summary = "Precondition and similar checks with a constant message and no parameters should use equivalent"
-                + " checks from com.palantir.logsafe.Preconditions for standardization as functionality is the"
+                + " checks from com.palantir.logsafe.preconditions.Preconditions for standardization as functionality is the"
                 + " same.")
 public final class PreferSafeLoggingPreconditions extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
@@ -92,13 +92,15 @@ public final class PreferSafeLoggingPreconditions extends BugChecker implements 
         }
 
         SuggestedFix.Builder fix = SuggestedFix.builder();
-        String logSafeQualifiedClassName = SuggestedFixes.qualifyType(state, fix, "com.palantir.logsafe.Preconditions");
+        String logSafeQualifiedClassName =
+                SuggestedFixes.qualifyType(state, fix, "com.palantir.logsafe.preconditions.Preconditions");
         String logSafeMethodName = getLogSafeMethodName(ASTHelpers.getSymbol(tree));
         String replacement = String.format("%s.%s", logSafeQualifiedClassName, logSafeMethodName);
 
         return buildDescription(tree)
-                .setMessage("The call can be replaced with an equivalent one from com.palantir.logsafe.Preconditions "
-                        + "for standardization as the functionality is the same.")
+                .setMessage(
+                        "The call can be replaced with an equivalent one from com.palantir.logsafe.preconditions.Preconditions "
+                                + "for standardization as the functionality is the same.")
                 .addFix(fix.replace(tree.getMethodSelect(), replacement).build())
                 .build();
     }

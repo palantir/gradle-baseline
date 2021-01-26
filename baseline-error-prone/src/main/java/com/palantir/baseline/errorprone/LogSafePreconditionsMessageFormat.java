@@ -41,7 +41,7 @@ public final class LogSafePreconditionsMessageFormat extends PreconditionsMessag
     private static final long serialVersionUID = 1L;
 
     private static final Matcher<ExpressionTree> LOGSAFE_PRECONDITIONS_METHOD = MethodMatchers.staticMethod()
-            .onClassAny("com.palantir.logsafe.Preconditions")
+            .onClassAny("com.palantir.logsafe.preconditions.Preconditions")
             .withNameMatching(Pattern.compile("checkArgument|checkState|checkNotNull"));
 
     public LogSafePreconditionsMessageFormat() {

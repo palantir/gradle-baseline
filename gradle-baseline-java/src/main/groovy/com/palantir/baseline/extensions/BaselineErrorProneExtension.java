@@ -58,6 +58,7 @@ public class BaselineErrorProneExtension {
             "ReadReturnValueIgnored",
             "RedundantMethodReference",
             "RedundantModifier",
+            "SafeLoggingPreconditionsMigration",
             "Slf4jLevelCheck",
             "Slf4jLogsafeArgs",
             "Slf4jThrowable",

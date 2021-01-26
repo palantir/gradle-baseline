@@ -41,7 +41,7 @@ public abstract class PreconditionsTests {
         compilationHelper()
                 .addSourceLines(
                         "Test.java",
-                        "import com.palantir.logsafe.Preconditions;",
+                        "import com.palantir.logsafe.preconditions.Preconditions;",
                         "import com.palantir.logsafe.UnsafeArg;",
                         "class Test {",
                         "  void f(String param) {",
@@ -149,7 +149,7 @@ public abstract class PreconditionsTests {
         compilationHelper()
                 .addSourceLines(
                         "Test.java",
-                        "import com.palantir.logsafe.Preconditions;",
+                        "import com.palantir.logsafe.preconditions.Preconditions;",
                         "import com.palantir.logsafe.UnsafeArg;",
                         "import java.util.Iterator;",
                         "class Test {",

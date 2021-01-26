@@ -332,7 +332,7 @@ the exception of the members of the following classes:
 
 - `java.util.Collections`
 - `java.util.stream.Collectors`
-- `com.palantir.logsafe.Preconditions`
+- `com.palantir.logsafe.preconditions.Preconditions`
 - `com.google.common.base.Preconditions`
 - `org.apache.commons.lang3.Validate`
 
