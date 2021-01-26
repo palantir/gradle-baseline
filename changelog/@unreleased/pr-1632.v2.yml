@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Migrate preconditions to the new package
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1632
