@@ -50,12 +50,10 @@ public final class ConsistentLoggerName extends BugChecker implements BugChecker
 
     @Override
     public Description matchVariable(VariableTree tree, VisitorState state) {
-        if (matcher.matches(tree, state)) {
-            if (!tree.getName().contentEquals("log")) {
-                return buildDescription(tree)
-                        .addFix(SuggestedFixes.renameVariable(tree, "log", state))
-                        .build();
-            }
+        if (matcher.matches(tree, state) && !tree.getName().contentEquals("log")) {
+            return buildDescription(tree)
+                    .addFix(SuggestedFixes.renameVariable(tree, "log", state))
+                    .build();
         }
         return Description.NO_MATCH;
     }
