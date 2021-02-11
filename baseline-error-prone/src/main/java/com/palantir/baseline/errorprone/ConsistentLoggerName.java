@@ -26,6 +26,7 @@ import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.sun.source.tree.VariableTree;
+import java.lang.reflect.Modifier;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -40,7 +41,7 @@ public final class ConsistentLoggerName extends BugChecker implements BugChecker
     private static final Matcher<VariableTree> matcher = Matchers.allOf(
             Matchers.isField(),
             Matchers.isStatic(),
-            MoreMatchers.isFinal(),
+            Matchers.hasModifier(Modifier.FINAL),
             Matchers.isSubtypeOf("org.slf4j.Logger"),
             Matchers.variableInitializer(MethodMatchers.staticMethod()
                     .onClass("org.slf4j.LoggerFactory")
