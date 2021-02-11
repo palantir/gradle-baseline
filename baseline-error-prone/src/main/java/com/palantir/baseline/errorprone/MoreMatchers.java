@@ -16,6 +16,9 @@
 
 package com.palantir.baseline.errorprone;
 
+import static com.google.errorprone.util.ASTHelpers.getSymbol;
+import static com.sun.tools.javac.code.Flags.FINAL;
+
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
@@ -115,6 +118,13 @@ final class MoreMatchers {
                 return false;
             }
             return signature.equals(symbol.toString());
+        };
+    }
+
+    public static <T extends Tree> Matcher<T> isFinal() {
+        return (tree, state) -> {
+            Symbol sym = getSymbol(tree);
+            return sym != null && (sym.flags_field & FINAL) != 0;
         };
     }
 

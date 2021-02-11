@@ -39,6 +39,8 @@ public final class ConsistentLoggerName extends BugChecker implements BugChecker
 
     private static final Matcher<VariableTree> matcher = Matchers.allOf(
             Matchers.isField(),
+            Matchers.isStatic(),
+            MoreMatchers.isFinal(),
             Matchers.isSubtypeOf("org.slf4j.Logger"),
             Matchers.variableInitializer(MethodMatchers.staticMethod()
                     .onClass("org.slf4j.LoggerFactory")
@@ -48,16 +50,13 @@ public final class ConsistentLoggerName extends BugChecker implements BugChecker
 
     @Override
     public Description matchVariable(VariableTree tree, VisitorState state) {
-        if (!matcher.matches(tree, state)) {
-            return Description.NO_MATCH;
+        if (matcher.matches(tree, state)) {
+            if (!tree.getName().contentEquals("log")) {
+                return buildDescription(tree)
+                        .addFix(SuggestedFixes.renameVariable(tree, "log", state))
+                        .build();
+            }
         }
-
-        if (tree.getName().contentEquals("log")) {
-            return Description.NO_MATCH;
-        }
-
-        return buildDescription(tree)
-                .addFix(SuggestedFixes.renameVariable(tree, "log", state))
-                .build();
+        return Description.NO_MATCH;
     }
 }

@@ -60,6 +60,40 @@ class ConsistentLoggerNameTest {
                 .doTest();
     }
 
+    @Test
+    void ignores_local_variables() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import org.slf4j.*;",
+                        "class Test {",
+                        "    private Logger LOG = LoggerFactory.getLogger(Test.class);",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import org.slf4j.*;",
+                        "class Test {",
+                        "    private Logger LOG = LoggerFactory.getLogger(Test.class);",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void ignores_non_final_methods() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import org.slf4j.*;",
+                        "class Test {",
+                        "    private static Logger LOG = LoggerFactory.getLogger(Test.class);",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import org.slf4j.*;",
+                        "class Test {",
+                        "    private static Logger LOG = LoggerFactory.getLogger(Test.class);",
+                        "}")
+                .doTest();
+    }
+
     private RefactoringValidator fix() {
         return RefactoringValidator.of(new ConsistentLoggerName(), getClass());
     }
