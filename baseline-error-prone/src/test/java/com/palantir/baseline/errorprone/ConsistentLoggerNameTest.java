@@ -68,12 +68,7 @@ class ConsistentLoggerNameTest {
                         "class Test {",
                         "    private Logger LOG = LoggerFactory.getLogger(Test.class);",
                         "}")
-                .addOutputLines(
-                        "Test.java",
-                        "import org.slf4j.*;",
-                        "class Test {",
-                        "    private Logger LOG = LoggerFactory.getLogger(Test.class);",
-                        "}")
+                .expectUnchanged()
                 .doTest();
     }
 
@@ -85,12 +80,7 @@ class ConsistentLoggerNameTest {
                         "class Test {",
                         "    private static Logger LOG = LoggerFactory.getLogger(Test.class);",
                         "}")
-                .addOutputLines(
-                        "Test.java",
-                        "import org.slf4j.*;",
-                        "class Test {",
-                        "    private static Logger LOG = LoggerFactory.getLogger(Test.class);",
-                        "}")
+                .expectUnchanged()
                 .doTest();
     }
 
