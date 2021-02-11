@@ -26,7 +26,7 @@ import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.sun.source.tree.VariableTree;
-import java.lang.reflect.Modifier;
+import javax.lang.model.element.Modifier;
 
 @AutoService(BugChecker.class)
 @BugPattern(
