@@ -73,12 +73,36 @@ class ConsistentLoggerNameTest {
     }
 
     @Test
-    void ignores_non_final_methods() {
+    void ignores_non_final_fields() {
         fix().addInputLines(
                         "Test.java",
                         "import org.slf4j.*;",
                         "class Test {",
                         "    private static Logger LOG = LoggerFactory.getLogger(Test.class);",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void ignores_non_private_fields() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import org.slf4j.*;",
+                        "class Test {",
+                        "    static Logger LOG = LoggerFactory.getLogger(Test.class);",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void ignores_field_on_interface() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import org.slf4j.*;",
+                        "interface Test {",
+                        "    static Logger LOG = LoggerFactory.getLogger(Test.class);",
                         "}")
                 .expectUnchanged()
                 .doTest();
