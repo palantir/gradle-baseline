@@ -34,6 +34,7 @@ public class BaselineErrorProneExtension {
             // "CatchSpecificity",
             "CollectionStreamForEach",
             "CompileTimeConstantViolatesLiskovSubstitution",
+            "ConsistentLoggerName",
             "DeprecatedGuavaObjects",
             "ExecutorSubmitRunnableFutureIgnored",
             "ExtendsErrorOrThrowable",

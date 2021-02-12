@@ -1,0 +1,5 @@
+type: feature
+feature:
+  description: Add consistent logging errorprone rule
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1644
