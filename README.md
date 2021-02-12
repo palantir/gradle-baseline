@@ -150,7 +150,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `PreferSafeLoggingPreconditions`: Users should use the safe-logging versions of Precondition checks for standardization when there is equivalent functionality
     ```diff
     -com.google.common.base.Preconditions.checkNotNull(variable, "message");
-    +com.palantir.logsafe.Preconditions.checkNotNull(variable, "message"); // equivalent functionality is available in the safe-logging variant
+    +com.palantir.logsafe.preconditions.Preconditions.checkNotNull(variable, "message"); // equivalent functionality is available in the safe-logging variant
     ```
 - `ShutdownHook`: Applications should not use `Runtime#addShutdownHook`.
 - `GradleCacheableTaskAction`: Gradle plugins should not call `Task.doFirst` or `Task.doLast` with a lambda, as that is not cacheable. See [gradle/gradle#5510](https://github.com/gradle/gradle/issues/5510) for more details.
@@ -202,6 +202,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `IncubatingMethod`: Prevents calling Conjure incubating APIs unless you explicitly opt-out of the check on a per-use or per-project basis.
 - `CompileTimeConstantViolatesLiskovSubstitution`: Requires consistent application of the `@CompileTimeConstant` annotation to resolve inconsistent validation based on the reference type on which the met is invoked.
 - `ClassInitializationDeadlock`: Detect type structures which can cause deadlocks initializing classes.
+- `SafeLoggingPreconditionsMigration`: Migrate safe-logging preconditions references to the new non-deprecated package.
 
 ### Programmatic Application
 
