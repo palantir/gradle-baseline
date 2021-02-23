@@ -190,7 +190,10 @@ public final class ClassInitializationDeadlock extends BugChecker implements Bug
             if (symbol != null && symbol.isStatic() && symbol instanceof VarSymbol) {
                 VarSymbol varSymbol = (VarSymbol) symbol;
                 // Constant values may be accessed without forcing initialization
-                if (varSymbol.getConstValue() == null && isSubtype(varSymbol.owner.type, baseType, state)) {
+                if (varSymbol.getConstValue() == null
+                        && isSubtype(varSymbol.owner.type, baseType, state)
+                        // .class access does not force class initialization
+                        && !varSymbol.name.contentEquals("class")) {
                     state.reportMatch(describeMatch(node));
                     return null;
                 }

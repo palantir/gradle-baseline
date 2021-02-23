@@ -16,6 +16,8 @@
 
 package com.palantir.baseline.errorprone;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
 import com.google.errorprone.CompilationTestHelper;
 import org.junit.jupiter.api.Test;
 
@@ -278,6 +280,39 @@ class ClassInitializationDeadlockTest {
                         "  };",
                         "}")
                 .doTest();
+    }
+
+    @Test
+    @SuppressWarnings("ObjectToString")
+    void testClassAccessIsAllowed() {
+        assertThat(initializationTestClassInitialized)
+                .as("InitializationTestClass has already been initialized")
+                .isFalse();
+        assertThat(InitializationTestClass.class).isNotNull();
+        assertThat(initializationTestClassInitialized)
+                .as(".class access does not force initialization")
+                .isFalse();
+        new InitializationTestClass();
+        assertThat(initializationTestClassInitialized)
+                .as("Instantiation initializes classes")
+                .isTrue();
+
+        helper().addSourceLines(
+                        "Base.java",
+                        "import java.util.Optional;",
+                        "class Base {",
+                        "  private static final Object VALUE = Sub.class;",
+                        "  static class Sub extends Base {}",
+                        "}")
+                .doTest();
+    }
+
+    private static volatile boolean initializationTestClassInitialized;
+
+    public static final class InitializationTestClass {
+        static {
+            initializationTestClassInitialized = true;
+        }
     }
 
     private CompilationTestHelper helper() {
