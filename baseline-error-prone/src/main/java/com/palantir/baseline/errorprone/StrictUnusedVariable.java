@@ -238,9 +238,11 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             }
             state.reportMatch(buildDescription(unused)
                     .setMessage(String.format(
-                            "%s %s '%s' is never read.",
+                            "%s %s '%s' is never read. Intentional occurrences are acknowledged by renaming "
+                                    + "the unused variable with a leading underscore. '_%s', for example.",
                             unused instanceof VariableTree ? "The" : "The assignment to this",
                             describeVariable(symbol),
+                            symbol.name,
                             symbol.name))
                     .addAllFixes(fixes.stream()
                             .map(f -> SuggestedFix.builder()
