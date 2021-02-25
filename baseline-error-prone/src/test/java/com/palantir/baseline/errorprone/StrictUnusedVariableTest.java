@@ -72,11 +72,11 @@ public class StrictUnusedVariableTest {
                         "Test.java",
                         "import java.util.Optional;",
                         "class Test {",
-                        "  // BUG: Diagnostic contains: Unused",
+                        "  // BUG: Diagnostic contains: '_foo', for example",
                         "   Test(String foo) { }",
-                        "  // BUG: Diagnostic contains: Unused",
+                        "  // BUG: Diagnostic contains: '_buggy', for example",
                         "  private static void privateMethod(String buggy) { }",
-                        "  // BUG: Diagnostic contains: Unused",
+                        "  // BUG: Diagnostic contains: '_buggy', for example",
                         "  public static void publicMethod(String buggy) { }",
                         "}")
                 .doTest();
