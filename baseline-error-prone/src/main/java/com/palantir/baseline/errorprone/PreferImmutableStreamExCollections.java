@@ -99,7 +99,7 @@ public final class PreferImmutableStreamExCollections extends BugChecker
             if (COLLECT_TO_SET.matches(argument, state)) {
                 return buildDescription(tree)
                         .addFix(SuggestedFix.builder()
-                                .merge(SuggestedFix.delete(argument))
+                                .delete(argument)
                                 .merge(SuggestedFixes.renameMethodInvocation(tree, "toImmutableSet", state))
                                 .build())
                         .build();
@@ -108,7 +108,7 @@ public final class PreferImmutableStreamExCollections extends BugChecker
             if (COLLECT_TO_LIST.matches(argument, state)) {
                 return buildDescription(tree)
                         .addFix(SuggestedFix.builder()
-                                .merge(SuggestedFix.delete(argument))
+                                .delete(argument)
                                 .merge(SuggestedFixes.renameMethodInvocation(tree, "toImmutableList", state))
                                 .build())
                         .build();
