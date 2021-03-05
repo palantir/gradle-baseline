@@ -35,7 +35,7 @@ import java.util.Collections;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.WARNING,
-        summary = "Prefer immutable/unmodifable collections wherever possible because they are innately threadsafe, "
+        summary = "Prefer immutable/unmodifable collections wherever possible because they are inherently threadsafe "
                 + "and easier to reason about when passed between different functions."
                 + " If you really want a mutable output then explicitly suppress this check.")
 public final class PreferImmutableStreamExCollections extends BugChecker
@@ -62,24 +62,18 @@ public final class PreferImmutableStreamExCollections extends BugChecker
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
         if (TO_MAP.matches(tree, state)) {
             return buildDescription(tree)
-                    .setMessage("Prefer .toImmutableMap() because immutable collections are inherently threadsafe and"
-                            + " easier to reason about when passed between different methods.")
                     .addFix(SuggestedFixes.renameMethodInvocation(tree, "toImmutableMap", state))
                     .build();
         }
 
         if (TO_SET.matches(tree, state)) {
             return buildDescription(tree)
-                    .setMessage("Prefer .toImmutableSet() because immutable collections are inherently threadsafe and"
-                            + " easier to reason about when passed between different methods.")
                     .addFix(SuggestedFixes.renameMethodInvocation(tree, "toImmutableSet", state))
                     .build();
         }
 
         if (TO_LIST.matches(tree, state)) {
             return buildDescription(tree)
-                    .setMessage("Prefer .toImmutableList() because immutable collections are inherently threadsafe and"
-                            + " easier to reason about when passed between different methods.")
                     .addFix(SuggestedFixes.renameMethodInvocation(tree, "toImmutableList", state))
                     .build();
         }
