@@ -1,0 +1,8 @@
+type: improvement
+improvement:
+  description: |-
+    A new suggested error-prone rule `AutoCloseableMustBeClosed` annotates methods and constructors that return an `AutoCloseable` type as `@MustBeClosed` to allow for `MustBeClosedChecker` to perform analysis that resources are appropriately closed.
+
+    See https://errorprone.info/bugpattern/MustBeClosedChecker
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1673
