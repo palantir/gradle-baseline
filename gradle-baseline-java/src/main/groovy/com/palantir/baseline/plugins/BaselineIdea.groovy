@@ -96,7 +96,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
             addInspectionProjectProfile(node)
             addJavacSettings(node)
             addGitHubIssueNavigation(node)
-            ignoreCommonShadedPackages(node)
+            addExcludedAutoImports(node)
         }
         configureProjectForIntellijImport(rootProject)
 
@@ -430,7 +430,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
         }
     }
 
-    private static void ignoreCommonShadedPackages(Node node) {
+    private static void addExcludedAutoImports(Node node) {
         // language=xml
         node.append(new XmlParser().parseText('''
             <component name="JavaProjectCodeInsightSettings">
@@ -440,6 +440,9 @@ class BaselineIdea extends AbstractBaselinePlugin {
                 <name>autovalue.shaded</name>
                 <name>org.inferred.freebuilder.shaded</name>
                 <name>org.immutables.value.internal</name>
+                <name>com.palantir.conjure.java.client.config.ImmutablesStyle</name>
+                <name>com.palantir.sls.versions.ImmutablesStyle</name>
+                <name>com.palantir.tokens.auth.ImmutablesStyle</name>
               </excluded-names>
             </component>
         '''.stripIndent()))
