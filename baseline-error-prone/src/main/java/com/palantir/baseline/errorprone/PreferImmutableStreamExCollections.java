@@ -21,6 +21,7 @@ import com.google.errorprone.BugPattern;
 import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
+import com.google.errorprone.fixes.SuggestedFix;
 import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
@@ -43,39 +44,75 @@ public final class PreferImmutableStreamExCollections extends BugChecker
 
     private static final long serialVersionUID = 1L;
 
-    private static final Matcher<ExpressionTree> TO_MAP = MethodMatchers.instanceMethod()
+    private static final Matcher<ExpressionTree> STREAMEX_TO_MAP = MethodMatchers.instanceMethod()
             .onExactClass("one.util.streamex.EntryStream")
             .named("toMap")
             .withParameters(Collections.emptyList());
 
-    private static final Matcher<ExpressionTree> TO_SET = MethodMatchers.instanceMethod()
+    private static final Matcher<ExpressionTree> STREAMEX_TO_SET = MethodMatchers.instanceMethod()
             .onDescendantOf("one.util.streamex.AbstractStreamEx")
             .named("toSet")
             .withParameters(Collections.emptyList());
 
-    private static final Matcher<ExpressionTree> TO_LIST = MethodMatchers.instanceMethod()
+    private static final Matcher<ExpressionTree> STREAMEX_TO_LIST = MethodMatchers.instanceMethod()
             .onDescendantOf("one.util.streamex.AbstractStreamEx")
+            .named("toList")
+            .withParameters(Collections.emptyList());
+
+    private static final Matcher<ExpressionTree> STREAMEX_COLLECT = MethodMatchers.instanceMethod()
+            .onDescendantOf("one.util.streamex.AbstractStreamEx")
+            .named("collect");
+
+    private static final Matcher<ExpressionTree> COLLECT_TO_SET = MethodMatchers.staticMethod()
+            .onClass("java.util.stream.Collectors")
+            .named("toSet")
+            .withParameters(Collections.emptyList());
+
+    private static final Matcher<ExpressionTree> COLLECT_TO_LIST = MethodMatchers.staticMethod()
+            .onClass("java.util.stream.Collectors")
             .named("toList")
             .withParameters(Collections.emptyList());
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
-        if (TO_MAP.matches(tree, state)) {
+        if (STREAMEX_TO_MAP.matches(tree, state)) {
             return buildDescription(tree)
                     .addFix(SuggestedFixes.renameMethodInvocation(tree, "toImmutableMap", state))
                     .build();
         }
 
-        if (TO_SET.matches(tree, state)) {
+        if (STREAMEX_TO_SET.matches(tree, state)) {
             return buildDescription(tree)
                     .addFix(SuggestedFixes.renameMethodInvocation(tree, "toImmutableSet", state))
                     .build();
         }
 
-        if (TO_LIST.matches(tree, state)) {
+        if (STREAMEX_TO_LIST.matches(tree, state)) {
             return buildDescription(tree)
                     .addFix(SuggestedFixes.renameMethodInvocation(tree, "toImmutableList", state))
                     .build();
+        }
+
+        if (STREAMEX_COLLECT.matches(tree, state) && tree.getArguments().size() == 1) {
+            ExpressionTree argument = tree.getArguments().get(0);
+
+            if (COLLECT_TO_SET.matches(argument, state)) {
+                return buildDescription(tree)
+                        .addFix(SuggestedFix.builder()
+                                .merge(SuggestedFix.delete(argument))
+                                .merge(SuggestedFixes.renameMethodInvocation(tree, "toImmutableSet", state))
+                                .build())
+                        .build();
+            }
+
+            if (COLLECT_TO_LIST.matches(argument, state)) {
+                return buildDescription(tree)
+                        .addFix(SuggestedFix.builder()
+                                .merge(SuggestedFix.delete(argument))
+                                .merge(SuggestedFixes.renameMethodInvocation(tree, "toImmutableList", state))
+                                .build())
+                        .build();
+            }
         }
 
         return Description.NO_MATCH;
