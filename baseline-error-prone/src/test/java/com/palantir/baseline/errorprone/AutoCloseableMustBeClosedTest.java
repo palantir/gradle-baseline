@@ -93,6 +93,24 @@ public final class AutoCloseableMustBeClosedTest {
     }
 
     @Test
+    public void testIgnoreStream() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.stream.*;",
+                        "class Test {",
+                        "    private Stream<Integer> a() {",
+                        "        return Stream.of(1);",
+                        "    }",
+                        "",
+                        "    private IntStream b() {",
+                        "        return IntStream.of(1);",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testAlreadyAnnotated() {
         compilationHelper
                 .addSourceLines(

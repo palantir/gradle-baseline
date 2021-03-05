@@ -28,6 +28,7 @@ import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.sun.source.tree.MethodTree;
+import java.util.stream.BaseStream;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -46,10 +47,15 @@ public final class AutoCloseableMustBeClosed extends BugChecker implements Metho
 
     private static final Matcher<MethodTree> methodReturnsAutoCloseable = Matchers.allOf(
             Matchers.not(Matchers.methodIsConstructor()),
-            Matchers.methodReturns(Matchers.isSubtypeOf(AutoCloseable.class)));
+            Matchers.methodReturns(Matchers.isSubtypeOf(AutoCloseable.class)),
+            // ignore Stream for now, see https://errorprone.info/bugpattern/StreamResourceLeak
+            Matchers.not(Matchers.methodReturns(Matchers.isSubtypeOf(BaseStream.class))));
 
     private static final Matcher<MethodTree> constructsAutoCloseable = Matchers.allOf(
-            Matchers.methodIsConstructor(), Matchers.enclosingClass(Matchers.isSubtypeOf(AutoCloseable.class)));
+            Matchers.methodIsConstructor(),
+            Matchers.enclosingClass(Matchers.isSubtypeOf(AutoCloseable.class)),
+            // ignore Stream for now, see https://errorprone.info/bugpattern/StreamResourceLeak
+            Matchers.not(Matchers.enclosingClass(Matchers.isSubtypeOf(BaseStream.class))));
 
     private static final Matcher<MethodTree> methodNotAnnotatedMustBeClosed =
             Matchers.not(Matchers.hasAnnotation(MUST_BE_CLOSED_TYPE));
