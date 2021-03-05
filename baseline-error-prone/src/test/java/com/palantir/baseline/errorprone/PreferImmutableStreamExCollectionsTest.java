@@ -28,15 +28,18 @@ public class PreferImmutableStreamExCollectionsTest {
                         "import one.util.streamex.EntryStream;",
                         "import java.util.Map;",
                         "public class Test {",
-                        "  Map<String, String> entryStream = EntryStream.of(Map.of(\"hello\", \"world\")).toMap();",
+                        "  Map<String, String> map = EntryStream.of(Map.of(\"hello\", \"world\")).toMap();",
+                        "  EntryStream<String, String> entryStream = EntryStream.of(Map.of(\"hello\", \"world\"));",
+                        "  Map<String, String> entryStream2 = entryStream.toMap();",
                         "}")
                 .addOutputLines(
                         "Test.java",
                         "import one.util.streamex.EntryStream;",
                         "import java.util.Map;",
                         "public class Test {",
-                        "  Map<String, String> entryStream = EntryStream.of(Map.of(\"hello\", \"world\"))"
-                                + ".toImmutableMap();",
+                        "  Map<String, String> map = EntryStream.of(Map.of(\"hello\", \"world\")).toImmutableMap();",
+                        "  EntryStream<String, String> entryStream = EntryStream.of(Map.of(\"hello\", \"world\"));",
+                        "  Map<String, String> entryStream2 = entryStream.toImmutableMap();",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
