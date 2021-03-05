@@ -441,7 +441,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
                 <name>org.inferred.freebuilder.shaded</name>
                 <name>org.immutables.value.internal</name>
                 <name>com.palantir.conjure.java.client.config.ImmutablesStyle</name>
-                <name>com.palantir.sls.versionsImmutablesStyle</name>
+                <name>com.palantir.sls.versions.ImmutablesStyle</name>
                 <name>com.palantir.tokens.auth.ImmutablesStyle</name>
               </excluded-names>
             </component>
