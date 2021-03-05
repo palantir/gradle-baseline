@@ -37,11 +37,10 @@ import java.util.stream.BaseStream;
         linkType = BugPattern.LinkType.CUSTOM,
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = SeverityLevel.SUGGESTION,
-        summary = AutoCloseableMustBeClosed.SUMMARY)
+        summary = "If a constructor or method returns an AutoCloseable, it should be annotated "
+                + "@MustBeClosed to ensure callers appropriately close resources")
 public final class AutoCloseableMustBeClosed extends BugChecker implements MethodTreeMatcher {
 
-    static final String SUMMARY = "If a constructor or method returns an AutoCloseable, "
-            + "it should be annotated @MustBeClosed to ensure callers appropriately close resources";
     private static final String MUST_BE_CLOSED_TYPE = "com.google.errorprone.annotations.MustBeClosed";
     private static final String CAN_IGNORE_RETURN_VALUE_TYPE = "com.google.errorprone.annotations.CanIgnoreReturnValue";
 
@@ -71,10 +70,9 @@ public final class AutoCloseableMustBeClosed extends BugChecker implements Metho
     @Override
     public Description matchMethod(MethodTree tree, VisitorState state) {
         if (methodShouldBeAnnotatedMustBeClosed.matches(tree, state)) {
-            SuggestedFix.Builder builder = SuggestedFix.builder().addImport(MUST_BE_CLOSED_TYPE);
+            SuggestedFix.Builder builder = SuggestedFix.builder();
             String annotation = SuggestedFixes.qualifyType(state, builder, MUST_BE_CLOSED_TYPE);
             return buildDescription(tree)
-                    .setMessage(SUMMARY)
                     .addFix(builder.prefixWith(tree, "@" + annotation + " ").build())
                     .build();
         }
