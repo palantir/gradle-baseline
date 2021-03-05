@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: A new error-prone rule `PreferImmutableStreamExCollections` converts the StreamEx `toMap()` -> `toImmutableMap()`, `toImmutableList()` and `toImmutableSet()`
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1670
