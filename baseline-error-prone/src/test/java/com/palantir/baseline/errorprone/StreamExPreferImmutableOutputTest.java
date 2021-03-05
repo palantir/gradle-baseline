@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 public class StreamExPreferImmutableOutputTest {
 
     @Test
-    void replace_EntryStream_toMap() {
+    void toMap() {
         fix().addInputLines(
                         "Test.java",
                         "import one.util.streamex.EntryStream;",
@@ -37,6 +37,25 @@ public class StreamExPreferImmutableOutputTest {
                         "public class Test {",
                         "  Map<String, String> entryStream = EntryStream.of(Map.of(\"hello\", \"world\"))"
                                 + ".toImmutableMap();",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    void toSet() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import one.util.streamex.StreamEx;",
+                        "import java.util.Set;",
+                        "public class Test {",
+                        "  Set<String> s = StreamEx.of(\"Hello\").toSet();",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import one.util.streamex.StreamEx;",
+                        "import java.util.Set;",
+                        "public class Test {",
+                        "  Set<String> s = StreamEx.of(\"Hello\").toImmutableSet();",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }

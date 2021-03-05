@@ -44,24 +44,31 @@ public final class StreamExPreferImmutableOutput extends BugChecker implements B
 
     private static final long serialVersionUID = 1L;
 
-    private static final String ERROR_MESSAGE = "Prefer toImmutableMap()";
-
     private static final Matcher<ExpressionTree> TO_MAP = MethodMatchers.instanceMethod()
             .onExactClass("one.util.streamex.EntryStream")
             .named("toMap")
             .withParameters(Collections.emptyList());
 
+    private static final Matcher<ExpressionTree> TO_SET = MethodMatchers.instanceMethod()
+            .onDescendantOf("one.util.streamex.AbstractStreamEx")
+            .named("toSet")
+            .withParameters(Collections.emptyList());
+
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
         if (TO_MAP.matches(tree, state)) {
-            SuggestedFix.Builder fix = SuggestedFix.builder();
-
             String base = state.getSourceForNode(ASTHelpers.getReceiver(tree.getMethodSelect()));
-
             return buildDescription(tree)
-                    .setMessage(ERROR_MESSAGE)
-                    .addFix(fix.replace(tree.getMethodSelect(), base + ".toImmutableMap")
-                            .build())
+                    .setMessage("Prefer .toImmutableMap()")
+                    .addFix(SuggestedFix.replace(tree.getMethodSelect(), base + ".toImmutableMap"))
+                    .build();
+        }
+
+        if (TO_SET.matches(tree, state)) {
+            String base = state.getSourceForNode(ASTHelpers.getReceiver(tree.getMethodSelect()));
+            return buildDescription(tree)
+                    .setMessage("Prefer .toImmutableSet()")
+                    .addFix(SuggestedFix.replace(tree.getMethodSelect(), base + ".toImmutableSet"))
                     .build();
         }
 
