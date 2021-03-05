@@ -21,11 +21,10 @@ import com.google.errorprone.BugPattern;
 import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
-import com.google.errorprone.fixes.SuggestedFix;
+import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
-import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import java.util.Collections;
@@ -62,26 +61,26 @@ public final class PreferImmutableStreamExCollections extends BugChecker
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
         if (TO_MAP.matches(tree, state)) {
-            String base = state.getSourceForNode(ASTHelpers.getReceiver(tree.getMethodSelect()));
             return buildDescription(tree)
-                    .setMessage("Prefer .toImmutableMap()")
-                    .addFix(SuggestedFix.replace(tree.getMethodSelect(), base + ".toImmutableMap"))
+                    .setMessage("Prefer .toImmutableMap() because immutable collections are inherently threadsafe and"
+                            + " easier to reason about when passed between different methods.")
+                    .addFix(SuggestedFixes.renameMethodInvocation(tree, "toImmutableMap", state))
                     .build();
         }
 
         if (TO_SET.matches(tree, state)) {
-            String base = state.getSourceForNode(ASTHelpers.getReceiver(tree.getMethodSelect()));
             return buildDescription(tree)
-                    .setMessage("Prefer .toImmutableSet()")
-                    .addFix(SuggestedFix.replace(tree.getMethodSelect(), base + ".toImmutableSet"))
+                    .setMessage("Prefer .toImmutableSet() because immutable collections are inherently threadsafe and"
+                            + " easier to reason about when passed between different methods.")
+                    .addFix(SuggestedFixes.renameMethodInvocation(tree, "toImmutableSet", state))
                     .build();
         }
 
         if (TO_LIST.matches(tree, state)) {
-            String base = state.getSourceForNode(ASTHelpers.getReceiver(tree.getMethodSelect()));
             return buildDescription(tree)
-                    .setMessage("Prefer .toImmutableList()")
-                    .addFix(SuggestedFix.replace(tree.getMethodSelect(), base + ".toImmutableList"))
+                    .setMessage("Prefer .toImmutableList() because immutable collections are inherently threadsafe and"
+                            + " easier to reason about when passed between different methods.")
+                    .addFix(SuggestedFixes.renameMethodInvocation(tree, "toImmutableList", state))
                     .build();
         }
 
