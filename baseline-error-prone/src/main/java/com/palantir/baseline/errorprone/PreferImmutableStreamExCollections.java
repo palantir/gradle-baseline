@@ -32,7 +32,7 @@ import java.util.Collections;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "StreamExPreferImmutableStreamOutputs",
+        name = "PreferImmutableStreamExCollections",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
@@ -40,7 +40,8 @@ import java.util.Collections;
         summary = "Prefer immutable/unmodifable collections wherever possible because they are innately threadsafe, "
                 + "and easier to reason about when passed between different functions."
                 + " If you really want a mutable output then explicitly suppress this check.")
-public final class StreamExPreferImmutableOutput extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
+public final class PreferImmutableStreamExCollections extends BugChecker
+        implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
 
@@ -52,6 +53,11 @@ public final class StreamExPreferImmutableOutput extends BugChecker implements B
     private static final Matcher<ExpressionTree> TO_SET = MethodMatchers.instanceMethod()
             .onDescendantOf("one.util.streamex.AbstractStreamEx")
             .named("toSet")
+            .withParameters(Collections.emptyList());
+
+    private static final Matcher<ExpressionTree> TO_LIST = MethodMatchers.instanceMethod()
+            .onDescendantOf("one.util.streamex.AbstractStreamEx")
+            .named("toList")
             .withParameters(Collections.emptyList());
 
     @Override
@@ -69,6 +75,14 @@ public final class StreamExPreferImmutableOutput extends BugChecker implements B
             return buildDescription(tree)
                     .setMessage("Prefer .toImmutableSet()")
                     .addFix(SuggestedFix.replace(tree.getMethodSelect(), base + ".toImmutableSet"))
+                    .build();
+        }
+
+        if (TO_LIST.matches(tree, state)) {
+            String base = state.getSourceForNode(ASTHelpers.getReceiver(tree.getMethodSelect()));
+            return buildDescription(tree)
+                    .setMessage("Prefer .toImmutableList()")
+                    .addFix(SuggestedFix.replace(tree.getMethodSelect(), base + ".toImmutableList"))
                     .build();
         }
 

@@ -19,7 +19,7 @@ package com.palantir.baseline.errorprone;
 import com.google.errorprone.BugCheckerRefactoringTestHelper;
 import org.junit.jupiter.api.Test;
 
-public class StreamExPreferImmutableOutputTest {
+public class PreferImmutableStreamExCollectionsTest {
 
     @Test
     void toMap() {
@@ -60,7 +60,26 @@ public class StreamExPreferImmutableOutputTest {
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
+    @Test
+    void toList() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import one.util.streamex.StreamEx;",
+                        "import java.util.List;",
+                        "public class Test {",
+                        "  List<String> s = StreamEx.of(\"Hello\").toList();",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import one.util.streamex.StreamEx;",
+                        "import java.util.List;",
+                        "public class Test {",
+                        "  List<String> s = StreamEx.of(\"Hello\").toImmutableList();",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(new StreamExPreferImmutableOutput(), getClass());
+        return RefactoringValidator.of(new PreferImmutableStreamExCollections(), getClass());
     }
 }
