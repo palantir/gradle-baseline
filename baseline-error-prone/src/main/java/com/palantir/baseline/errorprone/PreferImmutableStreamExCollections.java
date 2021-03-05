@@ -35,7 +35,6 @@ import java.util.Collections;
         name = "PreferImmutableStreamExCollections",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = SeverityLevel.WARNING,
         summary = "Prefer immutable/unmodifable collections wherever possible because they are innately threadsafe, "
                 + "and easier to reason about when passed between different functions."
