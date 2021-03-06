@@ -219,7 +219,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
                     : CheckSeverity.OFF;
         }));
 
-        errorProneOptions.disable("CatchSpecificity", "UnusedVariable");
+        errorProneOptions.disable("AutoCloseableMustBeClosed", "CatchSpecificity", "UnusedVariable");
         errorProneOptions.error(
                 "EqualsHashCode",
                 "EqualsIncompatibleType",
