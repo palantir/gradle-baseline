@@ -71,6 +71,7 @@ public class BaselineErrorProneExtension {
             // TODO(ckozak): re-enable pending scala check
             // "ThrowSpecificity",
             "UnsafeGaugeRegistration",
+            "PreferImmutableStreamExCollections",
 
             // Built-in checks
             "ArrayEquals",
