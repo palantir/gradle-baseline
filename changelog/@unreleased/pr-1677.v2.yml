@@ -1,0 +1,8 @@
+type: improvement
+improvement:
+  description: |-
+    Disable AutoCloseableMustBeClosed by default
+
+    Projects can choose to manually opt-in by enabling the `AutoCloseableMustBeClosed` check as part of their baseline configuration and running `./gradlew compileJava compileTestJava -PerrorProneApply=AutoCloseableMustBeClosed && ./gradlew format` to apply the automated fixes.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1677
