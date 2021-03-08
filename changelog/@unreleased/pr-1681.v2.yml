@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: PreferImmutableStreamExCollections is disabled by default
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1681
