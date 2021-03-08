@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Revert PreferImmutableStreamExCollections
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1680
