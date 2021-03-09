@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: AutoCloseableMustBeClosed doesn't match method overrides
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1685
