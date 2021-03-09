@@ -127,6 +127,22 @@ public final class AutoCloseableMustBeClosedTest {
     }
 
     @Test
+    public void testIgnoreOverride() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.io.IOException;",
+                        "import java.net.Socket;",
+                        "import javax.net.ssl.SSLSocketFactory;",
+                        "abstract class Test extends SSLSocketFactory {",
+                        "    public Socket createSocket() throws IOException {",
+                        "        return new Socket();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testCanIgnoreReturnValue() {
         compilationHelper
                 .addSourceLines(
@@ -214,5 +230,44 @@ public final class AutoCloseableMustBeClosedTest {
                         "    }",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    public void testFixOverridesAnnotatedMethod() {
+        refactoringTestHelper
+                .addInputLines(
+                        "Test.java",
+                        "import com.google.errorprone.annotations.MustBeClosed;",
+                        "import java.io.*;",
+                        "class Test {",
+                        "  interface Iface {",
+                        "    @MustBeClosed",
+                        "    InputStream stream() throws IOException;",
+                        "  }",
+                        "  static class Impl implements Iface {",
+                        "    @Override",
+                        "    public InputStream stream() throws IOException {",
+                        "      return new FileInputStream(new File(\"test\"));",
+                        "    }",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.google.errorprone.annotations.MustBeClosed;",
+                        "import java.io.*;",
+                        "class Test {",
+                        "  interface Iface {",
+                        "    @MustBeClosed",
+                        "    InputStream stream() throws IOException;",
+                        "  }",
+                        "  static class Impl implements Iface {",
+                        "    @MustBeClosed",
+                        "    @Override",
+                        "    public InputStream stream() throws IOException {",
+                        "      return new FileInputStream(new File(\"test\"));",
+                        "    }",
+                        "  }",
+                        "}")
+                .doTest();
     }
 }
