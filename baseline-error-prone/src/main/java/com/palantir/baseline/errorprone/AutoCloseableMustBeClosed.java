@@ -27,7 +27,9 @@ import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
+import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.MethodTree;
+import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import java.util.stream.BaseStream;
 
 @AutoService(BugChecker.class)
@@ -48,7 +50,15 @@ public final class AutoCloseableMustBeClosed extends BugChecker implements Metho
             Matchers.not(Matchers.methodIsConstructor()),
             Matchers.methodReturns(Matchers.isSubtypeOf(AutoCloseable.class)),
             // ignore Stream for now, see https://errorprone.info/bugpattern/StreamResourceLeak
-            Matchers.not(Matchers.methodReturns(Matchers.isSubtypeOf(BaseStream.class))));
+            Matchers.not(Matchers.methodReturns(Matchers.isSubtypeOf(BaseStream.class))),
+            // Avoid noise when methods override base interfaces that aren't annotated. In most cases
+            // the supertype reference is used, so annotations are less helpful on overrides.
+            // The override must be annotated MustBeClosed if the supertype is annotated.
+            Matchers.anyOf(
+                    // It might be worthwhile to make an exception for generic types, for example
+                    // Supplier<InputStream> subtypes should definitely be annotated.
+                    Matchers.not(OverrideMethod.INSTANCE),
+                    Matchers.hasAnnotationOnAnyOverriddenMethod(MUST_BE_CLOSED_TYPE)));
 
     private static final Matcher<MethodTree> constructsAutoCloseable = Matchers.allOf(
             Matchers.methodIsConstructor(),
@@ -63,9 +73,9 @@ public final class AutoCloseableMustBeClosed extends BugChecker implements Metho
             Matchers.not(Matchers.hasAnnotation(CAN_IGNORE_RETURN_VALUE_TYPE));
 
     private static final Matcher<MethodTree> methodShouldBeAnnotatedMustBeClosed = Matchers.allOf(
-            Matchers.anyOf(methodReturnsAutoCloseable, constructsAutoCloseable),
             methodNotAnnotatedMustBeClosed,
-            methodNotAnnotatedIgnoreReturnValue);
+            methodNotAnnotatedIgnoreReturnValue,
+            Matchers.anyOf(methodReturnsAutoCloseable, constructsAutoCloseable));
 
     @Override
     public Description matchMethod(MethodTree tree, VisitorState state) {
@@ -77,5 +87,18 @@ public final class AutoCloseableMustBeClosed extends BugChecker implements Metho
                     .build();
         }
         return Description.NO_MATCH;
+    }
+
+    private enum OverrideMethod implements Matcher<MethodTree> {
+        INSTANCE;
+
+        @Override
+        public boolean matches(MethodTree tree, VisitorState state) {
+            MethodSymbol methodSym = ASTHelpers.getSymbol(tree);
+            if (methodSym == null) {
+                return false;
+            }
+            return !ASTHelpers.findSuperMethods(methodSym, state.getTypes()).isEmpty();
+        }
     }
 }
