@@ -47,6 +47,7 @@ public final class Baseline implements Plugin<Project> {
             proj.getPluginManager().apply(BaselineExactDependencies.class);
             proj.getPluginManager().apply(BaselineReleaseCompatibility.class);
             proj.getPluginManager().apply(BaselineTesting.class);
+            proj.getPluginManager().apply(BaselineJavaParameters.class);
 
             // TODO(dsanduleac): enable this when people's idea{} blocks no longer reference things like
             //    configurations.integrationTestCompile

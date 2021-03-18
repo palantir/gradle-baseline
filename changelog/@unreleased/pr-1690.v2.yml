@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Baseline applies the `-parameters` javac option for method parameter metadata
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1690
