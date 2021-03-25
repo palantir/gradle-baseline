@@ -2,7 +2,7 @@ description = 'Baseline configuration files for the Baseline Gradle plugin'
 
 apply plugin: 'java-library'
 apply plugin: 'nebula.maven-base-publish'
-apply from: "${rootDir}/gradle/publish-jar.gradle"
+apply plugin: 'com.palantir.external-publish-jar'
 
 task zipConfig(type: Zip) {
     from('resources') {
