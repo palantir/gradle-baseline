@@ -1,7 +1,5 @@
-apply plugin: 'nebula.maven-publish'
-apply plugin: 'nebula.source-jar'
 apply plugin: 'java-library'
-apply from: "${rootDir}/gradle/publish-jar.gradle"
+apply plugin: 'com.palantir.external-publish-jar'
 
 dependencies {
     compile 'com.google.errorprone:error_prone_refaster'

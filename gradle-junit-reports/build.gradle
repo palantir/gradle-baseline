@@ -1,5 +1,5 @@
 apply plugin: 'java-library'
-apply from: "${rootDir}/gradle/publish-jar.gradle"
+apply plugin: 'com.palantir.external-publish-jar'
 
 dependencies {
   compile gradleApi()
