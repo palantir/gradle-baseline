@@ -40,7 +40,7 @@ public final class IncubatingMethod extends BugChecker
 
     /** Matcher for the Incubating annotation, using the full qualified path. */
     private static final Matcher<Tree> INCUBATING_MATCHER =
-            Matchers.hasAnnotation("com.palantir.conjure.java.lib.internal.Incubating");
+            Matchers.symbolHasAnnotation("com.palantir.conjure.java.lib.internal.Incubating");
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
