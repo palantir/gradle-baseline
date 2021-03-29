@@ -17,7 +17,7 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.errorprone.CompilationTestHelper;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class IncubatingMethodTest {
 

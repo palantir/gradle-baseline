@@ -1,0 +1,8 @@
+type: fix
+fix:
+  description: |-
+    Fix IncubatingMethod check
+
+    The check was non-functional; the test did not catch this since it was using the wrong `@Test` annotation. Fixed both issues.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1698
