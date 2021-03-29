@@ -1,7 +1,5 @@
 import net.ltgt.gradle.errorprone.CheckSeverity
 
-apply plugin: 'nebula.maven-publish'
-apply plugin: 'nebula.source-jar'
 apply plugin: 'java-library'
 apply plugin: 'com.palantir.external-publish-jar'
 
@@ -46,6 +44,6 @@ tasks.withType(JavaCompile) {
 // TODO(dsanduleac): this might not be necessary in gradle 6 anymore
 def originalGroup = project.group
 group = originalGroup + '-internal'
-publishing.publications.nebula {
+publishing.publications.maven {
     groupId = originalGroup
 }

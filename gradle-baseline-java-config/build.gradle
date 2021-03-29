@@ -1,7 +1,6 @@
 description = 'Baseline configuration files for the Baseline Gradle plugin'
 
 apply plugin: 'java-library'
-apply plugin: 'nebula.maven-base-publish'
 apply plugin: 'com.palantir.external-publish-jar'
 
 task zipConfig(type: Zip) {
@@ -12,7 +11,7 @@ task zipConfig(type: Zip) {
 
 publishing {
     publications {
-        nebula(MavenPublication) {
+        maven(MavenPublication) {
             artifact(zipConfig) {
                 extension 'zip'
             }
