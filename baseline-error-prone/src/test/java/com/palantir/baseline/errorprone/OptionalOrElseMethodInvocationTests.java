@@ -29,7 +29,7 @@ public final class OptionalOrElseMethodInvocationTests {
     @BeforeEach
     public void before() {
         compilationHelper = CompilationTestHelper.newInstance(OptionalOrElseMethodInvocation.class, getClass());
-        refactoringTestHelper = RefactoringValidator.of(new OptionalOrElseMethodInvocation(), getClass());
+        refactoringTestHelper = RefactoringValidator.of(OptionalOrElseMethodInvocation.class, getClass());
     }
 
     @Test

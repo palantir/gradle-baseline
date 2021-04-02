@@ -40,7 +40,6 @@ import java.util.Set;
         name = "LogsafeArgName",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = SeverityLevel.ERROR,
         summary = "Prevent certain argument names from being logged as safe.")
 public final class LogsafeArgName extends BugChecker implements MethodInvocationTreeMatcher {

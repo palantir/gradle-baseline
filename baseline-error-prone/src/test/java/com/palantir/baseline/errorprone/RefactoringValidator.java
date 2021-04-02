@@ -34,14 +34,16 @@ final class RefactoringValidator {
     private String outputPath;
     private String[] outputLines;
 
-    private RefactoringValidator(BugChecker refactoringBugChecker, Class<?> clazz) {
-        this.delegate = BugCheckerRefactoringTestHelper.newInstance(refactoringBugChecker, clazz);
-        this.compilationHelper = CompilationTestHelper.newInstance(refactoringBugChecker.getClass(), clazz);
+    private RefactoringValidator(Class<? extends BugChecker> checkerClass, Class<?> clazz, String... args) {
+        this.delegate =
+                BugCheckerRefactoringTestHelper.newInstance(checkerClass, clazz).setArgs(args);
+        this.compilationHelper =
+                CompilationTestHelper.newInstance(checkerClass, clazz).setArgs(args);
     }
 
     @CheckReturnValue
-    static RefactoringValidator of(BugChecker refactoringBugChecker, Class<?> clazz) {
-        return new RefactoringValidator(refactoringBugChecker, clazz);
+    static RefactoringValidator of(Class<? extends BugChecker> checkerClass, Class<?> clazz, String... args) {
+        return new RefactoringValidator(checkerClass, clazz, args);
     }
 
     @CheckReturnValue

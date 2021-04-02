@@ -47,7 +47,6 @@ import java.util.stream.Stream;
         name = "StringBuilderConstantParameters",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = SeverityLevel.WARNING,
         summary = "StringBuilder with a constant number of parameters should be replaced by simple concatenation")
 public final class StringBuilderConstantParameters extends BugChecker

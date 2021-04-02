@@ -53,7 +53,6 @@ import javax.annotation.Nullable;
         name = "LambdaMethodReference",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = SeverityLevel.WARNING,
         summary = "Lambda should be a method reference")
 @SuppressWarnings("checkstyle:CyclomaticComplexity")

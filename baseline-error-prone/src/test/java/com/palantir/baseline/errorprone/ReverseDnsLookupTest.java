@@ -49,6 +49,6 @@ class ReverseDnsLookupTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(new ReverseDnsLookup(), getClass());
+        return RefactoringValidator.of(ReverseDnsLookup.class, getClass());
     }
 }

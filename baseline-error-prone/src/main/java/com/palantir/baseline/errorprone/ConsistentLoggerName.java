@@ -33,7 +33,6 @@ import javax.lang.model.element.Modifier;
         name = "ConsistentLoggerName",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = BugPattern.SeverityLevel.WARNING,
         summary = "Loggers created using getLogger(Class<?>) must be named 'log'.")
 public final class ConsistentLoggerName extends BugChecker implements BugChecker.VariableTreeMatcher {

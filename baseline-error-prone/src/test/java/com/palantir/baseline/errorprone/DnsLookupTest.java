@@ -42,6 +42,6 @@ class DnsLookupTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(new DnsLookup(), getClass());
+        return RefactoringValidator.of(DnsLookup.class, getClass());
     }
 }

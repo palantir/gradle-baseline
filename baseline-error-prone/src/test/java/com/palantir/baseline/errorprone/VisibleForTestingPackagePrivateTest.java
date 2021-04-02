@@ -129,6 +129,6 @@ class VisibleForTestingPackagePrivateTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(new VisibleForTestingPackagePrivate(), getClass());
+        return RefactoringValidator.of(VisibleForTestingPackagePrivate.class, getClass());
     }
 }

@@ -38,7 +38,6 @@ import java.util.regex.Pattern;
         name = "Slf4jThrowable",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = SeverityLevel.WARNING,
         summary = "Slf4j loggers require throwables to be the last parameter otherwise a stack trace is not produced. "
                 + "Documentation is available here: http://www.slf4j.org/faq.html#paramException")

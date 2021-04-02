@@ -119,6 +119,6 @@ class ThrowErrorTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(new ThrowError(), getClass());
+        return RefactoringValidator.of(ThrowError.class, getClass());
     }
 }

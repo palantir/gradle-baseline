@@ -52,7 +52,7 @@ class ObjectsHashCodeUnnecessaryVarargsTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(new ObjectsHashCodeUnnecessaryVarargs(), getClass());
+        return RefactoringValidator.of(ObjectsHashCodeUnnecessaryVarargs.class, getClass());
     }
 
     public CompilationTestHelper helper() {

@@ -335,7 +335,7 @@ class RedundantModifierTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(new RedundantModifier(), getClass());
+        return RefactoringValidator.of(RedundantModifier.class, getClass());
     }
 
     private CompilationTestHelper helper() {

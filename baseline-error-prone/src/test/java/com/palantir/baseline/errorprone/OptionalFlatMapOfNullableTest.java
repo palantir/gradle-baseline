@@ -89,6 +89,6 @@ class OptionalFlatMapOfNullableTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(new OptionalFlatMapOfNullable(), getClass());
+        return RefactoringValidator.of(OptionalFlatMapOfNullable.class, getClass());
     }
 }

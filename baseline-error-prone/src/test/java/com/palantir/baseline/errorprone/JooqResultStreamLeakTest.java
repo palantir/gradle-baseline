@@ -25,7 +25,7 @@ public final class JooqResultStreamLeakTest {
             CompilationTestHelper.newInstance(JooqResultStreamLeak.class, getClass());
 
     private final RefactoringValidator refactoringValidator =
-            RefactoringValidator.of(new JooqResultStreamLeak(), getClass());
+            RefactoringValidator.of(JooqResultStreamLeak.class, getClass());
 
     @Test
     public void test_positive() {

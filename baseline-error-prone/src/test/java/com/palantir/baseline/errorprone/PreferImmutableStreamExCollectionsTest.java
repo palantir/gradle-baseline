@@ -91,6 +91,6 @@ public class PreferImmutableStreamExCollectionsTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(new PreferImmutableStreamExCollections(), getClass());
+        return RefactoringValidator.of(PreferImmutableStreamExCollections.class, getClass());
     }
 }

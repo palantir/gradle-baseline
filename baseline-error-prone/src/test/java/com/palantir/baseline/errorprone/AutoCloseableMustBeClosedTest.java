@@ -29,7 +29,7 @@ public final class AutoCloseableMustBeClosedTest {
     @BeforeEach
     public void before() {
         compilationHelper = CompilationTestHelper.newInstance(AutoCloseableMustBeClosed.class, getClass());
-        refactoringTestHelper = RefactoringValidator.of(new AutoCloseableMustBeClosed(), getClass());
+        refactoringTestHelper = RefactoringValidator.of(AutoCloseableMustBeClosed.class, getClass());
     }
 
     @Test

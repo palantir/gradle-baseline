@@ -75,6 +75,6 @@ class RedundantMethodReferenceTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(new RedundantMethodReference(), getClass());
+        return RefactoringValidator.of(RedundantMethodReference.class, getClass());
     }
 }

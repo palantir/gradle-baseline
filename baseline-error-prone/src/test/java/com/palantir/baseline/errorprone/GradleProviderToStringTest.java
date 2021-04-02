@@ -28,7 +28,7 @@ public class GradleProviderToStringTest {
     @BeforeEach
     public void before() {
         compilationHelper = CompilationTestHelper.newInstance(GradleProviderToString.class, getClass());
-        refactoringValidator = RefactoringValidator.of(new GradleProviderToString(), getClass());
+        refactoringValidator = RefactoringValidator.of(GradleProviderToString.class, getClass());
     }
 
     @Test

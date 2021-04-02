@@ -51,6 +51,6 @@ class DeprecatedGuavaObjectsTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(new DeprecatedGuavaObjects(), getClass());
+        return RefactoringValidator.of(DeprecatedGuavaObjects.class, getClass());
     }
 }

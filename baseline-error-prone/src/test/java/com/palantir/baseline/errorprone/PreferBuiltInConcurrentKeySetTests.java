@@ -53,7 +53,7 @@ public class PreferBuiltInConcurrentKeySetTests {
 
     @Test
     public void auto_fix() {
-        RefactoringValidator.of(new PreferBuiltInConcurrentKeySet(), getClass())
+        RefactoringValidator.of(PreferBuiltInConcurrentKeySet.class, getClass())
                 .addInputLines(
                         "Test.java",
                         "import com.google.common.collect.Sets;",

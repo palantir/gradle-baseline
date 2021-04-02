@@ -34,7 +34,6 @@ import com.sun.tools.javac.code.Type;
         name = "JooqResultStreamLeak",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = BugPattern.SeverityLevel.WARNING,
         summary = "Methods that return an autocloseable resource on jOOQ's ResultQuery should be closed using"
                 + " try-with-resources. Not doing so can result in leaked database resources (such as connections"

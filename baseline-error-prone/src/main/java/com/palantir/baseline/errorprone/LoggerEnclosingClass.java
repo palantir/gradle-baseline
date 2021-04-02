@@ -38,7 +38,6 @@ import com.sun.tools.javac.code.Symbol;
         name = "LoggerEnclosingClass",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = BugPattern.SeverityLevel.WARNING,
         summary = "Loggers created using getLogger(Class<?>) must reference their enclosing class.")
 public final class LoggerEnclosingClass extends BugChecker implements BugChecker.VariableTreeMatcher {

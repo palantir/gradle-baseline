@@ -63,6 +63,6 @@ final class JavaTimeSystemDefaultTimeZoneTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(new JavaTimeSystemDefaultTimeZone(), getClass());
+        return RefactoringValidator.of(JavaTimeSystemDefaultTimeZone.class, getClass());
     }
 }

@@ -118,7 +118,7 @@ public final class PreferCollectionTransformTests {
 
     @Test
     public void auto_fix_Iterables_transform_List() {
-        RefactoringValidator.of(new PreferCollectionTransform(), getClass())
+        RefactoringValidator.of(PreferCollectionTransform.class, getClass())
                 .addInputLines(
                         "Test.java",
                         "import com.google.common.collect.Iterables;",
@@ -143,7 +143,7 @@ public final class PreferCollectionTransformTests {
 
     @Test
     public void auto_fix_Iterables_transform_Collection() {
-        RefactoringValidator.of(new PreferCollectionTransform(), getClass())
+        RefactoringValidator.of(PreferCollectionTransform.class, getClass())
                 .addInputLines(
                         "Test.java",
                         "import com.google.common.collect.Iterables;",

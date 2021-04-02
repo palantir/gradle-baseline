@@ -41,7 +41,6 @@ import com.sun.source.tree.Tree;
         name = "OptionalOrElseGetValue",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = SeverityLevel.WARNING,
         summary = "If lambda passed to Optional#orElseGet returns a simple expression, use Optional#orElse instead")
 public final class OptionalOrElseGetValue extends BugChecker implements MethodInvocationTreeMatcher {

@@ -247,7 +247,7 @@ class ReadReturnValueIgnoredTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(new ReadReturnValueIgnored(), getClass());
+        return RefactoringValidator.of(ReadReturnValueIgnored.class, getClass());
     }
 
     private CompilationTestHelper helper() {

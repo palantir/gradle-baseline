@@ -40,7 +40,6 @@ import javax.lang.model.element.Modifier;
         name = "ImplicitPublicBuilderConstructor",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = BugPattern.SeverityLevel.WARNING,
         summary = "A Builder with a static factory method on the encapsulating class must have a private constructor. "
                 + "Minimizing unnecessary public API prevents future API breaks from impacting consumers. ")

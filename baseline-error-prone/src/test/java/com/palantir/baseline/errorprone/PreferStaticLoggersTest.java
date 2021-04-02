@@ -55,6 +55,6 @@ class PreferStaticLoggersTest {
     }
 
     RefactoringValidator fix() {
-        return RefactoringValidator.of(new PreferStaticLoggers(), getClass());
+        return RefactoringValidator.of(PreferStaticLoggers.class, getClass());
     }
 }

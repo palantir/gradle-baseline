@@ -270,6 +270,6 @@ public class FinalClassTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(new FinalClass(), getClass());
+        return RefactoringValidator.of(FinalClass.class, getClass());
     }
 }

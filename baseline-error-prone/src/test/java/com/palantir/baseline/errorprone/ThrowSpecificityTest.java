@@ -224,6 +224,6 @@ class ThrowSpecificityTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(new ThrowSpecificity(), getClass());
+        return RefactoringValidator.of(ThrowSpecificity.class, getClass());
     }
 }

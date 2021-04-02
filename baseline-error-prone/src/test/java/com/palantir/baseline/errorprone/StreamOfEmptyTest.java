@@ -43,6 +43,6 @@ class StreamOfEmptyTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(new StreamOfEmpty(), getClass());
+        return RefactoringValidator.of(StreamOfEmpty.class, getClass());
     }
 }
