@@ -197,6 +197,6 @@ class Slf4jLevelCheckTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(new Slf4jLevelCheck(), getClass());
+        return RefactoringValidator.of(Slf4jLevelCheck.class, getClass());
     }
 }

@@ -16,9 +16,7 @@
 
 package com.palantir.baseline.errorprone;
 
-import com.google.common.collect.ImmutableList;
 import com.google.errorprone.CompilationTestHelper;
-import com.google.errorprone.ErrorProneFlags;
 import org.junit.jupiter.api.Test;
 
 public final class LogsafeArgNameTest {
@@ -114,14 +112,13 @@ public final class LogsafeArgNameTest {
 
     private static RefactoringValidator getRefactoringHelper() {
         return RefactoringValidator.of(
-                new LogsafeArgName(ErrorProneFlags.builder()
-                        .putFlag(LogsafeArgName.UNSAFE_ARG_NAMES_FLAG, "foo,bar")
-                        .build()),
-                LogsafeArgNameTest.class);
+                LogsafeArgName.class,
+                LogsafeArgNameTest.class,
+                "-XepOpt:" + LogsafeArgName.UNSAFE_ARG_NAMES_FLAG + "=foo,bar");
     }
 
     private static CompilationTestHelper getCompilationHelper() {
         return CompilationTestHelper.newInstance(LogsafeArgName.class, LogsafeArgNameTest.class)
-                .setArgs(ImmutableList.of("-XepOpt:" + LogsafeArgName.UNSAFE_ARG_NAMES_FLAG + "=foo,bar"));
+                .setArgs("-XepOpt:" + LogsafeArgName.UNSAFE_ARG_NAMES_FLAG + "=foo,bar");
     }
 }

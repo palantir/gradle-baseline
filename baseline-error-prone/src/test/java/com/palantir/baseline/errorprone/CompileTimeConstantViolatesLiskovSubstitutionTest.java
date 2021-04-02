@@ -202,6 +202,6 @@ class CompileTimeConstantViolatesLiskovSubstitutionTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(new CompileTimeConstantViolatesLiskovSubstitution(), getClass());
+        return RefactoringValidator.of(CompileTimeConstantViolatesLiskovSubstitution.class, getClass());
     }
 }

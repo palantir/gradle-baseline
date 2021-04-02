@@ -30,7 +30,6 @@ import com.sun.source.tree.Tree;
 @AutoService(BugChecker.class)
 @BugPattern(
         name = "IncubatingMethod",
-        providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = BugPattern.SeverityLevel.ERROR,
         summary = "You should avoid using incubating methods where possible, since they have very weak stability"
                 + " guarantees. You can explicitly disable this check on a case-by-case basis using"

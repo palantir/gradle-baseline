@@ -130,6 +130,6 @@ class ImplicitPublicBuilderConstructorTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(new ImplicitPublicBuilderConstructor(), getClass());
+        return RefactoringValidator.of(ImplicitPublicBuilderConstructor.class, getClass());
     }
 }

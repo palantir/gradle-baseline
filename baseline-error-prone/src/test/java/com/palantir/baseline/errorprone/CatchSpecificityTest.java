@@ -621,6 +621,6 @@ class CatchSpecificityTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(new CatchSpecificity(), getClass());
+        return RefactoringValidator.of(CatchSpecificity.class, getClass());
     }
 }

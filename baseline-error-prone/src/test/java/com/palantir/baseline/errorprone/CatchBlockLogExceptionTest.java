@@ -193,6 +193,6 @@ public class CatchBlockLogExceptionTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(new CatchBlockLogException(), getClass());
+        return RefactoringValidator.of(CatchBlockLogException.class, getClass());
     }
 }

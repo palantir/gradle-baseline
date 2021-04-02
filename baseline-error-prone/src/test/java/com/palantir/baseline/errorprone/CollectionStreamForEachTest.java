@@ -47,6 +47,6 @@ class CollectionStreamForEachTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(new CollectionStreamForEach(), getClass());
+        return RefactoringValidator.of(CollectionStreamForEach.class, getClass());
     }
 }

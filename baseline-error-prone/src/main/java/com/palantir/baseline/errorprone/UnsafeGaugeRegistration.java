@@ -34,7 +34,6 @@ import com.sun.tools.javac.code.Symbol;
         name = "UnsafeGaugeRegistration",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = BugPattern.SeverityLevel.WARNING,
         summary = "Using TaggedMetricRegistry.gauge is equivalent to map.putIfAbsent, and can result in subtle "
                 + "resource leaks. Prefer replacing existing gauge values.\n"

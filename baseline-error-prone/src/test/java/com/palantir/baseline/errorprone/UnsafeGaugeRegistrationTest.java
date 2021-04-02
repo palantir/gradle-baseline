@@ -24,7 +24,7 @@ class UnsafeGaugeRegistrationTest {
 
     @Test
     void testFix() {
-        RefactoringValidator.of(new UnsafeGaugeRegistration(), getClass())
+        RefactoringValidator.of(UnsafeGaugeRegistration.class, getClass())
                 .addInputLines(
                         "Test.java",
                         "import com.palantir.tritium.metrics.registry.MetricName;",
@@ -48,7 +48,7 @@ class UnsafeGaugeRegistrationTest {
 
     @Test
     void testKnownBug() {
-        RefactoringValidator.of(new UnsafeGaugeRegistration(), getClass())
+        RefactoringValidator.of(UnsafeGaugeRegistration.class, getClass())
                 .addInputLines(
                         "Test.java",
                         "import com.codahale.metrics.Gauge;",

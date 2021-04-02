@@ -94,6 +94,6 @@ public final class ExtendsErrorOrThrowableTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(new ExtendsErrorOrThrowable(), getClass());
+        return RefactoringValidator.of(ExtendsErrorOrThrowable.class, getClass());
     }
 }

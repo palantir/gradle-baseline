@@ -136,6 +136,6 @@ class LoggerEnclosingClassTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(new LoggerEnclosingClass(), getClass());
+        return RefactoringValidator.of(LoggerEnclosingClass.class, getClass());
     }
 }

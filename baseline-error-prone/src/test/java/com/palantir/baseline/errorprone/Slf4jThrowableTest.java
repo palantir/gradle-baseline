@@ -70,6 +70,6 @@ class Slf4jThrowableTest {
     }
 
     RefactoringValidator fix() {
-        return RefactoringValidator.of(new Slf4jThrowable(), getClass());
+        return RefactoringValidator.of(Slf4jThrowable.class, getClass());
     }
 }

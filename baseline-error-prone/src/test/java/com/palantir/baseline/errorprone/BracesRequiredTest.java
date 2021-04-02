@@ -252,6 +252,6 @@ public class BracesRequiredTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(new BracesRequired(), getClass());
+        return RefactoringValidator.of(BracesRequired.class, getClass());
     }
 }

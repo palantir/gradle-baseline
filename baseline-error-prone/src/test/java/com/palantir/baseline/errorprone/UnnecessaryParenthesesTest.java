@@ -15,7 +15,6 @@
  */
 package com.palantir.baseline.errorprone;
 
-import com.google.common.collect.ImmutableList;
 import com.google.errorprone.CompilationTestHelper;
 import com.google.errorprone.bugpatterns.UnnecessaryParentheses;
 import org.junit.jupiter.api.Test;
@@ -29,7 +28,7 @@ public class UnnecessaryParenthesesTest {
     public void testSwitchExpression() {
         CompilationTestHelper compilationHelper = CompilationTestHelper.newInstance(
                         UnnecessaryParentheses.class, getClass())
-                .setArgs(ImmutableList.of("--enable-preview", "--release", "15"));
+                .setArgs("--enable-preview", "--release", "15");
 
         compilationHelper
                 .addSourceLines(

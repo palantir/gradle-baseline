@@ -26,7 +26,7 @@ class ExecutorSubmitRunnableFutureIgnoredTest {
 
     @Test
     void testFix() {
-        RefactoringValidator.of(new ExecutorSubmitRunnableFutureIgnored(), getClass())
+        RefactoringValidator.of(ExecutorSubmitRunnableFutureIgnored.class, getClass())
                 .addInputLines(
                         "Test.java",
                         "import " + ExecutorService.class.getName() + ';',

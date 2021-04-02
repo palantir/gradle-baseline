@@ -19,7 +19,6 @@ package com.palantir.baseline.errorprone;
 import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.BugPattern.LinkType;
-import com.google.errorprone.BugPattern.ProvidesFix;
 import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
@@ -36,7 +35,6 @@ import com.sun.tools.javac.code.Symbol;
         name = "TooManyArguments",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = LinkType.CUSTOM,
-        providesFix = ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = SeverityLevel.WARNING,
         summary = "Prefer Interface that take few arguments rather than many.")
 public final class TooManyArguments extends BugChecker implements BugChecker.MethodTreeMatcher {

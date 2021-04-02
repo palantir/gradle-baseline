@@ -36,7 +36,6 @@ import java.util.Optional;
         name = "ExtendsErrorOrThrowable",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = BugPattern.SeverityLevel.ERROR,
         summary = "Class should not extend Error or Throwable directly. While allowed by java "
                 + "it can lead to surprising behaviour if users end up catching Error or Throwable.")

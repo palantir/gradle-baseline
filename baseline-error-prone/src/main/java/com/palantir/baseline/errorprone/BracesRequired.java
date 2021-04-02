@@ -36,7 +36,6 @@ import javax.annotation.Nullable;
         name = "BracesRequired",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = BugPattern.SeverityLevel.WARNING,
         summary = "Braces are required for readability")
 public final class BracesRequired extends BugChecker

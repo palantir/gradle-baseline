@@ -45,7 +45,7 @@ public class StringBuilderConstantParametersTests {
 
     @Test
     public void shouldWarnOnConstantNumberOfParams_fix() {
-        RefactoringValidator.of(new StringBuilderConstantParameters(), getClass())
+        RefactoringValidator.of(StringBuilderConstantParameters.class, getClass())
                 .addInputLines(
                         "Test.java",
                         "class Test {",
@@ -74,7 +74,7 @@ public class StringBuilderConstantParametersTests {
 
     @Test
     public void shouldWarnOnConstantNumberOfParams_stringCtor_fix() {
-        RefactoringValidator.of(new StringBuilderConstantParameters(), getClass())
+        RefactoringValidator.of(StringBuilderConstantParameters.class, getClass())
                 .addInputLines(
                         "Test.java",
                         "class Test {",
@@ -108,7 +108,7 @@ public class StringBuilderConstantParametersTests {
 
     @Test
     public void shouldWarnOnConstantNumberOfParams_charSequenceCtor_fix() {
-        RefactoringValidator.of(new StringBuilderConstantParameters(), getClass())
+        RefactoringValidator.of(StringBuilderConstantParameters.class, getClass())
                 .addInputLines(
                         "Test.java",
                         "class Test {",
@@ -142,7 +142,7 @@ public class StringBuilderConstantParametersTests {
 
     @Test
     public void shouldWarnOnConstantNumberOfNonConstantParams_fix() {
-        RefactoringValidator.of(new StringBuilderConstantParameters(), getClass())
+        RefactoringValidator.of(StringBuilderConstantParameters.class, getClass())
                 .addInputLines(
                         "Test.java",
                         "class Test {",
@@ -162,7 +162,7 @@ public class StringBuilderConstantParametersTests {
 
     @Test
     public void shouldWarnOnConstantNumberOfNonConstantParams_firstString_fix() {
-        RefactoringValidator.of(new StringBuilderConstantParameters(), getClass())
+        RefactoringValidator.of(StringBuilderConstantParameters.class, getClass())
                 .addInputLines(
                         "Test.java",
                         "class Test {",
@@ -213,7 +213,7 @@ public class StringBuilderConstantParametersTests {
 
     @Test
     public void doesNotRemoveComments() {
-        RefactoringValidator.of(new StringBuilderConstantParameters(), getClass())
+        RefactoringValidator.of(StringBuilderConstantParameters.class, getClass())
                 .addInputLines(
                         "Test.java",
                         "class Test {",
@@ -231,7 +231,7 @@ public class StringBuilderConstantParametersTests {
 
     @Test
     public void shouldWarnOnNoParams_fix() {
-        RefactoringValidator.of(new StringBuilderConstantParameters(), getClass())
+        RefactoringValidator.of(StringBuilderConstantParameters.class, getClass())
                 .addInputLines(
                         "Test.java",
                         "class Test {",
@@ -245,7 +245,7 @@ public class StringBuilderConstantParametersTests {
 
     @Test
     public void suggestedFixRetainsCast() {
-        RefactoringValidator.of(new StringBuilderConstantParameters(), getClass())
+        RefactoringValidator.of(StringBuilderConstantParameters.class, getClass())
                 .addInputLines(
                         "Test.java",
                         "class Test {",
@@ -265,7 +265,7 @@ public class StringBuilderConstantParametersTests {
 
     @Test
     public void suggestedFixHandlesTernary() {
-        RefactoringValidator.of(new StringBuilderConstantParameters(), getClass())
+        RefactoringValidator.of(StringBuilderConstantParameters.class, getClass())
                 .addInputLines(
                         "Test.java",
                         "class Test {",
@@ -289,7 +289,7 @@ public class StringBuilderConstantParametersTests {
 
     @Test
     public void suggestedFixHandlesAddition() {
-        RefactoringValidator.of(new StringBuilderConstantParameters(), getClass())
+        RefactoringValidator.of(StringBuilderConstantParameters.class, getClass())
                 .addInputLines(
                         "Test.java",
                         "class Test {",

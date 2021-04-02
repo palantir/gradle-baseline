@@ -43,7 +43,6 @@ import java.util.regex.Pattern;
         name = "Slf4jLogsafeArgs",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = SeverityLevel.WARNING,
         summary = "Allow only com.palantir.logsafe.Arg types, or vararg arrays, as parameter inputs to slf4j log "
                 + "messages.")

@@ -16,7 +16,6 @@
 
 package com.palantir.baseline.errorprone;
 
-import com.google.common.collect.ImmutableList;
 import com.google.errorprone.BugCheckerRefactoringTestHelper.TestMode;
 import com.google.errorprone.CompilationTestHelper;
 import org.junit.jupiter.api.BeforeEach;
@@ -32,7 +31,7 @@ public class StrictUnusedVariableTest {
     @BeforeEach
     public void before() {
         compilationHelper = CompilationTestHelper.newInstance(StrictUnusedVariable.class, getClass());
-        refactoringTestHelper = RefactoringValidator.of(new StrictUnusedVariable(), getClass());
+        refactoringTestHelper = RefactoringValidator.of(StrictUnusedVariable.class, getClass());
     }
 
     @Test
@@ -302,7 +301,7 @@ public class StrictUnusedVariableTest {
     @DisabledForJreRange(max = JRE.JAVA_13)
     public void testRecord() {
         compilationHelper = CompilationTestHelper.newInstance(StrictUnusedVariable.class, getClass())
-                .setArgs(ImmutableList.of("--enable-preview", "--release", "15"));
+                .setArgs("--enable-preview", "--release", "15");
 
         compilationHelper
                 .addSourceLines("Test.java", "class Test {", "  record Foo(int bar) {}", "}")

@@ -65,6 +65,6 @@ class UnnecessaryLambdaArgumentParenthesesTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(new UnnecessaryLambdaArgumentParentheses(), getClass());
+        return RefactoringValidator.of(UnnecessaryLambdaArgumentParentheses.class, getClass());
     }
 }

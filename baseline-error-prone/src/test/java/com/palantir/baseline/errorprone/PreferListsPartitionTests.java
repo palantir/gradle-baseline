@@ -85,7 +85,7 @@ public final class PreferListsPartitionTests {
 
     @Test
     public void auto_fix_Iterables_partition() {
-        RefactoringValidator.of(new PreferListsPartition(), getClass())
+        RefactoringValidator.of(PreferListsPartition.class, getClass())
                 .addInputLines(
                         "Test.java",
                         "import com.google.common.collect.Iterables;",

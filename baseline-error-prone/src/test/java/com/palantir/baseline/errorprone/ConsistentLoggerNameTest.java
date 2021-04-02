@@ -109,6 +109,6 @@ class ConsistentLoggerNameTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(new ConsistentLoggerName(), getClass());
+        return RefactoringValidator.of(ConsistentLoggerName.class, getClass());
     }
 }

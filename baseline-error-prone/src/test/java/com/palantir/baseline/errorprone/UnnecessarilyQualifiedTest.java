@@ -51,6 +51,6 @@ class UnnecessarilyQualifiedTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(new UnnecessarilyQualified(), getClass());
+        return RefactoringValidator.of(UnnecessarilyQualified.class, getClass());
     }
 }

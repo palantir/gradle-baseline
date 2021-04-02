@@ -37,7 +37,6 @@ import java.util.stream.BaseStream;
         name = "AutoCloseableMustBeClosed",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = SeverityLevel.SUGGESTION,
         summary = "If a constructor or method returns an AutoCloseable, it should be annotated "
                 + "@MustBeClosed to ensure callers appropriately close resources")

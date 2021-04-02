@@ -32,7 +32,7 @@ public class LambdaMethodReferenceTest {
     }
 
     private RefactoringValidator refactor() {
-        return RefactoringValidator.of(new LambdaMethodReference(), getClass());
+        return RefactoringValidator.of(LambdaMethodReference.class, getClass());
     }
 
     @Test

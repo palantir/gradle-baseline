@@ -40,7 +40,6 @@ import javax.lang.model.element.Modifier;
         name = "PreferStaticLoggers",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = SeverityLevel.WARNING,
         summary = "Prefer static logger instances over instances to reduce object initialization costs and heap "
                 + "overhead. Some logger frameworks may run expensive classloader lookups when loggers are requested "

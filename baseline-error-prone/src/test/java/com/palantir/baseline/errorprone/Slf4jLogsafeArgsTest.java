@@ -219,6 +219,6 @@ public final class Slf4jLogsafeArgsTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(new Slf4jLogsafeArgs(), getClass());
+        return RefactoringValidator.of(Slf4jLogsafeArgs.class, getClass());
     }
 }

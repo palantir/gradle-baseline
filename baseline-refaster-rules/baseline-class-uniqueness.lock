@@ -41,10 +41,6 @@
   - org.checkerframework.checker.fenum.qual.SwingTitleJustification
   - org.checkerframework.checker.fenum.qual.SwingTitlePosition
   - org.checkerframework.checker.fenum.qual.SwingVerticalOrientation
-  - org.checkerframework.checker.formatter.FormatUtil
-  - org.checkerframework.checker.formatter.FormatUtil$Conversion
-  - org.checkerframework.checker.formatter.FormatUtil$ExcessiveOrMissingFormatArgumentException
-  - org.checkerframework.checker.formatter.FormatUtil$IllegalFormatConversionCategoryException
   - org.checkerframework.checker.formatter.qual.ConversionCategory
   - org.checkerframework.checker.formatter.qual.Format
   - org.checkerframework.checker.formatter.qual.FormatBottom
@@ -67,9 +63,6 @@
   - org.checkerframework.checker.i18n.qual.Localized
   - org.checkerframework.checker.i18n.qual.UnknownLocalizableKey
   - org.checkerframework.checker.i18n.qual.UnknownLocalized
-  - org.checkerframework.checker.i18nformatter.I18nFormatUtil
-  - org.checkerframework.checker.i18nformatter.I18nFormatUtil$I18nConversion
-  - org.checkerframework.checker.i18nformatter.I18nFormatUtil$MessageFormatParser
   - org.checkerframework.checker.i18nformatter.qual.I18nChecksFormat
   - org.checkerframework.checker.i18nformatter.qual.I18nConversionCategory
   - org.checkerframework.checker.i18nformatter.qual.I18nFormat
@@ -144,8 +137,6 @@
   - org.checkerframework.checker.lock.qual.LockingFree
   - org.checkerframework.checker.lock.qual.MayReleaseLocks
   - org.checkerframework.checker.lock.qual.ReleasesNoLocks
-  - org.checkerframework.checker.nullness.NullnessUtil
-  - org.checkerframework.checker.nullness.Opt
   - org.checkerframework.checker.nullness.qual.AssertNonNullIfNonNull
   - org.checkerframework.checker.nullness.qual.EnsuresKeyFor
   - org.checkerframework.checker.nullness.qual.EnsuresKeyFor$List
@@ -170,8 +161,6 @@
   - org.checkerframework.checker.propkey.qual.PropertyKey
   - org.checkerframework.checker.propkey.qual.PropertyKeyBottom
   - org.checkerframework.checker.propkey.qual.UnknownPropertyKey
-  - org.checkerframework.checker.regex.RegexUtil
-  - org.checkerframework.checker.regex.RegexUtil$CheckedPatternSyntaxException
   - org.checkerframework.checker.regex.qual.PartialRegex
   - org.checkerframework.checker.regex.qual.PolyRegex
   - org.checkerframework.checker.regex.qual.Regex
@@ -200,8 +189,6 @@
   - org.checkerframework.checker.signature.qual.PrimitiveType
   - org.checkerframework.checker.signature.qual.SignatureBottom
   - org.checkerframework.checker.signature.qual.SignatureUnknown
-  - org.checkerframework.checker.signedness.SignednessUtil
-  - org.checkerframework.checker.signedness.SignednessUtilExtra
   - org.checkerframework.checker.signedness.qual.PolySigned
   - org.checkerframework.checker.signedness.qual.Signed
   - org.checkerframework.checker.signedness.qual.SignedPositive
@@ -213,7 +200,6 @@
   - org.checkerframework.checker.tainting.qual.PolyTainted
   - org.checkerframework.checker.tainting.qual.Tainted
   - org.checkerframework.checker.tainting.qual.Untainted
-  - org.checkerframework.checker.units.UnitsTools
   - org.checkerframework.checker.units.qual.A
   - org.checkerframework.checker.units.qual.Acceleration
   - org.checkerframework.checker.units.qual.Angle
@@ -258,6 +244,11 @@
   - org.checkerframework.common.aliasing.qual.MaybeLeaked
   - org.checkerframework.common.aliasing.qual.NonLeaked
   - org.checkerframework.common.aliasing.qual.Unique
+  - org.checkerframework.common.initializedfields.qual.EnsuresInitializedFields
+  - org.checkerframework.common.initializedfields.qual.EnsuresInitializedFields$List
+  - org.checkerframework.common.initializedfields.qual.InitializedFields
+  - org.checkerframework.common.initializedfields.qual.InitializedFieldsBottom
+  - org.checkerframework.common.initializedfields.qual.PolyInitializedFields
   - org.checkerframework.common.reflection.qual.ClassBound
   - org.checkerframework.common.reflection.qual.ClassVal
   - org.checkerframework.common.reflection.qual.ClassValBottom
@@ -344,4 +335,3 @@
   - org.checkerframework.framework.qual.TypeUseLocation
   - org.checkerframework.framework.qual.Unused
   - org.checkerframework.framework.qual.UpperBoundFor
-  - org.checkerframework.framework.util.PurityUnqualified

@@ -34,7 +34,6 @@ import java.util.concurrent.ExecutorService;
         name = "ExecutorSubmitRunnableFutureIgnored",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = BugPattern.SeverityLevel.ERROR,
         summary = "Uncaught exceptions from ExecutorService.submit are not logged by the uncaught exception handler "
                 + "because it is assumed that the returned future is used to watch for failures.\n"

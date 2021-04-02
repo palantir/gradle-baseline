@@ -36,7 +36,6 @@ import java.util.List;
         name = "PreferCollectionTransform",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = SeverityLevel.WARNING,
         summary =
                 "Prefer Guava's Lists.transform or Collections2.transform instead of Iterables.transform when first"
