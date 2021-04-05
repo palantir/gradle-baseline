@@ -1,0 +1,131 @@
+/*
+ * (c) Copyright 2021 Palantir Technologies Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.palantir.baseline.errorprone;
+
+import org.junit.jupiter.api.Test;
+
+class ConsistentInterfacesTest {
+
+    @Test
+    void ignores_generic_methods() {
+        fix().addInputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  interface ParameterizedInterface<T> {",
+                        "    void doStuff(T foo, T bar);",
+                        "  }",
+                        "  interface ParameterizedMethod {",
+                        "    <T> void otherStuff(T foo, T bar);",
+                        "  }",
+                        "  class DefaultFoo implements ParameterizedInterface<String>, ParameterizedMethod {",
+                        "    @Override",
+                        "    public void doStuff(String bar, String foo) {}",
+                        "    @Override",
+                        "    public <T> void otherStuff(T bar, T foo) {}",
+                        "  }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void swapped_names() {
+        fix().addInputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  interface Foo {",
+                        "    boolean doStuff(String foo, String bar);",
+                        "  }",
+                        "  class DefaultFoo implements Foo {",
+                        "    @Override",
+                        "    public boolean doStuff(String bar, String foo) {",
+                        "      return bar.equals(foo);",
+                        "    }",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  interface Foo {",
+                        "    boolean doStuff(String foo, String bar);",
+                        "  }",
+                        "  class DefaultFoo implements Foo {",
+                        "    @Override",
+                        "    public boolean doStuff(String foo, String bar) {",
+                        "      return foo.equals(bar);",
+                        "    }",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void overridden_name() {
+        fix().addInputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  interface Foo {",
+                        "    void doStuff(String foo, String bar);",
+                        "  }",
+                        "  class DefaultFoo implements Foo {",
+                        "    @Override",
+                        "    public void doStuff(String foo, String baz) {}",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  interface Foo {",
+                        "    void doStuff(String foo, String bar);",
+                        "  }",
+                        "  class DefaultFoo implements Foo {",
+                        "    @Override",
+                        "    public void doStuff(String foo, String bar) {}",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void extended_interface() {
+        fix().addInputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  interface Foo {",
+                        "    void doStuff(String foo, String bar);",
+                        "  }",
+                        "  interface Bar extends Foo {",
+                        "    void doStuff(String foo, String baz);",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  interface Foo {",
+                        "    void doStuff(String foo, String bar);",
+                        "  }",
+                        "  interface Bar extends Foo {",
+                        "    void doStuff(String foo, String bar);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    private RefactoringValidator fix() {
+        return RefactoringValidator.of(new ConsistentInterfaces(), getClass());
+    }
+}
