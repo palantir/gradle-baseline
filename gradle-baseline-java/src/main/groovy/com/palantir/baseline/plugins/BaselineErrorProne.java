@@ -27,9 +27,7 @@ import com.palantir.baseline.extensions.BaselineErrorProneExtension;
 import com.palantir.baseline.extensions.BaselineJavaVersionExtension;
 import com.palantir.baseline.tasks.CompileRefasterTask;
 import java.io.File;
-import java.util.AbstractList;
 import java.util.Collections;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -45,7 +43,6 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
@@ -56,14 +53,11 @@ import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
-import org.gradle.api.tasks.javadoc.Javadoc;
-import org.gradle.api.tasks.testing.Test;
 import org.gradle.process.CommandLineArgumentProvider;
 
 public final class BaselineErrorProne implements Plugin<Project> {
     private static final Logger log = Logging.getLogger(BaselineErrorProne.class);
     public static final String EXTENSION_NAME = "baselineErrorProne";
-    private static final String ERROR_PRONE_JAVAC_VERSION = "9+181-r4173-1";
     private static final String PROP_ERROR_PRONE_APPLY = "errorProneApply";
     private static final String PROP_REFASTER_APPLY = "refasterApply";
     private static final String DISABLE_PROPERTY = "com.palantir.baseline-error-prone.disable";
@@ -112,45 +106,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
                     task.setClasspath(refasterCompilerConfiguration);
                     task.getRefasterRulesFile().set(refasterRulesFile);
                 });
-
-        // In case of java 8 we need to add errorprone javac compiler to bootstrap classpath of tasks that perform
-        // compilation or code analysis. ErrorProneJavacPluginPlugin handles JavaCompile cases via errorproneJavac
-        // configuration and we do similar thing for Test and Javadoc type tasks
-        if (!JavaVersion.current().isJava9Compatible()) {
-            project.getDependencies()
-                    .add(
-                            ErrorPronePlugin.JAVAC_CONFIGURATION_NAME,
-                            "com.google.errorprone:javac:" + ERROR_PRONE_JAVAC_VERSION);
-            project.getConfigurations()
-                    .named(ErrorPronePlugin.JAVAC_CONFIGURATION_NAME)
-                    .configure(
-                            conf -> {
-                                List<File> bootstrapClasspath = Splitter.on(File.pathSeparator)
-                                        .splitToList(System.getProperty("sun.boot.class.path"))
-                                        .stream()
-                                        .map(File::new)
-                                        .collect(Collectors.toList());
-                                FileCollection errorProneFiles = conf.plus(project.files(bootstrapClasspath));
-                                project.getTasks()
-                                        .withType(Test.class)
-                                        .configureEach(test -> test.setBootstrapClasspath(errorProneFiles));
-                                project.getTasks().withType(Javadoc.class).configureEach(javadoc -> javadoc.getOptions()
-                                        .setBootClasspath(new LazyConfigurationList(errorProneFiles)));
-                            });
-        }
-
-        project.getPluginManager().withPlugin("com.palantir.baseline-java-version", unused -> {
-            BaselineJavaVersionExtension versionExtension =
-                    project.getExtensions().getByType(BaselineJavaVersionExtension.class);
-            project.getDependencies()
-                    .addProvider(
-                            ErrorPronePlugin.JAVAC_CONFIGURATION_NAME,
-                            versionExtension
-                                    .target()
-                                    .map(target -> target.asInt() == 8
-                                            ? "com.google.errorprone:javac:" + ERROR_PRONE_JAVAC_VERSION
-                                            : null));
-        });
 
         project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
             ((ExtensionAware) javaCompile.getOptions())
@@ -399,30 +354,5 @@ public final class BaselineErrorProne implements Plugin<Project> {
         Map<String, CheckSeverity> checks = errorProneOptions.getChecks().get();
         return checks.get(check) == CheckSeverity.OFF
                 || errorProneOptions.getErrorproneArgs().get().contains(String.format("-Xep:%s:OFF", check));
-    }
-
-    private static final class LazyConfigurationList extends AbstractList<File> {
-        private final FileCollection files;
-        private List<File> fileList;
-
-        private LazyConfigurationList(FileCollection files) {
-            this.files = files;
-        }
-
-        @Override
-        public File get(int index) {
-            if (fileList == null) {
-                fileList = ImmutableList.copyOf(files.getFiles());
-            }
-            return fileList.get(index);
-        }
-
-        @Override
-        public int size() {
-            if (fileList == null) {
-                fileList = ImmutableList.copyOf(files.getFiles());
-            }
-            return fileList.size();
-        }
     }
 }
