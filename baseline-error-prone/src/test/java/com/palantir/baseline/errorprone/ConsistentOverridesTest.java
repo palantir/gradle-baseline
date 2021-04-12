@@ -79,6 +79,42 @@ class ConsistentOverridesTest {
     }
 
     @Test
+    void ignores_unhelpfulNames() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import " + List.class.getCanonicalName() + ";",
+                        "class Test {",
+                        "  interface Foo {",
+                        "    void doStuff(String a, String b);",
+                        "  }",
+                        "  class DefaultFoo implements Foo {",
+                        "    @Override",
+                        "    public void doStuff(String foo, String bar) {}",
+                        "  }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void ignores_unused_variables() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import " + List.class.getCanonicalName() + ";",
+                        "class Test {",
+                        "  interface Foo {",
+                        "    void doStuff(String foo, String bar);",
+                        "  }",
+                        "  class DefaultFoo implements Foo {",
+                        "    @Override",
+                        "    public void doStuff(String foo, String _bar) {}",
+                        "  }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
     void swapped_names() {
         fix().addInputLines(
                         "Test.java",
