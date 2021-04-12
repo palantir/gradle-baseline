@@ -19,7 +19,7 @@ package com.palantir.baseline.errorprone;
 import java.util.List;
 import org.junit.jupiter.api.Test;
 
-class ConsistentInterfacesTest {
+class ConsistentOverridesTest {
 
     @Test
     void ignores_generic_methods() {
@@ -162,6 +162,6 @@ class ConsistentInterfacesTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(new ConsistentInterfaces(), getClass());
+        return RefactoringValidator.of(new ConsistentOverrides(), getClass());
     }
 }

@@ -42,13 +42,14 @@ import org.immutables.value.Value.Immutable;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "ConsistentInterfaces",
+        name = "ConsistentOverrides",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = SeverityLevel.ERROR,
-        summary = "Sub-types should have variable names consistent with the super-type")
-public final class ConsistentInterfaces extends BugChecker implements MethodTreeMatcher {
+        summary = "Method overrides should have variable names consistent with the super-method when there "
+                + "are multiple parameters with the same type to avoid incorrectly binding values to variables.")
+public final class ConsistentOverrides extends BugChecker implements MethodTreeMatcher {
     private static final Pattern UNKNOWN_ARG_NAME = Pattern.compile("^args\\d+$");
 
     @Override
@@ -61,7 +62,7 @@ public final class ConsistentInterfaces extends BugChecker implements MethodTree
         MethodSymbol methodSymbol = (MethodSymbol) sym;
         List<? extends VariableTree> paramTrees = tree.getParameters();
         getNonParameterizedSuperMethod(methodSymbol, state.getTypes())
-                .filter(ConsistentInterfaces::hasMeaningfulArgNames)
+                .filter(ConsistentOverrides::hasMeaningfulArgNames)
                 .ifPresent(superMethod -> {
                     Map<Type, List<ParamEntry>> superParamsByType = IntStream.range(0, paramTrees.size())
                             .mapToObj(i -> ParamEntry.of(superMethod.params().get(i), i))
