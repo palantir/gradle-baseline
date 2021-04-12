@@ -60,6 +60,10 @@ public final class ConsistentOverrides extends BugChecker implements MethodTreeM
         }
 
         MethodSymbol methodSymbol = (MethodSymbol) sym;
+        if (methodSymbol.params().size() <= 1) {
+            return Description.NO_MATCH;
+        }
+
         List<? extends VariableTree> paramTrees = tree.getParameters();
         getNonParameterizedSuperMethod(methodSymbol, state.getTypes())
                 .filter(ConsistentOverrides::hasMeaningfulArgNames)
@@ -76,7 +80,7 @@ public final class ConsistentOverrides extends BugChecker implements MethodTreeM
                         for (ParamEntry expectedParam : params) {
                             int index = expectedParam.index();
                             String param = methodSymbol.params.get(index).name.toString();
-                            if (param.equals(expectedParam.name())) {
+                            if (equivalentNames(param, expectedParam.name())) {
                                 continue;
                             }
 
@@ -91,9 +95,14 @@ public final class ConsistentOverrides extends BugChecker implements MethodTreeM
         return Description.NO_MATCH;
     }
 
+    private static boolean equivalentNames(String actual, String expected) {
+        return actual.equals(expected) || actual.equals("_" + expected);
+    }
+
     private static boolean hasMeaningfulArgNames(MethodSymbol methodSymbol) {
         return !methodSymbol.params().stream()
-                .allMatch(symbol -> UNKNOWN_ARG_NAME.matcher(symbol.name).matches());
+                .allMatch(symbol -> symbol.name.length() == 1
+                        || UNKNOWN_ARG_NAME.matcher(symbol.name).matches());
     }
 
     private static Optional<MethodSymbol> getNonParameterizedSuperMethod(MethodSymbol methodSymbol, Types types) {
