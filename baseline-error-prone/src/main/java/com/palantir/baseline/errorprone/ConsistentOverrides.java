@@ -96,7 +96,9 @@ public final class ConsistentOverrides extends BugChecker implements MethodTreeM
     }
 
     private static boolean equivalentNames(String actual, String expected) {
-        return actual.equals(expected) || actual.equals("_" + expected);
+        return actual.equals(expected)
+                || (actual.charAt(0) == '_' && actual.equals("_" + expected))
+                || (expected.charAt(0) == '_' && expected.equals("_" + actual));
     }
 
     private static boolean hasMeaningfulArgNames(MethodSymbol methodSymbol) {
