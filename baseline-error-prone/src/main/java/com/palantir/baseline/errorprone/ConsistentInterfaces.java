@@ -17,27 +17,28 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
-import com.google.common.collect.Streams;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.bugpatterns.BugChecker.MethodTreeMatcher;
-import com.google.errorprone.fixes.SuggestedFix;
 import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.VariableTree;
 import com.sun.tools.javac.code.Symbol;
-import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
+import com.sun.tools.javac.code.Symbol.VarSymbol;
+import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
+import java.util.List;
+import java.util.Map;
 import java.util.Optional;
-import java.util.function.Function;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
-import java.util.stream.Stream;
+import org.immutables.value.Value.Immutable;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -58,54 +59,63 @@ public final class ConsistentInterfaces extends BugChecker implements MethodTree
         }
 
         MethodSymbol methodSymbol = (MethodSymbol) sym;
-        return getNonParameterizedSuperMethod(methodSymbol, state.getTypes())
+        List<? extends VariableTree> paramTrees = tree.getParameters();
+        getNonParameterizedSuperMethod(methodSymbol, state.getTypes())
                 .filter(ConsistentInterfaces::hasMeaningfulArgNames)
-                .map(superMethod -> {
-                    SuggestedFix fix = IntStream.range(0, superMethod.params.size())
-                            .mapToObj(i -> {
-                                String param = methodSymbol.params.get(i).name.toString();
-                                String superParam =
-                                        superMethod.params.get(i).name.toString();
-                                if (param.equals(superParam)) {
-                                    return Stream.<SuggestedFix>empty();
-                                }
-                                VariableTree paramTree = tree.getParameters().get(i);
-                                return Stream.of(SuggestedFixes.renameVariable(paramTree, superParam, state));
-                            })
-                            .flatMap(Function.identity())
-                            .reduce(SuggestedFix.builder(), SuggestedFix.Builder::merge, SuggestedFix.Builder::merge)
-                            .build();
+                .ifPresent(superMethod -> {
+                    Map<Type, List<ParamEntry>> superParamsByType = IntStream.range(0, paramTrees.size())
+                            .mapToObj(i -> ParamEntry.of(superMethod.params().get(i), i))
+                            .collect(Collectors.groupingBy(ParamEntry::type));
 
-                    if (fix.isEmpty()) {
-                        return Description.NO_MATCH;
-                    }
+                    superParamsByType.values().forEach(params -> {
+                        if (params.size() <= 1) {
+                            return;
+                        }
 
-                    return buildDescription(tree).addFix(fix).build();
-                })
-                .orElse(Description.NO_MATCH);
+                        for (ParamEntry expectedParam : params) {
+                            int index = expectedParam.index();
+                            String param = methodSymbol.params.get(index).name.toString();
+                            if (param.equals(expectedParam.name())) {
+                                continue;
+                            }
+
+                            state.reportMatch(buildDescription(tree)
+                                    .addFix(SuggestedFixes.renameVariable(
+                                            paramTrees.get(index), expectedParam.name(), state))
+                                    .build());
+                        }
+                    });
+                });
+
+        return Description.NO_MATCH;
     }
 
     private static boolean hasMeaningfulArgNames(MethodSymbol methodSymbol) {
         return !methodSymbol.params().stream()
-                .allMatch(symbol ->
-                        UNKNOWN_ARG_NAME.matcher(symbol.name.toString()).matches());
+                .allMatch(symbol -> UNKNOWN_ARG_NAME.matcher(symbol.name).matches());
     }
 
-    /**
-     * Returns the first super method of the given method that neither comes from a parameterized type or is itself
-     * parameterized.
-     */
     private static Optional<MethodSymbol> getNonParameterizedSuperMethod(MethodSymbol methodSymbol, Types types) {
-        ClassSymbol owner = methodSymbol.enclClass();
-        return types.closure(owner.type).stream()
-                .filter(superType -> superType.getTypeArguments().isEmpty())
-                .filter(superType -> !types.isSameType(superType, owner.type))
-                .flatMap(superType -> Streams.stream(superType.tsym.members().getSymbolsByName(methodSymbol.name)))
-                .filter(MethodSymbol.class::isInstance)
-                .map(MethodSymbol.class::cast)
-                .filter(superMethod -> superMethod.getTypeParameters().isEmpty()
-                        && !superMethod.isStatic()
-                        && methodSymbol.overrides(superMethod, owner, types, false))
+        return ASTHelpers.findSuperMethods(methodSymbol, types).stream()
+                .filter(superMethod -> superMethod.owner.getTypeParameters().isEmpty())
+                .filter(superMethod -> superMethod.getTypeParameters().isEmpty())
                 .findFirst();
+    }
+
+    @Immutable
+    interface ParamEntry {
+        Type type();
+
+        String name();
+
+        int index();
+
+        static ParamEntry of(VarSymbol symbol, int index) {
+            return ImmutableParamEntry.builder()
+                    .type(symbol.type)
+                    .name(symbol.name.toString())
+                    .index(index)
+                    .build();
+        }
     }
 }

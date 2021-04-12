@@ -16,6 +16,7 @@
 
 package com.palantir.baseline.errorprone;
 
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 class ConsistentInterfacesTest {
@@ -36,6 +37,41 @@ class ConsistentInterfacesTest {
                         "    public void doStuff(String bar, String foo) {}",
                         "    @Override",
                         "    public <T> void otherStuff(T bar, T foo) {}",
+                        "  }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void ignores_unambiguous_rename() {
+        fix().addInputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  interface Foo {",
+                        "    void doStuff(String foo, int bar);",
+                        "  }",
+                        "  class DefaultFoo implements Foo {",
+                        "    @Override",
+                        "    public void doStuff(String bar, int foo) {}",
+                        "  }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void ignores_unambiguous_generics_rename() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import " + List.class.getCanonicalName() + ";",
+                        "class Test {",
+                        "  interface Foo {",
+                        "    void doStuff(List<String> foo, List<Integer> bar);",
+                        "  }",
+                        "  class DefaultFoo implements Foo {",
+                        "    @Override",
+                        "    public void doStuff(List<String> bar, List<Integer> foo) {}",
                         "  }",
                         "}")
                 .expectUnchanged()
