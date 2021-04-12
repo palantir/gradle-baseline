@@ -1,10 +1,10 @@
-com.diffplug.spotless:spotless-plugin-gradle = 5.11.1
-com.google.auto.service:auto-service = 1.0-rc4
+com.diffplug.spotless:spotless-plugin-gradle = 5.12.0
+com.google.auto.service:auto-service = 1.0
 com.google.errorprone:error_prone_annotations = 2.6.0
 com.google.errorprone:error_prone_core = 2.6.0
 com.google.errorprone:error_prone_refaster = 2.6.0
 com.google.errorprone:error_prone_test_helpers = 2.6.0
-com.google.guava:guava = 30.1-jre
+com.google.guava:guava = 30.1.1-jre
 com.palantir.safe-logging:* = 1.14.0
 org.apache.maven.shared:maven-dependency-analyzer = 1.11.3
 org.github.ngbinh.scalastyle:gradle-scalastyle-plugin_2.11 = 1.0.1
@@ -14,13 +14,13 @@ org.slf4j:slf4j-api = 1.7.30
 org.immutables:* = 2.8.8
 org.ow2.asm:asm = 9.1
 com.googlecode.java-diff-utils:diffutils = 1.3.0
-com.puppycrawl.tools:checkstyle = 8.41
+com.puppycrawl.tools:checkstyle = 8.41.1
 
 # test deps
 com.fasterxml.jackson.*:* = 2.11.1
 com.github.stefanbirkner:system-rules = 1.19.0
 com.netflix.nebula:nebula-test = 8.1.0
-com.palantir.tokens:auth-tokens = 3.8.0
+com.palantir.tokens:auth-tokens = 3.8.1
 com.palantir.conjure.java:conjure-lib = 5.52.0
 com.palantir.tritium:tritium-registry = 0.18.7
 commons-lang:commons-lang = 2.6
