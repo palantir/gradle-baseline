@@ -27,15 +27,12 @@ import com.google.errorprone.matchers.Description;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.VariableTree;
-import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 import org.immutables.value.Value.Immutable;
@@ -50,61 +47,102 @@ import org.immutables.value.Value.Immutable;
         summary = "Method overrides should have variable names consistent with the super-method when there "
                 + "are multiple parameters with the same type to avoid incorrectly binding values to variables.")
 public final class ConsistentOverrides extends BugChecker implements MethodTreeMatcher {
-    private static final Pattern UNKNOWN_ARG_NAME = Pattern.compile("^args\\d+$");
 
     @Override
     public Description matchMethod(MethodTree tree, VisitorState state) {
-        Symbol sym = ASTHelpers.getSymbol(tree);
-        if (!(sym instanceof MethodSymbol) || sym.isStatic()) {
+        MethodSymbol methodSymbol = ASTHelpers.getSymbol(tree);
+        List<? extends VariableTree> methodParameters = tree.getParameters();
+        if (methodSymbol == null
+                || methodSymbol.isStatic()
+                || methodSymbol.isPrivate()
+                || methodSymbol.params().size() <= 1
+                || methodParameters.size() <= 1) {
             return Description.NO_MATCH;
         }
 
-        MethodSymbol methodSymbol = (MethodSymbol) sym;
-        if (methodSymbol.params().size() <= 1) {
-            return Description.NO_MATCH;
-        }
-
-        List<? extends VariableTree> paramTrees = tree.getParameters();
         getNonParameterizedSuperMethod(methodSymbol, state.getTypes())
-                .filter(ConsistentOverrides::hasMeaningfulArgNames)
-                .ifPresent(superMethod -> {
-                    Map<Type, List<ParamEntry>> superParamsByType = IntStream.range(0, paramTrees.size())
-                            .mapToObj(i -> ParamEntry.of(superMethod.params().get(i), i))
-                            .collect(Collectors.groupingBy(ParamEntry::type));
-
-                    superParamsByType.values().forEach(params -> {
-                        if (params.size() <= 1) {
-                            return;
-                        }
-
-                        for (ParamEntry expectedParam : params) {
-                            int index = expectedParam.index();
-                            String param = methodSymbol.params.get(index).name.toString();
-                            if (equivalentNames(param, expectedParam.name())) {
-                                continue;
+                .filter(ConsistentOverrides::retainedParameterNames)
+                .ifPresent(superMethod -> IntStream.range(0, methodParameters.size())
+                        .mapToObj(i -> ParamEntry.of(superMethod.params().get(i), i))
+                        .collect(Collectors.groupingBy(ParamEntry::type))
+                        .values()
+                        .forEach(params -> {
+                            if (params.size() <= 1) {
+                                return;
                             }
 
-                            state.reportMatch(buildDescription(tree)
-                                    .addFix(SuggestedFixes.renameVariable(
-                                            paramTrees.get(index), expectedParam.name(), state))
-                                    .build());
-                        }
-                    });
-                });
+                            for (ParamEntry expectedParam : params) {
+                                int index = expectedParam.index();
+                                // Use the parameter VariableTree name which always retains name information
+                                VariableTree parameter = methodParameters.get(index);
+                                String parameterName = parameter.getName().toString();
+                                String expectedParameterName = expectedParam.name();
+                                if (!isMeaninglessParameterName(expectedParameterName)
+                                        && !equivalentNames(parameterName, expectedParameterName)) {
+                                    state.reportMatch(buildDescription(tree)
+                                            .addFix(SuggestedFixes.renameVariable(
+                                                    methodParameters.get(index),
+                                                    retainUnderscore(parameterName, expectedParameterName),
+                                                    state))
+                                            .build());
+                                }
+                            }
+                        }));
 
         return Description.NO_MATCH;
     }
 
-    private static boolean equivalentNames(String actual, String expected) {
-        return actual.equals(expected)
-                || (actual.charAt(0) == '_' && actual.equals("_" + expected))
-                || (expected.charAt(0) == '_' && expected.equals("_" + actual));
+    // Match the original names underscore prefix to appease StrictUnusedVariable
+    private static String retainUnderscore(String originalName, String newName) {
+        boolean originalUnderscore = originalName.startsWith("_");
+        boolean newUnderscore = newName.startsWith("_");
+        if (originalUnderscore == newUnderscore) {
+            return newName;
+        }
+        if (!originalUnderscore) {
+            return newName.substring(1);
+        } else {
+            return "_" + newName;
+        }
     }
 
-    private static boolean hasMeaningfulArgNames(MethodSymbol methodSymbol) {
-        return !methodSymbol.params().stream()
-                .allMatch(symbol -> symbol.name.length() == 1
-                        || UNKNOWN_ARG_NAME.matcher(symbol.name).matches());
+    private static boolean equivalentNames(String actual, String expected) {
+        return actual.equals(expected)
+                // Handle StrictUnusedVariable underscore prefixes in both directions
+                || (actual.charAt(0) == '_' && actual.length() == expected.length() + 1 && actual.endsWith(expected))
+                || (expected.charAt(0) == '_' && expected.length() == actual.length() + 1 && expected.endsWith(actual));
+    }
+
+    // If any parameters have names that don't match 'arg\d+', names are retained.
+    private static boolean retainedParameterNames(MethodSymbol methodSymbol) {
+        for (VarSymbol parameter : methodSymbol.params()) {
+            if (!isUnknownParameterName(parameter.name)) {
+                return true;
+            }
+        }
+        return methodSymbol.params().isEmpty();
+    }
+
+    private static boolean isMeaninglessParameterName(CharSequence input) {
+        // Single character names are unhelpful for readers, and should be overridden in implementations
+        return input.length() <= 1
+                // Implementation may not retain parameter names, we shouldn't create churn in this case.
+                || isUnknownParameterName(input);
+    }
+
+    // Returns true if code was compiled without javac '-parameters'
+    private static boolean isUnknownParameterName(CharSequence input) {
+        int length = input.length();
+        if (length > 3 && input.charAt(0) == 'a' && input.charAt(1) == 'r' && input.charAt(2) == 'g') {
+            for (int i = 3; i < length; i++) {
+                char current = input.charAt(i);
+                if (!Character.isDigit(current)) {
+                    return false;
+                }
+            }
+            return true;
+        }
+        return false;
     }
 
     private static Optional<MethodSymbol> getNonParameterizedSuperMethod(MethodSymbol methodSymbol, Types types) {
