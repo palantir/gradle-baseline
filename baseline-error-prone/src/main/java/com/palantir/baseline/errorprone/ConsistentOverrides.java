@@ -55,8 +55,8 @@ public final class ConsistentOverrides extends BugChecker implements MethodTreeM
         if (methodSymbol == null
                 || methodSymbol.isStatic()
                 || methodSymbol.isPrivate()
-                || methodSymbol.params().size() <= 1
-                || methodParameters.size() <= 1) {
+                || methodParameters.size() <= 1
+                || !hasDuplicateTypes(methodParameters, state)) {
             return Description.NO_MATCH;
         }
 
@@ -90,6 +90,22 @@ public final class ConsistentOverrides extends BugChecker implements MethodTreeM
                         }));
 
         return Description.NO_MATCH;
+    }
+
+    /**
+     * {@code O(n^2)} check for duplicate types. Methods tend to have very few arguments so
+     * performance is better than using a {@link java.util.Set} because n is generally less than 100.
+     */
+    private static boolean hasDuplicateTypes(List<? extends VariableTree> methodParameters, VisitorState state) {
+        for (int i = 0; i < methodParameters.size() - 1; i++) {
+            Type firstType = ASTHelpers.getType(methodParameters.get(i));
+            for (int j = i + 1; j < methodParameters.size(); j++) {
+                if (state.getTypes().isSameType(firstType, ASTHelpers.getType(methodParameters.get(j)))) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     // Match the original names underscore prefix to appease StrictUnusedVariable
