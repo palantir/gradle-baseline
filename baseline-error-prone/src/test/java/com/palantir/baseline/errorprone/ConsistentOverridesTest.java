@@ -97,7 +97,7 @@ class ConsistentOverridesTest {
     }
 
     @Test
-    void ignores_unused_variables() {
+    void allows_unused_variables() {
         fix().addInputLines(
                         "Test.java",
                         "import " + List.class.getCanonicalName() + ";",
@@ -111,6 +111,35 @@ class ConsistentOverridesTest {
                         "  }",
                         "}")
                 .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void allows_unused_variable_names() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import " + List.class.getCanonicalName() + ";",
+                        "class Test {",
+                        "  interface Foo {",
+                        "    void doStuff(String foo, String bar);",
+                        "  }",
+                        "  class DefaultFoo implements Foo {",
+                        "    @Override",
+                        "    public void doStuff(String foo, String _baz) {}",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import " + List.class.getCanonicalName() + ";",
+                        "class Test {",
+                        "  interface Foo {",
+                        "    void doStuff(String foo, String bar);",
+                        "  }",
+                        "  class DefaultFoo implements Foo {",
+                        "    @Override",
+                        "    public void doStuff(String foo, String _bar) {}",
+                        "  }",
+                        "}")
                 .doTest();
     }
 
@@ -210,6 +239,37 @@ class ConsistentOverridesTest {
                         "  }",
                         "  interface Bar extends Foo {",
                         "    void doStuff(String foo, String bar);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void interface_has_one_meaningless_name() {
+        fix().addInputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  interface Foo {",
+                        "    boolean doStuff(String a, String bar);",
+                        "  }",
+                        "  class DefaultFoo implements Foo {",
+                        "    @Override",
+                        "    public boolean doStuff(String bang, String foo) {",
+                        "      return bang.equals(foo);",
+                        "    }",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  interface Foo {",
+                        "    boolean doStuff(String a, String bar);",
+                        "  }",
+                        "  class DefaultFoo implements Foo {",
+                        "    @Override",
+                        "    public boolean doStuff(String bang, String bar) {",
+                        "      return bang.equals(bar);",
+                        "    }",
                         "  }",
                         "}")
                 .doTest();
