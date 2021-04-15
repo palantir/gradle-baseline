@@ -17,6 +17,7 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.errorprone.CompilationTestHelper;
+import java.util.HashSet;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -71,6 +72,134 @@ public final class DangerousIdentityKeyTest {
                         "class Test {",
                         "    private Object test() {",
                         "        return new IdentityHashMap<Pattern, String>();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testValidSetKey() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.*;",
+                        "class Test {",
+                        "    private Object test() {",
+                        "        return new HashSet<String>();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testValidNonFinal() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.*;",
+                        "class Test {",
+                        "    static class Impl {}",
+                        "    private Object test() {",
+                        "        return new HashSet<Impl>();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testValidEnum() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.*;",
+                        "class Test {",
+                        "    enum Impl {",
+                        "        INSTANCE",
+                        "    }",
+                        "    private Object test() {",
+                        "        return new HashSet<Impl>();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testInvalidNoEquals() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.*;",
+                        "class Test {",
+                        "    static final class Impl {",
+                        "        @Override public boolean equals(Object o) {",
+                        "            return true;",
+                        "        }",
+                        "    }",
+                        "    private Object test() {",
+                        "        // BUG: Diagnostic contains: does not override",
+                        "        return new HashSet<Impl>();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testInvalidNoHash() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.*;",
+                        "class Test {",
+                        "    static final class Impl {",
+                        "        @Override public int hashCode() {",
+                        "            return 1;",
+                        "        }",
+                        "    }",
+                        "    private Object test() {",
+                        "        // BUG: Diagnostic contains: does not override",
+                        "        return new HashSet<Impl>();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testObjectAllowed() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.*;",
+                        "class Test {",
+                        "    private Object test() {",
+                        "        return new HashSet<Object>();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testRawTypeAllowed() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.*;",
+                        "class Test {",
+                        "    private Object test() {",
+                        "        return new HashSet();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testWildcardAllowed() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.*;",
+                        "class Test {",
+                        "    private HashSet<?> test() {",
+                        "        return new HashSet<>();",
                         "    }",
                         "}")
                 .doTest();
