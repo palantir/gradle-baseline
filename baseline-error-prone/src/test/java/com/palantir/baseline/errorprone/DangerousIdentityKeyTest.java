@@ -20,13 +20,13 @@ import com.google.errorprone.CompilationTestHelper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-public final class PatternAsKeyOfSetOrMapTest {
+public final class DangerousIdentityKeyTest {
 
     private CompilationTestHelper compilationHelper;
 
     @BeforeEach
     public void before() {
-        compilationHelper = CompilationTestHelper.newInstance(PatternAsKeyOfSetOrMap.class, getClass());
+        compilationHelper = CompilationTestHelper.newInstance(DangerousIdentityKey.class, getClass());
     }
 
     @Test
@@ -38,7 +38,7 @@ public final class PatternAsKeyOfSetOrMapTest {
                         "import java.util.regex.Pattern;",
                         "class Test {",
                         "    private Object test() {",
-                        "        // BUG: Diagnostic contains: Pattern does not override equals",
+                        "        // BUG: Diagnostic contains: does not override equals",
                         "        return new HashMap<Pattern, String>();",
                         "    }",
                         "}")
@@ -54,7 +54,7 @@ public final class PatternAsKeyOfSetOrMapTest {
                         "import java.util.regex.Pattern;",
                         "class Test {",
                         "    private Object test() {",
-                        "        // BUG: Diagnostic contains: Pattern does not override equals",
+                        "        // BUG: Diagnostic contains: does not override equals",
                         "        return new HashSet<Pattern>();",
                         "    }",
                         "}")
