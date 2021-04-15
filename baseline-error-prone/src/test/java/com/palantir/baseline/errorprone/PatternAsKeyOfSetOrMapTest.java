@@ -70,7 +70,7 @@ public final class PatternAsKeyOfSetOrMapTest {
                         "import java.util.regex.Pattern;",
                         "class Test {",
                         "    private Object test() {",
-                        "        return new HashMap<String, Pattern>();",
+                        "        return new IdentityHashMap<Pattern, String>();",
                         "    }",
                         "}")
                 .doTest();
