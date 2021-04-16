@@ -214,8 +214,8 @@ public final class DangerousIdentityKeyTest {
                         "import java.util.stream.*;",
                         "class Test {",
                         "    private Map<Pattern, String> test() {",
-                        "        // BUG: Diagnostic contains: does not override",
                         "        return Stream.of(\".\").collect(",
+                        "                // BUG: Diagnostic contains: does not override",
                         "                Collectors.toMap(Pattern::compile, s -> s));",
                         "    }",
                         "}")
@@ -234,6 +234,105 @@ public final class DangerousIdentityKeyTest {
                         "    private Map<String, Pattern> test() {",
                         "        return Stream.of(\".\").collect(",
                         "                Collectors.toMap(s -> s, Pattern::compile));",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testCollectMapInvalidKey_immutable() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import com.google.common.collect.*;",
+                        "import java.util.*;",
+                        "import java.util.regex.Pattern;",
+                        "import java.util.stream.*;",
+                        "class Test {",
+                        "    private Map<Pattern, String> test() {",
+                        "        return Stream.of(\".\").collect(",
+                        "                // BUG: Diagnostic contains: does not override",
+                        "                ImmutableMap.toImmutableMap(Pattern::compile, s -> s));",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testCollectMapValidKey_immutable() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import com.google.common.collect.*;",
+                        "import java.util.*;",
+                        "import java.util.regex.Pattern;",
+                        "import java.util.stream.*;",
+                        "class Test {",
+                        "    private Map<String, Pattern> test() {",
+                        "        return Stream.of(\".\").collect(",
+                        "                ImmutableMap.toImmutableMap(s -> s, Pattern::compile));",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testGuavaCacheInvalidKey() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import com.google.common.cache.*;",
+                        "import java.util.regex.Pattern;",
+                        "class Test {",
+                        "    private Object test() {",
+                        "        // BUG: Diagnostic contains: does not override",
+                        "        return CacheBuilder.newBuilder().<Pattern, String>build();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testGuavaCacheValidKey() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import com.google.common.cache.*;",
+                        "import java.util.regex.Pattern;",
+                        "class Test {",
+                        "    private Object test() {",
+                        "        return CacheBuilder.newBuilder().<String, Pattern>build();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testCaffeineCacheInvalidKey() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import com.github.benmanes.caffeine.cache.*;",
+                        "import java.util.regex.Pattern;",
+                        "class Test {",
+                        "    private Object test() {",
+                        "        // BUG: Diagnostic contains: does not override",
+                        "        return Caffeine.newBuilder().<Pattern, String>build();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testCaffeineCacheValidKey() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import com.github.benmanes.caffeine.cache.*;",
+                        "import java.util.regex.Pattern;",
+                        "class Test {",
+                        "    private Object test() {",
+                        "        return Caffeine.newBuilder().<String, Pattern>build();",
                         "    }",
                         "}")
                 .doTest();
