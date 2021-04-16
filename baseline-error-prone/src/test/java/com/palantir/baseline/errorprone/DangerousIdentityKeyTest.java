@@ -203,4 +203,39 @@ public final class DangerousIdentityKeyTest {
                         "}")
                 .doTest();
     }
+
+    @Test
+    void testCollectMapInvalidKey() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.*;",
+                        "import java.util.regex.Pattern;",
+                        "import java.util.stream.*;",
+                        "class Test {",
+                        "    private Map<Pattern, String> test() {",
+                        "        // BUG: Diagnostic contains: does not override",
+                        "        return Stream.of(\".\").collect(",
+                        "                Collectors.toMap(Pattern::compile, s -> s));",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testCollectMapValidKey() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.*;",
+                        "import java.util.regex.Pattern;",
+                        "import java.util.stream.*;",
+                        "class Test {",
+                        "    private Map<String, Pattern> test() {",
+                        "        return Stream.of(\".\").collect(",
+                        "                Collectors.toMap(s -> s, Pattern::compile));",
+                        "    }",
+                        "}")
+                .doTest();
+    }
 }
