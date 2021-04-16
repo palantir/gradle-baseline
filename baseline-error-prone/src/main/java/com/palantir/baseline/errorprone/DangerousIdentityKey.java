@@ -20,7 +20,6 @@ import com.google.common.collect.Iterables;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
-import com.google.errorprone.bugpatterns.AbstractAsKeyOfSetOrMap;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
@@ -36,7 +35,7 @@ import com.sun.tools.javac.util.Name;
                 + " consider using a List instead. Otherwise, use IdentityHashMap/Set,"
                 + " or an Iterable/List of pairs.",
         severity = SeverityLevel.WARNING)
-public final class DangerousIdentityKey extends AbstractAsKeyOfSetOrMap {
+public final class DangerousIdentityKey extends MoreAbstractAsKeyOfSetOrMap {
 
     @Override
     protected boolean isBadType(Type type, VisitorState state) {
