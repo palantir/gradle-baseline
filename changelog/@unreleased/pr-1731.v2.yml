@@ -1,5 +1,5 @@
 type: improvement
 improvement:
-  description: PatternAsKeyOfSetOrMap identifies regex Pattern used as map or set key
+  description: DangerousIdentityKey identifies key types which do not override equals or hashCode thus rely on reference comparison.
   links:
   - https://github.com/palantir/gradle-baseline/pull/1731
