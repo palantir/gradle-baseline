@@ -373,6 +373,24 @@ public final class DangerousIdentityKeyTest {
     }
 
     @Test
+    void testImmutableMapBuilderInvalidKey() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import com.google.common.collect.*;",
+                        "import java.util.regex.Pattern;",
+                        "class Test {",
+                        "    private Object test() {",
+                        "        return ImmutableMap.<Pattern, String>builder()",
+                        "            .put(Pattern.compile(\".\"), \"str\")",
+                        "            // BUG: Diagnostic contains: does not override",
+                        "            .build();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     void testImmutableSetInvalidKey() {
         compilationHelper
                 .addSourceLines(
@@ -383,6 +401,22 @@ public final class DangerousIdentityKeyTest {
                         "    private Object test() {",
                         "        // BUG: Diagnostic contains: does not override",
                         "        return ImmutableSet.of(Pattern.compile(\".\"));",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testImmutableSetBuilderInvalidKey() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import com.google.common.collect.*;",
+                        "import java.util.regex.Pattern;",
+                        "class Test {",
+                        "    private ImmutableSet<Pattern> test() {",
+                        "        // BUG: Diagnostic contains: does not override",
+                        "        return ImmutableSet.<Pattern>builder().add(Pattern.compile(\".\")).build();",
                         "    }",
                         "}")
                 .doTest();

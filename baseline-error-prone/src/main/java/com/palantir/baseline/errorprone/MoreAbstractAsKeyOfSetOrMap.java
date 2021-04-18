@@ -88,9 +88,17 @@ abstract class MoreAbstractAsKeyOfSetOrMap extends AbstractAsKeyOfSetOrMap {
             .onClass("com.google.common.collect.ImmutableMap")
             .namedAnyOf("of", "copyOf");
 
+    private static final Matcher<ExpressionTree> IMMUTABLE_MAP_BUILDER = MethodMatchers.instanceMethod()
+            .onDescendantOf("com.google.common.collect.ImmutableMap.Builder")
+            .named("build");
+
     private static final Matcher<ExpressionTree> IMMUTABLE_SET_OF = MethodMatchers.staticMethod()
             .onClass("com.google.common.collect.ImmutableSet")
             .namedAnyOf("of", "copyOf");
+
+    private static final Matcher<ExpressionTree> IMMUTABLE_SET_BUILDER = MethodMatchers.instanceMethod()
+            .onDescendantOf("com.google.common.collect.ImmutableSet.Builder")
+            .named("build");
 
     private static final Matcher<ExpressionTree> STREAMEX_TO_MAP = MethodMatchers.instanceMethod()
             .onDescendantOf("one.util.streamex.EntryStream")
@@ -106,7 +114,9 @@ abstract class MoreAbstractAsKeyOfSetOrMap extends AbstractAsKeyOfSetOrMap {
             JAVA_UTIL_MAP_OF,
             JAVA_UTIL_SET_OF,
             IMMUTABLE_MAP_OF,
+            IMMUTABLE_MAP_BUILDER,
             IMMUTABLE_SET_OF,
+            IMMUTABLE_SET_BUILDER,
             STREAMEX_TO_MAP,
             STREAMEX_TO_SET);
 
