@@ -78,8 +78,37 @@ abstract class MoreAbstractAsKeyOfSetOrMap extends AbstractAsKeyOfSetOrMap {
             .onClass("com.google.common.collect.ImmutableMap")
             .named("toImmutableMap");
 
-    private static final Matcher<MethodInvocationTree> HASH_KEYED_METHODS =
-            Matchers.anyOf(GUAVA_CACHE_BUILDER, CAFFEINE_CACHE_BUILDER);
+    private static final Matcher<ExpressionTree> JAVA_UTIL_MAP_OF =
+            MethodMatchers.staticMethod().onClass("java.util.Map").named("of");
+
+    private static final Matcher<ExpressionTree> JAVA_UTIL_SET_OF =
+            MethodMatchers.staticMethod().onClass("java.util.Set").named("of");
+
+    private static final Matcher<ExpressionTree> IMMUTABLE_MAP_OF = MethodMatchers.staticMethod()
+            .onClass("com.google.common.collect.ImmutableMap")
+            .namedAnyOf("of", "copyOf");
+
+    private static final Matcher<ExpressionTree> IMMUTABLE_SET_OF = MethodMatchers.staticMethod()
+            .onClass("com.google.common.collect.ImmutableSet")
+            .namedAnyOf("of", "copyOf");
+
+    private static final Matcher<ExpressionTree> STREAMEX_TO_MAP = MethodMatchers.instanceMethod()
+            .onDescendantOf("one.util.streamex.EntryStream")
+            .namedAnyOf("toMap", "toImmutableMap");
+
+    private static final Matcher<ExpressionTree> STREAMEX_TO_SET = MethodMatchers.instanceMethod()
+            .onDescendantOf("one.util.streamex.AbstractStreamEx")
+            .namedAnyOf("toSet", "toImmutableSet");
+
+    private static final Matcher<MethodInvocationTree> HASH_KEYED_METHODS = Matchers.anyOf(
+            GUAVA_CACHE_BUILDER,
+            CAFFEINE_CACHE_BUILDER,
+            JAVA_UTIL_MAP_OF,
+            JAVA_UTIL_SET_OF,
+            IMMUTABLE_MAP_OF,
+            IMMUTABLE_SET_OF,
+            STREAMEX_TO_MAP,
+            STREAMEX_TO_SET);
 
     private static final Matcher<MethodInvocationTree> HASH_KEYED_COLLECTOR_METHODS = Matchers.anyOf(
             SET_COLLECTOR,
