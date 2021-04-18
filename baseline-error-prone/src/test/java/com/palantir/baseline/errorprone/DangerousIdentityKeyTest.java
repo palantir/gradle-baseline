@@ -223,6 +223,24 @@ public final class DangerousIdentityKeyTest {
     }
 
     @Test
+    void testCollectUnmodifiableMapInvalidKey() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.*;",
+                        "import java.util.regex.Pattern;",
+                        "import java.util.stream.*;",
+                        "class Test {",
+                        "    private Map<Pattern, String> test() {",
+                        "        return Stream.of(\".\").collect(",
+                        "                // BUG: Diagnostic contains: does not override",
+                        "                Collectors.toUnmodifiableMap(Pattern::compile, s -> s));",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     void testCollectMapValidKey() {
         compilationHelper
                 .addSourceLines(
@@ -333,6 +351,168 @@ public final class DangerousIdentityKeyTest {
                         "class Test {",
                         "    private Object test() {",
                         "        return Caffeine.newBuilder().<String, Pattern>build();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testImmutableMapInvalidKey() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import com.google.common.collect.*;",
+                        "import java.util.regex.Pattern;",
+                        "class Test {",
+                        "    private Object test() {",
+                        "        // BUG: Diagnostic contains: does not override",
+                        "        return ImmutableMap.of(Pattern.compile(\".\"), \"str\");",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testImmutableMapBuilderInvalidKey() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import com.google.common.collect.*;",
+                        "import java.util.regex.Pattern;",
+                        "class Test {",
+                        "    private Object test() {",
+                        "        return ImmutableMap.<Pattern, String>builder()",
+                        "            .put(Pattern.compile(\".\"), \"str\")",
+                        "            // BUG: Diagnostic contains: does not override",
+                        "            .build();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testImmutableSetInvalidKey() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import com.google.common.collect.*;",
+                        "import java.util.regex.Pattern;",
+                        "class Test {",
+                        "    private Object test() {",
+                        "        // BUG: Diagnostic contains: does not override",
+                        "        return ImmutableSet.of(Pattern.compile(\".\"));",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testImmutableSetBuilderInvalidKey() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import com.google.common.collect.*;",
+                        "import java.util.regex.Pattern;",
+                        "class Test {",
+                        "    private ImmutableSet<Pattern> test() {",
+                        "        // BUG: Diagnostic contains: does not override",
+                        "        return ImmutableSet.<Pattern>builder().add(Pattern.compile(\".\")).build();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testJavaUtilMapInvalidKey() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.*;",
+                        "import java.util.regex.Pattern;",
+                        "class Test {",
+                        "    private Object test() {",
+                        "        // BUG: Diagnostic contains: does not override",
+                        "        return Map.of(Pattern.compile(\".\"), \"str\");",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testJavaUtilSetInvalidKey() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.*;",
+                        "import java.util.regex.Pattern;",
+                        "class Test {",
+                        "    private Object test() {",
+                        "        // BUG: Diagnostic contains: does not override",
+                        "        return Set.of(Pattern.compile(\".\"));",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testStreamExSetInvalidKey() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import one.util.streamex.*;",
+                        "import java.util.regex.Pattern;",
+                        "class Test {",
+                        "    private Object test(StreamEx<Pattern> stream) {",
+                        "        // BUG: Diagnostic contains: does not override",
+                        "        return stream.toSet();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testStreamExImmutableSetInvalidKey() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import one.util.streamex.*;",
+                        "import java.util.regex.Pattern;",
+                        "class Test {",
+                        "    private Object test(StreamEx<Pattern> stream) {",
+                        "        // BUG: Diagnostic contains: does not override",
+                        "        return stream.toImmutableSet();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testStreamExMapInvalidKey() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import one.util.streamex.*;",
+                        "import java.util.regex.Pattern;",
+                        "class Test {",
+                        "    private Object test(EntryStream<Pattern, String> stream) {",
+                        "        // BUG: Diagnostic contains: does not override",
+                        "        return stream.toMap();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testStreamExImmutableMapInvalidKey() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import one.util.streamex.*;",
+                        "import java.util.regex.Pattern;",
+                        "class Test {",
+                        "    private Object test(EntryStream<Pattern, String> stream) {",
+                        "        // BUG: Diagnostic contains: does not override",
+                        "        return stream.toImmutableMap();",
                         "    }",
                         "}")
                 .doTest();
