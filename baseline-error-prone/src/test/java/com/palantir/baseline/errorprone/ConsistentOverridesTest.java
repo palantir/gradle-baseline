@@ -276,6 +276,6 @@ class ConsistentOverridesTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(new ConsistentOverrides(), getClass());
+        return RefactoringValidator.of(ConsistentOverrides.class, getClass());
     }
 }
