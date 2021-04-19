@@ -223,7 +223,10 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 "AutoCloseableMustBeClosed",
                 "CatchSpecificity",
                 "PreferImmutableStreamExCollections",
-                "UnusedVariable");
+                "UnusedVariable",
+                // ConsistentOverrides will be enabled in a follow-up with
+                // a clean migration path.
+                "ConsistentOverrides");
         errorProneOptions.error(
                 "EqualsHashCode",
                 "EqualsIncompatibleType",
