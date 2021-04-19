@@ -42,7 +42,6 @@ import org.immutables.value.Value.Immutable;
         name = "ConsistentOverrides",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        providesFix = BugPattern.ProvidesFix.REQUIRES_HUMAN_ATTENTION,
         severity = SeverityLevel.ERROR,
         summary = "Method overrides should have variable names consistent with the super-method when there "
                 + "are multiple parameters with the same type to avoid incorrectly binding values to variables.")
