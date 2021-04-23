@@ -29,6 +29,7 @@ allprojects {
     repositories {
         mavenCentral()
         jcenter()
+        gradlePluginPortal()
     }
 
     // Since we are using gradle-baseline in gradle-baseline we need to undo forces on project dependencies. Following
