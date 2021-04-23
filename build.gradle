@@ -2,9 +2,9 @@ import net.ltgt.gradle.errorprone.CheckSeverity
 
 buildscript {
     repositories {
-        jcenter()
         gradlePluginPortal()
-        maven { url  'https://palantir.bintray.com/releases'}
+        mavenCentral()
+        jcenter()
     }
 
     dependencies {
@@ -27,9 +27,9 @@ apply plugin: 'com.palantir.baseline'
 
 allprojects {
     repositories {
+        mavenCentral()
         jcenter()
         gradlePluginPortal()
-        maven { url  'https://palantir.bintray.com/releases'}
     }
 
     // Since we are using gradle-baseline in gradle-baseline we need to undo forces on project dependencies. Following
