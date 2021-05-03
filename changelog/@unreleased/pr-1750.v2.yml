@@ -1,0 +1,5 @@
+type: feature
+feature:
+  description: Adds the `baseline-immutables` plugin to enable incremental compilation for Immutables.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1750

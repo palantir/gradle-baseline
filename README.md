@@ -24,6 +24,7 @@ _Baseline is a family of Gradle plugins for configuring Java projects with sensi
 | `com.palantir.baseline-encoding`              | Ensures projects use the UTF-8 encoding in compile tasks.
 | `com.palantir.baseline-release-compatibility` | Ensures projects targetting older JREs only compile against classes and methods available in those JREs.
 | `com.palantir.baseline-testing`               | Configures test tasks to dump heap dumps (hprof files) for convenient debugging
+| `com.palantir.baseline-immutables`            | Enables incremental compilation for the [Immutables](http://immutables.github.io/) annotation processor.
 
 See also the [Baseline Java Style Guide and Best Practices](./docs).
 
@@ -402,6 +403,14 @@ The plugin also adds a `checkJUnitDependencies` to make the migration to JUnit5 
 
 3. For repos that use 'snapshot' style testing, it's convenient to have a single command to accept the updated snapshots after a code change.
 This plugin ensures that if you run tests with `./gradlew test -Drecreate=true`, the system property will be passed down to the running Java process (which can be detected with `Boolean.getBoolean("recreate")`).
+
+## com.palantir.baseline-immutables
+
+This plugin enables incremental compilation for the [Immutables](http://immutables.github.io/) annotation processor.
+
+This plugin adds the `-Aimmutables.gradle.incremental` compiler arg to the compile Java task for any source set whose annotation processor configuration contains the Immutables annotation processor.
+
+For more details, see the Immutables incremental compilation [tracking issue](https://github.com/immutables/immutables/issues/804).
 
 ## com.palantir.baseline-fix-gradle-java (off by default)
 
