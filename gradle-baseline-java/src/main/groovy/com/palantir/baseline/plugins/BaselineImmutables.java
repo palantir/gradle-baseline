@@ -16,12 +16,13 @@
 
 package com.palantir.baseline.plugins;
 
+import java.util.Collections;
 import java.util.Objects;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Dependency;
-import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.compile.JavaCompile;
 
 public final class BaselineImmutables implements Plugin<Project> {
@@ -29,10 +30,19 @@ public final class BaselineImmutables implements Plugin<Project> {
     @Override
     public void apply(Project project) {
         project.getPluginManager().withPlugin("java", unused -> {
-            project.afterEvaluate(proj -> {
-                proj.getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().stream()
-                        .filter(sourceSet -> hasImmutablesProcessor(project, sourceSet))
-                        .forEach(sourceSet -> addImmutablesIncrementalCompilerArg(project, sourceSet));
+            project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
+                project.getTasks()
+                        .named(sourceSet.getCompileJavaTaskName(), JavaCompile.class)
+                        .get()
+                        .getOptions()
+                        .getCompilerArgumentProviders()
+                        .add(() -> {
+                            if (hasImmutablesProcessor(project, sourceSet)) {
+                                return Collections.singletonList("-Aimmutables.gradle.incremental");
+                            }
+
+                            return Collections.emptyList();
+                        });
             });
         });
     }
@@ -48,14 +58,5 @@ public final class BaselineImmutables implements Plugin<Project> {
 
     private static boolean isImmutablesValue(Dependency dep) {
         return Objects.equals(dep.getGroup(), "org.immutables") && Objects.equals(dep.getName(), "value");
-    }
-
-    private static void addImmutablesIncrementalCompilerArg(Project project, SourceSet sourceSet) {
-        project.getTasks()
-                .named(sourceSet.getCompileJavaTaskName(), JavaCompile.class)
-                .get()
-                .getOptions()
-                .getCompilerArgs()
-                .add("-Aimmutables.gradle.incremental");
     }
 }
