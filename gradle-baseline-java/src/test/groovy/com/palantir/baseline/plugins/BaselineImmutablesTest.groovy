@@ -21,7 +21,7 @@ import nebula.test.IntegrationSpec
 class BaselineImmutablesTest extends IntegrationSpec {
     private static final String IMMUTABLES = 'org.immutables:value:2.8.8'
 
-    def 'should insert args into the correct places'() {
+    def 'inserts incremental compilation args into source sets that have immutables'() {
         buildFile << """
             plugins {
                 id 'org.unbroken-dome.test-sets' version '3.0.1'
