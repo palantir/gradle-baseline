@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Build compiler args for `com.palantir.baseline-immutables` plugin lazily to avoid `afterEvaluate` ordering issues.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1752
