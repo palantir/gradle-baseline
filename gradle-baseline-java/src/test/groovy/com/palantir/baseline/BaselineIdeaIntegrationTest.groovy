@@ -32,7 +32,7 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         allprojects {
             apply plugin: 'com.palantir.baseline-idea'
             repositories {
-                maven { url 'https://dl.bintray.com/palantir/releases' }
+                mavenCentral()
                 jcenter()
             }
         }

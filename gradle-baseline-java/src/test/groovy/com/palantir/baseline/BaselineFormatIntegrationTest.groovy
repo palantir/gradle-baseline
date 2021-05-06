@@ -44,7 +44,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         }
         repositories {
             // to resolve the `palantirJavaFormat` configuration
-            maven { url 'https://dl.bintray.com/palantir/releases' }
+            mavenCentral()
             jcenter()
         }
     '''.stripIndent()
@@ -131,7 +131,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
             }
             repositories {
                 // to resolve the `palantirJavaFormat` configuration
-                maven { url 'https://dl.bintray.com/palantir/releases' }
+                mavenCentral()
                 jcenter()
             }
         """.stripIndent()
