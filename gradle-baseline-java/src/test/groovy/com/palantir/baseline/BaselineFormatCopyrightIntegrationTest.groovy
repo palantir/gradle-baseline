@@ -98,7 +98,7 @@ class BaselineFormatCopyrightIntegrationTest extends AbstractPluginTest {
         }
         repositories {
             // to resolve the `palantirJavaFormat` configuration
-            maven { url 'https://dl.bintray.com/palantir/releases' }
+            mavenCentral()
             jcenter()
         }
         dependencies {

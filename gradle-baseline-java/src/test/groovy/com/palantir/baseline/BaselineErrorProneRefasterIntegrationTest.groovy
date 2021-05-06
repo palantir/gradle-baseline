@@ -34,7 +34,7 @@ class BaselineErrorProneRefasterIntegrationTest extends AbstractPluginTest {
             mavenLocal()
             jcenter()
             // TODO(forozco): figure out why pTML no longer works
-            maven { url  "http://palantir.bintray.com/releases" }
+            mavenCentral()
         }
         tasks.withType(JavaCompile) {
             options.compilerArgs += ['-Werror', '-Xlint:deprecation']

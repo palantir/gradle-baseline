@@ -34,7 +34,6 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         }
         repositories {
             mavenCentral()
-            maven { url 'https://dl.bintray.com/palantir/releases' }
         }
     """.stripIndent()
 
