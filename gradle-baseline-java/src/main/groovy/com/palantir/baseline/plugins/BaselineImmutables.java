@@ -24,6 +24,7 @@ import org.gradle.api.artifacts.Dependency;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.compile.JavaCompile;
+import org.gradle.process.CommandLineArgumentProvider;
 
 public final class BaselineImmutables implements Plugin<Project> {
 
@@ -36,12 +37,16 @@ public final class BaselineImmutables implements Plugin<Project> {
                         .get()
                         .getOptions()
                         .getCompilerArgumentProviders()
-                        .add(() -> {
-                            if (hasImmutablesProcessor(project, sourceSet)) {
-                                return Collections.singletonList("-Aimmutables.gradle.incremental");
-                            }
+                        // Use an anonymous class because tasks with lambda inputs cannot be cached
+                        .add(new CommandLineArgumentProvider() {
+                            @Override
+                            public Iterable<String> asArguments() {
+                                if (hasImmutablesProcessor(project, sourceSet)) {
+                                    return Collections.singletonList("-Aimmutables.gradle.incremental");
+                                }
 
-                            return Collections.emptyList();
+                                return Collections.emptyList();
+                            }
                         });
             });
         });
