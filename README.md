@@ -189,7 +189,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `VisibleForTestingPackagePrivate`: `@VisibleForTesting` members should be package-private.
 - `OptionalFlatMapOfNullable`: Optional.map functions may return null to safely produce an empty result.
 - `ExtendsErrorOrThrowable`: Avoid extending Error (or subclasses of it) or Throwable directly.
-- `ImmutablesStyleCollision`: Prevent unintentionally voiding immutables Style meta-annotations through the introduction of inline style annotations.
+- `ImmutablesStyle`: Disallow the use of inline immutables style annotations to avoid forcing compile dependencies on consumers.
 - `TooManyArguments`: Prefer Interface that take few arguments rather than many.
 - `ObjectsHashCodeUnnecessaryVarargs`: java.util.Objects.hash(non-varargs) should be replaced with java.util.Objects.hashCode(value) to avoid unnecessary varargs array allocations.
 - `PreferStaticLoggers`: Prefer static loggers over instance loggers.
