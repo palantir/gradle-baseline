@@ -1,0 +1,8 @@
+type: improvement
+improvement:
+  description: |-
+    Add ImmutablesInterfaceDefaultValue
+
+    @Value.Immutable interface default methods should be annotated @Value.Default
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1761
