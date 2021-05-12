@@ -21,6 +21,27 @@ import org.junit.jupiter.api.Test;
 public class ImmutablesInterfaceDefaultValueTest {
 
     @Test
+    public void testFailsWhenDefaultMethodNotAnnotated() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import org.immutables.value.*;",
+                        "public class Test {",
+                        "    @Value.Immutable",
+                        "    public interface InterfaceWithValueDefault {",
+                        "        String value();",
+                        "",
+                        "        // BUG: Diagnostic contains: @Value.Immutable interface"
+                                + " default methods should be annotated with"
+                                + " @Value.Default, @Value.Derived, or @Value.Lazy",
+                        "        default String defaultValue() {",
+                        "            return \"default\";",
+                        "        }",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testPassesWhenDefaultMethodAnnotatedValueDefault() {
         helper().addSourceLines(
                         "Test.java",
@@ -29,6 +50,7 @@ public class ImmutablesInterfaceDefaultValueTest {
                         "    @Value.Immutable",
                         "    public interface InterfaceWithValueDefault {",
                         "        String value();",
+                        "",
                         "        @Value.Default",
                         "        default String defaultValue() {",
                         "            return \"default\";",
@@ -47,6 +69,7 @@ public class ImmutablesInterfaceDefaultValueTest {
                         "    @Value.Immutable",
                         "    public interface InterfaceWithValueDefault {",
                         "        String value();",
+                        "",
                         "        @Value.Derived",
                         "        default String derivedValue() {",
                         "            return value();",
@@ -65,6 +88,7 @@ public class ImmutablesInterfaceDefaultValueTest {
                         "    @Value.Immutable",
                         "    public interface InterfaceWithValueDefault {",
                         "        String value();",
+                        "",
                         "        @Value.Lazy",
                         "        default String lazyValue() {",
                         "            return value();",
@@ -84,15 +108,18 @@ public class ImmutablesInterfaceDefaultValueTest {
                         "    @Value.Immutable",
                         "    public interface InterfaceWithValueDefault {",
                         "        String value();",
+                        "",
                         "    // BUG: Diagnostic contains: "
                                 + "@Value.Immutable interface default methods should be annotated @Value.Default",
                         "        default String defaultValue() {",
                         "            return \"default\";",
                         "        }",
+                        "",
                         "        @Value.Derived",
                         "        default String derivedValue() {",
                         "            return value();",
                         "        }",
+                        "",
                         "        @Value.Lazy",
                         "        default String lazyValue() {",
                         "            return value();",
@@ -106,14 +133,17 @@ public class ImmutablesInterfaceDefaultValueTest {
                         "    @Value.Immutable",
                         "    public interface InterfaceWithValueDefault {",
                         "        String value();",
+                        "",
                         "        @Value.Default",
                         "        default String defaultValue() {",
                         "            return \"default\";",
                         "        }",
+                        "",
                         "        @Value.Derived",
                         "        default String derivedValue() {",
                         "            return value();",
                         "        }",
+                        "",
                         "        @Value.Lazy",
                         "        default String lazyValue() {",
                         "            return value();",

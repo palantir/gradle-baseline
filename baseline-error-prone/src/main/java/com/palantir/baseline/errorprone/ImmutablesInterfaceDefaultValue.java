@@ -25,13 +25,18 @@ import com.google.errorprone.bugpatterns.BugChecker.MethodTreeMatcher;
 import com.google.errorprone.fixes.SuggestedFix;
 import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
-import com.google.errorprone.util.ASTHelpers;
+import com.google.errorprone.matchers.Matcher;
+import com.google.errorprone.matchers.Matchers;
 import com.sun.source.tree.MethodTree;
-import com.sun.tools.javac.code.Symbol.ClassSymbol;
-import com.sun.tools.javac.code.Symbol.MethodSymbol;
+import com.sun.source.tree.Tree;
+import javax.lang.model.element.Modifier;
 
 /**
- * Checks that interface default methods in an immutables.org @Value.Immutable are marked with @Value.Default.
+ * Checks that interface default methods in an immutables.org @Value.Immutable are
+ * annotated with
+ * <a href="https://immutables.github.io/immutable.html#default-attributes">@Value.Default</a> ,
+ * <a href="https://immutables.github.io/immutable.html#derived-attributes">@Value.Derived</a> , or
+ * <a href="https://immutables.github.io/immutable.html#lazy-attributes">@Value.Lazy</a> .
  */
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -39,26 +44,26 @@ import com.sun.tools.javac.code.Symbol.MethodSymbol;
         linkType = LinkType.CUSTOM,
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         severity = BugPattern.SeverityLevel.ERROR,
-        summary = "@Value.Immutable interface default methods should be annotated @Value.Default")
+        summary = "@Value.Immutable interface default methods should be annotated with"
+                + " @Value.Default, @Value.Derived, or @Value.Lazy")
 public final class ImmutablesInterfaceDefaultValue extends BugChecker implements MethodTreeMatcher {
+
+    private static final Matcher<Tree> MISSING_ANNOTATION_MATCHER = Matchers.allOf(
+            Matchers.enclosingClass(Matchers.hasAnnotation("org.immutables.value.Value.Immutable")),
+            Matchers.hasModifier(Modifier.DEFAULT),
+            Matchers.not(Matchers.anyOf(
+                    Matchers.hasAnnotation("org.immutables.value.Value.Default"),
+                    Matchers.hasAnnotation("org.immutables.value.Value.Derived"),
+                    Matchers.hasAnnotation("org.immutables.value.Value.Lazy"))));
 
     @Override
     public Description matchMethod(MethodTree tree, VisitorState state) {
-        ClassSymbol enclosingClass = ASTHelpers.enclosingClass(ASTHelpers.getSymbol(tree));
-        if (enclosingClass != null
-                && ASTHelpers.hasAnnotation(enclosingClass, "org.immutables.value.Value.Immutable", state)) {
-            MethodSymbol methodSymbol = ASTHelpers.getSymbol(tree);
-            if (methodSymbol != null
-                    && methodSymbol.isDefault()
-                    && !ASTHelpers.hasAnnotation(methodSymbol, "org.immutables.value.Value.Default", state)
-                    && !ASTHelpers.hasAnnotation(methodSymbol, "org.immutables.value.Value.Derived", state)
-                    && !ASTHelpers.hasAnnotation(methodSymbol, "org.immutables.value.Value.Lazy", state)) {
-                SuggestedFix.Builder builder = SuggestedFix.builder();
-                String annotation = SuggestedFixes.qualifyType(state, builder, "org.immutables.value.Value.Default");
-                return buildDescription(tree)
-                        .addFix(builder.prefixWith(tree, "@" + annotation + " ").build())
-                        .build();
-            }
+        if (MISSING_ANNOTATION_MATCHER.matches(tree, state)) {
+            SuggestedFix.Builder builder = SuggestedFix.builder();
+            String annotation = SuggestedFixes.qualifyType(state, builder, "org.immutables.value.Value.Default");
+            return buildDescription(tree)
+                    .addFix(builder.prefixWith(tree, "@" + annotation + " ").build())
+                    .build();
         }
         return Description.NO_MATCH;
     }
