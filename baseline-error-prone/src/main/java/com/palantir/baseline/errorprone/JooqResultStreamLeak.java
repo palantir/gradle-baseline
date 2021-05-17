@@ -53,7 +53,7 @@ public final class JooqResultStreamLeak extends StreamResourceLeak {
             return Description.NO_MATCH;
         }
 
-        return matchNewClassOrMethodInvocation(tree, state);
+        return matchNewClassOrMethodInvocation(tree, state, findingPerSite());
     }
 
     private static boolean shouldBeAutoClosed(MethodInvocationTree tree, VisitorState state) {
