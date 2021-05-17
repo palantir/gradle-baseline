@@ -5,7 +5,10 @@ dependencies {
   compile gradleApi()
   compile 'com.google.guava:guava'
 
+  annotationProcessor 'org.immutables:value'
   annotationProcessor 'org.inferred:freebuilder'
+
+  compileOnly 'org.immutables:value::annotations'
   compileOnly 'org.inferred:freebuilder'
 
   testCompile 'com.google.guava:guava'

@@ -20,15 +20,29 @@ import org.gradle.api.Project;
 import org.gradle.api.file.DirectoryProperty;
 
 public class JunitReportsExtension {
+    private static final String EXT_JUNIT_REPORTS = "junitReports";
 
     private final DirectoryProperty reportsDirectory;
+    private final TaskTimer timer;
 
-    public JunitReportsExtension(Project project) {
-        this.reportsDirectory = project.getObjects().directoryProperty();
-        reportsDirectory.set(project.getLayout().getBuildDirectory().dir("junit-reports"));
+    static JunitReportsExtension register(Project project) {
+        TaskTimer timer = new StyleTaskTimer();
+        project.getGradle().addListener(timer);
+        return project.getExtensions().create(EXT_JUNIT_REPORTS, JunitReportsExtension.class, timer);
+    }
+
+    public JunitReportsExtension(Project project, TaskTimer timer) {
+        this.reportsDirectory = project.getObjects()
+                .directoryProperty()
+                .value(project.getLayout().getBuildDirectory().dir("junit-reports"));
+        this.timer = timer;
     }
 
     public final DirectoryProperty getReportsDirectory() {
         return reportsDirectory;
+    }
+
+    public final TaskTimer getTimer() {
+        return this.timer;
     }
 }
