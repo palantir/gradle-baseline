@@ -51,7 +51,7 @@ public final class FailuresReportGeneratorTests {
     @Test
     public void testJavacErrors() {
         List<Failure> failures = ImmutableList.of(
-                new Failure.Builder()
+                Failure.builder()
                         .file(new File(ROOT, "src/main/java/com/example/MyClass.java"))
                         .line(8)
                         .severity("ERROR")
@@ -59,7 +59,7 @@ public final class FailuresReportGeneratorTests {
                         .details("\n    private final int a = \"hello\";                               "
                                 + "\n                          ^")
                         .build(),
-                new Failure.Builder()
+                Failure.builder()
                         .file(new File(ROOT, "src/main/java/com/example/MyClass.java"))
                         .line(12)
                         .severity("ERROR")

@@ -21,7 +21,6 @@ import java.io.Writer;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.List;
-import javax.inject.Inject;
 import javax.xml.transform.TransformerException;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.Project;
@@ -29,63 +28,57 @@ import org.gradle.api.Task;
 import org.gradle.api.file.Directory;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.RegularFileProperty;
+import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.util.GUtil;
 import org.w3c.dom.Document;
 
-public class JunitReportsFinalizer extends DefaultTask {
+public abstract class JunitReportsFinalizer extends DefaultTask {
 
     public static void registerFinalizer(
             Project project,
             String taskName,
-            TaskTimer timer,
+            TaskTimer taskTimer,
             FailuresSupplier failuresSupplier,
             Provider<Directory> reportDir) {
+        TaskProvider<Task> wrappedTask = project.getTasks().named(taskName);
         TaskProvider<JunitReportsFinalizer> finalizer = project.getTasks()
-                .register(GUtil.toLowerCamelCase(taskName + " CircleFinalizer"), JunitReportsFinalizer.class, task -> {
-                    task.setTaskTimer(timer);
-                    task.setFailuresSupplier(failuresSupplier);
-                    task.getTargetFile()
-                            .set(reportDir.map(dir -> dir.file(project.getName() + "-" + taskName + ".xml")));
-                    task.getReportDir().set(reportDir);
-                });
+                .register(
+                        GUtil.toLowerCamelCase(taskName + " junitReportsFinalizer"),
+                        JunitReportsFinalizer.class,
+                        task -> {
+                            task.getWrappedDidWork()
+                                    .set(project.provider(
+                                            () -> wrappedTask.get().getDidWork()));
+                            task.getWrappedTaskName().set(taskName);
+                            task.getDurationNanos()
+                                    .set(project.provider(() -> taskTimer.getTaskTimeNanos(wrappedTask.get())));
+                            task.setFailuresSupplier(failuresSupplier);
+                            task.getTargetFile()
+                                    .set(reportDir.map(dir -> dir.file(project.getName() + "-" + taskName + ".xml")));
+                            task.getReportDir().set(reportDir);
+                        });
 
-        project.getTasks().named(taskName, task -> {
+        wrappedTask.get().finalizedBy(finalizer);
+        wrappedTask.configure(task -> {
             task.finalizedBy(finalizer);
         });
     }
 
-    private Task styleTask;
-    private TaskTimer taskTimer;
     private FailuresSupplier failuresSupplier;
-    private final RegularFileProperty targetFile = getProject().getObjects().fileProperty();
-    private final DirectoryProperty reportDir = getProject().getObjects().directoryProperty();
-
-    @Inject
-    public JunitReportsFinalizer() {}
 
     @Input
-    public final Task getStyleTask() {
-        return styleTask;
-    }
-
-    public final void setStyleTask(Task styleTask) {
-        this.styleTask = styleTask;
-    }
+    public abstract Property<Boolean> getWrappedDidWork();
 
     @Input
-    public final TaskTimer getTaskTimer() {
-        return taskTimer;
-    }
+    abstract Property<String> getWrappedTaskName();
 
-    public final void setTaskTimer(TaskTimer taskTimer) {
-        this.taskTimer = taskTimer;
-    }
-
-    @Input
+    @Internal
     public final FailuresSupplier getFailuresSupplier() {
         return failuresSupplier;
     }
@@ -94,19 +87,18 @@ public class JunitReportsFinalizer extends DefaultTask {
         this.failuresSupplier = failuresSupplier;
     }
 
-    @Input
-    public final RegularFileProperty getTargetFile() {
-        return targetFile;
-    }
+    @Internal
+    public abstract Property<Long> getDurationNanos();
 
-    @Input
-    public final DirectoryProperty getReportDir() {
-        return reportDir;
-    }
+    @OutputFile
+    public abstract RegularFileProperty getTargetFile();
+
+    @Internal
+    public abstract DirectoryProperty getReportDir();
 
     @TaskAction
     public final void createCircleReport() throws IOException, TransformerException {
-        if (!styleTask.getDidWork()) {
+        if (!getWrappedDidWork().get()) {
             setDidWork(false);
             return;
         }
@@ -115,12 +107,12 @@ public class JunitReportsFinalizer extends DefaultTask {
             File rootDir = getProject().getRootProject().getProjectDir();
             String projectName = getProject().getName();
             List<Failure> failures = failuresSupplier.getFailures();
-            long taskTimeNanos = taskTimer.getTaskTimeNanos(styleTask);
+            long taskTimeNanos = getDurationNanos().get();
 
             Document report = JunitReportCreator.reportToXml(FailuresReportGenerator.failuresReport(
-                    rootDir, projectName, styleTask.getName(), taskTimeNanos, failures));
+                    rootDir, projectName, getWrappedTaskName().get(), taskTimeNanos, failures));
 
-            File target = targetFile.getAsFile().get();
+            File target = getTargetFile().getAsFile().get();
             Files.createDirectories(target.getParentFile().toPath());
             try (Writer writer = Files.newBufferedWriter(target.toPath(), StandardCharsets.UTF_8)) {
                 XmlUtils.write(writer, report);
@@ -129,7 +121,7 @@ public class JunitReportsFinalizer extends DefaultTask {
             RuntimeException modified;
             try {
                 modified = failuresSupplier.handleInternalFailure(
-                        reportDir.getAsFile().get().toPath(), e);
+                        getReportDir().getAsFile().get().toPath(), e);
             } catch (RuntimeException x) {
                 e.addSuppressed(x);
                 throw e;

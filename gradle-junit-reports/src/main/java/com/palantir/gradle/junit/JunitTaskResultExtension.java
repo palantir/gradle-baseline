@@ -16,9 +16,12 @@
 
 package com.palantir.gradle.junit;
 
+import java.nio.file.Path;
+import java.util.List;
 import org.gradle.api.NamedDomainObjectSet;
 import org.gradle.api.Project;
 import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.provider.Provider;
 import org.immutables.value.Value.Immutable;
 
 public class JunitTaskResultExtension {
@@ -37,6 +40,20 @@ public class JunitTaskResultExtension {
         return taskEntries;
     }
 
+    public final void registerTask(String taskName, Provider<List<Failure>> failures) {
+        registerTask(taskName, new FailuresSupplier() {
+            @Override
+            public List<Failure> getFailures() {
+                return failures.get();
+            }
+
+            @Override
+            public RuntimeException handleInternalFailure(Path _reportDir, RuntimeException ex) {
+                return ex;
+            }
+        });
+    }
+
     public final void registerTask(String taskName, FailuresSupplier failuresSupplier) {
         taskEntries.add(TaskEntry.of(taskName, failuresSupplier));
     }
@@ -44,13 +61,13 @@ public class JunitTaskResultExtension {
     @Immutable
     interface TaskEntry {
 
-        String taskName();
+        String name();
 
         FailuresSupplier failuresSupplier();
 
-        static TaskEntry of(String taskName, FailuresSupplier failuresSupplier) {
+        static TaskEntry of(String name, FailuresSupplier failuresSupplier) {
             return ImmutableTaskEntry.builder()
-                    .taskName(taskName)
+                    .name(name)
                     .failuresSupplier(failuresSupplier)
                     .build();
         }

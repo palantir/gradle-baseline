@@ -19,7 +19,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 
-interface FailuresSupplier {
+public interface FailuresSupplier {
     List<Failure> getFailures() throws IOException;
 
     RuntimeException handleInternalFailure(Path reportDir, RuntimeException ex);

@@ -16,12 +16,16 @@
 package com.palantir.gradle.junit;
 
 import java.io.File;
-import org.inferred.freebuilder.FreeBuilder;
+import org.immutables.value.Value.Default;
+import org.immutables.value.Value.Immutable;
 
-@FreeBuilder
-interface Failure {
+@Immutable
+public interface Failure {
 
-    String source();
+    @Default
+    default String source() {
+        return "";
+    }
 
     File file();
 
@@ -31,12 +35,14 @@ interface Failure {
 
     String message();
 
-    String details();
+    @Default
+    default String details() {
+        return "";
+    }
 
-    class Builder extends Failure_Builder {
-        Builder() {
-            source("");
-            details("");
-        }
+    class Builder extends ImmutableFailure.Builder {}
+
+    static Builder builder() {
+        return new Builder();
     }
 }

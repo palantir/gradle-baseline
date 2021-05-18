@@ -30,14 +30,14 @@ public final class TestCommon {
     private static final String MESSAGE_2 = "Parameter name 'c' must match pattern '^[a-z][a-zA-Z0-9][a-zA-Z0-9]*$'.";
     private static final String MESSAGE_1 = "Parameter name 'b' must match pattern '^[a-z][a-zA-Z0-9][a-zA-Z0-9]*$'.";
     public static final ImmutableList<Failure> CHECKSTYLE_FAILURES = ImmutableList.of(
-            new Failure.Builder()
+            Failure.builder()
                     .source(SOURCE)
                     .severity("ERROR")
                     .file(new File(ROOT, CLASSFILE))
                     .line(135)
                     .message(MESSAGE_1)
                     .build(),
-            new Failure.Builder()
+            Failure.builder()
                     .source(SOURCE)
                     .severity("ERROR")
                     .file(new File(ROOT, CLASSFILE))

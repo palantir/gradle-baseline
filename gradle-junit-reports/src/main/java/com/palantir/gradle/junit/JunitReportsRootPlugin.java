@@ -18,9 +18,10 @@ package com.palantir.gradle.junit;
 
 import com.google.common.base.Preconditions;
 import java.nio.file.Path;
+import java.util.function.Predicate;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.file.Directory;
+import org.gradle.api.Task;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
 
@@ -30,23 +31,31 @@ public final class JunitReportsRootPlugin implements Plugin<Project> {
         Preconditions.checkState(
                 project.getRootProject().equals(project), "Plugin must only be applied to root project");
 
-        JunitReportsExtension reportsExtension = JunitReportsExtension.register(project);
-        configureBuildFailureFinalizer(project.getRootProject(), reportsExtension.getReportsDirectory());
-    }
+        Predicate<Task> isTaskRegistered = task -> task.getProject()
+                        .getExtensions()
+                        .getByType(JunitTaskResultExtension.class)
+                        .getTaskEntries()
+                        .findByName(task.getName())
+                != null;
 
-    private static void configureBuildFailureFinalizer(Project rootProject, Provider<Directory> reportsDir) {
-        Provider<RegularFile> targetFileProvider = reportsDir.map(dir -> {
-            int attemptNumber = 1;
-            Path targetFile = dir.getAsFile().toPath().resolve("gradle").resolve("build.xml");
-            while (targetFile.toFile().exists()) {
-                targetFile = dir.getAsFile().toPath().resolve("gradle").resolve("build" + ++attemptNumber + ".xml");
-            }
-            return dir.file(targetFile.toAbsolutePath().toString());
-        });
+        JunitReportsExtension reportsExtension = JunitReportsExtension.register(project, isTaskRegistered);
+        Provider<RegularFile> targetFileProvider = reportsExtension
+                .getReportsDirectory()
+                .map(dir -> {
+                    int attemptNumber = 1;
+                    Path targetFile = dir.getAsFile().toPath().resolve("gradle").resolve("build.xml");
+                    while (targetFile.toFile().exists()) {
+                        targetFile =
+                                dir.getAsFile().toPath().resolve("gradle").resolve("build" + ++attemptNumber + ".xml");
+                    }
+                    return dir.file(targetFile.toAbsolutePath().toString());
+                });
 
-        BuildFailureListener listener = new BuildFailureListener();
+        BuildFailureListener listener = new BuildFailureListener(isTaskRegistered);
         BuildFinishedAction action = new BuildFinishedAction(targetFileProvider, listener);
-        rootProject.getGradle().addListener(listener);
-        rootProject.getGradle().buildFinished(action);
+        project.getGradle().addListener(listener);
+        project.getGradle().buildFinished(action);
+
+        project.allprojects(proj -> proj.getPluginManager().apply(JunitReportsPlugin.class));
     }
 }

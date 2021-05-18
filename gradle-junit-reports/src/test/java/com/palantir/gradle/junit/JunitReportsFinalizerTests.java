@@ -20,8 +20,6 @@ import static com.palantir.gradle.junit.TestCommon.ROOT;
 import static com.palantir.gradle.junit.TestCommon.readTestFile;
 import static com.palantir.gradle.junit.TestCommon.testFile;
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.mockito.Mockito.mock;
-import static org.mockito.Mockito.when;
 
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
@@ -53,15 +51,13 @@ public class JunitReportsFinalizerTests {
 
         checkstyle.setDidWork(true);
 
-        TaskTimer timer = mock(TaskTimer.class);
-        when(timer.getTaskTimeNanos(checkstyle)).thenReturn(FAILED_CHECKSTYLE_TIME_NANOS);
-
         File targetFile = new File(projectDir.getRoot(), "reports/report.xml");
 
         JunitReportsFinalizer finalizer = (JunitReportsFinalizer)
                 project.task(ImmutableMap.of("type", JunitReportsFinalizer.class), "checkstyleTestCircleFinalizer");
-        finalizer.setStyleTask(checkstyle);
-        finalizer.setTaskTimer(timer);
+        finalizer.getWrappedDidWork().set(true);
+        finalizer.getWrappedTaskName().set(checkstyle.getName());
+        finalizer.getDurationNanos().set(FAILED_CHECKSTYLE_TIME_NANOS);
         finalizer.setFailuresSupplier(XmlReportFailuresSupplier.create(checkstyle, new CheckstyleReportHandler()));
         finalizer.getTargetFile().set(targetFile);
 
@@ -83,17 +79,13 @@ public class JunitReportsFinalizerTests {
                 .build();
         Checkstyle checkstyle = createCheckstyleTask(project);
 
-        checkstyle.setDidWork(false);
-
-        TaskTimer timer = mock(TaskTimer.class);
-        when(timer.getTaskTimeNanos(checkstyle)).thenReturn(FAILED_CHECKSTYLE_TIME_NANOS);
-
         File targetFile = new File(projectDir.getRoot(), "reports/report.xml");
 
         JunitReportsFinalizer finalizer = (JunitReportsFinalizer)
                 project.task(ImmutableMap.of("type", JunitReportsFinalizer.class), "checkstyleTestCircleFinalizer");
-        finalizer.setStyleTask(checkstyle);
-        finalizer.setTaskTimer(timer);
+        finalizer.getWrappedDidWork().set(false);
+        finalizer.getWrappedTaskName().set(checkstyle.getName());
+        finalizer.getDurationNanos().set(FAILED_CHECKSTYLE_TIME_NANOS);
         finalizer.setFailuresSupplier(XmlReportFailuresSupplier.create(checkstyle, new CheckstyleReportHandler()));
         finalizer.getTargetFile().set(targetFile);
 

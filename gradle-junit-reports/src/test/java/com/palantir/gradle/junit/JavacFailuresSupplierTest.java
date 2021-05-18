@@ -70,14 +70,14 @@ public final class JavacFailuresSupplierTest {
         JavacFailuresSupplier supplier = new JavacFailuresSupplier(new StringBuilder(javacOutput));
         assertThat(supplier.getFailures())
                 .containsExactly(
-                        new Failure.Builder()
+                        Failure.builder()
                                 .file(new File(CLASS_FILE))
                                 .line(LINE_1)
                                 .severity("ERROR")
                                 .message(ERROR_1)
                                 .details(DETAIL_1)
                                 .build(),
-                        new Failure.Builder()
+                        Failure.builder()
                                 .file(new File(CLASS_FILE))
                                 .line(12)
                                 .severity("ERROR")

@@ -52,8 +52,8 @@ public final class JunitReportsPlugin implements Plugin<Project> {
         ext.getTaskEntries()
                 .configureEach(entry -> JunitReportsFinalizer.registerFinalizer(
                         project,
-                        entry.taskName(),
-                        rootExt.getTimer(),
+                        entry.name(),
+                        rootExt.getTaskTimer(),
                         entry.failuresSupplier(),
                         rootExt.getReportsDirectory()));
     }

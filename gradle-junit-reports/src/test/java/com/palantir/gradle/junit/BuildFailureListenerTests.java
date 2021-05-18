@@ -16,16 +16,23 @@
 package com.palantir.gradle.junit;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 
 import com.palantir.gradle.junit.Report.TestCase;
+import java.util.function.Predicate;
 import org.gradle.api.Task;
 import org.gradle.api.plugins.quality.Checkstyle;
 import org.gradle.api.tasks.TaskState;
-import org.junit.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.junit.jupiter.MockitoExtension;
 
+@ExtendWith(MockitoExtension.class)
 public class BuildFailureListenerTests {
 
     private static final String PROJECT_1_NAME = "project1";
@@ -33,7 +40,15 @@ public class BuildFailureListenerTests {
     private static final String PROJECT_2_NAME = "project2";
     private static final String TASK_2_NAME = "task2";
 
-    private final BuildFailureListener listener = new BuildFailureListener();
+    @Mock
+    Predicate<Task> isTracked;
+
+    private BuildFailureListener listener;
+
+    @BeforeEach
+    void beforeEach() {
+        listener = new BuildFailureListener(isTracked);
+    }
 
     @Test
     public void noTasks() {
@@ -41,14 +56,16 @@ public class BuildFailureListenerTests {
     }
 
     @Test
-    public void onlyTestAndStyleTasks() {
+    public void ignoresTrackedTasks() {
+        when(isTracked.test(any())).thenReturn(true);
         listener.afterExecute(mock(org.gradle.api.tasks.testing.Test.class), succeeded());
         listener.afterExecute(mock(Checkstyle.class), succeeded());
         assertThat(listener.getTestCases()).isEmpty();
     }
 
     @Test
-    public void successfulTasks() {
+    public void includesSuccessfulUntrackedTasks() {
+        when(isTracked.test(any())).thenReturn(false);
         listener.afterExecute(task(PROJECT_1_NAME, TASK_1_NAME), succeeded());
         listener.afterExecute(task(PROJECT_2_NAME, TASK_2_NAME), succeeded());
         assertThat(listener.getTestCases())
@@ -63,6 +80,7 @@ public class BuildFailureListenerTests {
 
     @Test
     public void failedTasks() {
+        when(isTracked.test(any())).thenReturn(false);
         listener.afterExecute(task(PROJECT_1_NAME, TASK_1_NAME), failed("task 1 failed"));
         listener.afterExecute(task(PROJECT_2_NAME, TASK_2_NAME), failed("task 2 failed"));
 
