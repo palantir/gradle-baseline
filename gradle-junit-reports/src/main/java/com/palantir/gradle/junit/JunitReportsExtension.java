@@ -28,7 +28,7 @@ public class JunitReportsExtension {
     static JunitReportsExtension register(Project project) {
         TaskTimer timer = new StyleTaskTimer();
         project.getGradle().addListener(timer);
-        return project.getExtensions().create(EXT_JUNIT_REPORTS, JunitReportsExtension.class, timer);
+        return project.getExtensions().create(EXT_JUNIT_REPORTS, JunitReportsExtension.class, project, timer);
     }
 
     public JunitReportsExtension(Project project, TaskTimer timer) {
