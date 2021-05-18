@@ -28,7 +28,6 @@ public class BaselineErrorProneExtension {
      */
     private static final ImmutableList<String> DEFAULT_PATCH_CHECKS = ImmutableList.of(
             // Baseline checks
-            "BracesRequired",
             "CatchBlockLogException",
             // TODO(ckozak): re-enable pending scala check
             // "CatchSpecificity",
@@ -75,6 +74,7 @@ public class BaselineErrorProneExtension {
             // Built-in checks
             "ArrayEquals",
             "BadImport",
+            "MissingBraces",
             "MissingOverride",
             "ObjectsHashCodePrimitive",
             "PreferJavaTimeOverload",
