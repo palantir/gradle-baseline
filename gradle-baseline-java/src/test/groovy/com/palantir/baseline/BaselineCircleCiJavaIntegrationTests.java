@@ -70,7 +70,7 @@ public class BaselineCircleCiJavaIntegrationTests {
                 .contains("b = 2")
                 .contains("uses unchecked or unsafe operations");
 
-        File report = new File(reportsDir, "javac/foobar-compileJava.xml");
+        File report = new File(reportsDir, "/foobar-compileJava.xml");
         assertThat(report).exists();
         String reportXml = Files.asCharSource(report, StandardCharsets.UTF_8).read();
         assertThat(reportXml)
@@ -93,7 +93,7 @@ public class BaselineCircleCiJavaIntegrationTests {
                 .buildAndFail();
         assertThat(result.getOutput()).contains("2 tests completed, 1 failed");
 
-        File report = new File(reportsDir, "junit/test/TEST-MyClassTests.xml");
+        File report = new File(reportsDir, "junit/test/TEST-com.example.MyClassTests.xml");
         assertThat(report).exists();
         String reportXml = Files.asCharSource(report, StandardCharsets.UTF_8).read();
         assertThat(reportXml)
@@ -114,7 +114,7 @@ public class BaselineCircleCiJavaIntegrationTests {
                 .buildAndFail();
         assertThat(result.getOutput()).contains("2 tests completed, 1 failed");
 
-        File report = new File(reportsDir, "junit/subproject/test/TEST-MyClassTests.xml");
+        File report = new File(reportsDir, "junit/subproject/test/TEST-com.example.MyClassTests.xml");
         assertThat(report).exists();
         String reportXml = Files.asCharSource(report, StandardCharsets.UTF_8).read();
         assertThat(reportXml)
