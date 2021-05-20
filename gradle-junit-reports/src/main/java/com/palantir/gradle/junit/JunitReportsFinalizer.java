@@ -64,7 +64,6 @@ public abstract class JunitReportsFinalizer extends DefaultTask {
                             task.getReportDir().set(reportDir);
                         });
 
-        wrappedTask.get().finalizedBy(finalizer);
         wrappedTask.configure(task -> {
             task.finalizedBy(finalizer);
         });
