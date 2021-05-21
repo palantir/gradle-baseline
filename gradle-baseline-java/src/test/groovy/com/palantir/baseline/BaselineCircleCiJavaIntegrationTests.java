@@ -70,7 +70,7 @@ public class BaselineCircleCiJavaIntegrationTests {
                 .contains("b = 2")
                 .contains("uses unchecked or unsafe operations");
 
-        File report = new File(reportsDir, "javac/foobar-compileJava.xml");
+        File report = new File(reportsDir, "/foobar-compileJava.xml");
         assertThat(report).exists();
         String reportXml = Files.asCharSource(report, StandardCharsets.UTF_8).read();
         assertThat(reportXml)
@@ -134,7 +134,7 @@ public class BaselineCircleCiJavaIntegrationTests {
                 .buildAndFail();
         assertThat(result.getOutput()).contains("Checkstyle rule violations were found");
 
-        File report = new File(reportsDir, "checkstyle/foobar-checkstyleMain.xml");
+        File report = new File(reportsDir, "foobar-checkstyleMain.xml");
         assertThat(report).exists();
         String reportXml = Files.asCharSource(report, StandardCharsets.UTF_8).read();
         assertThat(reportXml).contains("Name 'a_constant' must match pattern");

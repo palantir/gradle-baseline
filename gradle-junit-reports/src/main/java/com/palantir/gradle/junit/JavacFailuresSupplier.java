@@ -61,7 +61,7 @@ public final class JavacFailuresSupplier implements FailuresSupplier {
             }
             Matcher matcher = ERROR_LINE.matcher(line);
             if (matcher.matches()) {
-                failureBuilder = new Failure.Builder()
+                failureBuilder = Failure.builder()
                         .file(new File(matcher.group(1)))
                         .line(Integer.parseInt(matcher.group(2)))
                         .severity("ERROR")

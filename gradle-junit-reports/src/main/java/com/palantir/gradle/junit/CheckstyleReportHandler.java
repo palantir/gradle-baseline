@@ -41,7 +41,7 @@ public final class CheckstyleReportHandler extends ReportHandler<Checkstyle> {
                 break;
 
             case "error":
-                failures.add(new Failure.Builder()
+                failures.add(Failure.builder()
                         .source(attributes.getValue("source"))
                         .severity(attributes.getValue("severity").toUpperCase())
                         .file(file)

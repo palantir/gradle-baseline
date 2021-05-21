@@ -16,19 +16,35 @@
 
 package com.palantir.gradle.junit;
 
+import java.util.function.Predicate;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.file.DirectoryProperty;
 
 public class JunitReportsExtension {
+    private static final String EXT_JUNIT_REPORTS = "junitReports";
 
     private final DirectoryProperty reportsDirectory;
+    private final TaskTimer taskTimer;
 
-    public JunitReportsExtension(Project project) {
-        this.reportsDirectory = project.getObjects().directoryProperty();
-        reportsDirectory.set(project.getLayout().getBuildDirectory().dir("junit-reports"));
+    static JunitReportsExtension register(Project project, Predicate<Task> isTaskRegistered) {
+        DefaultTaskTimer timer = new DefaultTaskTimer(isTaskRegistered);
+        project.getGradle().addListener(timer);
+        return project.getExtensions().create(EXT_JUNIT_REPORTS, JunitReportsExtension.class, project, timer);
+    }
+
+    public JunitReportsExtension(Project project, TaskTimer taskTimer) {
+        this.reportsDirectory = project.getObjects()
+                .directoryProperty()
+                .value(project.getLayout().getBuildDirectory().dir("junit-reports"));
+        this.taskTimer = taskTimer;
     }
 
     public final DirectoryProperty getReportsDirectory() {
         return reportsDirectory;
+    }
+
+    public final TaskTimer getTaskTimer() {
+        return taskTimer;
     }
 }

@@ -19,28 +19,32 @@ import java.io.PrintWriter;
 import java.io.StringWriter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.Predicate;
 import org.gradle.api.Task;
 import org.gradle.api.execution.TaskExecutionListener;
 import org.gradle.api.tasks.TaskExecutionException;
 import org.gradle.api.tasks.TaskState;
-import org.gradle.api.tasks.testing.Test;
 
 public final class BuildFailureListener implements TaskExecutionListener {
 
     private final List<Report.TestCase> testCases = new ArrayList<>();
+    private final Predicate<Task> isTracked;
+
+    public BuildFailureListener(Predicate<Task> isTracked) {
+        this.isTracked = isTracked;
+    }
 
     @Override
-    @SuppressWarnings("StrictUnusedVariable")
-    public void beforeExecute(Task task) {}
+    public void beforeExecute(Task _task) {}
 
     @Override
     public synchronized void afterExecute(Task task, TaskState state) {
-        if (isUntracked(task)) {
+        if (!isTracked.test(task)) {
             Report.TestCase.Builder testCase =
                     new Report.TestCase.Builder().name(":" + task.getProject().getName() + ":" + task.getName());
 
             Throwable failure = state.getFailure();
-            if (failure != null && isUntracked(task)) {
+            if (failure != null) {
                 if (failure instanceof TaskExecutionException && failure.getCause() != null) {
                     failure = failure.getCause();
                 }
@@ -66,9 +70,5 @@ public final class BuildFailureListener implements TaskExecutionListener {
         } else {
             return throwable.getClass().getSimpleName() + ": " + throwable.getMessage();
         }
-    }
-
-    private static boolean isUntracked(Task task) {
-        return !(task instanceof Test) && !StyleTaskTimer.isStyleTask(task);
     }
 }

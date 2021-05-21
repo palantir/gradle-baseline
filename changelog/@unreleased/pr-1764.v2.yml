@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Allow other plugins to register tasks to produce junit reports
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1764

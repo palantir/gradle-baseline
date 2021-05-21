@@ -17,8 +17,7 @@
 package com.palantir.gradle.junit;
 
 import org.gradle.api.Task;
-import org.gradle.api.execution.TaskExecutionListener;
 
-public interface TaskTimer extends TaskExecutionListener {
-    long getTaskTimeNanos(Task styleTask);
+public interface TaskTimer {
+    long getTaskTimeNanos(Task task);
 }

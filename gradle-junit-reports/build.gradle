@@ -5,12 +5,18 @@ dependencies {
   compile gradleApi()
   compile 'com.google.guava:guava'
 
+  annotationProcessor 'org.immutables:value'
   annotationProcessor 'org.inferred:freebuilder'
+
+  compileOnly 'org.immutables:value::annotations'
   compileOnly 'org.inferred:freebuilder'
 
-  testCompile 'com.google.guava:guava'
-  testCompile 'junit:junit'
-  testCompile 'org.assertj:assertj-core'
-  testCompile 'org.mockito:mockito-core'
+  testImplementation 'com.google.guava:guava'
   testImplementation 'com.netflix.nebula:nebula-test'
+  testImplementation 'org.assertj:assertj-core'
+  testImplementation 'org.junit.jupiter:junit-jupiter'
+  testImplementation 'org.mockito:mockito-core'
+  testImplementation 'org.mockito:mockito-junit-jupiter'
+
+  testRuntimeOnly 'org.junit.vintage:junit-vintage-engine'
 }
