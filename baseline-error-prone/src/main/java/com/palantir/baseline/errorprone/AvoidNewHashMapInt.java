@@ -27,16 +27,16 @@ import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.sun.source.tree.ExpressionTree;
-import com.sun.source.tree.MethodInvocationTree;
+import com.sun.source.tree.NewClassTree;
 
 @AutoService(BugChecker.class)
 @BugPattern(
         name = "AvoidNewHashMapInt",
-        link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
+        link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks", // TODO (DCohen)
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,
         summary = "The HashMap(int) constructor is misleading, use Maps.newHashMapWithExpectedSize(int) instead.")
-public final class AvoidNewHashMapInt extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
+public final class AvoidNewHashMapInt extends BugChecker implements BugChecker.NewClassTreeMatcher {
 
     private static final long serialVersionUID = 1L;
 
@@ -46,8 +46,8 @@ public final class AvoidNewHashMapInt extends BugChecker implements BugChecker.M
             .withParameters("int");
 
     @Override
-    public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
-
+    public Description matchNewClass(
+            NewClassTree tree, VisitorState state) {
         if (!NEW_HASH_MAP.matches(tree, state)) {
             return Description.NO_MATCH;
         }
