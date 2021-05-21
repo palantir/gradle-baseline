@@ -29,8 +29,8 @@ public final class AvoidNewHashMapIntTest {
                         "import java.util.HashMap;",
                         "class Test {{ Map<Integer, Integer> map = new HashMap<>(10);}}")
                 .addOutputLines("Test.java",
-                        "import java.util.Map;",
                         "import com.google.common.collect.Maps;",
+                        "import java.util.Map;",
                         "class Test {{ Map<Integer, Integer> map = Maps.newHashMapWithExpectedSize(10);")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
