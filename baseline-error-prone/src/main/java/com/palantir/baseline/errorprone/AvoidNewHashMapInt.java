@@ -32,7 +32,7 @@ import com.sun.source.tree.NewClassTree;
 @AutoService(BugChecker.class)
 @BugPattern(
         name = "AvoidNewHashMapInt",
-        link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks", // TODO (DCohen)
+        link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,
         summary = "The HashMap(int) constructor is misleading, use Maps.newHashMapWithExpectedSize(int) instead.")
@@ -63,10 +63,8 @@ public final class AvoidNewHashMapInt extends BugChecker implements BugChecker.N
                         + " size, it will double its internal storage array. Instead use Maps"
                         + ".newHashMapWithExpectedSize which behaves as expected."
                         + "See"
-                                + " https://github.com/palantir/gradle-baseline/blob/develop/docs/best-practices/java-coding-guidelines/readme.md#avoid-generics-clutter-where-possible"
+                                + " https://github.com/palantir/gradle-baseline/blob/develop/docs/best-practices/java-coding-guidelines/readme.md#avoid-new-HashMap(int)"
                                 + " for more information.")
-                // TODO (DCohen): update https://github.com/palantir/gradle-baseline/blob/develop/docs/best-practices
-                //  /java-coding-guidelines/readme.md with a new coding guideline.
                 .addFix(fixBuilder.replace(tree, replacement).build())
                 .build();
     }
