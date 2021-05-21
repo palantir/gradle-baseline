@@ -29,6 +29,7 @@ topics:
     - [Avoid Generics clutter where possible](#avoid-generics-clutter-where-possible)
     - [Keep Boolean expressions simple](#keep-boolean-expressions-simple)
     - [Durations: measured by longs or complex types, not by ints](#durations-measured-by-longs-or-complex-types-not-by-ints)
+    - [Avoid new HashMap(int), use Maps.newHashMapWithExpectedSize(int)](#avoid-new-HashMap(int))
   - [APIs and Interfaces](#apis-and-interfaces)
     - [Indicate failure consistently](#indicate-failure-consistently)
     - [Return empty arrays and collections, not null](#return-empty-arrays-and-collections-not-null)
@@ -647,6 +648,18 @@ interval that may feasibly take values on the order of hours or days
 must thus be represented by `long` types, or by appropriate
 non-primitive types such as Java8/Joda-Time
 [Duration](https://docs.oracle.com/javase/8/docs/api/java/time/Duration.html).
+
+### Avoid new HashMap(int)
+
+Avoid new HashMap(int), use Maps#newHashMapWithExpectedSize(int) instead.
+
+The behavior of `new HashMap(int)` is misleading -- the parameter represents an
+internal size rather than an ability to hold that number of elements.  If a HashMap
+with capacity K receives K elements, it will increase its capacity to 2*K along the way.
+This is because HashMap doubles its internal storage by 2 once it reaches 75% capacity.
+
+The Guava static method `Maps.newHashMapWithExpectedSize(int)` creates a HashMap which
+will not resize if provided the given number of elements.
 
 ## APIs and Interfaces
 
