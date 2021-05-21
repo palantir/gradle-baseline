@@ -35,7 +35,12 @@ import com.sun.source.tree.NewClassTree;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,
-        summary = "The HashMap(int) constructor is misleading, use Maps.newHashMapWithExpectedSize(int) instead.")
+        summary = "The HashMap(int) constructor is misleading: once the HashMap reaches 3/4 of the supplied"
+                + " size, it will double its internal storage array. Instead use Maps"
+                + ".newHashMapWithExpectedSize which behaves as expected."
+                + "See"
+                + " https://github.com/palantir/gradle-baseline/blob/develop/docs/best-practices/java-coding-guidelines/readme.md#avoid-new-HashMap(int)"
+                + " for more information.")
 public final class AvoidNewHashMapInt extends BugChecker implements BugChecker.NewClassTreeMatcher {
 
     private static final long serialVersionUID = 1L;
@@ -54,17 +59,9 @@ public final class AvoidNewHashMapInt extends BugChecker implements BugChecker.N
 
         SuggestedFix.Builder fixBuilder = SuggestedFix.builder();
         String newType = SuggestedFixes.qualifyType(state, fixBuilder, Maps.class.getName());
-        String arg = tree.getArguments().isEmpty()
-                ? ""
-                : state.getSourceForNode(tree.getArguments().get(0));
+        String arg = state.getSourceForNode(tree.getArguments().get(0));
         String replacement = newType + ".newHashMapWithExpectedSize(" + arg + ")";
         return buildDescription(tree)
-                .setMessage("The HashMap(int) constructor is misleading: once the HashMap reaches 3/4 of the supplied"
-                        + " size, it will double its internal storage array. Instead use Maps"
-                        + ".newHashMapWithExpectedSize which behaves as expected."
-                        + "See"
-                                + " https://github.com/palantir/gradle-baseline/blob/develop/docs/best-practices/java-coding-guidelines/readme.md#avoid-new-HashMap(int)"
-                                + " for more information.")
                 .addFix(fixBuilder.replace(tree, replacement).build())
                 .build();
     }
