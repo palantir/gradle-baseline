@@ -35,24 +35,20 @@ import com.sun.source.tree.NewClassTree;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,
-        summary = "The HashMap(int) constructor is misleading: once the HashMap reaches 3/4 of the supplied"
-                + " size, it will double its internal storage array. Instead use Maps"
-                + ".newHashMapWithExpectedSize which behaves as expected."
-                + "See"
-                + " https://github.com/palantir/gradle-baseline/blob/develop/docs/best-practices/java-coding-guidelines/readme.md#avoid-new-HashMap(int)"
-                + " for more information.")
+        summary = "The HashMap(int) constructor is misleading: once the HashMap reaches 3/4 of the supplied size, it"
+            + " will double its internal storage array. Instead use Maps.newHashMapWithExpectedSize which behaves as"
+            + " expected.See"
+            + " https://github.com/palantir/gradle-baseline/blob/develop/docs/best-practices/java-coding-guidelines/readme.md#avoid-new-HashMap(int)"
+            + " for more information.")
 public final class AvoidNewHashMapInt extends BugChecker implements BugChecker.NewClassTreeMatcher {
 
     private static final long serialVersionUID = 1L;
 
-
-    private static final Matcher<ExpressionTree> NEW_HASH_MAP = MethodMatchers.constructor()
-            .forClass("java.util.HashMap")
-            .withParameters("int");
+    private static final Matcher<ExpressionTree> NEW_HASH_MAP =
+            MethodMatchers.constructor().forClass("java.util.HashMap").withParameters("int");
 
     @Override
-    public Description matchNewClass(
-            NewClassTree tree, VisitorState state) {
+    public Description matchNewClass(NewClassTree tree, VisitorState state) {
         if (!NEW_HASH_MAP.matches(tree, state)) {
             return Description.NO_MATCH;
         }

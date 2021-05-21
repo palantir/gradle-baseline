@@ -24,11 +24,13 @@ public final class AvoidNewHashMapIntTest {
     @Test
     public void testRewriteHashMapConstructor() {
         RefactoringValidator.of(AvoidNewHashMapInt.class, getClass())
-                .addInputLines("Test.java",
+                .addInputLines(
+                        "Test.java",
                         "import java.util.Map;",
                         "import java.util.HashMap;",
                         "class Test {{ Map<Integer, Integer> map = new HashMap<>(10);}}")
-                .addOutputLines("Test.java",
+                .addOutputLines(
+                        "Test.java",
                         "import com.google.common.collect.Maps;",
                         "import java.util.HashMap;", // HACK
                         "import java.util.Map;",
