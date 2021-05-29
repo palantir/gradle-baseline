@@ -222,6 +222,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
         errorProneOptions.disable(
                 "AutoCloseableMustBeClosed",
                 "CatchSpecificity",
+                "InlineMeSuggester",
                 "PreferImmutableStreamExCollections",
                 "UnusedVariable",
                 // ConsistentOverrides will be enabled in a follow-up with
