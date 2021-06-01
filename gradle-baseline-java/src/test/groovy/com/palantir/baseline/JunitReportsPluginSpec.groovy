@@ -16,6 +16,7 @@
 
 package com.palantir.baseline
 
+import com.palantir.baseline.plugins.BaselineCircleCi
 import nebula.test.IntegrationSpec
 import nebula.test.functional.ExecutionResult
 import spock.lang.IgnoreIf
@@ -31,15 +32,15 @@ class JunitReportsPluginSpec extends IntegrationSpec {
         gradleVersion = gradleVersionNumber
 
         when:
-        buildFile << '''
+        buildFile << """
             apply plugin: 'java'
             apply plugin: 'checkstyle'
-            apply plugin: 'com.palantir.junit-reports'
+            ${applyPlugin(BaselineCircleCi)}
             
             repositories {
                 jcenter()
             }
-        '''.stripIndent()
+        """.stripIndent()
 
         file('src/main/java/foo/Foo.java') << '''
             package foo;
