@@ -42,17 +42,18 @@ import org.immutables.value.Value;
                 + "See https://github.com/immutables/immutables/issues/291.")
 public final class ImmutablesStyle extends BugChecker implements BugChecker.ClassTreeMatcher {
 
-    private static final Matcher<ClassTree> INLINE_STYLE_ANNOTATION = Matchers.hasAnnotation(Value.Style.class);
+    private static final Matcher<ClassTree> STYLE_ANNOTATION = Matchers.hasAnnotation(Value.Style.class);
 
     @Override
     public Description matchClass(ClassTree tree, VisitorState state) {
+        if (!STYLE_ANNOTATION.matches(tree, state)) {
+            return Description.NO_MATCH;
+        }
+
         switch (tree.getKind()) {
             case CLASS:
             case INTERFACE:
-                if (INLINE_STYLE_ANNOTATION.matches(tree, state)) {
-                    return describeMatch(tree);
-                }
-                break;
+                return describeMatch(tree);
             case ANNOTATION_TYPE:
                 ClassSymbol classSymbol = ASTHelpers.getSymbol(tree);
                 if (!ElementPredicates.hasSourceRetention(classSymbol)) {
