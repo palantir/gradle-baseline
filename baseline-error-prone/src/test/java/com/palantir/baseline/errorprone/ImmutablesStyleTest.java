@@ -16,7 +16,7 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.errorprone.CompilationTestHelper;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public class ImmutablesStyleTest {
 
@@ -96,6 +96,13 @@ public class ImmutablesStyleTest {
                         "@Value.Style(visibility = Value.Style.ImplementationVisibility.PUBLIC)\n",
                         "public @interface MyMetaAnnotation {}")
                 .addSourceLines("Person.java", "@MyMetaAnnotation", "public interface Person {}")
+                .doTest();
+    }
+
+    @Test
+    public void testOtherAnnotation() {
+        helper().addSourceLines("MyOtherAnnotation.java", "public @interface MyOtherAnnotation {}")
+                .addSourceLines("Person.java", "@MyOtherAnnotation", "public interface Person {}")
                 .doTest();
     }
 
