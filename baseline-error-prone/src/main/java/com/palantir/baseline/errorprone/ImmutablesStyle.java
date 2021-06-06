@@ -37,7 +37,7 @@ import org.immutables.value.Value;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         severity = SeverityLevel.WARNING,
         summary = "Using an inline Immutables @Value.Style annotation or meta-annotation with non-SOURCE "
-                + "rentention forces consumers to add a Immutables annotations to their compile classpath."
+                + "retention forces consumers to add a Immutables annotations to their compile classpath."
                 + "Instead use a meta-annotation with SOURCE retention."
                 + "See https://github.com/immutables/immutables/issues/291.")
 public final class ImmutablesStyle extends BugChecker implements BugChecker.ClassTreeMatcher {
