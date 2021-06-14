@@ -66,6 +66,20 @@ class VarUsageTest {
                 .doTest();
     }
 
+    @Test
+    void testNegative() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import java.util.stream.Stream;",
+                        "class Test {",
+                        "  void function(Stream<String> stream) {",
+                        "    stream.forEach(var -> System.out.println(var));",
+                        "  }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
     private RefactoringValidator fix() {
         return RefactoringValidator.of(VarUsage.class, getClass());
     }
