@@ -27,8 +27,10 @@ import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.util.ASTHelpers;
 import com.google.errorprone.util.ErrorProneToken;
+import com.sun.source.tree.LambdaExpressionTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.VariableTree;
+import com.sun.source.util.TreePath;
 import com.sun.tools.javac.parser.Tokens.TokenKind;
 
 @AutoService(BugChecker.class)
@@ -47,6 +49,15 @@ public final class VarUsage extends BugChecker implements BugChecker.VariableTre
         // prior to tokenizing the variable tree.
         String sourceType = state.getSourceForNode(typeTree);
         if (sourceType != null) {
+            return Description.NO_MATCH;
+        }
+        TreePath parentPath = state.getPath().getParentPath();
+        if (parentPath == null) {
+            return Description.NO_MATCH;
+        }
+        Tree parentTree = parentPath.getLeaf();
+        if (parentTree instanceof LambdaExpressionTree) {
+            // Lambdas may take the form: var -> var.foo()
             return Description.NO_MATCH;
         }
         for (ErrorProneToken token : state.getOffsetTokensForNode(tree)) {
