@@ -3,6 +3,10 @@ import net.ltgt.gradle.errorprone.CheckSeverity
 apply plugin: 'java-library'
 apply plugin: 'com.palantir.external-publish-jar'
 
+configurations {
+    errorProneDocGen
+}
+
 dependencies {
     compile 'com.google.errorprone:error_prone_core'
     compile 'org.mockito:mockito-errorprone'
@@ -26,8 +30,11 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-migrationsupport'
     testRuntimeOnly 'one.util:streamex'
 
+    errorProneDocGen 'com.google.errorprone:error_prone_docgen'
+
     annotationProcessor 'com.google.auto.service:auto-service'
     annotationProcessor 'org.immutables:value'
+    annotationProcessor 'com.google.errorprone:error_prone_docgen_processor'
     testAnnotationProcessor 'org.immutables:value'
     compileOnly 'com.google.auto.service:auto-service'
 }
@@ -46,4 +53,18 @@ def originalGroup = project.group
 group = originalGroup + '-internal'
 publishing.publications.maven {
     groupId = originalGroup
+}
+
+task updateDocs(type: JavaExec) {
+    doFirst {
+        // stub out a bugpattern markdown directory
+        new File("${buildDir.absolutePath}/docs/bugpattern/").mkdirs()
+    }
+    classpath configurations.errorProneDocGen
+    mainClass = 'com.google.errorprone.DocGenTool'
+    args "-bug_patterns=${buildDir.absolutePath}/generated/sources/annotationProcessor/java/main/bugPatterns.txt",
+                    "-docs_repository=${buildDir.absolutePath}/docs/generated-wiki/",
+                    "-explanations=${buildDir.absolutePath}/docs/bugpattern/",
+                    "-target=external"
+
 }
