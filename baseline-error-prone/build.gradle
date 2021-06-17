@@ -71,4 +71,4 @@ task updateDocs(type: Sync) {
     into file('docs/wiki')
 }
 
-task.check.dependsOn updateDocs
+tasks.check.dependsOn updateDocs
