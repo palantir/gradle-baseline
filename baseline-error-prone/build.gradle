@@ -55,16 +55,20 @@ publishing.publications.maven {
     groupId = originalGroup
 }
 
-task updateDocs(type: JavaExec) {
-    doFirst {
-        // stub out a bugpattern markdown directory
-        new File("${buildDir.absolutePath}/docs/bugpattern/").mkdirs()
-    }
+task generateDocs(type: JavaExec, dependsOn: classes) {
+    File outputDirectory = new File(buildDir, "docs/generated-wiki")
+    outputs.dir(outputDirectory)
     classpath configurations.errorProneDocGen
     mainClass = 'com.google.errorprone.DocGenTool'
     args "-bug_patterns=${buildDir.absolutePath}/generated/sources/annotationProcessor/java/main/bugPatterns.txt",
-                    "-docs_repository=${buildDir.absolutePath}/docs/generated-wiki/",
-                    "-explanations=${buildDir.absolutePath}/docs/bugpattern/",
+                    "-docs_repository=${outputDirectory.absolutePath}",
+                    "-explanations=${file('docs/bugpattern').absolutePath}",
                     "-target=external"
-
 }
+
+task updateDocs(type: Sync) {
+    from generateDocs
+    into file('docs/wiki')
+}
+
+task.check.dependsOn updateDocs
