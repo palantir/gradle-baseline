@@ -38,7 +38,7 @@ import java.lang.reflect.Proxy;
         name = "ProxyNonConstantType",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = LinkType.CUSTOM,
-        severity = SeverityLevel.SUGGESTION,
+        severity = SeverityLevel.WARNING,
         summary = "Proxy instances should be created using constant types known at compile time to allow native-image "
                 + "behavior to match hotspot. Methods which build proxies should take a "
                 + "`Function<InvocationHandler, ? extends T>` instead of arbitrary class references. "
