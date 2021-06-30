@@ -63,25 +63,4 @@ public final class LogsafeRid extends BugChecker implements MethodInvocationTree
 
         return Description.NO_MATCH;
     }
-    //
-    // private static boolean containsRid(Object value) {
-    //     if (value instanceof ResourceIdentifier) {
-    //         return true;
-    //     }
-    //     if (value instanceof String) {
-    //         return ResourceIdentifier.isValid((String) value);
-    //     }
-    //     if (value instanceof Optional<?>) {
-    //         return ((Optional<?>) value).map(LogsafeRid::containsRid).orElse(false);
-    //     }
-    //     if (value instanceof Collection<?>) {
-    //         return ((Collection<?>) value).stream().anyMatch(LogsafeRid::containsRid);
-    //     }
-    //     if (value instanceof Map<?, ?>) {
-    //         return ((Map<?, ?>) value)
-    //                 .entrySet().stream()
-    //                         .anyMatch(entry -> containsRid(entry.getKey()) || containsRid(entry.getValue()));
-    //     }
-    //     return false;
-    // }
 }
