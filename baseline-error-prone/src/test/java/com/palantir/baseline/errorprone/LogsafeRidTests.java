@@ -59,7 +59,8 @@ public final class LogsafeRidTests {
                         "  void f() {",
                         "    ResourceIdentifier rid = ResourceIdentifier.of(\"service\", \"instance\", \"locator\", "
                                 + "UUID.randomUUID().toString());\n",
-                        "    // BUG: Diagnostic contains: Arguments with with rid values are not guaranteed to be safe.",
+                        "    // BUG: Diagnostic contains: Arguments with with rid values are not guaranteed to be"
+                                + " safe.",
                         "    SafeArg.of(\"rid\", rid);",
                         "  }",
                         "",
@@ -128,7 +129,8 @@ public final class LogsafeRidTests {
                         "  void f() {",
                         "    ResourceIdentifier rid = ResourceIdentifier.of(\"service\", \"instance\", \"locator\", "
                                 + "UUID.randomUUID().toString());\n",
-                        "    // BUG: Diagnostic contains: Arguments with with rid values are not guaranteed to be safe.",
+                        "    // BUG: Diagnostic contains: Arguments with with rid values are not guaranteed to be"
+                                + " safe.",
                         "    SafeArg.of(\"rid\", Optional.of(rid));",
                         "  }",
                         "",
@@ -200,7 +202,8 @@ public final class LogsafeRidTests {
                         "  void f() {",
                         "    ResourceIdentifier rid = ResourceIdentifier.of(\"service\", \"instance\", \"locator\", "
                                 + "UUID.randomUUID().toString());\n",
-                        "    // BUG: Diagnostic contains: Arguments with with rid values are not guaranteed to be safe.",
+                        "    // BUG: Diagnostic contains: Arguments with with rid values are not guaranteed to be"
+                                + " safe.",
                         "    SafeArg.of(\"rid\", Map.of(rid, 1));",
                         "  }",
                         "",
@@ -272,7 +275,8 @@ public final class LogsafeRidTests {
                         "  void f() {",
                         "    ResourceIdentifier rid = ResourceIdentifier.of(\"service\", \"instance\", \"locator\", "
                                 + "UUID.randomUUID().toString());\n",
-                        "    // BUG: Diagnostic contains: Arguments with with rid values are not guaranteed to be safe.",
+                        "    // BUG: Diagnostic contains: Arguments with with rid values are not guaranteed to be"
+                                + " safe.",
                         "    SafeArg.of(\"rid\", Set.of(rid));",
                         "  }",
                         "",
@@ -345,7 +349,8 @@ public final class LogsafeRidTests {
                         "  void f() {",
                         "    ResourceIdentifier rid = ResourceIdentifier.of(\"service\", \"instance\", \"locator\", "
                                 + "UUID.randomUUID().toString());\n",
-                        "    // BUG: Diagnostic contains: Arguments with with rid values are not guaranteed to be safe.",
+                        "    // BUG: Diagnostic contains: Arguments with with rid values are not guaranteed to be"
+                                + " safe.",
                         "    SafeArg.of(\"rid\", Set.of(List.of(rid)));",
                         "  }",
                         "",
