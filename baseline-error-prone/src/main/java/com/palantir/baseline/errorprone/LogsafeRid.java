@@ -30,13 +30,14 @@ import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
+import com.sun.tools.javac.code.Type;
 
 @AutoService(BugChecker.class)
 @BugPattern(
         name = "LogsafeRid",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        severity = SeverityLevel.SUGGESTION,
+        severity = SeverityLevel.WARNING,
         summary = "Prevent rids from being logged as safe.")
 public final class LogsafeRid extends BugChecker implements MethodInvocationTreeMatcher {
 
@@ -51,7 +52,9 @@ public final class LogsafeRid extends BugChecker implements MethodInvocationTree
             return Description.NO_MATCH;
         }
 
-        if (ASTHelpers.getReturnType(tree).toString().contains("com.palantir.ri.ResourceIdentifier")) {
+        ExpressionTree value = tree.getArguments().get(1);
+        Type valueType = ASTHelpers.getType(value);
+        if (valueType != null && valueType.toString().contains("com.palantir.ri.ResourceIdentifier")) {
             SuggestedFix.Builder builder = SuggestedFix.builder();
             String unsafeArg = SuggestedFixes.qualifyType(state, builder, "com.palantir.logsafe.UnsafeArg");
             return buildDescription(tree)
