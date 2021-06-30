@@ -1,0 +1,6 @@
+type: feature
+feature:
+  description: '`LogsafeRid` errorprone check flags instances of `com.palantir.ri.ResourceIdentifier`s
+    being logged as safe.'
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1817
