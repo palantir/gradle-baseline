@@ -55,7 +55,7 @@ public final class LogsafeRid extends BugChecker implements MethodInvocationTree
             SuggestedFix.Builder builder = SuggestedFix.builder();
             String unsafeArg = SuggestedFixes.qualifyType(state, builder, "com.palantir.logsafe.UnsafeArg");
             return buildDescription(tree)
-                    .setMessage("Arguments with with rid values must be marked as unsafe.")
+                    .setMessage("Arguments with with rid values are not guaranteed to be safe.")
                     .addFix(builder.replace(tree.getMethodSelect(), unsafeArg + ".of")
                             .build())
                     .build();

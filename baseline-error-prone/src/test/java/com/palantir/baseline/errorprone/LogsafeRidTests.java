@@ -59,7 +59,7 @@ public final class LogsafeRidTests {
                         "  void f() {",
                         "    ResourceIdentifier rid = ResourceIdentifier.of(\"service\", \"instance\", \"locator\", "
                                 + "UUID.randomUUID().toString());\n",
-                        "    // BUG: Diagnostic contains: must be marked as unsafe",
+                        "    // BUG: Diagnostic contains: Arguments with with rid values are not guaranteed to be safe.",
                         "    SafeArg.of(\"rid\", rid);",
                         "  }",
                         "",
@@ -128,7 +128,7 @@ public final class LogsafeRidTests {
                         "  void f() {",
                         "    ResourceIdentifier rid = ResourceIdentifier.of(\"service\", \"instance\", \"locator\", "
                                 + "UUID.randomUUID().toString());\n",
-                        "    // BUG: Diagnostic contains: must be marked as unsafe",
+                        "    // BUG: Diagnostic contains: Arguments with with rid values are not guaranteed to be safe.",
                         "    SafeArg.of(\"rid\", Optional.of(rid));",
                         "  }",
                         "",
@@ -172,7 +172,7 @@ public final class LogsafeRidTests {
     }
 
     @Test
-    public void ignores_non_optional_rid_arg() {
+    public void ignores_optional_non_rid_arg() {
         getCompilationHelper()
                 .addSourceLines(
                         "Test.java",
@@ -200,7 +200,7 @@ public final class LogsafeRidTests {
                         "  void f() {",
                         "    ResourceIdentifier rid = ResourceIdentifier.of(\"service\", \"instance\", \"locator\", "
                                 + "UUID.randomUUID().toString());\n",
-                        "    // BUG: Diagnostic contains: must be marked as unsafe",
+                        "    // BUG: Diagnostic contains: Arguments with with rid values are not guaranteed to be safe.",
                         "    SafeArg.of(\"rid\", Map.of(rid, 1));",
                         "  }",
                         "",
@@ -244,7 +244,7 @@ public final class LogsafeRidTests {
     }
 
     @Test
-    public void ignores_non_map_rid_arg() {
+    public void ignores_map_non_rid_arg() {
         getCompilationHelper()
                 .addSourceLines(
                         "Test.java",
@@ -272,7 +272,7 @@ public final class LogsafeRidTests {
                         "  void f() {",
                         "    ResourceIdentifier rid = ResourceIdentifier.of(\"service\", \"instance\", \"locator\", "
                                 + "UUID.randomUUID().toString());\n",
-                        "    // BUG: Diagnostic contains: must be marked as unsafe",
+                        "    // BUG: Diagnostic contains: Arguments with with rid values are not guaranteed to be safe.",
                         "    SafeArg.of(\"rid\", Set.of(rid));",
                         "  }",
                         "",
@@ -316,7 +316,7 @@ public final class LogsafeRidTests {
     }
 
     @Test
-    public void ignores_non_set_rid_arg() {
+    public void ignores_collection_non_rid_arg() {
         getCompilationHelper()
                 .addSourceLines(
                         "Test.java",
@@ -325,6 +325,82 @@ public final class LogsafeRidTests {
                         "class Test {",
                         "  void f() {",
                         "    SafeArg.of(\"v\", Set.of(1));",
+                        "  }",
+                        "",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void catches_safe_nested_collections_rid_arg() {
+        getCompilationHelper()
+                .addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.SafeArg;",
+                        "import com.palantir.ri.ResourceIdentifier;",
+                        "import java.util.List;",
+                        "import java.util.Set;",
+                        "import java.util.UUID;",
+                        "class Test {",
+                        "  void f() {",
+                        "    ResourceIdentifier rid = ResourceIdentifier.of(\"service\", \"instance\", \"locator\", "
+                                + "UUID.randomUUID().toString());\n",
+                        "    // BUG: Diagnostic contains: Arguments with with rid values are not guaranteed to be safe.",
+                        "    SafeArg.of(\"rid\", Set.of(List.of(rid)));",
+                        "  }",
+                        "",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void fixes_safe_nested_collections_rid_arg() {
+        getRefactoringHelper()
+                .addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.SafeArg;",
+                        "import com.palantir.ri.ResourceIdentifier;",
+                        "import java.util.List;",
+                        "import java.util.Set;",
+                        "import java.util.UUID;",
+                        "class Test {",
+                        "  void f() {",
+                        "    ResourceIdentifier rid = ResourceIdentifier.of(\"service\", \"instance\", \"locator\", "
+                                + "UUID.randomUUID().toString());\n",
+                        "    SafeArg.of(\"rid\", Set.of(List.of(rid)));",
+                        "  }",
+                        "",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.SafeArg;",
+                        "import com.palantir.logsafe.UnsafeArg;",
+                        "import com.palantir.ri.ResourceIdentifier;",
+                        "import java.util.List;",
+                        "import java.util.Set;",
+                        "import java.util.UUID;",
+                        "class Test {",
+                        "  void f() {",
+                        "    ResourceIdentifier rid = ResourceIdentifier.of(\"service\", \"instance\", \"locator\", "
+                                + "UUID.randomUUID().toString());\n",
+                        "    UnsafeArg.of(\"rid\", Set.of(List.of(rid)));",
+                        "  }",
+                        "",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void ignores_nested_collections_non_rid_arg() {
+        getCompilationHelper()
+                .addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.SafeArg;",
+                        "import java.util.List;",
+                        "import java.util.Set;",
+                        "class Test {",
+                        "  void f() {",
+                        "    SafeArg.of(\"v\", Set.of(List.of(1)));",
                         "  }",
                         "",
                         "}")
