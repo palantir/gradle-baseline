@@ -224,10 +224,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 "CatchSpecificity",
                 "InlineMeSuggester",
                 "PreferImmutableStreamExCollections",
-                "UnusedVariable",
-                // ConsistentOverrides will be enabled in a follow-up with
-                // a clean migration path.
-                "ConsistentOverrides");
+                "UnusedVariable");
         errorProneOptions.error(
                 "EqualsHashCode",
                 "EqualsIncompatibleType",

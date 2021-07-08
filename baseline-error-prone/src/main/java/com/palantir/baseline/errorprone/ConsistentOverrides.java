@@ -122,10 +122,14 @@ public final class ConsistentOverrides extends BugChecker implements MethodTreeM
     }
 
     private static boolean equivalentNames(String actual, String expected) {
-        return actual.equals(expected)
+        return actual.equalsIgnoreCase(expected)
                 // Handle StrictUnusedVariable underscore prefixes in both directions
-                || (actual.charAt(0) == '_' && actual.length() == expected.length() + 1 && actual.endsWith(expected))
-                || (expected.charAt(0) == '_' && expected.length() == actual.length() + 1 && expected.endsWith(actual));
+                || (actual.charAt(0) == '_'
+                        && actual.length() == expected.length() + 1
+                        && actual.substring(1).equalsIgnoreCase(expected))
+                || (expected.charAt(0) == '_'
+                        && expected.length() == actual.length() + 1
+                        && expected.substring(1).equalsIgnoreCase(actual));
     }
 
     // If any parameters have names that don't match 'arg\d+', names are retained.

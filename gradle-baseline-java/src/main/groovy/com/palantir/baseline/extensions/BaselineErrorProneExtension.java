@@ -35,6 +35,7 @@ public class BaselineErrorProneExtension {
             "CollectionStreamForEach",
             "CompileTimeConstantViolatesLiskovSubstitution",
             "ConsistentLoggerName",
+            "ConsistentOverrides",
             "DeprecatedGuavaObjects",
             "ExecutorSubmitRunnableFutureIgnored",
             "ExtendsErrorOrThrowable",
