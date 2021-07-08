@@ -82,7 +82,6 @@ class ConsistentOverridesTest {
     void ignores_unhelpfulNames() {
         fix().addInputLines(
                         "Test.java",
-                        "import " + List.class.getCanonicalName() + ";",
                         "class Test {",
                         "  interface Foo {",
                         "    void doStuff(String a, String b);",
@@ -97,10 +96,43 @@ class ConsistentOverridesTest {
     }
 
     @Test
+    void ignores_caseInsensitiveRename() {
+        fix().addInputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  interface Foo {",
+                        "    void doStuff(String Foo, String Bar);",
+                        "  }",
+                        "  class DefaultFoo implements Foo {",
+                        "    @Override",
+                        "    public void doStuff(String foo, String bar) {}",
+                        "  }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void ignores_caseInsensitiveRenameWithUnused() {
+        fix().addInputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  interface Foo {",
+                        "    void doStuff(String Foo, String Bar);",
+                        "  }",
+                        "  class DefaultFoo implements Foo {",
+                        "    @Override",
+                        "    public void doStuff(String _foo, String _bar) {}",
+                        "  }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
     void allows_unused_variables() {
         fix().addInputLines(
                         "Test.java",
-                        "import " + List.class.getCanonicalName() + ";",
                         "class Test {",
                         "  interface Foo {",
                         "    void doStuff(String foo, String bar);",
@@ -118,7 +150,6 @@ class ConsistentOverridesTest {
     void allows_unused_variable_names() {
         fix().addInputLines(
                         "Test.java",
-                        "import " + List.class.getCanonicalName() + ";",
                         "class Test {",
                         "  interface Foo {",
                         "    void doStuff(String foo, String bar);",
@@ -130,7 +161,6 @@ class ConsistentOverridesTest {
                         "}")
                 .addOutputLines(
                         "Test.java",
-                        "import " + List.class.getCanonicalName() + ";",
                         "class Test {",
                         "  interface Foo {",
                         "    void doStuff(String foo, String bar);",
@@ -147,7 +177,6 @@ class ConsistentOverridesTest {
     void allows_unused_variables_to_be_used() {
         fix().addInputLines(
                         "Test.java",
-                        "import " + List.class.getCanonicalName() + ";",
                         "class Test {",
                         "  interface Foo {",
                         "    void doStuff(String foo, String _bar);",
