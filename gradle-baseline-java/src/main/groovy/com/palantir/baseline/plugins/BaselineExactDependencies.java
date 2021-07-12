@@ -89,15 +89,13 @@ public final class BaselineExactDependencies implements Plugin<Project> {
             TaskProvider<CheckImplicitDependenciesParentTask> checkImplicitDependencies) {
         Configuration implementation =
                 project.getConfigurations().getByName(sourceSet.getImplementationConfigurationName());
-        Configuration compile = project.getConfigurations().getByName(sourceSet.getCompileConfigurationName());
         Configuration compileClasspath =
                 project.getConfigurations().getByName(sourceSet.getCompileClasspathConfigurationName());
 
         Configuration explicitCompile = project.getConfigurations()
                 .create("baseline-exact-dependencies-" + sourceSet.getName(), conf -> {
                     conf.setDescription(String.format(
-                            "Tracks the explicit (not inherited) dependencies added to either %s or %s",
-                            compile.toString(), implementation.toString()));
+                            "Tracks the explicit (not inherited) dependencies added to either %s", implementation));
                     conf.setVisible(false);
                     conf.setCanBeConsumed(false);
 
@@ -137,18 +135,11 @@ public final class BaselineExactDependencies implements Plugin<Project> {
         // configurations (belonging to our source set)
         project.afterEvaluate(p -> {
             Configuration implCopy = implementation.copy();
-            Configuration compileCopy = compile.copy();
-            // Ensure it's not resolvable, otherwise plugins that resolve all configurations might have
-            // a bad time resolving this with GCV, if you have direct dependencies without corresponding entries in
-            // versions.props, but instead rely on getting a version for them from the lock file.
-            compileCopy.setCanBeResolved(false);
-            compileCopy.setCanBeConsumed(false);
             // Without these, explicitCompile will successfully resolve 0 files and you'll waste 1 hour trying
             // to figure out why.
             project.getConfigurations().add(implCopy);
-            project.getConfigurations().add(compileCopy);
 
-            explicitCompile.extendsFrom(implCopy, compileCopy);
+            explicitCompile.extendsFrom(implCopy);
         });
 
         explicitCompile.withDependencies(deps -> {

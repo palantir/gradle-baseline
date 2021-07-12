@@ -20,7 +20,9 @@ import org.gradle.api.JavaVersion
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assume
+import spock.lang.Unroll
 
+@Unroll
 class BaselineReleaseCompatibilityIntegrationTest extends AbstractPluginTest {
 
     def standardBuildFile = '''
@@ -29,7 +31,7 @@ class BaselineReleaseCompatibilityIntegrationTest extends AbstractPluginTest {
             id 'com.palantir.baseline-release-compatibility'
         }
 
-        sourceCompatibility = 1.8
+        sourceCompatibility = 11
 
         repositories {
             mavenLocal()
@@ -37,37 +39,45 @@ class BaselineReleaseCompatibilityIntegrationTest extends AbstractPluginTest {
         }
     '''.stripIndent()
 
-    def useJava9Features = '''
+    def useJava15Features = '''
         package test;
         public class Invalid {
             void demo() {
-                java.util.Optional.of(1).isEmpty(); // this method was added in Java9
+                // Added in Java 15
+                String example = """
+                    text block""";
             }
         }
     '''.stripIndent()
 
-    def 'compileJava fails when features from Java9 are used'() {
+    def 'compileJava fails when features from Java 15 are used'() {
         when:
         buildFile << standardBuildFile
-        file('src/main/java/test/Invalid.java').text = useJava9Features
+        file('src/main/java/test/Invalid.java').text = useJava15Features
 
         then:
-        BuildResult result = with('compileJava').buildAndFail()
+        BuildResult result = with('compileJava').withGradleVersion(gradleVersion).buildAndFail()
         result.task(":compileJava").outcome == TaskOutcome.FAILED
+
+        where:
+        gradleVersion << GradleTestVersions.VERSIONS
     }
 
-    def 'compileJava succeeds when sourceCompatibility = 11 and Java9 features are used'() {
+    def 'compileJava succeeds when sourceCompatibility = 15 and Java 15 features are used'() {
         Assume.assumeTrue(
                 "This test can only pass when run from a Java9+ JVM.",
-                JavaVersion.current().isJava9Compatible())
+                JavaVersion.current() >= JavaVersion.VERSION_15)
 
         when:
         buildFile << standardBuildFile
-        buildFile << 'sourceCompatibility = 11'
-        file('src/main/java/test/Invalid.java').text = useJava9Features
+        buildFile << 'sourceCompatibility = 15'
+        file('src/main/java/test/Invalid.java').text = useJava15Features
 
         then:
-        BuildResult result = with('compileJava').build()
+        BuildResult result = with('compileJava').withGradleVersion(gradleVersion).build()
         result.task(":compileJava").outcome == TaskOutcome.SUCCESS
+
+        where:
+        gradleVersion << GradleTestVersions.VERSIONS
     }
 }

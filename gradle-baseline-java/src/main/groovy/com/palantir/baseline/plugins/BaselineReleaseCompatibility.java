@@ -56,8 +56,7 @@ public final class BaselineReleaseCompatibility extends AbstractBaselinePlugin {
 
         @Override
         public Iterable<String> asArguments() {
-            JavaVersion jdkVersion =
-                    JavaVersion.toVersion(javaCompile.getToolChain().getVersion());
+            JavaVersion jdkVersion = JavaVersion.toVersion(javaCompile.getTargetCompatibility());
             if (!supportsReleaseFlag(jdkVersion)) {
                 log.debug(
                         "BaselineReleaseCompatibility is a no-op for {} in {} as {} doesn't support --release",

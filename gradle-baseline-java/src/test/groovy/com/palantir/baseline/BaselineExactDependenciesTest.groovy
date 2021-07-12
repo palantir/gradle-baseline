@@ -81,7 +81,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
             mavenCentral()
         }
         dependencies {
-            compile 'com.google.guava:guava:27.0.1-jre'
+            implementation 'com.google.guava:guava:27.0.1-jre'
         }
         """
         file('src/main/java/pkg/Foo.java') << minimalJavaFile
@@ -120,7 +120,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         buildFile << standardBuildFile
         buildFile << """
         dependencies {
-            compile project(':needs-building-first')
+            implementation project(':needs-building-first')
         }
         """
 
@@ -156,7 +156,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
             mavenCentral()
         }
         dependencies {
-            compile 'com.google.guava:guava:28.0-jre'
+            implementation 'com.google.guava:guava:28.0-jre'
         }
         """
         file('src/main/java/pkg/Foo.java') << '''
@@ -181,7 +181,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
             mavenCentral()
         }
         dependencies {
-            compile 'com.fasterxml.jackson.datatype:jackson-datatype-guava:2.9.8' // pulls in guava transitively
+            implementation 'com.fasterxml.jackson.datatype:jackson-datatype-guava:2.9.8' // pulls in guava transitively
         }
         """
         file('src/main/java/pkg/Foo.java') << '''
@@ -248,7 +248,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
 
         then:
         BuildResult result = with(':checkUnusedDependencies', '--stacktrace').withDebug(true).buildAndFail()
-        result.output.contains "project(':sub-project-with-deps') (sub-project-with-deps.jar (project :sub-project-with-deps))"
+        result.output.contains "project(':sub-project-with-deps') (main (project :sub-project-with-deps))"
         result.output.contains "project(':sub-project-no-deps')"
     }
 
@@ -264,7 +264,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
     }
 
     /**
-     * Sets up a multi-module project with 2 sub projects.  The root project has a transitive dependency on sub-project-no-deps
+     * Sets up a multi-module project with 2 sub projects. The root project has a transitive dependency on sub-project-no-deps
      * and so checkImplicitDependencies should fail on it.
      */
     private void setupMultiProject() {
@@ -275,7 +275,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
             apply plugin: 'com.palantir.baseline-exact-dependencies'
         }
         dependencies {
-            compile project(':sub-project-with-deps')
+            implementation project(':sub-project-with-deps')
         }
         """.stripIndent()
 
@@ -283,8 +283,10 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
 
         //properly declare dependency between two sub-projects
         subProjects['sub-project-with-deps'].buildGradle << '''
+            apply plugin: 'java-library'
+            
             dependencies {
-                compile project(':sub-project-no-deps')
+                api project(':sub-project-no-deps')
             }
         '''.stripIndent()
 
@@ -323,6 +325,5 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
             }
         }
         '''.stripIndent()
-
     }
 }
