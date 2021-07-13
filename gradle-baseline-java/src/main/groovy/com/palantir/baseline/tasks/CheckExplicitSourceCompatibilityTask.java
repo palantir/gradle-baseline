@@ -17,6 +17,7 @@
 package com.palantir.baseline.tasks;
 
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
@@ -28,6 +29,8 @@ import org.gradle.api.JavaVersion;
 import org.gradle.api.Task;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.JavaPluginConvention;
+import org.gradle.api.plugins.JavaPluginExtension;
+import org.gradle.api.plugins.internal.DefaultJavaPluginExtension;
 import org.gradle.api.provider.Property;
 import org.gradle.api.publish.PublishingExtension;
 import org.gradle.api.specs.Spec;
@@ -92,12 +95,7 @@ public class CheckExplicitSourceCompatibilityTask extends DefaultTask {
 
     @TaskAction
     public final void taskAction() throws IOException {
-        // We're doing this naughty casting because we need access to the `getRawSourceCompatibility` method.
-        org.gradle.api.plugins.internal.DefaultJavaPluginConvention convention =
-                (org.gradle.api.plugins.internal.DefaultJavaPluginConvention)
-                        getProject().getConvention().getPlugin(JavaPluginConvention.class);
-
-        if (convention.getRawSourceCompatibility() != null) {
+        if (getRawSourceCompat() != null) {
             // In theory, users could configure the fancy new 'java toolchain' as an alternative to explicit
             // sourceCompatibility, but there's no method to access this yet (as of Gradle 6.8).
             return;
@@ -126,5 +124,25 @@ public class CheckExplicitSourceCompatibilityTask extends DefaultTask {
                 getProject().getRootProject().relativePath(getProject().getBuildFile()),
                 JavaVersion.current(),
                 getPath()));
+    }
+
+    private JavaVersion getRawSourceCompat() {
+        // TODO(fwindheuser): Remove internal api usage. Maybe through adopting toolchains?
+        // We're doing this naughty casting because we need access to the `getRawSourceCompatibility` method.
+        if (GradleVersion.current().compareTo(GradleVersion.version("7.0")) < 0) {
+            org.gradle.api.plugins.internal.DefaultJavaPluginConvention convention =
+                    (org.gradle.api.plugins.internal.DefaultJavaPluginConvention)
+                            getProject().getConvention().getPlugin(JavaPluginConvention.class);
+            return convention.getRawSourceCompatibility();
+        }
+
+        DefaultJavaPluginExtension extension =
+                (DefaultJavaPluginExtension) getProject().getExtensions().getByType(JavaPluginExtension.class);
+        try {
+            Method rawSourceCompat = DefaultJavaPluginExtension.class.getMethod("getRawSourceCompatibility");
+            return (JavaVersion) rawSourceCompat.invoke(extension);
+        } catch (Exception e) {
+            throw new RuntimeException("Error calling Gradle 7 getRawSourceCompatibility", e);
+        }
     }
 }
