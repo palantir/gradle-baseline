@@ -30,9 +30,7 @@ class BaselineReleaseCompatibilityIntegrationTest extends AbstractPluginTest {
             id 'java'
             id 'com.palantir.baseline-release-compatibility'
         }
-
         sourceCompatibility = 11
-
         repositories {
             mavenLocal()
             jcenter()
