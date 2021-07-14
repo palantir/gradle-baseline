@@ -62,6 +62,22 @@ class ProxyNonConstantTypeTest {
                 .doTest();
     }
 
+    @Test
+    void testIgnoresTestCode() {
+        helper().addSourceLines(
+                        "Foo.java",
+                        "import java.lang.reflect.Proxy;",
+                        "import org.junit.Test;",
+                        "class Foo {",
+                        "  @Test",
+                        "  public void test() {}",
+                        "  void f(Class<?> iface) {",
+                        "    Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{iface}, null);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(ProxyNonConstantType.class, getClass());
     }

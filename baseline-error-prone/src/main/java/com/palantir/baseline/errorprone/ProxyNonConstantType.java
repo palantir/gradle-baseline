@@ -41,7 +41,8 @@ import java.lang.reflect.Proxy;
         severity = SeverityLevel.WARNING,
         summary = "Proxy instances should be created using constant types known at compile time to allow native-image "
                 + "behavior to match hotspot. Methods which build proxies should take a "
-                + "`Function<InvocationHandler, ? extends T>` instead of arbitrary class references. "
+                + "`Function<InvocationHandler, ? extends T>` instead of arbitrary class references. This check can "
+                + "be safely suppressed in legacy code using @SuppressWarnings(\"ProxyNonConstantType\"). "
                 + "The proxy annotation processor can make this process much easier: "
                 + "https://github.com/palantir/proxy-processor\n"
                 + "See https://www.graalvm.org/reference-manual/native-image/DynamicProxy/#automatic-detection")
@@ -65,7 +66,7 @@ public final class ProxyNonConstantType extends BugChecker implements BugChecker
             if (interfaces instanceof NewArrayTree) {
                 NewArrayTree newArrayTree = (NewArrayTree) interfaces;
                 for (ExpressionTree element : newArrayTree.getInitializers()) {
-                    if (!isDirectClassAccess(element)) {
+                    if (!isDirectClassAccess(element) && !TestCheckUtils.isTestCode(state)) {
                         return describeMatch(interfaces);
                     }
                 }
