@@ -136,13 +136,16 @@ public class CheckExplicitSourceCompatibilityTask extends DefaultTask {
             return convention.getRawSourceCompatibility();
         }
 
+        // TODO(fwindheuser): Don't use reflection after building with Gradle 7
         DefaultJavaPluginExtension extension =
                 (DefaultJavaPluginExtension) getProject().getExtensions().getByType(JavaPluginExtension.class);
         try {
             Method rawSourceCompat = DefaultJavaPluginExtension.class.getMethod("getRawSourceCompatibility");
             return (JavaVersion) rawSourceCompat.invoke(extension);
         } catch (Exception e) {
-            throw new RuntimeException("Error calling Gradle 7 getRawSourceCompatibility", e);
+            throw new RuntimeException(
+                    "Error calling DefaultJavaPluginExtension#getRawSourceCompatibility for " + GradleVersion.current(),
+                    e);
         }
     }
 }

@@ -22,6 +22,8 @@ import java.util.Optional;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.compile.JavaCompile;
+import org.gradle.jvm.toolchain.JavaCompiler;
+import org.gradle.jvm.toolchain.JavaInstallationMetadata;
 import org.gradle.process.CommandLineArgumentProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -41,22 +43,28 @@ public final class BaselineReleaseCompatibility extends AbstractBaselinePlugin {
         this.project = project;
 
         project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
-            javaCompile.getOptions().getCompilerArgumentProviders().add(new ReleaseFlagProvider(javaCompile));
+            javaCompile.getOptions().getCompilerArgumentProviders().add(new ReleaseFlagProvider(project, javaCompile));
         });
     }
 
     // using a lazy argument provider is crucial because otherwise we'd try to read sourceCompat / targetCompat
     // before the user has even set it in their build.gradle!
     private static final class ReleaseFlagProvider implements CommandLineArgumentProvider {
+        private final Project project;
         private final JavaCompile javaCompile;
 
-        private ReleaseFlagProvider(JavaCompile javaCompile) {
+        private ReleaseFlagProvider(Project project, JavaCompile javaCompile) {
             this.javaCompile = javaCompile;
+            this.project = project;
         }
 
         @Override
         public Iterable<String> asArguments() {
-            JavaVersion jdkVersion = JavaVersion.toVersion(javaCompile.getTargetCompatibility());
+            JavaVersion jdkVersion = getJdkVersion(javaCompile);
+
+            project.getLogger()
+                    .lifecycle(">>>>>> jdkVersion: {} | jversion current {}", jdkVersion, JavaVersion.current());
+
             if (!supportsReleaseFlag(jdkVersion)) {
                 log.debug(
                         "BaselineReleaseCompatibility is a no-op for {} in {} as {} doesn't support --release",
@@ -102,5 +110,15 @@ public final class BaselineReleaseCompatibility extends AbstractBaselinePlugin {
         private static boolean supportsReleaseFlag(JavaVersion jdkVersion) {
             return jdkVersion.isJava9Compatible();
         }
+    }
+
+    private static JavaVersion getJdkVersion(JavaCompile javaCompile) {
+        return javaCompile
+                .getJavaCompiler()
+                .map(JavaCompiler::getMetadata)
+                .map(JavaInstallationMetadata::getLanguageVersion)
+                .map(version -> JavaVersion.toVersion(version.asInt()))
+                // Fallback to current java version if toolchain is not configured
+                .getOrElse(JavaVersion.current());
     }
 }
