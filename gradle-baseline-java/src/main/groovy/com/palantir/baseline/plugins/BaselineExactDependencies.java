@@ -27,12 +27,14 @@ import com.palantir.baseline.tasks.CheckUnusedDependenciesTask;
 import java.io.File;
 import java.io.IOException;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.concurrent.ThreadSafe;
+import org.apache.commons.lang.StringUtils;
 import org.apache.maven.shared.dependency.analyzer.ClassAnalyzer;
 import org.apache.maven.shared.dependency.analyzer.DefaultClassAnalyzer;
 import org.apache.maven.shared.dependency.analyzer.DependencyAnalyzer;
@@ -89,13 +91,17 @@ public final class BaselineExactDependencies implements Plugin<Project> {
             TaskProvider<CheckImplicitDependenciesParentTask> checkImplicitDependencies) {
         Configuration implementation =
                 project.getConfigurations().getByName(sourceSet.getImplementationConfigurationName());
+        Optional<Configuration> maybeCompile =
+                Optional.ofNullable(project.getConfigurations().findByName(getCompileConfigurationName(sourceSet)));
         Configuration compileClasspath =
                 project.getConfigurations().getByName(sourceSet.getCompileClasspathConfigurationName());
 
         Configuration explicitCompile = project.getConfigurations()
                 .create("baseline-exact-dependencies-" + sourceSet.getName(), conf -> {
                     conf.setDescription(String.format(
-                            "Tracks the explicit (not inherited) dependencies added to either %s", implementation));
+                            "Tracks the explicit (not inherited) dependencies added to either %s "
+                                    + "or compile (deprecated)",
+                            implementation));
                     conf.setVisible(false);
                     conf.setCanBeConsumed(false);
 
@@ -140,6 +146,20 @@ public final class BaselineExactDependencies implements Plugin<Project> {
             project.getConfigurations().add(implCopy);
 
             explicitCompile.extendsFrom(implCopy);
+
+            // For Gradle 6 and below, the compile configuration might still be used.
+            maybeCompile.ifPresent(compile -> {
+                Configuration compileCopy = compile.copy();
+                // Ensure it's not resolvable, otherwise plugins that resolve all configurations might have
+                // a bad time resolving this with GCV, if you have direct dependencies without corresponding entries in
+                // versions.props, but instead rely on getting a version for them from the lock file.
+                compileCopy.setCanBeResolved(false);
+                compileCopy.setCanBeConsumed(false);
+
+                project.getConfigurations().add(compileCopy);
+
+                explicitCompile.extendsFrom(compileCopy);
+            });
         });
 
         explicitCompile.withDependencies(deps -> {
@@ -197,6 +217,18 @@ public final class BaselineExactDependencies implements Plugin<Project> {
 
     static String checkUnusedDependenciesNameForSourceSet(SourceSet sourceSet) {
         return GUtil.toLowerCamelCase("checkUnusedDependencies " + sourceSet.getName());
+    }
+
+    /**
+     * The {@link SourceSet#getCompileConfigurationName()} method got removed in Gradle 7. Because we want to stay
+     * compatible with Gradle 6 but can't compile this method, we reimplement it temporarily.
+     * TODO(fwindheuser): Remove after dropping support for Gradle 6.
+     */
+    private static String getCompileConfigurationName(SourceSet sourceSet) {
+        String baseName = sourceSet.getName().equals(SourceSet.MAIN_SOURCE_SET_NAME)
+                ? ""
+                : GUtil.toCamelCase(sourceSet.getName());
+        return StringUtils.uncapitalize(baseName + StringUtils.capitalize("compile"));
     }
 
     private static Map<String, String> excludeRuleAsMap(ExcludeRule rule) {

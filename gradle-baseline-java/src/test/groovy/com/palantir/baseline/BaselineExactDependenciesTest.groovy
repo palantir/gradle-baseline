@@ -46,6 +46,20 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         with('checkUnusedDependencies', 'checkImplicitDependencies', '--stacktrace').build()
     }
 
+    def '#gradleVersion: both tasks work with different gradle versions'() {
+        when:
+        buildFile << standardBuildFile
+        file('src/main/java/pkg/Foo.java') << minimalJavaFile
+
+        then:
+        with('checkUnusedDependencies', 'checkImplicitDependencies', '--stacktrace')
+                .withGradleVersion(gradleVersion)
+                .build()
+
+        where:
+        gradleVersion << GradleTestVersions.VERSIONS
+    }
+
     def 'both tasks vacuously pass with no dependencies when entire baseline is applied'() {
         when:
         buildFile << standardBuildFile
