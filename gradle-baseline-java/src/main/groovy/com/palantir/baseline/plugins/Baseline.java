@@ -50,11 +50,6 @@ public final class Baseline implements Plugin<Project> {
             proj.getPluginManager().apply(BaselineTestHeap.class);
             proj.getPluginManager().apply(BaselineJavaParameters.class);
             proj.getPluginManager().apply(BaselineImmutables.class);
-
-            // TODO(dsanduleac): enable this when people's idea{} blocks no longer reference things like
-            //    configurations.integrationTestCompile
-            // proj.getPluginManager().apply(BaselineFixGradleJava.class);
-
         });
     }
 }

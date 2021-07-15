@@ -18,7 +18,9 @@ package com.palantir.baseline
 
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
+import spock.lang.Unroll
 
+@Unroll
 class BaselineTestingIntegrationTest extends AbstractPluginTest {
     def standardBuildFile = '''
         plugins {
@@ -27,11 +29,11 @@ class BaselineTestingIntegrationTest extends AbstractPluginTest {
         }
         
         repositories {
-            jcenter()
+            mavenCentral()
         }
         
         dependencies {
-            testCompile 'junit:junit:4.12'
+            testImplementation 'junit:junit:4.12'
         }
     '''.stripIndent()
 
@@ -72,10 +74,13 @@ class BaselineTestingIntegrationTest extends AbstractPluginTest {
         file('src/test/java/test/TestClass5.java') << junit5Test
 
         then:
-        BuildResult result = with('test').build()
+        BuildResult result = with('test').withGradleVersion(gradleVersion).build()
         result.task(':test').outcome == TaskOutcome.SUCCESS
         new File(projectDir, "build/reports/tests/test/classes/test.TestClass4.html").exists()
         new File(projectDir, "build/reports/tests/test/classes/test.TestClass5.html").exists()
+
+        where:
+        gradleVersion << GradleTestVersions.VERSIONS
     }
 
     def 'runs integration tests with junit5'() {
