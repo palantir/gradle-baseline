@@ -30,7 +30,6 @@ import org.gradle.api.Task;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.plugins.JavaPluginExtension;
-import org.gradle.api.plugins.internal.DefaultJavaPluginExtension;
 import org.gradle.api.provider.Property;
 import org.gradle.api.publish.PublishingExtension;
 import org.gradle.api.specs.Spec;
@@ -141,7 +140,8 @@ public class CheckExplicitSourceCompatibilityTask extends DefaultTask {
                 (org.gradle.api.plugins.internal.DefaultJavaPluginExtension)
                         getProject().getExtensions().getByType(JavaPluginExtension.class);
         try {
-            Method rawSourceCompat = DefaultJavaPluginExtension.class.getMethod("getRawSourceCompatibility");
+            Method rawSourceCompat = org.gradle.api.plugins.internal.DefaultJavaPluginExtension.class.getMethod(
+                    "getRawSourceCompatibility");
             return (JavaVersion) rawSourceCompat.invoke(extension);
         } catch (Exception e) {
             throw new RuntimeException(
