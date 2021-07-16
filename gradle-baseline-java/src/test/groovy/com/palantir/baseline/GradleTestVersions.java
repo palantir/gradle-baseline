@@ -17,9 +17,11 @@
 package com.palantir.baseline;
 
 import com.google.common.collect.ImmutableList;
+import com.palantir.baseline.plugins.Baseline;
 
 public final class GradleTestVersions {
-    public static final ImmutableList<String> VERSIONS = ImmutableList.of("6.9", "7.1.1");
+    public static final ImmutableList<String> VERSIONS =
+            ImmutableList.of(Baseline.MIN_GRADLE_VERSION.getVersion(), "7.1.1");
 
     private GradleTestVersions() {}
 }
