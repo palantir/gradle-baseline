@@ -27,7 +27,7 @@ public final class Baseline implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
-        if (GradleVersion.current().compareTo(MIN_GRADLE_VERSION) >= 0) {
+        if (GradleVersion.current().compareTo(MIN_GRADLE_VERSION) < 0) {
             throw new GradleException(String.format(
                     "The minimum supported Gradle version is version %s but got version %s",
                     MIN_GRADLE_VERSION, GradleVersion.current()));

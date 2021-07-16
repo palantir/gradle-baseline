@@ -43,19 +43,17 @@ public final class BaselineReleaseCompatibility extends AbstractBaselinePlugin {
         this.project = project;
 
         project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
-            javaCompile.getOptions().getCompilerArgumentProviders().add(new ReleaseFlagProvider(project, javaCompile));
+            javaCompile.getOptions().getCompilerArgumentProviders().add(new ReleaseFlagProvider(javaCompile));
         });
     }
 
     // using a lazy argument provider is crucial because otherwise we'd try to read sourceCompat / targetCompat
     // before the user has even set it in their build.gradle!
     private static final class ReleaseFlagProvider implements CommandLineArgumentProvider {
-        private final Project project;
         private final JavaCompile javaCompile;
 
-        private ReleaseFlagProvider(Project project, JavaCompile javaCompile) {
+        private ReleaseFlagProvider(JavaCompile javaCompile) {
             this.javaCompile = javaCompile;
-            this.project = project;
         }
 
         @Override
