@@ -1,0 +1,5 @@
+type: break
+break:
+  description: Add Gradle 7 support
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1824
