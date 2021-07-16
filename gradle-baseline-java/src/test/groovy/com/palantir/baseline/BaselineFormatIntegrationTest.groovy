@@ -16,6 +16,8 @@
 
 package com.palantir.baseline
 
+import spock.lang.Unroll
+
 import java.nio.file.Files
 import java.nio.file.Path
 import org.apache.commons.io.FileUtils
@@ -27,6 +29,7 @@ import org.gradle.testkit.runner.TaskOutcome
 
 import static org.assertj.core.api.Assertions.assertThat
 
+@Unroll
 class BaselineFormatIntegrationTest extends AbstractPluginTest {
 
     def setup() {
@@ -89,7 +92,10 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         buildFile << standardBuildFile
 
         then:
-        with('format', '--stacktrace').build()
+        with('format', '--stacktrace').withGradleVersion(gradleVersion).build()
+
+        where:
+        gradleVersion << GradleTestVersions.VERSIONS
     }
 
     def 'eclipse formatter integration test'() {
@@ -108,12 +114,15 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         file('gradle.properties') << "com.palantir.baseline-format.eclipse=true\n"
 
         when:
-        BuildResult result = with(':format').build()
+        BuildResult result = with(':format').withGradleVersion(gradleVersion).build()
         result.task(":format").outcome == TaskOutcome.SUCCESS
         result.task(":spotlessApply").outcome == TaskOutcome.SUCCESS
 
         then:
         assertThatFilesAreTheSame(testedDir, expectedDir)
+
+        where:
+        gradleVersion << GradleTestVersions.VERSIONS
     }
 
     def 'palantir java format works'() {
@@ -138,12 +147,15 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         file('gradle.properties') << "com.palantir.baseline-format.palantir-java-format=true\n"
 
         when:
-        BuildResult result = with(':format').build()
+        BuildResult result = with(':format').withGradleVersion(gradleVersion).build()
 
         then:
         result.task(":format").outcome == TaskOutcome.SUCCESS
         result.task(":spotlessApply").outcome == TaskOutcome.SUCCESS
         assertThatFilesAreTheSame(testedDir, expectedDir)
+
+        where:
+        gradleVersion << GradleTestVersions.VERSIONS
     }
 
     private static void assertThatFilesAreTheSame(File outputDir, File expectedDir) throws IOException {

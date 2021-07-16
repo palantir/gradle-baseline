@@ -27,7 +27,7 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.compile.JavaCompile;
-import org.gradle.api.tasks.incremental.IncrementalTaskInputs;
+import org.gradle.work.InputChanges;
 
 public class CompileRefasterTask extends JavaCompile {
 
@@ -37,16 +37,14 @@ public class CompileRefasterTask extends JavaCompile {
 
     public CompileRefasterTask() {
         // Don't care about .class files
-        setDestinationDir(getTemporaryDir());
+        getDestinationDirectory().set(getTemporaryDir());
 
         // Ensure we hit the incremental code-path since we override it
         getOptions().setIncremental(true);
     }
 
     @Override
-    // TODO(forozco): override compile(InputChanges inputs) once we can raise our minimum version 6.0
-    @SuppressWarnings("deprecated")
-    protected final void compile(IncrementalTaskInputs inputs) {
+    protected final void compile(InputChanges inputs) {
         // Clear out the default error-prone providers
         getOptions().getCompilerArgumentProviders().clear();
         getOptions()

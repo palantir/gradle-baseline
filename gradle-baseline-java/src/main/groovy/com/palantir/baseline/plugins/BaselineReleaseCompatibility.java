@@ -22,6 +22,8 @@ import java.util.Optional;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.compile.JavaCompile;
+import org.gradle.jvm.toolchain.JavaCompiler;
+import org.gradle.jvm.toolchain.JavaInstallationMetadata;
 import org.gradle.process.CommandLineArgumentProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -56,8 +58,8 @@ public final class BaselineReleaseCompatibility extends AbstractBaselinePlugin {
 
         @Override
         public Iterable<String> asArguments() {
-            JavaVersion jdkVersion =
-                    JavaVersion.toVersion(javaCompile.getToolChain().getVersion());
+            JavaVersion jdkVersion = getJdkVersion(javaCompile);
+
             if (!supportsReleaseFlag(jdkVersion)) {
                 log.debug(
                         "BaselineReleaseCompatibility is a no-op for {} in {} as {} doesn't support --release",
@@ -103,5 +105,15 @@ public final class BaselineReleaseCompatibility extends AbstractBaselinePlugin {
         private static boolean supportsReleaseFlag(JavaVersion jdkVersion) {
             return jdkVersion.isJava9Compatible();
         }
+    }
+
+    private static JavaVersion getJdkVersion(JavaCompile javaCompile) {
+        return javaCompile
+                .getJavaCompiler()
+                .map(JavaCompiler::getMetadata)
+                .map(JavaInstallationMetadata::getLanguageVersion)
+                .map(version -> JavaVersion.toVersion(version.asInt()))
+                // Fallback to current java version if toolchain is not configured
+                .getOrElse(JavaVersion.current());
     }
 }

@@ -16,14 +16,23 @@
 
 package com.palantir.baseline.plugins;
 
+import org.gradle.api.GradleException;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.util.GradleVersion;
 
 /** A Plugin that configures a project with all Baseline settings. */
 public final class Baseline implements Plugin<Project> {
+    public static final GradleVersion MIN_GRADLE_VERSION = GradleVersion.version("6.7");
 
     @Override
     public void apply(Project project) {
+        if (GradleVersion.current().compareTo(MIN_GRADLE_VERSION) < 0) {
+            throw new GradleException(String.format(
+                    "The minimum supported Gradle version is version %s but got version %s",
+                    MIN_GRADLE_VERSION, GradleVersion.current()));
+        }
+
         Project rootProject = project.getRootProject();
         if (!project.equals(rootProject)) {
             project.getLogger()
@@ -50,11 +59,6 @@ public final class Baseline implements Plugin<Project> {
             proj.getPluginManager().apply(BaselineTestHeap.class);
             proj.getPluginManager().apply(BaselineJavaParameters.class);
             proj.getPluginManager().apply(BaselineImmutables.class);
-
-            // TODO(dsanduleac): enable this when people's idea{} blocks no longer reference things like
-            //    configurations.integrationTestCompile
-            // proj.getPluginManager().apply(BaselineFixGradleJava.class);
-
         });
     }
 }
