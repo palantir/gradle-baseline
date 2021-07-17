@@ -38,7 +38,7 @@ It is recommended to add `apply plugin: 'com.palantir.baseline'` to your root pr
 buildscript {
     repositories {
         gradlePluginPortal()
-        maven { url  "http://palantir.bintray.com/releases" }
+        mavenCentral()
     }
 
     dependencies {
@@ -48,7 +48,7 @@ buildscript {
 }
 
 repositories {
-    maven { url  "http://palantir.bintray.com/releases" }
+    mavenCentral()
 }
 
 apply plugin: 'java'
