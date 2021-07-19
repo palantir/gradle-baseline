@@ -224,6 +224,8 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 "CatchSpecificity",
                 "InlineMeSuggester",
                 "PreferImmutableStreamExCollections",
+                // Avoid noisy suggestions, this will be enabled later
+                "PreferSafeLogger",
                 "UnusedVariable");
         errorProneOptions.error(
                 "EqualsHashCode",

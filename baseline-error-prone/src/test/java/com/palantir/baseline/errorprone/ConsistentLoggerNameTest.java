@@ -38,6 +38,23 @@ class ConsistentLoggerNameTest {
     }
 
     @Test
+    void testFix_safeLogging() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.logger.*;",
+                        "class Test {",
+                        "    private static final SafeLogger LOG = SafeLoggerFactory.get(Test.class);",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.logger.*;",
+                        "class Test {",
+                        "    private static final SafeLogger log = SafeLoggerFactory.get(Test.class);",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     void testFix_references() {
         fix().addInputLines(
                         "Test.java",

@@ -38,6 +38,23 @@ class LoggerEnclosingClassTest {
     }
 
     @Test
+    void testFix_logsafe() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.logger.*;",
+                        "class Test {",
+                        "    private static final SafeLogger log = SafeLoggerFactory.get(String.class);",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.logger.*;",
+                        "class Test {",
+                        "    private static final SafeLogger log = SafeLoggerFactory.get(Test.class);",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     void testFix_generic() {
         fix().addInputLines(
                         "Test.java",
