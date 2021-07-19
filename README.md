@@ -22,7 +22,7 @@ _Baseline is a family of Gradle plugins for configuring Java projects with sensi
 | `com.palantir.baseline-reproducibility`       | Sensible defaults to ensure Jar, Tar and Zip tasks can be reproduced
 | `com.palantir.baseline-exact-dependencies`    | Ensures projects explicitly declare all the dependencies they rely on, no more and no less
 | `com.palantir.baseline-encoding`              | Ensures projects use the UTF-8 encoding in compile tasks.
-| `com.palantir.baseline-release-compatibility` | Ensures projects targetting older JREs only compile against classes and methods available in those JREs.
+| `com.palantir.baseline-release-compatibility` | Ensures projects targeting older JREs only compile against classes and methods available in those JREs.
 | `com.palantir.baseline-testing`               | Configures test tasks to dump heap dumps (hprof files) for convenient debugging
 | `com.palantir.baseline-immutables`            | Enables incremental compilation for the [Immutables](http://immutables.github.io/) annotation processor.
 
@@ -410,21 +410,6 @@ This plugin enables incremental compilation for the [Immutables](http://immutabl
 This plugin adds the `-Aimmutables.gradle.incremental` compiler arg to the compile Java task for any source set whose annotation processor configuration contains the Immutables annotation processor.
 
 For more details, see the Immutables incremental compilation [tracking issue](https://github.com/immutables/immutables/issues/804).
-
-## com.palantir.baseline-fix-gradle-java (off by default)
-
-Fixes up all Java [SourceSets](https://docs.gradle.org/current/userguide/building_java_projects.html#sec:java_source_sets)
-by marking their deprecated [configurations](https://docs.gradle.org/current/userguide/java_plugin.html#tab:configurations)
-- `compile` and `runtime` - as well as the `compileOnly` configuration as not resolvable
-(can't call resolve on them) and not consumable (can't be depended on from other projects).
-
-See [here](https://docs.gradle.org/current/userguide/declaring_dependencies.html#sec:resolvable-consumable-configs)
-for a more in-depth discussion on what these terms mean. By configuring them thusly, we are saying that these configurations
-now fulfil the "Bucket of dependencies" role described in that document, as they should.
-
-This will become the default in Gradle 7 and leaving these as they currently are can cause both unnecessary confusion
-(users looking in `compile` instead of `compileClasspath`) and [random crashes](https://github.com/gradle/gradle/issues/11844#issuecomment-585219427).
-
 
 ## com.palantir.baseline-enable-preview-flag (off by default)
 
