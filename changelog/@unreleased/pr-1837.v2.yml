@@ -3,6 +3,6 @@ improvement:
   description: |-
     Increase the speed of the `checkClassUniqueness` task, especially in large repos, by adding caching of jar information.
 
-    Fix class names listed in the `baseline-class-uniqueness.lock` when the class or package name contains `class`. In rare cases, this may require running `./gradlew checkClassUniqueness --write-locks` to update the files.
+    Fix class names listed in the `baseline-class-uniqueness.lock` when the class or package name contains the substring `class`. In rare cases, this may require running `./gradlew checkClassUniqueness --write-locks` to update the files.
   links:
   - https://github.com/palantir/gradle-baseline/pull/1837
