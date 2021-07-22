@@ -131,6 +131,35 @@ class PreferSafeLoggerTest {
     }
 
     @Test
+    void testFixWithLevelCheck() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import org.slf4j.*;",
+                        "class Test {",
+                        "  private static final Logger log = LoggerFactory.getLogger(Test.class);",
+                        "  void action(Throwable t) {",
+                        "    if (log.isInfoEnabled()) {",
+                        "        log.info(\"foo\", t);",
+                        "    }",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.logger.SafeLogger;",
+                        "import com.palantir.logsafe.logger.SafeLoggerFactory;",
+                        "import org.slf4j.*;",
+                        "class Test {",
+                        "  private static final SafeLogger log = SafeLoggerFactory.get(Test.class);",
+                        "  void action(Throwable t) {",
+                        "    if (log.isInfoEnabled()) {",
+                        "        log.info(\"foo\", t);",
+                        "    }",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     void testIgnoresIncorrectlyOrderedThrowables() {
         fix().addInputLines(
                         "Test.java",

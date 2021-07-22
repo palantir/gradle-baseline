@@ -128,7 +128,8 @@ public final class PreferSafeLogger extends BugChecker implements BugChecker.Var
         }
         List<? extends Tree> arguments = tree.getArguments();
         if (arguments.isEmpty()) {
-            return false;
+            // is<level>Enabled
+            return true;
         }
         if (!state.getTypes()
                 .isSameType(ASTHelpers.getType(arguments.get(0)), state.getTypeFromString(String.class.getName()))) {
