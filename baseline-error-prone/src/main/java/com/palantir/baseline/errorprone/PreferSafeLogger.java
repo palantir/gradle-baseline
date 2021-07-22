@@ -44,7 +44,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
         name = "PreferSafeLogger",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        // Will be increased to WARNING after rollout
         severity = BugPattern.SeverityLevel.WARNING,
         summary = "Prefer using type-safe safe-logging loggers rather than safety-oblivious implementations.")
 public final class PreferSafeLogger extends BugChecker implements BugChecker.VariableTreeMatcher {
