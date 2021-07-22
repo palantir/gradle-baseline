@@ -18,13 +18,10 @@ package com.palantir.baseline.tasks;
 
 import static java.util.stream.Collectors.toSet;
 
+import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.hash.HashCode;
-import com.google.common.hash.Hashing;
-import com.google.common.hash.HashingInputStream;
-import com.google.common.io.ByteStreams;
+import com.palantir.baseline.services.JarClassHasher;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
@@ -32,8 +29,6 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.jar.JarEntry;
-import java.util.jar.JarInputStream;
 import java.util.stream.Collectors;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
@@ -41,12 +36,13 @@ import org.gradle.api.artifacts.ResolvedArtifact;
 import org.slf4j.Logger;
 
 public final class ClassUniquenessAnalyzer {
-
+    private final JarClassHasher jarHasher;
     private final Map<Set<ModuleVersionIdentifier>, Set<String>> jarsToClasses = new HashMap<>();
     private final Map<String, Set<HashCode>> classToHashCodes = new HashMap<>();
     private final Logger log;
 
-    public ClassUniquenessAnalyzer(Logger log) {
+    public ClassUniquenessAnalyzer(JarClassHasher jarHasher, Logger log) {
+        this.jarHasher = jarHasher;
         this.log = log;
     }
 
@@ -60,43 +56,26 @@ public final class ClassUniquenessAnalyzer {
         Map<String, Set<ModuleVersionIdentifier>> classToJars = new HashMap<>();
         Map<String, Set<HashCode>> tempClassToHashCodes = new HashMap<>();
 
-        dependencies.stream().forEach(resolvedArtifact -> {
+        for (ResolvedArtifact resolvedArtifact : dependencies) {
             File file = resolvedArtifact.getFile();
             if (!file.exists()) {
                 log.info("Skipping non-existent jar {}: {}", resolvedArtifact, file);
                 return;
             }
 
-            try (FileInputStream fileInputStream = new FileInputStream(file);
-                    JarInputStream jarInputStream = new JarInputStream(fileInputStream)) {
-                JarEntry entry;
-                while ((entry = jarInputStream.getNextJarEntry()) != null) {
-                    if (entry.isDirectory() || !entry.getName().endsWith(".class")) {
-                        continue;
-                    }
+            ImmutableSetMultimap<String, HashCode> hashes =
+                    jarHasher.hashClasses(resolvedArtifact).getHashesByClassName();
 
-                    if (entry.getName().contains("module-info.class")) {
-                        // Java 9 allows jars to have a module-info.class file in the root,
-                        // we shouldn't complain about these.
-                        continue;
-                    }
-
-                    String className = entry.getName().replaceAll("/", ".").replaceAll(".class", "");
-                    HashingInputStream inputStream = new HashingInputStream(Hashing.sha256(), jarInputStream);
-                    ByteStreams.exhaust(inputStream);
-
-                    multiMapPut(
-                            classToJars,
-                            className,
-                            resolvedArtifact.getModuleVersion().getId());
-
-                    multiMapPut(tempClassToHashCodes, className, inputStream.hash());
-                }
-            } catch (IOException e) {
-                log.error("Failed to read JarFile {}", resolvedArtifact, e);
-                throw new RuntimeException(e);
+            for (Map.Entry<String, HashCode> entry : hashes.entries()) {
+                String className = entry.getKey();
+                HashCode hashValue = entry.getValue();
+                multiMapPut(
+                        classToJars,
+                        className,
+                        resolvedArtifact.getModuleVersion().getId());
+                multiMapPut(tempClassToHashCodes, className, hashValue);
             }
-        });
+        }
 
         // discard all the classes that only come from one jar - these are completely safe!
         classToJars.entrySet().stream()

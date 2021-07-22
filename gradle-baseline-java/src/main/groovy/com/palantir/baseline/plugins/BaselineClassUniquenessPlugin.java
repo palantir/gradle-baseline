@@ -16,10 +16,12 @@
 
 package com.palantir.baseline.plugins;
 
+import com.palantir.baseline.services.JarClassHasher;
 import com.palantir.baseline.tasks.CheckClassUniquenessLockTask;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.plugins.JavaPlugin;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.language.base.plugins.LifecycleBasePlugin;
 
@@ -33,8 +35,14 @@ import org.gradle.language.base.plugins.LifecycleBasePlugin;
 public class BaselineClassUniquenessPlugin extends AbstractBaselinePlugin {
     @Override
     public final void apply(Project project) {
-        TaskProvider<CheckClassUniquenessLockTask> checkClassUniqueness =
-                project.getTasks().register("checkClassUniqueness", CheckClassUniquenessLockTask.class);
+        Provider<JarClassHasher> jarClassHasher = project.getGradle()
+                .getSharedServices()
+                .registerIfAbsent("jarClassHasher", JarClassHasher.class, _spec -> {});
+        TaskProvider<CheckClassUniquenessLockTask> checkClassUniqueness = project.getTasks()
+                .register("checkClassUniqueness", CheckClassUniquenessLockTask.class, task -> {
+                    task.jarClassHasher.set(jarClassHasher);
+                    task.usesService(jarClassHasher);
+                });
         project.getPlugins().apply(LifecycleBasePlugin.class);
         project.getTasks().getByName(LifecycleBasePlugin.CHECK_TASK_NAME).dependsOn(checkClassUniqueness);
 

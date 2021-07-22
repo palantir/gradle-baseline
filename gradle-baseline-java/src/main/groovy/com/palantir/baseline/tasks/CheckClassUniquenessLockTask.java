@@ -19,6 +19,7 @@ package com.palantir.baseline.tasks;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
+import com.palantir.baseline.services.JarClassHasher;
 import difflib.DiffUtils;
 import difflib.Patch;
 import java.io.File;
@@ -36,6 +37,7 @@ import org.gradle.api.GradleException;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
+import org.gradle.api.provider.Property;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.CacheableTask;
@@ -55,10 +57,14 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
     @SuppressWarnings("VisibilityModifier")
     public final SetProperty<Configuration> configurations;
 
+    @SuppressWarnings("VisibilityModifier")
+    public final Property<JarClassHasher> jarClassHasher;
+
     private final File lockFile;
 
     public CheckClassUniquenessLockTask() {
         this.configurations = getProject().getObjects().setProperty(Configuration.class);
+        this.jarClassHasher = getProject().getObjects().property(JarClassHasher.class);
         this.lockFile = getProject().file("baseline-class-uniqueness.lock");
         onlyIf(new Spec<Task>() {
             @Override
@@ -91,8 +97,8 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
         ImmutableSortedMap<String, Optional<String>> resultsByConfiguration = configurations.get().stream()
                 .collect(ImmutableSortedMap.toImmutableSortedMap(
                         Comparator.naturalOrder(), Configuration::getName, configuration -> {
-                            ClassUniquenessAnalyzer analyzer =
-                                    new ClassUniquenessAnalyzer(getProject().getLogger());
+                            ClassUniquenessAnalyzer analyzer = new ClassUniquenessAnalyzer(
+                                    jarClassHasher.get(), getProject().getLogger());
                             analyzer.analyzeConfiguration(configuration);
                             Collection<Set<ModuleVersionIdentifier>> problemJars = analyzer.getDifferingProblemJars();
 
