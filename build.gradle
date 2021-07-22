@@ -4,7 +4,6 @@ buildscript {
     repositories {
         gradlePluginPortal()
         mavenCentral()
-        jcenter()
     }
 
     dependencies {
@@ -29,7 +28,6 @@ allprojects {
     repositories {
         gradlePluginPortal()
         mavenCentral()
-        jcenter()
     }
 
     // Since we are using gradle-baseline in gradle-baseline we need to undo forces on project dependencies. Following
