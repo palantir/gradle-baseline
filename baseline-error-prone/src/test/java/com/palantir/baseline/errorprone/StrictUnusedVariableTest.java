@@ -121,7 +121,6 @@ public class StrictUnusedVariableTest {
                 .addSourceLines(
                         "Test.java",
                         "import java.util.function.BiFunction;",
-                        "import java.util.Optional;",
                         "class Test {",
                         "  static {",
                         "  // BUG: Diagnostic contains: Unused",
