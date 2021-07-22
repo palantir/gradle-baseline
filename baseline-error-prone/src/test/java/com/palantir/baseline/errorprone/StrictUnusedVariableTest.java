@@ -116,6 +116,24 @@ public class StrictUnusedVariableTest {
     }
 
     @Test
+    void handles_lambdas_in_static_init() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.function.BiFunction;",
+                        "import java.util.Optional;",
+                        "class Test {",
+                        "  static {",
+                        "  // BUG: Diagnostic contains: Unused",
+                        "    BiFunction<String, String, Integer> first = (String value1, String value2) -> 1;",
+                        "  // BUG: Diagnostic contains: Unused",
+                        "    first.andThen(value3 -> 2);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void renames_previous_suppression() {
         refactoringTestHelper
                 .addInputLines(
