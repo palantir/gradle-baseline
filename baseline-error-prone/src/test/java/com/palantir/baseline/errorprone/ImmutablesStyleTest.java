@@ -32,6 +32,30 @@ public class ImmutablesStyleTest {
     }
 
     @Test
+    public void fixInlineAnnotation() {
+        fix().addInputLines(
+                        "Person.java",
+                        "import org.immutables.value.Value;",
+                        "@Value.Style(visibility = Value.Style.ImplementationVisibility.PUBLIC)",
+                        "public interface Person {}")
+                .addOutputLines(
+                        "Person.java",
+                        "import java.lang.annotation.ElementType;",
+                        "import java.lang.annotation.Retention;",
+                        "import java.lang.annotation.RetentionPolicy;",
+                        "import java.lang.annotation.Target;",
+                        "import org.immutables.value.Value;",
+                        "@PersonStyle",
+                        "public interface Person {}",
+                        "@Target(ElementType.TYPE)",
+                        "@Retention(RetentionPolicy.SOURCE)",
+                        "@SuppressWarnings({\"checkstyle:OuterTypeFilename\", \"checkstyle:OneTopLevelClass\"})",
+                        "@Value.Style(visibility = Value.Style.ImplementationVisibility.PUBLIC)",
+                        "@interface PersonStyle {}")
+                .doTest();
+    }
+
+    @Test
     public void testMetaAnnotation_defaultRetention() {
         helper().addSourceLines(
                         "MyMetaAnnotation.java",
@@ -43,6 +67,30 @@ public class ImmutablesStyleTest {
                         "// BUG: Diagnostic contains: ImmutablesStyle",
                         "public @interface MyMetaAnnotation {}")
                 .addSourceLines("Person.java", "@MyMetaAnnotation", "public interface Person {}")
+                .doTest();
+    }
+
+    @Test
+    public void fixMetaAnnotation_defaultRetention() {
+        fix().addInputLines(
+                        "MyMetaAnnotation.java",
+                        "import java.lang.annotation.ElementType;",
+                        "import java.lang.annotation.Target;",
+                        "import org.immutables.value.Value;",
+                        "@Target({ElementType.PACKAGE, ElementType.TYPE})\n",
+                        "@Value.Style(visibility = Value.Style.ImplementationVisibility.PUBLIC)\n",
+                        "public @interface MyMetaAnnotation {}")
+                .addOutputLines(
+                        "MyMetaAnnotation.java",
+                        "import java.lang.annotation.ElementType;",
+                        "import java.lang.annotation.Retention;",
+                        "import java.lang.annotation.RetentionPolicy;",
+                        "import java.lang.annotation.Target;",
+                        "import org.immutables.value.Value;",
+                        "@Retention(RetentionPolicy.SOURCE)",
+                        "@Target({ElementType.PACKAGE, ElementType.TYPE})\n",
+                        "@Value.Style(visibility = Value.Style.ImplementationVisibility.PUBLIC)\n",
+                        "public @interface MyMetaAnnotation {}")
                 .doTest();
     }
 
@@ -65,6 +113,33 @@ public class ImmutablesStyleTest {
     }
 
     @Test
+    public void fixMetaAnnotation_classRetention() {
+        fix().addInputLines(
+                        "MyMetaAnnotation.java",
+                        "import java.lang.annotation.ElementType;",
+                        "import java.lang.annotation.Retention;",
+                        "import java.lang.annotation.RetentionPolicy;",
+                        "import java.lang.annotation.Target;",
+                        "import org.immutables.value.Value;",
+                        "@Target({ElementType.PACKAGE, ElementType.TYPE})",
+                        "@Retention(RetentionPolicy.CLASS)",
+                        "@Value.Style(visibility = Value.Style.ImplementationVisibility.PUBLIC)",
+                        "public @interface MyMetaAnnotation {}")
+                .addOutputLines(
+                        "MyMetaAnnotation.java",
+                        "import java.lang.annotation.ElementType;",
+                        "import java.lang.annotation.Retention;",
+                        "import java.lang.annotation.RetentionPolicy;",
+                        "import java.lang.annotation.Target;",
+                        "import org.immutables.value.Value;",
+                        "@Target({ElementType.PACKAGE, ElementType.TYPE})",
+                        "@Retention(RetentionPolicy.SOURCE)",
+                        "@Value.Style(visibility = Value.Style.ImplementationVisibility.PUBLIC)",
+                        "public @interface MyMetaAnnotation {}")
+                .doTest();
+    }
+
+    @Test
     public void testMetaAnnotation_runtimeRetention() {
         helper().addSourceLines(
                         "MyMetaAnnotation.java",
@@ -79,6 +154,33 @@ public class ImmutablesStyleTest {
                         "// BUG: Diagnostic contains: ImmutablesStyle",
                         "public @interface MyMetaAnnotation {}")
                 .addSourceLines("Person.java", "@MyMetaAnnotation", "public interface Person {}")
+                .doTest();
+    }
+
+    @Test
+    public void fixMetaAnnotation_runtimeRetention() {
+        fix().addInputLines(
+                        "MyMetaAnnotation.java",
+                        "import java.lang.annotation.ElementType;",
+                        "import java.lang.annotation.Retention;",
+                        "import java.lang.annotation.RetentionPolicy;",
+                        "import java.lang.annotation.Target;",
+                        "import org.immutables.value.Value;",
+                        "@Target({ElementType.PACKAGE, ElementType.TYPE})",
+                        "@Retention(value = RetentionPolicy.RUNTIME)",
+                        "@Value.Style(visibility = Value.Style.ImplementationVisibility.PUBLIC)",
+                        "public @interface MyMetaAnnotation {}")
+                .addOutputLines(
+                        "MyMetaAnnotation.java",
+                        "import java.lang.annotation.ElementType;",
+                        "import java.lang.annotation.Retention;",
+                        "import java.lang.annotation.RetentionPolicy;",
+                        "import java.lang.annotation.Target;",
+                        "import org.immutables.value.Value;",
+                        "@Target({ElementType.PACKAGE, ElementType.TYPE})",
+                        "@Retention(value = RetentionPolicy.SOURCE)",
+                        "@Value.Style(visibility = Value.Style.ImplementationVisibility.PUBLIC)",
+                        "public @interface MyMetaAnnotation {}")
                 .doTest();
     }
 
@@ -108,5 +210,9 @@ public class ImmutablesStyleTest {
 
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(ImmutablesStyle.class, getClass());
+    }
+
+    private RefactoringValidator fix() {
+        return RefactoringValidator.of(ImmutablesStyle.class, getClass());
     }
 }
