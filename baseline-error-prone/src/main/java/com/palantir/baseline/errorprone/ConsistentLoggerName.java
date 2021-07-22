@@ -42,12 +42,20 @@ public final class ConsistentLoggerName extends BugChecker implements BugChecker
             Matchers.isStatic(),
             Matchers.hasModifier(Modifier.FINAL),
             Matchers.hasModifier(Modifier.PRIVATE),
-            Matchers.isSubtypeOf("org.slf4j.Logger"),
-            Matchers.variableInitializer(MethodMatchers.staticMethod()
-                    .onClass("org.slf4j.LoggerFactory")
-                    .named("getLogger")
-                    // Only match the 'class' constructor
-                    .withParameters(Class.class.getName())));
+            Matchers.anyOf(
+                    Matchers.isSubtypeOf("org.slf4j.Logger"),
+                    Matchers.isSubtypeOf("com.palantir.logsafe.logger.SafeLogger")),
+            Matchers.anyOf(
+                    Matchers.variableInitializer(MethodMatchers.staticMethod()
+                            .onClass("org.slf4j.LoggerFactory")
+                            .named("getLogger")
+                            // Only match the 'class' constructor
+                            .withParameters(Class.class.getName())),
+                    Matchers.variableInitializer(MethodMatchers.staticMethod()
+                            .onClass("com.palantir.logsafe.logger.SafeLoggerFactory")
+                            .named("get")
+                            // Only match the 'class' constructor
+                            .withParameters(Class.class.getName()))));
 
     @Override
     public Description matchVariable(VariableTree tree, VisitorState state) {
