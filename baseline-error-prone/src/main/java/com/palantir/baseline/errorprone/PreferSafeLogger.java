@@ -102,6 +102,9 @@ public final class PreferSafeLogger extends BugChecker implements BugChecker.Var
                     if (sym.equals(ASTHelpers.getSymbol(receiver))) {
                         if (!isSafeSlf4jInteraction(tree, state)) {
                             foundUnknownUsage.set(true);
+                        } else {
+                            // Scan arguments for findings that may not compile
+                            scan(tree.getArguments(), null);
                         }
                         return null;
                     }

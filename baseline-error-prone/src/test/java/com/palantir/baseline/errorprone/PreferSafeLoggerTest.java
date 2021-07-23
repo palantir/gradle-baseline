@@ -210,4 +210,48 @@ class PreferSafeLoggerTest {
                 .expectUnchanged()
                 .doTest();
     }
+
+    @Test
+    void testGetNameInArgUnmodified() {
+        // getName is not supported by SafeLogger, so we shouldn't make changes that won't compile.
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import org.slf4j.*;",
+                        "class Test {",
+                        "  private static final Logger log = LoggerFactory.getLogger(Test.class);",
+                        "  void action() {",
+                        "    log.info(\"foo\", SafeArg.of(\"name\", log.getName()));",
+                        "  }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void testIsTraceEnabledInArg() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import org.slf4j.*;",
+                        "class Test {",
+                        "  private static final Logger log = LoggerFactory.getLogger(Test.class);",
+                        "  void action() {",
+                        "    log.info(\"foo\", SafeArg.of(\"name\", log.isTraceEnabled()));",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.palantir.logsafe.logger.SafeLogger;",
+                        "import com.palantir.logsafe.logger.SafeLoggerFactory;",
+                        "import org.slf4j.*;",
+                        "class Test {",
+                        "  private static final SafeLogger log = SafeLoggerFactory.get(Test.class);",
+                        "  void action() {",
+                        "    log.info(\"foo\", SafeArg.of(\"name\", log.isTraceEnabled()));",
+                        "  }",
+                        "}")
+                .doTest();
+    }
 }
