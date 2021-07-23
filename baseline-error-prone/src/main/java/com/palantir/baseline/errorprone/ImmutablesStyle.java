@@ -74,29 +74,33 @@ public final class ImmutablesStyle extends BugChecker implements BugChecker.Clas
     }
 
     private Description matchStyleAnnotatedType(ClassTree tree, VisitorState state) {
+        if (ASTHelpers.enclosingClass(ASTHelpers.getSymbol(tree)) == null) {
+            // Top level class, we cannot create new files with suggested fixes, nor should we create
+            // additional top-level classes.
+            return buildDescription(tree)
+                    .addFix(SuggestedFixes.addSuppressWarnings(
+                            state, canonicalName(), "Automatically suppressed to unblock enforcement in new code"))
+                    .build();
+        }
         SuggestedFix.Builder fix = SuggestedFix.builder();
         String qualifiedTarget = SuggestedFixes.qualifyType(state, fix, Target.class.getName());
         String qualifiedElementType = SuggestedFixes.qualifyType(state, fix, ElementType.class.getName());
         String qualifiedRetention = SuggestedFixes.qualifyType(state, fix, Retention.class.getName());
         String qualifiedRetentionPolicy = SuggestedFixes.qualifyType(state, fix, RetentionPolicy.class.getName());
         AnnotationTree styleAnnotationTree = getAnnotation(tree, Value.Style.class, state);
-        String topLevelClassPrefix = ASTHelpers.enclosingClass(ASTHelpers.getSymbol(tree)) == null
-                ? "@SuppressWarnings({\"checkstyle:OuterTypeFilename\", \"checkstyle:OneTopLevelClass\"})\n"
-                : "";
         return buildDescription(tree)
-                .addFix(fix.prefixWith(tree, String.format("@%sStyle\n", tree.getSimpleName()))
-                        .replace(styleAnnotationTree, "")
-                        .postfixWith(
+                .addFix(fix.prefixWith(
                                 tree,
                                 String.format(
-                                        "\n@%s(%s.TYPE)\n@%s(%s.SOURCE)\n%s%s\n@interface %sStyle {}\n",
+                                        "\n@%s(%s.TYPE)\n@%s(%s.SOURCE)\n%s\n@interface %sStyle {}\n@%sStyle\n",
                                         qualifiedTarget,
                                         qualifiedElementType,
                                         qualifiedRetention,
                                         qualifiedRetentionPolicy,
-                                        topLevelClassPrefix,
                                         state.getSourceForNode(styleAnnotationTree),
+                                        tree.getSimpleName(),
                                         tree.getSimpleName()))
+                        .replace(styleAnnotationTree, "")
                         .build())
                 .build();
     }

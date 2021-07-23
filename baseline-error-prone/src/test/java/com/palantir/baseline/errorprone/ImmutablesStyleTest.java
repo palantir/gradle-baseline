@@ -32,7 +32,7 @@ public class ImmutablesStyleTest {
     }
 
     @Test
-    public void fixInlineAnnotation() {
+    public void fixInlineAnnotation_topLevel() {
         fix().addInputLines(
                         "Person.java",
                         "import org.immutables.value.Value;",
@@ -40,18 +40,37 @@ public class ImmutablesStyleTest {
                         "public interface Person {}")
                 .addOutputLines(
                         "Person.java",
+                        "import org.immutables.value.Value;",
+                        "@SuppressWarnings(\"ImmutablesStyle\")",
+                        "@Value.Style(visibility = Value.Style.ImplementationVisibility.PUBLIC)",
+                        "public interface Person {}")
+                .doTest();
+    }
+
+    @Test
+    public void fixInlineAnnotation_enclosed() {
+        fix().addInputLines(
+                        "Enclosing.java",
+                        "import org.immutables.value.Value;",
+                        "public class Enclosing {",
+                        "  @Value.Style(visibility = Value.Style.ImplementationVisibility.PUBLIC)",
+                        "  public interface Person {}",
+                        "}")
+                .addOutputLines(
+                        "Enclosing.java",
                         "import java.lang.annotation.ElementType;",
                         "import java.lang.annotation.Retention;",
                         "import java.lang.annotation.RetentionPolicy;",
                         "import java.lang.annotation.Target;",
                         "import org.immutables.value.Value;",
-                        "@PersonStyle",
-                        "public interface Person {}",
-                        "@Target(ElementType.TYPE)",
-                        "@Retention(RetentionPolicy.SOURCE)",
-                        "@SuppressWarnings({\"checkstyle:OuterTypeFilename\", \"checkstyle:OneTopLevelClass\"})",
-                        "@Value.Style(visibility = Value.Style.ImplementationVisibility.PUBLIC)",
-                        "@interface PersonStyle {}")
+                        "public class Enclosing {",
+                        "  @Target(ElementType.TYPE)",
+                        "  @Retention(RetentionPolicy.SOURCE)",
+                        "  @Value.Style(visibility = Value.Style.ImplementationVisibility.PUBLIC)",
+                        "  @interface PersonStyle {}",
+                        "  @PersonStyle",
+                        "  public interface Person {}",
+                        "}")
                 .doTest();
     }
 
