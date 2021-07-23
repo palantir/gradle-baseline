@@ -36,6 +36,28 @@ class ProxyNonConstantTypeTest {
     }
 
     @Test
+    void testGuavaReflectionNewProxySuppression() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.google.common.reflect.Reflection;",
+                        "class Test {",
+                        "  void f() {",
+                        "    Reflection.newProxy(Test.class, null);",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.google.common.reflect.Reflection;",
+                        "class Test {",
+                        "  @SuppressWarnings(\"ProxyNonConstantType\")",
+                        "  void f() {",
+                        "    Reflection.newProxy(Test.class, null);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     void testConstantInterfacesInline() {
         helper().addSourceLines(
                         "Test.java",
@@ -63,6 +85,28 @@ class ProxyNonConstantTypeTest {
     }
 
     @Test
+    void testConstantInterfacesDynamicSuppression() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import java.lang.reflect.Proxy;",
+                        "class Test {",
+                        "  void f(Class<?> iface) {",
+                        "    Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{iface}, null);",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import java.lang.reflect.Proxy;",
+                        "class Test {",
+                        "  @SuppressWarnings(\"ProxyNonConstantType\")",
+                        "  void f(Class<?> iface) {",
+                        "    Proxy.newProxyInstance(getClass().getClassLoader(), new Class<?>[]{iface}, null);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     void testIgnoresTestCode() {
         helper().addSourceLines(
                         "Foo.java",
@@ -80,5 +124,9 @@ class ProxyNonConstantTypeTest {
 
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(ProxyNonConstantType.class, getClass());
+    }
+
+    private RefactoringValidator fix() {
+        return RefactoringValidator.of(ProxyNonConstantType.class, getClass());
     }
 }

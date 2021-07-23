@@ -57,6 +57,7 @@ public class BaselineErrorProneExtension {
             "PreferSafeLoggableExceptions",
             "PreferSafeLoggingPreconditions",
             "PreferStaticLoggers",
+            "ProxyNonConstantType",
             "PublicConstructorForAbstractClass",
             "ReadReturnValueIgnored",
             "RedundantMethodReference",
