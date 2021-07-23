@@ -119,7 +119,8 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
                 .filter(symbol -> symbol.getSimpleName().toString().startsWith(FIELD_INIT_BITS_PREFIX))
                 .map(Symbol::toString)
                 .map(initBitsName -> removeFromStart(initBitsName, FIELD_INIT_BITS_PREFIX))
-                .map(fieldName -> GET_PREFIXES.stream().reduce(fieldName, ImmutablesBuilderMissingInitialization::removeFromStart))
+                .map(fieldName -> GET_PREFIXES.stream()
+                        .reduce(fieldName, ImmutablesBuilderMissingInitialization::removeFromStart))
                 .map(CaseFormat.UPPER_UNDERSCORE.converterTo(CaseFormat.LOWER_CAMEL))
                 .collect(Collectors.toSet());
 
@@ -214,7 +215,10 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
                         && !symbol.isAnonymous()
                         && symbol.getParameters().size() == 1)
                 .map(symbol -> symbol.getSimpleName().toString())
-                .reduce(fields, ImmutablesBuilderMissingInitialization::removeFieldsPotentiallyInitializedBy, Sets::intersection)
+                .reduce(
+                        fields,
+                        ImmutablesBuilderMissingInitialization::removeFieldsPotentiallyInitializedBy,
+                        Sets::intersection)
                 .isEmpty();
     }
 
@@ -222,7 +226,8 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
      * Takes a set of uninitialized fields, and returns a set containing the fields that cannot have been initialized by
      * the method methodName.
      */
-    private static Set<String> removeFieldsPotentiallyInitializedBy(Set<String> uninitializedFields, String methodName) {
+    private static Set<String> removeFieldsPotentiallyInitializedBy(
+            Set<String> uninitializedFields, String methodName) {
         String methodNameLowerCase = methodName.toLowerCase();
         return uninitializedFields.stream()
                 .filter(fieldName -> !methodNameLowerCase.endsWith(fieldName.toLowerCase()))
