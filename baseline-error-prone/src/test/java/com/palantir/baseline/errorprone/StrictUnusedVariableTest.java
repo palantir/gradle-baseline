@@ -339,4 +339,20 @@ public class StrictUnusedVariableTest {
                 .expectUnchanged()
                 .doTest(TestMode.TEXT_MATCH);
     }
+
+    @Test
+    public void allows_unused_loggers() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import org.slf4j.*;",
+                        "import com.palantir.logsafe.logger.*;",
+                        "class Test {",
+                        "  private static final Logger slf4j = LoggerFactory.getLogger(Test.class);",
+                        "  private static final SafeLogger logsafe = SafeLoggerFactory.get(Test.class);",
+                        "  // BUG: Diagnostic contains: Unused",
+                        "  private static final String str = \"str\";",
+                        "}")
+                .doTest();
+    }
 }

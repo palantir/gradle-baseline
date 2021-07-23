@@ -53,7 +53,7 @@ public final class CatchBlockLogException extends BugChecker implements BugCheck
     private static final long serialVersionUID = 1L;
 
     private static final Matcher<ExpressionTree> logMethod = MethodMatchers.instanceMethod()
-            .onDescendantOf("org.slf4j.Logger")
+            .onDescendantOfAny("org.slf4j.Logger", "com.palantir.logsafe.logger.SafeLogger")
             .withNameMatching(Pattern.compile("trace|debug|info|warn|error"));
 
     private static final Matcher<Tree> containslogMethod =
