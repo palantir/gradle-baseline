@@ -236,6 +236,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 "URLEqualsHashCode",
                 "BoxedPrimitiveEquality",
                 "ReferenceEquality");
+        errorProneOptions.warn("MethodCanBeStatic");
         // Relax some checks for test code
         if (errorProneOptions.getCompilingTestOnlyCode().get()) {
             errorProneOptions.disable("UnnecessaryLambda");
