@@ -119,7 +119,7 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
                 .filter(symbol -> symbol.getSimpleName().toString().startsWith(FIELD_INIT_BITS_PREFIX))
                 .map(Symbol::toString)
                 .map(initBitsName -> removeFromStart(initBitsName, FIELD_INIT_BITS_PREFIX))
-                .map(fieldName -> GET_PREFIXES.stream().reduce(fieldName, this::removeFromStart))
+                .map(fieldName -> GET_PREFIXES.stream().reduce(fieldName, ImmutablesBuilderMissingInitialization::removeFromStart))
                 .map(CaseFormat.UPPER_UNDERSCORE.converterTo(CaseFormat.LOWER_CAMEL))
                 .collect(Collectors.toSet());
 
@@ -151,7 +151,7 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
      * Recursively check that all of the uninitializedFields are initialized in the expression, returning any that
      * are not.
      */
-    private Set<String> checkInitialization(
+    private static Set<String> checkInitialization(
             ExpressionTree tree,
             Set<String> uninitializedFields,
             VisitorState state,
@@ -214,7 +214,7 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
                         && !symbol.isAnonymous()
                         && symbol.getParameters().size() == 1)
                 .map(symbol -> symbol.getSimpleName().toString())
-                .reduce(fields, this::removeFieldsPotentiallyInitializedBy, Sets::intersection)
+                .reduce(fields, ImmutablesBuilderMissingInitialization::removeFieldsPotentiallyInitializedBy, Sets::intersection)
                 .isEmpty();
     }
 
@@ -222,7 +222,7 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
      * Takes a set of uninitialized fields, and returns a set containing the fields that cannot have been initialized by
      * the method methodName.
      */
-    private Set<String> removeFieldsPotentiallyInitializedBy(Set<String> uninitializedFields, String methodName) {
+    private static Set<String> removeFieldsPotentiallyInitializedBy(Set<String> uninitializedFields, String methodName) {
         String methodNameLowerCase = methodName.toLowerCase();
         return uninitializedFields.stream()
                 .filter(fieldName -> !methodNameLowerCase.endsWith(fieldName.toLowerCase()))
@@ -235,7 +235,7 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
      * We don't check which class's constructor because it must return something compatible with Builder for us to have
      * got this far, and that's all we care about.
      */
-    private boolean methodJustConstructsBuilder(
+    private static boolean methodJustConstructsBuilder(
             MethodSymbol methodSymbol, VisitorState state, ClassSymbol immutableClass, ClassSymbol interfaceClass) {
         MethodTree methodTree = ASTHelpers.findMethod(methodSymbol, state);
         if (methodTree != null && methodTree.getBody() != null) {
@@ -282,7 +282,7 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
     /**
      * If input starts with toRemove, returns the rest of input with toRemove removed, otherwise just returns input.
      */
-    private String removeFromStart(String input, String toRemove) {
+    private static String removeFromStart(String input, String toRemove) {
         if (input.startsWith(toRemove)) {
             return input.substring(toRemove.length());
         }
@@ -292,7 +292,7 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
     /**
      * Returns a function for use in Optional.flatMap that filters by type, and casts to that type.
      */
-    private <I, O extends I> Function<I, Optional<O>> filterByType(Class<O> clazz) {
+    private static <I, O extends I> Function<I, Optional<O>> filterByType(Class<O> clazz) {
         return value -> {
             if (clazz.isInstance(value)) {
                 return Optional.of(clazz.cast(value));

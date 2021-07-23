@@ -95,7 +95,7 @@ public final class CompileTimeConstantViolatesLiskovSubstitution extends BugChec
         return Description.NO_MATCH;
     }
 
-    private boolean anySuperMethodsMissingParameterAnnotation(
+    private static boolean anySuperMethodsMissingParameterAnnotation(
             Set<MethodSymbol> superMethods, int parameterIndex, VisitorState state) {
         for (MethodSymbol superMethod : superMethods) {
             VarSymbol parameter = superMethod.getParameters().get(parameterIndex);
@@ -106,7 +106,7 @@ public final class CompileTimeConstantViolatesLiskovSubstitution extends BugChec
         return false;
     }
 
-    private boolean anySuperMethodsHaveParameterAnnotation(
+    private static boolean anySuperMethodsHaveParameterAnnotation(
             Set<MethodSymbol> superMethods, int parameterIndex, VisitorState state) {
         for (MethodSymbol superMethod : superMethods) {
             VarSymbol parameter = superMethod.getParameters().get(parameterIndex);

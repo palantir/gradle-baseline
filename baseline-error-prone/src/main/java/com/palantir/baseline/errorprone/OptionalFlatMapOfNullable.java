@@ -84,7 +84,7 @@ public final class OptionalFlatMapOfNullable extends BugChecker implements BugCh
                 .build();
     }
 
-    private Optional<ExpressionTree> finalExpression(LambdaExpressionTree lambdaExpressionTree) {
+    private static Optional<ExpressionTree> finalExpression(LambdaExpressionTree lambdaExpressionTree) {
         Tree body = lambdaExpressionTree.getBody();
         switch (lambdaExpressionTree.getBodyKind()) {
             case EXPRESSION:

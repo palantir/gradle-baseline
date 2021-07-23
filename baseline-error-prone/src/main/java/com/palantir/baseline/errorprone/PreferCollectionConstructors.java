@@ -268,7 +268,7 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
                 .build();
     }
 
-    private Class<?> findCollectionClassToUse(VisitorState state, ExpressionTree tree) {
+    private static Class<?> findCollectionClassToUse(VisitorState state, ExpressionTree tree) {
         for (Map.Entry<Matcher<ExpressionTree>, Class<?>> entry : classMap.entrySet()) {
             Matcher<ExpressionTree> matcher = entry.getKey();
             if (matcher.matches(tree, state)) {
@@ -282,7 +282,7 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
         return null;
     }
 
-    private boolean isFirstArgCollection(VisitorState state, ExpressionTree tree) {
+    private static boolean isFirstArgCollection(VisitorState state, ExpressionTree tree) {
         List<JCExpression> args = ((JCMethodInvocation) tree).args;
         if (args.isEmpty()) {
             return false;
