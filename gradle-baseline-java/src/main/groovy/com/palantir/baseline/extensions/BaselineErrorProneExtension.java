@@ -40,6 +40,7 @@ public class BaselineErrorProneExtension {
             "ExecutorSubmitRunnableFutureIgnored",
             "ExtendsErrorOrThrowable",
             "FinalClass",
+            "ImmutablesStyle",
             "ImplicitPublicBuilderConstructor",
             "JavaTimeDefaultTimeZone",
             "JavaTimeSystemDefaultTimeZone",
