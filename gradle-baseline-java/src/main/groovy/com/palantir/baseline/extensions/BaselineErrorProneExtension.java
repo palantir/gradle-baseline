@@ -78,6 +78,7 @@ public class BaselineErrorProneExtension {
             "ArrayEquals",
             "BadImport",
             "MissingBraces",
+            "MethodCanBeStatic",
             "MissingOverride",
             "ObjectsHashCodePrimitive",
             "PreferJavaTimeOverload",
