@@ -23,6 +23,7 @@ import com.google.errorprone.BugPattern.LinkType;
 import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
+import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
@@ -30,6 +31,7 @@ import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.NewArrayTree;
+import com.sun.source.tree.Tree;
 import java.lang.reflect.InvocationHandler;
 import java.lang.reflect.Proxy;
 
@@ -59,7 +61,7 @@ public final class ProxyNonConstantType extends BugChecker implements BugChecker
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
         if (REFLECTION_NEW_PROXY.matches(tree, state)) {
-            return describeMatch(tree);
+            return describeMatchWithFix(tree, state);
         }
         if (NEW_PROXY_INSTANCE_MATCHER.matches(tree, state)) {
             ExpressionTree interfaces = tree.getArguments().get(1);
@@ -67,13 +69,19 @@ public final class ProxyNonConstantType extends BugChecker implements BugChecker
                 NewArrayTree newArrayTree = (NewArrayTree) interfaces;
                 for (ExpressionTree element : newArrayTree.getInitializers()) {
                     if (!isDirectClassAccess(element) && !TestCheckUtils.isTestCode(state)) {
-                        return describeMatch(interfaces);
+                        return describeMatchWithFix(interfaces, state);
                     }
                 }
             }
         }
 
         return Description.NO_MATCH;
+    }
+
+    private Description describeMatchWithFix(Tree tree, VisitorState state) {
+        return buildDescription(tree)
+                .addFix(SuggestedFixes.addSuppressWarnings(state, canonicalName()))
+                .build();
     }
 
     private static boolean isDirectClassAccess(ExpressionTree expressionTree) {
