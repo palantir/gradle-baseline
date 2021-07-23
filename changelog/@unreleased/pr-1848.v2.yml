@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: baseline-error-prone now treats the `MethodCanBeStatic` check as WARN
+    (previously it was a SUGGESTION) and auto-fixes it.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1848
