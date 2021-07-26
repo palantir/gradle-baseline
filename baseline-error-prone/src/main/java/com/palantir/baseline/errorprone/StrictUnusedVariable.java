@@ -152,7 +152,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
 
     /** The set of types exempting a field of type extending them. */
     private static final ImmutableSet<String> EXEMPTING_FIELD_SUPER_TYPES =
-            ImmutableSet.of("org.junit.rules.TestRule", "org.slf4j.Logger");
+            ImmutableSet.of("org.junit.rules.TestRule", "org.slf4j.Logger", "com.palantir.logsafe.logger.SafeLogger");
 
     private static final ImmutableList<String> SPECIAL_FIELDS = ImmutableList.of(
             "serialVersionUID",
