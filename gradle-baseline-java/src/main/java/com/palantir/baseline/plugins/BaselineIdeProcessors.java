@@ -21,18 +21,21 @@ import groovy.util.Node;
 import groovy.xml.QName;
 import java.io.File;
 import java.util.stream.Stream;
+import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.plugins.ide.idea.IdeaPlugin;
 import org.gradle.plugins.ide.idea.model.IdeaModel;
 
-public final class BaselineIdeProcessors extends AbstractBaselinePlugin {
+public final class BaselineIdeProcessors implements Plugin<Project> {
     @Override
     public void apply(Project project) {
-        project.getPlugins().withType(IdeaPlugin.class, plugin -> configureIdeaPlugin(project, plugin));
+        if (project.getPlugins().hasPlugin(IdeaPlugin.class)) {
+            configureIdea(project);
+        }
         configureEclipsePlugin(project);
     }
 
-    private static void configureIdeaPlugin(Project project, IdeaPlugin plugin) {
+    private static void configureIdea(Project project) {
         IdeaModel idea = project.getExtensions().getByType(IdeaModel.class);
 
         // Ensure we're not importing from intellij before configuring these, otherwise we will conflict with Intellij's
@@ -81,7 +84,7 @@ public final class BaselineIdeProcessors extends AbstractBaselinePlugin {
         return parent.getAt(new QName(childQname)).stream();
     }
 
-    private static void configureEclipsePlugin(Project project) {
+    private static void configureEclipsePlugin(Project _project) {
         // TODO(tpetracca): impl
     }
 }

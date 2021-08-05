@@ -32,7 +32,7 @@ class BaselineIdeProcessorsTest extends Specification {
         project.evaluate()
     }
 
-    def baselineIdeaPluginApplied() {
+    def baselineIdeProcessorsPluginApplied() {
         expect:
         project.plugins.hasPlugin(BaselineIdeProcessors.class)
     }
