@@ -86,6 +86,10 @@ gradlePlugin {
             id = 'com.palantir.baseline-enable-preview-flag'
             implementationClass = 'com.palantir.baseline.plugins.BaselineEnablePreviewFlag'
         }
+        baselineIdeProcessors {
+            id = 'com.palantir.baseline-ide-processors'
+            implementationClass = 'com.palantir.baseline.plugins.BaselineIdeProcessors'
+        }
     }
 }
 
@@ -125,6 +129,9 @@ pluginBundle {
         }
         baselineEnablePreviewFlag {
             displayName = 'Palantir Baseline --enable-preview Flag Plugin'
+        }
+        baselineIdeProcessors {
+            displayName = 'Palantir Baseline IDE Processors Plugin'
         }
     }
 }
