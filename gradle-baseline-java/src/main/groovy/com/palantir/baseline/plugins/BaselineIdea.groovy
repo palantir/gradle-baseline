@@ -132,6 +132,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
                 Node node = provider.asNode()
                 recommendWitchcraftLoggingPlugin(node)
             }
+            recommendWitchcraftLoggingPluginForIntellijImport(rootProject)
         }
     }
 
@@ -563,5 +564,14 @@ class BaselineIdea extends AbstractBaselinePlugin {
                 'plugin',
                 [id: 'com.palantir.witchcraft.api.logging.idea'],
                 ['min-version': WITCHCRAFT_LOGGING_PLUGIN_MINIMUM_VERSION])
+    }
+
+    private static void recommendWitchcraftLoggingPluginForIntellijImport(Project project) {
+        if (!Boolean.getBoolean("idea.active")) {
+            return
+        }
+        XmlUtils.createOrUpdateXmlFile(
+                project.file(".idea/externalDependencies.xml"),
+                BaselineIdea.&recommendWitchcraftLoggingPlugin)
     }
 }
