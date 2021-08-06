@@ -25,14 +25,18 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.plugins.ide.idea.IdeaPlugin;
 import org.gradle.plugins.ide.idea.model.IdeaModel;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class BaselineIdeProcessors implements Plugin<Project> {
+    private static final Logger log = LoggerFactory.getLogger(BaselineIdeProcessors.class);
+
     @Override
     public void apply(Project project) {
         if (project.getPlugins().hasPlugin(IdeaPlugin.class)) {
             configureIdea(project);
         }
-        configureEclipsePlugin(project);
+        // TODO(tpetracca): eclipse support
     }
 
     private static void configureIdea(Project project) {
@@ -41,12 +45,16 @@ public final class BaselineIdeProcessors implements Plugin<Project> {
         // Ensure we're not importing from intellij before configuring these, otherwise we will conflict with Intellij's
         // own way of handling annotation processor output directories.
         if (!Boolean.getBoolean("idea.active")) {
-            addGeneratedOutputToIdeaSourceFolder(idea, project.file("generated_src"), false);
-            addGeneratedOutputToIdeaSourceFolder(idea, project.file("generated_testSrc"), true);
+            addGeneratedOutputToIdeaSourceFolder(project, idea, "generated_src", false);
+            addGeneratedOutputToIdeaSourceFolder(project, idea, "generated_testSrc", true);
         }
     }
 
-    private static void addGeneratedOutputToIdeaSourceFolder(IdeaModel idea, File outputDir, boolean isTest) {
+    private static void addGeneratedOutputToIdeaSourceFolder(
+            Project project, IdeaModel idea, String outputDirName, boolean isTest) {
+        File outputDir = project.file(outputDirName);
+        String relativeOutputDirPath = project.relativePath(outputDirName);
+
         // add generated directory as source directory
         idea.getModule().getGeneratedSourceDirs().add(outputDir);
         if (!isTest) {
@@ -58,7 +66,7 @@ public final class BaselineIdeProcessors implements Plugin<Project> {
         // if generated source directory doesn't already exist, Gradle IDEA plugin will not add it as a source folder,
         // so manually add as generated source folder to the .iml
         idea.getModule().getIml().withXml(xmlProvider -> {
-            String dirUrl = "file://$MODULE_DIR$/" + outputDir.getPath();
+            String dirUrl = "file://$MODULE_DIR$/" + relativeOutputDirPath;
             Node rootNode = xmlProvider.asNode();
             Node component = children(rootNode, "component")
                     .filter(node -> node.attributes().get("name").equals("NewModuleRootManager"))
@@ -80,11 +88,8 @@ public final class BaselineIdeProcessors implements Plugin<Project> {
         });
     }
 
+    @SuppressWarnings("unchecked")
     private static Stream<Node> children(Node parent, String childQname) {
         return parent.getAt(new QName(childQname)).stream();
-    }
-
-    private static void configureEclipsePlugin(Project _project) {
-        // TODO(tpetracca): impl
     }
 }
