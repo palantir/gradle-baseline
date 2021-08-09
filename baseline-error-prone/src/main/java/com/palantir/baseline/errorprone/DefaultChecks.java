@@ -24,7 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.ServiceLoader;
 
-public class DefaultChecks {
+public final class DefaultChecks {
     private static List<BugCheckerInfo> enabledErrors = getPluginsWithErrorSeverity();
 
     private DefaultChecks() {
