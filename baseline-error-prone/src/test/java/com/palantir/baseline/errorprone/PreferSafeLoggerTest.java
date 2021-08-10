@@ -254,4 +254,106 @@ class PreferSafeLoggerTest {
                         "}")
                 .doTest();
     }
+
+    @Test
+    void testTooManyArgs() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import org.slf4j.*;",
+                        "class Test {",
+                        "  private static final Logger log = LoggerFactory.getLogger(Test.class);",
+                        "  void action() {",
+                        "    log.info(\"msg\",",
+                        "        SafeArg.of(\"1\", 1),",
+                        "        SafeArg.of(\"2\", 2),",
+                        "        SafeArg.of(\"3\", 3),",
+                        "        SafeArg.of(\"4\", 4),",
+                        "        SafeArg.of(\"5\", 5),",
+                        "        SafeArg.of(\"6\", 6),",
+                        "        SafeArg.of(\"7\", 7),",
+                        "        SafeArg.of(\"8\", 8),",
+                        "        SafeArg.of(\"9\", 9),",
+                        "        SafeArg.of(\"10\", 10),",
+                        "        SafeArg.of(\"11\", 11));",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.palantir.logsafe.logger.SafeLogger;",
+                        "import com.palantir.logsafe.logger.SafeLoggerFactory;",
+                        "import java.util.Arrays;",
+                        "import org.slf4j.*;",
+                        "class Test {",
+                        "  private static final SafeLogger log = SafeLoggerFactory.get(Test.class);",
+                        "  void action() {",
+                        "    log.info(\"msg\",",
+                        "        Arrays.asList(SafeArg.of(\"1\", 1),",
+                        "        SafeArg.of(\"2\", 2),",
+                        "        SafeArg.of(\"3\", 3),",
+                        "        SafeArg.of(\"4\", 4),",
+                        "        SafeArg.of(\"5\", 5),",
+                        "        SafeArg.of(\"6\", 6),",
+                        "        SafeArg.of(\"7\", 7),",
+                        "        SafeArg.of(\"8\", 8),",
+                        "        SafeArg.of(\"9\", 9),",
+                        "        SafeArg.of(\"10\", 10),",
+                        "        SafeArg.of(\"11\", 11)));",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testTooManyArgsWithThrowable() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import org.slf4j.*;",
+                        "class Test {",
+                        "  private static final Logger log = LoggerFactory.getLogger(Test.class);",
+                        "  void action(Throwable t) {",
+                        "    log.info(\"msg\",",
+                        "        SafeArg.of(\"1\", 1),",
+                        "        SafeArg.of(\"2\", 2),",
+                        "        SafeArg.of(\"3\", 3),",
+                        "        SafeArg.of(\"4\", 4),",
+                        "        SafeArg.of(\"5\", 5),",
+                        "        SafeArg.of(\"6\", 6),",
+                        "        SafeArg.of(\"7\", 7),",
+                        "        SafeArg.of(\"8\", 8),",
+                        "        SafeArg.of(\"9\", 9),",
+                        "        SafeArg.of(\"10\", 10),",
+                        "        SafeArg.of(\"11\", 11),",
+                        "        t);",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.palantir.logsafe.logger.SafeLogger;",
+                        "import com.palantir.logsafe.logger.SafeLoggerFactory;",
+                        "import java.util.Arrays;",
+                        "import org.slf4j.*;",
+                        "class Test {",
+                        "  private static final SafeLogger log = SafeLoggerFactory.get(Test.class);",
+                        "  void action(Throwable t) {",
+                        "    log.info(\"msg\",",
+                        "        Arrays.asList(SafeArg.of(\"1\", 1),",
+                        "        SafeArg.of(\"2\", 2),",
+                        "        SafeArg.of(\"3\", 3),",
+                        "        SafeArg.of(\"4\", 4),",
+                        "        SafeArg.of(\"5\", 5),",
+                        "        SafeArg.of(\"6\", 6),",
+                        "        SafeArg.of(\"7\", 7),",
+                        "        SafeArg.of(\"8\", 8),",
+                        "        SafeArg.of(\"9\", 9),",
+                        "        SafeArg.of(\"10\", 10),",
+                        "        SafeArg.of(\"11\", 11)),",
+                        "        t);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
 }
