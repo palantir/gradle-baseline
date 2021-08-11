@@ -36,6 +36,7 @@ import com.sun.source.tree.VariableTree;
 import com.sun.source.util.TreeScanner;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
+import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicBoolean;
 
@@ -48,6 +49,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
         summary = "Prefer using type-safe safe-logging loggers rather than safety-oblivious implementations.")
 public final class PreferSafeLogger extends BugChecker implements BugChecker.VariableTreeMatcher {
 
+    private static final int MAX_SUPPORTED_ARGS = 10;
     private static final Matcher<ExpressionTree> SLF4J_METHOD =
             MethodMatchers.instanceMethod().onDescendantOf("org.slf4j.Logger");
 
@@ -78,6 +80,7 @@ public final class PreferSafeLogger extends BugChecker implements BugChecker.Var
         }
         Symbol.VarSymbol sym = ASTHelpers.getSymbol(tree);
         AtomicBoolean foundUnknownUsage = new AtomicBoolean();
+        SuggestedFix.Builder fix = SuggestedFix.builder();
         new TreeScanner<Void, Void>() {
             @Override
             public Void visitIdentifier(IdentifierTree tree, Void _unused) {
@@ -100,7 +103,7 @@ public final class PreferSafeLogger extends BugChecker implements BugChecker.Var
                 if (SLF4J_METHOD.matches(tree, state)) {
                     ExpressionTree receiver = ASTHelpers.getReceiver(tree);
                     if (sym.equals(ASTHelpers.getSymbol(receiver))) {
-                        if (!isSafeSlf4jInteraction(tree, state)) {
+                        if (!isSafeSlf4jInteraction(tree, fix, state)) {
                             foundUnknownUsage.set(true);
                         } else {
                             // Scan arguments for findings that may not compile
@@ -115,7 +118,6 @@ public final class PreferSafeLogger extends BugChecker implements BugChecker.Var
         if (foundUnknownUsage.get()) {
             return Description.NO_MATCH;
         }
-        SuggestedFix.Builder fix = SuggestedFix.builder();
         String qualifiedLogger = SuggestedFixes.qualifyType(state, fix, "com.palantir.logsafe.logger.SafeLogger");
         String qualifiedFactory =
                 SuggestedFixes.qualifyType(state, fix, "com.palantir.logsafe.logger.SafeLoggerFactory");
@@ -125,7 +127,9 @@ public final class PreferSafeLogger extends BugChecker implements BugChecker.Var
         return buildDescription(tree).addFix(fix.build()).build();
     }
 
-    private static boolean isSafeSlf4jInteraction(MethodInvocationTree tree, VisitorState state) {
+    @SuppressWarnings("checkstyle:CyclomaticComplexity")
+    private static boolean isSafeSlf4jInteraction(
+            MethodInvocationTree tree, SuggestedFix.Builder fix, VisitorState state) {
         if (!SLF4J_SAFE_METHODS.matches(tree, state)) {
             return false;
         }
@@ -140,9 +144,20 @@ public final class PreferSafeLogger extends BugChecker implements BugChecker.Var
         }
         Type argType = state.getTypeFromString("com.palantir.logsafe.Arg");
         Type throwableType = state.getTypeFromString(Throwable.class.getName());
+        int args = 0;
+        int firstArgStartPosition = -1;
+        int lastArgEndPosition = -1;
         for (int i = 1; i < arguments.size(); i++) {
-            Type type = ASTHelpers.getType(arguments.get(i));
+            Tree argument = arguments.get(i);
+            Type type = ASTHelpers.getType(argument);
             boolean isArg = ASTHelpers.isSubtype(type, argType, state);
+            if (isArg) {
+                if (i == 1) {
+                    firstArgStartPosition = ASTHelpers.getStartPosition(argument);
+                }
+                args++;
+                lastArgEndPosition = state.getEndPosition(argument);
+            }
             boolean valid = isArg
                     // Throwable is valid only in the last position
                     || (ASTHelpers.isSubtype(type, throwableType, state) && i == arguments.size() - 1);
@@ -150,6 +165,16 @@ public final class PreferSafeLogger extends BugChecker implements BugChecker.Var
                 return false;
             }
         }
+        if (args > MAX_SUPPORTED_ARGS) {
+            // Update the call to wrap args with 'Arrays.asList' so the result will compile.
+            CharSequence argsSource = state.getSourceCode().subSequence(firstArgStartPosition, lastArgEndPosition);
+            String qualifiedArrays = SuggestedFixes.qualifyType(state, fix, Arrays.class.getName());
+            fix.replace(
+                    firstArgStartPosition,
+                    lastArgEndPosition,
+                    String.format("%s.asList(%s)", qualifiedArrays, argsSource));
+        }
+
         return true;
     }
 }
