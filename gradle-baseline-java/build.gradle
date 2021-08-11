@@ -1,8 +1,7 @@
 apply plugin: 'groovy'
-apply plugin: 'java-gradle-plugin'
-apply plugin: 'com.gradle.plugin-publish'
 apply plugin: 'java-library'
 apply plugin: 'com.palantir.external-publish-jar'
+apply plugin: 'com.palantir.external-publish-gradle-plugin'
 
 dependencies {
     compile project(':gradle-junit-reports')
@@ -128,11 +127,6 @@ pluginBundle {
         }
     }
 }
-
-tasks.publish.dependsOn tasks.publishPlugins
-publishPlugins.onlyIf { versionDetails().isCleanTag }
-project.ext.'gradle.publish.key' = System.env["GRADLE_KEY"]
-project.ext.'gradle.publish.secret' = System.env["GRADLE_SECRET"]
 
 // Run `./gradlew test -Drecreate=true` to recreate all the expected
 // generated code that we have checked into the repo.
