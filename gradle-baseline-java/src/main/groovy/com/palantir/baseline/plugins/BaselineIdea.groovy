@@ -44,7 +44,6 @@ import org.gradle.plugins.ide.idea.model.ModuleDependency
 class BaselineIdea extends AbstractBaselinePlugin {
 
     static SAVE_ACTIONS_PLUGIN_MINIMUM_VERSION = '1.9.0'
-    static WITCHCRAFT_LOGGING_PLUGIN_MINIMUM_VERSION = '1.6.0'
 
     void apply(Project project) {
         this.project = project
@@ -119,29 +118,6 @@ class BaselineIdea extends AbstractBaselinePlugin {
                 configureExternalDependencies(node)
             }
             configureSaveActionsForIntellijImport(rootProject)
-        }
-
-        // recommend installing the witchcraft logging plugin
-        // to render json logs into human-readable text.
-        // Checking for the service distribution classes on the
-        // buildscript classpath isn't ideal, however from the
-        // root project we don't want to create dependencies
-        // onto submodules.
-        if (hasJavaServiceDistributionPluginLoaded()) {
-            ideaRootModel.project.ipr.withXml { XmlProvider provider ->
-                Node node = provider.asNode()
-                recommendWitchcraftLoggingPlugin(node)
-            }
-            recommendWitchcraftLoggingPluginForIntellijImport(rootProject)
-        }
-    }
-
-    private static boolean hasJavaServiceDistributionPluginLoaded() {
-        try {
-            Class.forName('com.palantir.gradle.dist.service.JavaServiceDistributionPlugin')
-            return true
-        } catch (ClassNotFoundException ignored) {
-            return false
         }
     }
 
@@ -554,24 +530,5 @@ class BaselineIdea extends AbstractBaselinePlugin {
                 'plugin',
                 [id: 'com.dubreuia'],
                 ['min-version': SAVE_ACTIONS_PLUGIN_MINIMUM_VERSION])
-    }
-
-    private static void recommendWitchcraftLoggingPlugin(Node rootNode) {
-        def externalDependencies =
-                GroovyXmlUtils.matchOrCreateChild(rootNode, 'component', [name: 'ExternalDependencies'])
-        GroovyXmlUtils.matchOrCreateChild(
-                externalDependencies,
-                'plugin',
-                [id: 'com.palantir.witchcraft.api.logging.idea'],
-                ['min-version': WITCHCRAFT_LOGGING_PLUGIN_MINIMUM_VERSION])
-    }
-
-    private static void recommendWitchcraftLoggingPluginForIntellijImport(Project project) {
-        if (!Boolean.getBoolean("idea.active")) {
-            return
-        }
-        XmlUtils.createOrUpdateXmlFile(
-                project.file(".idea/externalDependencies.xml"),
-                BaselineIdea.&recommendWitchcraftLoggingPlugin)
     }
 }
