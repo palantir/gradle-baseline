@@ -55,6 +55,7 @@ public class BaselineErrorProneExtension {
             "PreferCollectionTransform",
             "PreferListsPartition",
             "PreferSafeLoggableExceptions",
+            "PreferSafeLogger",
             "PreferSafeLoggingPreconditions",
             "PreferStaticLoggers",
             "ProxyNonConstantType",
