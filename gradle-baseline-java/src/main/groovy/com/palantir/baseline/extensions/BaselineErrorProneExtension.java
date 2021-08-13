@@ -79,6 +79,7 @@ public class BaselineErrorProneExtension {
             // Built-in checks
             "ArrayEquals",
             "BadImport",
+            "LoopOverCharArray",
             "MissingBraces",
             "MissingOverride",
             "ObjectsHashCodePrimitive",
