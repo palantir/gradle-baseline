@@ -18,10 +18,10 @@ apply plugin: 'java-library'
 apply plugin: 'com.palantir.external-publish-jar'
 
 dependencies {
-    compile 'com.google.errorprone:error_prone_refaster'
-    compile 'com.google.errorprone:error_prone_test_helpers'
+    api 'com.google.errorprone:error_prone_refaster'
+    api 'com.google.errorprone:error_prone_test_helpers'
 
-    compile 'com.google.guava:guava'
-    compile 'junit:junit'
-    compile 'org.assertj:assertj-core'
+    api 'com.google.guava:guava'
+    api 'junit:junit'
+    api 'org.assertj:assertj-core'
 }
