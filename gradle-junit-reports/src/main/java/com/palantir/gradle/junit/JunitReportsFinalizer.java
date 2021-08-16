@@ -35,7 +35,6 @@ import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
-import org.gradle.util.GUtil;
 import org.w3c.dom.Document;
 
 public abstract class JunitReportsFinalizer extends DefaultTask {
@@ -48,21 +47,16 @@ public abstract class JunitReportsFinalizer extends DefaultTask {
             Provider<Directory> reportDir) {
         TaskProvider<Task> wrappedTask = project.getTasks().named(taskName);
         TaskProvider<JunitReportsFinalizer> finalizer = project.getTasks()
-                .register(
-                        GUtil.toLowerCamelCase(taskName + " junitReportsFinalizer"),
-                        JunitReportsFinalizer.class,
-                        task -> {
-                            task.getWrappedDidWork()
-                                    .set(project.provider(
-                                            () -> wrappedTask.get().getDidWork()));
-                            task.getWrappedTaskName().set(taskName);
-                            task.getDurationNanos()
-                                    .set(project.provider(() -> taskTimer.getTaskTimeNanos(wrappedTask.get())));
-                            task.setFailuresSupplier(failuresSupplier);
-                            task.getTargetFile()
-                                    .set(reportDir.map(dir -> dir.file(project.getName() + "-" + taskName + ".xml")));
-                            task.getReportDir().set(reportDir);
-                        });
+                .register(taskName + "JunitReportsFinalizer", JunitReportsFinalizer.class, task -> {
+                    task.getWrappedDidWork()
+                            .set(project.provider(() -> wrappedTask.get().getDidWork()));
+                    task.getWrappedTaskName().set(taskName);
+                    task.getDurationNanos().set(project.provider(() -> taskTimer.getTaskTimeNanos(wrappedTask.get())));
+                    task.setFailuresSupplier(failuresSupplier);
+                    task.getTargetFile()
+                            .set(reportDir.map(dir -> dir.file(project.getName() + "-" + taskName + ".xml")));
+                    task.getReportDir().set(reportDir);
+                });
 
         wrappedTask.configure(task -> {
             task.finalizedBy(finalizer);

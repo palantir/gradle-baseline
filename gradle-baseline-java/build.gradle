@@ -4,15 +4,15 @@ apply plugin: 'com.palantir.external-publish-jar'
 apply plugin: 'com.palantir.external-publish-gradle-plugin'
 
 dependencies {
-    compile project(':gradle-junit-reports')
-    compile gradleApi()
-    compile 'org.apache.commons:commons-lang3'
-    compile 'com.diffplug.spotless:spotless-plugin-gradle'
-    compile 'com.google.errorprone:error_prone_refaster'
-    compile 'com.google.guava:guava'
-    compile 'net.ltgt.gradle:gradle-errorprone-plugin'
-    compile 'org.apache.maven.shared:maven-dependency-analyzer'
-    compile 'org.github.ngbinh.scalastyle:gradle-scalastyle-plugin_2.11'
+    implementation project(':gradle-junit-reports')
+    implementation gradleApi()
+    implementation 'org.apache.commons:commons-lang3'
+    implementation 'com.diffplug.spotless:spotless-plugin-gradle'
+    implementation 'com.google.errorprone:error_prone_refaster'
+    implementation 'com.google.guava:guava'
+    implementation 'net.ltgt.gradle:gradle-errorprone-plugin'
+    implementation 'org.apache.maven.shared:maven-dependency-analyzer'
+    implementation 'org.github.ngbinh.scalastyle:gradle-scalastyle-plugin_2.11'
     implementation 'commons-lang:commons-lang'
     implementation 'com.palantir.javaformat:palantir-java-format-spi'
     // Add an explicit dependency to ensure consumers can use JDK14 source compat
@@ -21,12 +21,12 @@ dependencies {
 
     runtimeOnly 'com.palantir.javaformat:gradle-palantir-java-format'
 
-    testCompile gradleTestKit()
-    testCompile 'com.github.stefanbirkner:system-rules'
-    testCompile 'com.netflix.nebula:nebula-test' // for better temp directory junit rule only
-    testCompile 'junit:junit'
-    testCompile 'net.lingala.zip4j:zip4j'
-    testCompile 'org.assertj:assertj-core'
+    testImplementation gradleTestKit()
+    testImplementation 'com.github.stefanbirkner:system-rules'
+    testImplementation 'com.netflix.nebula:nebula-test' // for better temp directory junit rule only
+    testImplementation 'junit:junit'
+    testImplementation 'net.lingala.zip4j:zip4j'
+    testImplementation 'org.assertj:assertj-core'
 
     annotationProcessor 'org.inferred:freebuilder'
     compileOnly 'org.inferred:freebuilder'
@@ -126,6 +126,10 @@ pluginBundle {
             displayName = 'Palantir Baseline --enable-preview Flag Plugin'
         }
     }
+}
+
+tasks.named('processResources').configure {
+    duplicatesStrategy 'include'
 }
 
 // Run `./gradlew test -Drecreate=true` to recreate all the expected

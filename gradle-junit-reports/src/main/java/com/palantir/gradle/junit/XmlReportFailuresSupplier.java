@@ -21,6 +21,7 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
@@ -55,7 +56,9 @@ public final class XmlReportFailuresSupplier implements FailuresSupplier {
 
     @Override
     public List<Failure> getFailures() throws IOException {
-        File sourceReport = reporting.getReports().findByName("xml").getDestination();
+        File sourceReport = Optional.ofNullable(reporting.getReports().findByName("xml"))
+                .map(report -> report.getOutputLocation().getAsFile().getOrNull())
+                .orElseThrow(() -> new RuntimeException("Could not find junit reports"));
         try {
             return XmlUtils.parseXml(reportHandler, new FileInputStream(sourceReport))
                     .failures();
@@ -73,12 +76,12 @@ public final class XmlReportFailuresSupplier implements FailuresSupplier {
             throw new RuntimeException(e);
         }
         for (SingleFileReport rawReport : reporting.getReports()) {
-            if (rawReport.isEnabled()) {
-                rawReport
-                        .getDestination()
-                        .renameTo(rawReportsDir
-                                .resolve(rawReport.getDestination().getName())
-                                .toFile());
+            if (rawReport.getRequired().get()) {
+                File rawReportFile = Optional.ofNullable(
+                                rawReport.getOutputLocation().getAsFile().getOrNull())
+                        .orElseThrow(() -> new IllegalStateException("Could not get raw report file: " + rawReport));
+                rawReportFile.renameTo(
+                        rawReportsDir.resolve(rawReportFile.getName()).toFile());
             }
         }
         return new RuntimeException(
