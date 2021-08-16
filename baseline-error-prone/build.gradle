@@ -4,9 +4,9 @@ apply plugin: 'java-library'
 apply plugin: 'com.palantir.external-publish-jar'
 
 dependencies {
-    api 'com.google.errorprone:error_prone_core'
-    api 'org.mockito:mockito-errorprone'
-    api 'org.immutables:value::annotations'
+    implementation 'com.google.errorprone:error_prone_core'
+    implementation 'org.mockito:mockito-errorprone'
+    implementation 'org.immutables:value::annotations'
 
     testImplementation gradleApi()
     testImplementation 'com.palantir.tokens:auth-tokens'

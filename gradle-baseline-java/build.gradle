@@ -4,15 +4,15 @@ apply plugin: 'com.palantir.external-publish-jar'
 apply plugin: 'com.palantir.external-publish-gradle-plugin'
 
 dependencies {
-    api project(':gradle-junit-reports')
-    api gradleApi()
-    api 'org.apache.commons:commons-lang3'
-    api 'com.diffplug.spotless:spotless-plugin-gradle'
-    api 'com.google.errorprone:error_prone_refaster'
-    api 'com.google.guava:guava'
-    api 'net.ltgt.gradle:gradle-errorprone-plugin'
-    api 'org.apache.maven.shared:maven-dependency-analyzer'
-    api 'org.github.ngbinh.scalastyle:gradle-scalastyle-plugin_2.11'
+    implementation project(':gradle-junit-reports')
+    implementation gradleApi()
+    implementation 'org.apache.commons:commons-lang3'
+    implementation 'com.diffplug.spotless:spotless-plugin-gradle'
+    implementation 'com.google.errorprone:error_prone_refaster'
+    implementation 'com.google.guava:guava'
+    implementation 'net.ltgt.gradle:gradle-errorprone-plugin'
+    implementation 'org.apache.maven.shared:maven-dependency-analyzer'
+    implementation 'org.github.ngbinh.scalastyle:gradle-scalastyle-plugin_2.11'
     implementation 'commons-lang:commons-lang'
     implementation 'com.palantir.javaformat:palantir-java-format-spi'
     // Add an explicit dependency to ensure consumers can use JDK14 source compat
@@ -126,6 +126,10 @@ pluginBundle {
             displayName = 'Palantir Baseline --enable-preview Flag Plugin'
         }
     }
+}
+
+tasks.named('processResources').configure {
+    duplicatesStrategy 'include'
 }
 
 // Run `./gradlew test -Drecreate=true` to recreate all the expected

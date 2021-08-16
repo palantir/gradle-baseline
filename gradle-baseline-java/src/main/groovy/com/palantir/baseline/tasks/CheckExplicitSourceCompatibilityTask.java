@@ -125,6 +125,7 @@ public class CheckExplicitSourceCompatibilityTask extends DefaultTask {
                 getPath()));
     }
 
+    @SuppressWarnings("Deprecation") // 'Project#getConvention' will be removed in Gradle 8
     private JavaVersion getRawSourceCompat() {
         // TODO(fwindheuser): Remove internal api usage. Maybe through adopting toolchains?
         // We're doing this naughty casting because we need access to the `getRawSourceCompatibility` method.
@@ -132,21 +133,23 @@ public class CheckExplicitSourceCompatibilityTask extends DefaultTask {
             org.gradle.api.plugins.internal.DefaultJavaPluginConvention convention =
                     (org.gradle.api.plugins.internal.DefaultJavaPluginConvention)
                             getProject().getConvention().getPlugin(JavaPluginConvention.class);
-            return convention.getRawSourceCompatibility();
+
+            try {
+                Method getRawSourceCompatibility =
+                        org.gradle.api.plugins.internal.DefaultJavaPluginConvention.class.getMethod(
+                                "getRawSourceCompatibility");
+                return (JavaVersion) getRawSourceCompatibility.invoke(convention);
+            } catch (Exception e) {
+                throw new RuntimeException(
+                        "Error calling DefaultJavaPluginConvention#getRawSourceCompatibility for "
+                                + GradleVersion.current(),
+                        e);
+            }
         }
 
-        // TODO(fwindheuser): Don't use reflection after building with Gradle 7
         org.gradle.api.plugins.internal.DefaultJavaPluginExtension extension =
                 (org.gradle.api.plugins.internal.DefaultJavaPluginExtension)
                         getProject().getExtensions().getByType(JavaPluginExtension.class);
-        try {
-            Method rawSourceCompat = org.gradle.api.plugins.internal.DefaultJavaPluginExtension.class.getMethod(
-                    "getRawSourceCompatibility");
-            return (JavaVersion) rawSourceCompat.invoke(extension);
-        } catch (Exception e) {
-            throw new RuntimeException(
-                    "Error calling DefaultJavaPluginExtension#getRawSourceCompatibility for " + GradleVersion.current(),
-                    e);
-        }
+        return extension.getRawSourceCompatibility();
     }
 }

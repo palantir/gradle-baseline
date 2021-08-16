@@ -18,7 +18,6 @@ package com.palantir.baseline.plugins;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
-import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.ImmutableSet;
 import com.palantir.baseline.tasks.CheckImplicitDependenciesParentTask;
 import com.palantir.baseline.tasks.CheckImplicitDependenciesTask;
@@ -199,7 +198,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
         checkUnusedDependencies.configure(task -> task.dependsOn(sourceSetUnusedDependencies));
         TaskProvider<CheckImplicitDependenciesTask> sourceSetCheckImplicitDependencies = project.getTasks()
                 .register(
-                        GUtil.toLowerCamelCase("checkImplicitDependencies " + sourceSet.getName()),
+                        "checkImplicitDependencies" + StringUtils.capitalize(sourceSet.getName()),
                         CheckImplicitDependenciesTask.class,
                         task -> {
                             task.dependsOn(sourceSet.getClassesTaskName());
@@ -216,7 +215,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     }
 
     static String checkUnusedDependenciesNameForSourceSet(SourceSet sourceSet) {
-        return GUtil.toLowerCamelCase("checkUnusedDependencies " + sourceSet.getName());
+        return "checkUnusedDependencies" + StringUtils.capitalize(sourceSet.getName());
     }
 
     /**
@@ -224,6 +223,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
      * compatible with Gradle 6 but can't compile this method, we reimplement it temporarily.
      * TODO(fwindheuser): Remove after dropping support for Gradle 6.
      */
+    @SuppressWarnings("Deprecations") // GUtil is deprecated and to be deleted with Gradle 8
     private static String getCompileConfigurationName(SourceSet sourceSet) {
         String baseName = sourceSet.getName().equals(SourceSet.MAIN_SOURCE_SET_NAME)
                 ? ""
@@ -232,14 +232,10 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     }
 
     private static Map<String, String> excludeRuleAsMap(ExcludeRule rule) {
-        Builder<String, String> excludeRule = ImmutableMap.builder();
-        if (rule.getGroup() != null) {
-            excludeRule.put("group", rule.getGroup());
-        }
-        if (rule.getModule() != null) {
-            excludeRule.put("module", rule.getModule());
-        }
-        return excludeRule.build();
+        return ImmutableMap.<String, String>builder()
+                .put("group", rule.getGroup())
+                .put("module", rule.getModule())
+                .build();
     }
 
     /** Given a {@code com/palantir/product/Foo.class} file, what other classes does it import/reference. */
