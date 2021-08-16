@@ -178,6 +178,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
                     .configure(ErrorProneOptions.class, errorProneOptions -> {
                         errorProneOptions.check("Slf4jLogsafeArgs", CheckSeverity.OFF);
                         errorProneOptions.check("PreferSafeLoggableExceptions", CheckSeverity.OFF);
+                        errorProneOptions.check("PreferSafeLogger", CheckSeverity.OFF);
                         errorProneOptions.check("PreferSafeLoggingPreconditions", CheckSeverity.OFF);
                         errorProneOptions.check("PreconditionsConstantMessage", CheckSeverity.OFF);
                     }));
@@ -224,8 +225,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 "CatchSpecificity",
                 "InlineMeSuggester",
                 "PreferImmutableStreamExCollections",
-                // Avoid noisy suggestions, this will be enabled later
-                "PreferSafeLogger",
                 "UnusedVariable");
         errorProneOptions.error(
                 "EqualsHashCode",
@@ -315,8 +314,14 @@ public final class BaselineErrorProne implements Plugin<Project> {
             ErrorProneOptions errorProneOptions) {
         // If this javaCompile is associated with a source set, use it to figure out if it has preconditions or not.
         Predicate<String> filterOutPreconditions = maybeSourceSet
-                .map(ss -> filterOutPreconditions(
-                        project.getConfigurations().getByName(ss.getCompileClasspathConfigurationName())))
+                .map(ss -> {
+                    Configuration configuration =
+                            project.getConfigurations().findByName(ss.getCompileClasspathConfigurationName());
+                    if (configuration == null) {
+                        return null;
+                    }
+                    return filterOutPreconditions(configuration).and(filterOutSafeLogger(configuration));
+                })
                 .orElse(check -> true);
 
         return errorProneExtension.getPatchChecks().get().stream().filter(check -> {
@@ -341,33 +346,41 @@ public final class BaselineErrorProne implements Plugin<Project> {
 
     /** Filters out preconditions checks if the required libraries are not on the classpath. */
     public static Predicate<String> filterOutPreconditions(Configuration compileClasspath) {
-        boolean hasPreconditions =
-                hasDependenciesMatching(compileClasspath, BaselineErrorProne::isSafeLoggingPreconditionsDep);
+        return filterOutBasedOnDependency(
+                compileClasspath,
+                "com.palantir.safe-logging",
+                "preconditions",
+                "PreferSafeLoggingPreconditions",
+                "PreferSafeLoggableExceptions");
+    }
 
+    /** Filters out PreferSafeLogger if the required libraries are not on the classpath. */
+    private static Predicate<String> filterOutSafeLogger(Configuration compileClasspath) {
+        return filterOutBasedOnDependency(compileClasspath, "com.palantir.safe-logging", "logger", "PreferSafeLogger");
+    }
+
+    private static Predicate<String> filterOutBasedOnDependency(
+            Configuration compileClasspath, String dependencyGroup, String dependencyModule, String... checkNames) {
+        boolean hasDependency = hasDependenciesMatching(
+                compileClasspath,
+                mci -> Objects.equals(mci.getGroup(), dependencyGroup)
+                        && Objects.equals(mci.getModule(), dependencyModule));
         return check -> {
-            if (!hasPreconditions) {
-                if (check.equals("PreferSafeLoggingPreconditions")) {
-                    log.info(
-                            "Disabling check PreferSafeLoggingPreconditions as "
-                                    + "'com.palantir.safe-logging:preconditions' missing from {}",
-                            compileClasspath);
-                    return false;
-                }
-                if (check.equals("PreferSafeLoggableExceptions")) {
-                    log.info(
-                            "Disabling check PreferSafeLoggableExceptions as 'com.palantir.safe-logging:preconditions' "
-                                    + "missing from {}",
-                            compileClasspath);
-                    return false;
+            if (!hasDependency) {
+                for (String checkName : checkNames) {
+                    if (Objects.equals(checkName, check)) {
+                        log.info(
+                                "Disabling check {} as '{}:{}' missing from {}",
+                                checkName,
+                                dependencyGroup,
+                                dependencyModule,
+                                compileClasspath);
+                        return false;
+                    }
                 }
             }
             return true;
         };
-    }
-
-    private static boolean isSafeLoggingPreconditionsDep(ModuleComponentIdentifier mci) {
-        return mci.getGroup().equals("com.palantir.safe-logging")
-                && mci.getModule().equals("preconditions");
     }
 
     private static boolean isRefactoring(Project project) {

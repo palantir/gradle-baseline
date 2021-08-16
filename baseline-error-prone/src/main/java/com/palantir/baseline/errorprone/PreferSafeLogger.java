@@ -75,7 +75,7 @@ public final class PreferSafeLogger extends BugChecker implements BugChecker.Var
 
     @Override
     public Description matchVariable(VariableTree tree, VisitorState state) {
-        if (!MATCHER.matches(tree, state)) {
+        if (!MATCHER.matches(tree, state) || TestCheckUtils.isTestCode(state)) {
             return Description.NO_MATCH;
         }
         Symbol.VarSymbol sym = ASTHelpers.getSymbol(tree);
@@ -116,7 +116,7 @@ public final class PreferSafeLogger extends BugChecker implements BugChecker.Var
             }
         }.scan(state.getPath().getCompilationUnit(), null);
         if (foundUnknownUsage.get()) {
-            return Description.NO_MATCH;
+            return describeMatch(tree);
         }
         String qualifiedLogger = SuggestedFixes.qualifyType(state, fix, "com.palantir.logsafe.logger.SafeLogger");
         String qualifiedFactory =
