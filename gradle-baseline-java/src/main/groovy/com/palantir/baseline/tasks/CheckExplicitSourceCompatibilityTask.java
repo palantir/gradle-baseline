@@ -125,7 +125,6 @@ public class CheckExplicitSourceCompatibilityTask extends DefaultTask {
                 getPath()));
     }
 
-    @SuppressWarnings("Deprecation") // 'Project#getConvention' will be removed in Gradle 8
     private JavaVersion getRawSourceCompat() {
         // TODO(fwindheuser): Remove internal api usage. Maybe through adopting toolchains?
         // We're doing this naughty casting because we need access to the `getRawSourceCompatibility` method.

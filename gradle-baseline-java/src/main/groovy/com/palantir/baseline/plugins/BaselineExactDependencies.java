@@ -223,7 +223,6 @@ public final class BaselineExactDependencies implements Plugin<Project> {
      * compatible with Gradle 6 but can't compile this method, we reimplement it temporarily.
      * TODO(fwindheuser): Remove after dropping support for Gradle 6.
      */
-    @SuppressWarnings("Deprecations") // GUtil is deprecated and to be deleted with Gradle 8
     private static String getCompileConfigurationName(SourceSet sourceSet) {
         String baseName = sourceSet.getName().equals(SourceSet.MAIN_SOURCE_SET_NAME)
                 ? ""
