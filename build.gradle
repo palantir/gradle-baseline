@@ -10,7 +10,7 @@ buildscript {
         classpath 'com.palantir.gradle.externalpublish:gradle-external-publish-plugin:1.4.0'
         classpath 'com.palantir.gradle.consistentversions:gradle-consistent-versions:2.0.0'
         classpath 'com.gradle.publish:plugin-publish-plugin:0.15.0'
-        classpath 'com.palantir.baseline:gradle-baseline-java:4.16.0'
+        classpath 'com.palantir.baseline:gradle-baseline-java:4.18.0'
         classpath 'com.palantir.javaformat:gradle-palantir-java-format:2.2.0'
     }
 }
@@ -44,6 +44,7 @@ allprojects {
             options.errorprone {
                 check("Slf4jLogsafeArgs", CheckSeverity.OFF)
                 check("PreferSafeLoggableExceptions", CheckSeverity.OFF)
+                check("PreferSafeLogger", CheckSeverity.OFF)
                 check("PreferSafeLoggingPreconditions", CheckSeverity.OFF)
                 check("PreconditionsConstantMessage", CheckSeverity.OFF)
             }
