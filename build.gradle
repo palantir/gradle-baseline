@@ -44,6 +44,7 @@ allprojects {
             options.errorprone {
                 check("Slf4jLogsafeArgs", CheckSeverity.OFF)
                 check("PreferSafeLoggableExceptions", CheckSeverity.OFF)
+                check("PreferSafeLogger", CheckSeverity.OFF)
                 check("PreferSafeLoggingPreconditions", CheckSeverity.OFF)
                 check("PreconditionsConstantMessage", CheckSeverity.OFF)
             }
