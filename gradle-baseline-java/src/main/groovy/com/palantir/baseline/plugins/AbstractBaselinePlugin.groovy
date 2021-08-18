@@ -26,7 +26,7 @@ import org.gradle.api.Project
  *
  * Note that we need to extend {@link GroovyObjectSupport} to still support projects using Gradle 6 and thus Groovy 2.x
  * because Baseline is now using Gradle 7 and thus Groovy 3.x. Otherwise, Groovy plugins (i.e. {@link BaselineIdea})
- * fail when setting properties. For more info, see ADD-PR-LINK.
+ * fail when setting properties. For more info, see https://github.com/palantir/gradle-baseline/pull/1884.
  */
 abstract class AbstractBaselinePlugin extends GroovyObjectSupport implements Plugin<Project> {
 
