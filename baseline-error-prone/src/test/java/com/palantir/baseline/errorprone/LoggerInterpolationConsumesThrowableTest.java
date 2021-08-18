@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 class LoggerInterpolationConsumesThrowableTest {
 
     @Test
-    void testOneExtra() {
+    void testOneExtra_slf4j() {
         helper().addSourceLines(
                         "Test.java",
                         "import org.slf4j.*;",
@@ -30,6 +30,35 @@ class LoggerInterpolationConsumesThrowableTest {
                         "  static {",
                         "    // BUG: Diagnostic contains: Please remove 1 '{}' placeholder.",
                         "    LoggerFactory.getLogger(Test.class).error(\"{}\", new RuntimeException());",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testOneExtra_safelogger() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.logger.*;",
+                        "class Test {",
+                        "  static {",
+                        "    // BUG: Diagnostic contains: Please remove 1 '{}' placeholder.",
+                        "    SafeLoggerFactory.get(Test.class).error(\"{}\", new RuntimeException());",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testOneExtraWithMarker() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import org.slf4j.*;",
+                        "class Test {",
+                        "  static {",
+                        "    // BUG: Diagnostic contains: Please remove 1 '{}' placeholder.",
+                        "    LoggerFactory.getLogger(Test.class).error(",
+                        "      MarkerFactory.getMarker(\"x\"), \"{}\", new RuntimeException());",
                         "  }",
                         "}")
                 .doTest();
