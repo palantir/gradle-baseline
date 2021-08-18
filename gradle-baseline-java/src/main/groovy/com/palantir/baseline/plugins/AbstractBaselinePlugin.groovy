@@ -17,15 +17,18 @@
 package com.palantir.baseline.plugins
 
 import com.palantir.baseline.BaselineParameters
+import java.nio.file.Paths
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 
-import java.nio.file.Paths
-
 /**
  * The super class of all Baseline plugins.
+ *
+ * Note that we need to extend {@link GroovyObjectSupport} to still support projects using Gradle 6 and thus Groovy 2.x
+ * because Baseline is now using Gradle 7 and thus Groovy 3.x. Otherwise, Groovy plugins (i.e. {@link BaselineIdea})
+ * fail when setting properties. For more info, see https://github.com/palantir/gradle-baseline/pull/1884.
  */
-abstract class AbstractBaselinePlugin implements Plugin<Project> {
+abstract class AbstractBaselinePlugin extends GroovyObjectSupport implements Plugin<Project> {
 
     /** The {@link Project} that this plugin has been applied to; must be set in the {@link Project#apply} method. */
     protected Project project
