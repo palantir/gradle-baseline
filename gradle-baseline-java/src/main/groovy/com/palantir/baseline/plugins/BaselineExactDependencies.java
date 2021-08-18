@@ -18,6 +18,7 @@ package com.palantir.baseline.plugins;
 
 import com.google.common.base.Preconditions;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMap.Builder;
 import com.google.common.collect.ImmutableSet;
 import com.palantir.baseline.tasks.CheckImplicitDependenciesParentTask;
 import com.palantir.baseline.tasks.CheckImplicitDependenciesTask;
@@ -231,10 +232,15 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     }
 
     private static Map<String, String> excludeRuleAsMap(ExcludeRule rule) {
-        return ImmutableMap.<String, String>builder()
-                .put("group", rule.getGroup())
-                .put("module", rule.getModule())
-                .build();
+        // Both 'ExcludeRule#getGroup' and 'ExcludeRule#getModule' can return null.
+        Builder<String, String> excludeRule = ImmutableMap.builder();
+        if (rule.getGroup() != null) {
+            excludeRule.put("group", rule.getGroup());
+        }
+        if (rule.getModule() != null) {
+            excludeRule.put("module", rule.getModule());
+        }
+        return excludeRule.build();
     }
 
     /** Given a {@code com/palantir/product/Foo.class} file, what other classes does it import/reference. */
