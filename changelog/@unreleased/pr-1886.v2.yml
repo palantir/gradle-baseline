@@ -1,0 +1,7 @@
+type: improvement
+improvement:
+  description: 'error-prone LoggerInterpolationConsumesThrowable: Flag as an ERROR
+    when logging statements fail to produce a stack trace due to excessive slf4j-style
+    interpolation placeholders.'
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1886
