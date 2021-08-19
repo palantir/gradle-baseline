@@ -35,18 +35,19 @@ public final class BaselineJavaCompilerDiagnostics implements Plugin<Project> {
     private static final String MAX_ERRORS_ARG = "-Xmaxerrs";
 
     @Override
-    public void apply(Project project) {
-        project.getTasks().withType(JavaCompile.class).configureEach(javaCompileTask -> {
-            List<String> compilerArgs = javaCompileTask.getOptions().getCompilerArgs();
-            // Avoid overriding options that have already been set
-            if (!compilerArgs.contains(MAX_WARNINGS_ARG)) {
-                compilerArgs.add(MAX_WARNINGS_ARG);
-                compilerArgs.add(MANY);
-            }
-            if (!compilerArgs.contains(MAX_ERRORS_ARG)) {
-                compilerArgs.add(MAX_ERRORS_ARG);
-                compilerArgs.add(MANY);
-            }
-        });
+    public void apply(Project proj) {
+        proj.afterEvaluate(
+                project -> project.getTasks().withType(JavaCompile.class).configureEach(javaCompileTask -> {
+                    List<String> compilerArgs = javaCompileTask.getOptions().getCompilerArgs();
+                    // Avoid overriding options that have already been set
+                    if (!compilerArgs.contains(MAX_WARNINGS_ARG)) {
+                        compilerArgs.add(MAX_WARNINGS_ARG);
+                        compilerArgs.add(MANY);
+                    }
+                    if (!compilerArgs.contains(MAX_ERRORS_ARG)) {
+                        compilerArgs.add(MAX_ERRORS_ARG);
+                        compilerArgs.add(MANY);
+                    }
+                }));
     }
 }
