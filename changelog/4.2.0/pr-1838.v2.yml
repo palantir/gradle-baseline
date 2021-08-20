@@ -1,0 +1,7 @@
+type: improvement
+improvement:
+  description: Fix the formatting of `baseline-class-uniqueness.lock` files when more
+    than one configuration is listed. A newline was missing. This may require running
+    `./gradlew checkClassUniqueness --write-locks` to update the files.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1838

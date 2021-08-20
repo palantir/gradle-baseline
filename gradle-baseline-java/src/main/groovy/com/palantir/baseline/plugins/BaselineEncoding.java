@@ -19,13 +19,17 @@ package com.palantir.baseline.plugins;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.compile.JavaCompile;
+import org.gradle.api.tasks.javadoc.Javadoc;
 
 public final class BaselineEncoding implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
-        project.getTasks().withType(JavaCompile.class).configureEach(javaCompileTask -> {
-            javaCompileTask.getOptions().setEncoding("UTF-8");
-        });
+        project.getTasks()
+                .withType(JavaCompile.class)
+                .configureEach(javaCompileTask -> javaCompileTask.getOptions().setEncoding("UTF-8"));
+        project.getTasks()
+                .withType(Javadoc.class)
+                .configureEach(javadocTask -> javadocTask.getOptions().setEncoding("UTF-8"));
     }
 }

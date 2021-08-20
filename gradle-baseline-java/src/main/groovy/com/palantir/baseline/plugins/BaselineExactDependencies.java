@@ -199,7 +199,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
         checkUnusedDependencies.configure(task -> task.dependsOn(sourceSetUnusedDependencies));
         TaskProvider<CheckImplicitDependenciesTask> sourceSetCheckImplicitDependencies = project.getTasks()
                 .register(
-                        GUtil.toLowerCamelCase("checkImplicitDependencies " + sourceSet.getName()),
+                        "checkImplicitDependencies" + StringUtils.capitalize(sourceSet.getName()),
                         CheckImplicitDependenciesTask.class,
                         task -> {
                             task.dependsOn(sourceSet.getClassesTaskName());
@@ -216,7 +216,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     }
 
     static String checkUnusedDependenciesNameForSourceSet(SourceSet sourceSet) {
-        return GUtil.toLowerCamelCase("checkUnusedDependencies " + sourceSet.getName());
+        return "checkUnusedDependencies" + StringUtils.capitalize(sourceSet.getName());
     }
 
     /**
@@ -232,6 +232,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     }
 
     private static Map<String, String> excludeRuleAsMap(ExcludeRule rule) {
+        // Both 'ExcludeRule#getGroup' and 'ExcludeRule#getModule' can return null.
         Builder<String, String> excludeRule = ImmutableMap.builder();
         if (rule.getGroup() != null) {
             excludeRule.put("group", rule.getGroup());

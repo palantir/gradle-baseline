@@ -51,11 +51,11 @@ public final class Slf4jLevelCheck extends BugChecker implements IfTreeMatcher {
     private static final long serialVersionUID = 1L;
 
     private static final Matcher<ExpressionTree> LEVEL_CHECK_METHOD = MethodMatchers.instanceMethod()
-            .onDescendantOf("org.slf4j.Logger")
+            .onDescendantOfAny("org.slf4j.Logger", "com.palantir.logsafe.logger.SafeLogger")
             .namedAnyOf("isTraceEnabled", "isDebugEnabled", "isInfoEnabled", "isWarnEnabled", "isErrorEnabled");
 
     private static final Matcher<ExpressionTree> LOG_METHOD = MethodMatchers.instanceMethod()
-            .onDescendantOf("org.slf4j.Logger")
+            .onDescendantOfAny("org.slf4j.Logger", "com.palantir.logsafe.logger.SafeLogger")
             .namedAnyOf("trace", "debug", "info", "warn", "error");
 
     @Override
@@ -188,12 +188,12 @@ public final class Slf4jLevelCheck extends BugChecker implements IfTreeMatcher {
 
         @SuppressWarnings("ImmutableEnumChecker")
         private final Matcher<ExpressionTree> levelCheckMatcher = MethodMatchers.instanceMethod()
-                .onDescendantOf("org.slf4j.Logger")
+                .onDescendantOfAny("org.slf4j.Logger", "com.palantir.logsafe.logger.SafeLogger")
                 .named(levelCheckMethodName);
 
         @SuppressWarnings("ImmutableEnumChecker")
         private final Matcher<ExpressionTree> logMatcher = MethodMatchers.instanceMethod()
-                .onDescendantOf("org.slf4j.Logger")
+                .onDescendantOfAny("org.slf4j.Logger", "com.palantir.logsafe.logger.SafeLogger")
                 .named(name().toLowerCase(Locale.ENGLISH));
 
         boolean matchesLevelCheck(ExpressionTree tree, VisitorState state) {

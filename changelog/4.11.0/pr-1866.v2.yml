@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: PreferSafeLogger produces suggestions which compile with >10 args
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1866

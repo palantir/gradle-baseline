@@ -131,9 +131,8 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
             stringBuilder.append(HEADER);
             resultsByConfiguration.forEach((configuration, maybeContents) -> maybeContents.ifPresent(contents -> {
                 stringBuilder.append("## ").append(configuration).append("\n");
-                stringBuilder.append(contents);
+                stringBuilder.append(contents).append('\n');
             }));
-            stringBuilder.append('\n');
             ensureLockfileContains(stringBuilder.toString());
         }
     }

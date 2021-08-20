@@ -1,0 +1,7 @@
+type: improvement
+improvement:
+  description: Add a `StrictUnusedVariable` exception for `SafeLogger` matching the
+    existing exception for slf4j. Update CatchBlockLogException to be SafeLogger aware
+    as well.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1853

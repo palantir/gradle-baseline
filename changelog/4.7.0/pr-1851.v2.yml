@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: Fix PreferSafeLogger edge case that produced suggested fixes that didn't
+    compile without human interaction.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1851

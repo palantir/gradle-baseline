@@ -55,6 +55,10 @@ class BaselineEncodingIntegrationTest extends AbstractPluginTest {
 
     def javaFile = '''
         package test;
+
+        /**
+         * Test source file encoding with UTF-8 ☃ Javadoc.
+         */
         public class Test {
             private static final String VALUE = "•";
         }

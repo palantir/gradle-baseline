@@ -116,6 +116,23 @@ public class StrictUnusedVariableTest {
     }
 
     @Test
+    void handles_lambdas_in_static_init() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.function.BiFunction;",
+                        "class Test {",
+                        "  static {",
+                        "  // BUG: Diagnostic contains: Unused",
+                        "    BiFunction<String, String, Integer> first = (String value1, String value2) -> 1;",
+                        "  // BUG: Diagnostic contains: Unused",
+                        "    first.andThen(value3 -> 2);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void renames_previous_suppression() {
         refactoringTestHelper
                 .addInputLines(
@@ -321,5 +338,21 @@ public class StrictUnusedVariableTest {
                         "}")
                 .expectUnchanged()
                 .doTest(TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    public void allows_unused_loggers() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import org.slf4j.*;",
+                        "import com.palantir.logsafe.logger.*;",
+                        "class Test {",
+                        "  private static final Logger slf4j = LoggerFactory.getLogger(Test.class);",
+                        "  private static final SafeLogger logsafe = SafeLoggerFactory.get(Test.class);",
+                        "  // BUG: Diagnostic contains: Unused",
+                        "  private static final String str = \"str\";",
+                        "}")
+                .doTest();
     }
 }

@@ -2,8 +2,8 @@ apply plugin: 'java-library'
 apply plugin: 'com.palantir.external-publish-jar'
 
 dependencies {
-  compile gradleApi()
-  compile 'com.google.guava:guava'
+  api gradleApi()
+  api 'com.google.guava:guava'
 
   annotationProcessor 'org.immutables:value'
   annotationProcessor 'org.inferred:freebuilder'

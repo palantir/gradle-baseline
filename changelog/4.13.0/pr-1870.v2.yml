@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: witchcraft-logging functionality has been migrated to https://github.com/palantir/witchcraft-java-logging#gradle-plugin
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1870

@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Fix missing setProperty error when using Gradle 6
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1884

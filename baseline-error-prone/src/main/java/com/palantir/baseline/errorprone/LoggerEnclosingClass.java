@@ -42,14 +42,23 @@ import com.sun.tools.javac.code.Symbol;
         summary = "Loggers created using getLogger(Class<?>) must reference their enclosing class.")
 public final class LoggerEnclosingClass extends BugChecker implements BugChecker.VariableTreeMatcher {
 
-    private static final Matcher<VariableTree> matcher = Matchers.allOf(
-            Matchers.isField(),
-            Matchers.isSubtypeOf("org.slf4j.Logger"),
-            Matchers.variableInitializer(MethodMatchers.staticMethod()
-                    .onClass("org.slf4j.LoggerFactory")
-                    .named("getLogger")
-                    // Only match the 'class' constructor
-                    .withParameters(Class.class.getName())));
+    private static final Matcher<VariableTree> matcher = Matchers.anyOf(
+            Matchers.allOf(
+                    Matchers.isField(),
+                    Matchers.isSubtypeOf("org.slf4j.Logger"),
+                    Matchers.variableInitializer(MethodMatchers.staticMethod()
+                            .onClass("org.slf4j.LoggerFactory")
+                            .named("getLogger")
+                            // Only match the 'class' constructor
+                            .withParameters(Class.class.getName()))),
+            Matchers.allOf(
+                    Matchers.isField(),
+                    Matchers.isSubtypeOf("com.palantir.logsafe.logger.SafeLogger"),
+                    Matchers.variableInitializer(MethodMatchers.staticMethod()
+                            .onClass("com.palantir.logsafe.logger.SafeLoggerFactory")
+                            .named("get")
+                            // Only match the 'class' constructor
+                            .withParameters(Class.class.getName()))));
 
     @Override
     public Description matchVariable(VariableTree tree, VisitorState state) {

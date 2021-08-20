@@ -152,7 +152,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
 
     /** The set of types exempting a field of type extending them. */
     private static final ImmutableSet<String> EXEMPTING_FIELD_SUPER_TYPES =
-            ImmutableSet.of("org.junit.rules.TestRule", "org.slf4j.Logger");
+            ImmutableSet.of("org.junit.rules.TestRule", "org.slf4j.Logger", "com.palantir.logsafe.logger.SafeLogger");
 
     private static final ImmutableList<String> SPECIAL_FIELDS = ImmutableList.of(
             "serialVersionUID",
@@ -224,7 +224,13 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             ImmutableList<SuggestedFix> fixes;
             if (symbol.getKind() == ElementKind.PARAMETER && !isEverUsed.contains(unusedSymbol)) {
                 Symbol.MethodSymbol methodSymbol = (Symbol.MethodSymbol) symbol.owner;
-                int index = methodSymbol.params.indexOf(symbol);
+                int index;
+                if (methodSymbol.params == null) {
+                    // if the parameter is for a lambda is defined in a static initializer, params is null
+                    index = -1;
+                } else {
+                    index = methodSymbol.params.indexOf(symbol);
+                }
                 // If we can not find the parameter in the owning method, then it must be a parameter to a lambda
                 // defined within the method
                 if (index == -1) {
