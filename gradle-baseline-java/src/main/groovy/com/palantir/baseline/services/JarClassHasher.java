@@ -37,7 +37,7 @@ public abstract class JarClassHasher implements BuildService<BuildServiceParamet
     private final Cache<ModuleVersionIdentifier, Result> cache =
             Caffeine.newBuilder().build();
 
-    public static class Result {
+    public static final class Result {
         private final ImmutableSetMultimap<String, HashCode> hashesByClassName;
 
         private Result(ImmutableSetMultimap<String, HashCode> hashesByClassName) {
