@@ -18,6 +18,7 @@ package com.palantir.baseline.services;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.hash.HashCode;
 import com.google.common.hash.Hashing;
@@ -26,12 +27,16 @@ import com.google.common.io.ByteStreams;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.util.List;
+import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
+import java.util.stream.Collectors;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.services.BuildService;
 import org.gradle.api.services.BuildServiceParameters;
+import org.slf4j.Logger;
 
 public abstract class JarClassHasher implements BuildService<BuildServiceParameters.None>, AutoCloseable {
     private final Cache<ModuleVersionIdentifier, Result> cache =
@@ -53,14 +58,14 @@ public abstract class JarClassHasher implements BuildService<BuildServiceParamet
         }
     }
 
-    public final Result hashClasses(ResolvedArtifact resolvedArtifact) {
+    public final Result hashClasses(ResolvedArtifact resolvedArtifact, Logger logger) {
         return cache.get(resolvedArtifact.getModuleVersion().getId(), _moduleId -> {
             File file = resolvedArtifact.getFile();
             if (!file.exists()) {
                 return Result.empty();
             }
 
-            ImmutableSetMultimap.Builder<String, HashCode> hashesByClassName = ImmutableSetMultimap.builder();
+            ImmutableListMultimap.Builder<String, HashCode> hashesByClassName = ImmutableListMultimap.builder();
             try (FileInputStream fileInputStream = new FileInputStream(file);
                     JarInputStream jarInputStream = new JarInputStream(fileInputStream)) {
                 JarEntry entry;
@@ -84,7 +89,24 @@ public abstract class JarClassHasher implements BuildService<BuildServiceParamet
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            return new Result(hashesByClassName.build());
+
+            ImmutableListMultimap<String, HashCode> builtHashesByClassName = hashesByClassName.build();
+            List<String> keysWithDuplicateEntries = builtHashesByClassName.asMap().entrySet().stream()
+                    .filter(entry -> entry.getValue().size() > 1)
+                    .map(Map.Entry::getKey)
+                    .sorted()
+                    .collect(Collectors.toList());
+            if (!keysWithDuplicateEntries.isEmpty()) {
+                logger.warn(
+                        "Warning: Gradle Baseline found a dependency jar that contains more than one zip entry for "
+                                + "a class and is likely malformed: {}\n"
+                                + "The following entries appear multiple times: {}\n"
+                                + "This issue should be reported to the maintainer of the dependency.",
+                        resolvedArtifact.getModuleVersion(),
+                        keysWithDuplicateEntries);
+            }
+
+            return new Result(ImmutableSetMultimap.copyOf(builtHashesByClassName));
         });
     }
 

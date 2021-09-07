@@ -65,7 +65,7 @@ public final class ClassUniquenessAnalyzer {
             }
 
             ImmutableSetMultimap<String, HashCode> hashes =
-                    jarHasher.hashClasses(resolvedArtifact).getHashesByClassName();
+                    jarHasher.hashClasses(resolvedArtifact, log).getHashesByClassName();
 
             for (Map.Entry<String, HashCode> entry : hashes.entries()) {
                 String className = entry.getKey();
