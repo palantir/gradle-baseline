@@ -18,22 +18,18 @@ package com.palantir.baseline.tasks;
 
 import static java.util.stream.Collectors.toSet;
 
+import com.google.common.collect.HashMultimap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.SetMultimap;
 import com.google.common.hash.HashCode;
-import com.google.common.hash.Hashing;
-import com.google.common.hash.HashingInputStream;
-import com.google.common.io.ByteStreams;
+import com.palantir.baseline.services.JarClassHasher;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
-import java.util.jar.JarEntry;
-import java.util.jar.JarInputStream;
 import java.util.stream.Collectors;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
@@ -41,12 +37,13 @@ import org.gradle.api.artifacts.ResolvedArtifact;
 import org.slf4j.Logger;
 
 public final class ClassUniquenessAnalyzer {
-
-    private final Map<Set<ModuleVersionIdentifier>, Set<String>> jarsToClasses = new HashMap<>();
-    private final Map<String, Set<HashCode>> classToHashCodes = new HashMap<>();
+    private final JarClassHasher jarHasher;
+    private final SetMultimap<Set<ModuleVersionIdentifier>, String> jarsToClasses = HashMultimap.create();
+    private final SetMultimap<String, HashCode> classToHashCodes = HashMultimap.create();
     private final Logger log;
 
-    public ClassUniquenessAnalyzer(Logger log) {
+    public ClassUniquenessAnalyzer(JarClassHasher jarHasher, Logger log) {
+        this.jarHasher = jarHasher;
         this.log = log;
     }
 
@@ -57,57 +54,36 @@ public final class ClassUniquenessAnalyzer {
 
         // we use these temporary maps to accumulate information as we process each jar,
         // so they may include singletons which we filter out later
-        Map<String, Set<ModuleVersionIdentifier>> classToJars = new HashMap<>();
-        Map<String, Set<HashCode>> tempClassToHashCodes = new HashMap<>();
+        SetMultimap<String, ModuleVersionIdentifier> classToJars = HashMultimap.create();
+        SetMultimap<String, HashCode> tempClassToHashCodes = HashMultimap.create();
 
-        dependencies.stream().forEach(resolvedArtifact -> {
+        for (ResolvedArtifact resolvedArtifact : dependencies) {
             File file = resolvedArtifact.getFile();
             if (!file.exists()) {
                 log.info("Skipping non-existent jar {}: {}", resolvedArtifact, file);
                 return;
             }
 
-            try (FileInputStream fileInputStream = new FileInputStream(file);
-                    JarInputStream jarInputStream = new JarInputStream(fileInputStream)) {
-                JarEntry entry;
-                while ((entry = jarInputStream.getNextJarEntry()) != null) {
-                    if (entry.isDirectory() || !entry.getName().endsWith(".class")) {
-                        continue;
-                    }
+            ImmutableSetMultimap<String, HashCode> hashes =
+                    jarHasher.hashClasses(resolvedArtifact, log).getHashesByClassName();
 
-                    if (entry.getName().contains("module-info.class")) {
-                        // Java 9 allows jars to have a module-info.class file in the root,
-                        // we shouldn't complain about these.
-                        continue;
-                    }
-
-                    String className = entry.getName().replaceAll("/", ".").replaceAll(".class", "");
-                    HashingInputStream inputStream = new HashingInputStream(Hashing.sha256(), jarInputStream);
-                    ByteStreams.exhaust(inputStream);
-
-                    multiMapPut(
-                            classToJars,
-                            className,
-                            resolvedArtifact.getModuleVersion().getId());
-
-                    multiMapPut(tempClassToHashCodes, className, inputStream.hash());
-                }
-            } catch (IOException e) {
-                log.error("Failed to read JarFile {}", resolvedArtifact, e);
-                throw new RuntimeException(e);
+            for (Map.Entry<String, HashCode> entry : hashes.entries()) {
+                String className = entry.getKey();
+                HashCode hashValue = entry.getValue();
+                classToJars.put(className, resolvedArtifact.getModuleVersion().getId());
+                tempClassToHashCodes.put(className, hashValue);
             }
-        });
+        }
 
         // discard all the classes that only come from one jar - these are completely safe!
-        classToJars.entrySet().stream()
+        classToJars.asMap().entrySet().stream()
                 .filter(entry -> entry.getValue().size() > 1)
-                .forEach(entry -> multiMapPut(jarsToClasses, entry.getValue(), entry.getKey()));
+                .forEach(entry -> jarsToClasses.put(ImmutableSet.copyOf(entry.getValue()), entry.getKey()));
 
         // figure out which classes have differing hashes
-        tempClassToHashCodes.entrySet().stream()
+        tempClassToHashCodes.asMap().entrySet().stream()
                 .filter(entry -> entry.getValue().size() > 1)
-                .forEach(entry ->
-                        entry.getValue().forEach(value -> multiMapPut(classToHashCodes, entry.getKey(), value)));
+                .forEach(entry -> entry.getValue().forEach(value -> classToHashCodes.put(entry.getKey(), value)));
 
         Instant after = Instant.now();
         log.info(
@@ -126,7 +102,7 @@ public final class ClassUniquenessAnalyzer {
     }
 
     /** Class names that appear in all of the given jars. */
-    public Set<String> getSharedClassesInProblemJars(Collection<ModuleVersionIdentifier> problemJars) {
+    public Set<String> getSharedClassesInProblemJars(Set<ModuleVersionIdentifier> problemJars) {
         return jarsToClasses.get(problemJars);
     }
 
@@ -138,17 +114,9 @@ public final class ClassUniquenessAnalyzer {
     }
 
     /** Class names which appear in all of the given jars and also have non-identical implementations. */
-    public Set<String> getDifferingSharedClassesInProblemJars(Collection<ModuleVersionIdentifier> problemJars) {
+    public Set<String> getDifferingSharedClassesInProblemJars(Set<ModuleVersionIdentifier> problemJars) {
         return getSharedClassesInProblemJars(problemJars).stream()
                 .filter(classToHashCodes::containsKey)
                 .collect(toSet());
-    }
-
-    private static <K, V> void multiMapPut(Map<K, Set<V>> map, K key, V value) {
-        map.compute(key, (unused, collection) -> {
-            Set<V> newCollection = collection != null ? collection : new HashSet<>();
-            newCollection.add(value);
-            return newCollection;
-        });
     }
 }
