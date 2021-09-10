@@ -15,6 +15,7 @@ _Baseline is a family of Gradle plugins for configuring Java projects with sensi
 | `com.palantir.baseline-error-prone`           | Static analysis for your Java code using Google's [error-prone](http://errorprone.info/).
 | `com.palantir.baseline-checkstyle`            | Enforces consistent Java formatting using [checkstyle](http://checkstyle.sourceforge.io/)
 | `com.palantir.baseline-format`                | Formats your java files to comply with checkstyle
+| `com.palantir.baseline-scalastyle`            | Enforces formatting using [scalastyle](https://github.com/scalastyle/scalastyle)
 | `com.palantir.baseline-class-uniqueness`      | Analyses your classpath to ensure no fully-qualified class is defined more than once.
 | `com.palantir.baseline-circleci`              | [CircleCI](https://circleci.com/) integration using `$CIRCLE_ARTIFACTS` and `$CIRCLE_TEST_REPORTS` dirs
 | `com.palantir.baseline-config`                | Config files for the above plugins

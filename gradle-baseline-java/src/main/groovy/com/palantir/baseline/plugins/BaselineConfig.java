@@ -94,6 +94,7 @@ class BaselineConfig extends AbstractBaselinePlugin {
             rootProject.copy(copySpec -> {
                 copySpec.from(rootProject.zipTree(configuration.getSingleFile()));
                 copySpec.into(configDir);
+                copySpec.exclude("**/scalastyle_config.xml");
                 copySpec.setIncludeEmptyDirs(false);
 
                 if (!BaselineFormat.eclipseFormattingEnabled(task.getProject())) {
@@ -136,6 +137,20 @@ class BaselineConfig extends AbstractBaselinePlugin {
                 } catch (Exception e) {
                     throw new RuntimeException("Unable to patch " + checkstyleXml, e);
                 }
+            }
+
+            if (rootProject.getAllprojects().stream()
+                    .anyMatch(p -> p.getPluginManager().hasPlugin("scala")
+                            && p.getPluginManager().hasPlugin("com.palantir.baseline-scalastyle"))) {
+                // Matches intellij scala plugin settings per
+                // https://github.com/JetBrains/intellij-scala/blob/baaa7c1dabe5222c4bca7c4dd8d80890ad2a8c6b/scala/scala-impl/src/org/jetbrains/plugins/scala/codeInspection/scalastyle/ScalastyleCodeInspection.scala#L19
+                rootProject.copy(copySpec -> {
+                    copySpec.from(
+                            rootProject.zipTree(configuration.getSingleFile()).filter(file -> file.getName()
+                                    .equals("scalastyle_config.xml")));
+                    copySpec.into(rootProject.getRootDir().toPath().resolve("project"));
+                    copySpec.setIncludeEmptyDirs(false);
+                });
             }
         }
 
