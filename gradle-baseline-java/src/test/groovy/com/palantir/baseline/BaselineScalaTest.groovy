@@ -16,9 +16,7 @@
 
 package com.palantir.baseline
 
-import com.palantir.baseline.plugins.BaselineScalastyle
-import org.github.ngbinh.scalastyle.ScalaStylePlugin
-import org.github.ngbinh.scalastyle.ScalaStyleTask
+import com.palantir.baseline.plugins.BaselineScala
 import org.gradle.api.Project
 import org.gradle.api.XmlProvider
 import org.gradle.api.tasks.scala.ScalaCompile
@@ -26,7 +24,7 @@ import org.gradle.plugins.ide.idea.model.IdeaModel
 import org.gradle.testfixtures.ProjectBuilder
 import spock.lang.Specification
 
-final class BaselineScalastyleTest extends Specification {
+final class BaselineScalaTest extends Specification {
     private Project project
 
     def validScalaFile = '''
@@ -43,30 +41,12 @@ final class BaselineScalastyleTest extends Specification {
         project = ProjectBuilder.builder().build()
         project.plugins.apply 'scala'
         project.plugins.apply 'idea'
-        project.plugins.apply BaselineScalastyle
+        project.plugins.apply BaselineScala
     }
 
     def baselineCheckstylePluginApplied() {
         expect:
-        project.plugins.hasPlugin(BaselineScalastyle.class)
-    }
-
-    def scalaStyleApplied() {
-        expect:
-        project.plugins.hasPlugin(ScalaStylePlugin.class)
-    }
-
-    def includesSourcests() {
-        def file = new File(project.projectDir, 'src/main/scala/test/Test.scala')
-        file.getParentFile().mkdirs()
-        when:
-        file << validScalaFile
-
-        then:
-        def tasks = project.tasks.withType(ScalaStyleTask.class)
-        for (ScalaStyleTask task : tasks) {
-            assert task.getSource().getFiles().contains(file)
-        }
+        project.plugins.hasPlugin(BaselineScala.class)
     }
 
     def configuresTargetJvmVersion() {
