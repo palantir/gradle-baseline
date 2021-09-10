@@ -20,20 +20,16 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import groovy.util.Node;
 import groovy.xml.QName;
-import java.nio.file.Paths;
 import org.codehaus.groovy.runtime.InvokerHelper;
-import org.github.ngbinh.scalastyle.ScalaStylePlugin;
-import org.github.ngbinh.scalastyle.ScalaStyleTask;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.Convention;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.ScalaSourceSet;
 import org.gradle.api.tasks.SourceSet;
-import org.gradle.api.tasks.TaskCollection;
 import org.gradle.api.tasks.scala.ScalaCompile;
 import org.gradle.plugins.ide.idea.model.IdeaModel;
 
-public final class BaselineScalastyle extends AbstractBaselinePlugin {
+public final class BaselineScala extends AbstractBaselinePlugin {
     private static final String SCALA_TARGET_VERSION = "jvm-1.8";
 
     @Override
@@ -54,21 +50,6 @@ public final class BaselineScalastyle extends AbstractBaselinePlugin {
                                             .getSourceSets()
                                             .named(SourceSet.MAIN_SOURCE_SET_NAME)
                                             .get())));
-            project.getPluginManager().apply(ScalaStylePlugin.class);
-            TaskCollection<ScalaStyleTask> scalaStyleTasks = project.getTasks().withType(ScalaStyleTask.class);
-            scalaStyleTasks.configureEach(scalaStyleTask -> {
-                scalaStyleTask.setConfigLocation(project.getRootDir()
-                        .toPath()
-                        .resolve(Paths.get("project", "scalastyle_config.xml"))
-                        .toString());
-                scalaStyleTask.setIncludeTestSourceDirectory(true);
-                scalaStyleTask.setFailOnWarning(true);
-                javaConvention.getSourceSets().forEach(sourceSet -> sourceSet
-                        .getAllSource()
-                        .getSrcDirs()
-                        .forEach(resourceDir -> scalaStyleTask.source(resourceDir.toString())));
-            });
-            project.getTasks().named("check").configure(task -> task.dependsOn(scalaStyleTasks));
         });
     }
 

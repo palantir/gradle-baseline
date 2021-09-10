@@ -1,0 +1,6 @@
+type: feature
+feature:
+  description: Scalastyle is not maintained anymore and config we had wasn't that
+    useful anyway.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1912
