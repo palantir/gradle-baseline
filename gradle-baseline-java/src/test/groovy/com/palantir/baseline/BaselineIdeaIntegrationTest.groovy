@@ -256,28 +256,6 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         iws ==~ '(?s).*name="WORKING_DIRECTORY"[^\\n]*value="file://abc".*'
     }
 
-    def 'scalastyle renders correctly'() {
-        when:
-        buildFile << '''
-        plugins {
-            id 'scala'
-            id 'com.palantir.baseline-idea'
-            id 'com.palantir.baseline-scalastyle'
-        }
-        repositories {
-            jcenter()
-            mavenLocal()
-        }
-        dependencies {
-            compile 'org.scala-lang:scala-library:2.11.12'
-        }
-        '''.stripIndent()
-
-        then:
-        BuildResult result = with('--stacktrace', '--info', 'idea').build()
-        assert result.tasks(TaskOutcome.SUCCESS).collect { it.path }.contains(':idea')
-    }
-
     def 'deletes redundant iml,ipr,iws files'() {
         when:
         buildFile << standardBuildFile
