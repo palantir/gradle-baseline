@@ -138,9 +138,7 @@ public final class BaselineTesting implements Plugin<Project> {
 
         // https://junit.org/junit5/docs/snapshot/user-guide/#writing-tests-parallel-execution
         task.systemProperty("junit.jupiter.execution.parallel.enabled", "true");
-
-        // Computes the desired parallelism based on the number of available processors/cores
-        task.systemProperty("junit.jupiter.execution.parallel.config.strategy", "dynamic");
+        task.systemProperty("junit.jupiter.execution.parallel.mode.default", "concurrent");
 
         // provide some stdout feedback when tests fail when running on CI and locally
         task.getTestLogging().getEvents().add(TestLogEvent.FAILED);
