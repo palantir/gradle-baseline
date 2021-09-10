@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: When using the `baseline-testing` plugin, tests now run concurrently
+    by default.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1913
