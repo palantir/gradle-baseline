@@ -12,6 +12,7 @@ dependencies {
     implementation 'com.google.guava:guava'
     implementation 'net.ltgt.gradle:gradle-errorprone-plugin'
     implementation 'org.apache.maven.shared:maven-dependency-analyzer'
+    implementation 'org.github.ngbinh.scalastyle:gradle-scalastyle-plugin_2.11'
     implementation 'commons-lang:commons-lang'
     implementation 'com.palantir.javaformat:palantir-java-format-spi'
     // Add an explicit dependency to ensure consumers can use JDK14 source compat
