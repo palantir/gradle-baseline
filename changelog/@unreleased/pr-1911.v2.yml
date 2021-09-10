@@ -1,0 +1,5 @@
+type: break
+break:
+  description: Remove baseline-scalastyle plugin
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1911
