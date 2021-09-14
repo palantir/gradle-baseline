@@ -26,11 +26,11 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
 
     def standardBuildFile = """
         plugins {
-            id 'java'
+            id 'java-library'
             id 'com.palantir.baseline-class-uniqueness'
         }
         subprojects {
-            apply plugin: 'java'
+            apply plugin: 'java-library'
         }
         repositories {
             mavenCentral()
@@ -44,8 +44,8 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         buildFile << standardBuildFile
         buildFile << """
         dependencies {
-            compile group: 'javax.el', name: 'javax.el-api', version: '3.0.0'
-            compile group: 'javax.servlet.jsp', name: 'jsp-api', version: '2.1'
+            api group: 'javax.el', name: 'javax.el-api', version: '3.0.0'
+            api group: 'javax.servlet.jsp', name: 'jsp-api', version: '2.1'
         }
         """.stripIndent()
         BuildResult result = with('check', '-s').buildAndFail()
@@ -95,8 +95,8 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         buildFile << standardBuildFile
         buildFile << """
         dependencies {
-            compile 'com.palantir.tritium:tritium-api:0.9.0'
-            compile 'com.palantir.tritium:tritium-core:0.9.0'
+            api 'com.palantir.tritium:tritium-api:0.9.0'
+            api 'com.palantir.tritium:tritium-core:0.9.0'
         }
         """.stripIndent()
 
@@ -121,10 +121,10 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         buildFile << standardBuildFile
         buildFile << """
         dependencies {
-            compile 'com.google.guava:guava:19.0'
-            compile 'org.apache.commons:commons-io:1.3.2'
-            compile 'junit:junit:4.12'
-            compile 'com.netflix.nebula:nebula-test:6.4.2'
+            api 'com.google.guava:guava:19.0'
+            api 'org.apache.commons:commons-io:1.3.2'
+            api 'junit:junit:4.12'
+            api 'com.netflix.nebula:nebula-test:6.4.2'
         }
         """.stripIndent()
         BuildResult result = with('checkClassUniqueness', '--info').build()
@@ -139,20 +139,20 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         when:
         multiProject.addSubproject('foo', """
         dependencies {
-            compile group: 'javax.el', name: 'javax.el-api', version: '3.0.0'
+            api group: 'javax.el', name: 'javax.el-api', version: '3.0.0'
         }
         """)
         multiProject.addSubproject('bar', """
         dependencies {
-            compile group: 'javax.servlet.jsp', name: 'jsp-api', version: '2.1'
+            api group: 'javax.servlet.jsp', name: 'jsp-api', version: '2.1'
         }
         """)
 
         buildFile << standardBuildFile
         buildFile << """
         dependencies {
-            compile project(':foo')
-            compile project(':bar')
+            api project(':foo')
+            api project(':bar')
         }
         """.stripIndent()
 
@@ -172,8 +172,8 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         buildFile << standardBuildFile
         buildFile << """
         dependencies {
-            compile project(':foo')
-            compile project(':bar')
+            api project(':foo')
+            api project(':bar')
         }
         """.stripIndent()
 
