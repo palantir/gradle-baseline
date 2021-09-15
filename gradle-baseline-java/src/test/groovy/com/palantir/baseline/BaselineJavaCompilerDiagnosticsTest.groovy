@@ -37,11 +37,11 @@ class BaselineJavaCompilerDiagnosticsTest extends Specification {
 
         then:
         JavaCompile compileTask = project.tasks.getByName('compileJava').asType(JavaCompile.class)
-        List<String> allJvmArgs = compileTask.allJvmArgs
+        List<String> allJvmArgs = compileTask.options.allCompilerArgs
         allJvmArgs.stream().filter('-Xmaxerrs'::equals).count() == 1
-        allJvmArgs.get(allJvmArgs.indexOf('-Xmaxerrs') + 1) == '1000'
+        allJvmArgs.get(allJvmArgs.indexOf('-Xmaxerrs') + 1) == '10000'
         allJvmArgs.stream().filter('-Xmaxwarns'::equals).count() == 1
-        allJvmArgs.get(allJvmArgs.indexOf('-Xmaxerrs') + 1) == '1000'
+        allJvmArgs.get(allJvmArgs.indexOf('-Xmaxerrs') + 1) == '10000'
     }
 
     def testOverridden() {
@@ -53,7 +53,7 @@ class BaselineJavaCompilerDiagnosticsTest extends Specification {
             }
         }
         project.plugins.apply 'java'
-        tasks.withType(JavaCompile) {
+        project.tasks.withType(JavaCompile) {
             options.compilerArgs += [
                     '-Xmaxerrs', '1000'
             ]
@@ -64,7 +64,7 @@ class BaselineJavaCompilerDiagnosticsTest extends Specification {
         then:
         project.tasks.type
         JavaCompile compileTask = project.tasks.getByName('compileJava').asType(JavaCompile.class)
-        List<String> allJvmArgs = compileTask.allJvmArgs
+        List<String> allJvmArgs = compileTask.options.allCompilerArgs
         allJvmArgs.stream().filter('-Xmaxerrs'::equals).count() == 1
         allJvmArgs.get(allJvmArgs.indexOf("-Xmaxerrs") + 1) == '1000'
         allJvmArgs.stream().filter('-Xmaxwarns'::equals).count() == 1

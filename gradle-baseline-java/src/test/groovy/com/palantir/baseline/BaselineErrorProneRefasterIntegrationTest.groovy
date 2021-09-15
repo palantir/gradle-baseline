@@ -26,9 +26,9 @@ class BaselineErrorProneRefasterIntegrationTest extends AbstractPluginTest {
 
     def standardBuildFile = '''
         plugins {
-            id 'java'
+            id 'java-library'
             id 'com.palantir.baseline-error-prone'
-            id 'org.inferred.processors' version '3.1.0'
+            id 'org.inferred.processors' version '3.6.0'
         }
         repositories {
             mavenLocal()
@@ -121,7 +121,7 @@ class BaselineErrorProneRefasterIntegrationTest extends AbstractPluginTest {
         buildFile << standardBuildFile
         buildFile << '''
             dependencies {
-                compile 'com.google.guava:guava:27.1-jre'
+                implementation 'com.google.guava:guava:27.1-jre'
             }
         '''
         file('src/main/java/test/Test.java') << '''

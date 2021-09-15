@@ -59,7 +59,7 @@ class BaselineEnablePreviewFlagTest extends IntegrationSpec {
         setupSingleProject(projectDir)
         buildFile << '''
         tasks.classes.doLast {
-          println "COMPILED:" + new File(sourceSets.main.java.outputDir, "foo").list()
+          println "COMPILED:" + new File(sourceSets.main.java.classesDirectory.get().getAsFile(), "foo").list()
         }
         '''
         ExecutionResult executionResult = runTasks('classes', '-is')

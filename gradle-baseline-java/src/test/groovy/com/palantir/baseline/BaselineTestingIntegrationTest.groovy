@@ -24,7 +24,7 @@ import spock.lang.Unroll
 class BaselineTestingIntegrationTest extends AbstractPluginTest {
     def standardBuildFile = '''
         plugins {
-            id 'java'
+            id 'java-library'
             id 'com.palantir.baseline-testing'
         }
         
@@ -87,7 +87,7 @@ class BaselineTestingIntegrationTest extends AbstractPluginTest {
         when:
         buildFile << '''
         plugins {
-            id 'org.unbroken-dome.test-sets' version '2.1.1'
+            id 'org.unbroken-dome.test-sets' version '4.0.0'
         }
         '''.stripIndent()
         buildFile << standardBuildFile
@@ -113,7 +113,7 @@ class BaselineTestingIntegrationTest extends AbstractPluginTest {
         when:
         buildFile << '''
         plugins {
-            id 'org.unbroken-dome.test-sets' version '2.1.1'
+            id 'org.unbroken-dome.test-sets' version '4.0.0'
         }
         '''.stripIndent()
         buildFile << standardBuildFile
@@ -139,7 +139,7 @@ class BaselineTestingIntegrationTest extends AbstractPluginTest {
         buildFile << standardBuildFile
         buildFile << '''
         dependencies {
-            testCompile "junit:junit:4.12"
+            testImplementation "junit:junit:4.12"
         }
         '''.stripIndent()
         file('src/test/java/test/TestClass2.java') << junit4Test

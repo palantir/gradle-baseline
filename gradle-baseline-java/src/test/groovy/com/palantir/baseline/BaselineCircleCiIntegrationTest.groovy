@@ -23,7 +23,7 @@ import org.gradle.testkit.runner.TaskOutcome
 class BaselineCircleCiIntegrationTest extends AbstractPluginTest {
     def standardBuildFile = '''
         plugins {
-            id 'java'
+            id 'java-library'
             id 'com.palantir.baseline-circleci'
         }
         
@@ -32,7 +32,7 @@ class BaselineCircleCiIntegrationTest extends AbstractPluginTest {
         }
         
         dependencies {
-            testCompile 'junit:junit:4.12'
+            testImplementation 'junit:junit:4.12'
         }
     '''.stripIndent()
 

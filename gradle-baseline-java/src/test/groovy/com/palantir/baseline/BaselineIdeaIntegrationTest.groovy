@@ -26,7 +26,7 @@ import spock.util.environment.RestoreSystemProperties
 class BaselineIdeaIntegrationTest extends AbstractPluginTest {
     def standardBuildFile = '''
         plugins {
-            id 'java'
+            id 'java-library'
             id 'com.palantir.baseline-idea'
         }
         allprojects {
@@ -195,7 +195,7 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         buildFile << standardBuildFile
         buildFile << """
             dependencies {
-                compile localGroovy()
+                api localGroovy()
             }
         """
 
@@ -210,7 +210,7 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         buildFile << standardBuildFile
         buildFile << '''
             dependencies {
-                compile localGroovy()
+                api localGroovy()
             }
             idea.workspace {
                 iws.withXml { provider ->
@@ -239,7 +239,7 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         buildFile << standardBuildFile
         buildFile << '''
             dependencies {
-                compile localGroovy()
+                api localGroovy()
             }
             idea.workspace {
                 iws.withXml { provider ->
@@ -254,28 +254,6 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         with('idea').build()
         def iws = Files.asCharSource(new File(projectDir, projectDir.name + ".iws"), Charsets.UTF_8).read()
         iws ==~ '(?s).*name="WORKING_DIRECTORY"[^\\n]*value="file://abc".*'
-    }
-
-    def 'scalastyle renders correctly'() {
-        when:
-        buildFile << '''
-        plugins {
-            id 'scala'
-            id 'com.palantir.baseline-idea'
-            id 'com.palantir.baseline-scalastyle'
-        }
-        repositories {
-            jcenter()
-            mavenLocal()
-        }
-        dependencies {
-            compile 'org.scala-lang:scala-library:2.11.12'
-        }
-        '''.stripIndent()
-
-        then:
-        BuildResult result = with('--stacktrace', '--info', 'idea').build()
-        assert result.tasks(TaskOutcome.SUCCESS).collect { it.path }.contains(':idea')
     }
 
     def 'deletes redundant iml,ipr,iws files'() {

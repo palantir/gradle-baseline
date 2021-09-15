@@ -24,11 +24,11 @@ class BaselineImmutablesTest extends IntegrationSpec {
     def 'inserts incremental compilation args into source sets that have immutables'() {
         buildFile << """
             plugins {
-                id 'org.unbroken-dome.test-sets' version '3.0.1'
+                id 'org.unbroken-dome.test-sets' version '4.0.0'
             }
 
             apply plugin: 'com.palantir.baseline-immutables'
-            apply plugin: 'java'
+            apply plugin: 'java-library'
 
             repositories {
                 mavenCentral()
