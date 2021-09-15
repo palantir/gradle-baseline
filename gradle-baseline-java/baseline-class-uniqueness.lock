@@ -2,17 +2,17 @@
 # Run ./gradlew checkClassUniqueness --write-locks to update this file
 
 ## runtimeClasspath
-[com.google.auto.service:auto-service-annotations, com.google.errorprone:error_prone_core, com.google.errorprone:error_prone_refaster]
+[com.google.auto.service:auto-service-annotations, com.google.errorprone:error_prone_refaster]
   - com.google.auto.service.AutoService
-[com.google.auto.value:auto-value-annotations, com.google.errorprone:error_prone_core, com.google.errorprone:error_prone_refaster]
+[com.google.auto.value:auto-value-annotations, com.google.errorprone:error_prone_refaster]
   - com.google.auto.value.extension.memoized.Memoized
-[com.google.code.findbugs:jsr305, com.google.errorprone:error_prone_core, com.google.errorprone:error_prone_refaster]
+[com.google.code.findbugs:jsr305, com.google.errorprone:error_prone_refaster]
   - javax.annotation.MatchesPattern$Checker
   - javax.annotation.Nonnegative$Checker
   - javax.annotation.Nonnull$Checker
   - javax.annotation.RegEx$Checker
   - javax.annotation.meta.When
-[com.google.errorprone:error_prone_core, com.google.errorprone:error_prone_refaster, com.google.guava:guava]
+[com.google.errorprone:error_prone_refaster, com.google.guava:guava]
   - com.google.common.base.Ascii
   - com.google.common.base.Converter
   - com.google.common.base.Converter$1
