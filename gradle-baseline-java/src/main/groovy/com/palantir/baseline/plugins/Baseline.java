@@ -43,6 +43,7 @@ public final class Baseline implements Plugin<Project> {
 
         rootProject.getPluginManager().apply(BaselineConfig.class);
         rootProject.getPluginManager().apply(BaselineCircleCi.class);
+        rootProject.getPluginManager().apply(BaselineJavaVersions.class);
         rootProject.allprojects(proj -> {
             proj.getPluginManager().apply(BaselineCheckstyle.class);
             proj.getPluginManager().apply(BaselineScala.class);
