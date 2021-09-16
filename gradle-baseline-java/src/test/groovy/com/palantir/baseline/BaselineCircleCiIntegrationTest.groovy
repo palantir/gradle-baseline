@@ -28,7 +28,7 @@ class BaselineCircleCiIntegrationTest extends AbstractPluginTest {
         }
         
         repositories {
-            jcenter()
+            mavenCentral()
         }
         
         dependencies {

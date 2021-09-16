@@ -99,7 +99,6 @@ class BaselineFormatCopyrightIntegrationTest extends AbstractPluginTest {
         repositories {
             // to resolve the `palantirJavaFormat` configuration
             mavenCentral()
-            jcenter()
         }
         dependencies {
             implementation localGroovy()

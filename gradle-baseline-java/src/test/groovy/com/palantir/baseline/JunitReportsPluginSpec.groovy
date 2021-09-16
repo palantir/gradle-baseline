@@ -38,7 +38,7 @@ class JunitReportsPluginSpec extends IntegrationSpec {
             ${applyPlugin(BaselineCircleCi)}
             
             repositories {
-                jcenter()
+                mavenCentral()
             }
         """.stripIndent()
 

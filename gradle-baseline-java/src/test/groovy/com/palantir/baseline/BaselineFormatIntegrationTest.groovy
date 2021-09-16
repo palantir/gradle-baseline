@@ -48,7 +48,6 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         repositories {
             // to resolve the `palantirJavaFormat` configuration
             mavenCentral()
-            jcenter()
         }
     '''.stripIndent()
 
@@ -141,7 +140,6 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
             repositories {
                 // to resolve the `palantirJavaFormat` configuration
                 mavenCentral()
-                jcenter()
             }
         """.stripIndent()
         file('gradle.properties') << "com.palantir.baseline-format.palantir-java-format=true\n"

@@ -28,7 +28,7 @@ class BaselineConfigIntegrationTest extends AbstractPluginTest {
             id 'com.palantir.baseline-config'
         }
         repositories {
-            jcenter()
+            mavenCentral()
             mavenLocal()
         }
     """.stripIndent()
@@ -111,7 +111,7 @@ class BaselineConfigIntegrationTest extends AbstractPluginTest {
         buildFile << standardBuildFile
         buildFile << """
             repositories {
-                jcenter()
+                mavenCentral()
                 mavenLocal()
             }
             dependencies {

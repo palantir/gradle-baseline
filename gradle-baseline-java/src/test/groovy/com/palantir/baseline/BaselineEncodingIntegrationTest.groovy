@@ -32,7 +32,7 @@ class BaselineEncodingIntegrationTest extends AbstractPluginTest {
 
         repositories {
             mavenLocal()
-            jcenter()
+            mavenCentral()
         }
     '''.stripIndent()
 
@@ -45,7 +45,7 @@ class BaselineEncodingIntegrationTest extends AbstractPluginTest {
 
         repositories {
             mavenLocal()
-            jcenter()
+            mavenCentral()
         }
         
         tasks.withType(JavaCompile) {

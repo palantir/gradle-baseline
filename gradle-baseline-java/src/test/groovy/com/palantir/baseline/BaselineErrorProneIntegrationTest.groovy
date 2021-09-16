@@ -34,7 +34,6 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         }
         repositories {
             mavenLocal()
-            jcenter()
             // TODO(forozco): figure out why pTML no longer works
             mavenCentral()
         }
