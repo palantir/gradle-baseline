@@ -36,6 +36,7 @@ import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.options.Option;
+import org.gradle.jvm.toolchain.JavaToolchainSpec;
 import org.gradle.util.GradleVersion;
 
 /**
@@ -83,6 +84,19 @@ public class CheckExplicitSourceCompatibilityTask extends DefaultTask {
                 return getProject().getExtensions().getByType(SourceSetContainer.class).stream()
                         .anyMatch(
                                 sourceSet -> !sourceSet.getAllJava().getFiles().isEmpty());
+            }
+        });
+        onlyIf(new Spec<Task>() {
+            @Override
+            public boolean isSatisfiedBy(Task task) {
+                JavaPluginExtension maybeExtension =
+                        getProject().getExtensions().findByType(JavaPluginExtension.class);
+                if (maybeExtension != null) {
+                    JavaToolchainSpec toolchainSpec = maybeExtension.getToolchain();
+                    return toolchainSpec == null
+                            || !toolchainSpec.getLanguageVersion().isPresent();
+                }
+                return true;
             }
         });
     }
