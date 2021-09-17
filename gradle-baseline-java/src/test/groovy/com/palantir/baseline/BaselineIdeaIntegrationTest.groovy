@@ -33,7 +33,6 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
             apply plugin: 'com.palantir.baseline-idea'
             repositories {
                 mavenCentral()
-                jcenter()
             }
         }
     '''.stripIndent()

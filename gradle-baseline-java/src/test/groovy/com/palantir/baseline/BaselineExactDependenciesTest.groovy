@@ -65,7 +65,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         buildFile << standardBuildFile
         buildFile << """
             repositories {
-                jcenter()
+                mavenCentral()
                 mavenLocal() // for baseline-error-prone
             }
             apply plugin: 'com.palantir.baseline'

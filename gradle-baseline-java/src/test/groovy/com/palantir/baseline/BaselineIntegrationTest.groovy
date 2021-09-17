@@ -28,7 +28,7 @@ class BaselineIntegrationTest extends AbstractPluginTest {
         }
     
         repositories {
-            jcenter()
+            mavenCentral()
         }
         """.stripIndent()
     }
