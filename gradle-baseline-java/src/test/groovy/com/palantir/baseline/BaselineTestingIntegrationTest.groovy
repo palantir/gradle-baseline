@@ -16,17 +16,18 @@
 
 package com.palantir.baseline
 
-import org.gradle.testkit.runner.BuildResult
-import org.gradle.testkit.runner.TaskOutcome
+import nebula.test.IntegrationSpec
+import nebula.test.functional.ExecutionResult
 import spock.lang.Unroll
 
 @Unroll
-class BaselineTestingIntegrationTest extends AbstractPluginTest {
+class BaselineTestingIntegrationTest extends IntegrationSpec {
     def standardBuildFile = '''
         plugins {
             id 'java-library'
-            id 'com.palantir.baseline-testing'
         }
+        
+        apply plugin: 'com.palantir.baseline-testing'
         
         repositories {
             mavenCentral()
@@ -59,8 +60,10 @@ class BaselineTestingIntegrationTest extends AbstractPluginTest {
         }
         '''.stripIndent()
 
-    def 'capable of running both junit4 and junit5 tests'() {
+    def '#gradleVersionNumber: capable of running both junit4 and junit5 tests'() {
         when:
+        gradleVersion = gradleVersionNumber
+
         buildFile << standardBuildFile
         buildFile << '''
         dependencies {
@@ -74,13 +77,12 @@ class BaselineTestingIntegrationTest extends AbstractPluginTest {
         file('src/test/java/test/TestClass5.java') << junit5Test
 
         then:
-        BuildResult result = with('test').withGradleVersion(gradleVersion).build()
-        result.task(':test').outcome == TaskOutcome.SUCCESS
+        runTasksSuccessfully('test')
         new File(projectDir, "build/reports/tests/test/classes/test.TestClass4.html").exists()
         new File(projectDir, "build/reports/tests/test/classes/test.TestClass5.html").exists()
 
         where:
-        gradleVersion << GradleTestVersions.VERSIONS
+        gradleVersionNumber << GradleTestVersions.VERSIONS
     }
 
     def 'runs integration tests with junit5'() {
@@ -104,9 +106,8 @@ class BaselineTestingIntegrationTest extends AbstractPluginTest {
         file('src/integrationTest/java/test/TestClass5.java') << junit5Test
 
         then:
-        BuildResult result = with('integrationTest').build()
-        result.task(':integrationTest').outcome == TaskOutcome.SUCCESS
-        new File(projectDir, "build/reports/tests/integrationTest/classes/test.TestClass5.html").exists()
+        runTasksSuccessfully('integrationTest')
+        fileExists("build/reports/tests/integrationTest/classes/test.TestClass5.html")
     }
 
     def 'checkJUnitDependencies ensures mixture of junit4 and 5 tests => legacy must be present'() {
@@ -130,8 +131,8 @@ class BaselineTestingIntegrationTest extends AbstractPluginTest {
         file('src/integrationTest/java/test/TestClass5.java') << junit5Test
 
         then:
-        BuildResult result = with('checkJUnitDependencies').buildAndFail()
-        result.output.contains 'Some tests still use JUnit4, but Gradle has been set to use JUnit Platform'
+        ExecutionResult result = runTasksWithFailure('checkJUnitDependencies')
+        result.failure.cause.cause.message.contains 'Some tests still use JUnit4, but Gradle has been set to use JUnit Platform'
     }
 
     def 'checkJUnitDependencies ensures mixture of junit4 and 5 tests => new must be present'() {
@@ -146,8 +147,8 @@ class BaselineTestingIntegrationTest extends AbstractPluginTest {
         file('src/test/java/test/TestClass5.java') << junit5Test
 
         then:
-        BuildResult result = with('checkJUnitDependencies').buildAndFail()
-        result.output.contains 'Some tests mention JUnit5, but the \'test\' task does not have useJUnitPlatform() enabled'
+        ExecutionResult result = runTasksWithFailure('checkJUnitDependencies')
+        result.failure.cause.cause.message.contains 'Some tests mention JUnit5, but the \'test\' task does not have useJUnitPlatform() enabled'
     }
 
     def 'checkJUnitDependencies ensures nebula test => vintage must be present'() {
@@ -162,8 +163,8 @@ class BaselineTestingIntegrationTest extends AbstractPluginTest {
         '''.stripIndent()
 
         then:
-        BuildResult result = with('checkJUnitDependencies').buildAndFail()
-        result.output.contains 'Tests may be silently not running! Spock 1.x dependency detected'
+        ExecutionResult result = runTasksWithFailure('checkJUnitDependencies')
+        result.failure.cause.cause.message.contains 'Tests may be silently not running! Spock 1.x dependency detected'
     }
 
     def 'running -Drecreate=true will re-run tests even if no code changes'() {
@@ -172,16 +173,16 @@ class BaselineTestingIntegrationTest extends AbstractPluginTest {
         file('src/test/java/test/TestClass4.java') << junit4Test
 
         then:
-        BuildResult result = with('test').build()
-        result.task(':test').getOutcome() == TaskOutcome.SUCCESS
+        def result = runTasksSuccessfully('test')
+        result.wasExecuted(':test')
 
-        BuildResult result2 = with('test').build()
-        result2.task(':test').getOutcome() == TaskOutcome.UP_TO_DATE
+        def result2 = runTasksSuccessfully('test')
+        result2.wasUpToDate(':test')
 
-        BuildResult result3 = with('test', '-Drecreate=true').build()
-        result3.task(':test').getOutcome() == TaskOutcome.SUCCESS
+        def result3 = runTasksSuccessfully('test', '-Drecreate=true')
+        result3.wasExecuted(':test')
 
-        BuildResult result4 = with('test', '-Drecreate=true').build()
-        result4.task(':test').getOutcome() == TaskOutcome.SUCCESS
+        def result4 = runTasksSuccessfully('test', '-Drecreate=true')
+        result4.wasExecuted(':test')
     }
 }

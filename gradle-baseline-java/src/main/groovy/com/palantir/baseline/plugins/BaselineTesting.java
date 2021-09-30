@@ -29,7 +29,7 @@ import org.gradle.api.Task;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedComponentResult;
 import org.gradle.api.plugins.JavaPlugin;
-import org.gradle.api.plugins.JavaPluginConvention;
+import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskContainer;
 import org.gradle.api.tasks.TaskProvider;
@@ -63,18 +63,23 @@ public final class BaselineTesting implements Plugin<Project> {
         });
 
         project.getPlugins().withType(JavaPlugin.class, unusedPlugin -> {
-            project.getConvention()
-                    .getPlugin(JavaPluginConvention.class)
-                    .getSourceSets()
-                    .forEach(ss -> {
-                        ifHasResolvedCompileDependenciesMatching(
-                                project, ss, BaselineTesting::requiresJunitPlatform, () -> fixSourceSet(project, ss));
-                    });
-
-            TaskProvider<CheckJUnitDependencies> task =
+            TaskProvider<CheckJUnitDependencies> checkJUnitDependencies =
                     project.getTasks().register("checkJUnitDependencies", CheckJUnitDependencies.class);
 
-            project.getTasks().findByName(JavaPlugin.TEST_TASK_NAME).dependsOn(task);
+            project.getExtensions()
+                    .getByType(JavaPluginExtension.class)
+                    .getSourceSets()
+                    .configureEach(sourceSet -> {
+                        getTestTaskForSourceSet(project, sourceSet).ifPresent(testTask -> {
+                            testTask.dependsOn(checkJUnitDependencies);
+                        });
+
+                        ifHasResolvedCompileDependenciesMatching(
+                                project,
+                                sourceSet,
+                                BaselineTesting::requiresJunitPlatform,
+                                () -> fixSourceSet(project, sourceSet));
+                    });
         });
     }
 
@@ -135,6 +140,7 @@ public final class BaselineTesting implements Plugin<Project> {
 
     private static boolean requiresJunitPlatform(ModuleComponentIdentifier dep) {
         return isDep(dep, "org.junit.jupiter", "junit-jupiter")
+                // || (isDep(dep, "com.netflix.nebula", "nebula-test") && majorVersionNumber(dep.getVersion()) >= 10)
                 || (isDep(dep, "org.spockframework", "spock-core")
                         && VersionUtils.majorVersionNumber(dep.getVersion()) >= 2);
     }
