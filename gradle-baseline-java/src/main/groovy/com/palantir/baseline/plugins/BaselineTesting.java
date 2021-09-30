@@ -16,18 +16,20 @@
 
 package com.palantir.baseline.plugins;
 
+import com.google.common.base.Predicate;
 import com.google.common.collect.ImmutableSet;
 import com.palantir.baseline.tasks.CheckJUnitDependencies;
 import com.palantir.baseline.tasks.CheckUnusedDependenciesTask;
+import com.palantir.baseline.util.VersionUtils;
 import java.util.Objects;
 import java.util.Optional;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
-import org.gradle.api.artifacts.Dependency;
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
+import org.gradle.api.artifacts.result.ResolvedComponentResult;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
-import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskContainer;
 import org.gradle.api.tasks.TaskProvider;
@@ -61,38 +63,39 @@ public final class BaselineTesting implements Plugin<Project> {
         });
 
         project.getPlugins().withType(JavaPlugin.class, unusedPlugin -> {
-            // afterEvaluate necessary because the junit-jupiter dep might be added further down the build.gradle
-            project.afterEvaluate(proj -> {
-                proj.getConvention()
-                        .getPlugin(JavaPluginConvention.class)
-                        .getSourceSets()
-                        .matching(ss -> hasCompileDependenciesMatching(proj, ss, BaselineTesting::isJunitJupiter))
-                        .forEach(ss -> {
-                            Optional<Test> maybeTestTask = getTestTaskForSourceSet(proj, ss);
-                            if (!maybeTestTask.isPresent()) {
-                                log.warn("Detected 'org:junit.jupiter:junit-jupiter', but unable to find test task");
-                                return;
-                            }
-                            log.info(
-                                    "Detected 'org:junit.jupiter:junit-jupiter', enabling useJUnitPlatform() on {}",
-                                    maybeTestTask.get().getName());
-                            enableJunit5ForTestTask(maybeTestTask.get());
-
-                            // Also wire up a test ignore for this source set
-                            project.getPlugins().withType(BaselineExactDependencies.class, exactDeps -> {
-                                TaskContainer tasks = project.getTasks();
-                                tasks.named(
-                                        BaselineExactDependencies.checkUnusedDependenciesNameForSourceSet(ss),
-                                        CheckUnusedDependenciesTask.class,
-                                        task -> task.ignore("org.junit.jupiter", "junit-jupiter"));
-                            });
-                        });
-            });
+            project.getConvention()
+                    .getPlugin(JavaPluginConvention.class)
+                    .getSourceSets()
+                    .forEach(ss -> {
+                        ifHasResolvedCompileDependenciesMatching(
+                                project, ss, BaselineTesting::requiresJunitPlatform, () -> fixSourceSet(project, ss));
+                    });
 
             TaskProvider<CheckJUnitDependencies> task =
                     project.getTasks().register("checkJUnitDependencies", CheckJUnitDependencies.class);
 
             project.getTasks().findByName(JavaPlugin.TEST_TASK_NAME).dependsOn(task);
+        });
+    }
+
+    private void fixSourceSet(Project project, SourceSet ss) {
+        Optional<Test> maybeTestTask = getTestTaskForSourceSet(project, ss);
+        if (!maybeTestTask.isPresent()) {
+            log.warn("Detected 'org:junit.jupiter:junit-jupiter', but unable to find test task");
+            return;
+        }
+        log.info(
+                "Detected 'org:junit.jupiter:junit-jupiter', enabling useJUnitPlatform() on {}",
+                maybeTestTask.get().getName());
+        enableJunit5ForTestTask(maybeTestTask.get());
+
+        // Also wire up a test ignore for this source set
+        project.getPlugins().withType(BaselineExactDependencies.class, exactDeps -> {
+            TaskContainer tasks = project.getTasks();
+            tasks.named(
+                    BaselineExactDependencies.checkUnusedDependenciesNameForSourceSet(ss),
+                    CheckUnusedDependenciesTask.class,
+                    task -> task.ignore("org.junit.jupiter", "junit-jupiter"));
         });
     }
 
@@ -112,20 +115,32 @@ public final class BaselineTesting implements Plugin<Project> {
         return Optional.empty();
     }
 
-    private static boolean hasCompileDependenciesMatching(Project project, SourceSet sourceSet, Spec<Dependency> spec) {
-        return project
-                .getConfigurations()
-                .getByName(sourceSet.getCompileClasspathConfigurationName())
-                .getAllDependencies()
-                .matching(spec)
-                .stream()
-                .findAny()
-                .isPresent();
+    private static void ifHasResolvedCompileDependenciesMatching(
+            Project project, SourceSet sourceSet, Predicate<ModuleComponentIdentifier> spec, Runnable runnable) {
+        project.getConfigurations()
+                .getByName(sourceSet.getRuntimeClasspathConfigurationName())
+                .getIncoming()
+                .afterResolve(deps -> {
+                    boolean anyMatch = deps.getResolutionResult().getAllComponents().stream()
+                            .map(ResolvedComponentResult::getId)
+                            .filter(componentId -> componentId instanceof ModuleComponentIdentifier)
+                            .map(componentId -> (ModuleComponentIdentifier) componentId)
+                            .anyMatch(spec);
+
+                    if (anyMatch) {
+                        runnable.run();
+                    }
+                });
     }
 
-    private static boolean isJunitJupiter(Dependency dep) {
-        return Objects.equals(dep.getGroup(), "org.junit.jupiter")
-                && dep.getName().equals("junit-jupiter");
+    private static boolean requiresJunitPlatform(ModuleComponentIdentifier dep) {
+        return isDep(dep, "org.junit.jupiter", "junit-jupiter")
+                || (isDep(dep, "org.spockframework", "spock-core")
+                        && VersionUtils.majorVersionNumber(dep.getVersion()) >= 2);
+    }
+
+    private static boolean isDep(ModuleComponentIdentifier dep, String group, String name) {
+        return group.equals(dep.getGroup()) && name.equals(dep.getModule());
     }
 
     private static void enableJunit5ForTestTask(Test task) {
