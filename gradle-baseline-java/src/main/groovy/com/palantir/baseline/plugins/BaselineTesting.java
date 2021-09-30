@@ -140,7 +140,6 @@ public final class BaselineTesting implements Plugin<Project> {
 
     private static boolean requiresJunitPlatform(ModuleComponentIdentifier dep) {
         return isDep(dep, "org.junit.jupiter", "junit-jupiter")
-                // || (isDep(dep, "com.netflix.nebula", "nebula-test") && majorVersionNumber(dep.getVersion()) >= 10)
                 || (isDep(dep, "org.spockframework", "spock-core")
                         && VersionUtils.majorVersionNumber(dep.getVersion()) >= 2);
     }
