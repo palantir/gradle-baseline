@@ -36,7 +36,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         dependencies {
             testImplementation 'junit:junit:4.12'
         }
-    '''.stripIndent()
+    '''.stripIndent(true)
 
     def junit4Test = '''
         package test;
@@ -47,7 +47,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
             @Test
             public void test() {}
         }
-        '''.stripIndent()
+        '''.stripIndent(true)
 
     def junit5Test = '''
         package test;
@@ -58,7 +58,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
             @Test
             public void test() {}
         }
-        '''.stripIndent()
+        '''.stripIndent(true)
 
     def '#gradleVersionNumber: capable of running both junit4 and junit5 tests'() {
         when:
@@ -72,7 +72,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
                 because 'allows JUnit 3 and JUnit 4 tests to run\'
             }
         }
-        '''.stripIndent()
+        '''.stripIndent(true)
         file('src/test/java/test/TestClass4.java') << junit4Test
         file('src/test/java/test/TestClass5.java') << junit5Test
 
@@ -91,7 +91,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         plugins {
             id 'org.unbroken-dome.test-sets' version '4.0.0'
         }
-        '''.stripIndent()
+        '''.stripIndent(true)
         buildFile << standardBuildFile
         buildFile << '''
 
@@ -102,12 +102,36 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         dependencies {
             integrationTestImplementation "org.junit.jupiter:junit-jupiter:5.4.2"
         }
-        '''.stripIndent()
+        '''.stripIndent(true)
         file('src/integrationTest/java/test/TestClass5.java') << junit5Test
 
         then:
         runTasksSuccessfully('integrationTest')
         fileExists("build/reports/tests/integrationTest/classes/test.TestClass5.html")
+    }
+    
+    def 'runs nebula-test version 10+ tests that require junit platform'() {
+        buildFile << standardBuildFile
+        
+        buildFile << '''
+            apply plugin: 'groovy'
+            dependencies {
+                testImplementation 'com.netflix.nebula:nebula-test:10.0.0'
+            }
+        '''.stripIndent(true)
+
+        file('src/test/groovy/test/Test.groovy') << '''
+            package test
+            class Test extends spock.lang.Specification {
+                def test() {}
+            }
+        '''.stripIndent(true)
+
+        when:
+        runTasksSuccessfully('test')
+
+        then:
+        true
     }
 
     def 'checkJUnitDependencies ensures mixture of junit4 and 5 tests => legacy must be present'() {
@@ -116,7 +140,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         plugins {
             id 'org.unbroken-dome.test-sets' version '4.0.0'
         }
-        '''.stripIndent()
+        '''.stripIndent(true)
         buildFile << standardBuildFile
         buildFile << '''
         testSets {
@@ -126,7 +150,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         dependencies {
             integrationTestImplementation "org.junit.jupiter:junit-jupiter:5.4.2"
         }
-        '''.stripIndent()
+        '''.stripIndent(true)
         file('src/integrationTest/java/test/TestClass2.java') << junit4Test
         file('src/integrationTest/java/test/TestClass5.java') << junit5Test
 
@@ -142,7 +166,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         dependencies {
             testImplementation "junit:junit:4.12"
         }
-        '''.stripIndent()
+        '''.stripIndent(true)
         file('src/test/java/test/TestClass2.java') << junit4Test
         file('src/test/java/test/TestClass5.java') << junit5Test
 
@@ -160,7 +184,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
             testImplementation "org.junit.jupiter:junit-jupiter:5.4.2"
             testImplementation 'com.netflix.nebula:nebula-test:7.3.0'
         }
-        '''.stripIndent()
+        '''.stripIndent(true)
 
         then:
         ExecutionResult result = runTasksWithFailure('checkJUnitDependencies')
