@@ -64,7 +64,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
     private static final String ERROR_PRONE_JAVAC_VERSION = "9+181-r4173-1";
     private static final String PROP_ERROR_PRONE_APPLY = "errorProneApply";
     private static final String PROP_REFASTER_APPLY = "refasterApply";
-    private static final String DISABLE_PROPERY = "com.palantir.baseline-error-prone.disable";
+    private static final String DISABLE_PROPERTY = "com.palantir.baseline-error-prone.disable";
 
     @Override
     public void apply(Project project) {
@@ -194,8 +194,8 @@ public final class BaselineErrorProne implements Plugin<Project> {
             JavaCompile javaCompile,
             ErrorProneOptions errorProneOptions) {
 
-        if (project.hasProperty(DISABLE_PROPERY)) {
-            log.info("Disabling baseline-error-prone for {} due to {}", project, DISABLE_PROPERY);
+        if (project.hasProperty(DISABLE_PROPERTY)) {
+            log.info("Disabling baseline-error-prone for {} due to {}", project, DISABLE_PROPERTY);
             errorProneOptions.getEnabled().set(false);
         } else {
             errorProneOptions.getEnabled().set(true);
