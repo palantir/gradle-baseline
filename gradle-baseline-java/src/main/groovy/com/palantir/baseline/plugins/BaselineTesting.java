@@ -29,7 +29,7 @@ import org.gradle.api.Task;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedComponentResult;
 import org.gradle.api.plugins.JavaPlugin;
-import org.gradle.api.plugins.JavaPluginExtension;
+import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskContainer;
 import org.gradle.api.tasks.TaskProvider;
@@ -66,8 +66,8 @@ public final class BaselineTesting implements Plugin<Project> {
             TaskProvider<CheckJUnitDependencies> checkJUnitDependencies =
                     project.getTasks().register("checkJUnitDependencies", CheckJUnitDependencies.class);
 
-            project.getExtensions()
-                    .getByType(JavaPluginExtension.class)
+            project.getConvention()
+                    .getPlugin(JavaPluginConvention.class)
                     .getSourceSets()
                     .configureEach(sourceSet -> {
                         getTestTaskForSourceSet(project, sourceSet).ifPresent(testTask -> {
