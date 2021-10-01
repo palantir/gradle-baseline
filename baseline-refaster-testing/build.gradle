@@ -25,3 +25,5 @@ dependencies {
     api 'junit:junit'
     api 'org.assertj:assertj-core'
 }
+
+tasks.checkClassUniqueness.enabled = false

@@ -8,7 +8,7 @@ dependencies {
     implementation gradleApi()
     implementation 'org.apache.commons:commons-lang3'
     implementation 'com.diffplug.spotless:spotless-plugin-gradle'
-    implementation 'com.google.errorprone:error_prone_refaster'
+    implementation 'com.github.ben-manes.caffeine:caffeine'
     implementation 'com.google.guava:guava'
     implementation 'net.ltgt.gradle:gradle-errorprone-plugin'
     implementation 'org.apache.maven.shared:maven-dependency-analyzer'
