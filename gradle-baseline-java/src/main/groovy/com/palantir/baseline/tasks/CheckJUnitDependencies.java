@@ -20,6 +20,7 @@ import static java.util.stream.Collectors.toList;
 
 import com.google.common.base.Preconditions;
 import com.palantir.baseline.plugins.BaselineTesting;
+import com.palantir.baseline.util.VersionUtils;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -84,7 +85,8 @@ public class CheckJUnitDependencies extends DefaultTask {
                 .getAllComponents();
         boolean junitJupiterIsPresent = hasDep(deps, CheckJUnitDependencies::isJunitJupiter);
         boolean vintageEngineExists = hasDep(deps, CheckJUnitDependencies::isVintageEngine);
-        boolean spockDependency = hasDep(deps, CheckJUnitDependencies::isSpock);
+        boolean spock1Dependency = hasDep(deps, CheckJUnitDependencies::isSpock1);
+        boolean spock2OrGreaterDependency = hasDep(deps, CheckJUnitDependencies::isSpock2OrGreater);
         String testRuntimeOnly = ss.getRuntimeOnlyConfigurationName();
         boolean junitPlatformEnabled = BaselineTesting.useJUnitPlatformEnabled(task);
 
@@ -139,14 +141,21 @@ public class CheckJUnitDependencies extends DefaultTask {
         }
 
         // spock uses JUnit4 under the hood, so the vintage engine is critical
-        if (spockDependency && junitPlatformEnabled) {
+        if (spock1Dependency && junitPlatformEnabled) {
             Preconditions.checkState(
                     vintageEngineExists,
-                    "Tests may be silently not running! Spock dependency detected (which uses "
+                    "Tests may be silently not running! Spock 1.x dependency detected (which uses "
                             + "a JUnit4 Runner under the hood). Please add the following:\n\n"
                             + "    "
                             + testRuntimeOnly
                             + " 'org.junit.vintage:junit-vintage-engine'\n\n");
+        }
+
+        if (spock2OrGreaterDependency) {
+            Preconditions.checkState(
+                    junitPlatformEnabled,
+                    "Tests may silently be not running! Spock 2.x dependency "
+                            + "detected (which requires useJUnitPlatform() in order to run).");
         }
     }
 
@@ -155,7 +164,7 @@ public class CheckJUnitDependencies extends DefaultTask {
     }
 
     private boolean sourceSetMentionsJUnit4(SourceSet ss) {
-        return !ss.getAllJava()
+        return !ss.getAllSource()
                 .filter(file -> fileContainsSubstring(
                         file,
                         l -> l.contains("org.junit.Test")
@@ -165,7 +174,7 @@ public class CheckJUnitDependencies extends DefaultTask {
     }
 
     private boolean sourceSetMentionsJUnit5Api(SourceSet ss) {
-        return !ss.getAllJava()
+        return !ss.getAllSource()
                 .filter(file -> fileContainsSubstring(file, l -> l.contains("org.junit.jupiter.api.")))
                 .isEmpty();
     }
@@ -186,6 +195,14 @@ public class CheckJUnitDependencies extends DefaultTask {
 
     private static boolean isVintageEngine(ModuleVersionIdentifier dep) {
         return "org.junit.vintage".equals(dep.getGroup()) && "junit-vintage-engine".equals(dep.getName());
+    }
+
+    private static boolean isSpock1(ModuleVersionIdentifier dep) {
+        return isSpock(dep) && VersionUtils.majorVersionNumber(dep.getVersion()) <= 1;
+    }
+
+    private static boolean isSpock2OrGreater(ModuleVersionIdentifier dep) {
+        return isSpock(dep) && VersionUtils.majorVersionNumber(dep.getVersion()) >= 2;
     }
 
     private static boolean isSpock(ModuleVersionIdentifier dep) {
