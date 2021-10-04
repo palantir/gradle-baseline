@@ -163,6 +163,7 @@ public class CheckJUnitDependencies extends DefaultTask {
     }
 
     private boolean sourceSetMentionsJUnit4(SourceSet ss) {
+        // getAllJava() includes groovy sources too
         return !ss.getAllJava()
                 .filter(file -> fileContainsSubstring(
                         file,
