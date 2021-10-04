@@ -164,7 +164,7 @@ public class CheckJUnitDependencies extends DefaultTask {
     }
 
     private boolean sourceSetMentionsJUnit4(SourceSet ss) {
-        return !ss.getAllSource()
+        return !ss.getAllJava()
                 .filter(file -> fileContainsSubstring(
                         file,
                         l -> l.contains("org.junit.Test")
@@ -174,7 +174,7 @@ public class CheckJUnitDependencies extends DefaultTask {
     }
 
     private boolean sourceSetMentionsJUnit5Api(SourceSet ss) {
-        return !ss.getAllSource()
+        return !ss.getAllJava()
                 .filter(file -> fileContainsSubstring(file, l -> l.contains("org.junit.jupiter.api.")))
                 .isEmpty();
     }
