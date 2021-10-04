@@ -16,6 +16,7 @@
 
 package com.palantir.baseline
 
+
 import nebula.test.IntegrationSpec
 import nebula.test.functional.ExecutionResult
 import spock.lang.Unroll
@@ -208,5 +209,17 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
 
         def result4 = runTasksSuccessfully('test', '-Drecreate=true')
         result4.wasExecuted(':test')
+    }
+
+    def 'does not crash with non-utf8 resources'() {
+        when:
+        buildFile << standardBuildFile
+        file('src/test/resources/some-binary').newOutputStream().withCloseable {
+            // Invalid unicode sequence identifier
+            it.write([0xA0, 0xA1] as byte[])
+        }
+
+        then:
+        runTasksSuccessfully('checkJUnitDependencies')
     }
 }
