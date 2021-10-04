@@ -22,7 +22,6 @@ import com.google.common.base.Preconditions;
 import com.palantir.baseline.plugins.BaselineTesting;
 import com.palantir.baseline.util.VersionUtils;
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Files;
 import java.util.List;
 import java.util.Optional;
@@ -181,11 +180,9 @@ public class CheckJUnitDependencies extends DefaultTask {
 
     private boolean fileContainsSubstring(File file, Predicate<String> substring) {
         try (Stream<String> lines = Files.lines(file.toPath())) {
-            boolean hit = lines.anyMatch(substring::test);
-            getProject().getLogger().debug("[{}] {}", hit ? "hit" : "miss", file);
-            return hit;
-        } catch (IOException e) {
-            throw new RuntimeException("Unable to check file " + file, e);
+            return lines.anyMatch(substring);
+        } catch (Exception e) {
+            throw new RuntimeException("Unable to check file for junit dependencies: " + file, e);
         }
     }
 
