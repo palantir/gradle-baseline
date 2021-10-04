@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: Fix `MalformedInputException` when checking non-utf8 files for correct
+    junit dependencies.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1932
