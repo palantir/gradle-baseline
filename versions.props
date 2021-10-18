@@ -30,7 +30,7 @@ org.apache.commons:commons-lang3 = 3.12.0
 org.assertj:assertj-core = 3.21.0
 org.hamcrest:hamcrest-core = 2.2
 org.junit.jupiter:* = 5.8.0
-org.mockito:* = 3.12.4
+org.mockito:* = 4.0.0
 one.util:streamex = 0.7.3
 
 # dependency-upgrader:OFF
