@@ -32,6 +32,9 @@ import java.util.function.Predicate;
  * A compatibility wrapper around {@link com.sun.tools.javac.util.Filter}.
  * Adapted from {@link com.google.errorprone.util.ErrorProneScope} with additional methods.
  *
+ * Original code from (Apache-2.0 License):
+ * https://github.com/google/error-prone/blob/ce87ca1c7bb005371837b82ffa69041dd8a356e5/check_api/src/main/java/com/google/errorprone/util/ErrorProneScope.java
+ *
  * TODO(fwindheuser): Delete after upstreaming missing methods into "ErrorProneScope".
  */
 @SuppressWarnings("ThrowError")
