@@ -41,7 +41,6 @@ import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
 import com.sun.tools.javac.code.Type;
-import com.sun.tools.javac.util.Filter;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -130,9 +129,8 @@ public final class ClassInitializationDeadlock extends BugChecker implements Bug
             if (newClassSymbol.isPrivate()) {
                 return true;
             }
-            return !newClassSymbol
-                    .members()
-                    .getSymbols(CanBeExternallyInitializedFilter.INSTANCE, LookupKind.NON_RECURSIVE)
+            return !new BaselineErrorProneScope(newClassSymbol.members())
+                    .getSymbols(ClassInitializationDeadlock::canBeExternallyInitialized, LookupKind.NON_RECURSIVE)
                     .iterator()
                     .hasNext();
         }
@@ -229,28 +227,23 @@ public final class ClassInitializationDeadlock extends BugChecker implements Bug
                 && !ASTHelpers.isSameType(maybeSubtype, baseType, state);
     }
 
-    private enum CanBeExternallyInitializedFilter implements Filter<Symbol> {
-        INSTANCE;
-
-        @Override
-        public boolean accepts(Symbol symbol) {
-            switch (symbol.getKind()) {
-                case FIELD:
-                    // fall through
-                case METHOD:
-                    if (symbol.isStatic() && !symbol.isPrivate()) {
-                        return true;
-                    }
-                    break;
-                case CONSTRUCTOR:
-                    if (!symbol.isPrivate()) {
-                        return true;
-                    }
-                    break;
-                default:
-                    // fall through
-            }
-            return false;
+    private static boolean canBeExternallyInitialized(Symbol symbol) {
+        switch (symbol.getKind()) {
+            case FIELD:
+                // fall through
+            case METHOD:
+                if (symbol.isStatic() && !symbol.isPrivate()) {
+                    return true;
+                }
+                break;
+            case CONSTRUCTOR:
+                if (!symbol.isPrivate()) {
+                    return true;
+                }
+                break;
+            default:
+                // fall through
         }
+        return false;
     }
 }
