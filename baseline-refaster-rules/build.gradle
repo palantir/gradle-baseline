@@ -18,3 +18,4 @@ tasks.compileRefaster.enabled = false
 tasks.compileJava.onlyIf { project.properties.refasterApply == null }
 // Do not apply errorprone rules
 tasks.compileJava.options.errorprone.enabled = false
+tasks.checkClassUniqueness.enabled = false
