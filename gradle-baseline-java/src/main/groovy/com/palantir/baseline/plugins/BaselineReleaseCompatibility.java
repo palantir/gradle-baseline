@@ -17,7 +17,6 @@
 package com.palantir.baseline.plugins;
 
 import com.google.common.collect.ImmutableList;
-import com.palantir.baseline.extensions.BaselineJavaVersionExtension;
 import java.util.Collections;
 import java.util.Optional;
 import org.gradle.api.JavaVersion;
@@ -25,7 +24,6 @@ import org.gradle.api.Project;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.jvm.toolchain.JavaCompiler;
 import org.gradle.jvm.toolchain.JavaInstallationMetadata;
-import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.process.CommandLineArgumentProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -60,6 +58,9 @@ public final class BaselineReleaseCompatibility extends AbstractBaselinePlugin {
 
         @Override
         public Iterable<String> asArguments() {
+            if (javaCompile.getProject().getPlugins().hasPlugin(BaselineJavaVersion.class)) {
+                return Collections.emptyList();
+            }
             JavaVersion compilerVersion = JavaVersion.current();
             if (!compilerVersion.isJava9Compatible()) {
                 log.debug(
@@ -77,17 +78,6 @@ public final class BaselineReleaseCompatibility extends AbstractBaselinePlugin {
                         javaCompile.getName(),
                         javaCompile.getProject());
                 return Collections.emptyList();
-            }
-
-            BaselineJavaVersionExtension maybeExtension =
-                    javaCompile.getProject().getExtensions().findByType(BaselineJavaVersionExtension.class);
-            if (maybeExtension != null) {
-                JavaLanguageVersion maybeTarget = maybeExtension.target().getOrNull();
-                if (maybeTarget != null) {
-                    return ImmutableList.of("--release", Integer.toString(maybeTarget.asInt()));
-                } else {
-                    log.debug("BaselineJavaVersionExtension.target was not set");
-                }
             }
 
             Optional<JavaVersion> taskTarget =

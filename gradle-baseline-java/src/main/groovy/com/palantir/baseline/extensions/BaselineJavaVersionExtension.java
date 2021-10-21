@@ -31,7 +31,7 @@ public class BaselineJavaVersionExtension {
         target = project.getObjects().property(JavaLanguageVersion.class);
         runtime = project.getObjects().property(JavaLanguageVersion.class);
         // Runtime defaults to the target value
-        runtime.set(target);
+        runtime.convention(target);
     }
 
     /** Target {@link JavaLanguageVersion} for compilation. */

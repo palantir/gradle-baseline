@@ -38,24 +38,22 @@ public final class BaselineJavaVersions implements Plugin<Project> {
         }
         BaselineJavaVersionsExtension rootExtension =
                 project.getExtensions().create(EXTENSION_NAME, BaselineJavaVersionsExtension.class, project);
-        project.allprojects(proj -> {
-            proj.getPluginManager().withPlugin("java", unused -> {
-                proj.getPluginManager().apply(BaselineJavaVersion.class);
-                BaselineJavaVersionExtension projectVersions =
-                        proj.getExtensions().getByType(BaselineJavaVersionExtension.class);
-                if (!projectVersions.target().isPresent()) {
-                    projectVersions.target().set(proj.provider(() -> {
-                        PublishingExtension publishing = proj.getExtensions().findByType(PublishingExtension.class);
-                        boolean library = publishing == null
-                                || publishing.getPublications().stream()
-                                        .anyMatch(pub -> isLibraryPublication(proj, pub));
-                        return library
-                                ? rootExtension.libraryTarget().get()
-                                : rootExtension.distributionTarget().get();
-                    }));
-                }
-            });
-        });
+        project.allprojects(proj -> proj.getPluginManager().withPlugin("java", unused -> {
+            proj.getPluginManager().apply(BaselineJavaVersion.class);
+            BaselineJavaVersionExtension projectVersions =
+                    proj.getExtensions().getByType(BaselineJavaVersionExtension.class);
+            projectVersions
+                    .target()
+                    .set(proj.provider(() -> isLibrary(proj)
+                            ? rootExtension.libraryTarget().get()
+                            : rootExtension.distributionTarget().get()));
+        }));
+    }
+
+    private static boolean isLibrary(Project project) {
+        PublishingExtension publishing = project.getExtensions().findByType(PublishingExtension.class);
+        return publishing != null
+                && publishing.getPublications().stream().anyMatch(pub -> isLibraryPublication(project, pub));
     }
 
     private static boolean isLibraryPublication(Project project, Publication publication) {

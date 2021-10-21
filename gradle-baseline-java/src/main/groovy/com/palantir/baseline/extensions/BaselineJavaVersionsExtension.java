@@ -33,9 +33,9 @@ public class BaselineJavaVersionsExtension {
         this.distributionTarget = project.getObjects().property(JavaLanguageVersion.class);
         this.runtime = project.getObjects().property(JavaLanguageVersion.class);
         // distribution defaults to the library value
-        distributionTarget.set(libraryTarget);
+        distributionTarget.convention(libraryTarget);
         // runtime defaults to the distribution value
-        runtime.set(distributionTarget);
+        runtime.convention(distributionTarget);
     }
 
     /** Target {@link JavaLanguageVersion} for compilation of libraries that are published. */
@@ -78,11 +78,5 @@ public class BaselineJavaVersionsExtension {
 
     public final void setRuntime(int value) {
         setRuntime(JavaLanguageVersion.of(value));
-    }
-
-    public final boolean isEmpty() {
-        return !libraryTarget().isPresent()
-                && !distributionTarget().isPresent()
-                && !runtime().isPresent();
     }
 }

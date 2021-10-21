@@ -17,9 +17,19 @@
 package com.palantir.baseline.plugins;
 
 import com.palantir.baseline.extensions.BaselineJavaVersionExtension;
+import java.util.Objects;
+import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
+import org.gradle.api.plugins.JavaPluginExtension;
+import org.gradle.api.specs.Spec;
+import org.gradle.api.tasks.TaskCollection;
 import org.gradle.api.tasks.compile.JavaCompile;
+import org.gradle.api.tasks.javadoc.Javadoc;
+import org.gradle.api.tasks.testing.Test;
+import org.gradle.jvm.toolchain.JavaToolchainService;
+import org.gradle.jvm.toolchain.JavaToolchainSpec;
 
 public final class BaselineJavaVersion implements Plugin<Project> {
 
@@ -29,12 +39,75 @@ public final class BaselineJavaVersion implements Plugin<Project> {
     public void apply(Project project) {
         BaselineJavaVersionExtension extension =
                 project.getExtensions().create(EXTENSION_NAME, BaselineJavaVersionExtension.class, project);
-        project.getTasks().withType(JavaCompile.class).configureEach(task -> {
-            if (extension.target().isPresent()) {
-                String stringValue = extension.target().get().toString();
-                task.setSourceCompatibility(stringValue);
-                task.setTargetCompatibility(stringValue);
-            }
+        project.getPluginManager().withPlugin("java", unused -> {
+            JavaPluginExtension javaPluginExtension = project.getExtensions().getByType(JavaPluginExtension.class);
+            JavaToolchainService javaToolchainService = project.getExtensions().getByType(JavaToolchainService.class);
+
+            // Set the default project toolchain
+            javaPluginExtension.toolchain(new Action<JavaToolchainSpec>() {
+                @Override
+                public void execute(JavaToolchainSpec javaToolchainSpec) {
+                    javaToolchainSpec.getLanguageVersion().set(extension.runtime());
+                }
+            });
+
+            project.getTasks().withType(JavaCompile.class, new Action<JavaCompile>() {
+                @Override
+                public void execute(JavaCompile javaCompile) {
+                    javaCompile.getJavaCompiler().set(javaToolchainService.compilerFor(new Action<JavaToolchainSpec>() {
+                        @Override
+                        public void execute(JavaToolchainSpec javaToolchainSpec) {
+                            javaToolchainSpec.getLanguageVersion().set(extension.target());
+                        }
+                    }));
+                }
+            });
+
+            project.getTasks().withType(Javadoc.class, new Action<Javadoc>() {
+                @Override
+                public void execute(Javadoc javadoc) {
+                    javadoc.getJavadocTool().set(javaToolchainService.javadocToolFor(new Action<JavaToolchainSpec>() {
+                        @Override
+                        public void execute(JavaToolchainSpec javaToolchainSpec) {
+                            javaToolchainSpec.getLanguageVersion().set(extension.target());
+                        }
+                    }));
+                }
+            });
+
+            TaskCollection<?> testTask = project.getTasks().matching(new Spec<Task>() {
+                @Override
+                public boolean isSatisfiedBy(Task element) {
+                    return "test".equals(element.getName()) && element instanceof Test;
+                }
+            });
+            Task testTargetVersion = project.getTasks().create("testTargetVersion", Test.class, new Action<Test>() {
+                @Override
+                public void execute(Test test) {
+                    // additional test task is only run if runtime and target versions differ
+                    test.onlyIf(new Spec<Task>() {
+                        @Override
+                        public boolean isSatisfiedBy(Task element) {
+                            return !Objects.equals(
+                                            extension.target().get(),
+                                            extension.runtime().get())
+                                    && !testTask.isEmpty();
+                        }
+                    });
+                    test.getJavaLauncher().set(javaToolchainService.launcherFor(new Action<JavaToolchainSpec>() {
+                        @Override
+                        public void execute(JavaToolchainSpec javaToolchainSpec) {
+                            javaToolchainSpec.getLanguageVersion().set(extension.target());
+                        }
+                    }));
+                }
+            });
+            testTask.configureEach(new Action<Task>() {
+                @Override
+                public void execute(Task task) {
+                    task.dependsOn(testTargetVersion);
+                }
+            });
         });
     }
 }
