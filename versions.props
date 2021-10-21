@@ -1,4 +1,3 @@
-com.diffplug.spotless:spotless-plugin-gradle = 5.17.0
 com.google.auto.service:auto-service = 1.0
 com.google.errorprone:error_prone_annotations = 2.9.0
 com.google.errorprone:error_prone_core = 2.9.0
@@ -37,3 +36,6 @@ one.util:streamex = 0.7.3
 # Don't upgrade, we will remove this in a future release.
 # Users should depend on this plugin directly such that it will get updated by excavator.
 com.palantir.javaformat:gradle-palantir-java-format = 1.1.0
+# Pulls in a newer version of groovy-xml which causes failures
+com.diffplug.spotless:spotless-plugin-gradle = 5.15.0
+# dependency-upgrader:ON
