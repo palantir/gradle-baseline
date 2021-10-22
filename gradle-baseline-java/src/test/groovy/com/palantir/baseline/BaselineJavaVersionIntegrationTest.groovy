@@ -22,6 +22,9 @@ import nebula.test.functional.ExecutionResult
 import spock.lang.Unroll
 
 class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
+    private static final int JAVA_8_BYTECODE = 52
+    private static final int JAVA_11_BYTECODE = 55
+
     def standardBuildFile = '''
         plugins {
             id 'java-library'
@@ -82,9 +85,11 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         }
         '''.stripIndent(true)
         file('src/main/java/Main.java') << java11CompatibleCode
+        File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
 
         then:
         runTasksSuccessfully('compileJava')
+        getBytecodeVersion(compiledClass) == JAVA_11_BYTECODE
     }
 
     def 'java 11 execution succeeds on java 11'() {
@@ -96,10 +101,12 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         }
         '''.stripIndent(true)
         file('src/main/java/Main.java') << java11CompatibleCode
+        File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
 
         then:
         ExecutionResult result = runTasksSuccessfully('run')
         result.standardOutput.contains 'jdk11 features on runtime 11'
+        getBytecodeVersion(compiledClass) == JAVA_11_BYTECODE
     }
 
     def 'java 11 execution succeeds on java 17'() {
@@ -112,10 +119,12 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         }
         '''.stripIndent(true)
         file('src/main/java/Main.java') << java11CompatibleCode
+        File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
 
         then:
         ExecutionResult result = runTasksSuccessfully('run')
         result.standardOutput.contains 'jdk11 features on runtime 17'
+        getBytecodeVersion(compiledClass) == JAVA_11_BYTECODE
     }
 
     def 'java 8 execution succeeds on java 8'() {
@@ -143,9 +152,49 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         }
         '''.stripIndent(true)
         file('src/main/java/Main.java') << java8CompatibleCode
+        File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
 
         then:
         ExecutionResult result = runTasksSuccessfully('run')
         result.standardOutput.contains 'jdk8 features on runtime 11'
+        getBytecodeVersion(compiledClass) == JAVA_8_BYTECODE
+    }
+
+    def 'JavaPluginConvention.getTargetCompatibility() produces the runtime java version'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << '''
+        javaVersions {
+            libraryTarget = 11
+            runtime = 17
+        }
+        task printTargetCompatibility() {
+            doLast {
+                System.out.println("[[[" + project.getConvention()
+                .getPlugin(org.gradle.api.plugins.JavaPluginConvention.class)
+                .getTargetCompatibility() + "]]]")
+            }
+        }
+        '''.stripIndent(true)
+
+        then:
+        ExecutionResult result = runTasksSuccessfully('printTargetCompatibility')
+        result.standardOutput.contains '[[[17]]]'
+    }
+
+    private static final int BYTECODE_IDENTIFIER = (int) 0xCAFEBABE
+
+    // See http://illegalargumentexception.blogspot.com/2009/07/java-finding-class-versions.html
+    private static int getBytecodeVersion(File file) {
+        try (InputStream stream = new FileInputStream(file)
+             DataInputStream dis = new DataInputStream(stream)) {
+            int magic = dis.readInt()
+            if (magic != BYTECODE_IDENTIFIER) {
+                throw new IllegalArgumentException("File " + file + " does not appear to be java bytecode")
+            }
+            // skip the minor version
+            dis.readShort()
+            return 0xFFFF & dis.readShort()
+        }
     }
 }
