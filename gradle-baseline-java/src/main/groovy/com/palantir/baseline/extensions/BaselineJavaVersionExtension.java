@@ -21,6 +21,10 @@ import org.gradle.api.Project;
 import org.gradle.api.provider.Property;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 
+/**
+ * Extension named {@code javaVersion} used to set the
+ * target and runtime java versions used for a single project.
+ */
 public class BaselineJavaVersionExtension {
 
     private final Property<JavaLanguageVersion> target;

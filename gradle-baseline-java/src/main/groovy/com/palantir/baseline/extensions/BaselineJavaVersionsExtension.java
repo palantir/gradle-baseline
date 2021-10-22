@@ -21,6 +21,10 @@ import org.gradle.api.Project;
 import org.gradle.api.provider.Property;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 
+/**
+ * Extension named {@code javaVersions} on the root project used to configure all java modules
+ * with consistent java toolchains.
+ */
 public class BaselineJavaVersionsExtension {
 
     private final Property<JavaLanguageVersion> libraryTarget;
