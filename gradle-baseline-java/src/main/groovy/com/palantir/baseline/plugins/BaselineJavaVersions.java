@@ -47,6 +47,7 @@ public final class BaselineJavaVersions implements Plugin<Project> {
                     .set(proj.provider(() -> isLibrary(proj)
                             ? rootExtension.libraryTarget().get()
                             : rootExtension.distributionTarget().get()));
+            projectVersions.runtime().set(rootExtension.runtime());
         }));
     }
 
