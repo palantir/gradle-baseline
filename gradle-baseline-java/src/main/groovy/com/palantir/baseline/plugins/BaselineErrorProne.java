@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.MoreCollectors;
 import com.palantir.baseline.extensions.BaselineErrorProneExtension;
+import com.palantir.baseline.extensions.BaselineJavaVersionExtension;
 import com.palantir.baseline.tasks.CompileRefasterTask;
 import java.io.File;
 import java.util.AbstractList;
@@ -136,6 +137,19 @@ public final class BaselineErrorProne implements Plugin<Project> {
                                         .setBootClasspath(new LazyConfigurationList(errorProneFiles)));
                             });
         }
+
+        project.getPluginManager().withPlugin("com.palantir.baseline-java-version", unused -> {
+            BaselineJavaVersionExtension versionExtension =
+                    project.getExtensions().getByType(BaselineJavaVersionExtension.class);
+            project.getDependencies()
+                    .addProvider(
+                            ErrorPronePlugin.JAVAC_CONFIGURATION_NAME,
+                            versionExtension
+                                    .target()
+                                    .map(target -> target.asInt() == 8
+                                            ? "com.google.errorprone:javac:" + ERROR_PRONE_JAVAC_VERSION
+                                            : null));
+        });
 
         project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
             ((ExtensionAware) javaCompile.getOptions())
