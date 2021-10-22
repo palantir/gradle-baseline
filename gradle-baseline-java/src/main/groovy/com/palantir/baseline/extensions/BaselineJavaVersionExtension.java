@@ -43,8 +43,8 @@ public class BaselineJavaVersionExtension {
         return target;
     }
 
-    public final void setTarget(JavaLanguageVersion value) {
-        target.set(value);
+    public final void setTarget(int value) {
+        target.set(JavaLanguageVersion.of(value));
     }
 
     /** Runtime {@link JavaLanguageVersion} for testing and distributions. */
@@ -52,7 +52,7 @@ public class BaselineJavaVersionExtension {
         return runtime;
     }
 
-    public final void setRuntime(JavaLanguageVersion value) {
-        runtime.set(value);
+    public final void setRuntime(int value) {
+        runtime.set(JavaLanguageVersion.of(value));
     }
 }

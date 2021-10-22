@@ -47,12 +47,8 @@ public class BaselineJavaVersionsExtension {
         return libraryTarget;
     }
 
-    public final void setLibraryTarget(JavaLanguageVersion value) {
-        libraryTarget.set(value);
-    }
-
     public final void setLibraryTarget(int value) {
-        setLibraryTarget(JavaLanguageVersion.of(value));
+        libraryTarget.set(JavaLanguageVersion.of(value));
     }
 
     /**
@@ -63,12 +59,8 @@ public class BaselineJavaVersionsExtension {
         return distributionTarget;
     }
 
-    public final void setDistributionTarget(JavaLanguageVersion value) {
-        distributionTarget.set(value);
-    }
-
     public final void setDistributionTarget(int value) {
-        setDistributionTarget(JavaLanguageVersion.of(value));
+        distributionTarget.set(JavaLanguageVersion.of(value));
     }
 
     /** Runtime {@link JavaLanguageVersion} for testing and packaging distributions. */
@@ -76,11 +68,7 @@ public class BaselineJavaVersionsExtension {
         return runtime;
     }
 
-    public final void setRuntime(JavaLanguageVersion value) {
-        runtime.set(value);
-    }
-
     public final void setRuntime(int value) {
-        setRuntime(JavaLanguageVersion.of(value));
+        runtime.set(JavaLanguageVersion.of(value));
     }
 }
