@@ -16,10 +16,12 @@
 
 package com.palantir.baseline.plugins;
 
+import com.google.common.collect.ImmutableList;
 import com.palantir.baseline.extensions.BaselineJavaVersionExtension;
 import com.palantir.baseline.extensions.BaselineJavaVersionsExtension;
 import java.util.Objects;
 import org.gradle.api.GradleException;
+import org.gradle.api.Named;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.publish.Publication;
@@ -53,8 +55,31 @@ public final class BaselineJavaVersions implements Plugin<Project> {
 
     private static boolean isLibrary(Project project) {
         PublishingExtension publishing = project.getExtensions().findByType(PublishingExtension.class);
-        return publishing != null
-                && publishing.getPublications().stream().anyMatch(pub -> isLibraryPublication(project, pub));
+        if (publishing == null) {
+            project.getLogger()
+                    .debug(
+                            "Project '{}' is considered a distribution, not a library, because "
+                                    + "it doesn't define any publishing extensions",
+                            project.getDisplayName());
+            return false;
+        }
+        ImmutableList<String> jarPublications = publishing.getPublications().stream()
+                .filter(pub -> isLibraryPublication(project, pub))
+                .map(Named::getName)
+                .collect(ImmutableList.toImmutableList());
+        if (jarPublications.isEmpty()) {
+            project.getLogger()
+                    .debug(
+                            "Project '{}' is considered a distribution because it does not publish jars",
+                            project.getDisplayName());
+            return false;
+        }
+        project.getLogger()
+                .debug(
+                        "Project '{}' is considered a library because it publishes jars: {}",
+                        project.getDisplayName(),
+                        jarPublications);
+        return true;
     }
 
     private static boolean isLibraryPublication(Project project, Publication publication) {
