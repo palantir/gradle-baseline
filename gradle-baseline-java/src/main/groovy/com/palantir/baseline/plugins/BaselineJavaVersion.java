@@ -25,8 +25,10 @@ import org.gradle.api.Task;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.TaskCollection;
+import org.gradle.api.tasks.compile.GroovyCompile;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
+import org.gradle.api.tasks.scala.ScalaCompile;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.jvm.toolchain.JavaToolchainService;
 import org.gradle.jvm.toolchain.JavaToolchainSpec;
@@ -60,6 +62,34 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                             javaToolchainSpec.getLanguageVersion().set(extension.target());
                         }
                     }));
+                }
+            });
+
+            project.getTasks().withType(GroovyCompile.class, new Action<GroovyCompile>() {
+                @Override
+                public void execute(GroovyCompile groovyCompile) {
+                    groovyCompile
+                            .getJavaLauncher()
+                            .set(javaToolchainService.launcherFor(new Action<JavaToolchainSpec>() {
+                                @Override
+                                public void execute(JavaToolchainSpec javaToolchainSpec) {
+                                    javaToolchainSpec.getLanguageVersion().set(extension.target());
+                                }
+                            }));
+                }
+            });
+
+            project.getTasks().withType(ScalaCompile.class, new Action<ScalaCompile>() {
+                @Override
+                public void execute(ScalaCompile scalaCompile) {
+                    scalaCompile
+                            .getJavaLauncher()
+                            .set(javaToolchainService.launcherFor(new Action<JavaToolchainSpec>() {
+                                @Override
+                                public void execute(JavaToolchainSpec javaToolchainSpec) {
+                                    javaToolchainSpec.getLanguageVersion().set(extension.target());
+                                }
+                            }));
                 }
             });
 
