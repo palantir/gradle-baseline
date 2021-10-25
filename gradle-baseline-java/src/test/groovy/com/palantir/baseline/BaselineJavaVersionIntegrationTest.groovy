@@ -61,9 +61,13 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         }
         '''.stripIndent(true)
 
+    def setup() {
+        setFork(true)
+        buildFile << standardBuildFile
+    }
+
     def 'java 11 compilation fails targeting java 8'() {
         when:
-        buildFile << standardBuildFile
         buildFile << '''
         javaVersions {
             libraryTarget = 8
@@ -78,7 +82,6 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
 
     def 'java 11 compilation succeeds targeting java 11'() {
         when:
-        buildFile << standardBuildFile
         buildFile << '''
         javaVersions {
             libraryTarget = 11
@@ -94,7 +97,6 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
 
     def 'java 11 execution succeeds on java 11'() {
         when:
-        buildFile << standardBuildFile
         buildFile << '''
         javaVersions {
             libraryTarget = 11
@@ -111,7 +113,6 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
 
     def 'java 11 execution succeeds on java 17'() {
         when:
-        buildFile << standardBuildFile
         buildFile << '''
         javaVersions {
             libraryTarget = 11
@@ -129,7 +130,6 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
 
     def 'java 8 execution succeeds on java 8'() {
         when:
-        buildFile << standardBuildFile
         buildFile << '''
         javaVersions {
             libraryTarget = 8
@@ -144,7 +144,6 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
 
     def 'java 8 execution succeeds on java 11'() {
         when:
-        buildFile << standardBuildFile
         buildFile << '''
         javaVersions {
             libraryTarget = 8
@@ -162,7 +161,6 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
 
     def 'JavaPluginConvention.getTargetCompatibility() produces the runtime java version'() {
         when:
-        buildFile << standardBuildFile
         buildFile << '''
         javaVersions {
             libraryTarget = 11
