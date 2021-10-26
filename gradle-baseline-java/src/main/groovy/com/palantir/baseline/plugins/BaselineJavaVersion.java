@@ -17,12 +17,19 @@
 package com.palantir.baseline.plugins;
 
 import com.palantir.baseline.extensions.BaselineJavaVersionExtension;
+import javax.inject.Inject;
 import org.gradle.api.Action;
+import org.gradle.api.DefaultTask;
+import org.gradle.api.GradleException;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.JavaPluginExtension;
+import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.CacheableTask;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.JavaExec;
+import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.compile.GroovyCompile;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
@@ -58,6 +65,17 @@ public final class BaselineJavaVersion implements Plugin<Project> {
 
             // Execution tasks (using the runtime version)
             configureExecutionTasks(project, extension.runtime());
+
+            // Validation
+            project.getTasks()
+                    .register("checkJavaVersions", CheckJavaVersionsTask.class, new Action<CheckJavaVersionsTask>() {
+                        @Override
+                        public void execute(CheckJavaVersionsTask task) {
+                            task.getTargetVersion().set(extension.target());
+                            task.getRuntimeVersion().set(extension.runtime());
+                            project.getTasks().getByName("check").dependsOn(task);
+                        }
+                    });
         });
     }
 
@@ -151,5 +169,42 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                 }));
             }
         });
+    }
+
+    @CacheableTask
+    @SuppressWarnings("checkstyle:DesignForExtension")
+    public static class CheckJavaVersionsTask extends DefaultTask {
+
+        private final Property<JavaLanguageVersion> targetVersion;
+        private final Property<JavaLanguageVersion> runtimeVersion;
+
+        @Inject
+        public CheckJavaVersionsTask() {
+            setGroup("Verification");
+            setDescription("Ensures configured java versions are compatible: "
+                    + "The runtime version must be greater than or equal to the target version.");
+            targetVersion = getProject().getObjects().property(JavaLanguageVersion.class);
+            runtimeVersion = getProject().getObjects().property(JavaLanguageVersion.class);
+        }
+
+        @Input
+        public Property<JavaLanguageVersion> getTargetVersion() {
+            return targetVersion;
+        }
+
+        @Input
+        public Property<JavaLanguageVersion> getRuntimeVersion() {
+            return runtimeVersion;
+        }
+
+        @TaskAction
+        public final void checkJavaVersions() {
+            if (getTargetVersion().get().asInt() > getRuntimeVersion().get().asInt()) {
+                throw new GradleException(String.format(
+                        "The requested compilation target Java version (%s) must not "
+                                + "exceed the requested runtime Java version (%s)",
+                        getTargetVersion().get(), getRuntimeVersion().get()));
+            }
+        }
     }
 }

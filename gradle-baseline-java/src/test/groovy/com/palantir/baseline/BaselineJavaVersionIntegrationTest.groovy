@@ -180,6 +180,33 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         result.standardOutput.contains '[[[11]]]'
     }
 
+    def 'verification should fail when target exceeds the runtime version'() {
+        when:
+        buildFile << '''
+        javaVersions {
+            libraryTarget = 17
+            runtime = 11
+        }
+        '''.stripIndent(true)
+
+        then:
+        ExecutionResult result = runTasksWithFailure('checkJavaVersions')
+        result.standardError.contains 'The requested compilation target'
+    }
+
+    def 'verification should succeed when target and runtime versions match'() {
+        when:
+        buildFile << '''
+        javaVersions {
+            libraryTarget = 17
+            runtime = 17
+        }
+        '''.stripIndent(true)
+
+        then:
+        runTasksSuccessfully('checkJavaVersions')
+    }
+
     private static final int BYTECODE_IDENTIFIER = (int) 0xCAFEBABE
 
     // See http://illegalargumentexception.blogspot.com/2009/07/java-finding-class-versions.html
