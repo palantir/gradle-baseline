@@ -17,19 +17,14 @@
 package com.palantir.baseline.plugins;
 
 import com.palantir.baseline.extensions.BaselineJavaVersionExtension;
-import java.util.Objects;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.Task;
 import org.gradle.api.plugins.JavaPluginExtension;
-import org.gradle.api.specs.Spec;
-import org.gradle.api.tasks.TaskCollection;
 import org.gradle.api.tasks.compile.GroovyCompile;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradle.api.tasks.scala.ScalaCompile;
-import org.gradle.api.tasks.testing.Test;
 import org.gradle.jvm.toolchain.JavaToolchainService;
 import org.gradle.jvm.toolchain.JavaToolchainSpec;
 
@@ -102,40 +97,6 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                             javaToolchainSpec.getLanguageVersion().set(extension.target());
                         }
                     }));
-                }
-            });
-
-            TaskCollection<?> testTask = project.getTasks().matching(new Spec<Task>() {
-                @Override
-                public boolean isSatisfiedBy(Task element) {
-                    return "test".equals(element.getName()) && element instanceof Test;
-                }
-            });
-            Task testTargetVersion = project.getTasks().create("testTargetVersion", Test.class, new Action<Test>() {
-                @Override
-                public void execute(Test test) {
-                    // additional test task is only run if runtime and target versions differ
-                    test.onlyIf(new Spec<Task>() {
-                        @Override
-                        public boolean isSatisfiedBy(Task element) {
-                            return !Objects.equals(
-                                            extension.target().get(),
-                                            extension.runtime().get())
-                                    && !testTask.isEmpty();
-                        }
-                    });
-                    test.getJavaLauncher().set(javaToolchainService.launcherFor(new Action<JavaToolchainSpec>() {
-                        @Override
-                        public void execute(JavaToolchainSpec javaToolchainSpec) {
-                            javaToolchainSpec.getLanguageVersion().set(extension.target());
-                        }
-                    }));
-                }
-            });
-            testTask.configureEach(new Action<Task>() {
-                @Override
-                public void execute(Task task) {
-                    task.dependsOn(testTargetVersion);
                 }
             });
         });
