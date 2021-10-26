@@ -51,12 +51,13 @@ public final class BaselineJavaVersion implements Plugin<Project> {
         project.getPluginManager().withPlugin("java", unused -> {
             JavaPluginExtension javaPluginExtension = project.getExtensions().getByType(JavaPluginExtension.class);
 
-            // Set the default project toolchain to the compilation target version, this indirectly
-            // sets the value returned by 'getTargetCompatibility'
+            // Set the default project toolchain to the runtime target version, this indirectly
+            // sets the value returned by 'getTargetCompatibility', which is used by sls-packaging
+            // to request a specific java feature release.
             javaPluginExtension.toolchain(new Action<JavaToolchainSpec>() {
                 @Override
                 public void execute(JavaToolchainSpec javaToolchainSpec) {
-                    javaToolchainSpec.getLanguageVersion().set(extension.target());
+                    javaToolchainSpec.getLanguageVersion().set(extension.runtime());
                 }
             });
 

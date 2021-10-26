@@ -159,7 +159,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         getBytecodeVersion(compiledClass) == JAVA_8_BYTECODE
     }
 
-    def 'JavaPluginConvention.getTargetCompatibility() produces the target java version'() {
+    def 'JavaPluginConvention.getTargetCompatibility() produces the runtime java version'() {
         when:
         buildFile << '''
         javaVersions {
@@ -177,7 +177,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
 
         then:
         ExecutionResult result = runTasksSuccessfully('printTargetCompatibility')
-        result.standardOutput.contains '[[[11]]]'
+        result.standardOutput.contains '[[[17]]]'
     }
 
     def 'verification should fail when target exceeds the runtime version'() {
