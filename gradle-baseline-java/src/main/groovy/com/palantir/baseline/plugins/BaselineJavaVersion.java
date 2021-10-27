@@ -200,11 +200,19 @@ public final class BaselineJavaVersion implements Plugin<Project> {
 
         @TaskAction
         public final void checkJavaVersions() {
-            if (getTargetVersion().get().asInt() > getRuntimeVersion().get().asInt()) {
+            JavaLanguageVersion target = getTargetVersion().get();
+            JavaLanguageVersion runtime = getRuntimeVersion().get();
+            getLogger()
+                    .debug(
+                            "BaselineJavaVersion configured project {} with target version {} and runtime version {}",
+                            getProject(),
+                            target,
+                            runtime);
+            if (target.asInt() > runtime.asInt()) {
                 throw new GradleException(String.format(
                         "The requested compilation target Java version (%s) must not "
                                 + "exceed the requested runtime Java version (%s)",
-                        getTargetVersion().get(), getRuntimeVersion().get()));
+                        target, runtime));
             }
         }
     }

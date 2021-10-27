@@ -59,6 +59,11 @@ public final class BaselineReleaseCompatibility extends AbstractBaselinePlugin {
         @Override
         public Iterable<String> asArguments() {
             if (javaCompile.getProject().getPlugins().hasPlugin(BaselineJavaVersion.class)) {
+                log.debug(
+                        "BaselineReleaseCompatibility is a no-op for {} in {} because the {} plugin is present",
+                        javaCompile.getName(),
+                        javaCompile.getProject(),
+                        BaselineJavaVersion.class);
                 return Collections.emptyList();
             }
             JavaVersion compilerVersion = JavaVersion.current();
@@ -102,11 +107,6 @@ public final class BaselineReleaseCompatibility extends AbstractBaselinePlugin {
             }
 
             return ImmutableList.of("--release", target.getMajorVersion());
-        }
-
-        // The --release flag was added in Java 9: https://openjdk.java.net/jeps/247
-        private static boolean supportsReleaseFlag(JavaVersion jdkVersion) {
-            return jdkVersion.isJava9Compatible();
         }
     }
 
