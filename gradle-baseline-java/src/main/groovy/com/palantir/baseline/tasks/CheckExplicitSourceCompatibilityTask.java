@@ -16,6 +16,7 @@
 
 package com.palantir.baseline.tasks;
 
+import com.palantir.baseline.plugins.BaselineJavaVersion;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
@@ -58,6 +59,12 @@ public class CheckExplicitSourceCompatibilityTask extends DefaultTask {
         this.shouldFix = objectFactory.property(Boolean.class);
         this.shouldFix.set(false);
 
+        onlyIf(new Spec<Task>() {
+            @Override
+            public boolean isSatisfiedBy(Task task) {
+                return !getProject().getPlugins().hasPlugin(BaselineJavaVersion.class);
+            }
+        });
         onlyIf(new Spec<Task>() {
             @Override
             public boolean isSatisfiedBy(Task element) {
