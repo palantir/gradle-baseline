@@ -32,8 +32,6 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.java.archives.Manifest;
 import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.SourceSet;
-import org.gradle.api.tasks.SourceSetContainer;
-import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.jvm.tasks.Jar;
 import org.gradle.process.CommandLineArgumentProvider;
@@ -56,21 +54,21 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
         project.getPluginManager().withPlugin("java", unused -> {
             BaselineExportsExtension extension =
                     project.getExtensions().create(EXTENSION_NAME, BaselineExportsExtension.class, project);
-            project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
-                project.getTasks()
-                        .named(sourceSet.getCompileJavaTaskName(), JavaCompile.class)
-                        .get()
-                        .getOptions()
-                        .getCompilerArgumentProviders()
-                        // Use an anonymous class because tasks with lambda inputs cannot be cached
-                        .add(new CommandLineArgumentProvider() {
-                            @Override
-                            public Iterable<String> asArguments() {
-                                // Annotation processors are executed at compile time
-                                return collectAnnotationProcessorExports(project, extension, sourceSet);
-                            }
-                        });
-            });
+            //            project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
+            //                project.getTasks()
+            //                        .named(sourceSet.getCompileJavaTaskName(), JavaCompile.class)
+            //                        .get()
+            //                        .getOptions()
+            //                        .getCompilerArgumentProviders()
+            //                        // Use an anonymous class because tasks with lambda inputs cannot be cached
+            //                        .add(new CommandLineArgumentProvider() {
+            //                            @Override
+            //                            public Iterable<String> asArguments() {
+            //                                // Annotation processors are executed at compile time
+            //                                return collectAnnotationProcessorExports(project, extension, sourceSet);
+            //                            }
+            //                        });
+            //            });
 
             project.getTasks().withType(Test.class, new Action<Test>() {
 
