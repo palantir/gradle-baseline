@@ -22,10 +22,12 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.palantir.baseline.extensions.BaselineExportsExtension;
 import java.io.IOException;
+import java.util.Collections;
 import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.stream.Stream;
 import org.gradle.api.Action;
+import org.gradle.api.JavaVersion;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.file.FileCollection;
@@ -57,9 +59,14 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
             BaselineExportsExtension extension =
                     project.getExtensions().create(EXTENSION_NAME, BaselineExportsExtension.class, project);
             project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
-                project.getTasks()
+                JavaCompile javaCompile = project.getTasks()
                         .named(sourceSet.getCompileJavaTaskName(), JavaCompile.class)
-                        .get()
+                        .get();
+                if (javaCompile.getSourceCompatibility().contains(".")
+                        || Integer.parseInt(javaCompile.getSourceCompatibility()) < 16) {
+                    return;
+                }
+                javaCompile
                         .getOptions()
                         .getCompilerArgumentProviders()
                         // Use an anonymous class because tasks with lambda inputs cannot be cached
@@ -80,7 +87,10 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
 
                         @Override
                         public Iterable<String> asArguments() {
-                            return collectClasspathExports(extension, test.getClasspath());
+                            if (test.getJavaVersion().isCompatibleWith(JavaVersion.VERSION_16)) {
+                                return collectClasspathExports(extension, test.getClasspath());
+                            }
+                            return Collections.emptyList();
                         }
                     });
                 }
@@ -94,7 +104,10 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
 
                         @Override
                         public Iterable<String> asArguments() {
-                            return collectClasspathExports(extension, javaExec.getClasspath());
+                            if (javaExec.getJavaVersion().isCompatibleWith(JavaVersion.VERSION_16)) {
+                                return collectClasspathExports(extension, javaExec.getClasspath());
+                            }
+                            return Collections.emptyList();
                         }
                     });
                 }
