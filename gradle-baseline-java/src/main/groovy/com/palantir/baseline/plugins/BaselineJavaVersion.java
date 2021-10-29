@@ -90,6 +90,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                 javaCompile.getJavaCompiler().set(javaToolchainService.compilerFor(new Action<JavaToolchainSpec>() {
                     @Override
                     public void execute(JavaToolchainSpec javaToolchainSpec) {
+                        javaCompile.getOptions().getRelease().set((Integer) null);
                         javaToolchainSpec.getLanguageVersion().set(targetVersionProvider);
                     }
                 }));
