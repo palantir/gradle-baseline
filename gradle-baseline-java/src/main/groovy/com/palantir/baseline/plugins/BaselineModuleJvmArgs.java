@@ -80,7 +80,9 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
 
                         @Override
                         public Iterable<String> asArguments() {
-                            return collectClasspathExports(extension, test.getClasspath());
+                            ImmutableList<String> arguments = collectClasspathExports(extension, test.getClasspath());
+                            project.getLogger().error("Executing tests with additional arguments: {}", arguments);
+                            return arguments;
                         }
                     });
                 }
