@@ -61,9 +61,10 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
             // https://github.com/gradle/gradle/issues/18824
             if (project.hasProperty("add.exports.to.javac")) {
                 project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
-                    project.getTasks()
+                    JavaCompile javaCompile = project.getTasks()
                             .named(sourceSet.getCompileJavaTaskName(), JavaCompile.class)
-                            .get()
+                            .get();
+                    javaCompile
                             .getOptions()
                             .getCompilerArgumentProviders()
                             // Use an anonymous class because tasks with lambda inputs cannot be cached
@@ -71,7 +72,15 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                                 @Override
                                 public Iterable<String> asArguments() {
                                     // Annotation processors are executed at compile time
-                                    return collectAnnotationProcessorExports(project, extension, sourceSet);
+                                    ImmutableList<String> arguments =
+                                            collectAnnotationProcessorExports(project, extension, sourceSet);
+                                    project.getLogger()
+                                            .debug(
+                                                    "BaselineModuleJvmArgs compiling {} on {} with exports: {}",
+                                                    javaCompile.getName(),
+                                                    project,
+                                                    arguments);
+                                    return arguments;
                                 }
                             });
                 });
@@ -87,7 +96,12 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                         public Iterable<String> asArguments() {
                             ImmutableList<String> arguments =
                                     collectClasspathExports(project, extension, test.getClasspath());
-                            project.getLogger().error("Executing tests with additional arguments: {}", arguments);
+                            project.getLogger()
+                                    .debug(
+                                            "BaselineModuleJvmArgs executing {} on {} with exports: {}",
+                                            test.getName(),
+                                            project,
+                                            arguments);
                             return arguments;
                         }
                     });
@@ -102,7 +116,15 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
 
                         @Override
                         public Iterable<String> asArguments() {
-                            return collectClasspathExports(project, extension, javaExec.getClasspath());
+                            ImmutableList<String> arguments =
+                                    collectClasspathExports(project, extension, javaExec.getClasspath());
+                            project.getLogger()
+                                    .debug(
+                                            "BaselineModuleJvmArgs executing {} on {} with exports: {}",
+                                            javaExec.getName(),
+                                            project,
+                                            arguments);
+                            return arguments;
                         }
                     });
                 }
@@ -117,7 +139,19 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                             // Only locally defined exports are applied to jars
                             Set<String> exports = extension.exports().get();
                             if (!exports.isEmpty()) {
+                                project.getLogger()
+                                        .debug(
+                                                "BaselineModuleJvmArgs adding manifest attributes to {} in {}: {}",
+                                                jar.getName(),
+                                                project,
+                                                exports);
                                 manifest.attributes(ImmutableMap.of(ADD_EXPORTS_ATTRIBUTE, String.join(" ", exports)));
+                            } else {
+                                project.getLogger()
+                                        .debug(
+                                                "BaselineModuleJvmArgs not adding manifest attributes to {} in {}",
+                                                jar.getName(),
+                                                project);
                             }
                         }
                     });
@@ -147,6 +181,12 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                                     if (Strings.isNullOrEmpty(value)) {
                                         return Stream.empty();
                                     }
+                                    project.getLogger()
+                                            .debug(
+                                                    "Found manifest entry {}: {} in jar {}",
+                                                    ADD_EXPORTS_ATTRIBUTE,
+                                                    value,
+                                                    file);
                                     return EXPORT_SPLITTER.splitToStream(value);
                                 }
                                 return Stream.empty();
