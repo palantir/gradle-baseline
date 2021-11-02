@@ -37,10 +37,11 @@ import java.util.List;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = LinkType.CUSTOM,
         severity = SeverityLevel.WARNING,
-        summary = "The default Guava RateLimiter without specifying a warm-up time creates a limiter with 0 permits, "
-                + "and starts acquiring them. This causes an unexpected behavior, where at the beginning of the rate "
-                + "limiter's lifetime, the rate is much lower than specified. Zero warm-up time should be preferred "
-                + "to no warm-up time to ensure a max amount of permits are available at the start.")
+        summary = "Ensures Guava RateLimiter initializers specify a warm-up duration. The default Guava RateLimiter "
+                + "without specifying a warm-up time creates a limiter with 0 permits, and starts acquiring them. "
+                + "This causes an unexpected behavior, where at the beginning of the rate limiter's lifetime, the "
+                + "rate is much lower than specified. Zero warm-up time should be preferred to no warm-up time to "
+                + "ensure a max amount of permits are available at the start.")
 public final class NoWarmupRateLimiter extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final String DURATION_NAME = "java.time.Duration";
