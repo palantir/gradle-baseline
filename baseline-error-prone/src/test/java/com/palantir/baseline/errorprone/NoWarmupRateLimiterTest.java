@@ -15,7 +15,6 @@
  */
 package com.palantir.baseline.errorprone;
 
-import com.google.errorprone.BugCheckerRefactoringTestHelper;
 import com.google.errorprone.CompilationTestHelper;
 import org.junit.jupiter.api.Test;
 
@@ -43,7 +42,7 @@ public class NoWarmupRateLimiterTest {
                         "  }",
                         "",
                         "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+                .doTest();
     }
 
     @Test
@@ -69,7 +68,7 @@ public class NoWarmupRateLimiterTest {
                         "  }",
                         "",
                         "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+                .doTest();
     }
 
     @Test
