@@ -206,7 +206,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `PreferImmutableStreamExCollections`: It's common to use toMap/toSet/toList() as the terminal operation on a stream, but would be extremely surprising to rely on the mutability of these collections. Prefer `toImmutableMap`, `toImmutableSet` and `toImmutableList`. (If the performance overhead of a stream is already acceptable, then the `UnmodifiableFoo` wrapper is likely tolerable).
 - `DangerousIdentityKey`: Key type does not override equals() and hashCode, so comparisons will be done on reference equality only.
 - `ConsistentOverrides`: Ensure values are bound to the correct variables when overriding methods
-- 'NoWarmupRateLimiter': Ensures Guava RateLimiter initializers specify a warm-up duration.
+- `NoWarmupRateLimiter`: Ensures Guava RateLimiter initializers specify a warm-up duration.
 
 ### Programmatic Application
 
