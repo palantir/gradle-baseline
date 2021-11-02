@@ -146,7 +146,8 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                                     if (!exports.isEmpty()) {
                                         project.getLogger()
                                                 .debug(
-                                                        "BaselineModuleJvmArgs adding manifest attributes to {} in {}: {}",
+                                                        "BaselineModuleJvmArgs adding "
+                                                                + "manifest attributes to {} in {}: {}",
                                                         jar.getName(),
                                                         project,
                                                         exports);
@@ -155,7 +156,8 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                                     } else {
                                         project.getLogger()
                                                 .debug(
-                                                        "BaselineModuleJvmArgs not adding manifest attributes to {} in {}",
+                                                        "BaselineModuleJvmArgs not adding "
+                                                                + "manifest attributes to {} in {}",
                                                         jar.getName(),
                                                         project);
                                     }
