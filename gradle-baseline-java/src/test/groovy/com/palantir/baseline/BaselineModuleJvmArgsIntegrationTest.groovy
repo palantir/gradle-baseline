@@ -20,7 +20,12 @@ import com.google.common.collect.MoreCollectors
 import nebula.test.IntegrationSpec
 import nebula.test.functional.ExecutionResult
 
+import java.nio.charset.StandardCharsets
+import java.util.jar.Attributes
+import java.util.jar.JarEntry
 import java.util.jar.JarFile
+import java.util.jar.JarOutputStream
+import java.util.jar.Manifest
 
 class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
 
@@ -100,12 +105,47 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
         '''.stripIndent(true))
 
         then:
-        ExecutionResult result = runTasksSuccessfully('jar')
+        runTasksSuccessfully('jar')
         JarFile jarFile = Arrays.stream(directory("build/libs").listFiles())
                 .filter(file -> file.name.endsWith(".jar"))
                 .map(JarFile::new)
                 .collect(MoreCollectors.onlyElement())
         String manifestValue = jarFile.getManifest().getMainAttributes().getValue('Add-Exports')
         manifestValue == 'java.management/sun.management'
+    }
+
+    def 'Executes with externally defined exports'() {
+        when:
+        Manifest manifest = new Manifest()
+        manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0")
+        manifest.getMainAttributes().putValue('Add-Exports', 'java.management/sun.management')
+        File testJar = new File(getProjectDir(),"test.jar");
+        testJar.withOutputStream { fos ->
+            new JarOutputStream(fos, manifest).close()
+        }
+        buildFile << '''
+        application {
+            mainClass = 'com.Example'
+        }
+        dependencies {
+            implementation files('test.jar')
+        }
+        '''.stripIndent(true)
+        writeJavaSourceFile('''
+        package com;
+        public class Example {
+            public static void main(String[] args) {
+                System.out.println(String.join(
+                    " ",
+                    java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments()));
+            }
+        }
+        '''.stripIndent(true))
+
+        then:
+        ExecutionResult result = runTasksSuccessfully('run')
+        // Gradle appears to normalize args, joining '--add-exports java.management/sun.management=ALL-UNNAMED'
+        // with an equals.
+        result.standardOutput.contains('--add-exports=java.management/sun.management=ALL-UNNAMED')
     }
 }
