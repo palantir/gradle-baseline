@@ -28,6 +28,7 @@ import java.util.stream.Stream;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.java.archives.Manifest;
 import org.gradle.api.tasks.JavaExec;
@@ -39,7 +40,8 @@ import org.gradle.jvm.tasks.Jar;
 import org.gradle.process.CommandLineArgumentProvider;
 
 /**
- * This plugin reuses the {@code Add-Exports} manifest entry to propagate and collect required exports
+ * This plugin reuses the {@code Add-Exports} manifest entry defined in
+ * <a href="https://openjdk.java.net/jeps/261">JEP-261</a> to propagate and collect required exports
  * from transitive dependencies, and applies them to compilation (for annotation processors) and
  * execution (tests, javaExec, etc) for runtime dependencies.
  */
@@ -133,26 +135,32 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
             project.getTasks().withType(Jar.class, new Action<Jar>() {
                 @Override
                 public void execute(Jar jar) {
-                    jar.manifest(new Action<Manifest>() {
+                    jar.doFirst(new Action<Task>() {
                         @Override
-                        public void execute(Manifest manifest) {
-                            // Only locally defined exports are applied to jars
-                            Set<String> exports = extension.exports().get();
-                            if (!exports.isEmpty()) {
-                                project.getLogger()
-                                        .debug(
-                                                "BaselineModuleJvmArgs adding manifest attributes to {} in {}: {}",
-                                                jar.getName(),
-                                                project,
-                                                exports);
-                                manifest.attributes(ImmutableMap.of(ADD_EXPORTS_ATTRIBUTE, String.join(" ", exports)));
-                            } else {
-                                project.getLogger()
-                                        .debug(
-                                                "BaselineModuleJvmArgs not adding manifest attributes to {} in {}",
-                                                jar.getName(),
-                                                project);
-                            }
+                        public void execute(Task task) {
+                            jar.manifest(new Action<Manifest>() {
+                                @Override
+                                public void execute(Manifest manifest) {
+                                    // Only locally defined exports are applied to jars
+                                    Set<String> exports = extension.exports().get();
+                                    if (!exports.isEmpty()) {
+                                        project.getLogger()
+                                                .debug(
+                                                        "BaselineModuleJvmArgs adding manifest attributes to {} in {}: {}",
+                                                        jar.getName(),
+                                                        project,
+                                                        exports);
+                                        manifest.attributes(
+                                                ImmutableMap.of(ADD_EXPORTS_ATTRIBUTE, String.join(" ", exports)));
+                                    } else {
+                                        project.getLogger()
+                                                .debug(
+                                                        "BaselineModuleJvmArgs not adding manifest attributes to {} in {}",
+                                                        jar.getName(),
+                                                        project);
+                                    }
+                                }
+                            });
                         }
                     });
                 }
