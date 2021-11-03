@@ -184,20 +184,21 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                         classpath.getFiles().stream().flatMap(file -> {
                             try {
                                 if (file.getName().endsWith(".jar") && file.isFile()) {
-                                    JarFile jar = new JarFile(file);
-                                    String value = jar.getManifest()
-                                            .getMainAttributes()
-                                            .getValue(ADD_EXPORTS_ATTRIBUTE);
-                                    if (Strings.isNullOrEmpty(value)) {
-                                        return Stream.empty();
+                                    try (JarFile jar = new JarFile(file)) {
+                                        String value = jar.getManifest()
+                                                .getMainAttributes()
+                                                .getValue(ADD_EXPORTS_ATTRIBUTE);
+                                        if (Strings.isNullOrEmpty(value)) {
+                                            return Stream.empty();
+                                        }
+                                        project.getLogger()
+                                                .debug(
+                                                        "Found manifest entry {}: {} in jar {}",
+                                                        ADD_EXPORTS_ATTRIBUTE,
+                                                        value,
+                                                        file);
+                                        return EXPORT_SPLITTER.splitToStream(value);
                                     }
-                                    project.getLogger()
-                                            .debug(
-                                                    "Found manifest entry {}: {} in jar {}",
-                                                    ADD_EXPORTS_ATTRIBUTE,
-                                                    value,
-                                                    file);
-                                    return EXPORT_SPLITTER.splitToStream(value);
                                 }
                                 return Stream.empty();
                             } catch (IOException e) {
