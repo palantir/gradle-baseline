@@ -185,9 +185,13 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                             try {
                                 if (file.getName().endsWith(".jar") && file.isFile()) {
                                     try (JarFile jar = new JarFile(file)) {
-                                        String value = jar.getManifest()
-                                                .getMainAttributes()
-                                                .getValue(ADD_EXPORTS_ATTRIBUTE);
+                                        java.util.jar.Manifest jarManifest = jar.getManifest();
+                                        if (jarManifest == null) {
+                                            project.getLogger().debug("Jar '{}' has no manifest", file);
+                                            return Stream.empty();
+                                        }
+                                        String value =
+                                                jarManifest.getMainAttributes().getValue(ADD_EXPORTS_ATTRIBUTE);
                                         if (Strings.isNullOrEmpty(value)) {
                                             return Stream.empty();
                                         }
