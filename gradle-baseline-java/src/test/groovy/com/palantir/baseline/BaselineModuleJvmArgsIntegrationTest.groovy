@@ -59,7 +59,7 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
         }
         
         moduleJvmArgs {
-           exports().add('java.management/sun.management')
+           exports = ['java.management/sun.management']
         }
         '''.stripIndent(true)
         writeJavaSourceFile('''
@@ -88,7 +88,7 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
         }
         
         moduleJvmArgs {
-           exports().add('java.management/sun.management')
+           exports = ['java.management/sun.management']
         }
         '''.stripIndent(true)
         writeJavaSourceFile('''
@@ -183,5 +183,22 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
                 .collect(MoreCollectors.onlyElement())
         String manifestValue = jarFile.getManifest().getMainAttributes().getValue('Add-Exports')
         manifestValue == null
+    }
+
+    def 'Validates exports'() {
+        when:
+        buildFile << '''
+        application {
+            mainClass = 'com.Example'
+        }
+        
+        moduleJvmArgs {
+           exports = ['java.management']
+        }
+        '''.stripIndent(true)
+
+        then:
+        ExecutionResult result = runTasksWithFailure('jar')
+        result.standardError.contains('separated by a single slash')
     }
 }

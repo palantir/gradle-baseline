@@ -20,7 +20,7 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
-import com.palantir.baseline.extensions.BaselineExportsExtension;
+import com.palantir.baseline.extensions.BaselineModuleJvmArgsExtension;
 import java.io.IOException;
 import java.util.Set;
 import java.util.jar.JarFile;
@@ -56,8 +56,8 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
     @Override
     public void apply(Project project) {
         project.getPluginManager().withPlugin("java", unused -> {
-            BaselineExportsExtension extension =
-                    project.getExtensions().create(EXTENSION_NAME, BaselineExportsExtension.class, project);
+            BaselineModuleJvmArgsExtension extension =
+                    project.getExtensions().create(EXTENSION_NAME, BaselineModuleJvmArgsExtension.class, project);
 
             // javac isn't provided `--add-exports` args for the time being due to
             // https://github.com/gradle/gradle/issues/18824
@@ -142,7 +142,7 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                                 @Override
                                 public void execute(Manifest manifest) {
                                     // Only locally defined exports are applied to jars
-                                    Set<String> exports = extension.exports().get();
+                                    Set<String> exports = extension.getExports().get();
                                     if (!exports.isEmpty()) {
                                         project.getLogger()
                                                 .debug(
@@ -171,7 +171,7 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
     }
 
     private static ImmutableList<String> collectAnnotationProcessorExports(
-            Project project, BaselineExportsExtension extension, SourceSet sourceSet) {
+            Project project, BaselineModuleJvmArgsExtension extension, SourceSet sourceSet) {
         return collectClasspathExports(
                 project,
                 extension,
@@ -179,7 +179,7 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
     }
 
     private static ImmutableList<String> collectClasspathExports(
-            Project project, BaselineExportsExtension extension, FileCollection classpath) {
+            Project project, BaselineModuleJvmArgsExtension extension, FileCollection classpath) {
         return Stream.concat(
                         classpath.getFiles().stream().flatMap(file -> {
                             try {
@@ -206,7 +206,7 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                                 return Stream.empty();
                             }
                         }),
-                        extension.exports().get().stream())
+                        extension.getExports().get().stream())
                 .distinct()
                 .sorted()
                 .flatMap(modulePackagePair -> Stream.of("--add-exports", modulePackagePair + "=ALL-UNNAMED"))
