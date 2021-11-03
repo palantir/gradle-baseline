@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Module export discovery handles jars with no manifest gracefully
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1954

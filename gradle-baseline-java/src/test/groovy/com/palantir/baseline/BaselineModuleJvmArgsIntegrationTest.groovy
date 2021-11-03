@@ -24,6 +24,7 @@ import java.util.jar.Attributes
 import java.util.jar.JarFile
 import java.util.jar.JarOutputStream
 import java.util.jar.Manifest
+import java.util.zip.ZipOutputStream
 
 class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
 
@@ -145,6 +146,36 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
         // Gradle appears to normalize args, joining '--add-exports java.management/sun.management=ALL-UNNAMED'
         // with an equals.
         result.standardOutput.contains('--add-exports=java.management/sun.management=ALL-UNNAMED')
+    }
+
+    def 'Handles jars with no manifest'() {
+        when:
+        File testJar = new File(getProjectDir(),"test.jar");
+        testJar.withOutputStream { fos ->
+            new ZipOutputStream(fos).close()
+        }
+        buildFile << '''
+        application {
+            mainClass = 'com.Example'
+        }
+        dependencies {
+            implementation files('test.jar')
+        }
+        '''.stripIndent(true)
+        writeJavaSourceFile('''
+        package com;
+        public class Example {
+            public static void main(String[] args) {
+                System.out.println(String.join(
+                    " ",
+                    java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments()));
+            }
+        }
+        '''.stripIndent(true))
+
+        then:
+        ExecutionResult result = runTasksSuccessfully('run')
+        !result.standardOutput.contains('--add-exports')
     }
 
     def 'Does not add externally defined exports to the jar manifest'() {
