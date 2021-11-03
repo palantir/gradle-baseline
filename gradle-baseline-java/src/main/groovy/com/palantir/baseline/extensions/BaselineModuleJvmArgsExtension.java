@@ -39,11 +39,11 @@ public class BaselineModuleJvmArgsExtension {
      * {@code --add-exports java.management/sun.management=ALL-UNNAMED} one would add the value
      * {@code java.management/sun.management}.
      */
-    public final SetProperty<String> getExports() {
+    public final SetProperty<String> exports() {
         return exports;
     }
 
-    public final void setExports(Iterable<String> input) {
+    public final void setExports(String... input) {
         ImmutableSet<String> immutableDeduplicatedCopy = ImmutableSet.copyOf(input);
         for (String export : immutableDeduplicatedCopy) {
             validateExport(export);

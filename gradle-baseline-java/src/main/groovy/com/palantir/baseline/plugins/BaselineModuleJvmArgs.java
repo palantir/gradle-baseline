@@ -142,7 +142,7 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                                 @Override
                                 public void execute(Manifest manifest) {
                                     // Only locally defined exports are applied to jars
-                                    Set<String> exports = extension.getExports().get();
+                                    Set<String> exports = extension.exports().get();
                                     if (!exports.isEmpty()) {
                                         project.getLogger()
                                                 .debug(
@@ -206,7 +206,7 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                                 return Stream.empty();
                             }
                         }),
-                        extension.getExports().get().stream())
+                        extension.exports().get().stream())
                 .distinct()
                 .sorted()
                 .flatMap(modulePackagePair -> Stream.of("--add-exports", modulePackagePair + "=ALL-UNNAMED"))
