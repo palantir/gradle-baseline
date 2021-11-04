@@ -22,15 +22,20 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.palantir.baseline.extensions.BaselineModuleJvmArgsExtension;
 import java.io.IOException;
+import java.util.List;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.jar.JarFile;
 import java.util.stream.Stream;
+import javax.annotation.Nullable;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.java.archives.Manifest;
+import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
@@ -38,6 +43,7 @@ import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.jvm.tasks.Jar;
 import org.gradle.process.CommandLineArgumentProvider;
+import org.immutables.value.Value;
 
 /**
  * This plugin reuses the {@code Add-Exports} manifest entry defined in
@@ -49,8 +55,9 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
 
     private static final String EXTENSION_NAME = "moduleJvmArgs";
     private static final String ADD_EXPORTS_ATTRIBUTE = "Add-Exports";
+    private static final String ADD_OPENS_ATTRIBUTE = "Add-Opens";
 
-    private static final Splitter EXPORT_SPLITTER =
+    private static final Splitter ENTRY_SPLITTER =
             Splitter.on(' ').trimResults().omitEmptyStrings();
 
     @Override
@@ -75,7 +82,7 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                                 public Iterable<String> asArguments() {
                                     // Annotation processors are executed at compile time
                                     ImmutableList<String> arguments =
-                                            collectAnnotationProcessorExports(project, extension, sourceSet);
+                                            collectAnnotationProcessorArgs(project, extension, sourceSet);
                                     project.getLogger()
                                             .debug(
                                                     "BaselineModuleJvmArgs compiling {} on {} with exports: {}",
@@ -97,7 +104,7 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                         @Override
                         public Iterable<String> asArguments() {
                             ImmutableList<String> arguments =
-                                    collectClasspathExports(project, extension, test.getClasspath());
+                                    collectClasspathArgs(project, extension, test.getClasspath());
                             project.getLogger()
                                     .debug(
                                             "BaselineModuleJvmArgs executing {} on {} with exports: {}",
@@ -119,7 +126,7 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                         @Override
                         public Iterable<String> asArguments() {
                             ImmutableList<String> arguments =
-                                    collectClasspathExports(project, extension, javaExec.getClasspath());
+                                    collectClasspathArgs(project, extension, javaExec.getClasspath());
                             project.getLogger()
                                     .debug(
                                             "BaselineModuleJvmArgs executing {} on {} with exports: {}",
@@ -141,26 +148,8 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                             jar.manifest(new Action<Manifest>() {
                                 @Override
                                 public void execute(Manifest manifest) {
-                                    // Only locally defined exports are applied to jars
-                                    Set<String> exports = extension.exports().get();
-                                    if (!exports.isEmpty()) {
-                                        project.getLogger()
-                                                .debug(
-                                                        "BaselineModuleJvmArgs adding "
-                                                                + "manifest attributes to {} in {}: {}",
-                                                        jar.getName(),
-                                                        project,
-                                                        exports);
-                                        manifest.attributes(
-                                                ImmutableMap.of(ADD_EXPORTS_ATTRIBUTE, String.join(" ", exports)));
-                                    } else {
-                                        project.getLogger()
-                                                .debug(
-                                                        "BaselineModuleJvmArgs not adding "
-                                                                + "manifest attributes to {} in {}",
-                                                        jar.getName(),
-                                                        project);
-                                    }
+                                    addManifestAttribute(jar, manifest, ADD_EXPORTS_ATTRIBUTE, extension.exports());
+                                    addManifestAttribute(jar, manifest, ADD_OPENS_ATTRIBUTE, extension.opens());
                                 }
                             });
                         }
@@ -170,50 +159,116 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
         });
     }
 
-    private static ImmutableList<String> collectAnnotationProcessorExports(
+    private static void addManifestAttribute(
+            Jar jarTask, Manifest manifest, String attributeName, SetProperty<String> valueProperty) {
+        Project project = jarTask.getProject();
+        // Only locally defined values are applied to jars
+        Set<String> values = valueProperty.get();
+        if (!values.isEmpty()) {
+            project.getLogger()
+                    .debug(
+                            "BaselineModuleJvmArgs adding {} attribute to {} in {}: {}",
+                            attributeName,
+                            jarTask.getName(),
+                            project,
+                            values);
+            manifest.attributes(ImmutableMap.of(attributeName, String.join(" ", values)));
+        } else {
+            project.getLogger()
+                    .debug(
+                            "BaselineModuleJvmArgs not adding {} attribute to {} in {}",
+                            attributeName,
+                            jarTask.getName(),
+                            project);
+        }
+    }
+
+    private static ImmutableList<String> collectAnnotationProcessorArgs(
             Project project, BaselineModuleJvmArgsExtension extension, SourceSet sourceSet) {
-        return collectClasspathExports(
+        return collectClasspathArgs(
                 project,
                 extension,
                 project.getConfigurations().getByName(sourceSet.getAnnotationProcessorConfigurationName()));
     }
 
-    private static ImmutableList<String> collectClasspathExports(
+    private static ImmutableList<String> collectClasspathArgs(
             Project project, BaselineModuleJvmArgsExtension extension, FileCollection classpath) {
-        return Stream.concat(
-                        classpath.getFiles().stream().flatMap(file -> {
-                            try {
-                                if (file.getName().endsWith(".jar") && file.isFile()) {
-                                    try (JarFile jar = new JarFile(file)) {
-                                        java.util.jar.Manifest jarManifest = jar.getManifest();
-                                        if (jarManifest == null) {
-                                            project.getLogger().debug("Jar '{}' has no manifest", file);
-                                            return Stream.empty();
-                                        }
-                                        String value =
-                                                jarManifest.getMainAttributes().getValue(ADD_EXPORTS_ATTRIBUTE);
-                                        if (Strings.isNullOrEmpty(value)) {
-                                            return Stream.empty();
-                                        }
-                                        project.getLogger()
-                                                .debug(
-                                                        "Found manifest entry {}: {} in jar {}",
-                                                        ADD_EXPORTS_ATTRIBUTE,
-                                                        value,
-                                                        file);
-                                        return EXPORT_SPLITTER.splitToStream(value);
-                                    }
-                                }
-                                return Stream.empty();
-                            } catch (IOException e) {
-                                project.getLogger().warn("Failed to check jar {} for manifest attributes", file, e);
-                                return Stream.empty();
+        ImmutableList<JarManifestModuleInfo> classpathInfo = classpath.getFiles().stream()
+                .map(file -> {
+                    try {
+                        if (file.getName().endsWith(".jar") && file.isFile()) {
+                            try (JarFile jar = new JarFile(file)) {
+                                java.util.jar.Manifest maybeJarManifest = jar.getManifest();
+                                Optional<JarManifestModuleInfo> parsedModuleInfo = parseModuleInfo(maybeJarManifest);
+                                project.getLogger()
+                                        .debug("Jar '{}' produced manifest info: {}", file, parsedModuleInfo);
+                                return parsedModuleInfo.orElse(null);
                             }
-                        }),
-                        extension.exports().get().stream())
+                        }
+                        return null;
+                    } catch (IOException e) {
+                        project.getLogger().warn("Failed to check jar {} for manifest attributes", file, e);
+                        return null;
+                    }
+                })
+                .filter(Objects::nonNull)
+                .collect(ImmutableList.toImmutableList());
+        Stream<String> exports = Stream.concat(
+                        extension.exports().get().stream(),
+                        classpathInfo.stream().flatMap(info -> info.exports().stream()))
                 .distinct()
                 .sorted()
-                .flatMap(modulePackagePair -> Stream.of("--add-exports", modulePackagePair + "=ALL-UNNAMED"))
-                .collect(ImmutableList.toImmutableList());
+                .flatMap(BaselineModuleJvmArgs::addExportArg);
+        Stream<String> opens = Stream.concat(
+                        extension.opens().get().stream(), classpathInfo.stream().flatMap(info -> info.opens().stream()))
+                .distinct()
+                .sorted()
+                .flatMap(BaselineModuleJvmArgs::addOpensArg);
+        return Stream.concat(exports, opens).collect(ImmutableList.toImmutableList());
+    }
+
+    private static Optional<JarManifestModuleInfo> parseModuleInfo(@Nullable java.util.jar.Manifest jarManifest) {
+        return Optional.ofNullable(jarManifest)
+                .<JarManifestModuleInfo>map(manifest -> JarManifestModuleInfo.builder()
+                        .exports(readManifestAttribute(manifest, ADD_EXPORTS_ATTRIBUTE))
+                        .opens(readManifestAttribute(manifest, ADD_OPENS_ATTRIBUTE))
+                        .build())
+                .filter(JarManifestModuleInfo::isPresent);
+    }
+
+    private static List<String> readManifestAttribute(java.util.jar.Manifest jarManifest, String attribute) {
+        return Optional.ofNullable(
+                        Strings.emptyToNull(jarManifest.getMainAttributes().getValue(attribute)))
+                .map(ENTRY_SPLITTER::splitToList)
+                .orElseGet(ImmutableList::of);
+    }
+
+    private static Stream<String> addExportArg(String modulePackagePair) {
+        return Stream.of("--add-exports", modulePackagePair + "=ALL-UNNAMED");
+    }
+
+    private static Stream<String> addOpensArg(String modulePackagePair) {
+        return Stream.of("--add-opens", modulePackagePair + "=ALL-UNNAMED");
+    }
+
+    @Value.Immutable
+    interface JarManifestModuleInfo {
+        ImmutableList<String> exports();
+
+        ImmutableList<String> opens();
+
+        default boolean isEmpty() {
+            return exports().isEmpty() && opens().isEmpty();
+        }
+
+        default boolean isPresent() {
+            return !isEmpty();
+        }
+
+        static Builder builder() {
+            return new Builder();
+        }
+
+        class Builder extends ImmutableJarManifestModuleInfo.Builder {}
     }
 }
