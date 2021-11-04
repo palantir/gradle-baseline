@@ -81,6 +81,35 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
         result.standardOutput.contains('--add-exports=java.management/sun.management=ALL-UNNAMED')
     }
 
+    def 'Runs with locally defined opens'() {
+        when:
+        buildFile << '''
+        application {
+            mainClass = 'com.Example'
+        }
+        
+        moduleJvmArgs {
+           opens 'java.management/sun.management'
+        }
+        '''.stripIndent(true)
+        writeJavaSourceFile('''
+        package com;
+        public class Example {
+            public static void main(String[] args) {
+                System.out.println(String.join(
+                    " ",
+                    java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments()));
+            }
+        }
+        '''.stripIndent(true))
+
+        then:
+        ExecutionResult result = runTasksSuccessfully('run')
+        // Gradle appears to normalize args, joining '--add-exports java.management/sun.management=ALL-UNNAMED'
+        // with an equals.
+        result.standardOutput.contains('--add-opens=java.management/sun.management=ALL-UNNAMED')
+    }
+
     def 'Adds locally defined exports to the jar manifest'() {
         when:
         buildFile << '''

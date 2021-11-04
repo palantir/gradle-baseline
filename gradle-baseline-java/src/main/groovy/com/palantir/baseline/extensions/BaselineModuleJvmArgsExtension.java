@@ -27,14 +27,16 @@ import org.gradle.api.provider.SetProperty;
 public class BaselineModuleJvmArgsExtension {
 
     private final SetProperty<String> exports;
+    private final SetProperty<String> opens;
 
     @Inject
     public BaselineModuleJvmArgsExtension(Project project) {
         exports = project.getObjects().setProperty(String.class);
+        opens = project.getObjects().setProperty(String.class);
     }
 
     /**
-     * Property describing all export values for this module.
+     * Property describing all {@code --add-exports} values for this module.
      * Exports take the form {@code MODULE_NAME/PACKAGE_NAME}, so to represent
      * {@code --add-exports java.management/sun.management=ALL-UNNAMED} one would add the value
      * {@code java.management/sun.management}.
@@ -46,28 +48,47 @@ public class BaselineModuleJvmArgsExtension {
     public final void setExports(String... input) {
         ImmutableSet<String> immutableDeduplicatedCopy = ImmutableSet.copyOf(input);
         for (String export : immutableDeduplicatedCopy) {
-            validateExport(export);
+            validateModulePackagePair(export);
         }
         exports.set(immutableDeduplicatedCopy);
     }
 
-    private static void validateExport(String export) {
-        if (export.contains("=")) {
+    /**
+     * Property describing all {@code --add-opens} values for this module.
+     * Opens take the form {@code MODULE_NAME/PACKAGE_NAME}, so to represent
+     * {@code --add-opens java.management/sun.management=ALL-UNNAMED} one would add the value
+     * {@code java.management/sun.management}.
+     */
+    public final SetProperty<String> opens() {
+        return opens;
+    }
+
+    public final void setOpens(String... input) {
+        ImmutableSet<String> immutableDeduplicatedCopy = ImmutableSet.copyOf(input);
+        for (String export : immutableDeduplicatedCopy) {
+            validateModulePackagePair(export);
+        }
+        opens.set(immutableDeduplicatedCopy);
+    }
+
+    private static void validateModulePackagePair(String moduleAndPackage) {
+        if (moduleAndPackage.contains("=")) {
             throw new IllegalArgumentException(String.format(
-                    "Export '%s' must not contain an '=', e.g. 'java.management/sun.management'. "
+                    "Value '%s' must not contain an '=', e.g. 'java.management/sun.management'. "
                             + "Each export implies a '=ALL-UNNAMED' suffix",
-                    export));
+                    moduleAndPackage));
         }
-        if (export.contains(" ")) {
-            throw new IllegalArgumentException(String.format("Export '%s' must not contain whitespace", export));
+        if (moduleAndPackage.contains(" ")) {
+            throw new IllegalArgumentException(
+                    String.format("Value '%s' must not contain whitespace", moduleAndPackage));
         }
-        int firstSlash = export.indexOf('/');
-        int lastSlash = export.lastIndexOf('/');
+        int firstSlash = moduleAndPackage.indexOf('/');
+        int lastSlash = moduleAndPackage.lastIndexOf('/');
         if (firstSlash != lastSlash || firstSlash < 0) {
             throw new IllegalArgumentException(String.format(
-                    "Export '%s' must contain both a module name and package "
+                    "Value '%s' must contain both a module name and package "
                             + "name separated by a single slash, e.g. 'java.management/sun.management'",
-                    export));
+                    moduleAndPackage));
         }
     }
 }

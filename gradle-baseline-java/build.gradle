@@ -33,6 +33,8 @@ dependencies {
 
     annotationProcessor 'org.inferred:freebuilder'
     compileOnly 'org.inferred:freebuilder'
+    annotationProcessor 'org.immutables:value'
+    compileOnly 'org.immutables:value::annotations'
 }
 
 tasks.test.dependsOn tasks.findByPath(':gradle-baseline-java-config:publishToMavenLocal')
