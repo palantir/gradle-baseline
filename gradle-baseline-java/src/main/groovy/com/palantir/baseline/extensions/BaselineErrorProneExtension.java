@@ -47,7 +47,6 @@ public class BaselineErrorProneExtension {
             "LambdaMethodReference",
             "LoggerEnclosingClass",
             "LogsafeArgName",
-            "NoWarmupRateLimiter",
             "ObjectsHashCodeUnnecessaryVarargs",
             "OptionalFlatMapOfNullable",
             "OptionalOrElseMethodInvocation",
