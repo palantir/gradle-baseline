@@ -76,6 +76,7 @@ public class BaselineErrorProneExtension {
             // "ThrowSpecificity",
             "UnsafeGaugeRegistration",
             "VarUsage",
+            "ZeroWarmupRateLimiter",
 
             // Built-in checks
             "ArrayEquals",
