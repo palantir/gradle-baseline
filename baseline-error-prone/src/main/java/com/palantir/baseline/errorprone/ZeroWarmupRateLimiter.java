@@ -92,7 +92,7 @@ public final class ZeroWarmupRateLimiter extends BugChecker implements BugChecke
     }
 
     private static boolean isIntLiteralZero(ExpressionTree expressionTree, VisitorState state) {
-        Integer warmupTime = ASTHelpers.constValue(expressionTree, Integer.class);
-        return warmupTime != null && warmupTime.equals(0);
+        Number warmupTime = ASTHelpers.constValue(expressionTree, Number.class);
+        return warmupTime != null && (warmupTime.equals(0) || warmupTime.equals(0L));
     }
 }

@@ -67,7 +67,7 @@ class ZeroWarmupRateLimiterTest {
     }
 
     @Test
-    public void should_remove_long_literal_zero() {
+    public void should_remove_int_literal_zero() {
         fix().addInputLines(
                         "Test.java",
                         "import com.google.common.util.concurrent.RateLimiter;",
@@ -75,6 +75,29 @@ class ZeroWarmupRateLimiterTest {
                         "class Test {",
                         "  void f() {",
                         "    RateLimiter.create(10, 0, TimeUnit.SECONDS);",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.google.common.util.concurrent.RateLimiter;",
+                        "import java.util.concurrent.TimeUnit;",
+                        "class Test {",
+                        "  void f() {",
+                        "    RateLimiter.create(10);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void should_remove_long_literal_zero() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.google.common.util.concurrent.RateLimiter;",
+                        "import java.util.concurrent.TimeUnit;",
+                        "class Test {",
+                        "  void f() {",
+                        "    RateLimiter.create(10, 0L, TimeUnit.SECONDS);",
                         "  }",
                         "}")
                 .addOutputLines(
