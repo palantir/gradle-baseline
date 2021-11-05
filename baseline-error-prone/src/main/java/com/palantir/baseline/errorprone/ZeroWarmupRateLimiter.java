@@ -35,6 +35,8 @@ import com.sun.source.tree.MethodInvocationTree;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
 import java.time.Duration;
+import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -46,22 +48,29 @@ import java.time.Duration;
                 + "Tracked at https://github.com/google/guava/issues/2730")
 public final class ZeroWarmupRateLimiter extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
-    private static final Matcher<ExpressionTree> MATCHER = Matchers.methodInvocation(
+    private static final Matcher<ExpressionTree> DURATION_ZERO_MATCHER = Matchers.methodInvocation(
             MethodMatchers.staticMethod()
                     .onClass(RateLimiter.class.getName())
                     .named("create")
                     .withParameters("double", Duration.class.getName()),
             MatchType.LAST,
             ZeroWarmupRateLimiter::isDurationZero);
+    private static final Matcher<MethodInvocationTree> INT_LITERAL_ZERO_MATCHER = Matchers.allOf(
+            MethodMatchers.staticMethod()
+                    .onClass(RateLimiter.class.getName())
+                    .named("create")
+                    .withParameters("double", "long", TimeUnit.class.getName()),
+            Matchers.argument(1, ZeroWarmupRateLimiter::isIntLiteralZero));
+    private static final Matcher<MethodInvocationTree> MATCHER =
+            Matchers.anyOf(DURATION_ZERO_MATCHER, INT_LITERAL_ZERO_MATCHER);
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
+        List<? extends ExpressionTree> args = tree.getArguments();
         if (MATCHER.matches(tree, state)) {
             return buildDescription(tree)
                     .addFix(SuggestedFix.replace(
-                            state.getEndPosition(tree.getArguments().get(0)),
-                            state.getEndPosition(tree.getArguments().get(1)),
-                            ""))
+                            state.getEndPosition(args.get(0)), state.getEndPosition(args.get(args.size() - 1)), ""))
                     .build();
         }
         return Description.NO_MATCH;
@@ -80,5 +89,10 @@ public final class ZeroWarmupRateLimiter extends BugChecker implements BugChecke
                             .isSameType(varSymbol.owner.type, state.getTypeFromString(Duration.class.getName()));
         }
         return false;
+    }
+
+    private static boolean isIntLiteralZero(ExpressionTree expressionTree, VisitorState state) {
+        Number warmupTime = ASTHelpers.constValue(expressionTree, Number.class);
+        return warmupTime != null && (warmupTime.equals(0) || warmupTime.equals(0L));
     }
 }
