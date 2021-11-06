@@ -69,8 +69,8 @@ public final class CatchBlockLogException extends BugChecker implements BugCheck
     public Description matchCatch(CatchTree tree, VisitorState state) {
         if (containslogMethod.matches(tree, state) && !containslogException.matches(tree, state)) {
             buildDescription(tree)
-                    .setMessage("Catch block contains log statements but thrown exception is never logged.")
                     .addFix(attemptFix(tree, state))
+                    .setMessage("Catch block contains log statements but thrown exception is never logged.")
                     .build();
         }
         return Description.NO_MATCH;
