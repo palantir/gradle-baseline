@@ -1,4 +1,4 @@
-com.diffplug.spotless:spotless-plugin-gradle = 5.17.1
+com.diffplug.spotless:spotless-plugin-gradle = 5.15.0
 com.google.auto.service:auto-service = 1.0.1
 com.google.errorprone:error_prone_annotations = 2.10.0
 com.google.errorprone:error_prone_core = 2.10.0
@@ -19,7 +19,7 @@ com.puppycrawl.tools:checkstyle = 9.0
 # test deps
 com.fasterxml.jackson.*:* = 2.11.1
 com.github.stefanbirkner:system-rules = 1.19.0
-com.netflix.nebula:nebula-test = 10.0.0
+com.netflix.nebula:nebula-test = 10.1.0
 com.palantir.tokens:auth-tokens = 3.10.0
 com.palantir.conjure.java:conjure-lib = 6.8.0
 com.palantir.tritium:tritium-registry = 0.30.0
