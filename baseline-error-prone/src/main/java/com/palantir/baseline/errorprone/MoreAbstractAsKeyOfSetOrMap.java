@@ -22,6 +22,7 @@ import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
+import com.google.errorprone.suppliers.Supplier;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
@@ -129,6 +130,9 @@ abstract class MoreAbstractAsKeyOfSetOrMap extends AbstractAsKeyOfSetOrMap {
             UNMODIFIABLE_MAP_COLLECTOR,
             IMMUTABLE_MAP_COLLECTOR);
 
+    private static final Supplier<Symbol> JAVA_UTIL_STREAM_COLLECTOR =
+            VisitorState.memoize(state -> state.getSymbolFromString("java.util.stream.Collector"));
+
     @Override
     public final Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
         Description superResult = super.matchMethodInvocation(tree, state);
@@ -143,7 +147,7 @@ abstract class MoreAbstractAsKeyOfSetOrMap extends AbstractAsKeyOfSetOrMap {
             if (collectorType == null) {
                 return Description.NO_MATCH;
             }
-            Symbol collectorSymbol = state.getSymbolFromString("java.util.stream.Collector");
+            Symbol collectorSymbol = JAVA_UTIL_STREAM_COLLECTOR.get(state);
             if (collectorSymbol == null) {
                 return Description.NO_MATCH;
             }
