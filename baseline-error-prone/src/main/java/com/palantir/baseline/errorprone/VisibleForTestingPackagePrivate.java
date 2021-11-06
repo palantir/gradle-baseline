@@ -20,6 +20,7 @@ import com.google.common.annotations.VisibleForTesting;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
+import com.google.errorprone.fixes.SuggestedFix;
 import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
@@ -52,7 +53,8 @@ public final class VisibleForTestingPackagePrivate extends BugChecker
             return buildDescription(tree)
                     // This may break code that references the visible component, so it should not
                     // be applied by default.
-                    .addFix(SuggestedFixes.removeModifiers(tree, state, Modifier.PROTECTED, Modifier.PUBLIC))
+                    .addFix(SuggestedFixes.removeModifiers(tree, state, Modifier.PROTECTED, Modifier.PUBLIC)
+                            .orElseGet(SuggestedFix::emptyFix))
                     .build();
         }
         return Description.NO_MATCH;

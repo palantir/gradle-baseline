@@ -21,6 +21,7 @@ import com.google.errorprone.BugPattern;
 import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
+import com.google.errorprone.fixes.SuggestedFix;
 import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
@@ -104,14 +105,16 @@ public final class RedundantModifier extends BugChecker
         if (INTERFACE_NESTED_CLASS_MODIFIERS.matches(tree, state)) {
             return buildDescription(tree)
                     .setMessage("Types nested in interfaces are public and static by default.")
-                    .addFix(SuggestedFixes.removeModifiers(tree, state, Modifier.PUBLIC, Modifier.STATIC))
+                    .addFix(SuggestedFixes.removeModifiers(tree, state, Modifier.PUBLIC, Modifier.STATIC)
+                            .orElseGet(SuggestedFix::emptyFix))
                     .build();
         }
         if (STATIC_ENUM_OR_INTERFACE.matches(tree, state)) {
             return buildDescription(tree)
                     .setMessage(tree.getKind().name().toLowerCase(Locale.ENGLISH)
                             + "s are static by default. The 'static' modifier is unnecessary.")
-                    .addFix(SuggestedFixes.removeModifiers(tree, state, Modifier.STATIC))
+                    .addFix(SuggestedFixes.removeModifiers(tree, state, Modifier.STATIC)
+                            .orElseGet(SuggestedFix::emptyFix))
                     .build();
         }
         return Description.NO_MATCH;
@@ -122,32 +125,37 @@ public final class RedundantModifier extends BugChecker
         if (PRIVATE_ENUM_CONSTRUCTOR.matches(tree, state)) {
             return buildDescription(tree)
                     .setMessage("Enum constructors are private by default. The 'private' modifier is unnecessary.")
-                    .addFix(SuggestedFixes.removeModifiers(tree, state, Modifier.PRIVATE))
+                    .addFix(SuggestedFixes.removeModifiers(tree, state, Modifier.PRIVATE)
+                            .orElseGet(SuggestedFix::emptyFix))
                     .build();
         }
         if (STATIC_FINAL_METHOD.matches(tree, state)) {
             return buildDescription(tree)
                     .setMessage("Static methods cannot be overridden. The 'final' modifier is unnecessary.")
-                    .addFix(SuggestedFixes.removeModifiers(tree, state, Modifier.FINAL))
+                    .addFix(SuggestedFixes.removeModifiers(tree, state, Modifier.FINAL)
+                            .orElseGet(SuggestedFix::emptyFix))
                     .build();
         }
         if (UNNECESSARY_INTERFACE_METHOD_MODIFIERS.matches(tree, state)) {
             return buildDescription(tree)
                     .setMessage("Interface methods are public and abstract by default. "
                             + "The 'public' and 'abstract' modifiers are unnecessary.")
-                    .addFix(SuggestedFixes.removeModifiers(tree, state, Modifier.PUBLIC, Modifier.ABSTRACT))
+                    .addFix(SuggestedFixes.removeModifiers(tree, state, Modifier.PUBLIC, Modifier.ABSTRACT)
+                            .orElseGet(SuggestedFix::emptyFix))
                     .build();
         }
         if (INTERFACE_STATIC_METHOD_MODIFIERS.matches(tree, state)) {
             return buildDescription(tree)
                     .setMessage("Interface components are public by default. The 'public' modifier is unnecessary.")
-                    .addFix(SuggestedFixes.removeModifiers(tree, state, Modifier.PUBLIC))
+                    .addFix(SuggestedFixes.removeModifiers(tree, state, Modifier.PUBLIC)
+                            .orElseGet(SuggestedFix::emptyFix))
                     .build();
         }
         if (UNNECESSARY_FINAL_METHOD_ON_FINAL_CLASS.matches(tree, state)) {
             return buildDescription(tree)
                     .setMessage("Redundant 'final' modifier on an instance method of a final class.")
-                    .addFix(SuggestedFixes.removeModifiers(tree, state, Modifier.FINAL))
+                    .addFix(SuggestedFixes.removeModifiers(tree, state, Modifier.FINAL)
+                            .orElseGet(SuggestedFix::emptyFix))
                     .build();
         }
         return Description.NO_MATCH;
@@ -160,13 +168,15 @@ public final class RedundantModifier extends BugChecker
                     .setMessage("Interface fields are public, static, and final by default. "
                             + "These modifiers are unnecessary to specify.")
                     .addFix(SuggestedFixes.removeModifiers(
-                            tree, state, Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL))
+                                    tree, state, Modifier.PUBLIC, Modifier.STATIC, Modifier.FINAL)
+                            .orElseGet(SuggestedFix::emptyFix))
                     .build();
         }
         if (ABSTRACT_METHOD_MODIFIERS.matches(tree, state)) {
             return buildDescription(tree)
                     .setMessage("The final modifier has no impact on abstract methods.")
-                    .addFix(SuggestedFixes.removeModifiers(tree, state, Modifier.FINAL))
+                    .addFix(SuggestedFixes.removeModifiers(tree, state, Modifier.FINAL)
+                            .orElseGet(SuggestedFix::emptyFix))
                     .build();
         }
         return Description.NO_MATCH;
