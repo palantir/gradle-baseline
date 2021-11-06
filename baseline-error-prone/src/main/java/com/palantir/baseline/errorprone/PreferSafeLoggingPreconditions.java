@@ -28,10 +28,12 @@ import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
+import com.google.errorprone.suppliers.Supplier;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
+import com.sun.tools.javac.code.Type;
 import java.util.List;
 import java.util.regex.Pattern;
 
@@ -66,6 +68,9 @@ public final class PreferSafeLoggingPreconditions extends BugChecker implements 
             "notNull", "checkNotNull", // org.apache.commons.lang3.Validate.notNull
             "validState", "checkState"); // org.apache.commons.lang3.Validate.validState
 
+    private static final Supplier<Type> JAVA_STRING =
+            VisitorState.memoize(state -> state.getTypeFromString("java.lang.String"));
+
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
         if (!METHOD_MATCHER.matches(tree, state)) {
@@ -79,8 +84,7 @@ public final class PreferSafeLoggingPreconditions extends BugChecker implements 
 
         if (args.size() == 2) {
             ExpressionTree messageArg = args.get(1);
-            boolean isStringType = ASTHelpers.isSameType(
-                    ASTHelpers.getType(messageArg), state.getTypeFromString("java.lang.String"), state);
+            boolean isStringType = ASTHelpers.isSameType(ASTHelpers.getType(messageArg), JAVA_STRING.get(state), state);
             if (!isStringType || !compileTimeConstExpressionMatcher.matches(messageArg, state)) {
                 return Description.NO_MATCH;
             }

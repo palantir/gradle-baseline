@@ -76,20 +76,20 @@ public final class CatchBlockLogException extends BugChecker implements BugCheck
         return Description.NO_MATCH;
     }
 
-    private static Optional<SuggestedFix> attemptFix(CatchTree tree, VisitorState state) {
+    private static SuggestedFix attemptFix(CatchTree tree, VisitorState state) {
         List<MethodInvocationTree> matchingLoggingStatements =
                 tree.getBlock().accept(LogStatementScanner.INSTANCE, state);
         if (matchingLoggingStatements == null || matchingLoggingStatements.size() != 1) {
-            return Optional.empty();
+            return SuggestedFix.emptyFix();
         }
         MethodInvocationTree loggingInvocation = matchingLoggingStatements.get(0);
         if (containslogException.matches(loggingInvocation, state)) {
-            return Optional.empty();
+            return SuggestedFix.emptyFix();
         }
         List<? extends ExpressionTree> loggingArguments = loggingInvocation.getArguments();
         // There are no valid log invocations without at least a single argument.
         ExpressionTree lastArgument = loggingArguments.get(loggingArguments.size() - 1);
-        return Optional.of(SuggestedFix.builder()
+        return SuggestedFix.builder()
                 .replace(
                         lastArgument,
                         lastArgument
@@ -97,7 +97,7 @@ public final class CatchBlockLogException extends BugChecker implements BugCheck
                                 .orElseGet(() -> state.getSourceForNode(lastArgument)
                                         + ", "
                                         + tree.getParameter().getName()))
-                .build());
+                .build();
     }
 
     private static final class ThrowableFromArgVisitor extends SimpleTreeVisitor<Optional<String>, VisitorState> {

@@ -30,6 +30,7 @@ import com.google.errorprone.bugpatterns.BugChecker.MethodInvocationTreeMatcher;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
+import com.google.errorprone.suppliers.Supplier;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
@@ -40,6 +41,7 @@ import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Type;
+import com.sun.tools.javac.util.Name;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -86,6 +88,8 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
             .onClass(ImmutablesBuilderMissingInitialization::extendsImmutablesGeneratedClass)
             .named("build")
             .withParameters();
+
+    private static final Supplier<Name> GENERATOR = VisitorState.memoize(state -> state.getName("generator"));
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
@@ -311,7 +315,7 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
                                     .tsym
                                     .getQualifiedName()
                                     .contentEquals("org.immutables.value.Generated"))
-                            .map(annotation -> annotation.member(state.getName("generator")))
+                            .map(annotation -> annotation.member(GENERATOR.get(state)))
                             .filter(Objects::nonNull)
                             .anyMatch(attribute -> Objects.equals(attribute.getValue(), "Immutables"))
                     || extendsImmutablesGeneratedClass(((ClassSymbol) type.tsym).getSuperclass(), state);

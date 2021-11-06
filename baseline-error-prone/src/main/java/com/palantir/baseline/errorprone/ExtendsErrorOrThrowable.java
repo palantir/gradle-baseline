@@ -29,7 +29,6 @@ import com.google.errorprone.suppliers.Suppliers;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.Type;
-import java.util.Optional;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -60,13 +59,13 @@ public final class ExtendsErrorOrThrowable extends BugChecker implements BugChec
         return buildDescription(tree).addFix(buildFix(tree, state)).build();
     }
 
-    private static Optional<SuggestedFix> buildFix(ClassTree tree, VisitorState state) {
+    private static SuggestedFix buildFix(ClassTree tree, VisitorState state) {
         if (IS_ERROR_OR_THROWABLE.matches(tree.getExtendsClause(), state)) {
             Type exceptionType = Suppliers.typeFromClass(RuntimeException.class).get(state);
             String prettyExceptionType = SuggestedFixes.prettyType(exceptionType, state);
-            return Optional.of(SuggestedFix.replace(tree.getExtendsClause(), prettyExceptionType));
+            return SuggestedFix.replace(tree.getExtendsClause(), prettyExceptionType);
         } else {
-            return Optional.empty();
+            return SuggestedFix.emptyFix();
         }
     }
 }

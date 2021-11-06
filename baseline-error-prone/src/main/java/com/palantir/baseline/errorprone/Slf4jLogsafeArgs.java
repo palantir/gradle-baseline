@@ -29,10 +29,12 @@ import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
+import com.google.errorprone.suppliers.Supplier;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.SimpleTreeVisitor;
+import com.sun.tools.javac.code.Type;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
@@ -54,11 +56,14 @@ public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocati
             .onDescendantOf("org.slf4j.Logger")
             .withNameMatching(Pattern.compile("trace|debug|info|warn|error"));
 
+    private static final Supplier<Type> JAVA_OBJECT =
+            VisitorState.memoize(state -> state.getTypeFromString("java.lang" + ".Object"));
+
     private static final Matcher<ExpressionTree> THROWABLE = MoreMatchers.isSubtypeOf(Throwable.class);
     private static final Matcher<ExpressionTree> ARG = MoreMatchers.isSubtypeOf("com.palantir.logsafe.Arg");
     private static final Matcher<ExpressionTree> MARKER = MoreMatchers.isSubtypeOf("org.slf4j.Marker");
-    private static final Matcher<Tree> OBJECT_ARRAY = Matchers.isSubtypeOf(
-            s -> s.getType(s.getTypeFromString("java.lang.Object"), true, Collections.emptyList()));
+    private static final Matcher<Tree> OBJECT_ARRAY =
+            Matchers.isSubtypeOf(s -> s.getType(JAVA_OBJECT.get(s), true, Collections.emptyList()));
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {

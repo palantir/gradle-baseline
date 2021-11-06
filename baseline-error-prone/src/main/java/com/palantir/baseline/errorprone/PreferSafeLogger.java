@@ -26,6 +26,7 @@ import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
+import com.google.errorprone.suppliers.Supplier;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.IdentifierTree;
@@ -72,6 +73,9 @@ public final class PreferSafeLogger extends BugChecker implements BugChecker.Var
             Matchers.variableInitializer(MethodMatchers.staticMethod()
                     .onClass("org.slf4j.LoggerFactory")
                     .named("getLogger")));
+
+    private static final Supplier<Type> SAFE_LOGGER_ARG =
+            VisitorState.memoize(state -> state.getTypeFromString("com.palantir.logsafe.Arg"));
 
     @Override
     public Description matchVariable(VariableTree tree, VisitorState state) {
@@ -142,7 +146,7 @@ public final class PreferSafeLogger extends BugChecker implements BugChecker.Var
                 .isSameType(ASTHelpers.getType(arguments.get(0)), state.getTypeFromString(String.class.getName()))) {
             return false;
         }
-        Type argType = state.getTypeFromString("com.palantir.logsafe.Arg");
+        Type argType = SAFE_LOGGER_ARG.get(state);
         Type throwableType = state.getTypeFromString(Throwable.class.getName());
         int args = 0;
         int firstArgStartPosition = -1;

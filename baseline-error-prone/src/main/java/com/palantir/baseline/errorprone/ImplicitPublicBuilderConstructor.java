@@ -23,6 +23,7 @@ import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.fixes.SuggestedFix;
 import com.google.errorprone.matchers.Description;
+import com.google.errorprone.suppliers.Supplier;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.MethodTree;
@@ -31,6 +32,7 @@ import com.sun.source.tree.Tree.Kind;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.tree.JCTree;
+import com.sun.tools.javac.util.Name;
 import java.util.List;
 import java.util.Set;
 import javax.lang.model.element.Modifier;
@@ -44,6 +46,7 @@ import javax.lang.model.element.Modifier;
         summary = "A Builder with a static factory method on the encapsulating class must have a private constructor. "
                 + "Minimizing unnecessary public API prevents future API breaks from impacting consumers. ")
 public final class ImplicitPublicBuilderConstructor extends BugChecker implements BugChecker.ClassTreeMatcher {
+    private static final Supplier<Name> BUILDER = VisitorState.memoize(state -> state.getName("builder"));
 
     @Override
     public Description matchClass(ClassTree tree, VisitorState state) {
@@ -97,7 +100,7 @@ public final class ImplicitPublicBuilderConstructor extends BugChecker implement
     private static boolean hasStaticBuilderFactory(
             ClassSymbol classSymbol, ClassTree builderClassTree, VisitorState state) {
         Set<MethodSymbol> matching = ASTHelpers.findMatchingMethods(
-                state.getName("builder"),
+                BUILDER.get(state),
                 methodSymbol -> methodSymbol != null
                         && methodSymbol.isStatic()
                         && ASTHelpers.isSameType(
