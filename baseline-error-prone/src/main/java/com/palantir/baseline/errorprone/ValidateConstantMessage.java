@@ -26,9 +26,11 @@ import com.google.errorprone.matchers.CompileTimeConstantExpressionMatcher;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
+import com.google.errorprone.suppliers.Supplier;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
+import com.sun.tools.javac.code.Type;
 import java.util.List;
 
 @AutoService(BugChecker.class)
@@ -67,6 +69,9 @@ public final class ValidateConstantMessage extends BugChecker implements BugChec
                     .put("allElementsOfType", 3) // commons-lang 2.x only
                     .build();
 
+    private static final Supplier<Type> JAVA_STRING =
+            VisitorState.memoize(state -> state.getTypeFromString("java.lang.String"));
+
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
         if (!VALIDATE_METHODS.matches(tree, state)) {
@@ -86,8 +91,7 @@ public final class ValidateConstantMessage extends BugChecker implements BugChec
         }
 
         ExpressionTree messageArg = args.get(messageArgNumber - 1);
-        boolean isStringType = ASTHelpers.isSameType(
-                ASTHelpers.getType(messageArg), state.getTypeFromString("java.lang.String"), state);
+        boolean isStringType = ASTHelpers.isSameType(ASTHelpers.getType(messageArg), JAVA_STRING.get(state), state);
         boolean isConstantString = compileTimeConstExpressionMatcher.matches(messageArg, state);
         if (!isStringType || isConstantString) {
             return Description.NO_MATCH;

@@ -24,6 +24,7 @@ import com.google.errorprone.bugpatterns.StreamResourceLeak;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
+import com.google.errorprone.suppliers.Supplier;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
@@ -42,6 +43,9 @@ public final class JooqResultStreamLeak extends StreamResourceLeak {
     private static final Matcher<ExpressionTree> MATCHER = MethodMatchers.instanceMethod()
             .onDescendantOf("org.jooq.ResultQuery")
             .withAnyName();
+
+    private static final Supplier<Type> JOOQ_QUERY_PART =
+            VisitorState.memoize(state -> state.getTypeFromString("org.jooq.QueryPart"));
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
@@ -65,7 +69,7 @@ public final class JooqResultStreamLeak extends StreamResourceLeak {
 
         // QueryParts can hold resources but usually don't, so auto-tripping and trying to fix on things
         // like SelectConditionStep is unnecessary.
-        boolean isJooqQuery = ASTHelpers.isSubtype(returnType, state.getTypeFromString("org.jooq.QueryPart"), state);
+        boolean isJooqQuery = ASTHelpers.isSubtype(returnType, JOOQ_QUERY_PART.get(state), state);
 
         return isAutoCloseable && !isJooqQuery;
     }

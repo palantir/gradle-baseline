@@ -26,9 +26,11 @@ import com.google.errorprone.matchers.CompileTimeConstantExpressionMatcher;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
+import com.google.errorprone.suppliers.Supplier;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.NewClassTree;
+import com.sun.tools.javac.code.Type;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -60,6 +62,9 @@ public final class PreferSafeLoggableExceptions extends BugChecker implements Bu
     private final Matcher<ExpressionTree> compileTimeConstExpressionMatcher =
             new CompileTimeConstantExpressionMatcher();
 
+    private static final Supplier<Type> JAVA_STRING =
+            VisitorState.memoize(state -> state.getTypeFromString("java.lang.String"));
+
     @Override
     public Description matchNewClass(NewClassTree tree, VisitorState state) {
         // This is invoked for all new class creations, so we execute a fast check first to
@@ -69,8 +74,7 @@ public final class PreferSafeLoggableExceptions extends BugChecker implements Bu
         }
         List<? extends ExpressionTree> args = tree.getArguments();
         Optional<? extends ExpressionTree> messageArg = args.stream()
-                .filter(arg -> ASTHelpers.isSameType(
-                        ASTHelpers.getType(arg), state.getTypeFromString("java.lang.String"), state))
+                .filter(arg -> ASTHelpers.isSameType(ASTHelpers.getType(arg), JAVA_STRING.get(state), state))
                 .reduce((one, two) -> one);
 
         if (!messageArg.isPresent()) {

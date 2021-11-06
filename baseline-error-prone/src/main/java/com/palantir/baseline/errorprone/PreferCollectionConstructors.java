@@ -27,8 +27,10 @@ import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
+import com.google.errorprone.suppliers.Supplier;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
+import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCMethodInvocation;
@@ -244,6 +246,9 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
             NEW_TREE_SET_WITH_ITERABLE,
             NEW_HASH_SET_WITH_ITERABLE);
 
+    private static final Supplier<Type> JAVA_UTIL_COLLECTION =
+            VisitorState.memoize(state -> state.getTypeFromString("java.util.Collection"));
+
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
 
@@ -288,7 +293,6 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
             return false;
         }
         Types types = state.getTypes();
-        return types.isSubtype(
-                types.erasure(args.get(0).type), types.erasure(state.getTypeFromString("java.util.Collection")));
+        return types.isSubtype(types.erasure(args.get(0).type), types.erasure(JAVA_UTIL_COLLECTION.get(state)));
     }
 }
