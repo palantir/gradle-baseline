@@ -28,15 +28,23 @@ import org.gradle.api.publish.Publication;
 import org.gradle.api.publish.PublishingExtension;
 import org.gradle.api.publish.ivy.IvyPublication;
 import org.gradle.api.publish.maven.MavenPublication;
+import org.gradle.util.GradleVersion;
 
 public final class BaselineJavaVersions implements Plugin<Project> {
 
     public static final String EXTENSION_NAME = "javaVersions";
 
+    public static final GradleVersion MIN_GRADLE_VERSION = GradleVersion.version("7.0");
+
     @Override
     public void apply(Project project) {
         if (!Objects.equals(project, project.getRootProject())) {
             throw new GradleException("BaselineJavaVersions may only be applied to the root project");
+        }
+        GradleVersion currentGradleVersion = GradleVersion.current();
+        if (currentGradleVersion.compareTo(MIN_GRADLE_VERSION) < 0) {
+            throw new GradleException(String.format(
+                    "BaselineJavaVersions requires %s. %s is not supported", MIN_GRADLE_VERSION, currentGradleVersion));
         }
         BaselineJavaVersionsExtension rootExtension =
                 project.getExtensions().create(EXTENSION_NAME, BaselineJavaVersionsExtension.class, project);
