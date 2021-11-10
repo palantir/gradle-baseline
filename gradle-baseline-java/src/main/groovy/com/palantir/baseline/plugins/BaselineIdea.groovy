@@ -433,6 +433,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
             <component name="JavaProjectCodeInsightSettings">
               <excluded-names>
                 <name>shadow</name><!-- from gradle-shadow-jar -->
+                <name>org.junit.jupiter.params.shadow</name><!-- shaded deps from junit5 -->
                 <name>org.gradle.internal.impldep</name>
                 <name>autovalue.shaded</name>
                 <name>org.inferred.freebuilder.shaded</name>
