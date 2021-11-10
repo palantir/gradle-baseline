@@ -25,6 +25,7 @@ _Baseline is a family of Gradle plugins for configuring Java projects with sensi
 | `com.palantir.baseline-release-compatibility` | Ensures projects targeting older JREs only compile against classes and methods available in those JREs.
 | `com.palantir.baseline-testing`               | Configures test tasks to dump heap dumps (hprof files) for convenient debugging
 | `com.palantir.baseline-immutables`            | Enables incremental compilation for the [Immutables](http://immutables.github.io/) annotation processor.
+| `com.palantir.baseline-java-versions`         | Configures JDK versions in a consistent way via Gradle Toolchains.
 
 See also the [Baseline Java Style Guide and Best Practices](./docs).
 
@@ -243,7 +244,7 @@ as that file will be overridden on updates.
 ### Copyright Checks
 
 Baseline enforces Palantir copyright at the beginning of files when applying `com.palantir.baseline-format`. To change this, edit the template copyrights
-in `.baseline/copyright/*.txt`. The largest file (sorted lexicographically) will be used to generate a new copyright if one is missing, or none of the existing templates match.￿
+in `.baseline/copyright/*.txt`. The largest file (sorted lexicographically) will be used to generate a new copyright if one is missing, or none of the existing templates match.
 
 To automatically update all files with mismatching/missing copyrights, run `./gradlew format`.
 
@@ -278,7 +279,7 @@ checkClassUniqueness {
 }
 ```
 
-If you discover multiple jars on your classpath contain clashing classes, you should ideally try to fix them upstream and then depend on the fixed version.  If this is not feasible, you may be able to tell Gradle to [use a substituted dependency instead](https://docs.gradle.org/current/userguide/customizing_dependency_resolution_behavior.html#sec:module_substitution):
+If you discover multiple jars on your classpath contain clashing classes, you should ideally try to fix them upstream and then depend on the fixed version.  If this is not feasible, you may be able to tell Gradle to [use a substituted dependency instead](https://docs.gradle.org/current/userguide/resolution_rules.html#sec:dependency_resolve_rules):
 
 ```gradle
 configurations.all {
@@ -444,3 +445,36 @@ tasks.withType(JavaExec) {
 If you've explicitly specified a lower sourceCompatibility (e.g. for a published API jar), then this plugin is a no-op.
 In fact, Java will actually error if you try to switch on the `--enable-preview` flag to get cutting edge syntax
 features but set `sourceCompatibility` (or `--release`) to an older Java version.
+
+## com.palantir.baseline-java-versions
+
+This plugin allows consistent configuration of JDK versions via [Gradle Toolchains](https://docs.gradle.org/current/userguide/toolchains.html).
+The plugin is currently used on an opt-in basis. To use it, apply the plugin and configure the default JDK versions in your root project (note that the plugin requires Gradle 7):
+
+```gradle
+// In the root build.gradle
+apply plugin: 'com.palantir.baseline-java-versions'
+
+javaVersions {
+    libraryTarget = 11
+    distributionTarget = 15
+    runtime = 17
+}
+```
+
+The configurable fields of the `javaVersions` extension are:
+* `libraryTarget`: (required) The Java version used for compilation of libraries that are published.
+* `distributionTarget`: (optional) The Java version used for compilation of code used within distributions, but not published externally. Defaults to the `libraryTarget` version.
+* `runtime`: (optional) Runtime Java version for testing and packaging distributions. Defaults to the `distributionTarget` version.
+
+The configured Java versions are used as defaults for all projects. Optionally, you can override the defaults in a sub-project, but it is recommended to avoid doing so:
+
+```gradle
+// In a sub-project's build.gradle
+javaVersion {
+    target = 11
+    runtime = 11
+}
+```
+
+The optionally configurable fields of the `javaVersion` extension are `target`, for setting the target version used for compilation and `runtime`, for setting the runtime version used for testing and distributions.
