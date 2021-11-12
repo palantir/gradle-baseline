@@ -205,7 +205,7 @@ public final class BaselineTesting implements Plugin<Project> {
         } catch (ReflectiveOperationException e) {
             throw new RuntimeException(
                     String.format(
-                            "Error calling Test#getTestFrameworkProvider reflectively on Gradle version %s",
+                            "Error calling Test#getTestFrameworkProperty reflectively on Gradle version %s",
                             GradleVersion.current()),
                     e);
         }
