@@ -21,7 +21,6 @@ import com.google.common.collect.ImmutableSet;
 import com.palantir.baseline.tasks.CheckJUnitDependencies;
 import com.palantir.baseline.tasks.CheckUnusedDependenciesTask;
 import com.palantir.baseline.util.VersionUtils;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.Objects;
 import java.util.Optional;
@@ -203,7 +202,7 @@ public final class BaselineTesting implements Plugin<Project> {
             Method getTestFrameworkProperty = Test.class.getMethod("getTestFrameworkProperty");
             return (Property<org.gradle.api.internal.tasks.testing.TestFramework>)
                     getTestFrameworkProperty.invoke(task);
-        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+        } catch (ReflectiveOperationException e) {
             throw new RuntimeException(
                     String.format(
                             "Error calling Test#getTestFrameworkProvider reflectively on Gradle version %s",
