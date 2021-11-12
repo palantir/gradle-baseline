@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Fix errors setting test framework due to finalized property
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1974
