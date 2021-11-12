@@ -21,6 +21,8 @@ import com.google.common.collect.ImmutableSet;
 import com.palantir.baseline.tasks.CheckJUnitDependencies;
 import com.palantir.baseline.tasks.CheckUnusedDependenciesTask;
 import com.palantir.baseline.util.VersionUtils;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
 import java.util.Objects;
 import java.util.Optional;
 import org.gradle.api.Plugin;
@@ -30,12 +32,14 @@ import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedComponentResult;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
+import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskContainer;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.api.tasks.testing.junitplatform.JUnitPlatformOptions;
 import org.gradle.api.tasks.testing.logging.TestLogEvent;
+import org.gradle.util.GradleVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -176,7 +180,34 @@ public final class BaselineTesting implements Plugin<Project> {
         }
     }
 
+    @SuppressWarnings("IllegalImports")
     public static boolean useJUnitPlatformEnabled(Test task) {
-        return task.getOptions() instanceof JUnitPlatformOptions;
+        // Starting with Gradle 7.3, the test framework property is getting finalized and can't be set multiple times.
+        // Using getter such as 'Test#getOptions' will set a default test framework if it is not configured yet and
+        // finalize this value. This result in errors when trying to set the test framework at a later point.
+        // For Gradle 7.3, we can actually access the test framework as a property without finalizing its value which
+        // allows us to check if it's already configured.
+        if (GradleVersion.current().compareTo(GradleVersion.version("7.3")) < 0) {
+            return task.getOptions() instanceof JUnitPlatformOptions;
+        }
+        Property<org.gradle.api.internal.tasks.testing.TestFramework> testFramework =
+                getTestFrameworkWithReflection(task);
+        return testFramework.isPresent() && (testFramework.get().getOptions() instanceof JUnitPlatformOptions);
+    }
+
+    @SuppressWarnings("IllegalImports")
+    private static Property<org.gradle.api.internal.tasks.testing.TestFramework> getTestFrameworkWithReflection(
+            Test task) {
+        try {
+            Method getTestFrameworkProperty = Test.class.getMethod("getTestFrameworkProperty");
+            return (Property<org.gradle.api.internal.tasks.testing.TestFramework>)
+                    getTestFrameworkProperty.invoke(task);
+        } catch (NoSuchMethodException | InvocationTargetException | IllegalAccessException e) {
+            throw new RuntimeException(
+                    String.format(
+                            "Error calling Test#getTestFrameworkProvider reflectively on Gradle version %s",
+                            GradleVersion.current()),
+                    e);
+        }
     }
 }
