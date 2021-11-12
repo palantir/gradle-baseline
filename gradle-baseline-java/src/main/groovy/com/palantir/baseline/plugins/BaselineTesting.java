@@ -187,6 +187,7 @@ public final class BaselineTesting implements Plugin<Project> {
         // finalize this value. This result in errors when trying to set the test framework at a later point.
         // For Gradle 7.3, we can actually access the test framework as a property without finalizing its value which
         // allows us to check if it's already configured.
+        // See: https: // github.com/palantir/gradle-baseline/pull/1974
         if (GradleVersion.current().compareTo(GradleVersion.version("7.3")) < 0) {
             return task.getOptions() instanceof JUnitPlatformOptions;
         }
