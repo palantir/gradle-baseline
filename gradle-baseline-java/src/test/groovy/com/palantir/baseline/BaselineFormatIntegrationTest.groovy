@@ -104,12 +104,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         def testedDir = new File(projectDir, "src/main/java")
         FileUtils.copyDirectory(inputDir, testedDir)
 
-        buildFile << """
-            plugins {
-                id 'java'
-                id 'com.palantir.baseline-format'
-            }
-        """.stripIndent()
+        buildFile << standardBuildFile
         file('gradle.properties') << "com.palantir.baseline-format.eclipse=true\n"
 
         when:
