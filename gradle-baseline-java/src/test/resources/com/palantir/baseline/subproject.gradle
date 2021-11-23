@@ -23,7 +23,6 @@ repositories {
     mavenCentral()
 }
 
-sourceCompatibility = 1.7
 
 dependencies {
     testImplementation 'junit:junit:4.12'

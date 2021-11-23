@@ -23,6 +23,7 @@ plugins {
 apply plugin: 'com.palantir.external-publish'
 apply plugin: 'com.palantir.consistent-versions'
 apply plugin: 'com.palantir.baseline'
+apply plugin: 'com.palantir.baseline-java-versions'
 
 allprojects {
     repositories {
@@ -38,7 +39,6 @@ allprojects {
     }
 
     pluginManager.withPlugin('java') {
-        sourceCompatibility = 1.8
         tasks.withType(JavaCompile) {
             options.compilerArgs += ['-Werror', '-Xlint:deprecation']
             options.errorprone {
@@ -57,4 +57,8 @@ allprojects {
     group = 'com.palantir.baseline'
     version System.env.CIRCLE_TAG ?: gitVersion()
     description = 'A Gradle plugin for applying Baseline-recommended build and IDE settings'
+}
+
+javaVersions {
+    libraryTarget = 11
 }
