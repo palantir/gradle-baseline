@@ -129,7 +129,7 @@ public final class ClassInitializationDeadlock extends BugChecker implements Bug
             if (newClassSymbol.isPrivate()) {
                 return true;
             }
-            return !new BaselineErrorProneScope(newClassSymbol.members())
+            return !ASTHelpers.scope(newClassSymbol.members())
                     .getSymbols(ClassInitializationDeadlock::canBeExternallyInitialized, LookupKind.NON_RECURSIVE)
                     .iterator()
                     .hasNext();
