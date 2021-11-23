@@ -24,8 +24,15 @@ import spock.lang.Unroll
 class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
     private static final int JAVA_8_BYTECODE = 52
     private static final int JAVA_11_BYTECODE = 55
+    private static final int JAVA_17_BYTECODE = 61
 
     def standardBuildFile = '''
+        buildscript {
+            repositories { mavenCentral() }
+            dependencies {
+                classpath 'com.netflix.nebula:nebula-publishing-plugin:17.0.0'
+            }
+        }
         plugins {
             id 'java-library'
             id 'application'
@@ -78,6 +85,39 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
 
         then:
         runTasksWithFailure('compileJava')
+    }
+
+    def 'distribution target is used when no artifacts are published'() {
+        when:
+        buildFile << '''
+        javaVersions {
+            libraryTarget = 11
+            distributionTarget = 17
+        }
+        '''.stripIndent(true)
+        file('src/main/java/Main.java') << java11CompatibleCode
+        File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
+
+        then:
+        runTasksSuccessfully('compileJava')
+        getBytecodeVersion(compiledClass) == JAVA_17_BYTECODE
+    }
+
+    def 'library target is used when nebula maven publishing plugin is applied'() {
+        when:
+        buildFile << '''
+        apply plugin: 'nebula.maven-publish'
+        javaVersions {
+            libraryTarget = 11
+            distributionTarget = 17
+        }
+        '''.stripIndent(true)
+        file('src/main/java/Main.java') << java11CompatibleCode
+        File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
+
+        then:
+        runTasksSuccessfully('compileJava')
+        getBytecodeVersion(compiledClass) == JAVA_11_BYTECODE
     }
 
     def 'java 11 compilation succeeds targeting java 11'() {
