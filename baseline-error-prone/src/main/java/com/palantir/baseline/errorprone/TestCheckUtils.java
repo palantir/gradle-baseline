@@ -25,7 +25,7 @@ import com.sun.source.tree.ImportTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.TreePath;
 
-final class TestCheckUtils {
+public final class TestCheckUtils {
 
     private TestCheckUtils() {
         // utility class

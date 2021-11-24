@@ -32,7 +32,7 @@ import javax.annotation.Nullable;
 
 /** Utility functionality that does not exist in {@link com.google.errorprone.util.ASTHelpers}. */
 @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
-final class MoreASTHelpers {
+public final class MoreASTHelpers {
 
     /** Removes any type that is a subtype of another type in the set. */
     @SuppressWarnings("ReferenceEquality")

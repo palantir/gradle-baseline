@@ -33,7 +33,7 @@ import java.util.List;
 import java.util.function.IntPredicate;
 
 /** Extension atop {@link AbstractAsKeyOfSetOrMap} to apply to caches and collectors. */
-abstract class MoreAbstractAsKeyOfSetOrMap extends AbstractAsKeyOfSetOrMap {
+public abstract class MoreAbstractAsKeyOfSetOrMap extends AbstractAsKeyOfSetOrMap {
 
     private static final Matcher<ExpressionTree> GUAVA_CACHE_BUILDER = MethodMatchers.instanceMethod()
             .onDescendantOf("com.google.common.cache.CacheBuilder")

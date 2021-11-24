@@ -31,7 +31,7 @@ import java.util.Locale;
 import javax.lang.model.element.Modifier;
 
 /** Additional {@link Matcher} factory methods shared by baseline checks. */
-final class MoreMatchers {
+public final class MoreMatchers {
 
     /**
      * Delegates to {@link Matchers#isSubtypeOf(Class)}, but adds a defensive check against null literals to work around
