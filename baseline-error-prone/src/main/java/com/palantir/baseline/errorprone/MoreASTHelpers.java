@@ -36,7 +36,7 @@ public final class MoreASTHelpers {
 
     /** Removes any type that is a subtype of another type in the set. */
     @SuppressWarnings("ReferenceEquality")
-    static ImmutableList<Type> flattenTypesForAssignment(ImmutableList<Type> input, VisitorState state) {
+    public static ImmutableList<Type> flattenTypesForAssignment(ImmutableList<Type> input, VisitorState state) {
         ImmutableList<Type> types =
                 input.stream().map(type -> broadenAnonymousType(type, state)).collect(ImmutableList.toImmutableList());
         ImmutableList.Builder<Type> deduplicatedBuilder = ImmutableList.builderWithExpectedSize(types.size());
@@ -77,7 +77,7 @@ public final class MoreASTHelpers {
     }
 
     /** Gets thrown exceptions from a {@link TryTree} excluding those thrown from {@link CatchTree}. */
-    static ImmutableSet<Type> getThrownExceptionsFromTryBody(TryTree tree, VisitorState state) {
+    public static ImmutableSet<Type> getThrownExceptionsFromTryBody(TryTree tree, VisitorState state) {
         ImmutableSet.Builder<Type> results = ImmutableSet.builder();
         results.addAll(ASTHelpers.getThrownExceptions(tree.getBlock(), state));
         tree.getResources().forEach(resource -> {
@@ -104,7 +104,7 @@ public final class MoreASTHelpers {
     }
 
     /** Returns either the input type, or the types that make up the union in the case of a union type. */
-    static ImmutableList<Type> expandUnion(@Nullable Type type) {
+    public static ImmutableList<Type> expandUnion(@Nullable Type type) {
         if (type == null) {
             return ImmutableList.of();
         }
