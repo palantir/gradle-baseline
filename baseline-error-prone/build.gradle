@@ -50,3 +50,8 @@ group = originalGroup + '-internal'
 publishing.publications.maven {
     groupId = originalGroup
 }
+
+javaVersion {
+    target = 8
+    runtime = 11
+}
