@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: baseline-error-prone supports java8
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1992
