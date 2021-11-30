@@ -359,4 +359,27 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         def deps = new XmlSlurper().parse(externalDepsSettingsFile)
         deps.component.find { it.@name == "ExternalDependencies" }
     }
+
+    def 'Idea files use versions derived from the baseline-java-versions plugin'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << """
+            apply plugin: 'com.palantir.baseline-java-versions'
+            javaVersions {
+                libraryTarget = 11
+                distributionTarget = 15
+                runtime = 17
+            }
+        """.stripIndent()
+
+        then:
+        with('idea').build()
+        def rootIpr = Files.asCharSource(new File(projectDir, projectDir.name + ".ipr"), Charsets.UTF_8).read()
+        rootIpr.contains('languageLevel="JDK_15"')
+        rootIpr.contains('project-jdk-name="15"')
+        rootIpr.contains('<bytecodeTargetLevel target="11">')
+        rootIpr.contains("<module name=\"${projectDir.name}\" target=\"15\"/>")
+        def rootIml = Files.asCharSource(new File(projectDir, projectDir.name + ".iml"), Charsets.UTF_8).read()
+        rootIml.contains('LANGUAGE_LEVEL="JDK_15')
+    }
 }
