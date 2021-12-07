@@ -18,9 +18,17 @@ package com.palantir.baseline.plugins
 
 import com.google.common.collect.ImmutableMap
 import com.palantir.baseline.IntellijSupport
+import com.palantir.baseline.extensions.BaselineJavaVersionExtension
+import com.palantir.baseline.extensions.BaselineJavaVersionsExtension
 import com.palantir.baseline.util.GitUtils
 import groovy.transform.CompileStatic
 import groovy.xml.XmlUtil
+import org.gradle.api.JavaVersion
+import org.gradle.jvm.toolchain.JavaLanguageVersion
+import org.gradle.plugins.ide.idea.model.IdeaLanguageLevel
+import org.gradle.plugins.ide.idea.model.IdeaModule
+import org.gradle.plugins.ide.idea.model.Jdk
+
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -58,6 +66,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
         // Configure Idea module
         IdeaModel ideaModuleModel = project.extensions.getByType(IdeaModel)
         moveProjectReferencesToEnd(ideaModuleModel)
+        updateModuleLanguageVersion(ideaModuleModel, project)
 
         // If someone renames a project, leftover {ipr,iml,ipr} files may still exist on disk and
         // confuse users, so we proactively clean them up. Intentionally using an Action<Task> to allow up-to-dateness.
@@ -87,6 +96,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
         ideaRootModel.project.ipr.withXml {XmlProvider provider ->
             Node node = provider.asNode()
             addCodeStyle(node)
+            setRootJavaVersions(node)
             addCopyright(node)
             addCheckstyle(node)
             addEclipseFormat(node)
@@ -175,6 +185,51 @@ class BaselineIdea extends AbstractBaselinePlugin {
                 {
                     new Node(null, "component", ImmutableMap.of("name", "ProjectCodeStyleConfiguration"))
                 })
+    }
+
+    private void setRootJavaVersions(Node node) {
+        BaselineJavaVersionsExtension versions = project.getExtensions().findByType(BaselineJavaVersionsExtension.class)
+        if (versions != null) {
+            updateCompilerConfiguration(node, versions)
+            updateProjectRootManager(node, versions)
+        }
+    }
+
+    private void updateCompilerConfiguration(Node node, BaselineJavaVersionsExtension versions) {
+        Node compilerConfiguration = node.component.find { it.'@name' == 'CompilerConfiguration' }
+        Node bytecodeTargetLevel = GroovyXmlUtils.matchOrCreateChild(compilerConfiguration, "bytecodeTargetLevel")
+        JavaLanguageVersion defaultBytecodeVersion = versions.libraryTarget().get()
+        bytecodeTargetLevel.attributes().put("target", defaultBytecodeVersion.toString())
+        project.allprojects.forEach({ project ->
+            BaselineJavaVersionExtension version = project.getExtensions().findByType(BaselineJavaVersionExtension.class)
+            if (version != null && version.target().get().asInt() != defaultBytecodeVersion.asInt()) {
+                bytecodeTargetLevel.appendNode("module", ImmutableMap.of(
+                        "name", project.getName(),
+                        "target", version.target().get().toString()))
+            }
+        })
+    }
+
+    private void updateProjectRootManager(Node node, BaselineJavaVersionsExtension versions) {
+        Node projectRootManager = node.component.find { it.'@name' == 'ProjectRootManager' }
+        int featureRelease = versions.distributionTarget().get().asInt()
+        JavaVersion javaVersion = JavaVersion.toVersion(featureRelease)
+        projectRootManager.attributes().put("project-jdk-name", featureRelease)
+        projectRootManager.attributes().put("languageLevel", new IdeaLanguageLevel(javaVersion).getLevel())
+    }
+
+    private static void updateModuleLanguageVersion(IdeaModel ideaModel, Project currentProject) {
+        ideaModel.module.iml.withXml { XmlProvider provider ->
+            // Extension must be checked lazily within the transformer
+            BaselineJavaVersionExtension version = currentProject.extensions.findByType(BaselineJavaVersionExtension.class)
+            if (version != null) {
+                int featureRelease = version.target().get().asInt()
+                JavaVersion javaVersion = JavaVersion.toVersion(featureRelease)
+                Node node = provider.asNode()
+                Node newModuleRootManager = node.component.find { it.'@name' == 'NewModuleRootManager' }
+                newModuleRootManager.attributes().put("LANGUAGE_LEVEL", new IdeaLanguageLevel(javaVersion).getLevel())
+            }
+        }
     }
 
     /**
