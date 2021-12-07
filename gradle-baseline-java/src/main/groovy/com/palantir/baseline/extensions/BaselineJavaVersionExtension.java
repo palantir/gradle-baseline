@@ -29,11 +29,13 @@ public class BaselineJavaVersionExtension {
 
     private final Property<JavaLanguageVersion> target;
     private final Property<JavaLanguageVersion> runtime;
+    private final Property<Boolean> overrideLibraryAutoDetection;
 
     @Inject
     public BaselineJavaVersionExtension(Project project) {
         target = project.getObjects().property(JavaLanguageVersion.class);
         runtime = project.getObjects().property(JavaLanguageVersion.class);
+        overrideLibraryAutoDetection = project.getObjects().property(Boolean.class);
     }
 
     /** Target {@link JavaLanguageVersion} for compilation. */
@@ -52,5 +54,17 @@ public class BaselineJavaVersionExtension {
 
     public final void setRuntime(int value) {
         runtime.set(JavaLanguageVersion.of(value));
+    }
+
+    /**
+     * Overrides auto-detection if a value is present to force this module to be a
+     * library ({@code true}) or a distribution {@code false}).
+     */
+    public final Property<Boolean> overrideLibraryAutoDetection() {
+        return overrideLibraryAutoDetection;
+    }
+
+    public final void library() {
+        overrideLibraryAutoDetection.set(true);
     }
 }

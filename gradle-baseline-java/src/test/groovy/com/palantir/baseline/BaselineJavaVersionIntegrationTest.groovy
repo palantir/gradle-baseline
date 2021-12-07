@@ -103,6 +103,25 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         getBytecodeVersion(compiledClass) == JAVA_17_BYTECODE
     }
 
+    def 'library target is used when no artifacts are published but project is overridden as a library'() {
+        when:
+        buildFile << '''
+        javaVersions {
+            libraryTarget = 11
+            distributionTarget = 17
+        }
+        javaVersion {
+            library()
+        }
+        '''.stripIndent(true)
+        file('src/main/java/Main.java') << java11CompatibleCode
+        File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
+
+        then:
+        runTasksSuccessfully('compileJava')
+        getBytecodeVersion(compiledClass) == JAVA_11_BYTECODE
+    }
+
     def 'library target is used when nebula maven publishing plugin is applied'() {
         when:
         buildFile << '''

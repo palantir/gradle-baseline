@@ -24,6 +24,7 @@ import org.gradle.api.GradleException;
 import org.gradle.api.Named;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.provider.Property;
 import org.gradle.api.publish.Publication;
 import org.gradle.api.publish.PublishingExtension;
 import org.gradle.api.publish.ivy.IvyPublication;
@@ -57,14 +58,21 @@ public final class BaselineJavaVersions implements Plugin<Project> {
                     proj.getExtensions().getByType(BaselineJavaVersionExtension.class);
             projectVersions
                     .target()
-                    .convention(proj.provider(() -> isLibrary(proj)
+                    .convention(proj.provider(() -> isLibrary(proj, projectVersions)
                             ? rootExtension.libraryTarget().get()
                             : rootExtension.distributionTarget().get()));
             projectVersions.runtime().convention(rootExtension.runtime());
         }));
     }
 
-    private static boolean isLibrary(Project project) {
+    private static boolean isLibrary(Project project, BaselineJavaVersionExtension projectVersions) {
+        Property<Boolean> libraryOverride = projectVersions.overrideLibraryAutoDetection();
+        if (libraryOverride.isPresent()) {
+            log.debug(
+                    "Project '{}' is considered a library because it has been overridden with library = true",
+                    project.getDisplayName());
+            return libraryOverride.get();
+        }
         if (project.getPluginManager().hasPlugin("nebula.maven-publish")) {
             // 'nebula.maven-publish' creates publications lazily which causes inconsistencies based
             // on ordering.
