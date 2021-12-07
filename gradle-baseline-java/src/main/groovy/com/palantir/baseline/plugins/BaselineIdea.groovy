@@ -17,6 +17,7 @@
 package com.palantir.baseline.plugins
 
 import com.google.common.collect.ImmutableMap
+import com.palantir.baseline.IntellijSupport
 import com.palantir.baseline.util.GitUtils
 import groovy.transform.CompileStatic
 import groovy.xml.XmlUtil
@@ -124,7 +125,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
     }
 
     private void configureProjectForIntellijImport(Project project) {
-        if (Boolean.getBoolean("idea.active")) {
+        if (IntellijSupport.isRunningInIntellij()) {
             addCodeStyleIntellijImport()
             addCheckstyleIntellijImport(project)
             addCopyrightIntellijImport()
@@ -447,7 +448,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
     }
 
     private static void configureSaveActionsForIntellijImport(Project project) {
-        if (!Boolean.getBoolean("idea.active")) {
+        if (!IntellijSupport.isRunningInIntellij()) {
             return
         }
         XmlUtils.createOrUpdateXmlFile(
