@@ -22,6 +22,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.MoreCollectors;
+import com.palantir.baseline.IntellijSupport;
 import com.palantir.baseline.extensions.BaselineErrorProneExtension;
 import com.palantir.baseline.extensions.BaselineJavaVersionExtension;
 import com.palantir.baseline.tasks.CompileRefasterTask;
@@ -208,7 +209,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
             JavaCompile javaCompile,
             ErrorProneOptions errorProneOptions) {
 
-        if (project.hasProperty(DISABLE_PROPERTY)) {
+        if (project.hasProperty(DISABLE_PROPERTY) || IntellijSupport.isRunningInIntellij()) {
             log.info("Disabling baseline-error-prone for {} due to {}", project, DISABLE_PROPERTY);
             errorProneOptions.getEnabled().set(false);
         } else {
