@@ -141,7 +141,8 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
 
         def ideaStyleSettings = new File(projectDir, ".idea/codeStyles/Project.xml").text
         ideaStyleSettings.startsWith('<component name="ProjectCodeStyleConfiguration">')
-        ideaStyleSettings.contains('<code_scheme name="Project">')
+        ideaStyleSettings.contains('<code_scheme name="Project" version="173">')
+        ideaStyleSettings.contains('<JavaCodeStyleSettings>')
         ideaStyleSettings.contains('<option name="ALIGN_MULTILINE_ARRAY_INITIALIZER_EXPRESSION" value="true"/>')
         ideaStyleSettings.endsWith("""
               </code_scheme>

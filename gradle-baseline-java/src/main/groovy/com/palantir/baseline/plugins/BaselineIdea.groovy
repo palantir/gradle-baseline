@@ -152,6 +152,11 @@ class BaselineIdea extends AbstractBaselinePlugin {
 
     private void addCodeStyleIntellijImport() {
         def ideaStyleFile = project.file("${configDir}/idea/intellij-java-palantir-style.xml")
+        // This runs eagerly, so the file might not exist if we haven't run `baselineUpdateConfig` yet.
+        // Thus, don't do anything if the file is not there yet.
+        if (!ideaStyleFile.isFile()) {
+            return
+        }
 
         def ideaStyle = new XmlParser().parse(ideaStyleFile)
                 .component
@@ -176,10 +181,12 @@ class BaselineIdea extends AbstractBaselinePlugin {
                 project.file(".idea/codeStyles/Project.xml"),
                 {
                     def codeScheme = GroovyXmlUtils.matchOrCreateChild(it, "code_scheme", [name: 'Project'])
+                    codeScheme.attributes().putIfAbsent("version", 173)
+                    def javaCodeStyleSettings = GroovyXmlUtils.matchOrCreateChild(codeScheme, "JavaCodeStyleSettings")
                     // Just add the default configuration nodes on top of whatever nodes already exist
                     // We could be better about this, but IDEA will mostly resolve the duplicates here for us
-                    ideaStyleSettings.value.option.forEach {
-                        codeScheme.append(it)
+                    ideaStyleSettings.value.option.forEach { ideaStyleSetting ->
+                        javaCodeStyleSettings.append(ideaStyleSetting)
                     }
                 },
                 {
