@@ -26,8 +26,6 @@ import groovy.xml.XmlUtil
 import org.gradle.api.JavaVersion
 import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.plugins.ide.idea.model.IdeaLanguageLevel
-import org.gradle.plugins.ide.idea.model.IdeaModule
-import org.gradle.plugins.ide.idea.model.Jdk
 
 import java.nio.file.Files
 import java.nio.file.Path
