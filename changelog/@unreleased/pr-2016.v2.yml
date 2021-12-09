@@ -1,5 +1,5 @@
-type: improvement
-improvement:
+type: fix
+fix:
   description: Idea integration results in correct copyright xml files without duplicate
     entries
   links:
