@@ -183,10 +183,13 @@ class BaselineIdea extends AbstractBaselinePlugin {
                     def codeScheme = GroovyXmlUtils.matchOrCreateChild(it, "code_scheme", [name: 'Project'])
                     codeScheme.attributes().putIfAbsent("version", 173)
                     def javaCodeStyleSettings = GroovyXmlUtils.matchOrCreateChild(codeScheme, "JavaCodeStyleSettings")
-                    // Just add the default configuration nodes on top of whatever nodes already exist
-                    // We could be better about this, but IDEA will mostly resolve the duplicates here for us
+                    // Avoid re-adding duplicate options to the project. This allows users to override settings based
+                    // on preference.
                     ideaStyleSettings.value.option.forEach { ideaStyleSetting ->
-                        javaCodeStyleSettings.append(ideaStyleSetting)
+                        def settingName = ideaStyleSetting.attributes().get("name")
+                        if (settingName != null && javaCodeStyleSettings["option"].find { it.attributes().get("name") == settingName } == null) {
+                            javaCodeStyleSettings.append(ideaStyleSetting)
+                        }
                     }
                 },
                 {
