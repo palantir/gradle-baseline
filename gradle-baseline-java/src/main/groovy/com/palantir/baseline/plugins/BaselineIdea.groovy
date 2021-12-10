@@ -271,7 +271,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
                     // Replace the extension by xml for the actual file
                     project.file(".idea/copyright/" + xmlFileName),
                     {node ->
-                        addCopyrightFile(node, file, fileName)
+                        createOrUpdateCopyrightFile(node, file, fileName)
                     },
                     copyrightManagerNode)
         }
@@ -306,6 +306,19 @@ class BaselineIdea extends AbstractBaselinePlugin {
             </copyright>
             """.stripIndent()
         ))
+    }
+
+    private static void createOrUpdateCopyrightFile(Node node, File file, String fileName) {
+        def copyrightText = XmlUtil.escapeControlCharacters(XmlUtil.escapeXml(file.text.trim()))
+        // Ensure that subsequent runs don't produce duplicate entries
+        Node copyrightNode = GroovyXmlUtils.matchOrCreateChild(node, "copyright")
+        Node noticeNode = GroovyXmlUtils.matchOrCreateChild(copyrightNode, "option", ["name": "notice"])
+        // Update the copyright text if it has changed
+        noticeNode.attributes().put("value", copyrightText)
+        GroovyXmlUtils.matchOrCreateChild(copyrightNode, "option", ["name": "keyword"], ["value": "Copyright"])
+        GroovyXmlUtils.matchOrCreateChild(copyrightNode, "option", ["name": "allowReplaceKeyword"], ["value": ""])
+        GroovyXmlUtils.matchOrCreateChild(copyrightNode, "option", ["name": "myName"], ["value": fileName])
+        GroovyXmlUtils.matchOrCreateChild(copyrightNode, "option", ["name": "myLocal"], ["value": true])
     }
 
     private void addEclipseFormat(node) {
