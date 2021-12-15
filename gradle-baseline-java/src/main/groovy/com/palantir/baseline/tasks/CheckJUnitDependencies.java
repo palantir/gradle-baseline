@@ -93,7 +93,7 @@ public class CheckJUnitDependencies extends DefaultTask {
         // org.junit.jupiter.api.Test annotation, but as JUnit4 knows nothing about these, they'll silently not run
         // unless the user has wired up the dependency correctly.
         if (sourceSetMentionsJUnit5Api(ss)) {
-            String implementation = ss.getRuntimeClasspathConfigurationName();
+            String runtime = ss.getRuntimeClasspathConfigurationName();
             Preconditions.checkState(
                     junitPlatformEnabled,
                     "Some tests mention JUnit5, but the '"
@@ -102,7 +102,7 @@ public class CheckJUnitDependencies extends DefaultTask {
                             + "useJUnitPlatform() enabled. This means tests may be silently not running! Please "
                             + "add the following:\n\n"
                             + "    "
-                            + implementation
+                            + runtime
                             + " 'org.junit.jupiter:junit-jupiter'\n");
         }
 
