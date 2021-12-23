@@ -47,6 +47,7 @@ public final class Slf4jConstantLogMessage extends BugChecker implements MethodI
             .withNameMatching(Pattern.compile("trace|debug|info|warn|error"));
 
     private static final Matcher<ExpressionTree> MARKER = MoreMatchers.isSubtypeOf("org.slf4j.Marker");
+    private static final Matcher<ExpressionTree> THROWABLE = MoreMatchers.isSubtypeOf("java.lang.Throwable");
 
     private final Matcher<ExpressionTree> compileTimeConstExpressionMatcher =
             new CompileTimeConstantExpressionMatcher();
@@ -58,6 +59,14 @@ public final class Slf4jConstantLogMessage extends BugChecker implements MethodI
         }
 
         List<? extends ExpressionTree> args = tree.getArguments();
+
+        int argumentCount = (MARKER.matches(tree.getArguments().get(0), state) ? args.size() - 2 : args.size() - 1);
+
+        /* A message with no arguments isn't treated as a format; nor one where the only argument is a Throwable */
+        if (argumentCount == 0 || (argumentCount == 1 && THROWABLE.matches(tree.getArguments().get(tree.getArguments().size() - 1), state))) {
+            return Description.NO_MATCH;
+        }
+
         ExpressionTree messageArg = MARKER.matches(tree.getArguments().get(0), state) ? args.get(1) : args.get(0);
 
         if (compileTimeConstExpressionMatcher.matches(messageArg, state)) {

@@ -51,16 +51,17 @@ public final class Slf4jConstantLogMessageTests {
 
     @Test
     public void testNonCompileTimeConstantExpression() throws Exception {
-        test("log.trace(\"constant\" + param);");
-        test("log.debug(\"constant\" + param);");
-        test("log.info(\"constant\" + param);");
-        test("log.warn(\"constant\" + param);");
-        test("log.error(\"constant\" + param);");
-        test("log.trace(new DummyMarker(), \"constant\" + param);");
-        test("log.debug(new DummyMarker(), \"constant\" + param);");
-        test("log.info(new DummyMarker(), \"constant\" + param);");
-        test("log.warn(new DummyMarker(), \"constant\" + param);");
-        test("log.error(new DummyMarker(), \"constant\" + param);");
+        test("log.trace(\"constant\" + param, \"argument\");");
+        test("log.debug(\"constant\" + param, \"argument\");");
+        test("log.info(\"constant\" + param, \"argument\");");
+        test("log.warn(\"constant\" + param, \"argument\");");
+        test("log.error(\"constant\" + param, \"argument\");");
+        test("log.trace(new DummyMarker(), \"constant\" + param, \"argument\");");
+        test("log.debug(new DummyMarker(), \"constant\" + param, \"argument\");");
+        test("log.info(new DummyMarker(), \"constant\" + param, \"argument\");");
+        test("log.warn(new DummyMarker(), \"constant\" + param, \"argument\");");
+        test("log.error(new DummyMarker(), \"constant\" + param, \"argument\");");
+        test("log.error(new DummyMarker(), \"constant\" + param, \"argument\", new Throwable());");
     }
 
     @Test
@@ -121,6 +122,22 @@ public final class Slf4jConstantLogMessageTests {
                         "    log.info(new DummyMarker(), \"constant\");",
                         "    log.warn(new DummyMarker(), \"constant\");",
                         "    log.error(new DummyMarker(), \"constant\");",
+                        "}",
+                        "",
+                        "void f(String param) {",
+                        "    // Logging of a non-constant, but with no arguments so it's a message",
+                        "    log.trace(\"constant\" + param);",
+                        "    log.debug(\"constant\" + param);",
+                        "    log.info(\"constant\" + param);",
+                        "    log.warn(\"constant\" + param);",
+                        "    log.error(\"constant\" + param);",
+                        "    log.trace(new DummyMarker(), \"constant\" + param);",
+                        "    log.debug(new DummyMarker(), \"constant\" + param);",
+                        "    log.info(new DummyMarker(), \"constant\" + param);",
+                        "    log.warn(new DummyMarker(), \"constant\" + param);",
+                        "    log.error(new DummyMarker(), \"constant\" + param);",
+                        "",
+                        "    log.error(new DummyMarker(), \"constant\" + param, new Throwable());",
                         "  }",
                         "",
                         "  class DummyMarker implements Marker {",
