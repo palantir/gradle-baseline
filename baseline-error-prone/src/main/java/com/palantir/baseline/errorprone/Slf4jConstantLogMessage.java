@@ -63,7 +63,10 @@ public final class Slf4jConstantLogMessage extends BugChecker implements MethodI
         int argumentCount = (MARKER.matches(tree.getArguments().get(0), state) ? args.size() - 2 : args.size() - 1);
 
         /* A message with no arguments isn't treated as a format; nor one where the only argument is a Throwable */
-        if (argumentCount == 0 || (argumentCount == 1 && THROWABLE.matches(tree.getArguments().get(tree.getArguments().size() - 1), state))) {
+        if (argumentCount == 0
+                || (argumentCount == 1
+                        && THROWABLE.matches(
+                                tree.getArguments().get(tree.getArguments().size() - 1), state))) {
             return Description.NO_MATCH;
         }
 
