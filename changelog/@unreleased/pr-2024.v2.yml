@@ -1,0 +1,13 @@
+type: improvement
+improvement:
+  description: |-
+    If a subclass of FilterOutputStream implements `void write(int)`, they
+    should also override `void write(byte[], int, int)`, otherwise the
+    performance of the stream is likely to be slow.
+
+    See https://docs.oracle.com/en/java/javase/11/docs/api/java.base/java/io/FilterOutputStream.html#write(byte%5B%5D,int,int)
+    > Subclasses of FilterOutputStream should provide a more efficient implementation of this method.
+
+    Similar in concept to https://errorprone.info/bugpattern/InputStreamSlowMultibyteRead
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2024
