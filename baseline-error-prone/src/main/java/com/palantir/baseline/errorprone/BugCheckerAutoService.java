@@ -43,7 +43,7 @@ import javax.lang.model.element.ElementKind;
         summary = "Concrete BugChecker implementations should be annotated "
                 + "`@AutoService(BugChecker.class)` for auto registration with error-prone.",
         severity = SeverityLevel.ERROR,
-        tags = StandardTags.PERFORMANCE)
+        tags = StandardTags.LIKELY_ERROR)
 public final class BugCheckerAutoService extends BugChecker implements ClassTreeMatcher {
 
     private static final String AUTO_SERVICE = "com.google.auto.service.AutoService";
