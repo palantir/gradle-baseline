@@ -30,6 +30,7 @@ public class BaselineErrorProneExtension {
             // Baseline checks
             "AssertNoArgs",
             "AvoidNewHashMapInt",
+            "BugCheckerAutoService",
             "CatchBlockLogException",
             // TODO(ckozak): re-enable pending scala check
             // "CatchSpecificity",
