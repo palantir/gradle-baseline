@@ -33,8 +33,9 @@ class FilterOutputStreamSlowMultibyteWriteTest {
         compilationHelper
                 .addSourceLines(
                         "TestClass.java",
-                        "class TestClass extends java.io.FilterOutputStream {",
-                        "  TestClass() { super(null); }",
+                        "import java.io.*;",
+                        "class TestClass extends FilterOutputStream {",
+                        "  TestClass(OutputStream out) { super(out); }",
                         "  public void write(byte[] b, int a, int c) {}",
                         "  public void write(int b) {}",
                         "}")
@@ -46,9 +47,10 @@ class FilterOutputStreamSlowMultibyteWriteTest {
         compilationHelper
                 .addSourceLines(
                         "TestClass.java",
+                        "import java.io.*;",
                         "  // BUG: Diagnostic contains:",
-                        "class TestClass extends java.io.FilterOutputStream {",
-                        "  TestClass() { super(null); }",
+                        "class TestClass extends FilterOutputStream {",
+                        "  TestClass(OutputStream out) { super(out); }",
                         "}")
                 .doTest();
     }
@@ -58,10 +60,25 @@ class FilterOutputStreamSlowMultibyteWriteTest {
         compilationHelper
                 .addSourceLines(
                         "TestClass.java",
-                        "class TestClass extends java.io.FilterOutputStream {",
-                        "  TestClass() { super(null); }",
+                        "import java.io.*;",
+                        "class TestClass extends FilterOutputStream {",
+                        "  TestClass(OutputStream out) { super(out); }",
                         "  // BUG: Diagnostic contains:",
                         "  public void write(int b) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void close() {
+        compilationHelper
+                .addSourceLines(
+                        "TestClass.java",
+                        "import java.io.*;",
+                        "  // BUG: Diagnostic contains:",
+                        "final class TestClass extends FilterOutputStream {",
+                        "  TestClass(OutputStream out) { super(out); }",
+                        "  @Override public void close() throws IOException {}",
                         "}")
                 .doTest();
     }
@@ -71,8 +88,9 @@ class FilterOutputStreamSlowMultibyteWriteTest {
         compilationHelper
                 .addSourceLines(
                         "TestClass.java",
-                        "abstract class TestClass extends java.io.FilterOutputStream {",
-                        "  TestClass() { super(null); }",
+                        "import java.io.*;",
+                        "abstract class TestClass extends FilterOutputStream {",
+                        "  TestClass(OutputStream out) { super(out); }",
                         "  // BUG: Diagnostic contains:",
                         "  public abstract void write(int b);",
                         "}")
@@ -84,8 +102,9 @@ class FilterOutputStreamSlowMultibyteWriteTest {
         compilationHelper
                 .addSourceLines(
                         "TestClass.java",
-                        "abstract class TestClass extends java.io.FilterOutputStream {",
-                        "  TestClass() { super(null); }",
+                        "import java.io.*;",
+                        "abstract class TestClass extends FilterOutputStream {",
+                        "  TestClass(OutputStream out) { super(out); }",
                         "  // BUG: Diagnostic contains:",
                         "  public native void write(int b);",
                         "}")
@@ -97,8 +116,9 @@ class FilterOutputStreamSlowMultibyteWriteTest {
         compilationHelper
                 .addSourceLines(
                         "Super.java",
-                        "abstract class Super extends java.io.FilterOutputStream {",
-                        "  Super() { super(null); }",
+                        "import java.io.*;",
+                        "abstract class Super extends FilterOutputStream {",
+                        "  Super() { super(new ByteArrayOutputStream()); }",
                         "  public void write(byte[] b, int a, int c) {}",
                         "}")
                 .addSourceLines(
@@ -115,8 +135,9 @@ class FilterOutputStreamSlowMultibyteWriteTest {
         compilationHelper
                 .addSourceLines(
                         "Super.java",
-                        "abstract class Super extends java.io.FilterOutputStream {",
-                        "  Super() { super(null); }",
+                        "import java.io.*;",
+                        "abstract class Super extends FilterOutputStream {",
+                        "  Super() { super(new ByteArrayOutputStream()); }",
                         "  // BUG: Diagnostic contains:",
                         "  public void write(int b) {}",
                         "}")
