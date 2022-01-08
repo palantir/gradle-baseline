@@ -16,10 +16,12 @@
 
 package com.palantir.baseline.errorprone;
 
+import com.google.auto.service.AutoService;
 import com.google.common.collect.Iterables;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
+import com.google.errorprone.bugpatterns.BugChecker;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
@@ -28,6 +30,7 @@ import com.sun.tools.javac.util.Name;
 /**
  * Warns that users should not have a {@link java.util.regex.Pattern} as a key to a Set or Map.
  */
+@AutoService(BugChecker.class)
 @BugPattern(
         name = "DangerousIdentityKey",
         summary = "Key type does not override equals() and hashCode, so comparisons will be done on"
