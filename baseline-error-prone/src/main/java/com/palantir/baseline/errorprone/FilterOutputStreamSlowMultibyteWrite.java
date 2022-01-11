@@ -62,6 +62,8 @@ public final class FilterOutputStreamSlowMultibyteWrite extends BugChecker imple
             Matchers.methodHasParameters(Matchers.isSameType(Suppliers.INT_TYPE)));
 
     private static final Supplier<Name> WRITE = VisitorState.memoize(state -> state.getName("write"));
+    private static final Supplier<Type> FILTER_OUTPUT_STREAM =
+            VisitorState.memoize(state -> state.getTypeFromString(FilterOutputStream.class.getTypeName()));
 
     @Override
     public Description matchClass(ClassTree classTree, VisitorState state) {
@@ -81,6 +83,11 @@ public final class FilterOutputStreamSlowMultibyteWrite extends BugChecker imple
             return Description.NO_MATCH;
         }
 
+        Type filterOutputStreamType = FILTER_OUTPUT_STREAM.get(state);
+        if (filterOutputStreamType == null) {
+            return Description.NO_MATCH;
+        }
+
         Type byteArrayType = state.arrayTypeForType(state.getSymtab().byteType);
         MethodSymbol multiByteWriteMethod = ASTHelpers.resolveExistingMethod(
                 state,
@@ -89,7 +96,11 @@ public final class FilterOutputStreamSlowMultibyteWrite extends BugChecker imple
                 ImmutableList.of(byteArrayType, intType, intType),
                 ImmutableList.of());
 
-        if (multiByteWriteMethod != null && multiByteWriteMethod.owner.equals(thisClassSymbol)) {
+        if ((multiByteWriteMethod != null)
+                && (multiByteWriteMethod.owner.equals(thisClassSymbol)
+                        || (singleByteWriteMethod.owner.equals(multiByteWriteMethod.owner)
+                                && !singleByteWriteMethod.owner.equals(filterOutputStreamType.tsym)))) {
+            // non-FilterOutputStream class defines both single & multibyte write
             return Description.NO_MATCH;
         }
 
