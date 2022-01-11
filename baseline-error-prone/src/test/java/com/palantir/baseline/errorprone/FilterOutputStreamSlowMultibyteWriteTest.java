@@ -148,4 +148,38 @@ class FilterOutputStreamSlowMultibyteWriteTest {
                         "}")
                 .doTest();
     }
+
+    @Test
+    public void inheritedSingleAndMultiByteWrite() {
+        compilationHelper
+                .addSourceLines(
+                        "Super.java",
+                        "import java.io.*;",
+                        "abstract class Super extends FilterOutputStream {",
+                        "  Super() { super(new ByteArrayOutputStream()); }",
+                        "  public void write(int b) {}",
+                        "  public void write(byte[] b, int a, int c) {}",
+                        "}")
+                .addSourceLines("TestClass.java", "class TestClass extends Super {}")
+                .doTest();
+    }
+
+    @Test
+    public void singleAndMultiByteWrite() {
+        compilationHelper
+                .addSourceLines(
+                        "Super.java",
+                        "import java.io.*;",
+                        "  // BUG: Diagnostic contains:",
+                        "abstract class Super extends FilterOutputStream {",
+                        "  Super() { super(new ByteArrayOutputStream()); }",
+                        "}")
+                .addSourceLines(
+                        "TestClass.java",
+                        "class TestClass extends Super {",
+                        "  public void write(int b) {}",
+                        "  public void write(byte[] b, int a, int c) {}",
+                        "}")
+                .doTest();
+    }
 }
