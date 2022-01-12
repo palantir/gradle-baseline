@@ -49,6 +49,7 @@ public final class PreferSafeLoggableExceptions extends BugChecker implements Bu
     private static final long serialVersionUID = 1L;
 
     // github.com/palantir/safe-logging/tree/develop/preconditions/src/main/java/com/palantir/logsafe/exceptions
+    @SuppressWarnings("DangerousIdentityKey")
     private static final ImmutableMap<Class<?>, String> EXCEPTION_MAPPINGS = ImmutableMap.of(
             IllegalArgumentException.class, "SafeIllegalArgumentException",
             IllegalStateException.class, "SafeIllegalStateException",
