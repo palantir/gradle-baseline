@@ -2,7 +2,7 @@
 # Run ./gradlew checkClassUniqueness --write-locks to update this file
 
 ## runtimeClasspath
-[org.checkerframework:checker-qual, org.checkerframework:dataflow-errorprone]
+[com.github.ben-manes.caffeine:caffeine, org.checkerframework:checker-qual, org.checkerframework:dataflow-errorprone]
   - org.checkerframework.dataflow.qual.Deterministic
   - org.checkerframework.dataflow.qual.Pure
   - org.checkerframework.dataflow.qual.Pure$Kind
