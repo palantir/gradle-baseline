@@ -22,6 +22,7 @@ import com.google.errorprone.BugPattern;
 import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
+import com.google.errorprone.util.ASTHelpers;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
@@ -42,10 +43,20 @@ public final class DangerousIdentityKey extends MoreAbstractAsKeyOfSetOrMap {
 
     @Override
     protected boolean isBadType(Type type, VisitorState state) {
-        // Only flag final types, otherwise we'll encounter false positives when presented with overrides.
-        if (type == null || !type.isFinal()) {
+        if (type == null) {
             return false;
         }
+
+        // Ignore non-final types, otherwise we'll encounter false positives when presented with overrides.
+        if (!type.isFinal()) {
+            return false;
+        }
+
+        // Ignore class types
+        if (ASTHelpers.isSameType(type, state.getSymtab().classType, state)) {
+            return false;
+        }
+
         return !implementsMethod(state.getTypes(), type, state.getNames().equals, state)
                 || !implementsMethod(state.getTypes(), type, state.getNames().hashCode, state);
     }
