@@ -53,6 +53,6 @@ publishing.publications.maven {
 }
 
 javaVersion {
-    target = 8
+    target = 11
     runtime = 11
 }
