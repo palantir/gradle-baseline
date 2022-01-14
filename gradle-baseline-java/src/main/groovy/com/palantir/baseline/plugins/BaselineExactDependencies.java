@@ -193,6 +193,9 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                             // this is liberally applied to ease the Java8 -> 11 transition
                             task.ignore("javax.annotation", "javax.annotation-api");
 
+                            // this is typically used instead of junit-jupiter-api to simplify configuration
+                            task.ignore("org.junit.jupiter", "junit-jupiter");
+
                             // pick up ignores configured globally on the parent task
                             task.ignore(checkUnusedDependencies.get().getIgnore());
                         });
