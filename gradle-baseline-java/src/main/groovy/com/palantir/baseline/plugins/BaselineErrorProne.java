@@ -66,7 +66,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
     private static final String PROP_ERROR_PRONE_APPLY = "errorProneApply";
     private static final String PROP_REFASTER_APPLY = "refasterApply";
     private static final String DISABLE_PROPERTY = "com.palantir.baseline-error-prone.disable";
-    private static final String ENABLE_PROPERTY = "com.palantir.baseline-error-prone.enable";
 
     @Override
     public void apply(Project project) {
@@ -209,11 +208,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
             BaselineErrorProneExtension errorProneExtension,
             JavaCompile javaCompile,
             ErrorProneOptions errorProneOptions) {
-
-        if (project.hasProperty(ENABLE_PROPERTY)) {
-            errorProneOptions.getEnabled().set(true);
-        } else if (project.hasProperty(DISABLE_PROPERTY) || IntellijSupport.isRunningInIntellij()) {
-            log.info("Disabling baseline-error-prone for {}", project);
+        if (isDisabled(project)) {
             errorProneOptions.getEnabled().set(false);
         }
 
@@ -393,6 +388,15 @@ public final class BaselineErrorProne implements Plugin<Project> {
 
     private static boolean isErrorProneRefactoring(Project project) {
         return project.hasProperty(PROP_ERROR_PRONE_APPLY);
+    }
+
+    private static boolean isDisabled(Project project) {
+        Object disable = project.findProperty(DISABLE_PROPERTY);
+        if (disable == null) {
+            return IntellijSupport.isRunningInIntellij();
+        } else {
+            return !disable.equals("false");
+        }
     }
 
     private static boolean checkExplicitlyDisabled(ErrorProneOptions errorProneOptions, String check) {
