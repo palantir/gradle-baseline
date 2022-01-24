@@ -90,6 +90,10 @@ gradlePlugin {
             id = 'com.palantir.baseline-enable-preview-flag'
             implementationClass = 'com.palantir.baseline.plugins.BaselineEnablePreviewFlag'
         }
+        baselinePreferProjectModules {
+            id = 'com.palantir.baseline-prefer-project-modules'
+            implementationClass = 'com.palantir.baseline.plugins.BaselinePreferProjectModules'
+        }
     }
 }
 
@@ -129,6 +133,9 @@ pluginBundle {
         }
         baselineEnablePreviewFlag {
             displayName = 'Palantir Baseline --enable-preview Flag Plugin'
+        }
+        baselinePreferProjectModules {
+            displayName = 'Palantir Baseline Prefer Project Modules Plugin'
         }
     }
 }
