@@ -61,6 +61,7 @@ public final class Baseline implements Plugin<Project> {
             proj.getPluginManager().apply(BaselineJavaParameters.class);
             proj.getPluginManager().apply(BaselineImmutables.class);
             proj.getPluginManager().apply(BaselineModuleJvmArgs.class);
+            proj.getPluginManager().apply(BaselinePreferProjectModules.class);
         });
     }
 }
