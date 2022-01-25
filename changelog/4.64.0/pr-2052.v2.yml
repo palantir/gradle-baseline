@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: Use lazy task initialization for the `compileRefaster` task for improved
+    performance when it is not needed.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2052

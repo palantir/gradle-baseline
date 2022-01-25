@@ -64,7 +64,8 @@ public final class DangerousIdentityKey extends MoreAbstractAsKeyOfSetOrMap {
     private static boolean implementsMethod(Types types, Type type, Name methodName, VisitorState state) {
         MethodSymbol equals =
                 (MethodSymbol) state.getSymtab().objectType.tsym.members().findFirst(methodName);
-        return !Iterables.isEmpty(types.membersClosure(type, false)
+
+        return !Iterables.isEmpty(ASTHelpers.scope(types.membersClosure(type, false))
                 .getSymbolsByName(methodName, m -> m != equals && m.overrides(equals, type.tsym, types, false)));
     }
 }

@@ -54,6 +54,7 @@ import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradle.api.tasks.testing.Test;
@@ -104,8 +105,8 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 .file("refaster/rules.refaster")
                 .map(RegularFile::getAsFile);
 
-        CompileRefasterTask compileRefaster = project.getTasks()
-                .create("compileRefaster", CompileRefasterTask.class, task -> {
+        TaskProvider<CompileRefasterTask> compileRefaster = project.getTasks()
+                .register("compileRefaster", CompileRefasterTask.class, task -> {
                     task.setSource(refasterConfiguration);
                     task.getRefasterSources().set(refasterConfiguration);
                     task.setClasspath(refasterCompilerConfiguration);
@@ -169,7 +170,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
         // these compiler flags after all configuration has happened.
         project.afterEvaluate(
                 unused -> project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
-                    if (javaCompile.equals(compileRefaster)) {
+                    if (javaCompile.getName().equals(compileRefaster.getName())) {
                         return;
                     }
                     if (isRefactoring(project)) {
@@ -204,7 +205,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
     private static void configureErrorProneOptions(
             Project project,
             Provider<File> refasterRulesFile,
-            CompileRefasterTask compileRefaster,
+            TaskProvider<CompileRefasterTask> compileRefaster,
             BaselineErrorProneExtension errorProneExtension,
             JavaCompile javaCompile,
             ErrorProneOptions errorProneOptions) {
@@ -239,7 +240,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
             errorProneOptions.disable("UnnecessaryLambda");
         }
 
-        if (javaCompile.equals(compileRefaster)) {
+        if (javaCompile.getName().equals(compileRefaster.getName())) {
             // Don't apply refaster to itself...
             return;
         }
