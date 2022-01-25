@@ -5,7 +5,7 @@
 version: 2.1
 jobs:
   compile:
-    docker: [{ image: 'cimg/openjdk:11.0.10-node' }]
+    docker: [{ image: 'cimg/openjdk:17.0.1-node' }]
     resource_class: large
     environment:
       CIRCLE_TEST_REPORTS: /home/circleci/junit
@@ -54,7 +54,7 @@ jobs:
           paths: [ project, .gradle/init.gradle ]
 
   check:
-    docker: [{ image: 'cimg/openjdk:11.0.10-node' }]
+    docker: [{ image: 'cimg/openjdk:17.0.1-node' }]
     resource_class: medium
     environment:
       CIRCLE_TEST_REPORTS: /home/circleci/junit
@@ -76,7 +76,7 @@ jobs:
       - store_artifacts: { path: ~/artifacts }
 
   unit-test:
-    docker: [{ image: 'cimg/openjdk:11.0.10-node' }]
+    docker: [{ image: 'cimg/openjdk:17.0.1-node' }]
     resource_class: large
     environment:
       CIRCLE_TEST_REPORTS: /home/circleci/junit
@@ -97,8 +97,30 @@ jobs:
       - store_test_results: { path: ~/junit }
       - store_artifacts: { path: ~/artifacts }
 
-  trial-publish:
+  unit-test-11:
     docker: [{ image: 'cimg/openjdk:11.0.10-node' }]
+    resource_class: large
+    environment:
+      CIRCLE_TEST_REPORTS: /home/circleci/junit
+      CIRCLE_ARTIFACTS: /home/circleci/artifacts
+      GRADLE_OPTS: -Dorg.gradle.workers.max=2 -Dorg.gradle.jvmargs='-Xmx2g --add-exports jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED'
+      _JAVA_OPTIONS: -XX:ActiveProcessorCount=4 -XX:MaxRAM=8g  -XX:ErrorFile=/home/circleci/artifacts/hs_err_pid%p.log -XX:HeapDumpPath=/home/circleci/artifacts
+    steps:
+      - checkout
+      - restore_cache: { key: 'gradle-wrapper-v2-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}' }
+      - restore_cache: { key: 'unit-test-11-gradle-cache-v2-{{ checksum "versions.props" }}-{{ checksum "build.gradle" }}' }
+      - run: ./gradlew --parallel --stacktrace --continue test -Pcom.palantir.baseline-error-prone.disable -Porg.gradle.java.installations.fromEnv=JAVA_8_HOME,JAVA_11_HOME,JAVA_15_HOME,JAVA_17_HOME,JAVA_HOME
+      - save_cache:
+          key: 'unit-test-11-gradle-cache-v2-{{ checksum "versions.props" }}-{{ checksum "build.gradle" }}'
+          paths: [ ~/.gradle/caches ]
+      - run:
+          command: mkdir -p ~/junit && find . -type f -regex ".*/build/.*TEST.*xml" -exec cp --parents {} ~/junit/ \;
+          when: always
+      - store_test_results: { path: ~/junit }
+      - store_artifacts: { path: ~/artifacts }
+
+  trial-publish:
+    docker: [{ image: 'cimg/openjdk:17.0.1-node' }]
     resource_class: medium
     environment:
       CIRCLE_TEST_REPORTS: /home/circleci/junit
@@ -120,7 +142,7 @@ jobs:
       - store_artifacts: { path: ~/artifacts }
 
   publish:
-    docker: [{ image: 'cimg/openjdk:11.0.10-node' }]
+    docker: [{ image: 'cimg/openjdk:17.0.1-node' }]
     resource_class: medium
     environment:
       CIRCLE_TEST_REPORTS: /home/circleci/junit
@@ -154,6 +176,9 @@ workflows:
           requires: [ compile ]
           filters: { tags: { only: /.*/ } }
 
+      - unit-test-11:
+          filters: { tags: { only: /.*/ } }
+
       - check:
           requires: [ compile ]
           filters: { tags: { only: /.*/ } }
@@ -163,5 +188,5 @@ workflows:
           filters: { branches: { ignore: develop } }
 
       - publish:
-          requires: [ unit-test, check, trial-publish ]
+          requires: [ unit-test, unit-test-11, check, trial-publish ]
           filters: { tags: { only: /.*/ }, branches: { only: develop } }
