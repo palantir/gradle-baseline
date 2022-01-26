@@ -1,0 +1,6 @@
+type: feature
+feature:
+  description: Error Prone can be explicitly enabled using the `com.palantir.baseline-error-prone.disable=false`
+    Gradle property.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2042

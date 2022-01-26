@@ -209,12 +209,8 @@ public final class BaselineErrorProne implements Plugin<Project> {
             BaselineErrorProneExtension errorProneExtension,
             JavaCompile javaCompile,
             ErrorProneOptions errorProneOptions) {
-
-        if (project.hasProperty(DISABLE_PROPERTY) || IntellijSupport.isRunningInIntellij()) {
-            log.info("Disabling baseline-error-prone for {} due to {}", project, DISABLE_PROPERTY);
+        if (isDisabled(project)) {
             errorProneOptions.getEnabled().set(false);
-        } else {
-            errorProneOptions.getEnabled().set(true);
         }
 
         errorProneOptions.getDisableWarningsInGeneratedCode().set(true);
@@ -393,6 +389,15 @@ public final class BaselineErrorProne implements Plugin<Project> {
 
     private static boolean isErrorProneRefactoring(Project project) {
         return project.hasProperty(PROP_ERROR_PRONE_APPLY);
+    }
+
+    private static boolean isDisabled(Project project) {
+        Object disable = project.findProperty(DISABLE_PROPERTY);
+        if (disable == null) {
+            return IntellijSupport.isRunningInIntellij();
+        } else {
+            return !disable.equals("false");
+        }
     }
 
     private static boolean checkExplicitlyDisabled(ErrorProneOptions errorProneOptions, String check) {
