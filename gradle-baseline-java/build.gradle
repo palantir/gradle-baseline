@@ -150,6 +150,12 @@ tasks.withType(Test) {
     systemProperty 'recreate', System.getProperty('recreate', 'false')
 }
 
+task('testsOn11', type: Test) {
+    javaLauncher = javaToolchains.launcherFor {
+        languageVersion = JavaLanguageVersion.of(11)
+    }
+}
+
 configurations {
     checkstyleVersion
 }
