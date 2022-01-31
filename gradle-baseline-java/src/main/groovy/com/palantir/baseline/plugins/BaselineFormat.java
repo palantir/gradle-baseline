@@ -39,6 +39,7 @@ import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
+import org.gradle.language.base.plugins.LifecycleBasePlugin;
 
 class BaselineFormat extends AbstractBaselinePlugin {
 
@@ -53,6 +54,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
         this.project = project;
 
         project.getPluginManager().apply("com.diffplug.spotless");
+        project.getPluginManager().apply(LifecycleBasePlugin.class);
 
         SpotlessExtension spotlessExtension = project.getExtensions().getByType(SpotlessExtension.class);
         // Keep spotless from eagerly configuring all other tasks.  We do the same thing as the enforceCheck
