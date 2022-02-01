@@ -107,17 +107,19 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         file('src/integrationTest/java/test/TestClass5.java') << junit5Test
 
         then:
-        runTasksSuccessfully('integrationTest')
+        // Explicitly testing broken state that needs fixing before gradle 8
+        runTasksSuccessfully('-DignoreDeprecations=true', 'integrationTest')
         fileExists("build/reports/tests/integrationTest/classes/test.TestClass5.html")
     }
     
     def 'runs nebula-test version 10+ tests that require junit platform'() {
+        when:
         buildFile << standardBuildFile
         
         buildFile << '''
             apply plugin: 'groovy'
             dependencies {
-                testImplementation 'com.netflix.nebula:nebula-test:10.0.0'
+                testImplementation 'com.netflix.nebula:nebula-test:10.2.0'
             }
         '''.stripIndent(true)
 
@@ -128,11 +130,9 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
             }
         '''.stripIndent(true)
 
-        when:
-        runTasksSuccessfully('test')
-
         then:
-        true
+        // Explicitly testing broken state that needs fixing before gradle 8
+        runTasksSuccessfully('-DignoreDeprecations=true', 'test')
     }
 
     def 'checkJUnitDependencies ensures mixture of junit4 and 5 tests => legacy must be present'() {

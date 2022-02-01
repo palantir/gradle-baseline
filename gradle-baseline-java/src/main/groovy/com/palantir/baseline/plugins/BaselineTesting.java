@@ -28,7 +28,6 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedComponentResult;
-import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.SourceSet;
@@ -63,7 +62,7 @@ public final class BaselineTesting implements Plugin<Project> {
             }
         });
 
-        project.getPlugins().withType(JavaPlugin.class, unusedPlugin -> {
+        project.getPluginManager().withPlugin("java-base", unusedPlugin -> {
             TaskProvider<CheckJUnitDependencies> checkJUnitDependencies =
                     project.getTasks().register("checkJUnitDependencies", CheckJUnitDependencies.class);
 
@@ -120,8 +119,8 @@ public final class BaselineTesting implements Plugin<Project> {
                 .afterResolve(deps -> {
                     boolean anyMatch = deps.getResolutionResult().getAllComponents().stream()
                             .map(ResolvedComponentResult::getId)
-                            .filter(componentId -> componentId instanceof ModuleComponentIdentifier)
-                            .map(componentId -> (ModuleComponentIdentifier) componentId)
+                            .filter(ModuleComponentIdentifier.class::isInstance)
+                            .map(ModuleComponentIdentifier.class::cast)
                             .anyMatch(spec);
 
                     if (anyMatch) {
@@ -179,9 +178,9 @@ public final class BaselineTesting implements Plugin<Project> {
         if (GradleVersion.current().compareTo(GradleVersion.version("7.3")) < 0) {
             return task.getOptions() instanceof JUnitPlatformOptions;
         }
-        Property<org.gradle.api.internal.tasks.testing.TestFramework> testFramework =
-                getTestFrameworkWithReflection(task);
-        return testFramework.isPresent() && (testFramework.get().getOptions() instanceof JUnitPlatformOptions);
+        return getTestFrameworkWithReflection(task)
+                .map(org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestFramework.class::isInstance)
+                .getOrElse(false);
     }
 
     @SuppressWarnings("IllegalImports")
