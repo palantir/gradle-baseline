@@ -3,6 +3,9 @@ apply plugin: 'java-library'
 apply plugin: 'com.palantir.external-publish-jar'
 apply plugin: 'com.palantir.external-publish-gradle-plugin'
 
+import org.gradle.api.internal.classpath.ModuleRegistry
+import org.gradle.api.internal.project.ProjectInternal
+
 dependencies {
     implementation project(':gradle-junit-reports')
     implementation gradleApi()
@@ -30,6 +33,13 @@ dependencies {
     testRuntimeOnly 'org.junit.vintage:junit-vintage-engine', {
         because 'allows JUnit 3 and JUnit 4 tests to run'
     }
+    // necessary because of https://github.com/gradle/gradle/issues/16774
+    def toolingApiBuildersJar = (project as ProjectInternal).services.get(ModuleRegistry.class)
+            .getModule("gradle-tooling-api-builders")
+            .classpath
+            .asFiles
+            .first()
+    testRuntimeOnly(files(toolingApiBuildersJar))
 
     annotationProcessor 'org.inferred:freebuilder'
     compileOnly 'org.inferred:freebuilder'
