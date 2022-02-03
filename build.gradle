@@ -43,6 +43,7 @@ allprojects {
         tasks.withType(JavaCompile) {
             options.compilerArgs += ['-Werror', '-Xlint:deprecation']
             options.errorprone {
+                enabled = false
                 check("Slf4jLogsafeArgs", CheckSeverity.OFF)
                 check("PreferSafeLoggableExceptions", CheckSeverity.OFF)
                 check("PreferSafeLogger", CheckSeverity.OFF)

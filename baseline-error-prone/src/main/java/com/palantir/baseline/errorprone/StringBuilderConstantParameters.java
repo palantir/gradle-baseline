@@ -65,7 +65,7 @@ public final class StringBuilderConstantParameters extends BugChecker
     private static final Matcher<ExpressionTree> STRING_BUILDER_TO_STRING = MethodMatchers.instanceMethod()
             .onExactClass(StringBuilder.class.getName())
             .named("toString")
-            .withParameters();
+            .withNoParameters();
 
     private static final Supplier<Type> JAVA_STRING =
             VisitorState.memoize(state -> state.getTypeFromString("java.lang.String"));

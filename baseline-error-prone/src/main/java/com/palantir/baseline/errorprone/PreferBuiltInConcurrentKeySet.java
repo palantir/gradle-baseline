@@ -42,7 +42,7 @@ public final class PreferBuiltInConcurrentKeySet extends BugChecker implements B
     private static final Matcher<ExpressionTree> MATCHER = MethodMatchers.staticMethod()
             .onClass("com.google.common.collect.Sets")
             .named("newConcurrentHashSet")
-            .withParameters();
+            .withNoParameters();
 
     private static final String ERROR_MESSAGE =
             "Prefer Java's built-in Concurrent Set implementation over Guava's ConcurrentHashSet, as it does "

@@ -68,6 +68,9 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
                 mavenCentral()
                 mavenLocal() // for baseline-error-prone
             }
+            tasks.withType(JavaCompile) {
+                options.errorprone.enabled = false
+            }
             apply plugin: 'com.palantir.baseline'
         """.stripIndent()
         file('src/main/java/pkg/Foo.java') << minimalJavaFile

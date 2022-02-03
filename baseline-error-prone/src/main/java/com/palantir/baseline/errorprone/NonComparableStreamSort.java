@@ -45,7 +45,7 @@ public final class NonComparableStreamSort extends BugChecker implements BugChec
     private static final Matcher<ExpressionTree> SORTED_CALL_ON_JAVA_STREAM_MATCHER = MethodMatchers.instanceMethod()
             .onDescendantOf(Stream.class.getName())
             .named("sorted")
-            .withParameters();
+            .withNoParameters();
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {

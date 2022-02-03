@@ -53,7 +53,7 @@ public final class PreferStaticLoggers extends BugChecker implements BugChecker.
             .withParameters("java.lang.Class");
 
     private static final Matcher<ExpressionTree> GET_CLASS =
-            MethodMatchers.instanceMethod().anyClass().named("getClass").withParameters();
+            MethodMatchers.instanceMethod().anyClass().named("getClass").withNoParameters();
 
     private static final Matcher<VariableTree> IS_FIELD = Matchers.isField();
 

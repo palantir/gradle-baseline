@@ -27,3 +27,5 @@ tasks.withType(JavaCompile).configureEach {
 }
 
 tasks.checkClassUniqueness.enabled = false
+tasks.javadoc.enabled = false
+

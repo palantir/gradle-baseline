@@ -52,15 +52,14 @@ tasks.withType(JavaCompile).configureEach {
         '--add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED',
         '--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED'
     ]
+   options.errorprone {
+        check("StrictUnusedVariable", CheckSeverity.OFF)
+    }
 }
 
 // Incorrectly identifies tests as junit4 usage
 tasks.checkJUnitDependencies.enabled = false
-tasks.withType(JavaCompile) {
-    options.errorprone {
-        check("StrictUnusedVariable", CheckSeverity.OFF)
-    }
-}
+tasks.javadoc.enabled = false
 
 // This is necessary to prevent the errorprone plugin from using this very project's output directory
 // TODO(dsanduleac): this might not be necessary in gradle 6 anymore

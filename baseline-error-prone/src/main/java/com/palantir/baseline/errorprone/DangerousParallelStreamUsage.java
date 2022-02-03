@@ -69,7 +69,7 @@ public final class DangerousParallelStreamUsage extends BugChecker implements Bu
     private static final Matcher<ExpressionTree> PARALLEL_STREAM_ON_COLLECTION_MATCHER = MethodMatchers.instanceMethod()
             .onDescendantOf(Collection.class.getName())
             .named("parallelStream")
-            .withParameters();
+            .withNoParameters();
 
     private static final Matcher<ExpressionTree> PARALLEL_STREAM_SUPPORT_MATCHER = Matchers.methodInvocation(
             MethodMatchers.staticMethod().onClass(StreamSupport.class.getName()),

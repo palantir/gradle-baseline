@@ -51,7 +51,7 @@ public final class CollectionStreamForEach extends BugChecker implements BugChec
     private static final Matcher<ExpressionTree> COLLECTION_STREAM = MethodMatchers.instanceMethod()
             .onDescendantOf(Collection.class.getName())
             .named("stream")
-            .withParameters();
+            .withNoParameters();
 
     private static final Matcher<MethodInvocationTree> matcher =
             Matchers.allOf(STREAM_FOR_EACH, Matchers.receiverOfInvocation(COLLECTION_STREAM));
