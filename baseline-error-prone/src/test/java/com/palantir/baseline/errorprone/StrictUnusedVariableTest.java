@@ -42,7 +42,6 @@ public class StrictUnusedVariableTest {
                         "import java.util.Optional;",
                         "interface Test {",
                         "  void method(String param);",
-                        "  // BUG: Diagnostic contains: Unused",
                         "  default void defaultMethod(String param) { }",
                         "}")
                 .doTest();
