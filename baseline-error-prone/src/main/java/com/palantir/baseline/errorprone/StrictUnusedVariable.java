@@ -743,7 +743,8 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             checkArgument(sym.getKind() == ElementKind.PARAMETER);
             Symbol enclosingMethod = sym.owner;
 
-            return !enclosingMethod.getModifiers().contains(Modifier.ABSTRACT);
+            return !enclosingMethod.getModifiers().contains(Modifier.ABSTRACT)
+                    && !enclosingMethod.getModifiers().contains(Modifier.DEFAULT);
         }
 
         @Override
