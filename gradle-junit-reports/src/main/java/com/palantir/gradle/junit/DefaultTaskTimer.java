@@ -24,6 +24,7 @@ import org.gradle.api.Task;
 import org.gradle.api.execution.TaskExecutionListener;
 import org.gradle.api.tasks.TaskState;
 
+@SuppressWarnings("deprecation")
 public final class DefaultTaskTimer implements TaskTimer, TaskExecutionListener {
 
     private final Map<Task, Timer> taskTimers = new LinkedHashMap<>();
