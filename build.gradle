@@ -7,6 +7,7 @@ buildscript {
     }
 
     dependencies {
+        classpath 'com.diffplug.gradle:goomph:3.32.1'
         classpath 'com.palantir.gradle.externalpublish:gradle-external-publish-plugin:1.10.0'
         classpath 'com.palantir.gradle.consistentversions:gradle-consistent-versions:2.7.0'
         classpath 'com.gradle.publish:plugin-publish-plugin:0.20.0'
