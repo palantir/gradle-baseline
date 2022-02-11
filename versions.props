@@ -33,7 +33,7 @@ org.apache.commons:commons-lang3 = 3.12.0
 org.assertj:assertj-core = 3.22.0
 org.hamcrest:hamcrest-core = 2.2
 org.junit.jupiter:* = 5.8.2
-org.mockito:* = 4.1.0
+org.mockito:* = 4.3.1
 
 # dependency-upgrader:OFF
 # Don't upgrade, we will remove this in a future release.
