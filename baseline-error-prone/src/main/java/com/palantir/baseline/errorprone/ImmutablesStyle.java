@@ -34,14 +34,12 @@ import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
-import java.lang.annotation.Annotation;
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import java.util.List;
 import javax.annotation.Nullable;
-import org.immutables.value.Value;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -55,7 +53,8 @@ import org.immutables.value.Value;
                 + "See https://github.com/immutables/immutables/issues/291.")
 public final class ImmutablesStyle extends BugChecker implements BugChecker.ClassTreeMatcher {
 
-    private static final Matcher<ClassTree> STYLE_ANNOTATION = Matchers.hasAnnotation(Value.Style.class);
+    private static final Matcher<ClassTree> STYLE_ANNOTATION =
+            Matchers.hasAnnotation("org.immutables.value.Value$Style");
 
     @Override
     public Description matchClass(ClassTree tree, VisitorState state) {
@@ -87,7 +86,7 @@ public final class ImmutablesStyle extends BugChecker implements BugChecker.Clas
         String qualifiedElementType = SuggestedFixes.qualifyType(state, fix, ElementType.class.getName());
         String qualifiedRetention = SuggestedFixes.qualifyType(state, fix, Retention.class.getName());
         String qualifiedRetentionPolicy = SuggestedFixes.qualifyType(state, fix, RetentionPolicy.class.getName());
-        AnnotationTree styleAnnotationTree = getAnnotation(tree, Value.Style.class, state);
+        AnnotationTree styleAnnotationTree = getAnnotation(tree, "org.immutables.value.Value$Style", state);
         return buildDescription(tree)
                 .addFix(fix.prefixWith(
                                 tree,
@@ -106,7 +105,7 @@ public final class ImmutablesStyle extends BugChecker implements BugChecker.Clas
     }
 
     private Description matchStyleMetaAnnotation(ClassTree tree, VisitorState state) {
-        AnnotationTree retention = getAnnotation(tree, Retention.class, state);
+        AnnotationTree retention = getAnnotation(tree, Retention.class.getName(), state);
         if (retention == null) {
             SuggestedFix.Builder fix = SuggestedFix.builder();
             fix.prefixWith(
@@ -133,10 +132,9 @@ public final class ImmutablesStyle extends BugChecker implements BugChecker.Clas
     }
 
     @Nullable
-    private static AnnotationTree getAnnotation(
-            ClassTree tree, Class<? extends Annotation> annotationType, VisitorState state) {
+    private static AnnotationTree getAnnotation(ClassTree tree, String annotationType, VisitorState state) {
         List<? extends AnnotationTree> annotations = tree.getModifiers().getAnnotations();
-        Type retention = state.getTypeFromString(annotationType.getName());
+        Type retention = state.getTypeFromString(annotationType);
         if (retention != null) {
             for (AnnotationTree annotation : annotations) {
                 if (ASTHelpers.isSameType(ASTHelpers.getType(annotation.getAnnotationType()), retention, state)) {
