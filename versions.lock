@@ -80,7 +80,7 @@ org.eclipse.platform:org.eclipse.osgi.compatibility.state:1.1.600 (1 constraints
 org.hamcrest:hamcrest:2.2 (3 constraints: de29cb0a)
 org.hamcrest:hamcrest-core:2.2 (5 constraints: c63ca3e1)
 org.hamcrest:hamcrest-library:1.3 (2 constraints: 972508e1)
-org.immutables:value:2.9.0 (6 constraints: 9a556f01)
+org.immutables:value:2.9.0 (6 constraints: a155c507)
 org.inferred:freebuilder:1.14.6 (2 constraints: 6f17ec56)
 org.jetbrains:annotations:19.0.0 (2 constraints: 441cf8cc)
 org.jetbrains.kotlin:kotlin-stdlib:1.3.61 (2 constraints: 0617a55e)
