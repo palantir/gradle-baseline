@@ -61,6 +61,18 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         }
         '''.stripIndent(true)
 
+    def jqwikTest = '''
+        package test;
+        
+        import net.jqwik.api.Property;
+        import net.jqwik.api.ForAll;
+        
+        class TestClass6 { 
+            @Property
+            void test(@ForAll byte value) {}
+        }
+        '''.stripIndent(true)
+
     def '#gradleVersionNumber: capable of running both junit4 and junit5 tests'() {
         when:
         gradleVersion = gradleVersionNumber
@@ -190,6 +202,65 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         then:
         ExecutionResult result = runTasksWithFailure('checkJUnitDependencies')
         result.failure.cause.cause.message.contains 'Tests may be silently not running! Spock 1.x dependency detected'
+    }
+
+    def 'runs jqwik tests'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << '''
+        tasks.withType(Test) {
+            useJUnitPlatform {
+                includeEngines 'jqwik', 'junit-jupiter'
+            }
+        }
+        dependencies {
+            testImplementation "org.junit.jupiter:junit-jupiter:5.4.2"
+            testImplementation "net.jqwik:jqwik:1.5.3"
+        }
+        '''.stripIndent(true)
+        file('src/test/java/test/TestClass6.java') << jqwikTest
+
+        then:
+        runTasksSuccessfully('checkJUnitDependencies')
+        runTasksSuccessfully('test')
+        new File(projectDir, "build/reports/tests/test/classes/test.TestClass6.html").exists()
+    }
+
+    def 'checkJUnitDependencies fails when jqwik engine is not configured'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << '''
+        dependencies {
+            testImplementation "org.junit.jupiter:junit-jupiter:5.4.2"
+            testImplementation "net.jqwik:jqwik:1.5.3"
+        }
+        '''.stripIndent(true)
+        file('src/test/java/test/TestClass6.java') << jqwikTest
+
+        then:
+        ExecutionResult result = runTasksWithFailure('checkJUnitDependencies')
+        result.failure.cause.cause.message.contains 'task does not have the jqwik engine enabled'
+    }
+
+    def 'checkJUnitDependencies fails when jqwik engine is not on the classpath'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << '''
+        tasks.withType(Test) {
+            useJUnitPlatform {
+                includeEngines 'jqwik', 'junit-jupiter'
+            }
+        }
+        dependencies {
+            testImplementation "org.junit.jupiter:junit-jupiter:5.4.2"
+            testImplementation "net.jqwik:jqwik-api:1.5.3"
+        }
+        '''.stripIndent(true)
+        file('src/test/java/test/TestClass6.java') << jqwikTest
+
+        then:
+        ExecutionResult result = runTasksWithFailure('checkJUnitDependencies')
+        result.failure.cause.cause.message.contains 'task does not depend on the jqwik engine'
     }
 
     def 'running -Drecreate=true will re-run tests even if no code changes'() {
