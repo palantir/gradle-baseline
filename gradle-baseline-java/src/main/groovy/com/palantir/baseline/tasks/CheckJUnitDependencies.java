@@ -139,6 +139,36 @@ public class CheckJUnitDependencies extends DefaultTask {
             }
         }
 
+        if (sourceSetMentionsJqwikApi(ss)) {
+            Preconditions.checkState(junitPlatformEnabled, "jqwik requires the junit platform");
+            String runtime = ss.getRuntimeClasspathConfigurationName();
+            Set<String> engines = BaselineTesting.getJUnitPlatformEngines(task);
+            if (!engines.contains("jqwik")) {
+                throw new IllegalStateException("Some tests mention jqwik, but the '"
+                        + task.getName()
+                        + "' task does not have the jqwik engine enabled. "
+                        + "This means tests may be silently not running! Please "
+                        + "add the following:\n\n"
+                        + "test {\n"
+                        + "    useJUnitPlatform {\n"
+                        + "        includeEngines 'jqwik', 'junit-jupiter'\n"
+                        + "    }\n"
+                        + "}\n\nAs well as a dependency on the engine:\n\n"
+                        + "    "
+                        + runtime
+                        + " 'net.jqwik:jqwik-engine'\n");
+            }
+            Preconditions.checkState(
+                    hasDep(deps, CheckJUnitDependencies::isJqwikEngine),
+                    "Some tests mention jqwik, but the '"
+                            + task.getName()
+                            + "' task does not depend on the jqwik engine. "
+                            + "This means tests may be silently not running! Please add the following:\n\n"
+                            + "    "
+                            + runtime
+                            + " 'net.jqwik:jqwik-engine'\n");
+        }
+
         // spock uses JUnit4 under the hood, so the vintage engine is critical
         if (spock1Dependency && junitPlatformEnabled) {
             Preconditions.checkState(
@@ -179,6 +209,12 @@ public class CheckJUnitDependencies extends DefaultTask {
                 .isEmpty();
     }
 
+    private boolean sourceSetMentionsJqwikApi(SourceSet ss) {
+        return !ss.getAllJava()
+                .filter(file -> fileContainsSubstring(file, l -> l.contains("net.jqwik.api.")))
+                .isEmpty();
+    }
+
     private boolean fileContainsSubstring(File file, Predicate<String> substring) {
         try (Stream<String> lines = Files.lines(file.toPath())) {
             return lines.anyMatch(substring);
@@ -205,5 +241,9 @@ public class CheckJUnitDependencies extends DefaultTask {
 
     private static boolean isSpock(ModuleVersionIdentifier dep) {
         return "org.spockframework".equals(dep.getGroup()) && "spock-core".equals(dep.getName());
+    }
+
+    private static boolean isJqwikEngine(ModuleVersionIdentifier dep) {
+        return "net.jqwik".equals(dep.getGroup()) && "jqwik-engine".equals(dep.getName());
     }
 }

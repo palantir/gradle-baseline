@@ -23,6 +23,7 @@ import com.palantir.baseline.util.VersionUtils;
 import java.lang.reflect.Method;
 import java.util.Objects;
 import java.util.Optional;
+import java.util.Set;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -33,6 +34,7 @@ import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.testing.Test;
+import org.gradle.api.tasks.testing.TestFrameworkOptions;
 import org.gradle.api.tasks.testing.junitplatform.JUnitPlatformOptions;
 import org.gradle.api.tasks.testing.logging.TestLogEvent;
 import org.gradle.util.GradleVersion;
@@ -181,6 +183,40 @@ public final class BaselineTesting implements Plugin<Project> {
         return getTestFrameworkWithReflection(task)
                 .map(org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestFramework.class::isInstance)
                 .getOrElse(false);
+    }
+
+    @SuppressWarnings("IllegalImports")
+    public static Set<String> getJUnitPlatformEngines(Test task) {
+        // Starting with Gradle 7.3, the test framework property is getting finalized and can't be set multiple times.
+        // Using getter such as 'Test#getOptions' will set a default test framework if it is not configured yet and
+        // finalize this value. This result in errors when trying to set the test framework at a later point.
+        // For Gradle 7.3, we can actually access the test framework as a property without finalizing its value which
+        // allows us to check if it's already configured.
+        // See: https: // github.com/palantir/gradle-baseline/pull/1974
+        if (GradleVersion.current().compareTo(GradleVersion.version("7.3")) < 0) {
+            TestFrameworkOptions testOpts = task.getOptions();
+            if (testOpts instanceof JUnitPlatformOptions) {
+                JUnitPlatformOptions platformOptions = (JUnitPlatformOptions) testOpts;
+                return ImmutableSet.copyOf(platformOptions.getIncludeEngines());
+            } else {
+                return ImmutableSet.of();
+            }
+        }
+        return getTestFrameworkWithReflection(task)
+                .map(framework -> {
+                    if (framework
+                            instanceof org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestFramework) {
+                        org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestFramework
+                                platformFramework =
+                                        (org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestFramework)
+                                                framework;
+                        return ImmutableSet.copyOf(
+                                platformFramework.getOptions().getIncludeEngines());
+                    }
+
+                    return ImmutableSet.<String>of();
+                })
+                .getOrElse(ImmutableSet.of());
     }
 
     @SuppressWarnings("IllegalImports")
