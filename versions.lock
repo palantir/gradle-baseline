@@ -44,7 +44,7 @@ com.palantir.javaformat:gradle-palantir-java-format:1.1.0 (1 constraints: 0405f3
 com.palantir.javaformat:palantir-java-format-spi:1.1.0 (1 constraints: 711560be)
 com.palantir.safe-logging:preconditions:1.22.0 (6 constraints: 33580f50)
 com.palantir.safe-logging:safe-logging:1.22.0 (7 constraints: 1b695685)
-com.palantir.tritium:tritium-registry:0.40.0 (1 constraints: 36052f3b)
+com.palantir.tritium:tritium-registry:0.41.0 (1 constraints: 3705323b)
 com.squareup.okhttp3:okhttp:4.3.1 (1 constraints: bf0b0dea)
 com.squareup.okio:okio:2.4.3 (2 constraints: 10183f8e)
 commons-io:commons-io:2.11.0 (2 constraints: 1e20060b)
