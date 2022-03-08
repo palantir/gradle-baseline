@@ -36,6 +36,9 @@ public class BaselineJavaVersionExtension {
         target = project.getObjects().property(JavaLanguageVersion.class);
         runtime = project.getObjects().property(JavaLanguageVersion.class);
         overrideLibraryAutoDetection = project.getObjects().property(Boolean.class);
+        target.finalizeValueOnRead();
+        runtime.finalizeValueOnRead();
+        overrideLibraryAutoDetection.finalizeValueOnRead();
     }
 
     /** Target {@link JavaLanguageVersion} for compilation. */
