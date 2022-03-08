@@ -17,6 +17,7 @@
 package com.palantir.baseline.plugins;
 
 import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableSet;
 import com.palantir.baseline.extensions.BaselineJavaVersionExtension;
 import com.palantir.baseline.extensions.BaselineJavaVersionsExtension;
 import java.util.Objects;
@@ -39,6 +40,10 @@ public final class BaselineJavaVersions implements Plugin<Project> {
     public static final String EXTENSION_NAME = "javaVersions";
 
     public static final GradleVersion MIN_GRADLE_VERSION = GradleVersion.version("7.0");
+    // 'nebula.maven-publish' and 'com.palantir.shadow-jar' create publications lazily which cause inconsistencies
+    // based on ordering.
+    private static final ImmutableSet<String> LIBRARY_PLUGINS =
+            ImmutableSet.of("nebula.maven-publish", "com.palantir.shadow-jar");
 
     @Override
     public void apply(Project project) {
@@ -73,13 +78,14 @@ public final class BaselineJavaVersions implements Plugin<Project> {
                     project.getDisplayName());
             return libraryOverride.get();
         }
-        if (project.getPluginManager().hasPlugin("nebula.maven-publish")) {
-            // 'nebula.maven-publish' creates publications lazily which causes inconsistencies based
-            // on ordering.
-            log.debug(
-                    "Project '{}' is considered a library because the 'nebula.maven-publish' plugin is applied",
-                    project.getDisplayName());
-            return true;
+        for (String plugin : LIBRARY_PLUGINS) {
+            if (project.getPluginManager().hasPlugin(plugin)) {
+                log.debug(
+                        "Project '{}' is considered a library because the '{}' plugin is applied",
+                        project.getDisplayName(),
+                        plugin);
+                return true;
+            }
         }
         PublishingExtension publishing = project.getExtensions().findByType(PublishingExtension.class);
         if (publishing == null) {
