@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: Finalize java-versions extension values on read to prevent changes
+    due to interactions from other plugins
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2107
