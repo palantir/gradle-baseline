@@ -31,6 +31,8 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             repositories { mavenCentral() }
             dependencies {
                 classpath 'com.netflix.nebula:nebula-publishing-plugin:17.0.0'
+                classpath 'com.palantir.gradle.shadow-jar:gradle-shadow-jar:2.5.0'
+                classpath 'com.palantir.gradle.consistentversions:gradle-consistent-versions:2.8.0'
             }
         }
         plugins {
@@ -135,6 +137,25 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
 
         then:
+        runTasksSuccessfully('compileJava')
+        getBytecodeVersion(compiledClass) == JAVA_11_BYTECODE
+    }
+
+    def 'library target is used when the palantir shadowjar plugin is applied'() {
+        when:
+        buildFile << '''
+        apply plugin: 'com.palantir.consistent-versions' // required by shadow-jar
+        apply plugin: 'com.palantir.shadow-jar'
+        javaVersions {
+            libraryTarget = 11
+            distributionTarget = 17
+        }
+        '''.stripIndent(true)
+        file('src/main/java/Main.java') << java11CompatibleCode
+        File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
+
+        then:
+        runTasksSuccessfully('--write-locks')
         runTasksSuccessfully('compileJava')
         getBytecodeVersion(compiledClass) == JAVA_11_BYTECODE
     }
