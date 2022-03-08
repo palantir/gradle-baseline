@@ -40,6 +40,9 @@ public class BaselineJavaVersionsExtension {
         distributionTarget.convention(libraryTarget);
         // runtime defaults to the distribution value
         runtime.convention(distributionTarget);
+        libraryTarget.finalizeValueOnRead();
+        distributionTarget.finalizeValueOnRead();
+        runtime.finalizeValueOnRead();
     }
 
     /** Target {@link JavaLanguageVersion} for compilation of libraries that are published. */
