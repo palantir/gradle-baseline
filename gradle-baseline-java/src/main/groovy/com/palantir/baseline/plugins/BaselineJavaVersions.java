@@ -40,6 +40,8 @@ public final class BaselineJavaVersions implements Plugin<Project> {
     public static final String EXTENSION_NAME = "javaVersions";
 
     public static final GradleVersion MIN_GRADLE_VERSION = GradleVersion.version("7.0");
+    // 'nebula.maven-publish' and 'com.palantir.shadow-jar' create publications lazily which cause inconsistencies
+    // based on ordering.
     private static final ImmutableSet<String> LIBRARY_PLUGINS =
             ImmutableSet.of("nebula.maven-publish", "com.palantir.shadow-jar");
 
@@ -78,8 +80,6 @@ public final class BaselineJavaVersions implements Plugin<Project> {
         }
         for (String plugin : LIBRARY_PLUGINS) {
             if (project.getPluginManager().hasPlugin(plugin)) {
-                // 'nebula.maven-publish' creates publications lazily which causes inconsistencies based
-                // on ordering.
                 log.debug(
                         "Project '{}' is considered a library because the '{}' plugin is applied",
                         project.getDisplayName(),
