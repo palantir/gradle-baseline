@@ -17,6 +17,7 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
+import com.google.common.collect.ImmutableList;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
@@ -26,6 +27,7 @@ import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
+import java.util.stream.Stream;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -36,6 +38,8 @@ import com.sun.source.tree.MethodInvocationTree;
         summary = "Authentication token information should never be logged as it poses a security risk. Prevents "
                 + "AuthHeader and BearerToken information from being passed to common logging calls.")
 public final class PreventTokenLogging extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
+    private static final ImmutableList<String> TOKEN_TYPES =
+            ImmutableList.of("com.palantir.tokens.auth.AuthHeader", "com.palantir.tokens.auth.BearerToken");
 
     private static final Matcher<ExpressionTree> METHOD_MATCHER = Matchers.anyOf(
             MethodMatchers.instanceMethod().onDescendantOf("org.slf4j.Logger"),
@@ -43,9 +47,9 @@ public final class PreventTokenLogging extends BugChecker implements BugChecker.
                     .onClassAny("com.palantir.logsafe.SafeArg", "com.palantir.logsafe.UnsafeArg")
                     .named("of"));
 
-    private static final Matcher<ExpressionTree> AUTH_MATCHER = Matchers.anyOf(
-            MoreMatchers.isSubtypeOf("com.palantir.tokens.auth.AuthHeader"),
-            MoreMatchers.isSubtypeOf("com.palantir.tokens.auth.BearerToken"));
+    private static final Matcher<ExpressionTree> AUTH_MATCHER = Matchers.anyOf(TOKEN_TYPES.stream()
+            .flatMap(PreventTokenLogging::getMatchersForTokenType)
+            .collect(ImmutableList.toImmutableList()));
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
@@ -59,5 +63,14 @@ public final class PreventTokenLogging extends BugChecker implements BugChecker.
             }
         }
         return Description.NO_MATCH;
+    }
+
+    private static Stream<Matcher<ExpressionTree>> getMatchersForTokenType(String tokenType) {
+        return Stream.of(
+                // Fail if the arg is a subtype of a token.
+                MoreMatchers.isSubtypeOf(tokenType),
+                // Fail if the arg is calling a method on a token (e.g. token.toString()).
+                // Note that this can't handle indirections.
+                MethodMatchers.instanceMethod().onDescendantOf(tokenType));
     }
 }
