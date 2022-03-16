@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Prevent instance methods of auth tokens from getting called in logging args
+  links:
+    - https://github.com/palantir/gradle-baseline/pull/2113
