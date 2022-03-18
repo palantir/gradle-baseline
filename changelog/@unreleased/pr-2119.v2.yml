@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: RawTypes no longer flags implicit raw types from lambdas
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2119

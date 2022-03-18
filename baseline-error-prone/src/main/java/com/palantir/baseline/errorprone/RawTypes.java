@@ -51,36 +51,36 @@ public final class RawTypes extends BugChecker
                 BugChecker.VariableTreeMatcher {
     @Override
     public Description matchVariable(VariableTree tree, VisitorState state) {
-        return testType(tree.getType());
+        return testType(tree.getType(), state);
     }
 
     @Override
     public Description matchNewClass(NewClassTree tree, VisitorState state) {
-        return testType(tree.getIdentifier());
+        return testType(tree.getIdentifier(), state);
     }
 
     @Override
     public Description matchClass(ClassTree tree, VisitorState state) {
-        Description extendsResult = testType(tree.getExtendsClause());
+        Description extendsResult = testType(tree.getExtendsClause(), state);
         if (extendsResult != Description.NO_MATCH) {
             return extendsResult;
         }
-        return testTypes(tree.getImplementsClause());
+        return testTypes(tree.getImplementsClause(), state);
     }
 
     @Override
     public Description matchMethod(MethodTree tree, VisitorState state) {
-        return testType(tree.getReturnType());
+        return testType(tree.getReturnType(), state);
     }
 
     @Override
     public Description matchTypeCast(TypeCastTree tree, VisitorState state) {
-        return testType(tree.getType());
+        return testType(tree.getType(), state);
     }
 
-    private Description testTypes(Iterable<? extends Tree> types) {
+    private Description testTypes(Iterable<? extends Tree> types, VisitorState state) {
         for (Tree type : types) {
-            Description description = testType(type);
+            Description description = testType(type, state);
             if (description != Description.NO_MATCH) {
                 return description;
             }
@@ -88,12 +88,16 @@ public final class RawTypes extends BugChecker
         return Description.NO_MATCH;
     }
 
-    private Description testType(Tree type) {
+    private Description testType(Tree type, VisitorState state) {
         if (type == null) {
             return Description.NO_MATCH;
         }
         Type realType = ASTHelpers.getType(type);
         if (realType != null && realType.isRaw()) {
+            if (state.getEndPosition(type) < 0) {
+                // No source for the type node, it may be an implicit type in a lambda
+                return Description.NO_MATCH;
+            }
             return buildDescription(type)
                     .setMessage("Avoid raw types; add appropriate type parameters if possible. "
                             + "The type was: "
@@ -103,7 +107,7 @@ public final class RawTypes extends BugChecker
                     .build();
         }
         if (type.getKind() == Tree.Kind.PARAMETERIZED_TYPE) {
-            return testTypes(((ParameterizedTypeTree) type).getTypeArguments());
+            return testTypes(((ParameterizedTypeTree) type).getTypeArguments(), state);
         }
         return Description.NO_MATCH;
     }
