@@ -288,7 +288,75 @@ class IllegalSafeLoggingArgumentTest {
                 .doTest();
     }
 
+    @Test
+    public void testSafeArgOfUnsafe_recommendsUnsafeArgOf() {
+        refactoringHelper()
+                .addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.SafeArg;",
+                        "import com.palantir.logsafe.Unsafe;",
+                        "class Test {",
+                        "  @Unsafe static class UnsafeClass {}",
+                        "  void f() {",
+                        "    SafeArg.of(\"unsafe\", new UnsafeClass());",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.SafeArg;",
+                        "import com.palantir.logsafe.Unsafe;",
+                        "import com.palantir.logsafe.UnsafeArg;",
+                        "class Test {",
+                        "  @Unsafe static class UnsafeClass {}",
+                        "  void f() {",
+                        "    UnsafeArg.of(\"unsafe\", new UnsafeClass());",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testSafeArgOfDoNotLog_noRecommendation() {
+        refactoringHelper()
+                .addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.SafeArg;",
+                        "import com.palantir.logsafe.DoNotLog;",
+                        "class Test {",
+                        "  @DoNotLog static class DoNotLogClass {}",
+                        "  void f() {",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'DO_NOT_LOG'",
+                        "    SafeArg.of(\"unsafe\", new DoNotLogClass());",
+                        "  }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    public void testUnsafeArgumentForSafeParameter_noRecommendation() {
+        refactoringHelper()
+                .addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.Safe;",
+                        "import com.palantir.logsafe.Unsafe;",
+                        "class Test {",
+                        "  @Unsafe static class UnsafeClass {}",
+                        "  void f() {",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
+                        "    fun(new UnsafeClass());",
+                        "  }",
+                        "  private static void fun(@Safe Object obj) {}",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(IllegalSafeLoggingArgument.class, getClass());
+    }
+
+    private RefactoringValidator refactoringHelper() {
+        return RefactoringValidator.of(IllegalSafeLoggingArgument.class, getClass());
     }
 }
