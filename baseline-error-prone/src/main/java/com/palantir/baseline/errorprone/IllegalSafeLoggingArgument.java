@@ -20,6 +20,8 @@ import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
+import com.google.errorprone.fixes.SuggestedFix;
+import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
@@ -38,8 +40,6 @@ import java.util.List;
  * Ensures that safe-logging annotated elements are handled correctly by annotated method parameters.
  * Potential future work:
  * <ul>
- *     <li>Suggest replacing {@code UnsafeArg.of(name, verifiableSafeValue)} with
- *     {@code SafeArg.of(name, verifiableSafeValue)}</li>
  *     <li>We could check return statements in methods annotated for
  *     safety to require consistency</li>
  *     <li>Enforce propagation of safety annotations from fields and types to types which encapsulate them.</li>
@@ -57,6 +57,11 @@ public final class IllegalSafeLoggingArgument extends BugChecker implements BugC
     private static final String SAFE = "com.palantir.logsafe.Safe";
     private static final String UNSAFE = "com.palantir.logsafe.Unsafe";
     private static final String DO_NOT_LOG = "com.palantir.logsafe.DoNotLog";
+
+    private static final String UNSAFE_ARG = "com.palantir.logsafe.UnsafeArg";
+    private static final Matcher<ExpressionTree> SAFE_ARG_OF_METHOD_MATCHER = MethodMatchers.staticMethod()
+            .onClass("com.palantir.logsafe.SafeArg")
+            .named("of");
 
     private static final Matcher<ExpressionTree> TO_STRING =
             MethodMatchers.instanceMethod().anyClass().named("toString").withNoParameters();
@@ -90,11 +95,23 @@ public final class IllegalSafeLoggingArgument extends BugChecker implements BugC
                             .setMessage(String.format(
                                     "Dangerous argument value: arg is '%s' but the parameter requires '%s'.",
                                     argumentSafety, parameterSafety))
+                            .addFix(getSuggestedFix(tree, state, argumentSafety))
                             .build());
                 }
             }
         }
         return Description.NO_MATCH;
+    }
+
+    private static SuggestedFix getSuggestedFix(MethodInvocationTree tree, VisitorState state, Safety argumentSafety) {
+        if (SAFE_ARG_OF_METHOD_MATCHER.matches(tree, state) && Safety.UNSAFE.allowsValueWith(argumentSafety)) {
+            SuggestedFix.Builder fix = SuggestedFix.builder();
+            String unsafeQualifiedClassName = SuggestedFixes.qualifyType(state, fix, UNSAFE_ARG);
+            String replacement = String.format("%s.of", unsafeQualifiedClassName);
+            return fix.replace(tree.getMethodSelect(), replacement).build();
+        }
+
+        return SuggestedFix.emptyFix();
     }
 
     private static Safety getSafety(ExpressionTree tree, VisitorState state) {
