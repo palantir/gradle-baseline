@@ -40,8 +40,6 @@ import java.util.List;
  * Ensures that safe-logging annotated elements are handled correctly by annotated method parameters.
  * Potential future work:
  * <ul>
- *     <li>Suggest replacing {@code UnsafeArg.of(name, verifiableSafeValue)} with
- *     {@code SafeArg.of(name, verifiableSafeValue)}</li>
  *     <li>We could check return statements in methods annotated for
  *     safety to require consistency</li>
  *     <li>Enforce propagation of safety annotations from fields and types to types which encapsulate them.</li>
