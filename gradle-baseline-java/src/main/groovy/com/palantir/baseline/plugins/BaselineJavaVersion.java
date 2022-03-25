@@ -17,6 +17,8 @@
 package com.palantir.baseline.plugins;
 
 import com.palantir.baseline.extensions.BaselineJavaVersionExtension;
+import com.palantir.baseline.plugins.javaversions.JavaToolchains;
+import com.palantir.baseline.plugins.javaversions.PalantirJavaToolchain;
 import javax.inject.Inject;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
@@ -25,7 +27,6 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Property;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.JavaExec;
@@ -61,11 +62,14 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                 }
             });
 
+            JavaToolchains javaToolchains =
+                    new JavaToolchains(project.getExtensions().getByType(JavaToolchainService.class));
+
             // Compilation tasks (using target version)
-            configureCompilationTasks(project, extension.target());
+            configureCompilationTasks(project, javaToolchains.forVersion(extension.target()));
 
             // Execution tasks (using the runtime version)
-            configureExecutionTasks(project, extension.runtime());
+            configureExecutionTasks(project, javaToolchains.forVersion(extension.runtime()));
 
             // Validation
             project.getTasks()
@@ -80,94 +84,55 @@ public final class BaselineJavaVersion implements Plugin<Project> {
         });
     }
 
-    private static void configureCompilationTasks(
-            Project project, Provider<JavaLanguageVersion> targetVersionProvider) {
-        JavaToolchainService javaToolchainService = project.getExtensions().getByType(JavaToolchainService.class);
-
+    private static void configureCompilationTasks(Project project, PalantirJavaToolchain javaToolchain) {
         project.getTasks().withType(JavaCompile.class, new Action<JavaCompile>() {
             @Override
             public void execute(JavaCompile javaCompile) {
-                javaCompile.getJavaCompiler().set(javaToolchainService.compilerFor(new Action<JavaToolchainSpec>() {
-                    @Override
-                    public void execute(JavaToolchainSpec javaToolchainSpec) {
-                        javaToolchainSpec.getLanguageVersion().set(targetVersionProvider);
-                    }
-                }));
+                javaCompile.getJavaCompiler().set(javaToolchain.javaCompiler());
             }
         });
 
         project.getTasks().withType(Javadoc.class, new Action<Javadoc>() {
             @Override
             public void execute(Javadoc javadoc) {
-                javadoc.getJavadocTool().set(javaToolchainService.javadocToolFor(new Action<JavaToolchainSpec>() {
-                    @Override
-                    public void execute(JavaToolchainSpec javaToolchainSpec) {
-                        javaToolchainSpec.getLanguageVersion().set(targetVersionProvider);
-                    }
-                }));
+                javadoc.getJavadocTool().set(javaToolchain.javadocTool());
             }
         });
 
         project.getTasks().withType(GroovyCompile.class, new Action<GroovyCompile>() {
             @Override
             public void execute(GroovyCompile groovyCompile) {
-                groovyCompile.getJavaLauncher().set(javaToolchainService.launcherFor(new Action<JavaToolchainSpec>() {
-                    @Override
-                    public void execute(JavaToolchainSpec javaToolchainSpec) {
-                        javaToolchainSpec.getLanguageVersion().set(targetVersionProvider);
-                    }
-                }));
+                groovyCompile.getJavaLauncher().set(javaToolchain.javaLauncher());
             }
         });
 
         project.getTasks().withType(ScalaCompile.class, new Action<ScalaCompile>() {
             @Override
             public void execute(ScalaCompile scalaCompile) {
-                scalaCompile.getJavaLauncher().set(javaToolchainService.launcherFor(new Action<JavaToolchainSpec>() {
-                    @Override
-                    public void execute(JavaToolchainSpec javaToolchainSpec) {
-                        javaToolchainSpec.getLanguageVersion().set(targetVersionProvider);
-                    }
-                }));
+                scalaCompile.getJavaLauncher().set(javaToolchain.javaLauncher());
             }
         });
 
         project.getTasks().withType(ScalaDoc.class, new Action<ScalaDoc>() {
             @Override
             public void execute(ScalaDoc scalaDoc) {
-                scalaDoc.getJavaLauncher().set(javaToolchainService.launcherFor(new Action<JavaToolchainSpec>() {
-                    @Override
-                    public void execute(JavaToolchainSpec javaToolchainSpec) {
-                        javaToolchainSpec.getLanguageVersion().set(targetVersionProvider);
-                    }
-                }));
+                scalaDoc.getJavaLauncher().set(javaToolchain.javaLauncher());
             }
         });
     }
 
-    private static void configureExecutionTasks(Project project, Provider<JavaLanguageVersion> runtimeVersionProvider) {
-        JavaToolchainService javaToolchainService = project.getExtensions().getByType(JavaToolchainService.class);
+    private static void configureExecutionTasks(Project project, PalantirJavaToolchain javaToolchain) {
         project.getTasks().withType(JavaExec.class, new Action<JavaExec>() {
             @Override
             public void execute(JavaExec javaExec) {
-                javaExec.getJavaLauncher().set(javaToolchainService.launcherFor(new Action<JavaToolchainSpec>() {
-                    @Override
-                    public void execute(JavaToolchainSpec javaToolchainSpec) {
-                        javaToolchainSpec.getLanguageVersion().set(runtimeVersionProvider);
-                    }
-                }));
+                javaExec.getJavaLauncher().set(javaToolchain.javaLauncher());
             }
         });
 
         project.getTasks().withType(Test.class, new Action<Test>() {
             @Override
             public void execute(Test test) {
-                test.getJavaLauncher().set(javaToolchainService.launcherFor(new Action<JavaToolchainSpec>() {
-                    @Override
-                    public void execute(JavaToolchainSpec javaToolchainSpec) {
-                        javaToolchainSpec.getLanguageVersion().set(runtimeVersionProvider);
-                    }
-                }));
+                test.getJavaLauncher().set(javaToolchain.javaLauncher());
             }
         });
     }
