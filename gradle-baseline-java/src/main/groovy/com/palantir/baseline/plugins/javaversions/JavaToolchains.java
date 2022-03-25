@@ -5,24 +5,26 @@
 package com.palantir.baseline.plugins.javaversions;
 
 import org.gradle.api.Action;
+import org.gradle.api.Project;
 import org.gradle.api.provider.Provider;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.jvm.toolchain.JavaToolchainService;
 import org.gradle.jvm.toolchain.JavaToolchainSpec;
 
 public final class JavaToolchains {
-    private final JavaToolchainService gradleJavaToolchainService;
+    private final Project project;
 
-    public JavaToolchains(JavaToolchainService gradleJavaToolchainService) {
-        this.gradleJavaToolchainService = gradleJavaToolchainService;
+    public JavaToolchains(Project project) {
+        this.project = project;
     }
 
     public PalantirJavaToolchain forVersion(Provider<JavaLanguageVersion> javaLanguageVersion) {
-        return new FallbackGradleJavaToolchain(gradleJavaToolchainService, new Action<JavaToolchainSpec>() {
-            @Override
-            public void execute(JavaToolchainSpec javaToolchainSpec) {
-                javaToolchainSpec.getLanguageVersion().set(javaLanguageVersion);
-            }
-        });
+        return new FallbackGradleJavaToolchain(
+                project.getExtensions().getByType(JavaToolchainService.class), new Action<JavaToolchainSpec>() {
+                    @Override
+                    public void execute(JavaToolchainSpec javaToolchainSpec) {
+                        javaToolchainSpec.getLanguageVersion().set(javaLanguageVersion);
+                    }
+                });
     }
 }

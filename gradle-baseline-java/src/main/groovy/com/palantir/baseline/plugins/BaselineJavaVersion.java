@@ -38,7 +38,6 @@ import org.gradle.api.tasks.scala.ScalaCompile;
 import org.gradle.api.tasks.scala.ScalaDoc;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
-import org.gradle.jvm.toolchain.JavaToolchainService;
 import org.gradle.jvm.toolchain.JavaToolchainSpec;
 
 public final class BaselineJavaVersion implements Plugin<Project> {
@@ -62,8 +61,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                 }
             });
 
-            JavaToolchains javaToolchains =
-                    new JavaToolchains(project.getExtensions().getByType(JavaToolchainService.class));
+            JavaToolchains javaToolchains = new JavaToolchains(project);
 
             // Compilation tasks (using target version)
             configureCompilationTasks(project, javaToolchains.forVersion(extension.target()));
