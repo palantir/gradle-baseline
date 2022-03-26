@@ -62,4 +62,5 @@ allprojects {
 
 javaVersions {
     libraryTarget = 11
+    runtime = 17
 }
