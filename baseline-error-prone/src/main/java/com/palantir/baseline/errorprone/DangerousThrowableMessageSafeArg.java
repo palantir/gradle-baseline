@@ -31,7 +31,6 @@ import java.util.List;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "DangerousThrowableMessageSafeArg",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,

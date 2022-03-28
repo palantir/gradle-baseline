@@ -31,7 +31,6 @@ import java.time.ZoneOffset;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "JavaTimeSystemDefaultTimeZone",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.ERROR,
@@ -42,11 +41,11 @@ public final class JavaTimeSystemDefaultTimeZone extends BugChecker implements B
     private static final Matcher<ExpressionTree> CLOCK_SYSTEM_DEFAULT_ZONE_MATCHER = Matchers.staticMethod()
             .onClass("java.time.Clock")
             .named("systemDefaultZone")
-            .withParameters();
+            .withNoParameters();
     private static final Matcher<ExpressionTree> ZONE_ID_SYSTEM_DEFAULT_MATCHER = Matchers.staticMethod()
             .onClass("java.time.ZoneId")
             .named("systemDefault")
-            .withParameters();
+            .withNoParameters();
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {

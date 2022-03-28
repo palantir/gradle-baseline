@@ -39,7 +39,6 @@ import org.immutables.value.Value.Immutable;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "ConsistentOverrides",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
