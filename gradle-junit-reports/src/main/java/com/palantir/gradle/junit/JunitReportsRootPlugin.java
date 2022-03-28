@@ -25,6 +25,7 @@ import org.gradle.api.Task;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
 
+@SuppressWarnings("deprecation")
 public final class JunitReportsRootPlugin implements Plugin<Project> {
     @Override
     public void apply(Project project) {
