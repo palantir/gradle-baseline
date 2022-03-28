@@ -88,24 +88,9 @@ public final class PreferSafeLoggingPreconditions extends BugChecker implements 
         List<? extends ExpressionTree> args = tree.getArguments();
         if (args.size() > 2) {
             if (PRECONDITIONS_MATCHER.matches(tree, state)) {
-                boolean anyMatch = false;
-                boolean allMatch = true;
-                for (int i = 2; i < args.size(); i++) {
-                    ExpressionTree arg = args.get(i);
-                    if (ARG_MATCHER.matches(arg, state)) {
-                        anyMatch = true;
-                    } else {
-                        allMatch = false;
-                    }
-                }
-                if (allMatch) {
-                    return suggestFix(tree, state);
-                } else if (anyMatch) {
-                    return buildDescription(tree)
-                            .setMessage(
-                                    "An Arg was passed to Preconditions.checkX(), but not all. Convert the non-Args to"
-                                            + " be Args and use com.palantir.logsafe.Preconditions instead.")
-                            .build();
+                Description result = checkGuavaPreconditionsAndLogsafeArgMixing(tree, state, args);
+                if (result != null) {
+                    return result;
                 }
             }
             return Description.NO_MATCH;
@@ -118,6 +103,29 @@ public final class PreferSafeLoggingPreconditions extends BugChecker implements 
         }
 
         return suggestFix(tree, state);
+    }
+
+    private Description checkGuavaPreconditionsAndLogsafeArgMixing(
+            MethodInvocationTree tree, VisitorState state, List<? extends ExpressionTree> args) {
+        boolean anyMatch = false;
+        boolean allMatch = true;
+        for (int i = 2; i < args.size(); i++) {
+            ExpressionTree arg = args.get(i);
+            if (ARG_MATCHER.matches(arg, state)) {
+                anyMatch = true;
+            } else {
+                allMatch = false;
+            }
+        }
+        if (allMatch) {
+            return suggestFix(tree, state);
+        } else if (anyMatch) {
+            return buildDescription(tree)
+                    .setMessage("An Arg was passed to Preconditions.checkX(), but not all. Convert the non-Args to"
+                            + " be Args and use com.palantir.logsafe.Preconditions instead.")
+                    .build();
+        }
+        return null;
     }
 
     private Description suggestFix(MethodInvocationTree tree, VisitorState state) {
