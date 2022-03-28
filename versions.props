@@ -1,6 +1,6 @@
 com.diffplug.spotless:spotless-plugin-gradle = 6.4.0
 com.google.auto.service:auto-service = 1.0.1
-com.google.errorprone:error_prone_* = 2.11.0
+com.google.errorprone:* = 2.11.0
 com.google.guava:guava = 31.1-jre
 com.palantir.safe-logging:* = 1.24.0
 commons-lang:commons-lang = 2.6
