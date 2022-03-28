@@ -53,6 +53,7 @@ public class BaselineErrorProneExtension {
             "ObjectsHashCodeUnnecessaryVarargs",
             "OptionalFlatMapOfNullable",
             "OptionalOrElseMethodInvocation",
+            "PreconditionsArgument",
             "PreferBuiltInConcurrentKeySet",
             "PreferCollectionConstructors",
             "PreferCollectionTransform",

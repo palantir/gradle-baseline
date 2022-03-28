@@ -1,0 +1,72 @@
+/*
+ * (c) Copyright 2017 Palantir Technologies Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.palantir.baseline.errorprone;
+
+import com.google.auto.service.AutoService;
+import com.google.errorprone.BugPattern;
+import com.google.errorprone.BugPattern.SeverityLevel;
+import com.google.errorprone.VisitorState;
+import com.google.errorprone.bugpatterns.BugChecker;
+import com.google.errorprone.matchers.Description;
+import com.google.errorprone.matchers.Matcher;
+import com.google.errorprone.matchers.method.MethodMatchers;
+import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.MethodInvocationTree;
+import java.util.List;
+import java.util.regex.Pattern;
+
+@AutoService(BugChecker.class)
+@BugPattern(
+        name = "PreconditionsArgument",
+        link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
+        linkType = BugPattern.LinkType.CUSTOM,
+        severity = SeverityLevel.ERROR,
+        summary = "Disallow logsafe Args as arguments to Preconditions.checkX() methods")
+public final class PreconditionsArgument extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
+
+    private static final long serialVersionUID = 1L;
+
+    private static final Matcher<ExpressionTree> PRECONDITIONS_METHOD = MethodMatchers.staticMethod()
+            .onClass("com.google.common.base.Preconditions")
+            .withNameMatching(Pattern.compile("checkArgument|checkState|checkNotNull"));
+
+    private static final Matcher<ExpressionTree> ARG = MoreMatchers.isSubtypeOf("com.palantir.logsafe.Arg");
+
+    @Override
+    public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
+        if (!PRECONDITIONS_METHOD.matches(tree, state)) {
+            return Description.NO_MATCH;
+        }
+
+        List<? extends ExpressionTree> args = tree.getArguments();
+        if (args.size() <= 2) {
+            return Description.NO_MATCH;
+        }
+
+        for (int i = 2; i < args.size(); i++) {
+            ExpressionTree arg = args.get(i);
+            if (ARG.matches(arg, state)) {
+                return buildDescription(tree)
+                        .setMessage("Arg was passed to Preconditions.checkX(). "
+                                + "Use logsafe Preconditions instead.")
+                        .build();
+            }
+        }
+
+        return Description.NO_MATCH;
+    }
+}
