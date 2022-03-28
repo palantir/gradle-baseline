@@ -40,7 +40,10 @@ import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.compile.JavaCompile;
+import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradle.api.tasks.testing.Test;
+import org.gradle.external.javadoc.CoreJavadocOptions;
+import org.gradle.external.javadoc.MinimalJavadocOptions;
 import org.gradle.jvm.tasks.Jar;
 import org.gradle.process.CommandLineArgumentProvider;
 import org.immutables.value.Value;
@@ -61,6 +64,7 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
             Splitter.on(' ').trimResults().omitEmptyStrings();
 
     @Override
+    @SuppressWarnings("checkstyle:MethodLength")
     public void apply(Project project) {
         project.getPluginManager().withPlugin("java", unused -> {
             BaselineModuleJvmArgsExtension extension =
@@ -92,6 +96,62 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                                 return arguments;
                             }
                         });
+
+                Task maybeJavadocTask = project.getTasks().findByName(sourceSet.getJavadocTaskName());
+                if (maybeJavadocTask instanceof Javadoc) {
+                    maybeJavadocTask.doFirst(new Action<Task>() {
+                        @Override
+                        public void execute(Task task) {
+                            Javadoc javadoc = (Javadoc) task;
+
+                            MinimalJavadocOptions options = javadoc.getOptions();
+                            if (options instanceof CoreJavadocOptions) {
+                                CoreJavadocOptions coreOptions = (CoreJavadocOptions) options;
+                                ImmutableList<JarManifestModuleInfo> info = collectClasspathInfo(project, sourceSet);
+                                List<String> exportValues = Stream.concat(
+                                                extension.exports().get().stream(),
+                                                info.stream().flatMap(item -> item.exports().stream()))
+                                        .distinct()
+                                        .sorted()
+                                        .map(item -> item + "=ALL-UNNAMED")
+                                        .collect(ImmutableList.toImmutableList());
+                                List<String> opens = Stream.concat(
+                                                extension.opens().get().stream(),
+                                                info.stream().flatMap(item -> item.opens().stream()))
+                                        .distinct()
+                                        .sorted()
+                                        .map(item -> item + "=ALL-UNNAMED")
+                                        .collect(ImmutableList.toImmutableList());
+                                project.getLogger()
+                                        .debug(
+                                                "BaselineModuleJvmArgs building {} on {} "
+                                                        + "with exports: {} and opens: {}",
+                                                javadoc.getName(),
+                                                project,
+                                                exportValues,
+                                                opens);
+                                if (!exportValues.isEmpty()) {
+                                    coreOptions
+                                            // options are automatically prefixed with '-' internally
+                                            .addMultilineStringsOption("-add-exports")
+                                            .setValue(exportValues);
+                                }
+                                if (!opens.isEmpty()) {
+                                    coreOptions
+                                            // options are automatically prefixed with '-' internally
+                                            .addMultilineStringsOption("-add-opens")
+                                            .setValue(opens);
+                                }
+                            } else {
+                                project.getLogger()
+                                        .error(
+                                                "MinimalJavadocOptions implementation was "
+                                                        + "not CoreJavadocOptions, rather '{}'",
+                                                options.getClass().getName());
+                            }
+                        }
+                    });
+                }
             });
 
             project.getTasks().withType(Test.class, new Action<Test>() {
@@ -192,7 +252,29 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
 
     private static ImmutableList<String> collectClasspathArgs(
             Project project, BaselineModuleJvmArgsExtension extension, FileCollection classpath) {
-        ImmutableList<JarManifestModuleInfo> classpathInfo = classpath.getFiles().stream()
+        ImmutableList<JarManifestModuleInfo> classpathInfo = collectClasspathInfo(project, classpath);
+        Stream<String> exports = Stream.concat(
+                        extension.exports().get().stream(),
+                        classpathInfo.stream().flatMap(info -> info.exports().stream()))
+                .distinct()
+                .sorted()
+                .flatMap(BaselineModuleJvmArgs::addExportArg);
+        Stream<String> opens = Stream.concat(
+                        extension.opens().get().stream(), classpathInfo.stream().flatMap(info -> info.opens().stream()))
+                .distinct()
+                .sorted()
+                .flatMap(BaselineModuleJvmArgs::addOpensArg);
+        return Stream.concat(exports, opens).collect(ImmutableList.toImmutableList());
+    }
+
+    private static ImmutableList<JarManifestModuleInfo> collectClasspathInfo(Project project, SourceSet sourceSet) {
+        return collectClasspathInfo(
+                project, project.getConfigurations().getByName(sourceSet.getAnnotationProcessorConfigurationName()));
+    }
+
+    private static ImmutableList<JarManifestModuleInfo> collectClasspathInfo(
+            Project project, FileCollection classpath) {
+        return classpath.getFiles().stream()
                 .map(file -> {
                     try {
                         if (file.getName().endsWith(".jar") && file.isFile()) {
@@ -212,18 +294,6 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                 })
                 .filter(Objects::nonNull)
                 .collect(ImmutableList.toImmutableList());
-        Stream<String> exports = Stream.concat(
-                        extension.exports().get().stream(),
-                        classpathInfo.stream().flatMap(info -> info.exports().stream()))
-                .distinct()
-                .sorted()
-                .flatMap(BaselineModuleJvmArgs::addExportArg);
-        Stream<String> opens = Stream.concat(
-                        extension.opens().get().stream(), classpathInfo.stream().flatMap(info -> info.opens().stream()))
-                .distinct()
-                .sorted()
-                .flatMap(BaselineModuleJvmArgs::addOpensArg);
-        return Stream.concat(exports, opens).collect(ImmutableList.toImmutableList());
     }
 
     private static Optional<JarManifestModuleInfo> parseModuleInfo(@Nullable java.util.jar.Manifest jarManifest) {

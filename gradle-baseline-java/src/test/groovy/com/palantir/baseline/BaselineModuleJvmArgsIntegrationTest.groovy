@@ -75,6 +75,33 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
         runTasksSuccessfully('compileJava')
     }
 
+    def 'Builds javadoc with locally defined exports'() {
+        when:
+        buildFile << '''
+        application {
+            mainClass = 'com.Example'
+        }
+        moduleJvmArgs {
+           exports = ['jdk.compiler/com.sun.tools.javac.code']
+        }
+        '''.stripIndent(true)
+        writeJavaSourceFile('''
+        package com;
+        public class Example {
+            /**
+             * Javadoc {@link com.sun.tools.javac.code.Symbol}.
+             * @param args Program arguments
+             */
+            public static void main(String[] args) {
+                com.sun.tools.javac.code.Symbol.class.toString();
+            }
+        }
+        '''.stripIndent(true))
+
+        then:
+        runTasksSuccessfully('javadoc')
+    }
+
     def 'Runs with locally defined exports'() {
         when:
         buildFile << '''
