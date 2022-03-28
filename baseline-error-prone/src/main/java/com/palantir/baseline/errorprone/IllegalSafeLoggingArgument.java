@@ -26,6 +26,7 @@ import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
+import com.palantir.baseline.errorprone.safety.Safety;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.Tree;
@@ -157,38 +158,5 @@ public final class IllegalSafeLoggingArgument extends BugChecker implements BugC
             return Safety.SAFE;
         }
         return Safety.UNKNOWN;
-    }
-
-    private enum Safety {
-        UNKNOWN() {
-            @Override
-            boolean allowsValueWith(Safety _valueSafety) {
-                // No constraints when safety isn't specified
-                return true;
-            }
-        },
-        DO_NOT_LOG() {
-            @Override
-            boolean allowsValueWith(Safety _valueSafety) {
-                // do-not-log on a parameter isn't meaningful for callers, only for the implementation
-                return true;
-            }
-        },
-        UNSAFE() {
-            @Override
-            boolean allowsValueWith(Safety valueSafety) {
-                // We allow safe data to be provided to an unsafe annotated parameter because that's safe, however
-                // we should separately flag and prompt migration of such UnsafeArgs to SafeArg.
-                return valueSafety != Safety.DO_NOT_LOG;
-            }
-        },
-        SAFE() {
-            @Override
-            boolean allowsValueWith(Safety valueSafety) {
-                return valueSafety == Safety.UNKNOWN || valueSafety == Safety.SAFE;
-            }
-        };
-
-        abstract boolean allowsValueWith(Safety valueSafety);
     }
 }
