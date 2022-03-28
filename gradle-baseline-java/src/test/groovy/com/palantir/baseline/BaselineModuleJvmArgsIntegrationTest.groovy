@@ -52,6 +52,29 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
         buildFile << standardBuildFile
     }
 
+    def 'Compiles with locally defined exports'() {
+        when:
+        buildFile << '''
+        application {
+            mainClass = 'com.Example'
+        }
+        moduleJvmArgs {
+           exports = ['jdk.compiler/com.sun.tools.javac.code']
+        }
+        '''.stripIndent(true)
+        writeJavaSourceFile('''
+        package com;
+        public class Example {
+            public static void main(String[] args) {
+                com.sun.tools.javac.code.Symbol.class.toString();
+            }
+        }
+        '''.stripIndent(true))
+
+        then:
+        runTasksSuccessfully('compileJava')
+    }
+
     def 'Runs with locally defined exports'() {
         when:
         buildFile << '''

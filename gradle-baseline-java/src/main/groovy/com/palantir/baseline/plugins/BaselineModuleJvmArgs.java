@@ -68,32 +68,31 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
 
             // javac isn't provided `--add-exports` args for the time being due to
             // https://github.com/gradle/gradle/issues/18824
-            if (project.hasProperty("add.exports.to.javac")) {
-                project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
-                    JavaCompile javaCompile = project.getTasks()
-                            .named(sourceSet.getCompileJavaTaskName(), JavaCompile.class)
-                            .get();
-                    javaCompile
-                            .getOptions()
-                            .getCompilerArgumentProviders()
-                            // Use an anonymous class because tasks with lambda inputs cannot be cached
-                            .add(new CommandLineArgumentProvider() {
-                                @Override
-                                public Iterable<String> asArguments() {
-                                    // Annotation processors are executed at compile time
-                                    ImmutableList<String> arguments =
-                                            collectAnnotationProcessorArgs(project, extension, sourceSet);
-                                    project.getLogger()
-                                            .debug(
-                                                    "BaselineModuleJvmArgs compiling {} on {} with exports: {}",
-                                                    javaCompile.getName(),
-                                                    project,
-                                                    arguments);
-                                    return arguments;
-                                }
-                            });
-                });
-            }
+            // However, we set sourceCompatibility in BaselineJavaVersion to opt out of the '-release' flag.
+            project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
+                JavaCompile javaCompile = project.getTasks()
+                        .named(sourceSet.getCompileJavaTaskName(), JavaCompile.class)
+                        .get();
+                javaCompile
+                        .getOptions()
+                        .getCompilerArgumentProviders()
+                        // Use an anonymous class because tasks with lambda inputs cannot be cached
+                        .add(new CommandLineArgumentProvider() {
+                            @Override
+                            public Iterable<String> asArguments() {
+                                // Annotation processors are executed at compile time
+                                ImmutableList<String> arguments =
+                                        collectAnnotationProcessorArgs(project, extension, sourceSet);
+                                project.getLogger()
+                                        .debug(
+                                                "BaselineModuleJvmArgs compiling {} on {} with exports: {}",
+                                                javaCompile.getName(),
+                                                project,
+                                                arguments);
+                                return arguments;
+                            }
+                        });
+            });
 
             project.getTasks().withType(Test.class, new Action<Test>() {
 
