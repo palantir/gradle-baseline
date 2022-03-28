@@ -5,7 +5,8 @@ apply plugin: 'com.palantir.external-publish-jar'
 
 dependencies {
     implementation 'com.google.errorprone:error_prone_core'
-    implementation 'org.mockito:mockito-errorprone'
+    // bring back mockito-errorprone once it is updated for 2.11.0+
+    //implementation 'org.mockito:mockito-errorprone'
 
     testImplementation gradleApi()
     testImplementation 'com.palantir.tokens:auth-tokens'
