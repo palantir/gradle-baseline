@@ -64,6 +64,7 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
             Splitter.on(' ').trimResults().omitEmptyStrings();
 
     @Override
+    @SuppressWarnings("checkstyle:MethodLength")
     public void apply(Project project) {
         project.getPluginManager().withPlugin("java", unused -> {
             BaselineModuleJvmArgsExtension extension =
