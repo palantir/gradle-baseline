@@ -61,8 +61,7 @@ public final class PreconditionsArgument extends BugChecker implements BugChecke
             ExpressionTree arg = args.get(i);
             if (ARG.matches(arg, state)) {
                 return buildDescription(tree)
-                        .setMessage("Arg was passed to Preconditions.checkX(). "
-                                + "Use logsafe Preconditions instead.")
+                        .setMessage("Arg was passed to Preconditions.checkX(). Use logsafe Preconditions instead.")
                         .build();
             }
         }
