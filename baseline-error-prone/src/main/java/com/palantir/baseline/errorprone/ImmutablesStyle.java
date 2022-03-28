@@ -43,7 +43,6 @@ import javax.annotation.Nullable;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "ImmutablesStyle",
         linkType = LinkType.CUSTOM,
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         severity = SeverityLevel.WARNING,

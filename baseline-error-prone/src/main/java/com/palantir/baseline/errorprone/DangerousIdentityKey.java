@@ -33,7 +33,6 @@ import com.sun.tools.javac.util.Name;
  */
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "DangerousIdentityKey",
         summary = "Key type does not override equals() and hashCode, so comparisons will be done on"
                 + " reference equality only. If neither deduplication nor lookup are needed,"
                 + " consider using a List instead. Otherwise, use IdentityHashMap/Set,"

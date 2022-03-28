@@ -28,7 +28,6 @@ import com.sun.source.tree.NewClassTree;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "AfterburnerJavaIncompatibility",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.ERROR,

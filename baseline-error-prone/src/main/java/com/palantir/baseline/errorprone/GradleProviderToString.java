@@ -31,7 +31,6 @@ import java.util.Optional;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "GradleProviderToString",
         summary = "Calling toString on a Provider does not render the contained value",
         severity = BugPattern.SeverityLevel.ERROR)
 public final class GradleProviderToString extends AbstractToString {

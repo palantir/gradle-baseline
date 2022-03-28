@@ -43,7 +43,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "PreferSafeLogger",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,

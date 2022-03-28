@@ -34,7 +34,6 @@ import com.sun.tools.javac.code.Symbol;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "DangerousJsonTypeInfoUsage",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
