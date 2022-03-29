@@ -573,6 +573,69 @@ class IllegalSafeLoggingArgumentTest {
     }
 
     @Test
+    public void testInvalidReturnValue_AnnotatedSupertype() {
+        helper().addSourceLines(
+                        "Annotated.java",
+                        "import com.palantir.logsafe.*;",
+                        "interface Annotated {",
+                        "  @Safe Object safe();",
+                        "  @Safe Object unsafe();",
+                        "  @Safe Object doNotLog();",
+                        "}")
+                .addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test implements Annotated {",
+                        "  @DoNotLog static class DoNotLogClass {}",
+                        "  @Safe static class SafeClass {}",
+                        "  @Unsafe static class UnsafeClass {}",
+                        "  @Override public Object safe() {",
+                        "    return new SafeClass();",
+                        "  }",
+                        "  @Override public Object unsafe() {",
+                        "    // BUG: Diagnostic contains: Dangerous return value: result is 'UNSAFE' "
+                                + "but the method is annotated 'SAFE'.",
+                        "    return new UnsafeClass();",
+                        "  }",
+                        "  @Override public Object doNotLog() {",
+                        "    // BUG: Diagnostic contains: Dangerous return value: result is 'DO_NOT_LOG' "
+                                + "but the method is annotated 'SAFE'.",
+                        "    return new DoNotLogClass();",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testInvalidValue_AnnotatedSupertype() {
+        helper().addSourceLines(
+                        "Annotated.java",
+                        "import com.palantir.logsafe.*;",
+                        "interface Annotated {",
+                        "  void safe(@Safe Object value);",
+                        "}")
+                .addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test implements Annotated {",
+                        "  @DoNotLog static class DoNotLogClass {}",
+                        "  @Safe static class SafeClass {}",
+                        "  @Unsafe static class UnsafeClass {}",
+                        "  void f() {",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'DO_NOT_LOG' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    safe(new DoNotLogClass());",
+                        "    safe(new SafeClass());",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    safe(new UnsafeClass());",
+                        "  }",
+                        "  @Override public void safe(Object value) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testSafeArgOfUnsafe_recommendsUnsafeArgOf() {
         refactoringHelper()
                 .addInputLines(

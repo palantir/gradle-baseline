@@ -20,7 +20,11 @@ import com.google.errorprone.VisitorState;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Symbol.MethodSymbol;
+import com.sun.tools.javac.code.Symbol.VarSymbol;
 import com.sun.tools.javac.code.Type;
+import com.sun.tools.javac.util.List;
+import java.util.Objects;
 import javax.annotation.Nullable;
 
 public final class SafetyAnnotations {
@@ -39,6 +43,7 @@ public final class SafetyAnnotations {
         return Safety.mergeAssumingUnknownIsSame(resultTypeSafet, symbolSafety);
     }
 
+    @SuppressWarnings("checkstyle:CyclomaticComplexity")
     public static Safety getSafety(@Nullable Symbol symbol, VisitorState state) {
         if (symbol != null) {
             if (ASTHelpers.hasAnnotation(symbol, DO_NOT_LOG, state)) {
@@ -50,8 +55,49 @@ public final class SafetyAnnotations {
             if (ASTHelpers.hasAnnotation(symbol, SAFE, state)) {
                 return Safety.SAFE;
             }
+            // Check super-methods
+            if (symbol instanceof MethodSymbol) {
+                return getSuperMethodSafety((MethodSymbol) symbol, state);
+            }
+            if (symbol instanceof VarSymbol) {
+                VarSymbol varSymbol = (VarSymbol) symbol;
+                return getSuperMethodParameterSafety(varSymbol, state);
+            }
         }
         return Safety.UNKNOWN;
+    }
+
+    private static Safety getSuperMethodSafety(MethodSymbol method, VisitorState state) {
+        Safety safety = Safety.UNKNOWN;
+        if (!method.isStaticOrInstanceInit()) {
+            for (MethodSymbol superMethod : ASTHelpers.findSuperMethods(method, state.getTypes())) {
+                safety = Safety.mergeAssumingUnknownIsSame(safety, getSafety(superMethod, state));
+            }
+        }
+        return safety;
+    }
+
+    private static Safety getSuperMethodParameterSafety(VarSymbol varSymbol, VisitorState state) {
+        Safety safety = Safety.UNKNOWN;
+        if (varSymbol.owner instanceof MethodSymbol) {
+            // If the owner is a MethodSymbol, this variable is a method parameter
+            MethodSymbol method = (MethodSymbol) varSymbol.owner;
+            if (!method.isStaticOrInstanceInit()) {
+                List<VarSymbol> methodParameters = method.getParameters();
+                for (int i = 0; i < methodParameters.size(); i++) {
+                    VarSymbol current = methodParameters.get(i);
+                    if (Objects.equals(current, varSymbol)) {
+                        for (MethodSymbol superMethod : ASTHelpers.findSuperMethods(method, state.getTypes())) {
+                            safety = Safety.mergeAssumingUnknownIsSame(
+                                    safety,
+                                    getSafety(superMethod.getParameters().get(i), state));
+                        }
+                        return safety;
+                    }
+                }
+            }
+        }
+        return safety;
     }
 
     public static Safety getResultTypeSafety(ExpressionTree expression, VisitorState state) {
