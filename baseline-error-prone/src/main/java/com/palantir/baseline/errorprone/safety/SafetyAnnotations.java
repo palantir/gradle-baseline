@@ -43,7 +43,6 @@ public final class SafetyAnnotations {
         return Safety.mergeAssumingUnknownIsSame(resultTypeSafet, symbolSafety);
     }
 
-    @SuppressWarnings("checkstyle:CyclomaticComplexity")
     public static Safety getSafety(@Nullable Symbol symbol, VisitorState state) {
         if (symbol != null) {
             if (ASTHelpers.hasAnnotation(symbol, DO_NOT_LOG, state)) {
