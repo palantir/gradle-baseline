@@ -31,6 +31,9 @@ import com.palantir.baseline.errorprone.safety.SafetyAnalysis;
 import com.palantir.baseline.errorprone.safety.SafetyAnnotations;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
+import com.sun.source.tree.MethodTree;
+import com.sun.source.tree.ReturnTree;
+import com.sun.source.tree.StatementTree;
 import com.sun.source.util.TreePath;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
@@ -52,7 +55,8 @@ import java.util.List;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.ERROR,
         summary = "safe-logging annotations must agree between args and method parameters")
-public final class IllegalSafeLoggingArgument extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
+public final class IllegalSafeLoggingArgument extends BugChecker
+        implements BugChecker.MethodInvocationTreeMatcher, BugChecker.ReturnTreeMatcher {
 
     private static final String UNSAFE_ARG = "com.palantir.logsafe.UnsafeArg";
     private static final Matcher<ExpressionTree> SAFE_ARG_OF_METHOD_MATCHER = MethodMatchers.staticMethod()
@@ -73,8 +77,8 @@ public final class IllegalSafeLoggingArgument extends BugChecker implements BugC
         for (int i = 0; i < parameters.size(); i++) {
             VarSymbol parameter = parameters.get(i);
             Safety parameterSafety = SafetyAnnotations.getSafety(parameter, state);
-            if (parameterSafety == Safety.UNKNOWN) {
-                // Fast path, avoid analysis when the value isn't provided to a safety-aware consumer
+            if (parameterSafety.allowsAll()) {
+                // Fast path: all types are accepted, there's no reason to do further analysis.
                 continue;
             }
 
@@ -97,6 +101,36 @@ public final class IllegalSafeLoggingArgument extends BugChecker implements BugC
             }
         }
         return Description.NO_MATCH;
+    }
+
+    @Override
+    public Description matchReturn(ReturnTree tree, VisitorState state) {
+        if (tree.getExpression() == null) {
+            return Description.NO_MATCH;
+        }
+        TreePath path = state.getPath();
+        while (path != null && path.getLeaf() instanceof StatementTree) {
+            path = path.getParentPath();
+        }
+        if (path == null || !(path.getLeaf() instanceof MethodTree)) {
+            return Description.NO_MATCH;
+        }
+        MethodTree method = (MethodTree) path.getLeaf();
+        Safety methodDeclaredSafety = SafetyAnnotations.getSafety(ASTHelpers.getSymbol(method), state);
+        if (methodDeclaredSafety.allowsAll()) {
+            // Fast path, all types are accepted, there's no reason to do further analysis.
+            return Description.NO_MATCH;
+        }
+        Safety returnValueSafety = SafetyAnalysis.instance(state.context)
+                .getSafety(state.withPath(new TreePath(state.getPath(), tree.getExpression())));
+        if (methodDeclaredSafety.allowsValueWith(returnValueSafety)) {
+            return Description.NO_MATCH;
+        }
+        return buildDescription(tree)
+                .setMessage(String.format(
+                        "Dangerous return value: result is '%s' but the method is annotated '%s'.",
+                        returnValueSafety, methodDeclaredSafety))
+                .build();
     }
 
     private static SuggestedFix getSuggestedFix(MethodInvocationTree tree, VisitorState state, Safety argumentSafety) {

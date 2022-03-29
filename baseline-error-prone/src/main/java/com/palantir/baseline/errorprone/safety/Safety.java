@@ -70,6 +70,10 @@ public enum Safety implements AbstractValue<Safety> {
 
     public abstract boolean allowsValueWith(Safety valueSafety);
 
+    public boolean allowsAll() {
+        return this == UNKNOWN || this == DO_NOT_LOG;
+    }
+
     /**
      * Merge Safety using {@link Safety#leastUpperBound(AbstractValue)} except that {@link Safety#UNKNOWN} assumes
      * no confidence, preferring the other type if data is available.

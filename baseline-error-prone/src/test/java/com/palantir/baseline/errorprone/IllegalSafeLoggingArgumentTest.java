@@ -547,6 +547,32 @@ class IllegalSafeLoggingArgumentTest {
     }
 
     @Test
+    public void testInvalidReturnValue() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  @DoNotLog static class DoNotLogClass {}",
+                        "  @Safe static class SafeClass {}",
+                        "  @Unsafe static class UnsafeClass {}",
+                        "  @Safe Object safe() {",
+                        "    return new SafeClass();",
+                        "  }",
+                        "  @Safe Object unsafe() {",
+                        "    // BUG: Diagnostic contains: Dangerous return value: result is 'UNSAFE' "
+                                + "but the method is annotated 'SAFE'.",
+                        "    return new UnsafeClass();",
+                        "  }",
+                        "  @Safe Object doNotLog() {",
+                        "    // BUG: Diagnostic contains: Dangerous return value: result is 'DO_NOT_LOG' "
+                                + "but the method is annotated 'SAFE'.",
+                        "    return new DoNotLogClass();",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testSafeArgOfUnsafe_recommendsUnsafeArgOf() {
         refactoringHelper()
                 .addInputLines(
