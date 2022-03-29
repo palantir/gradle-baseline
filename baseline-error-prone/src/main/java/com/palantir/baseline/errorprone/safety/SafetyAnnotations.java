@@ -64,6 +64,19 @@ public final class SafetyAnnotations {
         return argumentSymbol != null ? getSafety(argumentSymbol, state) : Safety.UNKNOWN;
     }
 
+    public static Safety getSafety(Symbol symbol, VisitorState state) {
+        if (ASTHelpers.hasAnnotation(symbol, DO_NOT_LOG, state)) {
+            return Safety.DO_NOT_LOG;
+        }
+        if (ASTHelpers.hasAnnotation(symbol, UNSAFE, state)) {
+            return Safety.UNSAFE;
+        }
+        if (ASTHelpers.hasAnnotation(symbol, SAFE, state)) {
+            return Safety.SAFE;
+        }
+        return Safety.UNKNOWN;
+    }
+
     public static Optional<Safety> getMethodInvocationResultSafety(
             MethodInvocationTree argumentInvocation, VisitorState state) {
         MethodSymbol methodSymbol = ASTHelpers.getSymbol(argumentInvocation);
@@ -76,19 +89,6 @@ public final class SafetyAnnotations {
             return Optional.of(methodSafety);
         }
         return Optional.empty();
-    }
-
-    public static Safety getSafety(Symbol symbol, VisitorState state) {
-        if (ASTHelpers.hasAnnotation(symbol, DO_NOT_LOG, state)) {
-            return Safety.DO_NOT_LOG;
-        }
-        if (ASTHelpers.hasAnnotation(symbol, UNSAFE, state)) {
-            return Safety.UNSAFE;
-        }
-        if (ASTHelpers.hasAnnotation(symbol, SAFE, state)) {
-            return Safety.SAFE;
-        }
-        return Safety.UNKNOWN;
     }
 
     private SafetyAnnotations() {}

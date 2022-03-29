@@ -162,8 +162,8 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
 
     @SuppressWarnings("CheckStyle")
     private static final class ResultingStore {
-        final AccessPathStore<Safety> store;
-        final boolean storeChanged;
+        private final AccessPathStore<Safety> store;
+        private final boolean storeChanged;
 
         ResultingStore(AccessPathStore<Safety> store, boolean storeChanged) {
             this.store = store;
@@ -191,9 +191,8 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
         }
     }
 
-    @SuppressWarnings("CheckStyle")
     private static final class ReadableUpdates implements Updates {
-        final Map<AccessPath, Safety> values = new HashMap<>();
+        private final Map<AccessPath, Safety> values = new HashMap<>();
 
         @Override
         public void set(LocalVariableNode node, Safety value) {
