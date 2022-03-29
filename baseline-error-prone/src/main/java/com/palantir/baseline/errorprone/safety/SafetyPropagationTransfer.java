@@ -251,7 +251,7 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
 
     private static TransferResult<Safety, AccessPathStore<Safety>> unknown(
             TransferInput<?, AccessPathStore<Safety>> input) {
-        return new RegularTransferResult<>(Safety.UNKNOWN, input.getRegularStore());
+        return noStoreChanges(Safety.UNKNOWN, input);
     }
 
     private TransferResult<Safety, AccessPathStore<Safety>> literal(
