@@ -107,6 +107,9 @@ import org.checkerframework.errorprone.dataflow.cfg.node.UnsignedRightShiftNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.VariableDeclarationNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.WideningConversionNode;
 
+/**
+ * Inspired heavily by error-prone NullnessPropagationTransfer (apache 2).
+ */
 public final class SafetyPropagationTransfer implements ForwardTransferFunction<Safety, AccessPathStore<Safety>> {
 
     private VisitorState state;
@@ -218,10 +221,15 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
         }
     }
 
+    private static TransferResult<Safety, AccessPathStore<Safety>> unknown(
+            TransferInput<?, AccessPathStore<Safety>> input) {
+        return new RegularTransferResult<>(Safety.UNKNOWN, input.getRegularStore());
+    }
+
     private TransferResult<Safety, AccessPathStore<Safety>> literal(
             TransferInput<Safety, AccessPathStore<Safety>> input) {
         ReadableUpdates updates = new ReadableUpdates();
-        // Compile-time data is guaranteed to be safe.
+        // Compile-time data (literal) is guaranteed to be safe.
         return updateRegularStore(Safety.SAFE, input, updates);
     }
 
@@ -535,31 +543,31 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitMethodAccess(
             MethodAccessNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return stubUnknown(input);
+        return unknown(input);
     }
 
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitArrayAccess(
             ArrayAccessNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return stubUnknown(input);
+        return unknown(input);
     }
 
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitImplicitThis(
             ImplicitThisNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return stubUnknown(input);
+        return unknown(input);
     }
 
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitExplicitThis(
             ExplicitThisNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return stubUnknown(input);
+        return unknown(input);
     }
 
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitSuper(
             SuperNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return stubUnknown(input);
+        return unknown(input);
     }
 
     @Override
@@ -573,7 +581,7 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitLambdaResultExpression(
             LambdaResultExpressionNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return stubUnknown(input);
+        return unknown(input);
     }
 
     @Override
@@ -604,7 +612,7 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitInstanceOf(
             InstanceOfNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return stubUnknown(input);
+        return unknown(input);
     }
 
     @Override
@@ -620,25 +628,25 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitSynchronized(
             SynchronizedNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return stubUnknown(input);
+        return unknown(input);
     }
 
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitAssertionError(
             AssertionErrorNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return stubUnknown(input);
+        return unknown(input);
     }
 
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitThrow(
             ThrowNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return stubUnknown(input);
+        return unknown(input);
     }
 
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitCase(
             CaseNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return stubUnknown(input);
+        return unknown(input);
     }
 
     @Override
@@ -661,59 +669,54 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitMemberReference(
             FunctionalInterfaceNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return stubUnknown(input);
+        return unknown(input);
     }
 
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitArrayCreation(
             ArrayCreationNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return stubUnknown(input);
+        return unknown(input);
     }
 
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitArrayType(
             ArrayTypeNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return stubUnknown(input);
+        return unknown(input);
     }
 
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitPrimitiveType(
             PrimitiveTypeNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return stubUnknown(input);
+        return unknown(input);
     }
 
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitClassName(
             ClassNameNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return stubUnknown(input);
+        return unknown(input);
     }
 
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitPackageName(
             PackageNameNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return stubUnknown(input);
+        return unknown(input);
     }
 
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitParameterizedType(
             ParameterizedTypeNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return stubUnknown(input);
+        return unknown(input);
     }
 
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitMarker(
             MarkerNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return stubUnknown(input);
+        return unknown(input);
     }
 
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitClassDeclaration(
             ClassDeclarationNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return stubUnknown(input);
-    }
-
-    private static TransferResult<Safety, AccessPathStore<Safety>> stubUnknown(
-            TransferInput<?, AccessPathStore<Safety>> input) {
-        return new RegularTransferResult<>(Safety.UNKNOWN, input.getRegularStore());
+        return unknown(input);
     }
 }
