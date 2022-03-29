@@ -204,6 +204,58 @@ class IllegalSafeLoggingArgumentTest {
     }
 
     @Test
+    public void testSafeReturnIndirect() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  @DoNotLog static Object doNotLogMethod() { return null; }",
+                        "  @Safe static Object safeMethod() { return null; }",
+                        "  @Unsafe static Object unsafeMethod() { return null; }",
+                        "  void f() {",
+                        "    Object one = doNotLogMethod();",
+                        "    Object two = safeMethod();",
+                        "    Object three = unsafeMethod();",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'DO_NOT_LOG' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(one);",
+                        "    fun(two);",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(three);",
+                        "  }",
+                        "  private static void fun(@Safe Object obj) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testStringConcatenationWithUnsafe() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  @DoNotLog static Object doNotLogMethod() { return null; }",
+                        "  @Safe static Object safeMethod() { return null; }",
+                        "  @Unsafe static Object unsafeMethod() { return null; }",
+                        "  void f() {",
+                        "    Object one = doNotLogMethod();",
+                        "    Object two = safeMethod();",
+                        "    Object three = unsafeMethod();",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'DO_NOT_LOG' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(\"test\" + one);",
+                        "    fun(\"test\" + two);",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(\"test\" + three);",
+                        "  }",
+                        "  private static void fun(@Safe Object obj) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testVarArgReturn() {
         helper().addSourceLines(
                         "Test.java",
