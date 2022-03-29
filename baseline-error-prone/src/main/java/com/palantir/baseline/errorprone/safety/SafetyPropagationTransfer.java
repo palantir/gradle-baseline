@@ -128,7 +128,8 @@ import org.checkerframework.errorprone.dataflow.cfg.node.VariableDeclarationNode
 import org.checkerframework.errorprone.dataflow.cfg.node.WideningConversionNode;
 
 /**
- * Inspired heavily by error-prone NullnessPropagationTransfer (apache 2).
+ * Heavily modified fork from error-prone NullnessPropagationTransfer (apache 2).
+ * @see <a href="https://github.com/google/error-prone/blob/v2.11.0/check_api/src/main/java/com/google/errorprone/dataflow/nullnesspropagation/NullnessPropagationTransfer.java">NullnessPropagationTransfer</a>
  */
 public final class SafetyPropagationTransfer implements ForwardTransferFunction<Safety, AccessPathStore<Safety>> {
 
