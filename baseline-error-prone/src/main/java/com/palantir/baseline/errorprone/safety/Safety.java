@@ -84,4 +84,9 @@ public enum Safety implements AbstractValue<Safety> {
         }
         return one.leastUpperBound(two);
     }
+
+    public static Safety mergeAssumingUnknownIsSame(Safety one, Safety two, Safety three) {
+        Safety result = mergeAssumingUnknownIsSame(one, two);
+        return mergeAssumingUnknownIsSame(result, three);
+    }
 }
