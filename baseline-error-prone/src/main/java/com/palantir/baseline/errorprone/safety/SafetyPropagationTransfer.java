@@ -34,6 +34,7 @@ import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
+import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import java.io.Closeable;
 import java.util.HashMap;
@@ -636,7 +637,8 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     public TransferResult<Safety, AccessPathStore<Safety>> visitFieldAccess(
             FieldAccessNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
         Safety fieldSafety = SafetyAnnotations.getSafety(ASTHelpers.getSymbol(node.getTree()), state);
-        Safety typeSafety = SafetyAnnotations.getSafety(ASTHelpers.getType(node.getTree()).tsym, state);
+        Type fieldType = ASTHelpers.getType(node.getTree());
+        Safety typeSafety = fieldType == null ? Safety.UNKNOWN : SafetyAnnotations.getSafety(fieldType.tsym, state);
         VarSymbol symbol = (VarSymbol) ASTHelpers.getSymbol(node.getTree());
         AccessPath maybeAccessPath = AccessPath.fromFieldAccess(node);
         Safety flowSafety = fieldSafety(symbol, maybeAccessPath, input.getRegularStore());
@@ -705,7 +707,9 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     public TransferResult<Safety, AccessPathStore<Safety>> visitWideningConversion(
             WideningConversionNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
         Safety valueSafety = input.getValueOfSubNode(node.getOperand());
-        Safety widenTargetSafety = SafetyAnnotations.getSafety(ASTHelpers.getType(node.getTree()).tsym, state);
+        Type widenTarget = ASTHelpers.getType(node.getTree());
+        Safety widenTargetSafety =
+                widenTarget == null ? Safety.UNKNOWN : SafetyAnnotations.getSafety(widenTarget.tsym, state);
         Safety resultSafety = Safety.mergeAssumingUnknownIsSame(valueSafety, widenTargetSafety);
         return noStoreChanges(resultSafety, input);
     }
@@ -714,7 +718,9 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     public TransferResult<Safety, AccessPathStore<Safety>> visitNarrowingConversion(
             NarrowingConversionNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
         Safety valueSafety = input.getValueOfSubNode(node.getOperand());
-        Safety narrowTargetSafety = SafetyAnnotations.getSafety(ASTHelpers.getType(node.getTree()).tsym, state);
+        Type narrowTarget = ASTHelpers.getType(node.getTree());
+        Safety narrowTargetSafety =
+                narrowTarget == null ? Safety.UNKNOWN : SafetyAnnotations.getSafety(narrowTarget.tsym, state);
         Safety resultSafety = Safety.mergeAssumingUnknownIsSame(valueSafety, narrowTargetSafety);
         return noStoreChanges(resultSafety, input);
     }
@@ -730,7 +736,9 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
             TypeCastNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
         Safety valueSafety = input.getValueOfSubNode(node.getOperand());
         TypeCastTree castTree = (TypeCastTree) node.getTree();
-        Safety castTargetSafety = SafetyAnnotations.getSafety(ASTHelpers.getType(castTree.getType()).tsym, state);
+        Type castTarget = ASTHelpers.getType(castTree.getType());
+        Safety castTargetSafety =
+                castTarget == null ? Safety.UNKNOWN : SafetyAnnotations.getSafety(castTarget.tsym, state);
         Safety resultSafety = Safety.mergeAssumingUnknownIsSame(valueSafety, castTargetSafety);
         return noStoreChanges(resultSafety, input);
     }
