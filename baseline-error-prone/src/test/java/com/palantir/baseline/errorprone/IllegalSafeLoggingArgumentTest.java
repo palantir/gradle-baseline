@@ -491,6 +491,30 @@ class IllegalSafeLoggingArgumentTest {
     }
 
     @Test
+    public void testIntegerCompound() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  void f(",
+                        "      @Safe int safeParam,",
+                        "      @Unsafe int unsafeParam,",
+                        "      @DoNotLog int doNotLogParam) {",
+                        "    int foo = safeParam;",
+                        "    fun(foo);",
+                        "    foo += unsafeParam;",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
+                        "    fun(foo);",
+                        "    foo += doNotLogParam;",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'DO_NOT_LOG'",
+                        "    fun(foo);",
+                        "  }",
+                        "  private static void fun(@Safe int obj) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testSafeOfThisUnsafe() {
         helper().addSourceLines(
                         "Test.java",
