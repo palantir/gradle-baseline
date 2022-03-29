@@ -86,8 +86,7 @@ public final class IllegalSafeLoggingArgument extends BugChecker
             for (int j = i; j < limit; j++) {
                 ExpressionTree argument = arguments.get(j);
 
-                Safety argumentSafety = SafetyAnalysis.instance(state.context)
-                        .getSafety(state.withPath(new TreePath(state.getPath(), argument)));
+                Safety argumentSafety = SafetyAnalysis.of(state.withPath(new TreePath(state.getPath(), argument)));
 
                 if (!parameterSafety.allowsValueWith(argumentSafety)) {
                     // use state.reportMatch to report all failing arguments if multiple are invalid
@@ -121,8 +120,8 @@ public final class IllegalSafeLoggingArgument extends BugChecker
             // Fast path, all types are accepted, there's no reason to do further analysis.
             return Description.NO_MATCH;
         }
-        Safety returnValueSafety = SafetyAnalysis.instance(state.context)
-                .getSafety(state.withPath(new TreePath(state.getPath(), tree.getExpression())));
+        Safety returnValueSafety =
+                SafetyAnalysis.of(state.withPath(new TreePath(state.getPath(), tree.getExpression())));
         if (methodDeclaredSafety.allowsValueWith(returnValueSafety)) {
             return Description.NO_MATCH;
         }

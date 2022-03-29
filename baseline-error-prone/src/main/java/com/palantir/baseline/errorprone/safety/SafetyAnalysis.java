@@ -19,26 +19,31 @@ package com.palantir.baseline.errorprone.safety;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.dataflow.DataFlow;
 import com.palantir.baseline.errorprone.safety.SafetyPropagationTransfer.ClearVisitorState;
+import com.sun.source.util.TreePath;
 import com.sun.tools.javac.util.Context;
 
 public final class SafetyAnalysis {
-    private static final Context.Key<SafetyAnalysis> SAFETY_ANALYSIS_KEY = new Context.Key<>();
-    private final SafetyPropagationTransfer safetyPropagation = new SafetyPropagationTransfer();
+    private static final Context.Key<SafetyPropagationTransfer> SAFETY_PROPAGATION = new Context.Key<>();
 
-    public static SafetyAnalysis instance(Context context) {
-        SafetyAnalysis instance = context.get(SAFETY_ANALYSIS_KEY);
+    /**
+     * Returns the safety of the item at the current path.
+     * Callers may need to use {@link VisitorState#withPath(TreePath)} to provide a more specific path.
+     */
+    public static Safety of(VisitorState state) {
+        SafetyPropagationTransfer propagation = instance(state.context);
+        try (ClearVisitorState ignored = propagation.setVisitorState(state)) {
+            return DataFlow.expressionDataflow(state.getPath(), state.context, propagation);
+        }
+    }
+
+    private static SafetyPropagationTransfer instance(Context context) {
+        SafetyPropagationTransfer instance = context.get(SAFETY_PROPAGATION);
         if (instance == null) {
-            instance = new SafetyAnalysis();
-            context.put(SAFETY_ANALYSIS_KEY, instance);
+            instance = new SafetyPropagationTransfer();
+            context.put(SAFETY_PROPAGATION, instance);
         }
         return instance;
     }
 
     private SafetyAnalysis() {}
-
-    public Safety getSafety(VisitorState state) {
-        try (ClearVisitorState ignored = safetyPropagation.setVisitorState(state)) {
-            return DataFlow.expressionDataflow(state.getPath(), state.context, safetyPropagation);
-        }
-    }
 }
