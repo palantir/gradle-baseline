@@ -137,6 +137,11 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     private static final Matcher<ExpressionTree> TO_STRING =
             MethodMatchers.instanceMethod().anyClass().named("toString").withNoParameters();
 
+    private static final Matcher<ExpressionTree> THROWABLE_GET_MESSAGE = MethodMatchers.instanceMethod()
+            .onDescendantOf(Throwable.class.getName())
+            .named("getMessage")
+            .withNoParameters();
+
     private VisitorState state;
     private final Set<VarSymbol> traversed = new HashSet<>();
 
@@ -770,24 +775,36 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitMethodInvocation(
             MethodInvocationNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        Safety result = getMethodSymbolSafety(node, input);
+        Safety methodSymbolSafety = getMethodSymbolSafety(node, input);
+        Safety knownMethodSafety = getKnownMethodSafety(node, input);
+        Safety result = Safety.mergeAssumingUnknownIsSame(methodSymbolSafety, knownMethodSafety);
         return noStoreChanges(result, input);
+    }
+
+    private Safety getKnownMethodSafety(
+            MethodInvocationNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
+        if (THROWABLE_GET_MESSAGE.matches(node.getTree(), state)) {
+            // Auth failures are sometimes annotated '@DoNotLog', which getMessage should inherit.
+            return Safety.mergeAssumingUnknownIsSame(
+                    Safety.UNSAFE, input.getValueOfSubNode(node.getTarget().getReceiver()));
+        }
+        return Safety.UNKNOWN;
     }
 
     private Safety getMethodSymbolSafety(
             MethodInvocationNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
+        Safety resultTypeSafety = SafetyAnnotations.getResultTypeSafety(node.getTree(), state);
         MethodSymbol methodSymbol = ASTHelpers.getSymbol(node.getTree());
         if (methodSymbol != null) {
             Safety methodSafety = Safety.mergeAssumingUnknownIsSame(
-                    SafetyAnnotations.getSafety(methodSymbol, state),
-                    SafetyAnnotations.getResultTypeSafety(node.getTree(), state));
+                    SafetyAnnotations.getSafety(methodSymbol, state), resultTypeSafety);
             // non-annotated toString inherits type-level safety.
             if (methodSafety == Safety.UNKNOWN && TO_STRING.matches(node.getTree(), state)) {
                 return input.getValueOfSubNode(node.getTarget().getReceiver());
             }
             return methodSafety;
         }
-        return SafetyAnnotations.getResultTypeSafety(node.getTree(), state);
+        return resultTypeSafety;
     }
 
     @Override
