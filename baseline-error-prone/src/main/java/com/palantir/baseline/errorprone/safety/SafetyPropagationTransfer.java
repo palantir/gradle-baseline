@@ -142,6 +142,9 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
             .namedAnyOf("getMessage", "getLocalizedMessage")
             .withNoParameters();
 
+    private static final Matcher<ExpressionTree> STRING_FORMAT =
+            MethodMatchers.staticMethod().onClass(String.class.getName()).named("format");
+
     private VisitorState state;
     private final Set<VarSymbol> traversed = new HashSet<>();
 
@@ -787,6 +790,12 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
             // Auth failures are sometimes annotated '@DoNotLog', which getMessage should inherit.
             return Safety.mergeAssumingUnknownIsSame(
                     Safety.UNSAFE, input.getValueOfSubNode(node.getTarget().getReceiver()));
+        } else if (STRING_FORMAT.matches(node.getTree(), state)) {
+            Safety safety = Safety.SAFE;
+            for (Node argument : node.getArguments()) {
+                safety = safety.leastUpperBound(input.getValueOfSubNode(argument));
+            }
+            return safety;
         }
         return Safety.UNKNOWN;
     }
@@ -823,7 +832,11 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitArrayCreation(
             ArrayCreationNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return unknown(input);
+        Safety safety = Safety.SAFE;
+        for (Node item : node.getInitializers()) {
+            safety = safety.leastUpperBound(input.getValueOfSubNode(item));
+        }
+        return noStoreChanges(safety, input);
     }
 
     @Override
