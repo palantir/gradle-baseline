@@ -139,7 +139,7 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
 
     private static final Matcher<ExpressionTree> THROWABLE_GET_MESSAGE = MethodMatchers.instanceMethod()
             .onDescendantOf(Throwable.class.getName())
-            .named("getMessage")
+            .namedAnyOf("getMessage", "getLocalizedMessage")
             .withNoParameters();
 
     private VisitorState state;

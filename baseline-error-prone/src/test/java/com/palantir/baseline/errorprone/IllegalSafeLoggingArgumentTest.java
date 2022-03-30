@@ -646,6 +646,10 @@ class IllegalSafeLoggingArgumentTest {
                         "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
                                 + "but the parameter requires 'SAFE'.",
                         "    fun(message);",
+                        "    String localized = e.getLocalizedMessage();",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(localized);",
                         "  }",
                         "  private static void fun(@Safe Object obj) {}",
                         "}")
