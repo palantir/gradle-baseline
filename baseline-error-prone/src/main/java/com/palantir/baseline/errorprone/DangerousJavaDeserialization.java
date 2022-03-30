@@ -27,6 +27,7 @@ import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
+import com.sun.source.tree.MethodTree;
 import java.io.ObjectInput;
 
 @AutoService(BugChecker.class)
@@ -40,10 +41,16 @@ public final class DangerousJavaDeserialization extends BugChecker implements Bu
 
     private static final long serialVersionUID = 1L;
 
-    private static final Matcher<ExpressionTree> OBJECT_INPUT_READ_OBJECT = MethodMatchers.instanceMethod()
-            .onDescendantOf(ObjectInput.class.getName())
-            .named("readObject")
-            .withNoParameters();
+    private static final Matcher<MethodTree> READ_OBJECT = Matchers.allOf(
+            Matchers.methodIsNamed("readObject"),
+            Matchers.methodHasParameters(Matchers.isSubtypeOf(ObjectInput.class.getName())));
+
+    private static final Matcher<ExpressionTree> OBJECT_INPUT_READ_OBJECT = Matchers.allOf(
+            MethodMatchers.instanceMethod()
+                    .onDescendantOf(ObjectInput.class.getName())
+                    .named("readObject")
+                    .withNoParameters(),
+            Matchers.not(Matchers.enclosingMethod(READ_OBJECT)));
 
     private static final Matcher<ExpressionTree> LANG3_SERIALIZATION_UTILS_DESERIALIZE = MethodMatchers.instanceMethod()
             .onExactClassAny(
@@ -57,6 +64,7 @@ public final class DangerousJavaDeserialization extends BugChecker implements Bu
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
+
         if (DESERIALIZE.matches(tree, state) && !TestCheckUtils.isTestCode(state)) {
             return describeMatch(tree);
         }

@@ -38,4 +38,17 @@ class DangerousJavaDeserializationTest {
                         "}")
                 .doTest();
     }
+
+    @Test
+    void allowsReadObject() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import java.io.*;",
+                        "class Test implements Serializable {",
+                        "   private synchronized void readObject(ObjectInputStream ois) throws Exception {",
+                        "       ois.readObject();",
+                        "   }",
+                        "}")
+                .doTest();
+    }
 }
