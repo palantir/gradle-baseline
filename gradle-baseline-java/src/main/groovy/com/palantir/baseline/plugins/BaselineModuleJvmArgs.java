@@ -72,7 +72,7 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
 
             // javac isn't provided `--add-exports` args for the time being due to
             // https://github.com/gradle/gradle/issues/18824
-            // However, we set sourceCompatibility in BaselineJavaVersion to opt out of the '-release' flag.
+            // However, we set sourceCompatibility in BaselineJavaVersion to opt out of the '--release' flag.
             project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
                 JavaCompile javaCompile = project.getTasks()
                         .named(sourceSet.getCompileJavaTaskName(), JavaCompile.class)
@@ -84,6 +84,16 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                         .add(new CommandLineArgumentProvider() {
                             @Override
                             public Iterable<String> asArguments() {
+                                // The '--release' flag is set when BaselineJavaVersion is not used.
+                                if (!project.getPlugins().hasPlugin(BaselineJavaVersion.class)) {
+                                    project.getLogger()
+                                            .debug(
+                                                    "BaselineModuleJvmArgs not applying args to compilation task "
+                                                            + "{} on {} due to lack of BaselineJavaVersion",
+                                                    javaCompile.getName(),
+                                                    project);
+                                    return ImmutableList.of();
+                                }
                                 // Annotation processors are executed at compile time
                                 ImmutableList<String> arguments =
                                         collectAnnotationProcessorArgs(project, extension, sourceSet);
@@ -102,6 +112,17 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                     maybeJavadocTask.doFirst(new Action<Task>() {
                         @Override
                         public void execute(Task task) {
+                            // The '--release' flag is set when BaselineJavaVersion is not used.
+                            if (!project.getPlugins().hasPlugin(BaselineJavaVersion.class)) {
+                                project.getLogger()
+                                        .debug(
+                                                "BaselineModuleJvmArgs not applying args to compilation task "
+                                                        + "{} on {} due to lack of BaselineJavaVersion",
+                                                task.getName(),
+                                                project);
+                                return;
+                            }
+
                             Javadoc javadoc = (Javadoc) task;
 
                             MinimalJavadocOptions options = javadoc.getOptions();

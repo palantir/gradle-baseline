@@ -131,6 +131,44 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
         result.standardOutput.contains('--add-exports=java.management/sun.management=ALL-UNNAMED')
     }
 
+    def 'Runs with locally defined exports with the release plugin, not toolchains'() {
+        when:
+        buildFile.text = '''
+        plugins {
+            id 'java-library'
+            id 'application'
+        }
+        apply plugin: 'com.palantir.baseline-release-compatibility'
+        apply plugin: 'com.palantir.baseline-module-jvm-args'
+        sourceCompatibility = 11
+        repositories {
+            mavenCentral()
+        }
+        application {
+            mainClass = 'com.Example'
+        }
+        moduleJvmArgs {
+           exports = ['java.management/sun.management']
+        }
+        '''.stripIndent(true)
+        writeJavaSourceFile('''
+        package com;
+        public class Example {
+            public static void main(String[] args) {
+                System.out.println(String.join(
+                    " ",
+                    java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments()));
+            }
+        }
+        '''.stripIndent(true))
+
+        then:
+        ExecutionResult result = runTasksSuccessfully('run')
+        // Gradle appears to normalize args, joining '--add-exports java.management/sun.management=ALL-UNNAMED'
+        // with an equals.
+        result.standardOutput.contains('--add-exports=java.management/sun.management=ALL-UNNAMED')
+    }
+
     def 'Runs with locally defined opens'() {
         when:
         buildFile << '''
