@@ -26,6 +26,7 @@ import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.Tree;
 import com.sun.source.tree.TypeCastTree;
 import com.sun.source.tree.VariableTree;
 import com.sun.source.util.TreePath;
@@ -520,15 +521,54 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
         Node target = node.getTarget();
         if (target instanceof LocalVariableNode) {
             updates.trySet(target, safety);
-        }
-        if (target instanceof ArrayAccessNode) {
+        } else if (target instanceof ArrayAccessNode) {
             updates.trySet(((ArrayAccessNode) target).getArray(), safety);
-        }
-        if (target instanceof FieldAccessNode) {
+        } else if (target instanceof FieldAccessNode) {
             FieldAccessNode fieldAccess = (FieldAccessNode) target;
             updates.set(fieldAccess, safety);
+        } else {
+            throw new UnsupportedOperationException(
+                    "Safety analysis bug, unknown target type: " + target.getClass() + " with value: " + target);
         }
         return updateRegularStore(safety, input, updates);
+    }
+
+    @Override
+    public TransferResult<Safety, AccessPathStore<Safety>> visitLocalVariable(
+            LocalVariableNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
+        Safety safety = hasNonNullConstantValue(node)
+                ? Safety.SAFE
+                : input.getRegularStore().valueOfAccessPath(AccessPath.fromLocalVariable(node), Safety.UNKNOWN);
+        return noStoreChanges(safety, input);
+    }
+
+    private static boolean hasNonNullConstantValue(LocalVariableNode node) {
+        if (node.getElement() instanceof VariableElement) {
+            VariableElement element = (VariableElement) node.getElement();
+            return (element.getConstantValue() != null);
+        }
+        return false;
+    }
+
+    @Override
+    public TransferResult<Safety, AccessPathStore<Safety>> visitVariableDeclaration(
+            VariableDeclarationNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
+        Safety safety =
+                SafetyAnnotations.getSafety(ASTHelpers.getSymbol(node.getTree().getType()), state);
+        return noStoreChanges(safety, input);
+    }
+
+    @Override
+    public TransferResult<Safety, AccessPathStore<Safety>> visitFieldAccess(
+            FieldAccessNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
+        Safety fieldSafety = SafetyAnnotations.getSafety(ASTHelpers.getSymbol(node.getTree()), state);
+        Type fieldType = ASTHelpers.getType(node.getTree());
+        Safety typeSafety = fieldType == null ? Safety.UNKNOWN : SafetyAnnotations.getSafety(fieldType.tsym, state);
+        VarSymbol symbol = (VarSymbol) ASTHelpers.getSymbol(node.getTree());
+        AccessPath maybeAccessPath = AccessPath.fromFieldAccess(node);
+        Safety flowSafety = fieldSafety(symbol, maybeAccessPath, input.getRegularStore());
+        Safety safety = Safety.mergeAssumingUnknownIsSame(fieldSafety, typeSafety, flowSafety);
+        return noStoreChanges(safety, input);
     }
 
     @SuppressWarnings("checkstyle:CyclomaticComplexity")
@@ -571,7 +611,8 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
 
     private Safety fieldInitializerSafetyIfAvailable(VarSymbol accessed) {
         if (!traversed.add(accessed)) {
-            // Initializer circularity
+            // Avoid infinite recursion between initializers with circular references. We recommend against
+            // writing such initializers, but handle it gracefully.
             return Safety.UNKNOWN;
         }
 
@@ -607,44 +648,6 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
         } finally {
             traversed.remove(accessed);
         }
-    }
-
-    @Override
-    public TransferResult<Safety, AccessPathStore<Safety>> visitLocalVariable(
-            LocalVariableNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        Safety safety = hasNonNullConstantValue(node)
-                ? Safety.SAFE
-                : input.getRegularStore().valueOfAccessPath(AccessPath.fromLocalVariable(node), Safety.UNKNOWN);
-        return noStoreChanges(safety, input);
-    }
-
-    private static boolean hasNonNullConstantValue(LocalVariableNode node) {
-        if (node.getElement() instanceof VariableElement) {
-            VariableElement element = (VariableElement) node.getElement();
-            return (element.getConstantValue() != null);
-        }
-        return false;
-    }
-
-    @Override
-    public TransferResult<Safety, AccessPathStore<Safety>> visitVariableDeclaration(
-            VariableDeclarationNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        Safety safety =
-                SafetyAnnotations.getSafety(ASTHelpers.getSymbol(node.getTree().getType()), state);
-        return noStoreChanges(safety, input);
-    }
-
-    @Override
-    public TransferResult<Safety, AccessPathStore<Safety>> visitFieldAccess(
-            FieldAccessNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        Safety fieldSafety = SafetyAnnotations.getSafety(ASTHelpers.getSymbol(node.getTree()), state);
-        Type fieldType = ASTHelpers.getType(node.getTree());
-        Safety typeSafety = fieldType == null ? Safety.UNKNOWN : SafetyAnnotations.getSafety(fieldType.tsym, state);
-        VarSymbol symbol = (VarSymbol) ASTHelpers.getSymbol(node.getTree());
-        AccessPath maybeAccessPath = AccessPath.fromFieldAccess(node);
-        Safety flowSafety = fieldSafety(symbol, maybeAccessPath, input.getRegularStore());
-        Safety safety = Safety.mergeAssumingUnknownIsSame(fieldSafety, typeSafety, flowSafety);
-        return noStoreChanges(safety, input);
     }
 
     @Override
@@ -707,21 +710,29 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitWideningConversion(
             WideningConversionNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        Safety valueSafety = input.getValueOfSubNode(node.getOperand());
-        Type widenTarget = ASTHelpers.getType(node.getTree());
-        Safety widenTargetSafety =
-                widenTarget == null ? Safety.UNKNOWN : SafetyAnnotations.getSafety(widenTarget.tsym, state);
-        Safety resultSafety = Safety.mergeAssumingUnknownIsSame(valueSafety, widenTargetSafety);
-        return noStoreChanges(resultSafety, input);
+        return handleTypeConversion(node.getTree(), node.getOperand(), input);
     }
 
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitNarrowingConversion(
             NarrowingConversionNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        Safety valueSafety = input.getValueOfSubNode(node.getOperand());
-        Type narrowTarget = ASTHelpers.getType(node.getTree());
+        return handleTypeConversion(node.getTree(), node.getOperand(), input);
+    }
+
+    @Override
+    public TransferResult<Safety, AccessPathStore<Safety>> visitTypeCast(
+            TypeCastNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
+        TypeCastTree castTree = (TypeCastTree) node.getTree();
+        return handleTypeConversion(castTree.getType(), node.getOperand(), input);
+    }
+
+    /** Handles type changes (widen, narrow, and cast). */
+    private TransferResult<Safety, AccessPathStore<Safety>> handleTypeConversion(
+            Tree newType, Node original, TransferInput<Safety, AccessPathStore<Safety>> input) {
+        Safety valueSafety = input.getValueOfSubNode(original);
+        Type targetType = ASTHelpers.getType(newType);
         Safety narrowTargetSafety =
-                narrowTarget == null ? Safety.UNKNOWN : SafetyAnnotations.getSafety(narrowTarget.tsym, state);
+                targetType == null ? Safety.UNKNOWN : SafetyAnnotations.getSafety(targetType.tsym, state);
         Safety resultSafety = Safety.mergeAssumingUnknownIsSame(valueSafety, narrowTargetSafety);
         return noStoreChanges(resultSafety, input);
     }
@@ -730,18 +741,6 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     public TransferResult<Safety, AccessPathStore<Safety>> visitInstanceOf(
             InstanceOfNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
         return unknown(input);
-    }
-
-    @Override
-    public TransferResult<Safety, AccessPathStore<Safety>> visitTypeCast(
-            TypeCastNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        Safety valueSafety = input.getValueOfSubNode(node.getOperand());
-        TypeCastTree castTree = (TypeCastTree) node.getTree();
-        Type castTarget = ASTHelpers.getType(castTree.getType());
-        Safety castTargetSafety =
-                castTarget == null ? Safety.UNKNOWN : SafetyAnnotations.getSafety(castTarget.tsym, state);
-        Safety resultSafety = Safety.mergeAssumingUnknownIsSame(valueSafety, castTargetSafety);
-        return noStoreChanges(resultSafety, input);
     }
 
     @Override
