@@ -710,6 +710,10 @@ class IllegalSafeLoggingArgumentTest {
                         "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'DO_NOT_LOG' "
                                 + "but the parameter requires 'SAFE'.",
                         "    fun(one);",
+                        "    one[2] = safeParam;",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'DO_NOT_LOG' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(one);",
                         "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'DO_NOT_LOG' "
                                 + "but the parameter requires 'SAFE'.",
                         "    fun(new Object[] {safeParam, unsafeParam, dnlParam});",
