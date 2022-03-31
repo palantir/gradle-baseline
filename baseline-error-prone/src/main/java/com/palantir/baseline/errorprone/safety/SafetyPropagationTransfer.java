@@ -530,7 +530,9 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
         if (target instanceof LocalVariableNode) {
             updates.trySet(target, safety);
         } else if (target instanceof ArrayAccessNode) {
-            updates.trySet(((ArrayAccessNode) target).getArray(), safety);
+            Node arrayNode = ((ArrayAccessNode) target).getArray();
+            Safety arrayCombinedSafety = input.getValueOfSubNode(arrayNode).leastUpperBound(safety);
+            updates.trySet(arrayNode, arrayCombinedSafety);
         } else if (target instanceof FieldAccessNode) {
             FieldAccessNode fieldAccess = (FieldAccessNode) target;
             updates.set(fieldAccess, safety);
