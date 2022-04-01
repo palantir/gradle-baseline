@@ -52,6 +52,10 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.OptionalDouble;
+import java.util.OptionalInt;
+import java.util.OptionalLong;
 import java.util.Set;
 import javax.annotation.Nullable;
 import javax.lang.model.element.VariableElement;
@@ -173,9 +177,30 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
                     .namedAnyOf("of", "copyOf"),
             MethodMatchers.staticMethod().onClass(Arrays.class.getName()).named("asList"));
 
+    private static final Matcher<ExpressionTree> OPTIONAL_FACTORIES = Matchers.anyOf(
+            MethodMatchers.staticMethod().onClass(Optional.class.getName()).namedAnyOf("of", "ofNullable"),
+            MethodMatchers.staticMethod()
+                    .onClassAny(
+                            OptionalInt.class.getName(), OptionalLong.class.getName(), OptionalDouble.class.getName())
+                    .named("of"));
+
     // These methods do not take the receiver (generally a static class) into account, only the inputs.
     private static final Matcher<ExpressionTree> RETURNS_SAFETY_COMBINATION_OF_ARGS =
-            Matchers.anyOf(STRING_FORMAT, OBJECTS_TO_STRING, IMMUTABLE_COLLECTION_FACTORY);
+            Matchers.anyOf(STRING_FORMAT, OBJECTS_TO_STRING, IMMUTABLE_COLLECTION_FACTORY, OPTIONAL_FACTORIES);
+
+    private static final Matcher<ExpressionTree> OPTIONAL_ACCESSORS = Matchers.anyOf(
+            MethodMatchers.instanceMethod()
+                    .onDescendantOf(Optional.class.getName())
+                    .namedAnyOf("get", "orElseThrow", "stream"),
+            MethodMatchers.instanceMethod()
+                    .onDescendantOf(OptionalInt.class.getName())
+                    .namedAnyOf("getAsInt", "orElseThrow"),
+            MethodMatchers.instanceMethod()
+                    .onDescendantOf(OptionalLong.class.getName())
+                    .namedAnyOf("getAsLong", "orElseThrow"),
+            MethodMatchers.instanceMethod()
+                    .onDescendantOf(OptionalDouble.class.getName())
+                    .namedAnyOf("getAsDouble", "orElseThrow"));
 
     // Returns the safety of the receiver, e.g. myString.getBytes() returns the safety of myString.
     private static final Matcher<ExpressionTree> RETURNS_SAFETY_OF_RECEIVER = Matchers.anyOf(
@@ -190,7 +215,8 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
                     .namedAnyOf("toArray", "stream", "parallelStream"),
             MethodMatchers.instanceMethod()
                     .onDescendantOf(Iterable.class.getName())
-                    .namedAnyOf("toArray", "iterator", "spliterator"));
+                    .namedAnyOf("toArray", "iterator", "spliterator"),
+            OPTIONAL_ACCESSORS);
 
     private static final Matcher<ExpressionTree> RETURNS_SAFETY_OF_FIRST_ARG = Matchers.anyOf(
             MethodMatchers.staticMethod().onClass(Objects.class.getName()).named("requireNonNull"),
