@@ -588,14 +588,18 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     public TransferResult<Safety, AccessPathStore<Safety>> visitAssignment(
             AssignmentNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
         ReadableUpdates updates = new ReadableUpdates();
-        Safety safety = input.getValueOfSubNode(node.getExpression());
+        Safety expressionSafety = input.getValueOfSubNode(node.getExpression());
+        Safety targetSymbolSafety = SafetyAnnotations.getSafety(
+                ASTHelpers.getSymbol(node.getTarget().getTree()), state);
+        Safety safety = Safety.mergeAssumingUnknownIsSame(expressionSafety, targetSymbolSafety);
         Node target = node.getTarget();
         if (target instanceof LocalVariableNode) {
             updates.trySet(target, safety);
         } else if (target instanceof ArrayAccessNode) {
             Node arrayNode = ((ArrayAccessNode) target).getArray();
-            Safety arrayCombinedSafety = input.getValueOfSubNode(arrayNode).leastUpperBound(safety);
-            updates.trySet(arrayNode, arrayCombinedSafety);
+            Safety arrayNodeSafety = input.getValueOfSubNode(arrayNode);
+            safety = arrayNodeSafety == null ? safety : arrayNodeSafety.leastUpperBound(safety);
+            updates.trySet(arrayNode, safety);
         } else if (target instanceof FieldAccessNode) {
             FieldAccessNode fieldAccess = (FieldAccessNode) target;
             updates.set(fieldAccess, safety);
@@ -626,8 +630,10 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitVariableDeclaration(
             VariableDeclarationNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        Safety safety =
+        Safety variableTypeSafety =
                 SafetyAnnotations.getSafety(ASTHelpers.getSymbol(node.getTree().getType()), state);
+        Safety variableSafety = SafetyAnnotations.getSafety(ASTHelpers.getSymbol(node.getTree()), state);
+        Safety safety = Safety.mergeAssumingUnknownIsSame(variableTypeSafety, variableSafety);
         return noStoreChanges(safety, input);
     }
 

@@ -819,6 +819,79 @@ class IllegalSafeLoggingArgumentTest {
     }
 
     @Test
+    public void testFieldAnnotation() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  @Unsafe private static final String SECRET = System.getProperty(\"foo\");",
+                        "  void f() {",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(SECRET);",
+                        "  }",
+                        "  private static void fun(@Safe Object obj) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testLocalAnnotation() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  void f() {",
+                        "    @DoNotLog String localVar = System.getProperty(\"bar\");",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'DO_NOT_LOG' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(localVar);",
+                        "  }",
+                        "  private static void fun(@Safe Object obj) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testLocalAnnotationAssignment() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  void f(@Safe String safeParam, @Unsafe String unsafeParam, @DoNotLog String dnlParam) {",
+                        "    @Safe String local = safeParam;",
+                        "    // BUG: Diagnostic contains: Dangerous assignment: value is 'UNSAFE' "
+                                + "but the variable is annotated 'SAFE'.",
+                        "    local = unsafeParam;",
+                        "    // BUG: Diagnostic contains: Dangerous assignment: value is 'DO_NOT_LOG' "
+                                + "but the variable is annotated 'SAFE'.",
+                        "    local = dnlParam;",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testFieldAnnotationAssignment() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  @Safe private static String field;",
+                        "  void f(@Safe String safeParam, @Unsafe String unsafeParam, @DoNotLog String dnlParam) {",
+                        "    field = safeParam;",
+                        "    // BUG: Diagnostic contains: Dangerous assignment: value is 'UNSAFE' "
+                                + "but the variable is annotated 'SAFE'.",
+                        "    field = unsafeParam;",
+                        "    // BUG: Diagnostic contains: Dangerous assignment: value is 'DO_NOT_LOG' "
+                                + "but the variable is annotated 'SAFE'.",
+                        "    field = dnlParam;",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testSafeArgOfUnsafe_recommendsUnsafeArgOf() {
         refactoringHelper()
                 .addInputLines(
