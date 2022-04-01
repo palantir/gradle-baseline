@@ -119,6 +119,7 @@ import org.checkerframework.errorprone.dataflow.cfg.node.StringConcatenateNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.StringConversionNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.StringLiteralNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.SuperNode;
+import org.checkerframework.errorprone.dataflow.cfg.node.SwitchExpressionNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.SynchronizedNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.TernaryExpressionNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.ThrowNode;
@@ -519,6 +520,12 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
         Safety safety = input.getValueOfSubNode(node.getThenOperand())
                 .leastUpperBound(input.getValueOfSubNode(node.getElseOperand()));
         return noStoreChanges(safety, input);
+    }
+
+    @Override
+    public TransferResult<Safety, AccessPathStore<Safety>> visitSwitchExpressionNode(
+            SwitchExpressionNode _node, TransferInput<Safety, AccessPathStore<Safety>> input) {
+        return unknown(input);
     }
 
     @Override
