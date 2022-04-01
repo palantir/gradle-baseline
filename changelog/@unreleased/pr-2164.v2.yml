@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Fix `SerializationUtils` matcher
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2164
