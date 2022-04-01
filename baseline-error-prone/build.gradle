@@ -5,6 +5,8 @@ apply plugin: 'com.palantir.external-publish-jar'
 
 dependencies {
     implementation 'com.google.errorprone:error_prone_core'
+    // Ensure a new enough version of dataflow-errorprone is available
+    implementation 'org.checkerframework:dataflow-errorprone'
     // bring back mockito-errorprone once it is updated for 2.11.0+
     //implementation 'org.mockito:mockito-errorprone'
 
@@ -52,11 +54,6 @@ def originalGroup = project.group
 group = originalGroup + '-internal'
 publishing.publications.maven {
     groupId = originalGroup
-}
-
-javaVersion {
-    target = 11
-    runtime = 11
 }
 
 moduleJvmArgs {

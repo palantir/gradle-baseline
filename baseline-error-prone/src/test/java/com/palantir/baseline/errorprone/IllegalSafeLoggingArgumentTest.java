@@ -724,6 +724,24 @@ class IllegalSafeLoggingArgumentTest {
     }
 
     @Test
+    public void testSwitchExpression() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  enum Nums { ONE, TWO }",
+                        "  void f(Nums value) {",
+                        "    fun(switch (value) {",
+                        "        case ONE -> 1;",
+                        "        case TWO -> 2;",
+                        "    });",
+                        "  }",
+                        "  private static void fun(@Safe Object obj) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testSafeArgOfUnsafe_recommendsUnsafeArgOf() {
         refactoringHelper()
                 .addInputLines(
