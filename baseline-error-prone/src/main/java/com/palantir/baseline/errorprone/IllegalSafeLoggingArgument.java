@@ -29,6 +29,8 @@ import com.google.errorprone.util.ASTHelpers;
 import com.palantir.baseline.errorprone.safety.Safety;
 import com.palantir.baseline.errorprone.safety.SafetyAnalysis;
 import com.palantir.baseline.errorprone.safety.SafetyAnnotations;
+import com.sun.source.tree.AssignmentTree;
+import com.sun.source.tree.CompoundAssignmentTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.MethodTree;
@@ -56,7 +58,10 @@ import java.util.List;
         severity = BugPattern.SeverityLevel.ERROR,
         summary = "safe-logging annotations must agree between args and method parameters")
 public final class IllegalSafeLoggingArgument extends BugChecker
-        implements BugChecker.MethodInvocationTreeMatcher, BugChecker.ReturnTreeMatcher {
+        implements BugChecker.MethodInvocationTreeMatcher,
+                BugChecker.ReturnTreeMatcher,
+                BugChecker.AssignmentTreeMatcher,
+                BugChecker.CompoundAssignmentTreeMatcher {
 
     private static final String UNSAFE_ARG = "com.palantir.logsafe.UnsafeArg";
     private static final Matcher<ExpressionTree> SAFE_ARG_OF_METHOD_MATCHER = MethodMatchers.staticMethod()
@@ -102,6 +107,17 @@ public final class IllegalSafeLoggingArgument extends BugChecker
         return Description.NO_MATCH;
     }
 
+    private static SuggestedFix getSuggestedFix(MethodInvocationTree tree, VisitorState state, Safety argumentSafety) {
+        if (SAFE_ARG_OF_METHOD_MATCHER.matches(tree, state) && Safety.UNSAFE.allowsValueWith(argumentSafety)) {
+            SuggestedFix.Builder fix = SuggestedFix.builder();
+            String unsafeQualifiedClassName = SuggestedFixes.qualifyType(state, fix, UNSAFE_ARG);
+            String replacement = String.format("%s.of", unsafeQualifiedClassName);
+            return fix.replace(tree.getMethodSelect(), replacement).build();
+        }
+
+        return SuggestedFix.emptyFix();
+    }
+
     @Override
     public Description matchReturn(ReturnTree tree, VisitorState state) {
         if (tree.getExpression() == null) {
@@ -132,14 +148,30 @@ public final class IllegalSafeLoggingArgument extends BugChecker
                 .build();
     }
 
-    private static SuggestedFix getSuggestedFix(MethodInvocationTree tree, VisitorState state, Safety argumentSafety) {
-        if (SAFE_ARG_OF_METHOD_MATCHER.matches(tree, state) && Safety.UNSAFE.allowsValueWith(argumentSafety)) {
-            SuggestedFix.Builder fix = SuggestedFix.builder();
-            String unsafeQualifiedClassName = SuggestedFixes.qualifyType(state, fix, UNSAFE_ARG);
-            String replacement = String.format("%s.of", unsafeQualifiedClassName);
-            return fix.replace(tree.getMethodSelect(), replacement).build();
-        }
+    @Override
+    public Description matchAssignment(AssignmentTree tree, VisitorState state) {
+        return handleAssignment(tree, tree.getVariable(), tree.getExpression(), state);
+    }
 
-        return SuggestedFix.emptyFix();
+    @Override
+    public Description matchCompoundAssignment(CompoundAssignmentTree tree, VisitorState state) {
+        return handleAssignment(tree, tree.getVariable(), tree.getExpression(), state);
+    }
+
+    private Description handleAssignment(
+            ExpressionTree assignmentTree, ExpressionTree variable, ExpressionTree expression, VisitorState state) {
+        Safety variableDeclaredSafety = SafetyAnnotations.getSafety(ASTHelpers.getSymbol(variable), state);
+        if (variableDeclaredSafety.allowsAll()) {
+            return Description.NO_MATCH;
+        }
+        Safety assignmentValue = SafetyAnalysis.of(state.withPath(new TreePath(state.getPath(), expression)));
+        if (variableDeclaredSafety.allowsValueWith(assignmentValue)) {
+            return Description.NO_MATCH;
+        }
+        return buildDescription(assignmentTree)
+                .setMessage(String.format(
+                        "Dangerous assignment: value is '%s' but the variable is annotated '%s'.",
+                        assignmentValue, variableDeclaredSafety))
+                .build();
     }
 }
