@@ -330,14 +330,14 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
 
     private TransferResult<Safety, AccessPathStore<Safety>> unary(
             UnaryOperationNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        Safety safety = input.getValueOfSubNode(node.getOperand());
+        Safety safety = getValueOfSubNode(input, node.getOperand());
         return noStoreChanges(safety, input);
     }
 
     private TransferResult<Safety, AccessPathStore<Safety>> binary(
             BinaryOperationNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        Safety safety = input.getValueOfSubNode(node.getLeftOperand())
-                .leastUpperBound(input.getValueOfSubNode(node.getRightOperand()));
+        Safety safety = getValueOfSubNode(input, node.getLeftOperand())
+                .leastUpperBound(getValueOfSubNode(input, node.getRightOperand()));
         return noStoreChanges(safety, input);
     }
 
@@ -509,8 +509,8 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitStringConcatenateAssignment(
             StringConcatenateAssignmentNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        Safety safety = input.getValueOfSubNode(node.getLeftOperand())
-                .leastUpperBound(input.getValueOfSubNode(node.getRightOperand()));
+        Safety safety = getValueOfSubNode(input, node.getLeftOperand())
+                .leastUpperBound(getValueOfSubNode(input, node.getRightOperand()));
         ReadableUpdates updates = new ReadableUpdates();
         updates.trySet(node.getLeftOperand(), safety);
         return updateRegularStore(safety, input, updates);
@@ -573,8 +573,8 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitTernaryExpression(
             TernaryExpressionNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        Safety safety = input.getValueOfSubNode(node.getThenOperand())
-                .leastUpperBound(input.getValueOfSubNode(node.getElseOperand()));
+        Safety safety = getValueOfSubNode(input, node.getThenOperand())
+                .leastUpperBound(getValueOfSubNode(input, node.getElseOperand()));
         return noStoreChanges(safety, input);
     }
 
@@ -588,7 +588,7 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     public TransferResult<Safety, AccessPathStore<Safety>> visitAssignment(
             AssignmentNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
         ReadableUpdates updates = new ReadableUpdates();
-        Safety expressionSafety = input.getValueOfSubNode(node.getExpression());
+        Safety expressionSafety = getValueOfSubNode(input, node.getExpression());
         Safety targetSymbolSafety = SafetyAnnotations.getSafety(
                 ASTHelpers.getSymbol(node.getTarget().getTree()), state);
         Safety safety = Safety.mergeAssumingUnknownIsSame(expressionSafety, targetSymbolSafety);
@@ -597,7 +597,7 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
             updates.trySet(target, safety);
         } else if (target instanceof ArrayAccessNode) {
             Node arrayNode = ((ArrayAccessNode) target).getArray();
-            Safety arrayNodeSafety = input.getValueOfSubNode(arrayNode);
+            Safety arrayNodeSafety = getValueOfSubNode(input, arrayNode);
             safety = arrayNodeSafety == null ? safety : arrayNodeSafety.leastUpperBound(safety);
             updates.trySet(arrayNode, safety);
         } else if (target instanceof FieldAccessNode) {
@@ -769,7 +769,7 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     public TransferResult<Safety, AccessPathStore<Safety>> visitReturn(
             ReturnNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
         Node result = node.getResult();
-        Safety safety = result == null ? Safety.SAFE : input.getValueOfSubNode(result);
+        Safety safety = result == null ? Safety.SAFE : getValueOfSubNode(input, result);
         return noStoreChanges(safety, input);
     }
 
@@ -782,7 +782,7 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitStringConversion(
             StringConversionNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        Safety safety = input.getValueOfSubNode(node.getOperand());
+        Safety safety = getValueOfSubNode(input, node.getOperand());
         return noStoreChanges(safety, input);
     }
 
@@ -808,7 +808,7 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     /** Handles type changes (widen, narrow, and cast). */
     private TransferResult<Safety, AccessPathStore<Safety>> handleTypeConversion(
             Tree newType, Node original, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        Safety valueSafety = input.getValueOfSubNode(original);
+        Safety valueSafety = getValueOfSubNode(input, original);
         Type targetType = ASTHelpers.getType(newType);
         Safety narrowTargetSafety =
                 targetType == null ? Safety.UNKNOWN : SafetyAnnotations.getSafety(targetType.tsym, state);
@@ -860,17 +860,17 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
         if (THROWABLE_GET_MESSAGE.matches(node.getTree(), state)) {
             // Auth failures are sometimes annotated '@DoNotLog', which getMessage should inherit.
             return Safety.mergeAssumingUnknownIsSame(
-                    Safety.UNSAFE, input.getValueOfSubNode(node.getTarget().getReceiver()));
+                    Safety.UNSAFE, getValueOfSubNode(input, node.getTarget().getReceiver()));
         } else if (RETURNS_SAFETY_COMBINATION_OF_ARGS.matches(node.getTree(), state)) {
             Safety safety = Safety.SAFE;
             for (Node argument : node.getArguments()) {
-                safety = safety.leastUpperBound(input.getValueOfSubNode(argument));
+                safety = safety.leastUpperBound(getValueOfSubNode(input, argument));
             }
             return safety;
         } else if (RETURNS_SAFETY_OF_RECEIVER.matches(node.getTree(), state)) {
-            return input.getValueOfSubNode(node.getTarget().getReceiver());
+            return getValueOfSubNode(input, node.getTarget().getReceiver());
         } else if (RETURNS_SAFETY_OF_FIRST_ARG.matches(node.getTree(), state)) {
-            return input.getValueOfSubNode(node.getArguments().get(0));
+            return getValueOfSubNode(input, node.getArguments().get(0));
         }
         return Safety.UNKNOWN;
     }
@@ -884,7 +884,7 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
                     SafetyAnnotations.getSafety(methodSymbol, state), resultTypeSafety);
             // non-annotated toString inherits type-level safety.
             if (methodSafety == Safety.UNKNOWN && TO_STRING.matches(node.getTree(), state)) {
-                return input.getValueOfSubNode(node.getTarget().getReceiver());
+                return getValueOfSubNode(input, node.getTarget().getReceiver());
             }
             return methodSafety;
         }
@@ -909,7 +909,7 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
             ArrayCreationNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
         Safety safety = Safety.SAFE;
         for (Node item : node.getInitializers()) {
-            safety = safety.leastUpperBound(input.getValueOfSubNode(item));
+            safety = safety.leastUpperBound(getValueOfSubNode(input, item));
         }
         return noStoreChanges(safety, input);
     }
@@ -954,5 +954,14 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     public TransferResult<Safety, AccessPathStore<Safety>> visitClassDeclaration(
             ClassDeclarationNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
         return unknown(input);
+    }
+
+    /**
+     * Equivalent to {@link TransferInput#getValueOfSubNode(Node)},
+     * but returning {@link Safety#UNKNOWN} rather than null.
+     */
+    private static Safety getValueOfSubNode(TransferInput<Safety, AccessPathStore<Safety>> input, Node node) {
+        Safety maybeSafety = input.getValueOfSubNode(node);
+        return Safety.nullToUnknown(maybeSafety);
     }
 }

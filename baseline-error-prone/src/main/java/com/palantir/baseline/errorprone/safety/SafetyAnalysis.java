@@ -32,7 +32,7 @@ public final class SafetyAnalysis {
     public static Safety of(VisitorState state) {
         SafetyPropagationTransfer propagation = instance(state.context);
         try (ClearVisitorState ignored = propagation.setVisitorState(state)) {
-            return DataFlow.expressionDataflow(state.getPath(), state.context, propagation);
+            return Safety.nullToUnknown(DataFlow.expressionDataflow(state.getPath(), state.context, propagation));
         }
     }
 
