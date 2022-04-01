@@ -52,8 +52,8 @@ public final class DangerousJavaDeserialization extends BugChecker implements Bu
                     .withNoParameters(),
             Matchers.not(Matchers.enclosingMethod(READ_OBJECT)));
 
-    private static final Matcher<ExpressionTree> LANG3_SERIALIZATION_UTILS_DESERIALIZE = MethodMatchers.instanceMethod()
-            .onExactClassAny(
+    private static final Matcher<ExpressionTree> LANG3_SERIALIZATION_UTILS_DESERIALIZE = MethodMatchers.staticMethod()
+            .onClassAny(
                     "org.apache.commons.lang.SerializationUtils",
                     "org.apache.commons.lang3.SerializationUtils",
                     "org.springframework.util.SerializationUtils")

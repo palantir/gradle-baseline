@@ -51,4 +51,32 @@ class DangerousJavaDeserializationTest {
                         "}")
                 .doTest();
     }
+
+    @Test
+    void testCommonsLang() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import org.apache.commons.lang.SerializationUtils;",
+                        "class Test {",
+                        "   void f(byte[] data) {",
+                        "       // BUG: Diagnostic contains: serialization features for security reasons",
+                        "       SerializationUtils.deserialize(data);",
+                        "   }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testCommonsLang3() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import org.apache.commons.lang3.SerializationUtils;",
+                        "class Test {",
+                        "   void f(byte[] data) {",
+                        "       // BUG: Diagnostic contains: serialization features for security reasons",
+                        "       SerializationUtils.deserialize(data);",
+                        "   }",
+                        "}")
+                .doTest();
+    }
 }
