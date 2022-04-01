@@ -86,20 +86,13 @@ public final class PreferSafeLoggingPreconditions extends BugChecker implements 
         }
 
         List<? extends ExpressionTree> args = tree.getArguments();
-        if (args.size() > 2) {
-            if (PRECONDITIONS_MATCHER.matches(tree, state)) {
-                Description result = checkGuavaPreconditionsAndLogsafeArgMixing(tree, state, args);
-                if (result != null) {
-                    return result;
-                }
-            }
-            return Description.NO_MATCH;
-        } else if (args.size() == 2) {
+        if (args.size() >= 2) {
             ExpressionTree messageArg = args.get(1);
             boolean isStringType = ASTHelpers.isSameType(ASTHelpers.getType(messageArg), JAVA_STRING.get(state), state);
             if (!isStringType || !compileTimeConstExpressionMatcher.matches(messageArg, state)) {
                 return Description.NO_MATCH;
             }
+            return checkGuavaPreconditionsAndLogsafeArgMixing(tree, state, args);
         }
 
         return suggestFix(tree, state);
@@ -125,7 +118,7 @@ public final class PreferSafeLoggingPreconditions extends BugChecker implements 
                             + " be Args and use com.palantir.logsafe.Preconditions instead.")
                     .build();
         }
-        return null;
+        return Description.NO_MATCH;
     }
 
     private Description suggestFix(MethodInvocationTree tree, VisitorState state) {
