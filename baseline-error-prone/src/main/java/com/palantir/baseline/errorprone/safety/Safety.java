@@ -22,7 +22,7 @@ public enum Safety implements AbstractValue<Safety> {
     UNKNOWN() {
         @Override
         public Safety leastUpperBound(Safety other) {
-            return other == SAFE ? this : other;
+            return other == SAFE ? this : nullToUnknown(other);
         }
 
         @Override
@@ -53,18 +53,18 @@ public enum Safety implements AbstractValue<Safety> {
         public boolean allowsValueWith(Safety valueSafety) {
             // We allow safe data to be provided to an unsafe annotated parameter because that's safe, however
             // we should separately flag and prompt migration of such UnsafeArgs to SafeArg.
-            return valueSafety != Safety.DO_NOT_LOG;
+            return nullToUnknown(valueSafety) != Safety.DO_NOT_LOG;
         }
     },
     SAFE() {
         @Override
         public Safety leastUpperBound(Safety other) {
-            return other;
+            return nullToUnknown(other);
         }
 
         @Override
         public boolean allowsValueWith(Safety valueSafety) {
-            return valueSafety == Safety.UNKNOWN || valueSafety == Safety.SAFE;
+            return nullToUnknown(valueSafety) == Safety.UNKNOWN || valueSafety == Safety.SAFE;
         }
     };
 
@@ -79,7 +79,9 @@ public enum Safety implements AbstractValue<Safety> {
      * no confidence, preferring the other type if data is available.
      * For example, casting from {@link Object} to a known-safe type should result in {@link Safety#SAFE}.
      */
-    public static Safety mergeAssumingUnknownIsSame(Safety one, Safety two) {
+    public static Safety mergeAssumingUnknownIsSame(Safety first, Safety second) {
+        Safety one = nullToUnknown(first);
+        Safety two = nullToUnknown(second);
         if (one == UNKNOWN) {
             return two;
         }
@@ -91,6 +93,10 @@ public enum Safety implements AbstractValue<Safety> {
 
     public static Safety mergeAssumingUnknownIsSame(Safety one, Safety two, Safety three) {
         Safety result = mergeAssumingUnknownIsSame(one, two);
-        return mergeAssumingUnknownIsSame(result, three);
+        return mergeAssumingUnknownIsSame(result, nullToUnknown(three));
+    }
+
+    static Safety nullToUnknown(Safety input) {
+        return input == null ? Safety.UNKNOWN : input;
     }
 }
