@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Validate that safety var annotations and type annotations agree
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2161
