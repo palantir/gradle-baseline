@@ -892,6 +892,29 @@ class IllegalSafeLoggingArgumentTest {
     }
 
     @Test
+    public void disagreeingSafetyAnnotations() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  @DoNotLog static class DoNotLogClass {}",
+                        "  @Safe static class SafeClass {}",
+                        "  @Unsafe static class UnsafeClass {}",
+                        "  // BUG: Diagnostic contains: Dangerous return type: type is 'DO_NOT_LOG' "
+                                + "but the method is annotated 'UNSAFE'.",
+                        "  @Unsafe DoNotLogClass f(",
+                        "    @Safe SafeClass superSafe,",
+                        "    // BUG: Diagnostic contains: Dangerous variable: type is 'UNSAFE' "
+                                + "but the variable is annotated 'SAFE'.",
+                        "    @Safe UnsafeClass oops",
+                        "    ) {",
+                        "    return null;",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testSafeArgOfUnsafe_recommendsUnsafeArgOf() {
         refactoringHelper()
                 .addInputLines(
