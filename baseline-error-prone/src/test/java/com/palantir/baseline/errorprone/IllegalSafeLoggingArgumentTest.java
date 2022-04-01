@@ -742,6 +742,83 @@ class IllegalSafeLoggingArgumentTest {
     }
 
     @Test
+    public void testPreconditionsPassthrough() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  void f(@Safe String safe, @Unsafe String unsafe, @DoNotLog String dnl) {",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(com.google.common.base.Preconditions.checkNotNull(unsafe));",
+                        "    fun(com.google.common.base.Preconditions.checkNotNull(safe, dnl));",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(com.palantir.logsafe.Preconditions.checkNotNull(unsafe));",
+                        "    fun(com.palantir.logsafe.Preconditions.checkNotNull(safe, dnl));",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(com.palantir.logsafe.Preconditions.checkArgumentNotNull(unsafe));",
+                        "    fun(com.palantir.logsafe.Preconditions.checkArgumentNotNull(safe, dnl));",
+                        "  }",
+                        "  private static void fun(@Safe Object obj) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testStringFunctions() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  void f(@Safe String safeParam, @Unsafe String unsafeParam, @DoNotLog String dnlParam) {",
+                        "    fun(safeParam.getBytes());",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(unsafeParam.getBytes());",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'DO_NOT_LOG' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(dnlParam.getBytes());",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'DO_NOT_LOG' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(dnlParam.toLowerCase());",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'DO_NOT_LOG' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(dnlParam.split(\":\"));",
+                        "  }",
+                        "  private static void fun(@Safe Object obj) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testImmutableCollectionFactories() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.google.common.collect.*;",
+                        "import java.util.*;",
+                        "class Test {",
+                        "  void f(@Safe String safeParam, @Unsafe String unsafeParam, @DoNotLog String dnlParam) {",
+                        "    fun(ImmutableList.of());",
+                        "    fun(ImmutableList.of(safeParam));",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(ImmutableList.of(unsafeParam));",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(ImmutableSet.copyOf(Set.of(unsafeParam)));",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'DO_NOT_LOG' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(Map.of(safeParam, unsafeParam, \"const\", dnlParam));",
+                        "  }",
+                        "  private static void fun(@Safe Object obj) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testSafeArgOfUnsafe_recommendsUnsafeArgOf() {
         refactoringHelper()
                 .addInputLines(

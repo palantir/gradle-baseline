@@ -16,12 +16,19 @@
 
 package com.palantir.baseline.errorprone.safety;
 
+import com.google.common.collect.ImmutableList;
+import com.google.common.collect.ImmutableListMultimap;
+import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableSet;
+import com.google.common.collect.ImmutableSetMultimap;
+import com.google.common.collect.ImmutableSortedSet;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.dataflow.AccessPath;
 import com.google.errorprone.dataflow.AccessPathStore;
 import com.google.errorprone.dataflow.AccessPathValues;
 import com.google.errorprone.matchers.Matcher;
+import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ClassTree;
@@ -38,6 +45,8 @@ import com.sun.tools.javac.code.Symbol.VarSymbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import java.io.Closeable;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
@@ -146,6 +155,52 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     private static final Matcher<ExpressionTree> STRING_FORMAT =
             MethodMatchers.staticMethod().onClass(String.class.getName()).named("format");
 
+    private static final Matcher<ExpressionTree> OBJECTS_TO_STRING =
+            MethodMatchers.staticMethod().onClass(Objects.class.getName()).named("toString");
+
+    private static final Matcher<ExpressionTree> IMMUTABLE_COLLECTION_FACTORY = Matchers.anyOf(
+            MethodMatchers.staticMethod()
+                    .onClassAny(
+                            ImmutableList.class.getName(),
+                            ImmutableSet.class.getName(),
+                            ImmutableSortedSet.class.getName(),
+                            ImmutableMap.class.getName(),
+                            ImmutableListMultimap.class.getName(),
+                            ImmutableSetMultimap.class.getName(),
+                            List.class.getName(),
+                            Set.class.getName(),
+                            Map.class.getName())
+                    .namedAnyOf("of", "copyOf"),
+            MethodMatchers.staticMethod().onClass(Arrays.class.getName()).named("asList"));
+
+    // These methods do not take the receiver (generally a static class) into account, only the inputs.
+    private static final Matcher<ExpressionTree> RETURNS_SAFETY_COMBINATION_OF_ARGS =
+            Matchers.anyOf(STRING_FORMAT, OBJECTS_TO_STRING, IMMUTABLE_COLLECTION_FACTORY);
+
+    // Returns the safety of the receiver, e.g. myString.getBytes() returns the safety of myString.
+    private static final Matcher<ExpressionTree> RETURNS_SAFETY_OF_RECEIVER = Matchers.anyOf(
+            MethodMatchers.instanceMethod()
+                    .onDescendantOf(CharSequence.class.getName())
+                    .namedAnyOf("charAt", "subSequence", "chars", "codePoints"),
+            MethodMatchers.instanceMethod()
+                    .onExactClass(String.class.getName())
+                    .namedAnyOf("getBytes", "toLowerCase", "toUpperCase", "substring", "split", "toCharArray"),
+            MethodMatchers.instanceMethod()
+                    .onDescendantOf(Collection.class.getName())
+                    .namedAnyOf("toArray", "stream", "parallelStream"),
+            MethodMatchers.instanceMethod()
+                    .onDescendantOf(Iterable.class.getName())
+                    .namedAnyOf("toArray", "iterator", "spliterator"));
+
+    private static final Matcher<ExpressionTree> RETURNS_SAFETY_OF_FIRST_ARG = Matchers.anyOf(
+            MethodMatchers.staticMethod().onClass(Objects.class.getName()).named("requireNonNull"),
+            MethodMatchers.staticMethod()
+                    .onClass("com.google.common.base.Preconditions")
+                    .named("checkNotNull"),
+            MethodMatchers.staticMethod()
+                    .onClass("com.palantir.logsafe.Preconditions")
+                    .namedAnyOf("checkNotNull", "checkArgumentNotNull"));
+
     private VisitorState state;
     private final Set<VarSymbol> traversed = new HashSet<>();
 
@@ -155,6 +210,7 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
             return AccessPathStore.empty();
         }
         AccessPathStore.Builder<Safety> result = AccessPathStore.<Safety>empty().toBuilder();
+
         for (LocalVariableNode param : parameters) {
             Safety declared = SafetyAnnotations.getSafety((Symbol) param.getElement(), state);
             result.setInformation(AccessPath.fromLocalVariable(param), declared);
@@ -799,12 +855,16 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
             // Auth failures are sometimes annotated '@DoNotLog', which getMessage should inherit.
             return Safety.mergeAssumingUnknownIsSame(
                     Safety.UNSAFE, input.getValueOfSubNode(node.getTarget().getReceiver()));
-        } else if (STRING_FORMAT.matches(node.getTree(), state)) {
+        } else if (RETURNS_SAFETY_COMBINATION_OF_ARGS.matches(node.getTree(), state)) {
             Safety safety = Safety.SAFE;
             for (Node argument : node.getArguments()) {
                 safety = safety.leastUpperBound(input.getValueOfSubNode(argument));
             }
             return safety;
+        } else if (RETURNS_SAFETY_OF_RECEIVER.matches(node.getTree(), state)) {
+            return input.getValueOfSubNode(node.getTarget().getReceiver());
+        } else if (RETURNS_SAFETY_OF_FIRST_ARG.matches(node.getTree(), state)) {
+            return input.getValueOfSubNode(node.getArguments().get(0));
         }
         return Safety.UNKNOWN;
     }
