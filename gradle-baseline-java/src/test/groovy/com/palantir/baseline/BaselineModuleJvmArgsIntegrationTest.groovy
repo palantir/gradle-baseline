@@ -75,6 +75,29 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
         runTasksSuccessfully('compileJava')
     }
 
+    def 'Compiles with locally defined opens'() {
+        when:
+        buildFile << '''
+        application {
+            mainClass = 'com.Example'
+        }
+        moduleJvmArgs {
+           opens = ['jdk.compiler/com.sun.tools.javac.code']
+        }
+        '''.stripIndent(true)
+        writeJavaSourceFile('''
+        package com;
+        public class Example {
+            public static void main(String[] args) {
+                com.sun.tools.javac.code.Symbol.class.toString();
+            }
+        }
+        '''.stripIndent(true))
+
+        then:
+        runTasksSuccessfully('compileJava')
+    }
+
     def 'Builds javadoc with locally defined exports'() {
         when:
         buildFile << '''
@@ -83,6 +106,33 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
         }
         moduleJvmArgs {
            exports = ['jdk.compiler/com.sun.tools.javac.code']
+        }
+        '''.stripIndent(true)
+        writeJavaSourceFile('''
+        package com;
+        public class Example {
+            /**
+             * Javadoc {@link com.sun.tools.javac.code.Symbol}.
+             * @param args Program arguments
+             */
+            public static void main(String[] args) {
+                com.sun.tools.javac.code.Symbol.class.toString();
+            }
+        }
+        '''.stripIndent(true))
+
+        then:
+        runTasksSuccessfully('javadoc')
+    }
+
+    def 'Builds javadoc with locally defined opens'() {
+        when:
+        buildFile << '''
+        application {
+            mainClass = 'com.Example'
+        }
+        moduleJvmArgs {
+           opens = ['jdk.compiler/com.sun.tools.javac.code']
         }
         '''.stripIndent(true)
         writeJavaSourceFile('''
