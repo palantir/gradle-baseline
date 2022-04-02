@@ -36,6 +36,8 @@ import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.ReturnTree;
 import com.sun.source.tree.StatementTree;
+import com.sun.source.tree.Tree;
+import com.sun.source.tree.VariableTree;
 import com.sun.source.util.TreePath;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
@@ -61,7 +63,9 @@ public final class IllegalSafeLoggingArgument extends BugChecker
         implements BugChecker.MethodInvocationTreeMatcher,
                 BugChecker.ReturnTreeMatcher,
                 BugChecker.AssignmentTreeMatcher,
-                BugChecker.CompoundAssignmentTreeMatcher {
+                BugChecker.CompoundAssignmentTreeMatcher,
+                BugChecker.MethodTreeMatcher,
+                BugChecker.VariableTreeMatcher {
 
     private static final String UNSAFE_ARG = "com.palantir.logsafe.UnsafeArg";
     private static final Matcher<ExpressionTree> SAFE_ARG_OF_METHOD_MATCHER = MethodMatchers.staticMethod()
@@ -172,6 +176,44 @@ public final class IllegalSafeLoggingArgument extends BugChecker
                 .setMessage(String.format(
                         "Dangerous assignment: value is '%s' but the variable is annotated '%s'.",
                         assignmentValue, variableDeclaredSafety))
+                .build();
+    }
+
+    @Override
+    public Description matchMethod(MethodTree tree, VisitorState state) {
+        Tree returnType = tree.getReturnType();
+        if (returnType == null) {
+            return Description.NO_MATCH;
+        }
+        Safety methodSafetyAnnotation = SafetyAnnotations.getSafety(ASTHelpers.getSymbol(tree), state);
+        if (methodSafetyAnnotation.allowsAll()) {
+            return Description.NO_MATCH;
+        }
+        Safety returnTypeSafety = SafetyAnnotations.getSafety(ASTHelpers.getSymbol(returnType), state);
+        if (methodSafetyAnnotation.allowsValueWith(returnTypeSafety)) {
+            return Description.NO_MATCH;
+        }
+        return buildDescription(returnType)
+                .setMessage(String.format(
+                        "Dangerous return type: type is '%s' but the method is annotated '%s'.",
+                        returnTypeSafety, methodSafetyAnnotation))
+                .build();
+    }
+
+    @Override
+    public Description matchVariable(VariableTree tree, VisitorState state) {
+        Safety parameterSafetyAnnotation = SafetyAnnotations.getSafety(ASTHelpers.getSymbol(tree), state);
+        if (parameterSafetyAnnotation.allowsAll()) {
+            return Description.NO_MATCH;
+        }
+        Safety variableTypeSafety = SafetyAnnotations.getSafety(ASTHelpers.getSymbol(tree.getType()), state);
+        if (parameterSafetyAnnotation.allowsValueWith(variableTypeSafety)) {
+            return Description.NO_MATCH;
+        }
+        return buildDescription(tree)
+                .setMessage(String.format(
+                        "Dangerous variable: type is '%s' but the variable is annotated '%s'.",
+                        variableTypeSafety, parameterSafetyAnnotation))
                 .build();
     }
 }

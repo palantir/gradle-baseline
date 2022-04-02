@@ -892,6 +892,67 @@ class IllegalSafeLoggingArgumentTest {
     }
 
     @Test
+    public void disagreeingSafetyAnnotations() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  @DoNotLog static class DoNotLogClass {}",
+                        "  @Safe static class SafeClass {}",
+                        "  @Unsafe static class UnsafeClass {}",
+                        "  // BUG: Diagnostic contains: Dangerous return type: type is 'DO_NOT_LOG' "
+                                + "but the method is annotated 'UNSAFE'.",
+                        "  @Unsafe DoNotLogClass f(",
+                        "    @Safe SafeClass superSafe,",
+                        "    // BUG: Diagnostic contains: Dangerous variable: type is 'UNSAFE' "
+                                + "but the variable is annotated 'SAFE'.",
+                        "    @Safe UnsafeClass oops",
+                        "    ) {",
+                        "    return null;",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testOptionalUnwrapping() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.*;",
+                        "class Test {",
+                        "  void f(@Unsafe Optional<String> p) {",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(p);",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(p.get());",
+                        "  }",
+                        "  void fun(@Safe Object in) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testOptionalUnsafeType() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.*;",
+                        "class Test {",
+                        "  @Unsafe static class UnsafeClass {}",
+                        "  void f(Optional<UnsafeClass> p) {",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(p.get());",
+                        "  }",
+                        "  void fun(@Safe Object in) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testSafeArgOfUnsafe_recommendsUnsafeArgOf() {
         refactoringHelper()
                 .addInputLines(
