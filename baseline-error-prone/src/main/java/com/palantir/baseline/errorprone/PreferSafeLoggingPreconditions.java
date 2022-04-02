@@ -52,14 +52,18 @@ public final class PreferSafeLoggingPreconditions extends BugChecker implements 
     private final Matcher<ExpressionTree> compileTimeConstExpressionMatcher =
             new CompileTimeConstantExpressionMatcher();
 
+    private static final Matcher<ExpressionTree> PRECONDITIONS_MATCHER = MethodMatchers.staticMethod()
+            .onClass("com.google.common.base.Preconditions")
+            .withNameMatching(Pattern.compile("checkArgument|checkState|checkNotNull"));
+
     private static final Matcher<ExpressionTree> METHOD_MATCHER = Matchers.anyOf(
-            MethodMatchers.staticMethod()
-                    .onClass("com.google.common.base.Preconditions")
-                    .withNameMatching(Pattern.compile("checkArgument|checkState|checkNotNull")),
+            PRECONDITIONS_MATCHER,
             MethodMatchers.staticMethod().onClass("java.util.Objects").named("requireNonNull"),
             MethodMatchers.staticMethod()
                     .onClass("org.apache.commons.lang3.Validate")
                     .withNameMatching(Pattern.compile("isTrue|notNull|validState")));
+
+    private static final Matcher<ExpressionTree> ARG_MATCHER = MoreMatchers.isSubtypeOf("com.palantir.logsafe.Arg");
 
     private static final ImmutableMap<String, String> TRANSLATIONS_TO_LOGSAFE_PRECONDITIONS_METHODS = ImmutableMap.of(
             "requireNonNull", "checkNotNull", // java.util.Objects.requireNotNull
@@ -76,23 +80,47 @@ public final class PreferSafeLoggingPreconditions extends BugChecker implements 
             return Description.NO_MATCH;
         }
 
-        List<? extends ExpressionTree> args = tree.getArguments();
-        if (args.size() > 2) {
+        if (TestCheckUtils.isTestCode(state)) {
             return Description.NO_MATCH;
         }
 
-        if (args.size() == 2) {
+        List<? extends ExpressionTree> args = tree.getArguments();
+        if (args.size() >= 2) {
             ExpressionTree messageArg = args.get(1);
             boolean isStringType = ASTHelpers.isSameType(ASTHelpers.getType(messageArg), JAVA_STRING.get(state), state);
             if (!isStringType || !compileTimeConstExpressionMatcher.matches(messageArg, state)) {
                 return Description.NO_MATCH;
             }
+            return checkGuavaPreconditionsAndLogsafeArgMixing(tree, state, args);
         }
 
-        if (TestCheckUtils.isTestCode(state)) {
-            return Description.NO_MATCH;
-        }
+        return suggestFix(tree, state);
+    }
 
+    private Description checkGuavaPreconditionsAndLogsafeArgMixing(
+            MethodInvocationTree tree, VisitorState state, List<? extends ExpressionTree> args) {
+        boolean anyMatch = false;
+        boolean allMatch = true;
+        for (int i = 2; i < args.size(); i++) {
+            ExpressionTree arg = args.get(i);
+            if (ARG_MATCHER.matches(arg, state)) {
+                anyMatch = true;
+            } else {
+                allMatch = false;
+            }
+        }
+        if (allMatch) {
+            return suggestFix(tree, state);
+        } else if (anyMatch) {
+            return buildDescription(tree)
+                    .setMessage("An Arg was passed to Preconditions.checkX(), but not all. Convert the non-Args to"
+                            + " be Args and use com.palantir.logsafe.Preconditions instead.")
+                    .build();
+        }
+        return Description.NO_MATCH;
+    }
+
+    private Description suggestFix(MethodInvocationTree tree, VisitorState state) {
         SuggestedFix.Builder fix = SuggestedFix.builder();
         String logSafeQualifiedClassName = SuggestedFixes.qualifyType(state, fix, "com.palantir.logsafe.Preconditions");
         String logSafeMethodName = getLogSafeMethodName(ASTHelpers.getSymbol(tree));
