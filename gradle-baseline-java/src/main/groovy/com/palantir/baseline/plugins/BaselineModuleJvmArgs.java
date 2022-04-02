@@ -128,7 +128,7 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                                 CoreJavadocOptions coreOptions = (CoreJavadocOptions) options;
                                 ImmutableList<JarManifestModuleInfo> info = collectClasspathInfo(project, sourceSet);
                                 List<String> exportValues = Stream.concat(
-                                                // Compilation only supports exports, so we with opens.
+                                                // Compilation only supports exports, so we union with opens.
                                                 Stream.concat(
                                                         extension.exports().get().stream(),
                                                         extension.opens().get().stream()),
