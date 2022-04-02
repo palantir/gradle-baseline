@@ -191,7 +191,7 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     private static final Matcher<ExpressionTree> OPTIONAL_ACCESSORS = Matchers.anyOf(
             MethodMatchers.instanceMethod()
                     .onDescendantOf(Optional.class.getName())
-                    .namedAnyOf("get", "orElseThrow", "stream"),
+                    .namedAnyOf("filter", "get", "orElseThrow", "stream"),
             MethodMatchers.instanceMethod()
                     .onDescendantOf(OptionalInt.class.getName())
                     .namedAnyOf("getAsInt", "orElseThrow"),
