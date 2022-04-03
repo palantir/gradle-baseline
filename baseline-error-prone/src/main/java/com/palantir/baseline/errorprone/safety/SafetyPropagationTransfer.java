@@ -31,8 +31,14 @@ import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
+import com.sun.source.tree.BlockTree;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.LambdaExpressionTree;
+import com.sun.source.tree.MemberReferenceTree;
+import com.sun.source.tree.MethodTree;
+import com.sun.source.tree.ReturnTree;
+import com.sun.source.tree.StatementTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.TypeCastTree;
 import com.sun.source.tree.VariableTree;
@@ -57,6 +63,8 @@ import java.util.OptionalDouble;
 import java.util.OptionalInt;
 import java.util.OptionalLong;
 import java.util.Set;
+import java.util.stream.BaseStream;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import javax.lang.model.element.VariableElement;
 import org.checkerframework.errorprone.dataflow.analysis.Analysis;
@@ -184,9 +192,25 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
                             OptionalInt.class.getName(), OptionalLong.class.getName(), OptionalDouble.class.getName())
                     .named("of"));
 
+    private static final Matcher<ExpressionTree> STATIC_STREAM_FACTORIES =
+            MethodMatchers.staticMethod().onClass(Stream.class.getName()).namedAnyOf("of", "ofNullable", "concat");
+
+    private static final Matcher<ExpressionTree> STREAMLIKE_TRANSFORM = Matchers.anyOf(
+            MethodMatchers.instanceMethod()
+                    .onDescendantOf(Stream.class.getName())
+                    .namedAnyOf("map", "flatMap"),
+            MethodMatchers.instanceMethod()
+                    .onDescendantOf(Optional.class.getName())
+                    .namedAnyOf("map", "flatMap"));
+
     // These methods do not take the receiver (generally a static class) into account, only the inputs.
-    private static final Matcher<ExpressionTree> RETURNS_SAFETY_COMBINATION_OF_ARGS =
-            Matchers.anyOf(STRING_FORMAT, OBJECTS_TO_STRING, IMMUTABLE_COLLECTION_FACTORY, OPTIONAL_FACTORIES);
+    private static final Matcher<ExpressionTree> RETURNS_SAFETY_COMBINATION_OF_ARGS = Matchers.anyOf(
+            STRING_FORMAT,
+            OBJECTS_TO_STRING,
+            IMMUTABLE_COLLECTION_FACTORY,
+            OPTIONAL_FACTORIES,
+            STATIC_STREAM_FACTORIES,
+            STREAMLIKE_TRANSFORM);
 
     private static final Matcher<ExpressionTree> OPTIONAL_ACCESSORS = Matchers.anyOf(
             MethodMatchers.instanceMethod()
@@ -202,6 +226,28 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
                     .onDescendantOf(OptionalDouble.class.getName())
                     .namedAnyOf("getAsDouble", "orElseThrow"));
 
+    private static final Matcher<ExpressionTree> STREAM_MODIFIERS = Matchers.anyOf(
+            MethodMatchers.instanceMethod()
+                    .onDescendantOf(BaseStream.class.getName())
+                    .namedAnyOf("iterator", "spliterator", "sequential", "parallel", "unordered", "onClose"),
+            MethodMatchers.instanceMethod()
+                    .onDescendantOf(Stream.class.getName())
+                    .namedAnyOf(
+                            "filter",
+                            "distinct",
+                            "sorted",
+                            "peek",
+                            "limit",
+                            "skip",
+                            "takeWhile",
+                            "dropWhile",
+                            "toArray",
+                            "toList",
+                            "min",
+                            "max",
+                            "findFirst",
+                            "findAny"));
+
     // Returns the safety of the receiver, e.g. myString.getBytes() returns the safety of myString.
     private static final Matcher<ExpressionTree> RETURNS_SAFETY_OF_RECEIVER = Matchers.anyOf(
             MethodMatchers.instanceMethod()
@@ -216,7 +262,8 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
             MethodMatchers.instanceMethod()
                     .onDescendantOf(Iterable.class.getName())
                     .namedAnyOf("toArray", "iterator", "spliterator"),
-            OPTIONAL_ACCESSORS);
+            OPTIONAL_ACCESSORS,
+            STREAM_MODIFIERS);
 
     private static final Matcher<ExpressionTree> RETURNS_SAFETY_OF_FIRST_ARG = Matchers.anyOf(
             MethodMatchers.staticMethod().onClass(Objects.class.getName()).named("requireNonNull"),
@@ -227,8 +274,16 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
                     .onClass("com.palantir.logsafe.Preconditions")
                     .namedAnyOf("checkNotNull", "checkArgumentNotNull"));
 
+    private static final Matcher<ExpressionTree> RETURNS_SAFETY_OF_ARGS_AND_RECEIVER = Matchers.anyOf(
+            MethodMatchers.instanceMethod()
+                    .onDescendantOf(Stream.class.getName())
+                    .namedAnyOf("collect"),
+            MethodMatchers.instanceMethod()
+                    .onDescendantOf(Optional.class.getName())
+                    .namedAnyOf("or", "orElse", "orElseGet"));
+
     private VisitorState state;
-    private final Set<VarSymbol> traversed = new HashSet<>();
+    private final Set<Symbol> traversed = new HashSet<>();
 
     @Override
     public AccessPathStore<Safety> initialStore(UnderlyingAST _underlyingAst, List<LocalVariableNode> parameters) {
@@ -802,7 +857,12 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitLambdaResultExpression(
             LambdaResultExpressionNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return unknown(input);
+        Node result = node.getResult();
+        Safety safety = result == null
+                // perhaps safe?
+                ? Safety.UNKNOWN
+                : getValueOfSubNode(input, result);
+        return noStoreChanges(safety, input);
     }
 
     @Override
@@ -887,6 +947,12 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
             // Auth failures are sometimes annotated '@DoNotLog', which getMessage should inherit.
             return Safety.mergeAssumingUnknownIsSame(
                     Safety.UNSAFE, getValueOfSubNode(input, node.getTarget().getReceiver()));
+        } else if (RETURNS_SAFETY_OF_ARGS_AND_RECEIVER.matches(node.getTree(), state)) {
+            Safety safety = getValueOfSubNode(input, node.getTarget().getReceiver());
+            for (Node argument : node.getArguments()) {
+                safety = safety.leastUpperBound(getValueOfSubNode(input, argument));
+            }
+            return safety;
         } else if (RETURNS_SAFETY_COMBINATION_OF_ARGS.matches(node.getTree(), state)) {
             Safety safety = Safety.SAFE;
             for (Node argument : node.getArguments()) {
@@ -927,7 +993,46 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitMemberReference(
             FunctionalInterfaceNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return unknown(input);
+        Tree tree = node.getTree();
+        if (tree instanceof LambdaExpressionTree) {
+            LambdaExpressionTree lambdaExpression = (LambdaExpressionTree) tree;
+            Tree body = lambdaExpression.getBody();
+            TreePath path;
+            if (body instanceof BlockTree) {
+                BlockTree blockTree = (BlockTree) body;
+                List<? extends StatementTree> statements = blockTree.getStatements();
+                if (statements.isEmpty()) {
+                    return unknown(input);
+                }
+                StatementTree finalStatement = statements.get(statements.size() - 1);
+                if (!(finalStatement instanceof ReturnTree)) {
+                    return unknown(input);
+                }
+                ReturnTree returnTree = (ReturnTree) finalStatement;
+                path = TreePath.getPath(state.getPath().getCompilationUnit(), returnTree.getExpression());
+            } else {
+                path = TreePath.getPath(state.getPath().getCompilationUnit(), body);
+            }
+
+            JavacProcessingEnvironment javacEnv = JavacProcessingEnvironment.instance(state.context);
+            UnderlyingAST ast = new UnderlyingAST.CFGMethod(
+                    ASTHelpers.findEnclosingNode(path, MethodTree.class),
+                    ASTHelpers.findEnclosingNode(path, ClassTree.class));
+            ControlFlowGraph cfg = CFGBuilder.build(path, ast, false, false, javacEnv);
+            Analysis<Safety, AccessPathStore<Safety>, SafetyPropagationTransfer> analysis =
+                    new ForwardAnalysisImpl<>(this);
+            //            additionalData.put(AccessPath.fromNodeIfTrackable())
+            analysis.performAnalysis(cfg);
+            Safety maybeResult = analysis.getValue(path.getLeaf());
+            Safety safety = maybeResult == null ? Safety.UNKNOWN : maybeResult;
+            return noStoreChanges(safety, input);
+        } else if (tree instanceof MemberReferenceTree) {
+            // Determine safety of the referenced method based on annotations and result type
+            return unknown(input);
+        } else {
+            throw new UnsupportedOperationException(
+                    "Safety analysis bug, FunctionalInterfaceNode tree type: " + tree.getClass() + " for node " + node);
+        }
     }
 
     @Override

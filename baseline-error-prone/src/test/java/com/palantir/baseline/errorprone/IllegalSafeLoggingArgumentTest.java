@@ -953,6 +953,76 @@ class IllegalSafeLoggingArgumentTest {
     }
 
     @Test
+    public void testStreamSafety() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.stream.*;",
+                        "class Test {",
+                        "  @Unsafe static class UnsafeClass {}",
+                        "  void f(@Unsafe Stream<String> s) {",
+                        "    Stream<String> t = s.filter(val -> val.length() > 1).limit(100);",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(t.toArray());",
+                        "    fun(s.count());",
+                        "  }",
+                        "  void fun(@Safe Object in) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testOptionalElseSafety() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.*;",
+                        "class Test {",
+                        "  @Unsafe static class UnsafeClass {}",
+                        "  void f(@Safe Optional<String> s, @Unsafe String unsafe) {",
+                        "    fun(s);",
+                        "    fun(s.get());",
+                        "    fun(s.orElseThrow(RuntimeException::new));",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(s.orElse(unsafe));",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(s.orElseGet(() -> unsafe));",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(s.orElseGet(() -> { return unsafe; }));",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(s.orElseGet(() -> { toString(); return unsafe; }));",
+                        "  }",
+                        "  void fun(@Safe Object in) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testStreamMap() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.*;",
+                        "import java.util.stream.*;",
+                        "class Test {",
+                        "  @Unsafe static class UnsafeClass {}",
+                        "  void f(@Unsafe Stream<String> s) {",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(s.map(value -> value));",
+                        //                        "    fun(s.map(value -> value.length()));",
+                        "  }",
+                        "  void fun(@Safe Object in) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testSafeArgOfUnsafe_recommendsUnsafeArgOf() {
         refactoringHelper()
                 .addInputLines(
