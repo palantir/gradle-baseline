@@ -49,6 +49,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -57,6 +58,8 @@ import java.util.OptionalDouble;
 import java.util.OptionalInt;
 import java.util.OptionalLong;
 import java.util.Set;
+import java.util.stream.BaseStream;
+import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import javax.lang.model.element.VariableElement;
 import org.checkerframework.errorprone.dataflow.analysis.Analysis;
@@ -184,9 +187,16 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
                             OptionalInt.class.getName(), OptionalLong.class.getName(), OptionalDouble.class.getName())
                     .named("of"));
 
+    private static final Matcher<ExpressionTree> STATIC_STREAM_FACTORIES =
+            MethodMatchers.staticMethod().onClass(Stream.class.getName()).namedAnyOf("of", "ofNullable", "concat");
+
     // These methods do not take the receiver (generally a static class) into account, only the inputs.
-    private static final Matcher<ExpressionTree> RETURNS_SAFETY_COMBINATION_OF_ARGS =
-            Matchers.anyOf(STRING_FORMAT, OBJECTS_TO_STRING, IMMUTABLE_COLLECTION_FACTORY, OPTIONAL_FACTORIES);
+    private static final Matcher<ExpressionTree> RETURNS_SAFETY_COMBINATION_OF_ARGS = Matchers.anyOf(
+            STRING_FORMAT,
+            OBJECTS_TO_STRING,
+            IMMUTABLE_COLLECTION_FACTORY,
+            OPTIONAL_FACTORIES,
+            STATIC_STREAM_FACTORIES);
 
     private static final Matcher<ExpressionTree> OPTIONAL_ACCESSORS = Matchers.anyOf(
             MethodMatchers.instanceMethod()
@@ -202,6 +212,28 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
                     .onDescendantOf(OptionalDouble.class.getName())
                     .namedAnyOf("getAsDouble", "orElseThrow"));
 
+    private static final Matcher<ExpressionTree> STREAM_ACCESSORS = Matchers.anyOf(
+            MethodMatchers.instanceMethod()
+                    .onDescendantOf(BaseStream.class.getName())
+                    .namedAnyOf("iterator", "spliterator", "sequential", "parallel", "unordered", "onClose"),
+            MethodMatchers.instanceMethod()
+                    .onDescendantOf(Stream.class.getName())
+                    .namedAnyOf(
+                            "filter",
+                            "distinct",
+                            "sorted",
+                            "peek",
+                            "limit",
+                            "skip",
+                            "takeWhile",
+                            "dropWhile",
+                            "toArray",
+                            "toList",
+                            "min",
+                            "max",
+                            "findFirst",
+                            "findAny"));
+
     // Returns the safety of the receiver, e.g. myString.getBytes() returns the safety of myString.
     private static final Matcher<ExpressionTree> RETURNS_SAFETY_OF_RECEIVER = Matchers.anyOf(
             MethodMatchers.instanceMethod()
@@ -216,7 +248,12 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
             MethodMatchers.instanceMethod()
                     .onDescendantOf(Iterable.class.getName())
                     .namedAnyOf("toArray", "iterator", "spliterator"),
-            OPTIONAL_ACCESSORS);
+            MethodMatchers.instanceMethod()
+                    .onDescendantOf(Iterator.class.getName())
+                    .named("next")
+                    .withNoParameters(),
+            OPTIONAL_ACCESSORS,
+            STREAM_ACCESSORS);
 
     private static final Matcher<ExpressionTree> RETURNS_SAFETY_OF_FIRST_ARG = Matchers.anyOf(
             MethodMatchers.staticMethod().onClass(Objects.class.getName()).named("requireNonNull"),
@@ -226,6 +263,15 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
             MethodMatchers.staticMethod()
                     .onClass("com.palantir.logsafe.Preconditions")
                     .namedAnyOf("checkNotNull", "checkArgumentNotNull"));
+
+    private static final Matcher<ExpressionTree> RETURNS_SAFETY_OF_ARGS_AND_RECEIVER = Matchers.anyOf(
+            MethodMatchers.instanceMethod()
+                    .onDescendantOf(Stream.class.getName())
+                    .namedAnyOf("collect"),
+            MethodMatchers.instanceMethod()
+                    .onDescendantOf(Optional.class.getName())
+                    // TODO(ckozak): support 'or' and 'orElseGet' which require lambda support
+                    .named("orElse"));
 
     private VisitorState state;
     private final Set<VarSymbol> traversed = new HashSet<>();
@@ -887,6 +933,12 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
             // Auth failures are sometimes annotated '@DoNotLog', which getMessage should inherit.
             return Safety.mergeAssumingUnknownIsSame(
                     Safety.UNSAFE, getValueOfSubNode(input, node.getTarget().getReceiver()));
+        } else if (RETURNS_SAFETY_OF_ARGS_AND_RECEIVER.matches(node.getTree(), state)) {
+            Safety safety = getValueOfSubNode(input, node.getTarget().getReceiver());
+            for (Node argument : node.getArguments()) {
+                safety = safety.leastUpperBound(getValueOfSubNode(input, argument));
+            }
+            return safety;
         } else if (RETURNS_SAFETY_COMBINATION_OF_ARGS.matches(node.getTree(), state)) {
             Safety safety = Safety.SAFE;
             for (Node argument : node.getArguments()) {
