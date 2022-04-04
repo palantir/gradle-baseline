@@ -953,6 +953,81 @@ class IllegalSafeLoggingArgumentTest {
     }
 
     @Test
+    public void testStreamSafety() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.stream.*;",
+                        "class Test {",
+                        "  @Unsafe static class UnsafeClass {}",
+                        "  void f(@Unsafe Stream<String> s, @DoNotLog String dnl) {",
+                        "    Stream<String> t = s.filter(val -> val.length() > 1).limit(100);",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(t.toArray());",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(t.collect(Collectors.toSet()));",
+                        "    fun(s.count());",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'DO_NOT_LOG' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(Stream.of(dnl));",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'DO_NOT_LOG' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(Stream.concat(s, Stream.of(dnl)));",
+                        "  }",
+                        "  void fun(@Safe Object in) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testOptionalElseSafety() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.*;",
+                        "class Test {",
+                        "  @Unsafe static class UnsafeClass {}",
+                        "  void f(@Safe Optional<String> s, @Unsafe String unsafe) {",
+                        "    fun(s);",
+                        "    fun(s.get());",
+                        "    fun(s.orElseThrow(RuntimeException::new));",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(s.orElse(unsafe));",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(Optional.ofNullable(unsafe).orElse(s.get()));",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(Optional.ofNullable(unsafe).stream());",
+                        "  }",
+                        "  void fun(@Safe Object in) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testEnhancedForLoopSafety() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.*;",
+                        "class Test {",
+                        "  void f(@Unsafe List<String> strings) {",
+                        "    for (String s : strings) {",
+                        "      // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "      fun(s);",
+                        "    }",
+                        "  }",
+                        "  void fun(@Safe Object in) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testSafeArgOfUnsafe_recommendsUnsafeArgOf() {
         refactoringHelper()
                 .addInputLines(
