@@ -1028,6 +1028,125 @@ class IllegalSafeLoggingArgumentTest {
     }
 
     @Test
+    public void testForEachStatementLambda() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.*;",
+                        "class Test {",
+                        "  void f(@Unsafe List<String> strings) {",
+                        "    strings.forEach(s -> {",
+                        "      // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "      fun(s);",
+                        "    });",
+                        "  }",
+                        "  void fun(@Safe Object in) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testForEachExpressionLambda() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.*;",
+                        "class Test {",
+                        "  void f(@Unsafe List<String> strings) {",
+                        "    strings.forEach(s ->",
+                        "      // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "      fun(s));",
+                        "  }",
+                        "  void fun(@Safe Object in) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testForEachMethodReference() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.*;",
+                        "class Test {",
+                        "  void f(@Unsafe List<String> strings) {",
+                        "      // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    strings.forEach(this::fun);",
+                        "  }",
+                        "  void fun(@Safe Object in) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testLambdaReferencesUnsafeExternalData() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.*;",
+                        "class Test {",
+                        "  Runnable f(RuntimeException exception) {",
+                        "    String message = exception.getMessage();",
+                        "      // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    return () -> fun(message);",
+                        "  }",
+                        "  void fun(@Safe Object in) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testAnonymousClassReferencesUnsafeExternalData() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.*;",
+                        "class Test {",
+                        "  Runnable f(RuntimeException exception) {",
+                        "    String message = exception.getMessage();",
+                        "    return new Runnable() {",
+                        "      @Override public void run() {",
+                        "        // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "        fun(message);",
+                        "      }",
+                        "    };",
+                        "  }",
+                        "  void fun(@Safe Object in) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testNestedAnonymousInLambdaUnsafeExternalData() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.*;",
+                        "import java.util.function.*;",
+                        "class Test {",
+                        "  Function<RuntimeException, Runnable> f() {",
+                        "    return exception -> {",
+                        "      String message = exception.getMessage();",
+                        "      return new Runnable() {",
+                        "        @Override public void run() {",
+                        "          // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "          fun(message);",
+                        "        }",
+                        "      };",
+                        "    };",
+                        "  }",
+                        "  void fun(@Safe Object in) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testSafeArgOfUnsafe_recommendsUnsafeArgOf() {
         refactoringHelper()
                 .addInputLines(
