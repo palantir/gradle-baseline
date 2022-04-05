@@ -157,6 +157,7 @@ import org.checkerframework.errorprone.javacutil.TreePathUtil;
  */
 public final class SafetyPropagationTransfer implements ForwardTransferFunction<Safety, AccessPathStore<Safety>> {
 
+    private static final Matcher<Tree> THROWABLE_SUBTYPE = Matchers.isSubtypeOf(Throwable.class);
     private static final Matcher<ExpressionTree> TO_STRING =
             MethodMatchers.instanceMethod().anyClass().named("toString").withNoParameters();
 
@@ -697,8 +698,18 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
         AccessPath accessPath = AccessPath.fromLocalVariable(node);
         Safety safety = input.getRegularStore().valueOfAccessPath(accessPath, null);
         if (safety == null) {
-            // No safety information found, likely a captured reference used within a lambda or anonymous class.
-            safety = getCapturedLocalVariableSafety(node);
+            // This may occur in one of several ways:
+            // 1. catch (SomeThrowable t)
+            // 2. referencing a captured local variable within a lambda
+            // 3. referencing a captured local variable within an anonymous class
+
+            // Cast a wide net for all throwables (covers catch statements)
+            if (THROWABLE_SUBTYPE.matches(node.getTree(), state)) {
+                safety = Safety.UNSAFE;
+            } else {
+                // No safety information found, likely a captured reference used within a lambda or anonymous class.
+                safety = getCapturedLocalVariableSafety(node);
+            }
         }
         return noStoreChanges(safety, input);
     }
