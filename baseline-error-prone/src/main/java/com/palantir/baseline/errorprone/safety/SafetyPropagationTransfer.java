@@ -33,7 +33,10 @@ import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.LambdaExpressionTree;
+import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.Tree;
+import com.sun.source.tree.Tree.Kind;
 import com.sun.source.tree.TypeCastTree;
 import com.sun.source.tree.VariableTree;
 import com.sun.source.util.TreePath;
@@ -47,6 +50,7 @@ import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import java.io.Closeable;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -70,6 +74,7 @@ import org.checkerframework.errorprone.dataflow.analysis.TransferInput;
 import org.checkerframework.errorprone.dataflow.analysis.TransferResult;
 import org.checkerframework.errorprone.dataflow.cfg.ControlFlowGraph;
 import org.checkerframework.errorprone.dataflow.cfg.UnderlyingAST;
+import org.checkerframework.errorprone.dataflow.cfg.UnderlyingAST.CFGStatement;
 import org.checkerframework.errorprone.dataflow.cfg.builder.CFGBuilder;
 import org.checkerframework.errorprone.dataflow.cfg.node.ArrayAccessNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.ArrayCreationNode;
@@ -144,6 +149,7 @@ import org.checkerframework.errorprone.dataflow.cfg.node.UnaryOperationNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.UnsignedRightShiftNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.VariableDeclarationNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.WideningConversionNode;
+import org.checkerframework.errorprone.javacutil.TreePathUtil;
 
 /**
  * Heavily modified fork from error-prone NullnessPropagationTransfer (apache 2).
@@ -685,10 +691,62 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitLocalVariable(
             LocalVariableNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        Safety safety = hasNonNullConstantValue(node)
-                ? Safety.SAFE
-                : input.getRegularStore().valueOfAccessPath(AccessPath.fromLocalVariable(node), Safety.UNKNOWN);
+        if (hasNonNullConstantValue(node)) {
+            return noStoreChanges(Safety.SAFE, input);
+        }
+        AccessPath accessPath = AccessPath.fromLocalVariable(node);
+        Safety safety = input.getRegularStore().valueOfAccessPath(accessPath, null);
+        if (safety == null) {
+            // No safety information found, likely a captured reference used within a lambda or anonymous class.
+            safety = getCapturedLocalVariableSafety(node);
+        }
         return noStoreChanges(safety, input);
+    }
+
+    private Safety getCapturedLocalVariableSafety(LocalVariableNode node) {
+        Symbol symbol = ASTHelpers.getSymbol(node.getTree());
+        if (!(symbol instanceof VarSymbol)) {
+            return Safety.UNKNOWN;
+        }
+        VarSymbol variableSymbol = (VarSymbol) symbol;
+        JavacProcessingEnvironment javacEnv = JavacProcessingEnvironment.instance(state.context);
+        TreePath variableDefinition = Trees.instance(javacEnv).getPath(variableSymbol);
+        if (variableDefinition == null) {
+            return Safety.UNKNOWN;
+        }
+        TreePath enclosingPath =
+                TreePathUtil.pathTillOfKind(variableDefinition, EnumSet.of(Kind.METHOD, Kind.LAMBDA_EXPRESSION));
+        if (enclosingPath == null) {
+            return Safety.UNKNOWN;
+        }
+        if (!traversed.add(variableSymbol)) {
+            // Avoid infinite recursion between sub-analysis cycles
+            return Safety.UNKNOWN;
+        }
+        try {
+            UnderlyingAST ast = createAst(enclosingPath);
+            ControlFlowGraph cfg = CFGBuilder.build(state.getPath().getCompilationUnit(), ast, false, false, javacEnv);
+            Analysis<Safety, AccessPathStore<Safety>, SafetyPropagationTransfer> analysis =
+                    new ForwardAnalysisImpl<>(this);
+            analysis.performAnalysis(cfg);
+            Safety maybeResult = analysis.getValue(variableDefinition.getLeaf());
+            return maybeResult == null ? Safety.UNKNOWN : maybeResult;
+        } finally {
+            traversed.remove(variableSymbol);
+        }
+    }
+
+    private static UnderlyingAST createAst(TreePath path) {
+        Tree tree = path.getLeaf();
+        ClassTree enclosingClass = TreePathUtil.enclosingClass(path);
+        if (tree instanceof MethodTree) {
+            return new UnderlyingAST.CFGMethod((MethodTree) tree, enclosingClass);
+        }
+        if (tree instanceof LambdaExpressionTree) {
+            return new UnderlyingAST.CFGLambda(
+                    (LambdaExpressionTree) tree, enclosingClass, TreePathUtil.enclosingMethod(path));
+        }
+        return new CFGStatement(tree, enclosingClass);
     }
 
     private static boolean hasNonNullConstantValue(LocalVariableNode node) {
