@@ -31,7 +31,6 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
-import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import net.ltgt.gradle.errorprone.CheckSeverity;
@@ -242,9 +241,10 @@ public final class BaselineErrorProne implements Plugin<Project> {
     }
 
     static String excludedPathsRegex() {
-        // don't want backslashes on windows to break our regex
-        String separator = File.separator.contains("\\") ? Pattern.quote("\\") : File.separator;
-        return String.format(".*%s(build|generated_.*[sS]rc|src%sgenerated.*)%s.*", separator, separator, separator);
+        // Error-prone normalizes filenames to use '/' path separator:
+        // https://github.com/google/error-prone/blob/c601758e81723a8efc4671726b8363be7a306dce
+        // /check_api/src/main/java/com/google/errorprone/util/ASTHelpers.java#L1277-L1285
+        return ".*/(build|generated_.*[sS]rc|src/generated.*)/.*";
     }
 
     private static Optional<Stream<String>> getSpecificErrorProneChecks(Project project) {
