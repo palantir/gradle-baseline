@@ -122,6 +122,7 @@ public final class ImmutablesStyle extends BugChecker implements BugChecker.Clas
             SuggestedFix.Builder fix = SuggestedFix.builder();
             fix.merge(SuggestedFixes.updateAnnotationArgumentValues(
                     retention,
+                    state,
                     "value",
                     ImmutableList.of(String.format(
                             "%s.SOURCE", SuggestedFixes.qualifyType(state, fix, RetentionPolicy.class.getName())))));
