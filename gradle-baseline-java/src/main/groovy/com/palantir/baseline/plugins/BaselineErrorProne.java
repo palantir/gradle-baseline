@@ -173,7 +173,9 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 "CatchSpecificity",
                 "InlineMeSuggester",
                 "PreferImmutableStreamExCollections",
-                "UnusedVariable");
+                "UnusedVariable",
+                // We don't use 'var' yet
+                "Varifier");
         errorProneOptions.error(
                 "EqualsHashCode",
                 "EqualsIncompatibleType",
