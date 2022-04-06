@@ -22,6 +22,20 @@ import org.junit.jupiter.api.Test;
 class LogsafeArgumentTest {
 
     @Test
+    void testNormalUsage() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.SafeArg;",
+                        "class Test {",
+                        "    void f() {",
+                        "        Exception e = new Exception();",
+                        "        SafeArg.of(\"name\", \"string\");",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     void testSafe() {
         helper().addSourceLines(
                         "Test.java",

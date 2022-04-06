@@ -35,26 +35,23 @@ import java.util.List;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.WARNING,
-        summary = "Prevent certain arguments from being logged.")
+        summary = "Args with type Throwable are not allowed.")
 public final class LogsafeArgument extends BugChecker implements MethodInvocationTreeMatcher {
-    static final String UNSAFE_ARG_NAMES_FLAG = "LogsafeArgName:UnsafeArgNames";
 
     private static final Matcher<ExpressionTree> MATCHER = Matchers.staticMethod()
             .onClassAny("com.palantir.logsafe.SafeArg", "com.palantir.logsafe.UnsafeArg")
             .named("of")
             .withParameters(String.class.getName(), Object.class.getName());
 
+    private static final Matcher<ExpressionTree> THROWABLE = MoreMatchers.isSubtypeOf(Throwable.class.getName());
+
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
-        if (!SAFE_ARG_OF.matches(tree, state) && !UNSAFE_ARG_OF.matches(tree, state)) {
-            return Description.NO_MATCH;
-        }
-
-        List<? extends ExpressionTree> args = tree.getArguments();
-        if (THROWABLE.matches(args.get(1), state)) {
-            return buildDescription(tree)
-                    .setMessage("Args with type Throwable are not allowed.")
-                    .build();
+        if (MATCHER.matches(tree, state)) {
+            List<? extends ExpressionTree> args = tree.getArguments();
+            if (THROWABLE.matches(args.get(1), state)) {
+                return describeMatch(tree);
+            }
         }
 
         return Description.NO_MATCH;
