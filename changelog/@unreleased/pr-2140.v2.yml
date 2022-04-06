@@ -1,0 +1,5 @@
+type: feature
+feature:
+  description: prevent exceptions from being passed into Args
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2140
