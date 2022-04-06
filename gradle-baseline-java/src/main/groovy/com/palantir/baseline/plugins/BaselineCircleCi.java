@@ -65,7 +65,7 @@ public final class BaselineCircleCi implements Plugin<Project> {
 
         project.getRootProject().allprojects(proj -> proj.getTasks().withType(Test.class, test -> {
             test.getReports().getHtml().getRequired().set(true);
-            test.getReports().getHtml().setDestination(junitPath(circleArtifactsDir, test.getPath()));
+            test.getReports().getHtml().getOutputLocation().set(junitPath(circleArtifactsDir, test.getPath()));
         }));
     }
 

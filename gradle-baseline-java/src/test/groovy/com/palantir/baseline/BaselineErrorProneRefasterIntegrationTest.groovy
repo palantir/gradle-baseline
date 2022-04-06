@@ -152,6 +152,10 @@ class BaselineErrorProneRefasterIntegrationTest extends AbstractPluginTest {
         when:
         buildFile << standardBuildFile
         buildFile << '''
+        tasks.withType(JavaCompile) {
+            options.errorprone.enabled = false
+        }
+
         dependencies {
             // this isn't actually a refaster jar, just want to make sure the baseline ones don't run!
             refaster 'org.codehaus.cargo:empty-jar:1.7.7'

@@ -42,7 +42,6 @@ import java.util.function.Supplier;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "OptionalOrElseThrowThrows",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,

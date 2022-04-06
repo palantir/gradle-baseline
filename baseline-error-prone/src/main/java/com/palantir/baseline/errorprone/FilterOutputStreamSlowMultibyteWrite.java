@@ -45,7 +45,6 @@ import javax.lang.model.element.ElementKind;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "FilterOutputStreamSlowMultibyteWrite",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         summary = "Please also override `void write(byte[], int, int)`, "

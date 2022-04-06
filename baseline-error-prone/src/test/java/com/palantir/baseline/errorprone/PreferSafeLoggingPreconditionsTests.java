@@ -626,6 +626,64 @@ public final class PreferSafeLoggingPreconditionsTests {
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
+    @Test
+    void testSafeArgPassedToGuava() {
+        failGuava("Preconditions.checkNotNull(param, \"constant\", com.palantir.logsafe.SafeArg.of(\"name\", null));");
+    }
+
+    @Test
+    void testUnsafeArgPassedToGuava() {
+        failGuava(
+                "Preconditions.checkNotNull(param, \"constant\", com.palantir.logsafe.UnsafeArg.of(\"name\", null));");
+    }
+
+    @Test
+    void testMixedArgsPassedToGuava() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import com.google.common.base.Preconditions;",
+                        "import com.palantir.logsafe.SafeArg;",
+                        "class Test {",
+                        "  void f(String param) {",
+                        "    // BUG: Diagnostic contains: An Arg was passed to",
+                        "    Preconditions.checkNotNull(param, \"constant\", SafeArg.of(\"name\", null), null);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testAutoFixArgsPassedToGuava() {
+        RefactoringValidator.of(PreferSafeLoggingPreconditions.class, getClass())
+                .addInputLines(
+                        "Test.java",
+                        "import com.google.common.base.Preconditions;",
+                        "import com.palantir.logsafe.SafeArg;",
+                        "class Test {",
+                        "  void f(String param) {",
+                        "    Preconditions.checkNotNull(param, \"constant\", SafeArg.of(\"name\", null));",
+                        "    Preconditions.checkArgument(true, \"constant\", SafeArg.of(\"name\", null));",
+                        "    Preconditions.checkState(true, \"constant\", SafeArg.of(\"name\", null));",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.google.common.base.Preconditions;",
+                        "import com.palantir.logsafe.SafeArg;",
+                        "class Test {",
+                        "  void f(String param) {",
+                        "    com.palantir.logsafe.Preconditions.checkNotNull(param, \"constant\", SafeArg.of(\"name\","
+                                + " null));",
+                        "    com.palantir.logsafe.Preconditions.checkArgument(true, \"constant\", SafeArg.of(\"name\","
+                                + " null));",
+                        "    com.palantir.logsafe.Preconditions.checkState(true, \"constant\", SafeArg.of(\"name\","
+                                + " null));",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
     private void passObjects(String precondition) {
         compilationHelper
                 .addSourceLines(

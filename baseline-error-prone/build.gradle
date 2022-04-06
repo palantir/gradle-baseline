@@ -5,7 +5,10 @@ apply plugin: 'com.palantir.external-publish-jar'
 
 dependencies {
     implementation 'com.google.errorprone:error_prone_core'
-    implementation 'org.mockito:mockito-errorprone'
+    // Ensure a new enough version of dataflow-errorprone is available
+    implementation 'org.checkerframework:dataflow-errorprone'
+    // bring back mockito-errorprone once it is updated for 2.11.0+
+    //implementation 'org.mockito:mockito-errorprone'
 
     testImplementation gradleApi()
     testImplementation 'com.palantir.tokens:auth-tokens'
@@ -53,7 +56,18 @@ publishing.publications.maven {
     groupId = originalGroup
 }
 
-javaVersion {
-    target = 11
-    runtime = 11
+moduleJvmArgs {
+    exports = [
+        'jdk.compiler/com.sun.tools.javac.api',
+        'jdk.compiler/com.sun.tools.javac.file',
+        'jdk.compiler/com.sun.tools.javac.code',
+        'jdk.compiler/com.sun.tools.javac.util',
+        'jdk.compiler/com.sun.tools.javac.comp',
+        'jdk.compiler/com.sun.tools.javac.main',
+        'jdk.compiler/com.sun.tools.javac.model',
+        'jdk.compiler/com.sun.tools.javac.parser',
+        'jdk.compiler/com.sun.tools.javac.processing',
+        'jdk.compiler/com.sun.tools.javac.tree',
+        'jdk.compiler/com.sun.tools.javac.util'
+    ]
 }

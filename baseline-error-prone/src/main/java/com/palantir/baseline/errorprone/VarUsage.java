@@ -35,7 +35,6 @@ import com.sun.tools.javac.parser.Tokens.TokenKind;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "VarUsage",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,

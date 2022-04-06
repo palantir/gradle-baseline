@@ -46,17 +46,17 @@ abstract class MoreAbstractAsKeyOfSetOrMap extends AbstractAsKeyOfSetOrMap {
     private static final Matcher<ExpressionTree> SET_COLLECTOR = MethodMatchers.staticMethod()
             .onClass("java.util.stream.Collectors")
             .named("toSet")
-            .withParameters();
+            .withNoParameters();
 
     private static final Matcher<ExpressionTree> UNMODIFIABLE_SET_COLLECTOR = MethodMatchers.staticMethod()
             .onClass("java.util.stream.Collectors")
             .named("toUnmodifiableSet")
-            .withParameters();
+            .withNoParameters();
 
     private static final Matcher<ExpressionTree> IMMUTABLE_SET_COLLECTOR = MethodMatchers.staticMethod()
             .onClass("com.google.common.collect.ImmutableSet")
             .named("toImmutableSet")
-            .withParameters();
+            .withNoParameters();
 
     private static final Matcher<MethodInvocationTree> MAP_COLLECTOR = Matchers.allOf(
             // We could inspect the fourth argument for hash-based maps in the future. That method

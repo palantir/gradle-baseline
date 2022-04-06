@@ -25,6 +25,7 @@ import org.gradle.api.execution.TaskExecutionListener;
 import org.gradle.api.tasks.TaskExecutionException;
 import org.gradle.api.tasks.TaskState;
 
+@SuppressWarnings("deprecation")
 public final class BuildFailureListener implements TaskExecutionListener {
 
     private final List<Report.TestCase> testCases = new ArrayList<>();

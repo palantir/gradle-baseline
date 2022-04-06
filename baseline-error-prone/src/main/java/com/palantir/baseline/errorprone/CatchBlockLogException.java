@@ -43,7 +43,6 @@ import javax.annotation.Nullable;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "CatchBlockLogException",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,

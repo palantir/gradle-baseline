@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Avoid nulls in safety analysis
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2169

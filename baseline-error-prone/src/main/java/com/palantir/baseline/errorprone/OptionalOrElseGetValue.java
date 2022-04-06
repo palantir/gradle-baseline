@@ -38,7 +38,6 @@ import com.sun.source.tree.Tree;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "OptionalOrElseGetValue",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.WARNING,

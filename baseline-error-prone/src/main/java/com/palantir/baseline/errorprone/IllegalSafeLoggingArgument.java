@@ -26,14 +26,21 @@ import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
+import com.palantir.baseline.errorprone.safety.Safety;
+import com.palantir.baseline.errorprone.safety.SafetyAnalysis;
+import com.palantir.baseline.errorprone.safety.SafetyAnnotations;
+import com.sun.source.tree.AssignmentTree;
+import com.sun.source.tree.CompoundAssignmentTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
+import com.sun.source.tree.MethodTree;
+import com.sun.source.tree.ReturnTree;
+import com.sun.source.tree.StatementTree;
 import com.sun.source.tree.Tree;
-import com.sun.source.tree.TypeCastTree;
-import com.sun.tools.javac.code.Symbol;
+import com.sun.source.tree.VariableTree;
+import com.sun.source.util.TreePath;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
-import com.sun.tools.javac.code.Type;
 import java.util.List;
 
 /**
@@ -48,23 +55,22 @@ import java.util.List;
  */
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "IllegalSafeLoggingArgument",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.ERROR,
         summary = "safe-logging annotations must agree between args and method parameters")
-public final class IllegalSafeLoggingArgument extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
-    private static final String SAFE = "com.palantir.logsafe.Safe";
-    private static final String UNSAFE = "com.palantir.logsafe.Unsafe";
-    private static final String DO_NOT_LOG = "com.palantir.logsafe.DoNotLog";
+public final class IllegalSafeLoggingArgument extends BugChecker
+        implements BugChecker.MethodInvocationTreeMatcher,
+                BugChecker.ReturnTreeMatcher,
+                BugChecker.AssignmentTreeMatcher,
+                BugChecker.CompoundAssignmentTreeMatcher,
+                BugChecker.MethodTreeMatcher,
+                BugChecker.VariableTreeMatcher {
 
     private static final String UNSAFE_ARG = "com.palantir.logsafe.UnsafeArg";
     private static final Matcher<ExpressionTree> SAFE_ARG_OF_METHOD_MATCHER = MethodMatchers.staticMethod()
             .onClass("com.palantir.logsafe.SafeArg")
             .named("of");
-
-    private static final Matcher<ExpressionTree> TO_STRING =
-            MethodMatchers.instanceMethod().anyClass().named("toString").withNoParameters();
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
@@ -79,16 +85,18 @@ public final class IllegalSafeLoggingArgument extends BugChecker implements BugC
         List<VarSymbol> parameters = methodSymbol.getParameters();
         for (int i = 0; i < parameters.size(); i++) {
             VarSymbol parameter = parameters.get(i);
-            Safety parameterSafety = getSafety(parameter, state);
-            if (parameterSafety == Safety.UNKNOWN) {
-                // Fast path, avoid analysis when the value isn't provided to a safety-aware consumer
+            Safety parameterSafety = SafetyAnnotations.getSafety(parameter, state);
+            if (parameterSafety.allowsAll()) {
+                // Fast path: all types are accepted, there's no reason to do further analysis.
                 continue;
             }
 
             int limit = methodSymbol.isVarArgs() && i == parameters.size() - 1 ? arguments.size() : i + 1;
             for (int j = i; j < limit; j++) {
                 ExpressionTree argument = arguments.get(j);
-                Safety argumentSafety = getSafety(argument, state);
+
+                Safety argumentSafety = SafetyAnalysis.of(state.withPath(new TreePath(state.getPath(), argument)));
+
                 if (!parameterSafety.allowsValueWith(argumentSafety)) {
                     // use state.reportMatch to report all failing arguments if multiple are invalid
                     state.reportMatch(buildDescription(argument)
@@ -114,82 +122,98 @@ public final class IllegalSafeLoggingArgument extends BugChecker implements BugC
         return SuggestedFix.emptyFix();
     }
 
-    private static Safety getSafety(ExpressionTree tree, VisitorState state) {
-        Tree argument = ASTHelpers.stripParentheses(tree);
-        // Check annotations on the result type
-        Type resultType = ASTHelpers.getResultType(tree);
-        if (resultType != null) {
-            Safety resultTypeSafety = getSafety(resultType.tsym, state);
-            if (resultTypeSafety != Safety.UNKNOWN) {
-                return resultTypeSafety;
-            }
+    @Override
+    public Description matchReturn(ReturnTree tree, VisitorState state) {
+        if (tree.getExpression() == null) {
+            return Description.NO_MATCH;
         }
-        // Unwrap type-casts: 'Object value = (Object) unsafeType;' is still unsafe.
-        if (argument instanceof TypeCastTree) {
-            TypeCastTree typeCastTree = (TypeCastTree) argument;
-            return getSafety(typeCastTree.getExpression(), state);
+        TreePath path = state.getPath();
+        while (path != null && path.getLeaf() instanceof StatementTree) {
+            path = path.getParentPath();
         }
-        // If the argument is a method invocation, check the method for safety annotations
-        if (argument instanceof MethodInvocationTree) {
-            MethodInvocationTree argumentInvocation = (MethodInvocationTree) argument;
-            MethodSymbol methodSymbol = ASTHelpers.getSymbol(argumentInvocation);
-            if (methodSymbol != null) {
-                Safety methodSafety = getSafety(methodSymbol, state);
-                // non-annotated toString inherits type-level safety.
-                if (methodSafety == Safety.UNKNOWN && TO_STRING.matches(argumentInvocation, state)) {
-                    return getSafety(ASTHelpers.getReceiver(argumentInvocation), state);
-                }
-                return methodSafety;
-            }
+        if (path == null || !(path.getLeaf() instanceof MethodTree)) {
+            return Description.NO_MATCH;
         }
-        // Check the argument symbol itself:
-        Symbol argumentSymbol = ASTHelpers.getSymbol(argument);
-        return argumentSymbol != null ? getSafety(argumentSymbol, state) : Safety.UNKNOWN;
+        MethodTree method = (MethodTree) path.getLeaf();
+        Safety methodDeclaredSafety = SafetyAnnotations.getSafety(ASTHelpers.getSymbol(method), state);
+        if (methodDeclaredSafety.allowsAll()) {
+            // Fast path, all types are accepted, there's no reason to do further analysis.
+            return Description.NO_MATCH;
+        }
+        Safety returnValueSafety =
+                SafetyAnalysis.of(state.withPath(new TreePath(state.getPath(), tree.getExpression())));
+        if (methodDeclaredSafety.allowsValueWith(returnValueSafety)) {
+            return Description.NO_MATCH;
+        }
+        return buildDescription(tree)
+                .setMessage(String.format(
+                        "Dangerous return value: result is '%s' but the method is annotated '%s'.",
+                        returnValueSafety, methodDeclaredSafety))
+                .build();
     }
 
-    private static Safety getSafety(Symbol symbol, VisitorState state) {
-        if (ASTHelpers.hasAnnotation(symbol, DO_NOT_LOG, state)) {
-            return Safety.DO_NOT_LOG;
-        }
-        if (ASTHelpers.hasAnnotation(symbol, UNSAFE, state)) {
-            return Safety.UNSAFE;
-        }
-        if (ASTHelpers.hasAnnotation(symbol, SAFE, state)) {
-            return Safety.SAFE;
-        }
-        return Safety.UNKNOWN;
+    @Override
+    public Description matchAssignment(AssignmentTree tree, VisitorState state) {
+        return handleAssignment(tree, tree.getVariable(), tree.getExpression(), state);
     }
 
-    private enum Safety {
-        UNKNOWN() {
-            @Override
-            boolean allowsValueWith(Safety _valueSafety) {
-                // No constraints when safety isn't specified
-                return true;
-            }
-        },
-        DO_NOT_LOG() {
-            @Override
-            boolean allowsValueWith(Safety _valueSafety) {
-                // do-not-log on a parameter isn't meaningful for callers, only for the implementation
-                return true;
-            }
-        },
-        UNSAFE() {
-            @Override
-            boolean allowsValueWith(Safety valueSafety) {
-                // We allow safe data to be provided to an unsafe annotated parameter because that's safe, however
-                // we should separately flag and prompt migration of such UnsafeArgs to SafeArg.
-                return valueSafety != Safety.DO_NOT_LOG;
-            }
-        },
-        SAFE() {
-            @Override
-            boolean allowsValueWith(Safety valueSafety) {
-                return valueSafety == Safety.UNKNOWN || valueSafety == Safety.SAFE;
-            }
-        };
+    @Override
+    public Description matchCompoundAssignment(CompoundAssignmentTree tree, VisitorState state) {
+        return handleAssignment(tree, tree.getVariable(), tree.getExpression(), state);
+    }
 
-        abstract boolean allowsValueWith(Safety valueSafety);
+    private Description handleAssignment(
+            ExpressionTree assignmentTree, ExpressionTree variable, ExpressionTree expression, VisitorState state) {
+        Safety variableDeclaredSafety = SafetyAnnotations.getSafety(ASTHelpers.getSymbol(variable), state);
+        if (variableDeclaredSafety.allowsAll()) {
+            return Description.NO_MATCH;
+        }
+        Safety assignmentValue = SafetyAnalysis.of(state.withPath(new TreePath(state.getPath(), expression)));
+        if (variableDeclaredSafety.allowsValueWith(assignmentValue)) {
+            return Description.NO_MATCH;
+        }
+        return buildDescription(assignmentTree)
+                .setMessage(String.format(
+                        "Dangerous assignment: value is '%s' but the variable is annotated '%s'.",
+                        assignmentValue, variableDeclaredSafety))
+                .build();
+    }
+
+    @Override
+    public Description matchMethod(MethodTree tree, VisitorState state) {
+        Tree returnType = tree.getReturnType();
+        if (returnType == null) {
+            return Description.NO_MATCH;
+        }
+        Safety methodSafetyAnnotation = SafetyAnnotations.getSafety(ASTHelpers.getSymbol(tree), state);
+        if (methodSafetyAnnotation.allowsAll()) {
+            return Description.NO_MATCH;
+        }
+        Safety returnTypeSafety = SafetyAnnotations.getSafety(ASTHelpers.getSymbol(returnType), state);
+        if (methodSafetyAnnotation.allowsValueWith(returnTypeSafety)) {
+            return Description.NO_MATCH;
+        }
+        return buildDescription(returnType)
+                .setMessage(String.format(
+                        "Dangerous return type: type is '%s' but the method is annotated '%s'.",
+                        returnTypeSafety, methodSafetyAnnotation))
+                .build();
+    }
+
+    @Override
+    public Description matchVariable(VariableTree tree, VisitorState state) {
+        Safety parameterSafetyAnnotation = SafetyAnnotations.getSafety(ASTHelpers.getSymbol(tree), state);
+        if (parameterSafetyAnnotation.allowsAll()) {
+            return Description.NO_MATCH;
+        }
+        Safety variableTypeSafety = SafetyAnnotations.getSafety(ASTHelpers.getSymbol(tree.getType()), state);
+        if (parameterSafetyAnnotation.allowsValueWith(variableTypeSafety)) {
+            return Description.NO_MATCH;
+        }
+        return buildDescription(tree)
+                .setMessage(String.format(
+                        "Dangerous variable: type is '%s' but the variable is annotated '%s'.",
+                        variableTypeSafety, parameterSafetyAnnotation))
+                .build();
     }
 }

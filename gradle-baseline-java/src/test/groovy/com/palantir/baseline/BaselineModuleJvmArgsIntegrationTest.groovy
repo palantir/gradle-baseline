@@ -75,6 +75,29 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
         runTasksSuccessfully('compileJava')
     }
 
+    def 'Compiles with locally defined opens'() {
+        when:
+        buildFile << '''
+        application {
+            mainClass = 'com.Example'
+        }
+        moduleJvmArgs {
+           opens = ['jdk.compiler/com.sun.tools.javac.code']
+        }
+        '''.stripIndent(true)
+        writeJavaSourceFile('''
+        package com;
+        public class Example {
+            public static void main(String[] args) {
+                com.sun.tools.javac.code.Symbol.class.toString();
+            }
+        }
+        '''.stripIndent(true))
+
+        then:
+        runTasksSuccessfully('compileJava')
+    }
+
     def 'Builds javadoc with locally defined exports'() {
         when:
         buildFile << '''
@@ -102,6 +125,33 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
         runTasksSuccessfully('javadoc')
     }
 
+    def 'Builds javadoc with locally defined opens'() {
+        when:
+        buildFile << '''
+        application {
+            mainClass = 'com.Example'
+        }
+        moduleJvmArgs {
+           opens = ['jdk.compiler/com.sun.tools.javac.code']
+        }
+        '''.stripIndent(true)
+        writeJavaSourceFile('''
+        package com;
+        public class Example {
+            /**
+             * Javadoc {@link com.sun.tools.javac.code.Symbol}.
+             * @param args Program arguments
+             */
+            public static void main(String[] args) {
+                com.sun.tools.javac.code.Symbol.class.toString();
+            }
+        }
+        '''.stripIndent(true))
+
+        then:
+        runTasksSuccessfully('javadoc')
+    }
+
     def 'Runs with locally defined exports'() {
         when:
         buildFile << '''
@@ -109,6 +159,44 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
             mainClass = 'com.Example'
         }
         
+        moduleJvmArgs {
+           exports = ['java.management/sun.management']
+        }
+        '''.stripIndent(true)
+        writeJavaSourceFile('''
+        package com;
+        public class Example {
+            public static void main(String[] args) {
+                System.out.println(String.join(
+                    " ",
+                    java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments()));
+            }
+        }
+        '''.stripIndent(true))
+
+        then:
+        ExecutionResult result = runTasksSuccessfully('run')
+        // Gradle appears to normalize args, joining '--add-exports java.management/sun.management=ALL-UNNAMED'
+        // with an equals.
+        result.standardOutput.contains('--add-exports=java.management/sun.management=ALL-UNNAMED')
+    }
+
+    def 'Runs with locally defined exports with the release plugin, not toolchains'() {
+        when:
+        buildFile.text = '''
+        plugins {
+            id 'java-library'
+            id 'application'
+        }
+        apply plugin: 'com.palantir.baseline-release-compatibility'
+        apply plugin: 'com.palantir.baseline-module-jvm-args'
+        sourceCompatibility = 11
+        repositories {
+            mavenCentral()
+        }
+        application {
+            mainClass = 'com.Example'
+        }
         moduleJvmArgs {
            exports = ['java.management/sun.management']
         }
