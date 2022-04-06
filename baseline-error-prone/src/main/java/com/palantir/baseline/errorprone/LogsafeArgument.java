@@ -1,5 +1,5 @@
 /*
- * (c) Copyright 2020 Palantir Technologies Inc. All rights reserved.
+ * (c) Copyright 2022 Palantir Technologies Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,16 +34,15 @@ import java.util.List;
         name = "LogsafeArgument",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        severity = SeverityLevel.ERROR,
+        severity = SeverityLevel.WARNING,
         summary = "Prevent certain arguments from being logged.")
 public final class LogsafeArgument extends BugChecker implements MethodInvocationTreeMatcher {
     static final String UNSAFE_ARG_NAMES_FLAG = "LogsafeArgName:UnsafeArgNames";
 
-    private static final Matcher<ExpressionTree> SAFE_ARG_OF =
-            Matchers.staticMethod().onClass("com.palantir.logsafe.SafeArg").named("of");
-    private static final Matcher<ExpressionTree> UNSAFE_ARG_OF =
-            Matchers.staticMethod().onClass("com.palantir.logsafe.UnsafeArg").named("of");
-    private static final Matcher<ExpressionTree> THROWABLE = MoreMatchers.isSubtypeOf("java.lang.Throwable");
+    private static final Matcher<ExpressionTree> MATCHER = Matchers.staticMethod()
+            .onClassAny("com.palantir.logsafe.SafeArg", "com.palantir.logsafe.UnsafeArg")
+            .named("of")
+            .withParameters(String.class.getName(), Object.class.getName());
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
