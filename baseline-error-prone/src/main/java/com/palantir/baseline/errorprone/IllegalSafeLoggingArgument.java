@@ -113,7 +113,8 @@ public final class IllegalSafeLoggingArgument extends BugChecker
             VarSymbol parameter = parameters.get(i);
             Type resolvedParameterType = resolveParameterType(parameter.type, tree, state);
             Safety parameterSafety = Safety.mergeAssumingUnknownIsSame(
-                    SafetyAnnotations.getSafety(parameter, state), SafetyAnnotations.getSafety(resolvedParameterType));
+                    SafetyAnnotations.getSafety(parameter, state),
+                    SafetyAnnotations.getSafety(resolvedParameterType, state));
             if (parameterSafety.allowsAll()) {
                 // Fast path: all types are accepted, there's no reason to do further analysis.
                 continue;
