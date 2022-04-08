@@ -204,6 +204,39 @@ class IllegalSafeLoggingArgumentTest {
     }
 
     @Test
+    public void testUnsafeTypeParameterProvidesSafety() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.*;",
+                        "class Test {",
+                        "  void f(List<@Unsafe String> input) {",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(input.get(0));",
+                        "  }",
+                        "  private static void fun(@Safe Object obj) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testUnsafeTypeParameterConsumesSafety() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.*;",
+                        "class Test {",
+                        "  void f(List<@Safe String> collection, @Unsafe String data) {",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    collection.add(data);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testSafeReturnIndirect() {
         helper().addSourceLines(
                         "Test.java",

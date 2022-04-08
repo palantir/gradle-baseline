@@ -19,6 +19,8 @@ package com.palantir.baseline.errorprone.safety;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.Tree;
+import com.sun.tools.javac.code.Attribute;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
@@ -26,21 +28,25 @@ import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.util.List;
 import java.util.Objects;
 import javax.annotation.Nullable;
+import javax.lang.model.element.Name;
+import javax.lang.model.element.TypeElement;
 
 public final class SafetyAnnotations {
     private static final String SAFE = "com.palantir.logsafe.Safe";
     private static final String UNSAFE = "com.palantir.logsafe.Unsafe";
     private static final String DO_NOT_LOG = "com.palantir.logsafe.DoNotLog";
 
-    public static Safety getSafety(ExpressionTree input, VisitorState state) {
-        // Check the result type
-        ExpressionTree tree = ASTHelpers.stripParentheses(input);
-        Safety resultTypeSafet = getResultTypeSafety(tree, state);
+    public static Safety getSafety(Tree tree, VisitorState state) {
+        // Check the symbol itself:
+        Symbol treeSymbol = ASTHelpers.getSymbol(tree);
+        Safety symbolSafety = getSafety(treeSymbol, state);
+        Type type = tree instanceof ExpressionTree
+                ? ASTHelpers.getResultType((ExpressionTree) tree)
+                : ASTHelpers.getType(tree);
 
-        // Check the argument symbol itself:
-        Symbol argumentSymbol = ASTHelpers.getSymbol(tree);
-        Safety symbolSafety = argumentSymbol != null ? getSafety(argumentSymbol, state) : Safety.UNKNOWN;
-        return Safety.mergeAssumingUnknownIsSame(resultTypeSafet, symbolSafety);
+        return (type == null)
+                ? symbolSafety
+                : Safety.mergeAssumingUnknownIsSame(symbolSafety, getSafety(type), getSafety(type.tsym, state));
     }
 
     public static Safety getSafety(@Nullable Symbol symbol, VisitorState state) {
@@ -61,6 +67,27 @@ public final class SafetyAnnotations {
             if (symbol instanceof VarSymbol) {
                 VarSymbol varSymbol = (VarSymbol) symbol;
                 return getSuperMethodParameterSafety(varSymbol, state);
+            }
+        }
+        return Safety.UNKNOWN;
+    }
+
+    public static Safety getSafety(@Nullable Type type) {
+        if (type != null) {
+            List<Attribute.TypeCompound> typeAnnotations = type.getAnnotationMirrors();
+            for (Attribute.TypeCompound annotation : typeAnnotations) {
+                TypeElement annotationElement =
+                        (TypeElement) annotation.getAnnotationType().asElement();
+                Name name = annotationElement.getQualifiedName();
+                if (name.contentEquals(DO_NOT_LOG)) {
+                    return Safety.DO_NOT_LOG;
+                }
+                if (name.contentEquals(UNSAFE)) {
+                    return Safety.UNSAFE;
+                }
+                if (name.contentEquals(SAFE)) {
+                    return Safety.SAFE;
+                }
             }
         }
         return Safety.UNKNOWN;
@@ -97,11 +124,6 @@ public final class SafetyAnnotations {
             }
         }
         return safety;
-    }
-
-    public static Safety getResultTypeSafety(ExpressionTree expression, VisitorState state) {
-        Type resultType = ASTHelpers.getResultType(expression);
-        return resultType == null ? Safety.UNKNOWN : getSafety(resultType.tsym, state);
     }
 
     private SafetyAnnotations() {}
