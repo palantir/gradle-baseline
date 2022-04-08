@@ -296,6 +296,41 @@ class IllegalSafeLoggingArgumentTest {
     }
 
     @Test
+    public void testUnsafeTypeParameterConsumesSafety_wildcard() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.function.*;",
+                        "class Test {",
+                        "  void f(Consumer<@Safe ? super CharSequence> consumer, @Unsafe String data) {",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    consumer.accept(data);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testTypeParamsDifferFromBase() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.*;",
+                        "class Test {",
+                        "  @Unsafe static class UnsafeClass {}",
+                        "  interface Foo<T> extends Iterable<UnsafeClass> {}",
+                        "  void f(Foo<@Safe String> foo) {",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(foo);",
+                        "  }",
+                        "  private static void fun(@Safe Object obj) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testSafeReturnIndirect() {
         helper().addSourceLines(
                         "Test.java",

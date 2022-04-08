@@ -160,9 +160,13 @@ public final class SafetyAnnotations {
                 // Apply the input type arguments to the base type
                 Type asSubtype = state.getTypes().asSuper(type, baseType.tsym);
                 Safety safety = Safety.SAFE;
-                for (Type typeArgument : asSubtype.getTypeArguments()) {
-                    safety = safety.leastUpperBound(
-                            SafetyAnnotations.getSafetyInternal(typeArgument, state, deJaVuToPass));
+                List<Type> typeArguments = asSubtype.getTypeArguments();
+                for (Type typeArgument : typeArguments) {
+                    Safety safetyBasedOnType = SafetyAnnotations.getSafetyInternal(typeArgument, state, deJaVuToPass);
+                    Safety safetyBasedOnSymbol = SafetyAnnotations.getSafety(typeArgument.tsym, state);
+                    Safety typeArgumentSafety =
+                            Safety.mergeAssumingUnknownIsSame(safetyBasedOnType, safetyBasedOnSymbol);
+                    safety = safety.leastUpperBound(typeArgumentSafety);
                 }
                 // remove the type on the way out, otherwise map<Foo,Foo> would break.
                 deJaVuToPass.remove(typeString);
