@@ -21,6 +21,7 @@ dependencies {
     implementation 'org.ow2.asm:asm'
     implementation 'com.googlecode.java-diff-utils:diffutils'
     implementation 'com.diffplug.gradle:goomph'
+    implementation 'org.rauschig:jarchivelib'
 
     runtimeOnly 'com.palantir.javaformat:gradle-palantir-java-format'
 

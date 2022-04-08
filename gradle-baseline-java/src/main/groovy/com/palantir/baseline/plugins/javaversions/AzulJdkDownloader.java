@@ -42,13 +42,14 @@ final class AzulJdkDownloader {
                 });
     }
 
-    public Path downloadJdkFor(String javaVersion, String zuluVersion, String os, String arch) {
+    public Path downloadJdkFor(JdkSpec jdkSpec) {
         Configuration configuration = rootProject
                 .getConfigurations()
                 .detachedConfiguration(rootProject
                         .getDependencies()
                         .create(String.format(
-                                "%s:zulu%s-ca-jdk%s-%s_%s:@tar.gz", AZUL_JDK, zuluVersion, javaVersion, os, arch)));
+                                "%s:zulu%s-ca-jdk%s-%s_%s:@zip",
+                                AZUL_JDK, jdkSpec.zuluVersion(), jdkSpec.javaVersion(), jdkSpec.os(), jdkSpec.arch())));
         return Iterables.getOnlyElement(configuration.resolve()).toPath();
     }
 
