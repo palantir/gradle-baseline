@@ -12,6 +12,7 @@ import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.util.UUID;
 import java.util.stream.Stream;
+import org.apache.commons.io.FileUtils;
 import org.rauschig.jarchivelib.Archiver;
 import org.rauschig.jarchivelib.ArchiverFactory;
 
@@ -36,24 +37,28 @@ public final class JdkManager {
         Archiver archiver = ArchiverFactory.createArchiver(jdkArchive.toFile());
         Path temporaryJdkPath = Paths.get(jdkPath + ".in-progress-" + UUID.randomUUID());
         try {
-            archiver.extract(jdkArchive.toFile(), temporaryJdkPath.toFile());
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to extract jdk to directory", e);
-        }
-
-        try {
-            Files.move(findJavaHome(temporaryJdkPath), jdkPath, StandardCopyOption.ATOMIC_MOVE);
-        } catch (FileAlreadyExistsException e) {
             try {
-                Files.delete(temporaryJdkPath);
-            } catch (IOException e2) {
-                throw new RuntimeException("Failed to delete temporary downloaded jdk " + temporaryJdkPath, e2);
+                archiver.extract(jdkArchive.toFile(), temporaryJdkPath.toFile());
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to extract jdk to directory", e);
             }
-        } catch (IOException e) {
-            throw new RuntimeException("Failed when moving jdk from temporary location", e);
-        }
 
-        return jdkPath;
+            try {
+                Files.move(findJavaHome(temporaryJdkPath), jdkPath, StandardCopyOption.ATOMIC_MOVE);
+            } catch (FileAlreadyExistsException e) {
+                // This means another process has successfully installed this JVM, and we can just use their one.
+            } catch (IOException e) {
+                throw new RuntimeException("Failed when moving jdk from temporary location", e);
+            }
+
+            return jdkPath;
+        } finally {
+            try {
+                FileUtils.deleteDirectory(temporaryJdkPath.toFile());
+            } catch (IOException e) {
+                throw new RuntimeException("Failed to delete temporary downloaded jdk " + temporaryJdkPath, e);
+            }
+        }
     }
 
     private Path findJavaHome(Path temporaryJdkPath) {
