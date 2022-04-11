@@ -5,9 +5,12 @@
 package com.palantir.baseline.plugins.javaversions;
 
 import java.io.IOException;
+import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
+import java.util.UUID;
 import java.util.stream.Stream;
 import org.rauschig.jarchivelib.Archiver;
 import org.rauschig.jarchivelib.ArchiverFactory;
@@ -22,20 +25,32 @@ final class JdkManager {
     }
 
     public Path jdk(JdkSpec jdkSpec) {
+        Path jdkPath = storageLocation.resolve(jdkSpec.hash());
+
+        if (Files.exists(jdkPath)) {
+            return jdkPath;
+        }
+
         Path jdkArchive = azulJdkDownloader.downloadJdkFor(jdkSpec);
+
         Archiver archiver = ArchiverFactory.createArchiver(jdkArchive.toFile());
-        Path temporaryJdkPath = storageLocation.resolve(jdkSpec.hash() + ".in-progress");
+        Path temporaryJdkPath = Paths.get(jdkPath + ".in-progress-" + UUID.randomUUID());
         try {
             archiver.extract(jdkArchive.toFile(), temporaryJdkPath.toFile());
         } catch (IOException e) {
             throw new RuntimeException("Failed to extract jdk to directory", e);
         }
 
-        Path jdkPath = storageLocation.resolve(jdkSpec.hash());
         try {
-            Files.move(findJavaHome(temporaryJdkPath), jdkPath);
+            Files.move(findJavaHome(temporaryJdkPath), jdkPath, StandardCopyOption.ATOMIC_MOVE);
+        } catch (FileAlreadyExistsException e) {
+            try {
+                Files.delete(temporaryJdkPath);
+            } catch (IOException e2) {
+                throw new RuntimeException("Failed to delete temporary downloaded jdk " + temporaryJdkPath, e2);
+            }
         } catch (IOException e) {
-            throw new RuntimeException("Failed to move extracted jdk to final location", e);
+            throw new RuntimeException("Failed when moving jdk from temporary location", e);
         }
 
         return jdkPath;

@@ -34,7 +34,7 @@ interface JdkSpec {
 
     @Value.Default
     default String arch() {
-        String osArch = System.getenv("os.arch");
+        String osArch = System.getProperty("os.arch");
 
         if (Set.of("x64", "amd64").contains(osArch)) {
             return "x64";

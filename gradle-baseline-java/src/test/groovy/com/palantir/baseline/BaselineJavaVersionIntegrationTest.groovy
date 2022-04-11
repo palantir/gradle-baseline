@@ -16,10 +16,8 @@
 
 package com.palantir.baseline
 
-
 import nebula.test.IntegrationSpec
 import nebula.test.functional.ExecutionResult
-import spock.lang.Unroll
 
 class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
     private static final int JAVA_8_BYTECODE = 52
@@ -71,7 +69,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         '''.stripIndent(true)
 
     def setup() {
-        setFork(true)
+//        setFork(true)
         buildFile << standardBuildFile
     }
 
@@ -99,6 +97,13 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         '''.stripIndent(true)
         file('src/main/java/Main.java') << java11CompatibleCode
         File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
+        file('gradle.properties') << '''
+            JAVA_11_VERSION = 11.0.14.1
+            ZULU_11_VERSION = 11.54.25
+            
+            JAVA_17_VERSION = 17.0.2
+            ZULU_17_VERSION = 17.32.13
+        '''.stripIndent(true)
 
         then:
         runTasksSuccessfully('compileJava')

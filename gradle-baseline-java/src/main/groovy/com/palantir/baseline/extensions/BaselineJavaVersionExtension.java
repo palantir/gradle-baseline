@@ -31,8 +31,8 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion;
  * target and runtime java versions used for a single project.
  */
 public class BaselineJavaVersionExtension {
-    private static final Pattern ZULU_VERSION_PATTERN = Pattern.compile("ZULU_([\\d.]+_VERSION)");
-    private static final Pattern JAVA_VERSION_PATTERN = Pattern.compile("JAVA_([\\d.]+_VERSION)");
+    private static final Pattern ZULU_VERSION_PATTERN = Pattern.compile("ZULU_([\\d]+)_VERSION");
+    private static final Pattern JAVA_VERSION_PATTERN = Pattern.compile("JAVA_([\\d]+)_VERSION");
 
     private final Property<JavaLanguageVersion> target;
     private final Property<JavaLanguageVersion> runtime;
