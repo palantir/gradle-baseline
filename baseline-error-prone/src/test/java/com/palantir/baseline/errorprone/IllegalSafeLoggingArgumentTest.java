@@ -221,6 +221,24 @@ class IllegalSafeLoggingArgumentTest {
     }
 
     @Test
+    public void testWildcardTypesAreHandledGracefully() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import one.util.streamex.*;",
+                        "import com.google.common.collect.*;",
+                        "import java.util.*;",
+                        "class Test<K, V> {",
+                        "  public Multimap<K, V> asFallthroughValues(Multimap<K, V> values) {",
+                        "    return EntryStream.of(values.entries().stream())",
+                        "        .collect(Multimaps.toMultimap(",
+                        "            Map.Entry::getKey, Map.Entry::getValue, HashMultimap::create));",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testUnsafeTypeParameterProvidesReceiverSafety_iterable() {
         helper().addSourceLines(
                         "Test.java",
