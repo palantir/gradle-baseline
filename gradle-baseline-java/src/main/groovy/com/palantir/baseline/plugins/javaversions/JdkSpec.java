@@ -6,6 +6,8 @@ package com.palantir.baseline.plugins.javaversions;
 
 import com.google.common.hash.Hashing;
 import java.nio.charset.StandardCharsets;
+import java.util.Set;
+import org.gradle.internal.os.OperatingSystem;
 import org.immutables.value.Value;
 
 @Value.Immutable
@@ -14,9 +16,40 @@ interface JdkSpec {
 
     String zuluVersion();
 
-    String os();
+    @Value.Default
+    default String os() {
+        OperatingSystem operatingSystem = OperatingSystem.current();
+        if (operatingSystem.isMacOsX()) {
+            return "macosx";
+        }
+        if (operatingSystem.isLinux()) {
+            return "linux";
+        }
+        if (operatingSystem.isWindows()) {
+            return "win";
+        }
 
-    String arch();
+        throw new UnsupportedOperationException("Cannot get platform for operation system " + operatingSystem);
+    }
+
+    @Value.Default
+    default String arch() {
+        String osArch = System.getenv("os.arch");
+
+        if (Set.of("x64", "amd64").contains(osArch)) {
+            return "x64";
+        }
+
+        if (Set.of("arm", "arm64", "aarch64").contains(osArch)) {
+            return "aarch64";
+        }
+
+        if (Set.of("x86", "i686").contains(osArch)) {
+            return "i686";
+        }
+
+        throw new UnsupportedOperationException("Cannot get architecture for " + osArch);
+    }
 
     default String hash() {
         return Hashing.sha256()

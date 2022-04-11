@@ -4,97 +4,66 @@
 
 package com.palantir.baseline.plugins.javaversions;
 
-import java.util.Optional;
-import java.util.Set;
+import com.palantir.baseline.extensions.BaselineJavaVersionExtension;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Provider;
-import org.gradle.internal.os.OperatingSystem;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.jvm.toolchain.JavaToolchainService;
 import org.gradle.jvm.toolchain.JavaToolchainSpec;
 
 public final class JavaToolchains {
     private final Project project;
+    private final BaselineJavaVersionExtension baselineJavaVersionExtension;
 
-    public JavaToolchains(Project project) {
+    public JavaToolchains(Project project, BaselineJavaVersionExtension baselineJavaVersionExtension) {
         this.project = project;
+        this.baselineJavaVersionExtension = baselineJavaVersionExtension;
     }
 
-    public PalantirJavaToolchain forVersion(Provider<JavaLanguageVersion> javaLanguageVersion) {
-        String jdkBaseUrl = property("base-url").orElse("https://cdn.azul.com/zulu/bin/");
+    public Provider<PalantirJavaToolchain> forVersion(Provider<JavaLanguageVersion> javaLanguageVersionProvider) {
+        return javaLanguageVersionProvider.map(javaLanguageVersion -> {
+            Provider<String> zuluVersionNumber =
+                    baselineJavaVersionExtension.zuluVersions().getting(javaLanguageVersion);
+            Provider<String> javaVersionNumber =
+                    baselineJavaVersionExtension.javaVersions().getting(javaLanguageVersion);
 
-        int jdkMajorVersion = javaLanguageVersion.get().asInt();
+            if (zuluVersionNumber.isPresent() ^ javaVersionNumber.isPresent()) {
+                throw new IllegalArgumentException(String.format(
+                        "Both the 'JAVA_X_VERSION' and 'ZULU_X_VERSION' gradle properties must be present to "
+                                + "select the correct JDK."
+                                + "However, only one of them was found. JAVA_X_VERSION: %s, ZULU_X_VERSION: %s",
+                        zuluVersionNumber.isPresent(), javaVersionNumber.isPresent()));
+            }
 
-        String zuluVersionProperty = "ZULU_" + jdkMajorVersion + "_VERSION";
-        String javaVersionProperty = "JAVA_" + jdkMajorVersion + "_VERSION";
+            if (!(zuluVersionNumber.isPresent() && javaVersionNumber.isPresent())) {
+                return new FallbackGradleJavaToolchain(
+                        project.getExtensions().getByType(JavaToolchainService.class), new Action<JavaToolchainSpec>() {
+                            @Override
+                            public void execute(JavaToolchainSpec javaToolchainSpec) {
+                                javaToolchainSpec.getLanguageVersion().set(javaLanguageVersion);
+                            }
+                        });
+            }
 
-        Optional<String> zuluVersionNumber = property(zuluVersionProperty);
-        Optional<String> javaVersionNumber = property(javaVersionProperty);
+            JdkManager jdkManager = new JdkManager(
+                    project.getRootProject().getBuildDir().toPath().resolve("jdks"),
+                    new AzulJdkDownloader(project.getRootProject()));
 
-        if (zuluVersionNumber.isPresent() ^ javaVersionNumber.isPresent()) {
-            throw new IllegalArgumentException(String.format(
-                    "Both the '%s' and '%s' gradle properties must be present to select the correct JDK."
-                            + "However, only one of them was found. %s: %s, %s: %s",
-                    zuluVersionProperty,
-                    javaVersionProperty,
-                    zuluVersionProperty,
-                    zuluVersionNumber.isPresent(),
-                    javaVersionProperty,
-                    javaVersionNumber.isPresent()));
-        }
-
-        if (!(zuluVersionNumber.isPresent() && javaVersionNumber.isPresent())) {
-            return new FallbackGradleJavaToolchain(
-                    project.getExtensions().getByType(JavaToolchainService.class), new Action<JavaToolchainSpec>() {
-                        @Override
-                        public void execute(JavaToolchainSpec javaToolchainSpec) {
-                            javaToolchainSpec.getLanguageVersion().set(javaLanguageVersion);
-                        }
-                    });
-        }
-
-        String url = String.format(
-                "%s/zulu%s-ca-jdk%s-%s_%s.zip",
-                jdkBaseUrl, zuluVersionNumber.get(), javaVersionNumber.get(), platform(), arch());
-
-        throw new IllegalArgumentException("Going to download " + url);
-    }
-
-    public static String platform() {
-        OperatingSystem operatingSystem = OperatingSystem.current();
-        if (operatingSystem.isMacOsX()) {
-            return "macosx";
-        }
-        if (operatingSystem.isLinux()) {
-            return "linux";
-        }
-        if (operatingSystem.isWindows()) {
-            return "win";
-        }
-
-        throw new UnsupportedOperationException("Cannot get platform for operation system " + operatingSystem);
-    }
-
-    public static String arch() {
-        String osArch = System.getenv("os.arch");
-
-        if (Set.of("x64", "amd64").contains(osArch)) {
-            return "x64";
-        }
-
-        if (Set.of("arm", "arm64", "aarch64").contains(osArch)) {
-            return "aarch64";
-        }
-
-        if (Set.of("x86", "i686").contains(osArch)) {
-            return "i686";
-        }
-
-        throw new UnsupportedOperationException("Cannot get architecture for " + osArch);
-    }
-
-    private Optional<String> property(String name) {
-        return Optional.ofNullable((String) project.findProperty("com.palantir.baseline-java-versions." + name));
+            return new AzulJavaToolchain(project.provider(() -> PalantirJavaInstallationMetadata.builder()
+                    .languageVersion(javaLanguageVersion)
+                    .jvmVersion(javaVersionNumber.get())
+                    .javaRuntimeVersion(javaVersionNumber.get())
+                    .vendor("Azul Zulu")
+                    .installationPath(project.getLayout()
+                            .dir(project.provider(() -> jdkManager
+                                    .jdk(JdkSpec.builder()
+                                            .javaVersion(javaVersionNumber.get())
+                                            .zuluVersion(zuluVersionNumber.get())
+                                            .build())
+                                    .toFile()))
+                            .get())
+                    .build()));
+        });
     }
 }

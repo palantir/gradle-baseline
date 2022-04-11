@@ -4,33 +4,19 @@
 
 package com.palantir.baseline.plugins.javaversions;
 
-import org.gradle.api.file.Directory;
+import org.gradle.api.file.RegularFile;
 import org.gradle.jvm.toolchain.JavaInstallationMetadata;
-import org.gradle.jvm.toolchain.JavaLanguageVersion;
+import org.immutables.value.Value;
 
-final class PalantirJavaInstallationMetadata implements JavaInstallationMetadata {
-    @Override
-    public JavaLanguageVersion getLanguageVersion() {
-        return null;
+@Value.Immutable
+interface PalantirJavaInstallationMetadata extends JavaInstallationMetadata {
+    default RegularFile findExecutable(String executable) {
+        return getInstallationPath().dir("bin").file(executable);
     }
 
-    @Override
-    public String getJavaRuntimeVersion() {
-        return null;
-    }
+    final class Builder extends ImmutablePalantirJavaInstallationMetadata.Builder {}
 
-    @Override
-    public String getJvmVersion() {
-        return null;
-    }
-
-    @Override
-    public String getVendor() {
-        return null;
-    }
-
-    @Override
-    public Directory getInstallationPath() {
-        return null;
+    static Builder builder() {
+        return new Builder();
     }
 }

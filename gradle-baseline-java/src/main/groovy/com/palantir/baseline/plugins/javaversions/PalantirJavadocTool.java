@@ -5,13 +5,13 @@
 package com.palantir.baseline.plugins.javaversions;
 
 import org.gradle.api.file.RegularFile;
-import org.gradle.jvm.toolchain.JavaCompiler;
 import org.gradle.jvm.toolchain.JavaInstallationMetadata;
+import org.gradle.jvm.toolchain.JavadocTool;
 
-final class PalantirJavaCompiler implements JavaCompiler {
+final class PalantirJavadocTool implements JavadocTool {
     private final PalantirJavaInstallationMetadata palantirJavaInstallationMetadata;
 
-    PalantirJavaCompiler(PalantirJavaInstallationMetadata palantirJavaInstallationMetadata) {
+    PalantirJavadocTool(PalantirJavaInstallationMetadata palantirJavaInstallationMetadata) {
         this.palantirJavaInstallationMetadata = palantirJavaInstallationMetadata;
     }
 
@@ -22,6 +22,6 @@ final class PalantirJavaCompiler implements JavaCompiler {
 
     @Override
     public RegularFile getExecutablePath() {
-        return palantirJavaInstallationMetadata.findExecutable("javac");
+        return palantirJavaInstallationMetadata.findExecutable("javadoc");
     }
 }

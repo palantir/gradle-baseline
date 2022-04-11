@@ -27,6 +27,7 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.JavaExec;
@@ -61,7 +62,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                 }
             });
 
-            JavaToolchains javaToolchains = new JavaToolchains(project);
+            JavaToolchains javaToolchains = new JavaToolchains(project, extension);
 
             // Compilation tasks (using target version)
             configureCompilationTasks(project, javaToolchains.forVersion(extension.target()));
@@ -82,55 +83,55 @@ public final class BaselineJavaVersion implements Plugin<Project> {
         });
     }
 
-    private static void configureCompilationTasks(Project project, PalantirJavaToolchain javaToolchain) {
+    private static void configureCompilationTasks(Project project, Provider<PalantirJavaToolchain> javaToolchain) {
         project.getTasks().withType(JavaCompile.class, new Action<JavaCompile>() {
             @Override
             public void execute(JavaCompile javaCompile) {
-                javaCompile.getJavaCompiler().set(javaToolchain.javaCompiler());
+                javaCompile.getJavaCompiler().set(javaToolchain.flatMap(PalantirJavaToolchain::javaCompiler));
             }
         });
 
         project.getTasks().withType(Javadoc.class, new Action<Javadoc>() {
             @Override
             public void execute(Javadoc javadoc) {
-                javadoc.getJavadocTool().set(javaToolchain.javadocTool());
+                javadoc.getJavadocTool().set(javaToolchain.flatMap(PalantirJavaToolchain::javadocTool));
             }
         });
 
         project.getTasks().withType(GroovyCompile.class, new Action<GroovyCompile>() {
             @Override
             public void execute(GroovyCompile groovyCompile) {
-                groovyCompile.getJavaLauncher().set(javaToolchain.javaLauncher());
+                groovyCompile.getJavaLauncher().set(javaToolchain.flatMap(PalantirJavaToolchain::javaLauncher));
             }
         });
 
         project.getTasks().withType(ScalaCompile.class, new Action<ScalaCompile>() {
             @Override
             public void execute(ScalaCompile scalaCompile) {
-                scalaCompile.getJavaLauncher().set(javaToolchain.javaLauncher());
+                scalaCompile.getJavaLauncher().set(javaToolchain.flatMap(PalantirJavaToolchain::javaLauncher));
             }
         });
 
         project.getTasks().withType(ScalaDoc.class, new Action<ScalaDoc>() {
             @Override
             public void execute(ScalaDoc scalaDoc) {
-                scalaDoc.getJavaLauncher().set(javaToolchain.javaLauncher());
+                scalaDoc.getJavaLauncher().set(javaToolchain.flatMap(PalantirJavaToolchain::javaLauncher));
             }
         });
     }
 
-    private static void configureExecutionTasks(Project project, PalantirJavaToolchain javaToolchain) {
+    private static void configureExecutionTasks(Project project, Provider<PalantirJavaToolchain> javaToolchain) {
         project.getTasks().withType(JavaExec.class, new Action<JavaExec>() {
             @Override
             public void execute(JavaExec javaExec) {
-                javaExec.getJavaLauncher().set(javaToolchain.javaLauncher());
+                javaExec.getJavaLauncher().set(javaToolchain.flatMap(PalantirJavaToolchain::javaLauncher));
             }
         });
 
         project.getTasks().withType(Test.class, new Action<Test>() {
             @Override
             public void execute(Test test) {
-                test.getJavaLauncher().set(javaToolchain.javaLauncher());
+                test.getJavaLauncher().set(javaToolchain.flatMap(PalantirJavaToolchain::javaLauncher));
             }
         });
     }
