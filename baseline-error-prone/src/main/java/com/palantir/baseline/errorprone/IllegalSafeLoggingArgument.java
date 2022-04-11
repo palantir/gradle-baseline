@@ -40,8 +40,12 @@ import com.sun.source.tree.Tree;
 import com.sun.source.tree.VariableTree;
 import com.sun.source.util.TreePath;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
+import com.sun.tools.javac.code.Symbol.TypeVariableSymbol;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
+import com.sun.tools.javac.code.Type;
+import com.sun.tools.javac.code.Type.TypeVar;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Ensures that safe-logging annotated elements are handled correctly by annotated method parameters.
@@ -72,6 +76,28 @@ public final class IllegalSafeLoggingArgument extends BugChecker
             .onClass("com.palantir.logsafe.SafeArg")
             .named("of");
 
+    private static Type resolveParameterType(Type input, MethodInvocationTree tree, VisitorState state) {
+        if (input instanceof TypeVar) {
+            TypeVar typeVar = (TypeVar) input;
+
+            Type receiver = ASTHelpers.getReceiverType(tree);
+            if (receiver == null) {
+                return input;
+            }
+            MethodSymbol methodSymbol = ASTHelpers.getSymbol(tree);
+            // List<String> -> Collection<E> gives us Collection<String>
+            Type boundToMethodOwner = state.getTypes().asSuper(receiver, methodSymbol.owner);
+            List<TypeVariableSymbol> ownerTypeVars = methodSymbol.owner.getTypeParameters();
+            for (int i = 0; i < ownerTypeVars.size(); i++) {
+                TypeVariableSymbol ownerVar = ownerTypeVars.get(i);
+                if (Objects.equals(ownerVar, typeVar.tsym)) {
+                    return boundToMethodOwner.getTypeArguments().get(i);
+                }
+            }
+        }
+        return input;
+    }
+
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
         List<? extends ExpressionTree> arguments = tree.getArguments();
@@ -85,7 +111,10 @@ public final class IllegalSafeLoggingArgument extends BugChecker
         List<VarSymbol> parameters = methodSymbol.getParameters();
         for (int i = 0; i < parameters.size(); i++) {
             VarSymbol parameter = parameters.get(i);
-            Safety parameterSafety = SafetyAnnotations.getSafety(parameter, state);
+            Type resolvedParameterType = resolveParameterType(parameter.type, tree, state);
+            Safety parameterSafety = Safety.mergeAssumingUnknownIsSame(
+                    SafetyAnnotations.getSafety(parameter, state),
+                    SafetyAnnotations.getSafety(resolvedParameterType, state));
             if (parameterSafety.allowsAll()) {
                 // Fast path: all types are accepted, there's no reason to do further analysis.
                 continue;
@@ -164,7 +193,7 @@ public final class IllegalSafeLoggingArgument extends BugChecker
 
     private Description handleAssignment(
             ExpressionTree assignmentTree, ExpressionTree variable, ExpressionTree expression, VisitorState state) {
-        Safety variableDeclaredSafety = SafetyAnnotations.getSafety(ASTHelpers.getSymbol(variable), state);
+        Safety variableDeclaredSafety = SafetyAnnotations.getSafety(variable, state);
         if (variableDeclaredSafety.allowsAll()) {
             return Description.NO_MATCH;
         }
