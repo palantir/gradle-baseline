@@ -15,7 +15,7 @@ import java.util.stream.Stream;
 import org.rauschig.jarchivelib.Archiver;
 import org.rauschig.jarchivelib.ArchiverFactory;
 
-final class JdkManager {
+public final class JdkManager {
     private final Path storageLocation;
     private final AzulJdkDownloader azulJdkDownloader;
 

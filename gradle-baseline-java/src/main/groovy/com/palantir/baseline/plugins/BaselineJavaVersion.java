@@ -17,7 +17,9 @@
 package com.palantir.baseline.plugins;
 
 import com.palantir.baseline.extensions.BaselineJavaVersionExtension;
+import com.palantir.baseline.plugins.javaversions.BaselineJavaVersionRootPlugin;
 import com.palantir.baseline.plugins.javaversions.JavaToolchains;
+import com.palantir.baseline.plugins.javaversions.JdkManager;
 import com.palantir.baseline.plugins.javaversions.PalantirJavaToolchain;
 import javax.inject.Inject;
 import org.gradle.api.Action;
@@ -49,6 +51,12 @@ public final class BaselineJavaVersion implements Plugin<Project> {
     public void apply(Project project) {
         BaselineJavaVersionExtension extension =
                 project.getExtensions().create(EXTENSION_NAME, BaselineJavaVersionExtension.class, project);
+
+        JdkManager jdkManager = project.getRootProject()
+                .getPlugins()
+                .apply(BaselineJavaVersionRootPlugin.class)
+                .jdkManager();
+
         project.getPluginManager().withPlugin("java", unused -> {
             JavaPluginExtension javaPluginExtension = project.getExtensions().getByType(JavaPluginExtension.class);
 
@@ -62,7 +70,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                 }
             });
 
-            JavaToolchains javaToolchains = new JavaToolchains(project, extension);
+            JavaToolchains javaToolchains = new JavaToolchains(project, extension, jdkManager);
 
             // Compilation tasks (using target version)
             configureCompilationTasks(project, javaToolchains.forVersion(extension.target()));

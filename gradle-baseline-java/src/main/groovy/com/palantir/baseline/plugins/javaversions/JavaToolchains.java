@@ -15,10 +15,13 @@ import org.gradle.jvm.toolchain.JavaToolchainSpec;
 public final class JavaToolchains {
     private final Project project;
     private final BaselineJavaVersionExtension baselineJavaVersionExtension;
+    private final JdkManager jdkManager;
 
-    public JavaToolchains(Project project, BaselineJavaVersionExtension baselineJavaVersionExtension) {
+    public JavaToolchains(
+            Project project, BaselineJavaVersionExtension baselineJavaVersionExtension, JdkManager jdkManager) {
         this.project = project;
         this.baselineJavaVersionExtension = baselineJavaVersionExtension;
+        this.jdkManager = jdkManager;
     }
 
     public Provider<PalantirJavaToolchain> forVersion(Provider<JavaLanguageVersion> javaLanguageVersionProvider) {
@@ -45,10 +48,6 @@ public final class JavaToolchains {
                             }
                         });
             }
-
-            JdkManager jdkManager = new JdkManager(
-                    project.getRootProject().getBuildDir().toPath().resolve("jdks"),
-                    new AzulJdkDownloader(project.getRootProject()));
 
             return new AzulJavaToolchain(project.provider(() -> PalantirJavaInstallationMetadata.builder()
                     .languageVersion(javaLanguageVersion)
