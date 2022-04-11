@@ -29,7 +29,7 @@ interface JdkSpec {
             return "win";
         }
 
-        throw new UnsupportedOperationException("Cannot get platform for operation system " + operatingSystem);
+        throw new UnsupportedOperationException("Cannot get platform for operating system " + operatingSystem);
     }
 
     @Value.Default
