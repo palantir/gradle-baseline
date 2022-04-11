@@ -27,6 +27,7 @@ import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
 import com.sun.tools.javac.code.Type;
+import com.sun.tools.javac.code.Type.WildcardType;
 import com.sun.tools.javac.util.List;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -145,6 +146,17 @@ public final class SafetyAnnotations {
             this.typeSupplier = Suppliers.typeFromClass(clazz);
         }
 
+        private static Type unwrapWildcard(Type type) {
+            if (type instanceof WildcardType) {
+                WildcardType wildcard = (WildcardType) type;
+                Type ext = wildcard.getExtendsBound();
+                if (ext != null) {
+                    return ext;
+                }
+            }
+            return type;
+        }
+
         @Nullable
         Safety getSafety(Type type, VisitorState state, @Nullable Set<String> dejaVu) {
             Type baseType = typeSupplier.get(state);
@@ -158,7 +170,12 @@ public final class SafetyAnnotations {
                     return Safety.UNKNOWN;
                 }
                 // Apply the input type arguments to the base type
-                Type asSubtype = state.getTypes().asSuper(type, baseType.tsym);
+                Type asSubtype = state.getTypes().asSuper(unwrapWildcard(type), baseType.tsym);
+                if (asSubtype == null) {
+                    // Some types cannot be bound to a super-type. We attempt to unwrap wildcards, however
+                    // that doesn't cover every possible case.
+                    return null;
+                }
                 Safety safety = Safety.SAFE;
                 List<Type> typeArguments = asSubtype.getTypeArguments();
                 for (Type typeArgument : typeArguments) {
