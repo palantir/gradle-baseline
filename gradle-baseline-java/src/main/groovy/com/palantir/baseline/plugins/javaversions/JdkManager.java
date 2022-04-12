@@ -26,7 +26,9 @@ public final class JdkManager {
     }
 
     public Path jdk(JdkSpec jdkSpec) {
-        Path jdkPath = storageLocation.resolve(jdkSpec.hash());
+        Path jdkPath = storageLocation.resolve(String.format(
+                "zulu-%s-%s-%s",
+                jdkSpec.javaVersion(), jdkSpec.zuluVersion(), jdkSpec.hash().substring(0, 8)));
 
         if (Files.exists(jdkPath)) {
             return jdkPath;
@@ -35,7 +37,8 @@ public final class JdkManager {
         Path jdkArchive = azulJdkDownloader.downloadJdkFor(jdkSpec);
 
         Archiver archiver = ArchiverFactory.createArchiver(jdkArchive.toFile());
-        Path temporaryJdkPath = Paths.get(jdkPath + ".in-progress-" + UUID.randomUUID());
+        Path temporaryJdkPath = Paths.get(
+                jdkPath + ".in-progress-" + UUID.randomUUID().toString().substring(0, 8));
         try {
             try {
                 archiver.extract(jdkArchive.toFile(), temporaryJdkPath.toFile());
