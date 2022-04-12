@@ -224,7 +224,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
         JavaVersion javaVersion = JavaVersion.toVersion(featureRelease)
         String preview = BaselineEnablePreviewFlag.shouldEnablePreview(project).get() ? "_PREVIEW" : ""
         projectRootManager.attributes().put("project-jdk-name", featureRelease)
-        projectRootManager.attributes().put("languageLevel", new IdeaLanguageLevel(javaVersion + preview).getLevel())
+        projectRootManager.attributes().put("languageLevel", new IdeaLanguageLevel(javaVersion).getLevel() + preview)
     }
 
     private static void updateModuleLanguageVersion(IdeaModel ideaModel, Project currentProject) {
@@ -234,10 +234,10 @@ class BaselineIdea extends AbstractBaselinePlugin {
             if (version != null) {
                 int featureRelease = version.target().get().asInt()
                 JavaVersion javaVersion = JavaVersion.toVersion(featureRelease)
-                String preview = BaselineEnablePreviewFlag.shouldEnablePreview(project).get() ? "_PREVIEW" : ""
+                String preview = BaselineEnablePreviewFlag.shouldEnablePreview(currentProject).get() ? "_PREVIEW" : ""
                 Node node = provider.asNode()
                 Node newModuleRootManager = node.component.find { it.'@name' == 'NewModuleRootManager' }
-                newModuleRootManager.attributes().put("LANGUAGE_LEVEL", new IdeaLanguageLevel(javaVersion + preview).getLevel())
+                newModuleRootManager.attributes().put("LANGUAGE_LEVEL", new IdeaLanguageLevel(javaVersion).getLevel() + preview)
             }
         }
     }
