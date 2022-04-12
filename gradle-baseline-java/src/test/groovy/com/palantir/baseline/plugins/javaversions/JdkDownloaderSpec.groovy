@@ -5,17 +5,28 @@
 package com.palantir.baseline.plugins.javaversions
 
 import nebula.test.ProjectSpec
+import spock.lang.Unroll
 
 class JdkDownloaderSpec extends ProjectSpec {
-    def 'can download a jdk from an Azul CDN'() {
+    @Unroll
+    def '#os-#arch: can download a jdk from an Azul CDN'() {
         AzulJdkDownloader jdkDownloader = new AzulJdkDownloader(project)
 
         when:
-        def path = jdkDownloader.downloadJdkFor('11.0.9.1', '11.43.1021', 'macosx', 'aarch64')
+        def path = jdkDownloader.downloadJdkFor(JdkSpec.builder()
+                .javaVersion('11.0.14.1')
+                .zuluVersion('11.54.25')
+                .os(os)
+                .arch(arch)
+                .build())
 
         then:
         println path
         path.toFile().exists()
-        path.endsWith(".tar.gz")
+        path.getFileName().toString().endsWith('.zip')
+
+        where:
+        os << ['macosx', 'linux', 'windows']
+        arch << ['aarch64', 'x64', 'x64']
     }
 }
