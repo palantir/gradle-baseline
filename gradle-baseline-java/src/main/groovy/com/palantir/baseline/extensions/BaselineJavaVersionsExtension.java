@@ -16,8 +16,13 @@
 
 package com.palantir.baseline.extensions;
 
+import java.util.HashMap;
+import java.util.Map;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.inject.Inject;
 import org.gradle.api.Project;
+import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 
@@ -26,10 +31,14 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion;
  * with consistent java toolchains.
  */
 public class BaselineJavaVersionsExtension {
+    private static final Pattern ZULU_VERSION_PATTERN = Pattern.compile("ZULU_([\\d]+)_VERSION");
+    private static final Pattern JAVA_VERSION_PATTERN = Pattern.compile("JAVA_([\\d]+)_VERSION");
 
     private final Property<JavaLanguageVersion> libraryTarget;
     private final Property<JavaLanguageVersion> distributionTarget;
     private final Property<JavaLanguageVersion> runtime;
+    private final MapProperty<JavaLanguageVersion, String> zuluVersions;
+    private final MapProperty<JavaLanguageVersion, String> javaVersions;
 
     @Inject
     public BaselineJavaVersionsExtension(Project project) {
@@ -40,9 +49,18 @@ public class BaselineJavaVersionsExtension {
         distributionTarget.convention(libraryTarget);
         // runtime defaults to the distribution value
         runtime.convention(distributionTarget);
+        runtime.convention(distributionTarget);
         libraryTarget.finalizeValueOnRead();
         distributionTarget.finalizeValueOnRead();
         runtime.finalizeValueOnRead();
+
+        zuluVersions = project.getObjects().mapProperty(JavaLanguageVersion.class, String.class);
+        zuluVersions.putAll(project.provider(() -> parseOutVersions(project, ZULU_VERSION_PATTERN)));
+        zuluVersions.finalizeValueOnRead();
+
+        javaVersions = project.getObjects().mapProperty(JavaLanguageVersion.class, String.class);
+        javaVersions.putAll(project.provider(() -> parseOutVersions(project, JAVA_VERSION_PATTERN)));
+        javaVersions.finalizeValueOnRead();
     }
 
     /** Target {@link JavaLanguageVersion} for compilation of libraries that are published. */
@@ -73,5 +91,29 @@ public class BaselineJavaVersionsExtension {
 
     public final void setRuntime(int value) {
         runtime.set(JavaLanguageVersion.of(value));
+    }
+
+    public final MapProperty<JavaLanguageVersion, String> zuluVersions() {
+        return zuluVersions;
+    }
+
+    public final MapProperty<JavaLanguageVersion, String> javaVersions() {
+        return javaVersions;
+    }
+
+    private static Map<JavaLanguageVersion, String> parseOutVersions(Project project, Pattern propertyPattern) {
+        Map<JavaLanguageVersion, String> ret = new HashMap<>();
+
+        project.getProperties().forEach((key, value) -> {
+            Matcher matcher = propertyPattern.matcher(key);
+
+            if (!matcher.matches()) {
+                return;
+            }
+
+            ret.put(JavaLanguageVersion.of(Integer.parseInt(matcher.group(1))), (String) value);
+        });
+
+        return ret;
     }
 }

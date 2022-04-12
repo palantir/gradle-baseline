@@ -17,6 +17,7 @@
 package com.palantir.baseline.plugins;
 
 import com.palantir.baseline.extensions.BaselineJavaVersionExtension;
+import com.palantir.baseline.extensions.BaselineJavaVersionsExtension;
 import com.palantir.baseline.plugins.javaversions.BaselineJavaVersionRootPlugin;
 import com.palantir.baseline.plugins.javaversions.JavaToolchains;
 import com.palantir.baseline.plugins.javaversions.JdkManager;
@@ -71,7 +72,10 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                 }
             });
 
-            JavaToolchains javaToolchains = new JavaToolchains(project, extension, jdkManager);
+            JavaToolchains javaToolchains = new JavaToolchains(
+                    project,
+                    project.getRootProject().getExtensions().getByType(BaselineJavaVersionsExtension.class),
+                    jdkManager);
 
             // Compilation tasks (using target version)
             configureCompilationTasks(project, extension.target(), javaToolchains.forVersion(extension.target()));

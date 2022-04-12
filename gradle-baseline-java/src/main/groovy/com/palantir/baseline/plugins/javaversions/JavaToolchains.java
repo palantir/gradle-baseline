@@ -4,7 +4,7 @@
 
 package com.palantir.baseline.plugins.javaversions;
 
-import com.palantir.baseline.extensions.BaselineJavaVersionExtension;
+import com.palantir.baseline.extensions.BaselineJavaVersionsExtension;
 import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Provider;
@@ -14,22 +14,22 @@ import org.gradle.jvm.toolchain.JavaToolchainSpec;
 
 public final class JavaToolchains {
     private final Project project;
-    private final BaselineJavaVersionExtension baselineJavaVersionExtension;
+    private final BaselineJavaVersionsExtension baselineJavaVersionsExtension;
     private final JdkManager jdkManager;
 
     public JavaToolchains(
-            Project project, BaselineJavaVersionExtension baselineJavaVersionExtension, JdkManager jdkManager) {
+            Project project, BaselineJavaVersionsExtension baselineJavaVersionsExtension, JdkManager jdkManager) {
         this.project = project;
-        this.baselineJavaVersionExtension = baselineJavaVersionExtension;
+        this.baselineJavaVersionsExtension = baselineJavaVersionsExtension;
         this.jdkManager = jdkManager;
     }
 
     public Provider<PalantirJavaToolchain> forVersion(Provider<JavaLanguageVersion> javaLanguageVersionProvider) {
         return javaLanguageVersionProvider.map(javaLanguageVersion -> {
             Provider<String> zuluVersionNumber =
-                    baselineJavaVersionExtension.zuluVersions().getting(javaLanguageVersion);
+                    baselineJavaVersionsExtension.zuluVersions().getting(javaLanguageVersion);
             Provider<String> javaVersionNumber =
-                    baselineJavaVersionExtension.javaVersions().getting(javaLanguageVersion);
+                    baselineJavaVersionsExtension.javaVersions().getting(javaLanguageVersion);
 
             if (zuluVersionNumber.isPresent() ^ javaVersionNumber.isPresent()) {
                 throw new IllegalArgumentException(String.format(
