@@ -40,7 +40,10 @@ import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.compile.JavaCompile;
+import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradle.api.tasks.testing.Test;
+import org.gradle.external.javadoc.CoreJavadocOptions;
+import org.gradle.external.javadoc.MinimalJavadocOptions;
 import org.gradle.jvm.tasks.Jar;
 import org.gradle.process.CommandLineArgumentProvider;
 import org.immutables.value.Value;
@@ -61,6 +64,7 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
             Splitter.on(' ').trimResults().omitEmptyStrings();
 
     @Override
+    @SuppressWarnings("checkstyle:MethodLength")
     public void apply(Project project) {
         project.getPluginManager().withPlugin("java", unused -> {
             BaselineModuleJvmArgsExtension extension =
@@ -68,32 +72,96 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
 
             // javac isn't provided `--add-exports` args for the time being due to
             // https://github.com/gradle/gradle/issues/18824
-            if (project.hasProperty("add.exports.to.javac")) {
-                project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
-                    JavaCompile javaCompile = project.getTasks()
-                            .named(sourceSet.getCompileJavaTaskName(), JavaCompile.class)
-                            .get();
-                    javaCompile
-                            .getOptions()
-                            .getCompilerArgumentProviders()
-                            // Use an anonymous class because tasks with lambda inputs cannot be cached
-                            .add(new CommandLineArgumentProvider() {
-                                @Override
-                                public Iterable<String> asArguments() {
-                                    // Annotation processors are executed at compile time
-                                    ImmutableList<String> arguments =
-                                            collectAnnotationProcessorArgs(project, extension, sourceSet);
+            // However, we set sourceCompatibility in BaselineJavaVersion to opt out of the '--release' flag.
+            project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
+                JavaCompile javaCompile = project.getTasks()
+                        .named(sourceSet.getCompileJavaTaskName(), JavaCompile.class)
+                        .get();
+                javaCompile
+                        .getOptions()
+                        .getCompilerArgumentProviders()
+                        // Use an anonymous class because tasks with lambda inputs cannot be cached
+                        .add(new CommandLineArgumentProvider() {
+                            @Override
+                            public Iterable<String> asArguments() {
+                                // The '--release' flag is set when BaselineJavaVersion is not used.
+                                if (!project.getPlugins().hasPlugin(BaselineJavaVersion.class)) {
                                     project.getLogger()
                                             .debug(
-                                                    "BaselineModuleJvmArgs compiling {} on {} with exports: {}",
+                                                    "BaselineModuleJvmArgs not applying args to compilation task "
+                                                            + "{} on {} due to lack of BaselineJavaVersion",
                                                     javaCompile.getName(),
-                                                    project,
-                                                    arguments);
-                                    return arguments;
+                                                    project);
+                                    return ImmutableList.of();
                                 }
-                            });
-                });
-            }
+                                ImmutableList<String> arguments = collectCompilationArgs(project, extension, sourceSet);
+                                project.getLogger()
+                                        .debug(
+                                                "BaselineModuleJvmArgs compiling {} on {} with exports: {}",
+                                                javaCompile.getName(),
+                                                project,
+                                                arguments);
+                                return arguments;
+                            }
+                        });
+
+                Task maybeJavadocTask = project.getTasks().findByName(sourceSet.getJavadocTaskName());
+                if (maybeJavadocTask instanceof Javadoc) {
+                    maybeJavadocTask.doFirst(new Action<Task>() {
+                        @Override
+                        public void execute(Task task) {
+                            // The '--release' flag is set when BaselineJavaVersion is not used.
+                            if (!project.getPlugins().hasPlugin(BaselineJavaVersion.class)) {
+                                project.getLogger()
+                                        .debug(
+                                                "BaselineModuleJvmArgs not applying args to compilation task "
+                                                        + "{} on {} due to lack of BaselineJavaVersion",
+                                                task.getName(),
+                                                project);
+                                return;
+                            }
+
+                            Javadoc javadoc = (Javadoc) task;
+
+                            MinimalJavadocOptions options = javadoc.getOptions();
+                            if (options instanceof CoreJavadocOptions) {
+                                CoreJavadocOptions coreOptions = (CoreJavadocOptions) options;
+                                ImmutableList<JarManifestModuleInfo> info = collectClasspathInfo(project, sourceSet);
+                                List<String> exportValues = Stream.concat(
+                                                // Compilation only supports exports, so we union with opens.
+                                                Stream.concat(
+                                                        extension.exports().get().stream(),
+                                                        extension.opens().get().stream()),
+                                                info.stream()
+                                                        .flatMap(item -> Stream.concat(
+                                                                item.exports().stream(), item.opens().stream())))
+                                        .distinct()
+                                        .sorted()
+                                        .map(item -> item + "=ALL-UNNAMED")
+                                        .collect(ImmutableList.toImmutableList());
+                                project.getLogger()
+                                        .debug(
+                                                "BaselineModuleJvmArgs building {} on {} " + "with exports: {}",
+                                                javadoc.getName(),
+                                                project,
+                                                exportValues);
+                                if (!exportValues.isEmpty()) {
+                                    coreOptions
+                                            // options are automatically prefixed with '-' internally
+                                            .addMultilineStringsOption("-add-exports")
+                                            .setValue(exportValues);
+                                }
+                            } else {
+                                project.getLogger()
+                                        .error(
+                                                "MinimalJavadocOptions implementation was "
+                                                        + "not CoreJavadocOptions, rather '{}'",
+                                                options.getClass().getName());
+                            }
+                        }
+                    });
+                }
+            });
 
             project.getTasks().withType(Test.class, new Action<Test>() {
 
@@ -104,7 +172,7 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                         @Override
                         public Iterable<String> asArguments() {
                             ImmutableList<String> arguments =
-                                    collectClasspathArgs(project, extension, test.getClasspath());
+                                    collectClasspathArgs(project, extension, test.getClasspath(), OpensMode.RUNTIME);
                             project.getLogger()
                                     .debug(
                                             "BaselineModuleJvmArgs executing {} on {} with exports: {}",
@@ -125,8 +193,8 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
 
                         @Override
                         public Iterable<String> asArguments() {
-                            ImmutableList<String> arguments =
-                                    collectClasspathArgs(project, extension, javaExec.getClasspath());
+                            ImmutableList<String> arguments = collectClasspathArgs(
+                                    project, extension, javaExec.getClasspath(), OpensMode.RUNTIME);
                             project.getLogger()
                                     .debug(
                                             "BaselineModuleJvmArgs executing {} on {} with exports: {}",
@@ -183,17 +251,45 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
         }
     }
 
-    private static ImmutableList<String> collectAnnotationProcessorArgs(
+    private static ImmutableList<String> collectCompilationArgs(
             Project project, BaselineModuleJvmArgsExtension extension, SourceSet sourceSet) {
         return collectClasspathArgs(
                 project,
                 extension,
-                project.getConfigurations().getByName(sourceSet.getAnnotationProcessorConfigurationName()));
+                project.getConfigurations().getByName(sourceSet.getAnnotationProcessorConfigurationName()),
+                OpensMode.COMPILATION);
     }
 
     private static ImmutableList<String> collectClasspathArgs(
-            Project project, BaselineModuleJvmArgsExtension extension, FileCollection classpath) {
-        ImmutableList<JarManifestModuleInfo> classpathInfo = classpath.getFiles().stream()
+            Project project, BaselineModuleJvmArgsExtension extension, FileCollection classpath, OpensMode mode) {
+        ImmutableList<JarManifestModuleInfo> classpathInfo = collectClasspathInfo(project, classpath);
+        Stream<String> allExports = Stream.concat(
+                extension.exports().get().stream(), classpathInfo.stream().flatMap(info -> info.exports().stream()));
+        Stream<String> allOpens = Stream.concat(
+                extension.opens().get().stream(), classpathInfo.stream().flatMap(info -> info.opens().stream()));
+        switch (mode) {
+            case COMPILATION:
+                return Stream.concat(allExports, allOpens)
+                        .distinct()
+                        .sorted()
+                        .flatMap(BaselineModuleJvmArgs::addExportArg)
+                        .collect(ImmutableList.toImmutableList());
+            case RUNTIME:
+                Stream<String> exports = allExports.distinct().sorted().flatMap(BaselineModuleJvmArgs::addExportArg);
+                Stream<String> opens = allOpens.distinct().sorted().flatMap(BaselineModuleJvmArgs::addOpensArg);
+                return Stream.concat(exports, opens).collect(ImmutableList.toImmutableList());
+        }
+        throw new IllegalStateException("unknown mode: " + mode);
+    }
+
+    private static ImmutableList<JarManifestModuleInfo> collectClasspathInfo(Project project, SourceSet sourceSet) {
+        return collectClasspathInfo(
+                project, project.getConfigurations().getByName(sourceSet.getAnnotationProcessorConfigurationName()));
+    }
+
+    private static ImmutableList<JarManifestModuleInfo> collectClasspathInfo(
+            Project project, FileCollection classpath) {
+        return classpath.getFiles().stream()
                 .map(file -> {
                     try {
                         if (file.getName().endsWith(".jar") && file.isFile()) {
@@ -213,18 +309,6 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                 })
                 .filter(Objects::nonNull)
                 .collect(ImmutableList.toImmutableList());
-        Stream<String> exports = Stream.concat(
-                        extension.exports().get().stream(),
-                        classpathInfo.stream().flatMap(info -> info.exports().stream()))
-                .distinct()
-                .sorted()
-                .flatMap(BaselineModuleJvmArgs::addExportArg);
-        Stream<String> opens = Stream.concat(
-                        extension.opens().get().stream(), classpathInfo.stream().flatMap(info -> info.opens().stream()))
-                .distinct()
-                .sorted()
-                .flatMap(BaselineModuleJvmArgs::addOpensArg);
-        return Stream.concat(exports, opens).collect(ImmutableList.toImmutableList());
     }
 
     private static Optional<JarManifestModuleInfo> parseModuleInfo(@Nullable java.util.jar.Manifest jarManifest) {
@@ -270,5 +354,10 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
         }
 
         class Builder extends ImmutableJarManifestModuleInfo.Builder {}
+    }
+
+    enum OpensMode {
+        COMPILATION,
+        RUNTIME;
     }
 }

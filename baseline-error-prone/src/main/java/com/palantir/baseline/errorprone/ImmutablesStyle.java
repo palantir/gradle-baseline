@@ -43,7 +43,6 @@ import javax.annotation.Nullable;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "ImmutablesStyle",
         linkType = LinkType.CUSTOM,
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         severity = SeverityLevel.WARNING,
@@ -123,6 +122,7 @@ public final class ImmutablesStyle extends BugChecker implements BugChecker.Clas
             SuggestedFix.Builder fix = SuggestedFix.builder();
             fix.merge(SuggestedFixes.updateAnnotationArgumentValues(
                     retention,
+                    state,
                     "value",
                     ImmutableList.of(String.format(
                             "%s.SOURCE", SuggestedFixes.qualifyType(state, fix, RetentionPolicy.class.getName())))));

@@ -37,7 +37,6 @@ import java.lang.reflect.Proxy;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "ProxyNonConstantType",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = LinkType.CUSTOM,
         severity = SeverityLevel.WARNING,

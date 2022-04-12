@@ -41,7 +41,6 @@ import java.util.List;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "ReadReturnValueIgnored",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.ERROR,
@@ -57,7 +56,7 @@ public final class ReadReturnValueIgnored extends AbstractReturnValueIgnored {
             Matchers.not(MethodMatchers.instanceMethod()
                     .onDescendantOf(InputStream.class.getName())
                     .named("read")
-                    .withParameters()));
+                    .withNoParameters()));
 
     private static final Matcher<ExpressionTree> RAF_BUFFER_READ_MATCHER = Matchers.allOf(
             MethodMatchers.instanceMethod()
@@ -66,7 +65,7 @@ public final class ReadReturnValueIgnored extends AbstractReturnValueIgnored {
             Matchers.not(MethodMatchers.instanceMethod()
                     .onDescendantOf(RandomAccessFile.class.getName())
                     .named("read")
-                    .withParameters()));
+                    .withNoParameters()));
 
     private static final Matcher<ExpressionTree> READER_SKIP_MATCHER = MethodMatchers.instanceMethod()
             .onDescendantOf(Reader.class.getName())

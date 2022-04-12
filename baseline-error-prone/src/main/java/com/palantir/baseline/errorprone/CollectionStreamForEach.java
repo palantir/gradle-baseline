@@ -35,7 +35,6 @@ import java.util.stream.Stream;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "CollectionStreamForEach",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,
@@ -51,7 +50,7 @@ public final class CollectionStreamForEach extends BugChecker implements BugChec
     private static final Matcher<ExpressionTree> COLLECTION_STREAM = MethodMatchers.instanceMethod()
             .onDescendantOf(Collection.class.getName())
             .named("stream")
-            .withParameters();
+            .withNoParameters();
 
     private static final Matcher<MethodInvocationTree> matcher =
             Matchers.allOf(STREAM_FOR_EACH, Matchers.receiverOfInvocation(COLLECTION_STREAM));

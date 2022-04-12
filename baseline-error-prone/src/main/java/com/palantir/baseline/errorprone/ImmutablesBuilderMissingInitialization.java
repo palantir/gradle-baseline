@@ -64,7 +64,6 @@ import java.util.stream.Stream;
  */
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "ImmutablesBuilderMissingInitialization",
         linkType = LinkType.CUSTOM,
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         severity = BugPattern.SeverityLevel.ERROR,
@@ -87,7 +86,7 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
     private static final Matcher<ExpressionTree> builderMethodMatcher = Matchers.instanceMethod()
             .onClass(ImmutablesBuilderMissingInitialization::extendsImmutablesGeneratedClass)
             .named("build")
-            .withParameters();
+            .withNoParameters();
 
     private static final Supplier<Name> GENERATOR = VisitorState.memoize(state -> state.getName("generator"));
 

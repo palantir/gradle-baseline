@@ -37,8 +37,6 @@ import javax.lang.model.element.Modifier;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "FinalClass",
-        // Support legacy suppressions from checkstyle
         altNames = {"checkstyle:finalclass", "checkstyle:FinalClass"},
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,

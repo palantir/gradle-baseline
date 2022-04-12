@@ -2,22 +2,22 @@ import net.ltgt.gradle.errorprone.CheckSeverity
 
 buildscript {
     repositories {
-        gradlePluginPortal()
-        mavenCentral()
+        gradlePluginPortal() { metadataSources { mavenPom(); ignoreGradleMetadataRedirection() } }
+        mavenCentral() { metadataSources { mavenPom(); ignoreGradleMetadataRedirection() } }
     }
 
     dependencies {
         classpath 'com.diffplug.gradle:goomph:3.32.1'
         classpath 'com.palantir.gradle.externalpublish:gradle-external-publish-plugin:1.11.0'
         classpath 'com.palantir.gradle.consistentversions:gradle-consistent-versions:2.9.0'
-        classpath 'com.gradle.publish:plugin-publish-plugin:0.20.0'
-        classpath 'com.palantir.baseline:gradle-baseline-java:4.78.0'
-        classpath 'com.palantir.javaformat:gradle-palantir-java-format:2.18.0'
+        classpath 'com.gradle.publish:plugin-publish-plugin:0.21.0'
+        classpath 'com.palantir.baseline:gradle-baseline-java:4.103.0'
+        classpath 'com.palantir.javaformat:gradle-palantir-java-format:2.20.0'
     }
 }
 
 plugins {
-    id 'com.palantir.git-version' version '0.14.0'
+    id 'com.palantir.git-version' version '0.15.0'
     id 'org.inferred.processors' version '3.6.0'
 }
 
@@ -29,7 +29,7 @@ apply plugin: 'com.palantir.baseline-java-versions'
 allprojects {
     repositories {
         gradlePluginPortal()
-        mavenCentral()
+        mavenCentral() { metadataSources { mavenPom(); ignoreGradleMetadataRedirection() } }
     }
 
     // Since we are using gradle-baseline in gradle-baseline we need to undo forces on project dependencies. Following
@@ -62,4 +62,5 @@ allprojects {
 
 javaVersions {
     libraryTarget = 11
+    runtime = 15
 }

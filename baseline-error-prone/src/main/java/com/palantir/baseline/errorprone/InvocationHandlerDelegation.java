@@ -48,7 +48,6 @@ import java.lang.reflect.Method;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "InvocationHandlerDelegation",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,
@@ -83,7 +82,7 @@ public final class InvocationHandlerDelegation extends BugChecker implements Bug
     private static final Matcher<ExpressionTree> UNWRAP_THROWABLE = MethodMatchers.instanceMethod()
             .onDescendantOf(Throwable.class.getName())
             .named("getCause")
-            .withParameters();
+            .withNoParameters();
 
     private static final Matcher<Tree> CONTAINS_UNWRAP_THROWABLE =
             Matchers.contains(ExpressionTree.class, UNWRAP_THROWABLE);
@@ -106,7 +105,7 @@ public final class InvocationHandlerDelegation extends BugChecker implements Bug
             .onClass(TypePredicates.anyOf(IS_ITE_SUBTYPE, IS_ITE_UNION))
             // getTargetException is deprecated, but does work correctly.
             .namedAnyOf("getCause", "getTargetException")
-            .withParameters();
+            .withNoParameters();
 
     private static final Matcher<ExpressionTree> PASS_ITE = Matchers.methodInvocation(
             Matchers.anyMethod(),

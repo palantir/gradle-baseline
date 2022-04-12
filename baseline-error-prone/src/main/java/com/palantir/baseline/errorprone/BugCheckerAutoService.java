@@ -37,7 +37,6 @@ import javax.lang.model.element.ElementKind;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "BugCheckerAutoService",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         summary = "Concrete BugChecker implementations should be annotated "

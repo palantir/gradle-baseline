@@ -34,7 +34,6 @@ import com.sun.tools.javac.code.Type;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "BadAssert",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,

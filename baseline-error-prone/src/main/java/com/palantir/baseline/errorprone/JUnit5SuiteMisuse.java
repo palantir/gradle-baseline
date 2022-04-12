@@ -37,7 +37,6 @@ import java.util.Set;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "JUnit5SuiteMisuse",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.ERROR,

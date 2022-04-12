@@ -27,6 +27,7 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
@@ -73,7 +74,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             JavaToolchains javaToolchains = new JavaToolchains(project, extension, jdkManager);
 
             // Compilation tasks (using target version)
-            configureCompilationTasks(project, javaToolchains.forVersion(extension.target()));
+            configureCompilationTasks(project, extension.target(), javaToolchains.forVersion(extension.target()));
 
             // Execution tasks (using the runtime version)
             configureExecutionTasks(project, javaToolchains.forVersion(extension.runtime()));
@@ -91,11 +92,23 @@ public final class BaselineJavaVersion implements Plugin<Project> {
         });
     }
 
-    private static void configureCompilationTasks(Project project, Provider<PalantirJavaToolchain> javaToolchain) {
+    private static void configureCompilationTasks(
+            Project project,
+            Provider<JavaLanguageVersion> targetVersionProvider,
+            Provider<PalantirJavaToolchain> javaToolchain) {
         project.getTasks().withType(JavaCompile.class, new Action<JavaCompile>() {
             @Override
             public void execute(JavaCompile javaCompile) {
                 javaCompile.getJavaCompiler().set(javaToolchain.flatMap(PalantirJavaToolchain::javaCompiler));
+                // Set sourceCompatibility to opt out of '-release', allowing opens/exports to be used.
+                javaCompile.doFirst(new Action<Task>() {
+                    @Override
+                    public void execute(Task task) {
+                        ((JavaCompile) task)
+                                .setSourceCompatibility(
+                                        targetVersionProvider.get().toString());
+                    }
+                });
             }
         });
 
@@ -110,6 +123,15 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             @Override
             public void execute(GroovyCompile groovyCompile) {
                 groovyCompile.getJavaLauncher().set(javaToolchain.flatMap(PalantirJavaToolchain::javaLauncher));
+                // Set sourceCompatibility to opt out of '-release', allowing opens/exports to be used.
+                groovyCompile.doFirst(new Action<Task>() {
+                    @Override
+                    public void execute(Task task) {
+                        ((GroovyCompile) task)
+                                .setSourceCompatibility(
+                                        targetVersionProvider.get().toString());
+                    }
+                });
             }
         });
 
@@ -117,6 +139,15 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             @Override
             public void execute(ScalaCompile scalaCompile) {
                 scalaCompile.getJavaLauncher().set(javaToolchain.flatMap(PalantirJavaToolchain::javaLauncher));
+                // Set sourceCompatibility to opt out of '-release', allowing opens/exports to be used.
+                scalaCompile.doFirst(new Action<Task>() {
+                    @Override
+                    public void execute(Task task) {
+                        ((ScalaCompile) task)
+                                .setSourceCompatibility(
+                                        targetVersionProvider.get().toString());
+                    }
+                });
             }
         });
 

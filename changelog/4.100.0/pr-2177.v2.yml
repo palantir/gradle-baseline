@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Lambdas/Anon-classes follow captured local variable safety
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2177

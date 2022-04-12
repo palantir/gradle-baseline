@@ -19,6 +19,7 @@ package com.palantir.baseline.plugins;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.palantir.gradle.junit.JunitReportsExtension;
+import com.palantir.gradle.junit.JunitReportsPlugin;
 import com.palantir.gradle.junit.JunitReportsRootPlugin;
 import java.io.File;
 import java.io.IOException;
@@ -40,6 +41,7 @@ public final class BaselineCircleCi implements Plugin<Project> {
     @Override
     public void apply(Project project) {
         project.getPluginManager().apply(JunitReportsRootPlugin.class);
+        project.getPluginManager().apply(JunitReportsPlugin.class);
 
         configurePluginsForReports(project);
         configurePluginsForArtifacts(project);
@@ -65,7 +67,7 @@ public final class BaselineCircleCi implements Plugin<Project> {
 
         project.getRootProject().allprojects(proj -> proj.getTasks().withType(Test.class, test -> {
             test.getReports().getHtml().getRequired().set(true);
-            test.getReports().getHtml().setDestination(junitPath(circleArtifactsDir, test.getPath()));
+            test.getReports().getHtml().getOutputLocation().set(junitPath(circleArtifactsDir, test.getPath()));
         }));
     }
 

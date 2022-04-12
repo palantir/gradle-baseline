@@ -37,7 +37,10 @@ public final class JunitReportsPlugin implements Plugin<Project> {
 
         project.getTasks().withType(Test.class, test -> {
             test.getReports().getJunitXml().getRequired().set(true);
-            test.getReports().getJunitXml().setDestination(junitPath(rootExt.getReportsDirectory(), test.getPath()));
+            test.getReports()
+                    .getJunitXml()
+                    .getOutputLocation()
+                    .fileProvider(junitPath(rootExt.getReportsDirectory(), test.getPath()));
         });
 
         project.getTasks().withType(Checkstyle.class, checkstyle -> {
