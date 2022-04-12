@@ -70,7 +70,7 @@ public final class BaselineJavaVersions implements Plugin<Project> {
         }));
     }
 
-    private static boolean isLibrary(Project project, BaselineJavaVersionExtension projectVersions) {
+    static boolean isLibrary(Project project, BaselineJavaVersionExtension projectVersions) {
         Property<Boolean> libraryOverride = projectVersions.overrideLibraryAutoDetection();
         if (libraryOverride.isPresent()) {
             log.debug(

@@ -16,6 +16,7 @@
 
 package com.palantir.baseline.plugins;
 
+import com.palantir.baseline.extensions.BaselineJavaVersionExtension;
 import java.util.Collections;
 import java.util.List;
 import org.gradle.api.JavaVersion;
@@ -33,22 +34,25 @@ import org.gradle.process.CommandLineArgumentProvider;
 public final class BaselineEnablePreviewFlag implements Plugin<Project> {
 
     private static final String FLAG = "--enable-preview";
+    private static final String ENABLE_PREVIEW_PROPERTY = "enablePreview";
 
     @Override
     public void apply(Project project) {
         // The idea behind registering a single 'extra property' is that other plugins (like
-        // sls-packaging) can easily detect this and also also add the --enable-preview jvm arg
-        Provider<Boolean> enablePreview = project.provider(() -> {
-            JavaVersion jvmExecutingGradle = JavaVersion.current();
-            JavaPluginConvention javaConvention = project.getConvention().findPlugin(JavaPluginConvention.class);
-            if (javaConvention == null) {
-                return false;
+        // sls-packaging) can easily detect this and also also add the --enable-preview jvm arg.
+        project.getExtensions().getExtraProperties().set(ENABLE_PREVIEW_PROPERTY, project.provider(() -> {
+            BaselineJavaVersionExtension javaVersionExtension =
+                    project.getExtensions().findByType(BaselineJavaVersionExtension.class);
+            if (javaVersionExtension != null) {
+                // We intentionally prefer NOT to enable feature preview in 'library' jars because this would force
+                // all consumers to also add the '--enable-preview' flag to their distribution's JVM args
+                return !BaselineJavaVersions.isLibrary(project, javaVersionExtension);
+            } else {
+                return true;
             }
+        }));
 
-            return javaConvention.getSourceCompatibility() == jvmExecutingGradle;
-        });
-
-        project.getExtensions().getExtraProperties().set("enablePreview", enablePreview);
+        Provider<Boolean> enablePreview = shouldEnablePreview(project);
 
         project.getPlugins().withId("java", _unused -> {
             project.getTasks().withType(JavaCompile.class, t -> {
@@ -79,6 +83,18 @@ public final class BaselineEnablePreviewFlag implements Plugin<Project> {
                     });
                 }
             });
+        });
+    }
+
+    public static Provider<Boolean> shouldEnablePreview(Project project) {
+        return project.provider(() -> {
+            Object maybeProvider =
+                    project.getExtensions().getExtraProperties().getProperties().get(ENABLE_PREVIEW_PROPERTY);
+            if (maybeProvider == null) {
+                return false;
+            }
+
+            return ((Provider<Boolean>) maybeProvider).get();
         });
     }
 
