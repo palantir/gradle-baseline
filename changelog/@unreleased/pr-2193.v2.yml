@@ -1,0 +1,7 @@
+type: feature
+feature:
+  description: Enable downloading specific versions of Azul JDKs rather than using
+    Gradle built in auto provisioning (will fall back to using Gradle's built in provisioning
+    if configured to use Azul downloads).
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2193
