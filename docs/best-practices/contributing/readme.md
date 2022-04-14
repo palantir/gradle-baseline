@@ -45,7 +45,7 @@ Conversely, project owners and reviewers should be empathetic towards contributo
 
 - constructive: *"try using fooFunction() instead of barFunction() here"* versus *"fix function"*
 - friendly: *"please use consistent variable naming (see other variables in this class)"* versus *silly naming*
-- educational: *".paralellStream() has bad performance characteristics in this case, see <link>"* instead of *"this is never going to scale"*
+- educational: *".parallelStream() has bad performance characteristics in this case, see <link>"* instead of *"this is never going to scale"*
 - reasonable: do not ask to add an end-to-end test if none of the other code in the project has end-to-end tests
 - in scope: do not ask to also clean up or refactor this other unrelated class as part of this contribution
 
@@ -57,7 +57,7 @@ discussed in the [best-practices document on Code Reviews](../code-reviews/readm
 
 
 ### Keep contributions as small and focused as possible
-Generally, we prefer small and focused contributions over bulky, vast ones. A rough guide line is that a contribution
+Generally, we prefer small and focused contributions over bulky, vast ones. A rough guideline is that a contribution
 to another team's repository should not be longer than 200-300 lines unless
 [explicitly agreed and discussed](#discuss-the-scope-of-your-contribution).
 

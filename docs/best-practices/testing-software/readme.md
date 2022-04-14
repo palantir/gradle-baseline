@@ -71,12 +71,12 @@ following guidelines:
   particular, do not abuse unit tests for performance tests or testing
   of long-lived services.
 
-Since unit tests guard from regression bugs, be very careful and verify
+Since unit tests guard against regression bugs, be very careful and verify
 with the code owner **and users** before you change the behavior of
 a unit test. For example, if the author of a sorting algorithm implements
 a test that verifies the *stability* of the sorting procedure, do
 not remove this test when you implement a performance improvement that cannot always
-guarantee that sorting is stable. Users of of the sorting
+guarantee that sorting is stable. Users of the sorting
 procedure may rely on its stability and their code will break if
 this assumption is violated.
 

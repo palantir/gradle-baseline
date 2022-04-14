@@ -37,7 +37,7 @@ public final class BaselineEnablePreviewFlag implements Plugin<Project> {
     @Override
     public void apply(Project project) {
         // The idea behind registering a single 'extra property' is that other plugins (like
-        // sls-packaging) can easily detect this and also also add the --enable-preview jvm arg
+        // sls-packaging) can easily detect this and also add the --enable-preview jvm arg
         Provider<Boolean> enablePreview = project.provider(() -> {
             JavaVersion jvmExecutingGradle = JavaVersion.current();
             JavaPluginConvention javaConvention = project.getConvention().findPlugin(JavaPluginConvention.class);

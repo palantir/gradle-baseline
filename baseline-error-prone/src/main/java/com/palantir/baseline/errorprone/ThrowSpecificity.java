@@ -104,7 +104,7 @@ public final class ThrowSpecificity extends BugChecker implements BugChecker.Met
                 .build();
     }
 
-    /** Avoid modifying methods which may me overridden and public API. */
+    /** Avoid modifying methods which may be overridden and public API. */
     private static boolean safeToModifyThrowsClause(MethodTree tree) {
         Symbol.MethodSymbol symbol = ASTHelpers.getSymbol(tree);
         if (symbol == null) {

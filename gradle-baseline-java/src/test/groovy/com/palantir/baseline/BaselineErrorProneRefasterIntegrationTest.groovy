@@ -172,7 +172,7 @@ class BaselineErrorProneRefasterIntegrationTest extends AbstractPluginTest {
         then:
         BuildResult result = with('compileJava', '-i', '-PrefasterApply').build()
         result.task(":compileJava").outcome == TaskOutcome.SUCCESS
-        // this signifies that the baked-in baseline refaster ruels were *not* applied
+        // this signifies that the baked-in baseline refaster rules were *not* applied
         file('src/main/java/test/Test.java').text.contains 'int i = "hello world".getBytes(StandardCharsets.UTF_8).length;'
     }
 }

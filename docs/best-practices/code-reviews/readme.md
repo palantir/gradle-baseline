@@ -227,7 +227,7 @@ science. The only way to learn it is to do it; an experienced
 reviewer should consider putting other less experienced reviewers on
 their changes and have them do a review first. Assuming the author has
 followed the guidelines above (especially with respect to self-review
-and ensuring the code runs), here's an list of things a reviewer should
+and ensuring the code runs), here's a list of things a reviewer should
 pay attention to in a code review:
 
 ### Purpose

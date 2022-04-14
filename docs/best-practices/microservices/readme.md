@@ -248,7 +248,7 @@ Per service, a `<service>-api` module exposes the set of JAX-RS
 interfaces and data objects (see [here](#complex-value-types-use-annotation-processor))
 see that define the API access to the service; ideally the interfaces
 are JAX-RS annotated, and we should strongly prefer
-Immutables/FreeBuilder-generated data objects over hand-written beans.
+Immutables/FreeBuilder-generated data objects over handwritten beans.
 
 Exported dependencies may include, at most, JAX-RS annotations,
 jackson-databind and Guava (restricted to use only Guava Optionals and
@@ -259,7 +259,7 @@ clients consuming this API, consider making it Java7-compatible.
 **Service implementation: in a separate module**
 
 The server implementation of the above API resides in a separate module
-`<service>-service`. Implementors have free reign over dependencies and
+`<service>-service`. Implementors have free rein over dependencies and
 Java version requirements. This package should be designed such that no
 API user has to (or would even want to) import any of its functionality.
 

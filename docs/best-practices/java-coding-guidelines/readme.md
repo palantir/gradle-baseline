@@ -64,7 +64,7 @@ topics:
   - [Log Levels](#log-levels)
   - [Concurrency](#concurrency)
     - [Before you start: Read the books](#before-you-start-read-the-books)
-    - [Use higher-level abstracttions](#use-higher-level-abstracttions)
+    - [Use higher-level abstractions](#use-higher-level-abstractions)
     - [Prefer simple synchronization schemes](#prefer-simple-synchronization-schemes)
     - [Always ensure your synchronization scheme is correct](#always-ensure-your-synchronization-scheme-is-correct)
     - [Avoid leaking 'this' from constructors](#avoid-leaking-this-from-constructors)
@@ -309,7 +309,7 @@ See *Effective Java, 2nd Edition, Item 51*
 
 Use reflection only as a last resort, prefer factory interfaces or
 `ServiceLoader` instead. Usually prefer `getCanonicalName()` over
-`getName()` as it produces more readable output). Never use
+`getName()` as it produces more readable output. Never use
 `Class.toString()` in log or debug messages.
 
 ### Return values and errors
@@ -581,7 +581,7 @@ tag.
 
 Since Java 7, Generic types are automatically inferred in many places
 where they previously had to be made explicit. Prefer less syntactic
-clutter while maintaining type satefy.
+clutter while maintaining type safety.
 
 ``` java
 // BAD. Don't do this.
@@ -845,7 +845,7 @@ show some examples below of instances where knowledge of library
 functions makes code cleaner, shorter, and more bug-free.
 
 **Use them**. Someone has probably written this before. If you find a
-(Palantir) library does *almost* does what you need, consider submitting
+(Palantir) library *almost* does what you need, consider submitting
 a patch to that library that generalizes it to cover the required
 functionality. Don't forget to add a test for your addition. This
 approach has two benefits: Firstly, you're less likely to introduce bugs
@@ -1048,7 +1048,7 @@ interface.
     code to an external class
 - The rendering process may be different depending on the particular
     type of a Feeds message
-- We plan to add add new kinds of Feeds messages later on
+- We plan to add new kinds of Feeds messages later on
 
 Naively, we might consider doing something like this:
 
@@ -1530,7 +1530,7 @@ be disabled in production.
 Learn modern Java concurrency primitives and utilities by reading *Java
 Concurrency in Practice*.
 
-### Use higher-level abstracttions
+### Use higher-level abstractions
 
 Use Executors, Tasks, and Java Concurrency Utilities; not Threads,
 ThreadGroups, synchronize, wait, notify, etc. If you are on Java 8, study
@@ -1562,7 +1562,7 @@ Think very carefully about the correctness of your synchronization
 scheme. If you can't "prove" to yourself that your synchronization
 scheme is correct, then it probably isn't. Note that "prove" is in
 quotes here — we're not expecting a detailed mathematical proof, just
-some sort of a tight argument.
+some sort of tight argument.
 
 Make sure all data that is accessed by multiple threads is protected by
 a lock, marked final/immutable, or marked volatile. Ensure that data is

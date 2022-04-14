@@ -27,7 +27,7 @@ import spock.lang.Unroll
 class JunitReportsPluginSpec extends IntegrationSpec {
     private static final List<String> GRADLE_TEST_VERSIONS = ['6.1']
 
-    def '#gradleVersionNumber: configures the checkstlye plugin correctly'() {
+    def '#gradleVersionNumber: configures the checkstyle plugin correctly'() {
         setup:
         gradleVersion = gradleVersionNumber
 
