@@ -8,7 +8,7 @@ The Internet provides a wealth of material on code reviews:
 [on formal security reviews](https://www.owasp.org/images/2/2e/OWASP_Code_Review_Guide-V1_1.pdf),
 [shorter guides](https://github.com/thoughtbot/guides/tree/master/code-review),
 [longer checklists](https://www.codeproject.com/Articles/524235/Codeplusreviewplusguidelines),
-[humanized reviews](http://www.processimpact.com/articles/humanizing_reviews.html),
+[humanized reviews](https://www.processimpact.com/articles/humanizing_reviews.pdf),
 [reasons for doing code reviews in the first place](https://smartbear.com/learn/code-review/why-review-code/),
 [best practices](https://smartbear.com/learn/code-review/best-practices-for-peer-code-review/),
 [more best practices](https://www.atlassian.com/agile/software-development/code-reviews) and
@@ -17,7 +17,7 @@ Oh, and of course there are
 [books](https://books.google.com/books/about/Peer_Reviews_in_Software.html?id=d7BQAAAAMAAJ),
 too. Long story short, this document presents Palantir's take on code reviews.
 Organizations with deep cultural reluctance to peer reviews may want to consult
-Karl E. Wiegers' excellent essay on [Humanizing Peer Reviews](http://www.processimpact.com/articles/humanizing_reviews.html) before trying to follow this guide.
+Karl E. Wiegers' excellent essay on [Humanizing Peer Reviews](https://www.processimpact.com/articles/humanizing_reviews.pdf) before trying to follow this guide.
 
 This guide covers the following topics:
 

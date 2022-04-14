@@ -137,7 +137,7 @@
         </module>
         <module name="IllegalImport">
             <property name="illegalPkgs" value="sun"/>
-            <message key="import.illegal" value="Must not use Oracle's Java implementation details. See http://www.oracle.com/technetwork/java/faq-sun-packages-142232.html ."/>
+            <message key="import.illegal" value="Must not use Oracle's Java implementation details. See https://www.oracle.com/java/technologies/faq-sun-packages.html ."/>
         </module>
         <module name="IllegalImport">
             <property name="illegalPkgs" value="org.apache.commons.lang"/>
