@@ -87,7 +87,7 @@ topics:
     all offices)
 - Java Concurrency in Practice (copies exist in all offices)
 - [Writing Testable Code](http://misko.hevery.com/code-reviewers-guide/)
-- [How to Design a GoodAPI and Why it Matters (Bloch)](http://fwdinnovations.net/whitepaper/APIDesign.pdf)
+- [How to Design a GoodAPI and Why it Matters (Bloch)](https://fwdinnovations.net/whitepaper/APIDesign.pdf)
 
 ## Miscellaneous
 
@@ -1851,7 +1851,7 @@ the constructor is made package-private and annotated with
 A range of orchestration frameworks for dependency injection and
 configuration are available -- from lightweight (e.g., Google's
 [Guice](https://github.com/google/guice)) to pretty hefty (e.g.,
-[Spring](http://projects.spring.io/spring-framework/)). The particular
+[Spring](https://spring.io/projects/spring-framework/)). The particular
 choice of framework can have long-range implications on code design and
 application architecture, so it's usually best to consult someone with
 prior experience before making a choice.

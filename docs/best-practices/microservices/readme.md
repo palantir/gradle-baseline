@@ -36,7 +36,7 @@ simple types is still brittle, we recommend wrapping simple types in a
 JSON document, i.e., return `{"name": "foo"}` rather than `"foo"`.
 
 Do not return root-level arrays, as it's an attack vector. See
-[here](http://haacked.com/archive/2009/06/25/json-hijacking.aspx/).
+[here](https://haacked.com/archive/2009/06/25/json-hijacking.aspx/).
 
 **Optional parameters: as URL query parameters**
 
@@ -272,7 +272,7 @@ frontend applications.
 
 Frontend-serving services should handle unauthenticated preflight
 OPTIONS requests in order to support
-[CORS](http://www.html5rocks.com/en/tutorials/cors/).
+[CORS](https://www.html5rocks.com/en/tutorials/cors/).
 
 **Response time: at most 100ms for synchronous requests**
 

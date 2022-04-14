@@ -151,7 +151,7 @@ not to waste reviewers' time and motivation:
   - Expensive human review time should be spent on the program logic
     rather than style, syntax, or formatting debates. We prefer settling
     those with automated tooling like
-    [Checkstyle](http://checkstyle.sourceforge.io/),
+    [Checkstyle](https://checkstyle.sourceforge.io/),
     [TSLint](https://github.com/palantir/tslint),
     [Baseline](https://github.com/palantir/gradle-baseline),
     [Prettier](https://github.com/prettier/prettier),
@@ -160,7 +160,7 @@ not to waste reviewers' time and motivation:
 
 ## Commit messages
 
-The following is an example of a good commit message following a [widely quoted standard](http://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html):
+The following is an example of a good commit message following a [widely quoted standard](https://tbaggery.com/2008/04/19/a-note-about-git-commit-messages.html):
 
 ```
 Capitalized, short (80 chars or less) summary

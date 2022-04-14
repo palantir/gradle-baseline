@@ -10,7 +10,7 @@ A very brief introduction to software testing. This guide covers the following t
 - [End-to-end (ETE) Tests](#end-to-end-ete-tests)
 
 Further reading: Steve Freeman, [Growing Object-Oriented Software, Guided by Tests
-](http://www.amazon.com/Growing-Object-Oriented-Software-Guided-Tests/dp/0321503627)
+](https://www.amazon.com/Growing-Object-Oriented-Software-Guided-Tests/dp/0321503627)
 
 ---
 
@@ -37,8 +37,8 @@ subset of *representative cases*.
 ## Unit Tests
 
 The examples in this section are written in Java using the standard
-[JUnit](http://junit.org/) and
-[AssertJ](http://joel-costigliola.github.io/assertj/) libraries for which a
+[JUnit](https://junit.org/) and
+[AssertJ](https://joel-costigliola.github.io/assertj/) libraries for which a
 plethora of tutorials are
 available. Conceptually similar approaches exist in other languages.
 
@@ -387,7 +387,7 @@ For more on this topic, please see Miško Hevery's *Guide: Writing Testable Code
 
 - Miško Hevery, [Guide: Writing Testable Code](http://misko.hevery.com/code-reviewers-guide/)
 - Miško Hevery, [The Clean Code Talks -- Unit Testing](https://www.youtube.com/watch?v=wEhu57pih5w)
-- Lisa Crispin, [Agile Testing: A Practical Guide for Testers and Agile Teams](http://www.amazon.com/gp/product/0321534468?tag=sw-testing-books-20)
+- Lisa Crispin, [Agile Testing: A Practical Guide for Testers and Agile Teams](https://www.amazon.com/gp/product/0321534468?tag=sw-testing-books-20)
 
 ## Integration Tests
 
