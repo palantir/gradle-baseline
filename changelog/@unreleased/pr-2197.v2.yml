@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Fix index-out-of-bounds analyzing type parameters on raw types
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2197
