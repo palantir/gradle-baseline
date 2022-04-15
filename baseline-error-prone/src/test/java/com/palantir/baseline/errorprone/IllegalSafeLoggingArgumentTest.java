@@ -1173,6 +1173,23 @@ class IllegalSafeLoggingArgumentTest {
     }
 
     @Test
+    public void testRawTypes() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.function.*;",
+                        "@SuppressWarnings(\"rawtypes\")",
+                        "interface Test<T extends CharSequence> {",
+                        "  Iface iface();",
+                        "  default void f(@Unsafe String value) {",
+                        "    iface().accept(value);",
+                        "  }",
+                        "  interface Iface<T> extends Consumer<T> {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testSafeArgOfUnsafe_recommendsUnsafeArgOf() {
         refactoringHelper()
                 .addInputLines(
