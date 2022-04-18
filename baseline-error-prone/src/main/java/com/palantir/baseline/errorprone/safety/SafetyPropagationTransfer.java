@@ -196,13 +196,20 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     private static final Matcher<ExpressionTree> STATIC_STREAM_FACTORIES =
             MethodMatchers.staticMethod().onClass(Stream.class.getName()).namedAnyOf("of", "ofNullable", "concat");
 
+    private static final Matcher<ExpressionTree> RID_FACTORY = MethodMatchers.staticMethod()
+            .onClass("com.palantir.ri.ResourceIdentifier")
+            // capture all overloads -- in the case of the multi-parameter methods, only the 'locator' components
+            // really matter, however the rest are required to be safe, so they cannot poison results.
+            .namedAnyOf("of", "valueOf");
+
     // These methods do not take the receiver (generally a static class) into account, only the inputs.
     private static final Matcher<ExpressionTree> RETURNS_SAFETY_COMBINATION_OF_ARGS = Matchers.anyOf(
             STRING_FORMAT,
             OBJECTS_TO_STRING,
             IMMUTABLE_COLLECTION_FACTORY,
             OPTIONAL_FACTORIES,
-            STATIC_STREAM_FACTORIES);
+            STATIC_STREAM_FACTORIES,
+            RID_FACTORY);
 
     private static final Matcher<ExpressionTree> OPTIONAL_ACCESSORS = Matchers.anyOf(
             MethodMatchers.instanceMethod()
@@ -257,6 +264,11 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
             MethodMatchers.instanceMethod()
                     .onDescendantOf(Iterator.class.getName())
                     .named("next")
+                    .withNoParameters(),
+            // Rid components are considered safe, except for 'locator' which inherits the safety of the rid object.
+            MethodMatchers.instanceMethod()
+                    .onDescendantOf("com.palantir.ri.ResourceIdentifier")
+                    .named("getLocator")
                     .withNoParameters(),
             OPTIONAL_ACCESSORS,
             STREAM_ACCESSORS);

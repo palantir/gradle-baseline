@@ -1190,6 +1190,66 @@ class IllegalSafeLoggingArgumentTest {
     }
 
     @Test
+    public void testResourceIdentifierComponentSafety() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.function.*;",
+                        "import com.palantir.ri.*;",
+                        "class Test {",
+                        "  void f(@Unsafe ResourceIdentifier rid) {",
+                        "    fun(rid.getService());",
+                        "    fun(rid.getInstance());",
+                        "    fun(rid.getType());",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(rid.getLocator());",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(rid);",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(rid.toString());",
+                        "  }",
+                        "  void fun(@Safe Object in) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testResourceIdentifierCreationSafety() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.function.*;",
+                        "import com.palantir.ri.*;",
+                        "class Test {",
+                        "  void f(@Unsafe String value) {",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    safe(ResourceIdentifier.of(value));",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    safe(ResourceIdentifier.valueOf(value));",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    safe(ResourceIdentifier.of(\"service\", \"instance\", \"type\", value));",
+                        "    ResourceIdentifier varArgs = ResourceIdentifier.of(",
+                        "      \"service\", \"instance\", \"type\", \"loc\", value);",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    safe(varArgs);",
+                        "    safe(ResourceIdentifier.valueOf(\"ri.service.instance.type.name\"));",
+                        "    safe(ResourceIdentifier.of(\"ri.service.instance.type.name\"));",
+                        "    safe(ResourceIdentifier.of(\"service\", \"instance\", \"type\", \"safe-locator\"));",
+                        "    safe(ResourceIdentifier.of(\"service\", \"instance\", \"type\", \"safe\", \"locator\"));",
+                        "  }",
+                        "  void safe(@Safe Object in) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testSafeArgOfUnsafe_recommendsUnsafeArgOf() {
         refactoringHelper()
                 .addInputLines(
