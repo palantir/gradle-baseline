@@ -8,6 +8,7 @@ import com.google.common.collect.Iterables;
 import java.nio.file.Path;
 import java.util.Optional;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.ArtifactView;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.attributes.Attribute;
 
@@ -63,8 +64,11 @@ final class AzulJdkDownloader {
                         .create(String.format(
                                 "%s:zulu%s-ca-jdk%s-%s_%s:@zip",
                                 AZUL_JDK, jdkSpec.zuluVersion(), jdkSpec.javaVersion(), jdkSpec.os(), jdkSpec.arch())));
-        configuration.attributes(attributes -> attributes.attribute(EXTRACTED_ATTRIBUTE, true));
-        return Iterables.getOnlyElement(configuration.resolve()).toPath();
+        //        configuration.attributes(attributes -> attributes.attribute(EXTRACTED_ATTRIBUTE, true));
+        ArtifactView artifactView = configuration.getIncoming().artifactView(view -> {
+            view.attributes(attributes -> attributes.attribute(EXTRACTED_ATTRIBUTE, true));
+        });
+        return Iterables.getOnlyElement(artifactView.getFiles()).toPath();
     }
 
     private Optional<String> property(String name) {
