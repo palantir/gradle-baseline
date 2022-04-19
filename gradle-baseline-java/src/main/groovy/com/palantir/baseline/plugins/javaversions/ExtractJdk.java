@@ -7,7 +7,12 @@ package com.palantir.baseline.plugins.javaversions;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.util.function.Consumer;
+import java.util.stream.Stream;
 import javax.inject.Inject;
+import org.apache.commons.io.FileUtils;
 import org.gradle.api.artifacts.transform.CacheableTransform;
 import org.gradle.api.artifacts.transform.InputArtifact;
 import org.gradle.api.artifacts.transform.TransformAction;
@@ -34,21 +39,46 @@ public abstract class ExtractJdk implements TransformAction<TransformParameters.
 
     @Override
     public final void transform(TransformOutputs transformOutputs) {
-        File tempDir = createTempDir();
+        String withoutExtension = getZippedAzulJdk().get().getAsFile().getName().replaceAll("-?\\.zip$", "");
+        File outputFolder = transformOutputs.dir(withoutExtension);
         getFileSystemOperations().copy(copy -> {
             copy.from(getArchiveOperations().zipTree(getZippedAzulJdk()));
-            copy.into(tempDir);
+            copy.into(outputFolder);
         });
-        transformOutputs.dir(tempDir);
+        Path innerFolder = outputFolder.toPath().resolve(withoutExtension);
+        Path javaHome = findJavaHome(innerFolder);
+
+        try (Stream<Path> topLevelJdkItems = Files.list(javaHome)) {
+            topLevelJdkItems.forEach(moveTo(outputFolder.toPath()));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        try {
+            FileUtils.deleteDirectory(innerFolder.toFile());
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
     }
 
-    private File createTempDir() {
-        try {
-            return Files.createTempDirectory(
-                            getZippedAzulJdk().get().getAsFile().getName())
-                    .toFile();
+    private Consumer<Path> moveTo(Path directory) {
+        return path -> {
+            Path destination = directory.resolve(path.getFileName());
+            try {
+                Files.move(path, destination);
+            } catch (IOException e) {
+                throw new RuntimeException(String.format("Failed to move file %s to %s", path, destination, e));
+            }
+        };
+    }
+
+    private Path findJavaHome(Path temporaryJdkPath) {
+        try (Stream<Path> files = Files.walk(temporaryJdkPath)) {
+            return files.filter(file -> Files.isDirectory(file) && file.endsWith(Paths.get("Contents/Home")))
+                    .findFirst()
+                    .orElseThrow(() -> new RuntimeException("Failed to find java home in " + temporaryJdkPath));
         } catch (IOException e) {
-            throw new RuntimeException("Failed to make temp dir", e);
+            throw new RuntimeException("Failed to find java home in " + temporaryJdkPath, e);
         }
     }
 }
