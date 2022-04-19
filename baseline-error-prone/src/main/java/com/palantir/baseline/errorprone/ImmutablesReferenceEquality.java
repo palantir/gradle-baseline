@@ -1,5 +1,5 @@
 /*
- * (c) Copyright 2020 Palantir Technologies Inc. All rights reserved.
+ * (c) Copyright 2022 Palantir Technologies Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,7 +31,7 @@ import com.sun.tools.javac.code.Type;
 @BugPattern(
         linkType = LinkType.CUSTOM,
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
-        severity = SeverityLevel.WARNING,
+        severity = SeverityLevel.ERROR,
         summary = "Comparison of Immutables value using reference equality instead of value equality.")
 public final class ImmutablesReferenceEquality extends AbstractReferenceEquality {
 
