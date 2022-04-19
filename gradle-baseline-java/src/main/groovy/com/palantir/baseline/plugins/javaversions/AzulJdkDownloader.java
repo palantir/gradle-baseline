@@ -38,11 +38,9 @@ final class AzulJdkDownloader {
 
         rootProject.getDependencies().getAttributesSchema().attribute(EXTRACTED_ATTRIBUTE);
         rootProject.getDependencies().getComponents().all(componentMetadataDetails -> {
-            if (!AZUL_JDK.equals(componentMetadataDetails.getId().getGroup())) {
-                return;
+            if (AZUL_JDK.equals(componentMetadataDetails.getId().getGroup())) {
+                componentMetadataDetails.attributes(attributes -> attributes.attribute(EXTRACTED_ATTRIBUTE, false));
             }
-
-            componentMetadataDetails.attributes(attributes -> attributes.attribute(EXTRACTED_ATTRIBUTE, false));
         });
         rootProject.getDependencies().registerTransform(ExtractJdk.class, transform -> {
             transform.getFrom().attribute(EXTRACTED_ATTRIBUTE, false);
