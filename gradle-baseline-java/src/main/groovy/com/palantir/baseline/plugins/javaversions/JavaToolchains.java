@@ -15,13 +15,15 @@ import org.gradle.jvm.toolchain.JavaToolchainSpec;
 public final class JavaToolchains {
     private final Project project;
     private final BaselineJavaVersionsExtension baselineJavaVersionsExtension;
-    private final JdkManager jdkManager;
+    private final AzulJdkDownloader jdkDownloader;
 
     public JavaToolchains(
-            Project project, BaselineJavaVersionsExtension baselineJavaVersionsExtension, JdkManager jdkManager) {
+            Project project,
+            BaselineJavaVersionsExtension baselineJavaVersionsExtension,
+            AzulJdkDownloader jdkDownloader) {
         this.project = project;
         this.baselineJavaVersionsExtension = baselineJavaVersionsExtension;
-        this.jdkManager = jdkManager;
+        this.jdkDownloader = jdkDownloader;
     }
 
     public Provider<PalantirJavaToolchain> forVersion(Provider<JavaLanguageVersion> javaLanguageVersionProvider) {
@@ -55,8 +57,8 @@ public final class JavaToolchains {
                     .javaRuntimeVersion(javaVersionNumber.get())
                     .vendor("Azul Zulu")
                     .installationPath(project.getLayout()
-                            .dir(project.provider(() -> jdkManager
-                                    .jdk(JdkSpec.builder()
+                            .dir(project.provider(() -> jdkDownloader
+                                    .downloadJdkFor(JdkSpec.builder()
                                             .javaVersion(javaVersionNumber.get())
                                             .zuluVersion(zuluVersionNumber.get())
                                             .build())

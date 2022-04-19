@@ -8,7 +8,7 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 
 public final class BaselineJavaVersionRootPlugin implements Plugin<Project> {
-    private JdkManager jdkManager;
+    private AzulJdkDownloader jdkDownloader;
 
     @Override
     public void apply(Project rootProject) {
@@ -17,11 +17,10 @@ public final class BaselineJavaVersionRootPlugin implements Plugin<Project> {
                     BaselineJavaVersionRootPlugin.class + " can only be applied on the root project");
         }
 
-        jdkManager =
-                new JdkManager(rootProject.getBuildDir().toPath().resolve("jdks"), new AzulJdkDownloader(rootProject));
+        jdkDownloader = new AzulJdkDownloader(rootProject);
     }
 
-    public JdkManager jdkManager() {
-        return jdkManager;
+    public AzulJdkDownloader jdkDownloader() {
+        return jdkDownloader;
     }
 }

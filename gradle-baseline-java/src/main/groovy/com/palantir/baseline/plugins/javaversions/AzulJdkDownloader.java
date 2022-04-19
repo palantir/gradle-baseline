@@ -12,7 +12,7 @@ import org.gradle.api.artifacts.ArtifactView;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.attributes.Attribute;
 
-final class AzulJdkDownloader {
+public final class AzulJdkDownloader {
     private static final Attribute<Boolean> EXTRACTED_ATTRIBUTE = Attribute.of("azul-jdk.extracted", Boolean.class);
     private static final String AZUL_JDK = "azul-jdk";
 
