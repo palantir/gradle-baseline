@@ -29,4 +29,9 @@ class JdkDownloaderSpec extends ProjectSpec {
         os << ['macosx', 'linux', 'windows']
         arch << ['aarch64', 'x64', 'x64']
     }
+
+    @Override
+    boolean deleteProjectDir() {
+        return false
+    }
 }

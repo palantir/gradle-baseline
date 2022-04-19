@@ -9,8 +9,10 @@ import java.nio.file.Path;
 import java.util.Optional;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.attributes.Attribute;
 
 final class AzulJdkDownloader {
+    private static final Attribute<Boolean> EXTRACTED_ATTRIBUTE = Attribute.of("azul-jdk.extracted", Boolean.class);
     private static final String AZUL_JDK = "azul-jdk";
 
     private final Project rootProject;
@@ -34,6 +36,19 @@ final class AzulJdkDownloader {
             });
         });
 
+        rootProject.getDependencies().getAttributesSchema().attribute(EXTRACTED_ATTRIBUTE);
+        rootProject.getDependencies().getComponents().all(componentMetadataDetails -> {
+            if (!AZUL_JDK.equals(componentMetadataDetails.getId().getGroup())) {
+                return;
+            }
+
+            componentMetadataDetails.attributes(attributes -> attributes.attribute(EXTRACTED_ATTRIBUTE, false));
+        });
+        rootProject.getDependencies().registerTransform(ExtractJdk.class, transform -> {
+            transform.getFrom().attribute(EXTRACTED_ATTRIBUTE, false);
+            transform.getTo().attribute(EXTRACTED_ATTRIBUTE, true);
+        });
+
         rootProject
                 .getRepositories()
                 .matching(repo -> !repo.getName().equals(AZUL_JDK))
@@ -50,6 +65,7 @@ final class AzulJdkDownloader {
                         .create(String.format(
                                 "%s:zulu%s-ca-jdk%s-%s_%s:@zip",
                                 AZUL_JDK, jdkSpec.zuluVersion(), jdkSpec.javaVersion(), jdkSpec.os(), jdkSpec.arch())));
+        configuration.attributes(attributes -> attributes.attribute(EXTRACTED_ATTRIBUTE, true));
         return Iterables.getOnlyElement(configuration.resolve()).toPath();
     }
 
