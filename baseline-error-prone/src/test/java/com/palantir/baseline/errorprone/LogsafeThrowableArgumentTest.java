@@ -19,7 +19,7 @@ package com.palantir.baseline.errorprone;
 import com.google.errorprone.CompilationTestHelper;
 import org.junit.jupiter.api.Test;
 
-class LogsafeArgumentTest {
+class LogsafeThrowableArgumentTest {
 
     @Test
     void testNormalUsage() {
@@ -66,6 +66,6 @@ class LogsafeArgumentTest {
     }
 
     private CompilationTestHelper helper() {
-        return CompilationTestHelper.newInstance(LogsafeArgument.class, getClass());
+        return CompilationTestHelper.newInstance(LogsafeThrowableArgument.class, getClass());
     }
 }
