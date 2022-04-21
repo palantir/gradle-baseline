@@ -34,12 +34,10 @@ public class BaselineJavaVersionExtension {
     @Inject
     public BaselineJavaVersionExtension(Project project) {
         target = project.getObjects().property(JavaLanguageVersion.class);
-        target.finalizeValueOnRead();
-
         runtime = project.getObjects().property(JavaLanguageVersion.class);
-        runtime.finalizeValueOnRead();
-
         overrideLibraryAutoDetection = project.getObjects().property(Boolean.class);
+        target.finalizeValueOnRead();
+        runtime.finalizeValueOnRead();
         overrideLibraryAutoDetection.finalizeValueOnRead();
     }
 

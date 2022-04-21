@@ -16,10 +16,6 @@
 
 package com.palantir.baseline.extensions;
 
-import java.util.HashMap;
-import java.util.Map;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import javax.inject.Inject;
 import org.gradle.api.Project;
 import org.gradle.api.provider.MapProperty;
@@ -31,7 +27,7 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion;
  * Extension named {@code javaVersions} on the root project used to configure all java modules
  * with consistent java toolchains.
  */
-public abstract class BaselineJavaVersionsExtension {
+public class BaselineJavaVersionsExtension {
     private final Property<JavaLanguageVersion> libraryTarget;
     private final Property<JavaLanguageVersion> distributionTarget;
     private final Property<JavaLanguageVersion> runtime;
@@ -87,21 +83,5 @@ public abstract class BaselineJavaVersionsExtension {
 
     public final MapProperty<JavaLanguageVersion, JavaInstallationMetadata> getJdks() {
         return jdks;
-    }
-
-    private static Map<JavaLanguageVersion, String> parseOutVersions(Project project, Pattern propertyPattern) {
-        Map<JavaLanguageVersion, String> ret = new HashMap<>();
-
-        project.getProperties().forEach((key, value) -> {
-            Matcher matcher = propertyPattern.matcher(key);
-
-            if (!matcher.matches()) {
-                return;
-            }
-
-            ret.put(JavaLanguageVersion.of(Integer.parseInt(matcher.group(1))), (String) value);
-        });
-
-        return ret;
     }
 }
