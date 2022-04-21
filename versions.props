@@ -21,7 +21,7 @@ com.fasterxml.jackson.*:* = 2.13.2
 com.github.stefanbirkner:system-rules = 1.19.0
 com.netflix.nebula:nebula-test = 10.1.0
 com.palantir.conjure.java:* = 6.44.0
-com.palantir.conjure.java.api:* = 2.24.0
+com.palantir.conjure.java.api:* = 2.25.0
 com.palantir.tokens:auth-tokens = 3.14.0
 com.palantir.tritium:tritium-registry = 0.47.0
 junit:junit = 4.13.2
@@ -32,7 +32,7 @@ org.apache.commons:commons-lang3 = 3.12.0
 org.assertj:assertj-core = 3.22.0
 org.hamcrest:hamcrest-core = 2.2
 org.junit.jupiter:* = 5.8.2
-org.mockito:* = 4.5.0
+org.mockito:* = 4.5.1
 
 # dependency-upgrader:OFF
 # Don't upgrade, we will remove this in a future release.
