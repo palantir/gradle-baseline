@@ -18,10 +18,8 @@ package com.palantir.baseline.plugins;
 
 import com.palantir.baseline.extensions.BaselineJavaVersionExtension;
 import com.palantir.baseline.extensions.BaselineJavaVersionsExtension;
-import com.palantir.baseline.plugins.javaversions.AzulJdkDownloader;
-import com.palantir.baseline.plugins.javaversions.BaselineJavaVersionRootPlugin;
+import com.palantir.baseline.plugins.javaversions.BaselineJavaToolchain;
 import com.palantir.baseline.plugins.javaversions.JavaToolchains;
-import com.palantir.baseline.plugins.javaversions.PalantirJavaToolchain;
 import javax.inject.Inject;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
@@ -54,11 +52,6 @@ public final class BaselineJavaVersion implements Plugin<Project> {
         BaselineJavaVersionExtension extension =
                 project.getExtensions().create(EXTENSION_NAME, BaselineJavaVersionExtension.class, project);
 
-        AzulJdkDownloader jdkDownloader = project.getRootProject()
-                .getPlugins()
-                .apply(BaselineJavaVersionRootPlugin.class)
-                .jdkDownloader();
-
         project.getPluginManager().withPlugin("java", unused -> {
             JavaPluginExtension javaPluginExtension = project.getExtensions().getByType(JavaPluginExtension.class);
 
@@ -73,9 +66,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             });
 
             JavaToolchains javaToolchains = new JavaToolchains(
-                    project,
-                    project.getRootProject().getExtensions().getByType(BaselineJavaVersionsExtension.class),
-                    jdkDownloader);
+                    project, project.getRootProject().getExtensions().getByType(BaselineJavaVersionsExtension.class));
 
             // Compilation tasks (using target version)
             configureCompilationTasks(project, extension.target(), javaToolchains.forVersion(extension.target()));
@@ -99,11 +90,11 @@ public final class BaselineJavaVersion implements Plugin<Project> {
     private static void configureCompilationTasks(
             Project project,
             Provider<JavaLanguageVersion> targetVersionProvider,
-            Provider<PalantirJavaToolchain> javaToolchain) {
+            Provider<BaselineJavaToolchain> javaToolchain) {
         project.getTasks().withType(JavaCompile.class, new Action<JavaCompile>() {
             @Override
             public void execute(JavaCompile javaCompile) {
-                javaCompile.getJavaCompiler().set(javaToolchain.flatMap(PalantirJavaToolchain::javaCompiler));
+                javaCompile.getJavaCompiler().set(javaToolchain.flatMap(BaselineJavaToolchain::javaCompiler));
                 // Set sourceCompatibility to opt out of '-release', allowing opens/exports to be used.
                 javaCompile.doFirst(new Action<Task>() {
                     @Override
@@ -119,14 +110,14 @@ public final class BaselineJavaVersion implements Plugin<Project> {
         project.getTasks().withType(Javadoc.class, new Action<Javadoc>() {
             @Override
             public void execute(Javadoc javadoc) {
-                javadoc.getJavadocTool().set(javaToolchain.flatMap(PalantirJavaToolchain::javadocTool));
+                javadoc.getJavadocTool().set(javaToolchain.flatMap(BaselineJavaToolchain::javadocTool));
             }
         });
 
         project.getTasks().withType(GroovyCompile.class, new Action<GroovyCompile>() {
             @Override
             public void execute(GroovyCompile groovyCompile) {
-                groovyCompile.getJavaLauncher().set(javaToolchain.flatMap(PalantirJavaToolchain::javaLauncher));
+                groovyCompile.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));
                 // Set sourceCompatibility to opt out of '-release', allowing opens/exports to be used.
                 groovyCompile.doFirst(new Action<Task>() {
                     @Override
@@ -142,7 +133,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
         project.getTasks().withType(ScalaCompile.class, new Action<ScalaCompile>() {
             @Override
             public void execute(ScalaCompile scalaCompile) {
-                scalaCompile.getJavaLauncher().set(javaToolchain.flatMap(PalantirJavaToolchain::javaLauncher));
+                scalaCompile.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));
                 // Set sourceCompatibility to opt out of '-release', allowing opens/exports to be used.
                 scalaCompile.doFirst(new Action<Task>() {
                     @Override
@@ -158,23 +149,23 @@ public final class BaselineJavaVersion implements Plugin<Project> {
         project.getTasks().withType(ScalaDoc.class, new Action<ScalaDoc>() {
             @Override
             public void execute(ScalaDoc scalaDoc) {
-                scalaDoc.getJavaLauncher().set(javaToolchain.flatMap(PalantirJavaToolchain::javaLauncher));
+                scalaDoc.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));
             }
         });
     }
 
-    private static void configureExecutionTasks(Project project, Provider<PalantirJavaToolchain> javaToolchain) {
+    private static void configureExecutionTasks(Project project, Provider<BaselineJavaToolchain> javaToolchain) {
         project.getTasks().withType(JavaExec.class, new Action<JavaExec>() {
             @Override
             public void execute(JavaExec javaExec) {
-                javaExec.getJavaLauncher().set(javaToolchain.flatMap(PalantirJavaToolchain::javaLauncher));
+                javaExec.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));
             }
         });
 
         project.getTasks().withType(Test.class, new Action<Test>() {
             @Override
             public void execute(Test test) {
-                test.getJavaLauncher().set(javaToolchain.flatMap(PalantirJavaToolchain::javaLauncher));
+                test.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));
             }
         });
     }

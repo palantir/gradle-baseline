@@ -8,20 +8,20 @@ import org.gradle.api.file.RegularFile;
 import org.gradle.jvm.toolchain.JavaCompiler;
 import org.gradle.jvm.toolchain.JavaInstallationMetadata;
 
-final class PalantirJavaCompiler implements JavaCompiler {
-    private final PalantirJavaInstallationMetadata palantirJavaInstallationMetadata;
+final class BaselineJavaCompiler implements JavaCompiler {
+    private final JavaInstallationMetadata javaInstallationMetadata;
 
-    PalantirJavaCompiler(PalantirJavaInstallationMetadata palantirJavaInstallationMetadata) {
-        this.palantirJavaInstallationMetadata = palantirJavaInstallationMetadata;
+    BaselineJavaCompiler(JavaInstallationMetadata javaInstallationMetadata) {
+        this.javaInstallationMetadata = javaInstallationMetadata;
     }
 
     @Override
-    public JavaInstallationMetadata getMetadata() {
-        return palantirJavaInstallationMetadata;
+    public org.gradle.jvm.toolchain.JavaInstallationMetadata getMetadata() {
+        return javaInstallationMetadata;
     }
 
     @Override
     public RegularFile getExecutablePath() {
-        return palantirJavaInstallationMetadata.findExecutable("javac");
+        return JavaInstallationMetadataUtils.findExecutable(javaInstallationMetadata, "javac");
     }
 }

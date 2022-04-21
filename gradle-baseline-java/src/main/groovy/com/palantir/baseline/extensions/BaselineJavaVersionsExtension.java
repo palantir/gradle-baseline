@@ -24,21 +24,18 @@ import javax.inject.Inject;
 import org.gradle.api.Project;
 import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.jvm.toolchain.JavaInstallationMetadata;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 
 /**
  * Extension named {@code javaVersions} on the root project used to configure all java modules
  * with consistent java toolchains.
  */
-public class BaselineJavaVersionsExtension {
-    private static final Pattern ZULU_VERSION_PATTERN = Pattern.compile("ZULU_([\\d]+)_VERSION");
-    private static final Pattern JAVA_VERSION_PATTERN = Pattern.compile("JAVA_([\\d]+)_VERSION");
-
+public abstract class BaselineJavaVersionsExtension {
     private final Property<JavaLanguageVersion> libraryTarget;
     private final Property<JavaLanguageVersion> distributionTarget;
     private final Property<JavaLanguageVersion> runtime;
-    private final MapProperty<JavaLanguageVersion, String> zuluVersions;
-    private final MapProperty<JavaLanguageVersion, String> javaVersions;
+    private final MapProperty<JavaLanguageVersion, JavaInstallationMetadata> jdks;
 
     @Inject
     public BaselineJavaVersionsExtension(Project project) {
@@ -54,13 +51,8 @@ public class BaselineJavaVersionsExtension {
         distributionTarget.finalizeValueOnRead();
         runtime.finalizeValueOnRead();
 
-        zuluVersions = project.getObjects().mapProperty(JavaLanguageVersion.class, String.class);
-        zuluVersions.putAll(project.provider(() -> parseOutVersions(project, ZULU_VERSION_PATTERN)));
-        zuluVersions.finalizeValueOnRead();
-
-        javaVersions = project.getObjects().mapProperty(JavaLanguageVersion.class, String.class);
-        javaVersions.putAll(project.provider(() -> parseOutVersions(project, JAVA_VERSION_PATTERN)));
-        javaVersions.finalizeValueOnRead();
+        jdks = project.getObjects().mapProperty(JavaLanguageVersion.class, JavaInstallationMetadata.class);
+        jdks.finalizeValueOnRead();
     }
 
     /** Target {@link JavaLanguageVersion} for compilation of libraries that are published. */
@@ -93,12 +85,8 @@ public class BaselineJavaVersionsExtension {
         runtime.set(JavaLanguageVersion.of(value));
     }
 
-    public final MapProperty<JavaLanguageVersion, String> zuluVersions() {
-        return zuluVersions;
-    }
-
-    public final MapProperty<JavaLanguageVersion, String> javaVersions() {
-        return javaVersions;
+    public final MapProperty<JavaLanguageVersion, JavaInstallationMetadata> getJdks() {
+        return jdks;
     }
 
     private static Map<JavaLanguageVersion, String> parseOutVersions(Project project, Pattern propertyPattern) {

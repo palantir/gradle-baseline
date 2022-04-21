@@ -5,66 +5,32 @@
 package com.palantir.baseline.plugins.javaversions;
 
 import com.palantir.baseline.extensions.BaselineJavaVersionsExtension;
-import org.gradle.api.Action;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Provider;
+import org.gradle.jvm.toolchain.JavaInstallationMetadata;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.jvm.toolchain.JavaToolchainService;
-import org.gradle.jvm.toolchain.JavaToolchainSpec;
 
 public final class JavaToolchains {
     private final Project project;
     private final BaselineJavaVersionsExtension baselineJavaVersionsExtension;
-    private final AzulJdkDownloader jdkDownloader;
 
-    public JavaToolchains(
-            Project project,
-            BaselineJavaVersionsExtension baselineJavaVersionsExtension,
-            AzulJdkDownloader jdkDownloader) {
+    public JavaToolchains(Project project, BaselineJavaVersionsExtension baselineJavaVersionsExtension) {
         this.project = project;
         this.baselineJavaVersionsExtension = baselineJavaVersionsExtension;
-        this.jdkDownloader = jdkDownloader;
     }
 
-    public Provider<PalantirJavaToolchain> forVersion(Provider<JavaLanguageVersion> javaLanguageVersionProvider) {
-        return javaLanguageVersionProvider.map(javaLanguageVersion -> {
-            Provider<String> zuluVersionNumber =
-                    baselineJavaVersionsExtension.zuluVersions().getting(javaLanguageVersion);
-            Provider<String> javaVersionNumber =
-                    baselineJavaVersionsExtension.javaVersions().getting(javaLanguageVersion);
+    public Provider<BaselineJavaToolchain> forVersion(Provider<JavaLanguageVersion> javaLanguageVersionProvider) {
+        return javaLanguageVersionProvider.flatMap(javaLanguageVersion -> {
+            Provider<JavaInstallationMetadata> configuredJdk =
+                    baselineJavaVersionsExtension.getJdks().getting(javaLanguageVersion);
 
-            if (zuluVersionNumber.isPresent() ^ javaVersionNumber.isPresent()) {
-                throw new IllegalArgumentException(String.format(
-                        "Both the 'JAVA_X_VERSION' and 'ZULU_X_VERSION' gradle properties must be present to "
-                                + "select the correct JDK."
-                                + "However, only one of them was found. JAVA_X_VERSION: %s, ZULU_X_VERSION: %s",
-                        zuluVersionNumber.isPresent(), javaVersionNumber.isPresent()));
-            }
-
-            if (!(zuluVersionNumber.isPresent() && javaVersionNumber.isPresent())) {
-                return new FallbackGradleJavaToolchain(
-                        project.getExtensions().getByType(JavaToolchainService.class), new Action<JavaToolchainSpec>() {
-                            @Override
-                            public void execute(JavaToolchainSpec javaToolchainSpec) {
-                                javaToolchainSpec.getLanguageVersion().set(javaLanguageVersion);
-                            }
-                        });
-            }
-
-            return new AzulJavaToolchain(project.provider(() -> PalantirJavaInstallationMetadata.builder()
-                    .languageVersion(javaLanguageVersion)
-                    .jvmVersion(javaVersionNumber.get())
-                    .javaRuntimeVersion(javaVersionNumber.get())
-                    .vendor("Azul Zulu")
-                    .installationPath(project.getLayout()
-                            .dir(project.provider(() -> jdkDownloader
-                                    .downloadJdkFor(JdkSpec.builder()
-                                            .javaVersion(javaVersionNumber.get())
-                                            .zuluVersion(zuluVersionNumber.get())
-                                            .build())
-                                    .toFile()))
-                            .get())
-                    .build()));
+            return configuredJdk
+                    .<BaselineJavaToolchain>map(_ignored -> new ConfiguredJavaToolchain(configuredJdk))
+                    .orElse(project.provider(() -> new FallbackGradleJavaToolchain(
+                            project.getExtensions().getByType(JavaToolchainService.class),
+                            javaToolchainSpec ->
+                                    javaToolchainSpec.getLanguageVersion().set(javaLanguageVersion))));
         });
     }
 }

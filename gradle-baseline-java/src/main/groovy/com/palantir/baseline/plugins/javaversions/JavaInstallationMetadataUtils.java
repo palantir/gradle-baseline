@@ -6,22 +6,11 @@ package com.palantir.baseline.plugins.javaversions;
 
 import org.gradle.api.file.RegularFile;
 import org.gradle.jvm.toolchain.JavaInstallationMetadata;
-import org.gradle.jvm.toolchain.JavaLauncher;
 
-final class PalantirJavaLauncher implements JavaLauncher {
-    private final PalantirJavaInstallationMetadata palantirJavaInstallationMetadata;
-
-    PalantirJavaLauncher(PalantirJavaInstallationMetadata palantirJavaInstallationMetadata) {
-        this.palantirJavaInstallationMetadata = palantirJavaInstallationMetadata;
+final class JavaInstallationMetadataUtils {
+    public static RegularFile findExecutable(JavaInstallationMetadata javaInstallationMetadata, String executableName) {
+        return javaInstallationMetadata.getInstallationPath().dir("bin").file(executableName);
     }
 
-    @Override
-    public JavaInstallationMetadata getMetadata() {
-        return palantirJavaInstallationMetadata;
-    }
-
-    @Override
-    public RegularFile getExecutablePath() {
-        return palantirJavaInstallationMetadata.findExecutable("java");
-    }
+    private JavaInstallationMetadataUtils() {}
 }

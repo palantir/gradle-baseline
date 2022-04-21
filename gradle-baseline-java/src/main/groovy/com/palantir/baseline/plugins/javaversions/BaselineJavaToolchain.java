@@ -9,7 +9,7 @@ import org.gradle.jvm.toolchain.JavaCompiler;
 import org.gradle.jvm.toolchain.JavaLauncher;
 import org.gradle.jvm.toolchain.JavadocTool;
 
-public interface PalantirJavaToolchain {
+public interface BaselineJavaToolchain {
     Provider<JavaCompiler> javaCompiler();
 
     Provider<JavadocTool> javadocTool();

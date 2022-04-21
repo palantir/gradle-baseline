@@ -6,28 +6,29 @@ package com.palantir.baseline.plugins.javaversions;
 
 import org.gradle.api.provider.Provider;
 import org.gradle.jvm.toolchain.JavaCompiler;
+import org.gradle.jvm.toolchain.JavaInstallationMetadata;
 import org.gradle.jvm.toolchain.JavaLauncher;
 import org.gradle.jvm.toolchain.JavadocTool;
 
-final class AzulJavaToolchain implements PalantirJavaToolchain {
-    private final Provider<PalantirJavaInstallationMetadata> javaInstallationMetadata;
+final class ConfiguredJavaToolchain implements BaselineJavaToolchain {
+    private final Provider<JavaInstallationMetadata> javaInstallationMetadata;
 
-    AzulJavaToolchain(Provider<PalantirJavaInstallationMetadata> javaInstallationMetadata) {
+    ConfiguredJavaToolchain(Provider<JavaInstallationMetadata> javaInstallationMetadata) {
         this.javaInstallationMetadata = javaInstallationMetadata;
     }
 
     @Override
     public Provider<JavaCompiler> javaCompiler() {
-        return javaInstallationMetadata.map(PalantirJavaCompiler::new);
+        return javaInstallationMetadata.map(BaselineJavaCompiler::new);
     }
 
     @Override
     public Provider<JavadocTool> javadocTool() {
-        return javaInstallationMetadata.map(PalantirJavadocTool::new);
+        return javaInstallationMetadata.map(BaselineJavadocTool::new);
     }
 
     @Override
     public Provider<JavaLauncher> javaLauncher() {
-        return javaInstallationMetadata.map(PalantirJavaLauncher::new);
+        return javaInstallationMetadata.map(BaselineJavaLauncher::new);
     }
 }

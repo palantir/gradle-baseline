@@ -4,23 +4,24 @@
 
 package com.palantir.baseline.plugins.javaversions;
 
-import org.gradle.api.Plugin;
-import org.gradle.api.Project;
+import org.gradle.api.file.RegularFile;
+import org.gradle.jvm.toolchain.JavaInstallationMetadata;
+import org.gradle.jvm.toolchain.JavaLauncher;
 
-public final class BaselineJavaVersionRootPlugin implements Plugin<Project> {
-    private AzulJdkDownloader jdkDownloader;
+final class BaselineJavaLauncher implements JavaLauncher {
+    private final JavaInstallationMetadata javaInstallationMetadata;
 
-    @Override
-    public void apply(Project rootProject) {
-        if (!rootProject.equals(rootProject.getRootProject())) {
-            throw new RuntimeException(
-                    BaselineJavaVersionRootPlugin.class + " can only be applied on the root project");
-        }
-
-        jdkDownloader = new AzulJdkDownloader(rootProject);
+    BaselineJavaLauncher(JavaInstallationMetadata javaInstallationMetadata) {
+        this.javaInstallationMetadata = javaInstallationMetadata;
     }
 
-    public AzulJdkDownloader jdkDownloader() {
-        return jdkDownloader;
+    @Override
+    public org.gradle.jvm.toolchain.JavaInstallationMetadata getMetadata() {
+        return javaInstallationMetadata;
+    }
+
+    @Override
+    public RegularFile getExecutablePath() {
+        return JavaInstallationMetadataUtils.findExecutable(javaInstallationMetadata, "java");
     }
 }

@@ -12,7 +12,7 @@ import org.gradle.jvm.toolchain.JavaToolchainService;
 import org.gradle.jvm.toolchain.JavaToolchainSpec;
 import org.gradle.jvm.toolchain.JavadocTool;
 
-public final class FallbackGradleJavaToolchain implements PalantirJavaToolchain {
+public final class FallbackGradleJavaToolchain implements BaselineJavaToolchain {
     private final JavaToolchainService javaToolchainService;
     private final Action<JavaToolchainSpec> configureJavaToolchainSpec;
 

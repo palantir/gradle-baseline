@@ -8,20 +8,20 @@ import org.gradle.api.file.RegularFile;
 import org.gradle.jvm.toolchain.JavaInstallationMetadata;
 import org.gradle.jvm.toolchain.JavadocTool;
 
-final class PalantirJavadocTool implements JavadocTool {
-    private final PalantirJavaInstallationMetadata palantirJavaInstallationMetadata;
+final class BaselineJavadocTool implements JavadocTool {
+    private final JavaInstallationMetadata javaInstallationMetadata;
 
-    PalantirJavadocTool(PalantirJavaInstallationMetadata palantirJavaInstallationMetadata) {
-        this.palantirJavaInstallationMetadata = palantirJavaInstallationMetadata;
+    BaselineJavadocTool(JavaInstallationMetadata javaInstallationMetadata) {
+        this.javaInstallationMetadata = javaInstallationMetadata;
     }
 
     @Override
-    public JavaInstallationMetadata getMetadata() {
-        return palantirJavaInstallationMetadata;
+    public org.gradle.jvm.toolchain.JavaInstallationMetadata getMetadata() {
+        return javaInstallationMetadata;
     }
 
     @Override
     public RegularFile getExecutablePath() {
-        return palantirJavaInstallationMetadata.findExecutable("javadoc");
+        return JavaInstallationMetadataUtils.findExecutable(javaInstallationMetadata, "javadoc");
     }
 }
