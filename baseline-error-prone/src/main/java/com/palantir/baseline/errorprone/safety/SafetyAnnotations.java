@@ -41,9 +41,9 @@ import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 
 public final class SafetyAnnotations {
-    private static final String SAFE = "com.palantir.logsafe.Safe";
-    private static final String UNSAFE = "com.palantir.logsafe.Unsafe";
-    private static final String DO_NOT_LOG = "com.palantir.logsafe.DoNotLog";
+    public static final String SAFE = "com.palantir.logsafe.Safe";
+    public static final String UNSAFE = "com.palantir.logsafe.Unsafe";
+    public static final String DO_NOT_LOG = "com.palantir.logsafe.DoNotLog";
 
     private static final TypeArgumentHandlers SAFETY_IS_COMBINATION_OF_TYPE_ARGUMENTS = new TypeArgumentHandlers(
             new TypeArgumentHandler(Iterable.class),
