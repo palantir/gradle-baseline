@@ -39,7 +39,8 @@ import javax.lang.model.element.Modifier;
 @BugPattern(
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        severity = BugPattern.SeverityLevel.WARNING,
+        // This will be promoted after an initial rollout period
+        severity = BugPattern.SeverityLevel.SUGGESTION,
         summary = "Safe logging annotations should be propagated to encapsulating elements to allow static analysis "
                 + "tooling to work with as much information as possible. This check can be auto-fixed using "
                 + "`./gradlew classes testClasses -PerrorProneApply=SafeLoggingPropagation`")
