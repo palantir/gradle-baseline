@@ -25,12 +25,14 @@ import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
+import com.google.errorprone.util.ASTHelpers;
 import com.palantir.baseline.errorprone.safety.Safety;
 import com.palantir.baseline.errorprone.safety.SafetyAnnotations;
 import com.sun.source.tree.AnnotationTree;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.Tree;
+import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import javax.lang.model.element.Modifier;
 
 @AutoService(BugChecker.class)
@@ -55,6 +57,10 @@ public final class SafeLoggingPropagation extends BugChecker implements BugCheck
 
     @Override
     public Description matchClass(ClassTree classTree, VisitorState state) {
+        ClassSymbol classSymbol = ASTHelpers.getSymbol(classTree);
+        if (classSymbol == null || classSymbol.isAnonymous()) {
+            return Description.NO_MATCH;
+        }
         Safety existingClassSafety = SafetyAnnotations.getSafety(classTree, state);
         Safety safety = SafetyAnnotations.getSafety(classTree.getExtendsClause(), state);
         for (Tree implemented : classTree.getImplementsClause()) {

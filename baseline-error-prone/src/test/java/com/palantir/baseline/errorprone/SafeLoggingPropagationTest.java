@@ -191,6 +191,24 @@ class SafeLoggingPropagationTest {
                 .doTest();
     }
 
+    @Test
+    void testIgnoresAnonymous() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.palantir.tokens.auth.*;",
+                        "import java.util.function.*;",
+                        "public final class Test {",
+                        "  private static final Supplier<?> supplier = new Supplier<BearerToken>() {",
+                        "    @Override public BearerToken get() {",
+                        "      return BearerToken.valueOf(\"abcdefghijklmnopq\");",
+                        "    }",
+                        "  };",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
     private RefactoringValidator fix() {
         return RefactoringValidator.of(SafeLoggingPropagation.class, getClass());
     }
