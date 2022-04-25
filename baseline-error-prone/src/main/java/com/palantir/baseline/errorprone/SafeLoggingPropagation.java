@@ -33,6 +33,8 @@ import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
+import com.sun.tools.javac.code.Symbol.VarSymbol;
+import java.util.List;
 import javax.lang.model.element.Modifier;
 
 @AutoService(BugChecker.class)
@@ -50,29 +52,61 @@ public final class SafeLoggingPropagation extends BugChecker implements BugCheck
             Matchers.isSameType(SafetyAnnotations.UNSAFE),
             Matchers.isSameType(SafetyAnnotations.DO_NOT_LOG));
 
-    private static final Matcher<MethodTree> NON_STATIC_METHOD_MATCHER =
-            Matchers.not(Matchers.hasModifier(Modifier.STATIC));
+    private static final Matcher<MethodTree> NON_STATIC_NON_CTOR =
+            Matchers.not(Matchers.anyOf(Matchers.hasModifier(Modifier.STATIC), Matchers.methodIsConstructor()));
     private static final Matcher<MethodTree> GETTER_METHOD_MATCHER = Matchers.allOf(
             Matchers.not(Matchers.methodReturns(Matchers.isVoidType())), Matchers.methodHasNoParameters());
 
     @Override
-    @SuppressWarnings("checkstyle:CyclomaticComplexity")
     public Description matchClass(ClassTree classTree, VisitorState state) {
         ClassSymbol classSymbol = ASTHelpers.getSymbol(classTree);
         if (classSymbol == null || classSymbol.isAnonymous()) {
             return Description.NO_MATCH;
         }
-        Safety existingClassSafety = SafetyAnnotations.getSafety(classTree, state);
-        Safety safety = SafetyAnnotations.getSafety(classTree.getExtendsClause(), state);
-        for (Tree implemented : classTree.getImplementsClause()) {
-            safety = safety.leastUpperBound(SafetyAnnotations.getSafety(implemented, state));
+        if (isRecord(classSymbol)) {
+            return matchRecord(classTree, classSymbol, state);
+        } else {
+            return matchClassOrInterface(classTree, classSymbol, state);
         }
+    }
+
+    private static boolean isRecord(ClassSymbol classSymbol) {
+        // Can use classSymbol.isRecord() in future versions
+        return (classSymbol.flags() & 1L << 61) != 0;
+    }
+
+    @SuppressWarnings("unchecked")
+    private static List<VarSymbol> getRecordComponents(ClassSymbol classSymbol) {
+        // Can use classSymbol.getRecordComponents() in future versions
+        try {
+            return (List<VarSymbol>)
+                    ClassSymbol.class.getMethod("getRecordComponents").invoke(classSymbol);
+        } catch (ReflectiveOperationException e) {
+            throw new RuntimeException("Failed to get record components", e);
+        }
+    }
+
+    private Description matchRecord(ClassTree classTree, ClassSymbol classSymbol, VisitorState state) {
+        Safety existingClassSafety = SafetyAnnotations.getSafety(classTree, state);
+        Safety safety = getTypeSafetyFromAncestors(classTree, state);
+        for (VarSymbol recordComponent : getRecordComponents(classSymbol)) {
+            Safety symbolSafety = SafetyAnnotations.getSafety(recordComponent, state);
+            Safety typeSymSafety = SafetyAnnotations.getSafety(recordComponent.type.tsym, state);
+            Safety recordComponentSafety = Safety.mergeAssumingUnknownIsSame(symbolSafety, typeSymSafety);
+            safety = safety.leastUpperBound(recordComponentSafety);
+        }
+        return handleSafety(classTree, state, existingClassSafety, safety);
+    }
+
+    private Description matchClassOrInterface(ClassTree classTree, ClassSymbol classSymbol, VisitorState state) {
+        Safety existingClassSafety = SafetyAnnotations.getSafety(classTree, state);
+        Safety safety = getTypeSafetyFromAncestors(classTree, state);
         boolean hasNonGetterMethod = false;
         boolean hasKnownGetter = false;
         for (Tree member : classTree.getMembers()) {
             if (member instanceof MethodTree) {
                 MethodTree methodMember = (MethodTree) member;
-                if (NON_STATIC_METHOD_MATCHER.matches(methodMember, state)) {
+                if (NON_STATIC_NON_CTOR.matches(methodMember, state)) {
                     if (GETTER_METHOD_MATCHER.matches(methodMember, state)) {
                         Safety getterSafety = SafetyAnnotations.getSafety(methodMember.getReturnType(), state);
                         if (getterSafety != Safety.UNKNOWN) {
@@ -97,6 +131,14 @@ public final class SafeLoggingPropagation extends BugChecker implements BugCheck
         }
 
         return handleSafety(classTree, state, existingClassSafety, safety);
+    }
+
+    private static Safety getTypeSafetyFromAncestors(ClassTree classTree, VisitorState state) {
+        Safety safety = SafetyAnnotations.getSafety(classTree.getExtendsClause(), state);
+        for (Tree implemented : classTree.getImplementsClause()) {
+            safety = safety.leastUpperBound(SafetyAnnotations.getSafety(implemented, state));
+        }
+        return safety;
     }
 
     private Description handleSafety(

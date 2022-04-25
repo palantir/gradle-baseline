@@ -125,6 +125,22 @@ class SafeLoggingPropagationTest {
     }
 
     @Test
+    void testRecordWithUnsafeTypes() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.tokens.auth.*;",
+                        "import com.palantir.logsafe.*;",
+                        "record Test(BearerToken token) {}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.tokens.auth.*;",
+                        "import com.palantir.logsafe.*;",
+                        "@DoNotLog",
+                        "record Test(BearerToken token) {}")
+                .doTest();
+    }
+
+    @Test
     void testDoesNotAddSafeAnnotation() {
         fix().addInputLines(
                         "Test.java",
