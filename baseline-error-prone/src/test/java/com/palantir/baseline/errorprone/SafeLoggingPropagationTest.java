@@ -26,6 +26,8 @@ class SafeLoggingPropagationTest {
                         "Test.java",
                         "import com.palantir.tokens.auth.*;",
                         "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
                         "interface Test {",
                         "  BearerToken token();",
                         "}")
@@ -33,7 +35,9 @@ class SafeLoggingPropagationTest {
                         "Test.java",
                         "import com.palantir.tokens.auth.*;",
                         "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
                         "@DoNotLog",
+                        "@Value.Immutable",
                         "interface Test {",
                         "  BearerToken token();",
                         "}")
@@ -46,6 +50,8 @@ class SafeLoggingPropagationTest {
                         "Test.java",
                         "import com.palantir.tokens.auth.*;",
                         "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
                         "interface Test {",
                         "  @Safe String one();",
                         "  @Unsafe String two();",
@@ -55,7 +61,9 @@ class SafeLoggingPropagationTest {
                         "Test.java",
                         "import com.palantir.tokens.auth.*;",
                         "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
                         "@Unsafe",
+                        "@Value.Immutable",
                         "interface Test {",
                         "  @Safe String one();",
                         "  @Unsafe String two();",
@@ -70,6 +78,8 @@ class SafeLoggingPropagationTest {
                         "Test.java",
                         "import com.palantir.tokens.auth.*;",
                         "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
                         "interface Test {",
                         "  @DoNotLog",
                         "  String token();",
@@ -78,7 +88,9 @@ class SafeLoggingPropagationTest {
                         "Test.java",
                         "import com.palantir.tokens.auth.*;",
                         "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
                         "@DoNotLog",
+                        "@Value.Immutable",
                         "interface Test {",
                         "  @DoNotLog",
                         "  String token();",
@@ -92,7 +104,9 @@ class SafeLoggingPropagationTest {
                         "Test.java",
                         "import com.palantir.tokens.auth.*;",
                         "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
                         "@Unsafe",
+                        "@Value.Immutable",
                         "interface Test {",
                         "  @DoNotLog",
                         "  String token();",
@@ -101,7 +115,9 @@ class SafeLoggingPropagationTest {
                         "Test.java",
                         "import com.palantir.tokens.auth.*;",
                         "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
                         "@DoNotLog",
+                        "@Value.Immutable",
                         "interface Test {",
                         "  @DoNotLog",
                         "  String token();",
@@ -115,6 +131,8 @@ class SafeLoggingPropagationTest {
                         "Test.java",
                         "import com.palantir.tokens.auth.*;",
                         "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
                         "@DoNotLog",
                         "interface Test {",
                         "  @Unsafe",
@@ -125,10 +143,29 @@ class SafeLoggingPropagationTest {
     }
 
     @Test
+    void testRecordWithUnsafeTypes() {
+        fix("--release", "15", "--enable-preview")
+                .addInputLines(
+                        "Test.java",
+                        "import com.palantir.tokens.auth.*;",
+                        "import com.palantir.logsafe.*;",
+                        "record Test(BearerToken token) {}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.tokens.auth.*;",
+                        "import com.palantir.logsafe.*;",
+                        "@DoNotLog",
+                        "record Test(BearerToken token) {}")
+                .doTest();
+    }
+
+    @Test
     void testDoesNotAddSafeAnnotation() {
         fix().addInputLines(
                         "Test.java",
                         "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
                         "interface Test {",
                         "  @Safe",
                         "  String token();",
@@ -142,6 +179,8 @@ class SafeLoggingPropagationTest {
         fix().addInputLines(
                         "Test.java",
                         "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
                         "interface Test {",
                         "  @Safe",
                         "  static String token() { return \"\"; }",
@@ -155,6 +194,8 @@ class SafeLoggingPropagationTest {
         fix().addInputLines(
                         "Test.java",
                         "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
                         "interface Test {",
                         "  @DoNotLog",
                         "  void token();",
@@ -168,11 +209,56 @@ class SafeLoggingPropagationTest {
         fix().addInputLines(
                         "Test.java",
                         "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
                         "interface Test {",
                         "  @DoNotLog",
                         "  String token(int i);",
                         "}")
                 .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void testIgnoresInterfacesWithMethodsWithParameters() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  String getToken();",
+                        "  @DoNotLog",
+                        "  String token(int i);",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void testIncludesIfacesWithMethodsWithParametersIfImmutables() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  String getToken();",
+                        "  @DoNotLog",
+                        "  default String token(int i) { return \"\"; };",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "@DoNotLog",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  String getToken();",
+                        "  @DoNotLog",
+                        "  default String token(int i) { return \"\"; };",
+                        "}")
                 .doTest();
     }
 
@@ -191,7 +277,25 @@ class SafeLoggingPropagationTest {
                 .doTest();
     }
 
-    private RefactoringValidator fix() {
-        return RefactoringValidator.of(SafeLoggingPropagation.class, getClass());
+    @Test
+    void testIgnoresAnonymous() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.palantir.tokens.auth.*;",
+                        "import java.util.function.*;",
+                        "public final class Test {",
+                        "  private static final Supplier<?> supplier = new Supplier<BearerToken>() {",
+                        "    @Override public BearerToken get() {",
+                        "      return BearerToken.valueOf(\"abcdefghijklmnopq\");",
+                        "    }",
+                        "  };",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    private RefactoringValidator fix(String... args) {
+        return RefactoringValidator.of(SafeLoggingPropagation.class, getClass(), args);
     }
 }
