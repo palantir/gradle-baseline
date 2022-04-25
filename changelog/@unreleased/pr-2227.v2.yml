@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: SafeLoggingPropagation doesn't attempt to annotate anonymous classes
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2227
