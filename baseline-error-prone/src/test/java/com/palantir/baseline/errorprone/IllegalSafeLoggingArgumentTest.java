@@ -819,6 +819,65 @@ class IllegalSafeLoggingArgumentTest {
     }
 
     @Test
+    public void testThrowableParameterIsUnsafe() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  void f(IllegalStateException e) {",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(e);",
+                        "  }",
+                        "  private static void fun(@Safe Object obj) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testThrowableStackTraceAsStringIsUnsafe() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.google.common.base.Throwables;",
+                        "class Test {",
+                        "  void f(IllegalStateException e) {",
+                        "    String strVal = Throwables.getStackTraceAsString(e);",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(strVal);",
+                        "  }",
+                        "  private static void fun(@Safe Object obj) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testCatchDoNotLog() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.google.common.base.Throwables;",
+                        "class Test {",
+                        "  void f() {",
+                        "    try {",
+                        "      action();",
+                        "    } catch (@DoNotLog RuntimeException e) {",
+                        "      // BUG: Diagnostic contains: Dangerous argument value: arg is 'DO_NOT_LOG' "
+                                + "but the parameter requires 'UNSAFE'.",
+                        "      fun(e);",
+                        "      // BUG: Diagnostic contains: Dangerous argument value: arg is 'DO_NOT_LOG' "
+                                + "but the parameter requires 'UNSAFE'.",
+                        "      fun(e.getMessage());",
+                        "    }",
+                        "  }",
+                        "  protected void action() {}",
+                        "  private static void fun(@Unsafe Object obj) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testStringFormat() {
         helper().addSourceLines(
                         "Test.java",
