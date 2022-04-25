@@ -445,6 +445,8 @@ class BaselineIdea extends AbstractBaselinePlugin {
                     </inspection_tool>
                         
                     <inspection_tool class="PlaceholderCountMatchesArgumentCount" enabled="false" level="WARNING" enabled_by_default="false" />
+                    
+                    <inspection_tool class="ClassCanBeRecord" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
 
                     <inspection_tool class="UnstableApiUsage" enabled="true" level="WARNING" enabled_by_default="true">
                         <option name="unstableApiAnnotations">
