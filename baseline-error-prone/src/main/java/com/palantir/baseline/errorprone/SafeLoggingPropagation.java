@@ -25,14 +25,12 @@ import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
-import com.google.errorprone.util.ASTHelpers;
 import com.palantir.baseline.errorprone.safety.Safety;
 import com.palantir.baseline.errorprone.safety.SafetyAnnotations;
 import com.sun.source.tree.AnnotationTree;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.Tree;
-import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import javax.lang.model.element.Modifier;
 
 @AutoService(BugChecker.class)
@@ -45,7 +43,6 @@ import javax.lang.model.element.Modifier;
                 + "tooling to work with as much information as possible. This check can be auto-fixed using "
                 + "`./gradlew classes testClasses -PerrorProneApply=SafeLoggingPropagation`")
 public final class SafeLoggingPropagation extends BugChecker implements BugChecker.ClassTreeMatcher {
-
     private static final Matcher<Tree> SAFETY_ANNOTATION_MATCHER = Matchers.anyOf(
             Matchers.isSameType(SafetyAnnotations.SAFE),
             Matchers.isSameType(SafetyAnnotations.UNSAFE),
@@ -58,8 +55,7 @@ public final class SafeLoggingPropagation extends BugChecker implements BugCheck
 
     @Override
     public Description matchClass(ClassTree classTree, VisitorState state) {
-        ClassSymbol classSymbol = ASTHelpers.getSymbol(classTree);
-        Safety existingClassSafety = SafetyAnnotations.getSafety(classSymbol, state);
+        Safety existingClassSafety = SafetyAnnotations.getSafety(classTree, state);
         Safety safety = SafetyAnnotations.getSafety(classTree.getExtendsClause(), state);
         for (Tree implemented : classTree.getImplementsClause()) {
             safety = safety.leastUpperBound(SafetyAnnotations.getSafety(implemented, state));
