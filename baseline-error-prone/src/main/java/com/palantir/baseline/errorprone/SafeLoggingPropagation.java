@@ -56,6 +56,7 @@ public final class SafeLoggingPropagation extends BugChecker implements BugCheck
             Matchers.not(Matchers.methodReturns(Matchers.isVoidType())), Matchers.methodHasNoParameters());
 
     @Override
+    @SuppressWarnings("checkstyle:CyclomaticComplexity")
     public Description matchClass(ClassTree classTree, VisitorState state) {
         ClassSymbol classSymbol = ASTHelpers.getSymbol(classTree);
         if (classSymbol == null || classSymbol.isAnonymous()) {
