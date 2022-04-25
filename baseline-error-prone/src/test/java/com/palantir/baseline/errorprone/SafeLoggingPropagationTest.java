@@ -177,6 +177,49 @@ class SafeLoggingPropagationTest {
     }
 
     @Test
+    void testIgnoresInterfacesWithMethodsWithParameters() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  String getToken();",
+                        "  @DoNotLog",
+                        "  String token(int i);",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void testIncludesIfacesWithMethodsWithParametersIfImmutables() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  String getToken();",
+                        "  @DoNotLog",
+                        "  default String token(int i) { return \"\"; };",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "@DoNotLog",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  String getToken();",
+                        "  @DoNotLog",
+                        "  default String token(int i) { return \"\"; };",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     void testIgnoresThrowable() {
         // exceptions are unsafe-by-default, it's unnecessary to annotate every exception as unsafe.
         fix().addInputLines(

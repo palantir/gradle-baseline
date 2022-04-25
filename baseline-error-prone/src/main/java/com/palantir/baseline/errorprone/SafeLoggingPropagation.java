@@ -50,10 +50,10 @@ public final class SafeLoggingPropagation extends BugChecker implements BugCheck
             Matchers.isSameType(SafetyAnnotations.UNSAFE),
             Matchers.isSameType(SafetyAnnotations.DO_NOT_LOG));
 
+    private static final Matcher<MethodTree> NON_STATIC_METHOD_MATCHER =
+            Matchers.not(Matchers.hasModifier(Modifier.STATIC));
     private static final Matcher<MethodTree> GETTER_METHOD_MATCHER = Matchers.allOf(
-            Matchers.not(Matchers.hasModifier(Modifier.STATIC)),
-            Matchers.not(Matchers.methodReturns(Matchers.isVoidType())),
-            Matchers.methodHasNoParameters());
+            Matchers.not(Matchers.methodReturns(Matchers.isVoidType())), Matchers.methodHasNoParameters());
 
     @Override
     public Description matchClass(ClassTree classTree, VisitorState state) {
@@ -66,14 +66,35 @@ public final class SafeLoggingPropagation extends BugChecker implements BugCheck
         for (Tree implemented : classTree.getImplementsClause()) {
             safety = safety.leastUpperBound(SafetyAnnotations.getSafety(implemented, state));
         }
+        boolean hasNonGetterMethod = false;
+        boolean hasKnownGetter = false;
         for (Tree member : classTree.getMembers()) {
             if (member instanceof MethodTree) {
                 MethodTree methodMember = (MethodTree) member;
-                if (GETTER_METHOD_MATCHER.matches(methodMember, state)) {
-                    safety = safety.leastUpperBound(SafetyAnnotations.getSafety(methodMember.getReturnType(), state));
+                if (NON_STATIC_METHOD_MATCHER.matches(methodMember, state)) {
+                    if (GETTER_METHOD_MATCHER.matches(methodMember, state)) {
+                        Safety getterSafety = SafetyAnnotations.getSafety(methodMember.getReturnType(), state);
+                        if (getterSafety != Safety.UNKNOWN) {
+                            hasKnownGetter = true;
+                        }
+                        safety = safety.leastUpperBound(getterSafety);
+                    } else {
+                        hasNonGetterMethod = true;
+                    }
                 }
             }
         }
+        // If no getter-style methods are detected, assume this is not a value type.
+        if (!hasKnownGetter) {
+            return Description.NO_MATCH;
+        }
+        // non-getter methods are avoided such that we don't annotate non-value types unless we have additional
+        // data to suggest this is a value (immutables annotations).
+        if (hasNonGetterMethod
+                && !ASTHelpers.hasAnnotation(classSymbol, "org.immutables.value.Value.Immutable", state)) {
+            return Description.NO_MATCH;
+        }
+
         return handleSafety(classTree, state, existingClassSafety, safety);
     }
 
