@@ -126,7 +126,8 @@ class SafeLoggingPropagationTest {
 
     @Test
     void testRecordWithUnsafeTypes() {
-        fix().addInputLines(
+        fix("--release", "15", "--enable-preview")
+                .addInputLines(
                         "Test.java",
                         "import com.palantir.tokens.auth.*;",
                         "import com.palantir.logsafe.*;",
@@ -268,7 +269,7 @@ class SafeLoggingPropagationTest {
                 .doTest();
     }
 
-    private RefactoringValidator fix() {
-        return RefactoringValidator.of(SafeLoggingPropagation.class, getClass());
+    private RefactoringValidator fix(String... args) {
+        return RefactoringValidator.of(SafeLoggingPropagation.class, getClass(), args);
     }
 }
