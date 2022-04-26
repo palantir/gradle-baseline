@@ -295,6 +295,125 @@ class SafeLoggingPropagationTest {
                 .doTest();
     }
 
+    @Test
+    void testAddsMethodAnnotations() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.palantir.tokens.auth.*;",
+                        "public final class Test {",
+                        "  public Object get() {",
+                        "    return BearerToken.valueOf(\"abcdefghijklmnopq\");",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.palantir.tokens.auth.*;",
+                        "public final class Test {",
+                        "  @DoNotLog public Object get() {",
+                        "    return BearerToken.valueOf(\"abcdefghijklmnopq\");",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testDoesNotAnnotateSafe() {
+        // Perhaps some day
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "public final class Test {",
+                        "  public Object get(@Safe String safe) {",
+                        "    return safe;",
+                        "  }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void testAddsMethodAnnotationByMergingSafety() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "public final class Test {",
+                        "  public Object get(int in, @Safe String safe, @Unsafe String unsafe, String unknown) {",
+                        "    switch (in) {",
+                        "      case 0:",
+                        "        return safe;",
+                        "      case 1:",
+                        "        return unsafe;",
+                        "      default:",
+                        "        return unknown;",
+                        "    }",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "public final class Test {",
+                        "  @Unsafe",
+                        "  public Object get(int in, @Safe String safe, @Unsafe String unsafe, String unknown) {",
+                        "    switch (in) {",
+                        "      case 0:",
+                        "        return safe;",
+                        "      case 1:",
+                        "        return unsafe;",
+                        "      default:",
+                        "        return unknown;",
+                        "    }",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testIgnoresOutOfScopeReturns() {
+        // Perhaps some day
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.palantir.tokens.auth.*;",
+                        "import java.util.concurrent.Callable;",
+                        "public final class Test {",
+                        "  public Object get(@Unsafe String unsafe) throws Exception {",
+                        "    Callable<Object> one = new Callable<Object>() {",
+                        "        @Override",
+                        "        public Object call() throws Exception {",
+                        "            return BearerToken.valueOf(\"abcdefghijklmnopq\");",
+                        "        }",
+                        "    };",
+                        "    Callable<Object> two = () -> {",
+                        "        return BearerToken.valueOf(\"abcdefghijklmnopq\");",
+                        "    };",
+                        "    return unsafe;",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.palantir.tokens.auth.*;",
+                        "import java.util.concurrent.Callable;",
+                        "public final class Test {",
+                        "  @Unsafe",
+                        "  public Object get(@Unsafe String unsafe) throws Exception {",
+                        "    Callable<Object> one = new Callable<Object>() {",
+                        "        @Override",
+                        "        public Object call() throws Exception {",
+                        "            return BearerToken.valueOf(\"abcdefghijklmnopq\");",
+                        "        }",
+                        "    };",
+                        "    Callable<Object> two = () -> {",
+                        "        return BearerToken.valueOf(\"abcdefghijklmnopq\");",
+                        "    };",
+                        "    return unsafe;",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
     private RefactoringValidator fix(String... args) {
         return RefactoringValidator.of(SafeLoggingPropagation.class, getClass(), args);
     }

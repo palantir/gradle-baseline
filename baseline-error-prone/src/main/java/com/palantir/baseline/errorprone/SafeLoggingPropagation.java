@@ -27,15 +27,26 @@ import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.util.ASTHelpers;
 import com.palantir.baseline.errorprone.safety.Safety;
+import com.palantir.baseline.errorprone.safety.SafetyAnalysis;
 import com.palantir.baseline.errorprone.safety.SafetyAnnotations;
 import com.sun.source.tree.AnnotationTree;
 import com.sun.source.tree.ClassTree;
+import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.LambdaExpressionTree;
 import com.sun.source.tree.MethodTree;
+import com.sun.source.tree.ModifiersTree;
+import com.sun.source.tree.NewClassTree;
+import com.sun.source.tree.ReturnTree;
 import com.sun.source.tree.Tree;
+import com.sun.source.util.TreePath;
+import com.sun.source.util.TreeScanner;
+import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
+import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
 import java.util.List;
 import javax.lang.model.element.Modifier;
+import org.checkerframework.errorprone.javacutil.TreePathUtil;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -46,18 +57,18 @@ import javax.lang.model.element.Modifier;
         summary = "Safe logging annotations should be propagated to encapsulating elements to allow static analysis "
                 + "tooling to work with as much information as possible. This check can be auto-fixed using "
                 + "`./gradlew classes testClasses -PerrorProneApply=SafeLoggingPropagation`")
-public final class SafeLoggingPropagation extends BugChecker implements BugChecker.ClassTreeMatcher {
+public final class SafeLoggingPropagation extends BugChecker
+        implements BugChecker.ClassTreeMatcher, BugChecker.MethodTreeMatcher {
     private static final Matcher<Tree> SAFETY_ANNOTATION_MATCHER = Matchers.anyOf(
             Matchers.isSameType(SafetyAnnotations.SAFE),
             Matchers.isSameType(SafetyAnnotations.UNSAFE),
             Matchers.isSameType(SafetyAnnotations.DO_NOT_LOG));
 
+    private static final Matcher<MethodTree> METHOD_RETURNS_VOID = Matchers.methodReturns(Matchers.isVoidType());
     private static final Matcher<MethodTree> NON_STATIC_NON_CTOR =
             Matchers.not(Matchers.anyOf(Matchers.hasModifier(Modifier.STATIC), Matchers.methodIsConstructor()));
-    private static final Matcher<MethodTree> GETTER_METHOD_MATCHER = Matchers.allOf(
-            NON_STATIC_NON_CTOR,
-            Matchers.not(Matchers.methodReturns(Matchers.isVoidType())),
-            Matchers.methodHasNoParameters());
+    private static final Matcher<MethodTree> GETTER_METHOD_MATCHER =
+            Matchers.allOf(NON_STATIC_NON_CTOR, Matchers.not(METHOD_RETURNS_VOID), Matchers.methodHasNoParameters());
 
     @Override
     public Description matchClass(ClassTree classTree, VisitorState state) {
@@ -97,7 +108,7 @@ public final class SafeLoggingPropagation extends BugChecker implements BugCheck
             Safety recordComponentSafety = Safety.mergeAssumingUnknownIsSame(symbolSafety, typeSymSafety);
             safety = safety.leastUpperBound(recordComponentSafety);
         }
-        return handleSafety(classTree, state, existingClassSafety, safety);
+        return handleSafety(classTree, classTree.getModifiers(), state, existingClassSafety, safety);
     }
 
     private Description matchClassOrInterface(ClassTree classTree, ClassSymbol classSymbol, VisitorState state) {
@@ -123,7 +134,7 @@ public final class SafeLoggingPropagation extends BugChecker implements BugCheck
         if (!hasKnownGetter) {
             return Description.NO_MATCH;
         }
-        return handleSafety(classTree, state, existingClassSafety, safety);
+        return handleSafety(classTree, classTree.getModifiers(), state, existingClassSafety, safety);
     }
 
     private static Safety getTypeSafetyFromAncestors(ClassTree classTree, VisitorState state) {
@@ -135,7 +146,7 @@ public final class SafeLoggingPropagation extends BugChecker implements BugCheck
     }
 
     private Description handleSafety(
-            ClassTree classTree, VisitorState state, Safety existingSafety, Safety computedSafety) {
+            Tree tree, ModifiersTree treeModifiers, VisitorState state, Safety existingSafety, Safety computedSafety) {
         if (existingSafety != Safety.UNKNOWN && existingSafety.allowsValueWith(computedSafety)) {
             // Do not suggest promotion, this check is not exhaustive.
             return Description.NO_MATCH;
@@ -148,27 +159,114 @@ public final class SafeLoggingPropagation extends BugChecker implements BugCheck
                 // Do not suggest promotion to safe, this check is not exhaustive.
                 return Description.NO_MATCH;
             case DO_NOT_LOG:
-                return annotate(classTree, state, SafetyAnnotations.DO_NOT_LOG);
+                return annotate(tree, treeModifiers, state, SafetyAnnotations.DO_NOT_LOG);
             case UNSAFE:
-                return annotate(classTree, state, SafetyAnnotations.UNSAFE);
+                return annotate(tree, treeModifiers, state, SafetyAnnotations.UNSAFE);
         }
         return Description.NO_MATCH;
     }
 
-    private Description annotate(ClassTree classTree, VisitorState state, String annotationName) {
+    private Description annotate(Tree tree, ModifiersTree treeModifiers, VisitorState state, String annotationName) {
         // Don't cause churn in test-code.
         if (TestCheckUtils.isTestCode(state)) {
             return Description.NO_MATCH;
         }
         SuggestedFix.Builder fix = SuggestedFix.builder();
         String qualifiedAnnotation = SuggestedFixes.qualifyType(state, fix, annotationName);
-        for (AnnotationTree annotationTree : classTree.getModifiers().getAnnotations()) {
+        for (AnnotationTree annotationTree : treeModifiers.getAnnotations()) {
             Tree annotationType = annotationTree.getAnnotationType();
             if (SAFETY_ANNOTATION_MATCHER.matches(annotationType, state)) {
                 fix.replace(annotationTree, "");
             }
         }
-        fix.prefixWith(classTree, String.format("@%s ", qualifiedAnnotation));
-        return buildDescription(classTree).addFix(fix.build()).build();
+        fix.prefixWith(tree, String.format("@%s ", qualifiedAnnotation));
+        return buildDescription(tree).addFix(fix.build()).build();
+    }
+
+    @Override
+    public Description matchMethod(MethodTree method, VisitorState state) {
+        if (METHOD_RETURNS_VOID.matches(method, state) || method.getReturnType() == null) {
+            return Description.NO_MATCH;
+        }
+        MethodSymbol methodSymbol = ASTHelpers.getSymbol(method);
+        if ((methodSymbol.flags() & Flags.ABSTRACT) != 0) {
+            return Description.NO_MATCH;
+        }
+        // Removing this check may be helpful once we begin to use the 'var' keyword.
+        if (methodSymbol.owner.isAnonymous()) {
+            return Description.NO_MATCH;
+        }
+        Safety methodDeclaredSafety = Safety.mergeAssumingUnknownIsSame(
+                SafetyAnnotations.getSafety(methodSymbol, state),
+                SafetyAnnotations.getSafety(method.getReturnType(), state));
+        if (methodDeclaredSafety != Safety.UNKNOWN) {
+            // No need to verify, that's handled by 'IllegalSafeLoggingArgument'
+            return Description.NO_MATCH;
+        }
+        // Don't cause churn in test-code. This is checked prior to the more expensive safety analysis
+        if (TestCheckUtils.isTestCode(state)) {
+            return Description.NO_MATCH;
+        }
+        Safety combinedReturnSafety = method.accept(new ReturnStatementSafetyScanner(method), state);
+        if (combinedReturnSafety == null
+                || combinedReturnSafety == Safety.UNKNOWN
+                // This _could_ become 'SAFE' once we build confidence in the check, however
+                // initially we will roll it out as 'UNKNOWN'.
+                || combinedReturnSafety == Safety.SAFE) {
+            return Description.NO_MATCH;
+        }
+        return handleSafety(method, method.getModifiers(), state, methodDeclaredSafety, combinedReturnSafety);
+    }
+
+    private static final class ReturnStatementSafetyScanner extends TreeScanner<Safety, VisitorState> {
+
+        private final MethodTree target;
+
+        ReturnStatementSafetyScanner(MethodTree target) {
+            this.target = target;
+        }
+
+        @Override
+        public Safety visitReturn(ReturnTree node, VisitorState visitorState) {
+            ExpressionTree expression = node.getExpression();
+            if (expression == null) {
+                return null;
+            }
+            // Validate that the discovered ReturnTree is from the same scope as the 'target' method.
+            TreePath path = TreePath.getPath(visitorState.getPath().getCompilationUnit(), expression);
+            if (target.equals(TreePathUtil.enclosingMethodOrLambda(path))) {
+                return SafetyAnalysis.of(visitorState.withPath(path));
+            } else {
+                // Unclear what's happening in this case, so we definitely don't want to claim SAFE
+                return Safety.UNKNOWN;
+            }
+        }
+
+        // Don't search beyond the scope of the method
+        @Override
+        public Safety visitClass(ClassTree _node, VisitorState _obj) {
+            return null;
+        }
+
+        @Override
+        public Safety visitNewClass(NewClassTree node, VisitorState _state) {
+            return null;
+        }
+
+        @Override
+        public Safety visitLambdaExpression(LambdaExpressionTree node, VisitorState _state) {
+            return null;
+        }
+
+        @Override
+        public Safety reduce(Safety lhs, Safety rhs) {
+            if (lhs == null) {
+                return rhs;
+            }
+            if (rhs == null) {
+                return lhs;
+            }
+            return lhs.leastUpperBound(rhs);
+        }
     }
 }
