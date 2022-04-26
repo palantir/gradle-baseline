@@ -224,6 +224,9 @@ public final class SafeLoggingPropagation extends BugChecker
             return Description.NO_MATCH;
         }
         Safety combinedReturnSafety = method.accept(new ReturnStatementSafetyScanner(method), state);
+        if (combinedReturnSafety == null) {
+            return Description.NO_MATCH;
+        }
         return handleSafety(method, method.getModifiers(), state, methodDeclaredSafety, combinedReturnSafety);
     }
 

@@ -196,6 +196,20 @@ class SafeLoggingPropagationTest {
     }
 
     @Test
+    void testMethodDoesNotReturn() {
+        // Ensure we don't fail when no return statement safety info is collected
+        fix().addInputLines(
+                        "Test.java",
+                        "abstract class Test {",
+                        "  @Override public String toString() {",
+                        "    throw new RuntimeException();",
+                        "  }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
     void testRecordWithUnsafeTypes() {
         fix("--release", "15", "--enable-preview")
                 .addInputLines(
