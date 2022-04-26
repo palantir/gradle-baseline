@@ -42,6 +42,9 @@ jobs:
       - restore_cache: { key: 'gradle-wrapper-v1-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}' }
       - restore_cache: { key: 'check-gradle-cache-v1-{{ checksum "versions.props" }}-{{ checksum "build.gradle" }}' }
       - run: ./gradlew --parallel --stacktrace --continue --max-workers=2 check idea -Porg.gradle.java.installations.fromEnv=JAVA_8_HOME,JAVA_11_HOME,JAVA_15_HOME,JAVA_17_HOME,JAVA_HOME
+      - persist_to_workspace:
+          root: /home/circleci
+          paths: [ project ]
       - save_cache:
           key: 'gradle-wrapper-v1-{{ checksum "gradle/wrapper/gradle-wrapper.properties" }}'
           paths: [ ~/.gradle/wrapper ]
