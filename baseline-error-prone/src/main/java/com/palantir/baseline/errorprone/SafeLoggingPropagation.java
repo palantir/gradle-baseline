@@ -17,6 +17,7 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
+import com.google.common.collect.ImmutableList;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
@@ -113,7 +114,7 @@ public final class SafeLoggingPropagation extends BugChecker
 
     private Description matchClassOrInterface(ClassTree classTree, ClassSymbol classSymbol, VisitorState state) {
         if (!ASTHelpers.hasAnnotation(classSymbol, "org.immutables.value.Value.Immutable", state)) {
-            return Description.NO_MATCH;
+            return matchBasedOnToString(classTree, classSymbol, state);
         }
         Safety existingClassSafety = SafetyAnnotations.getSafety(classTree, state);
         Safety safety = getTypeSafetyFromAncestors(classTree, state);
@@ -135,6 +136,17 @@ public final class SafeLoggingPropagation extends BugChecker
             return Description.NO_MATCH;
         }
         return handleSafety(classTree, classTree.getModifiers(), state, existingClassSafety, safety);
+    }
+
+    private Description matchBasedOnToString(ClassTree classTree, ClassSymbol classSymbol, VisitorState state) {
+        MethodSymbol toStringSymbol = ASTHelpers.resolveExistingMethod(
+                state, classSymbol, state.getName("toString"), ImmutableList.of(), ImmutableList.of());
+        if (toStringSymbol == null) {
+            return Description.NO_MATCH;
+        }
+        Safety existingClassSafety = SafetyAnnotations.getSafety(classTree, state);
+        Safety symbolSafety = SafetyAnnotations.getSafety(toStringSymbol, state);
+        return handleSafety(classTree, classTree.getModifiers(), state, existingClassSafety, symbolSafety);
     }
 
     private static Safety getTypeSafetyFromAncestors(ClassTree classTree, VisitorState state) {
@@ -208,13 +220,6 @@ public final class SafeLoggingPropagation extends BugChecker
             return Description.NO_MATCH;
         }
         Safety combinedReturnSafety = method.accept(new ReturnStatementSafetyScanner(method), state);
-        if (combinedReturnSafety == null
-                || combinedReturnSafety == Safety.UNKNOWN
-                // This _could_ become 'SAFE' once we build confidence in the check, however
-                // initially we will roll it out as 'UNKNOWN'.
-                || combinedReturnSafety == Safety.SAFE) {
-            return Description.NO_MATCH;
-        }
         return handleSafety(method, method.getModifiers(), state, methodDeclaredSafety, combinedReturnSafety);
     }
 

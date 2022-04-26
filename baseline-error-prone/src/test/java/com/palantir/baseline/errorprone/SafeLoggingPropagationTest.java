@@ -143,6 +143,59 @@ class SafeLoggingPropagationTest {
     }
 
     @Test
+    void testPropagationBasedOnToString() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "abstract class Test {",
+                        "  @DoNotLog",
+                        "  abstract String token();",
+                        "  @Override @DoNotLog public String toString() {",
+                        "    return \"Test\" + token();",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "@DoNotLog",
+                        "abstract class Test {",
+                        "  @DoNotLog",
+                        "  abstract String token();",
+                        "  @Override @DoNotLog public String toString() {",
+                        "    return \"Test\" + token();",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testPropagationReplacementBasedOnToString() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "@Unsafe",
+                        "abstract class Test {",
+                        "  @DoNotLog",
+                        "  abstract String token();",
+                        "  @Override @DoNotLog public String toString() {",
+                        "    return \"Test\" + token();",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "@DoNotLog",
+                        "abstract class Test {",
+                        "  @DoNotLog",
+                        "  abstract String token();",
+                        "  @Override @DoNotLog public String toString() {",
+                        "    return \"Test\" + token();",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     void testRecordWithUnsafeTypes() {
         fix("--release", "15", "--enable-preview")
                 .addInputLines(
