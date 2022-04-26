@@ -45,6 +45,7 @@ import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
+import com.sun.tools.javac.util.Name;
 import java.util.List;
 import javax.lang.model.element.Modifier;
 import org.checkerframework.errorprone.javacutil.TreePathUtil;
@@ -70,6 +71,9 @@ public final class SafeLoggingPropagation extends BugChecker
             Matchers.not(Matchers.anyOf(Matchers.hasModifier(Modifier.STATIC), Matchers.methodIsConstructor()));
     private static final Matcher<MethodTree> GETTER_METHOD_MATCHER =
             Matchers.allOf(NON_STATIC_NON_CTOR, Matchers.not(METHOD_RETURNS_VOID), Matchers.methodHasNoParameters());
+
+    private static final com.google.errorprone.suppliers.Supplier<Name> TO_STRING_NAME =
+            VisitorState.memoize(state -> state.getName("toString"));
 
     @Override
     public Description matchClass(ClassTree classTree, VisitorState state) {
@@ -140,7 +144,7 @@ public final class SafeLoggingPropagation extends BugChecker
 
     private Description matchBasedOnToString(ClassTree classTree, ClassSymbol classSymbol, VisitorState state) {
         MethodSymbol toStringSymbol = ASTHelpers.resolveExistingMethod(
-                state, classSymbol, state.getName("toString"), ImmutableList.of(), ImmutableList.of());
+                state, classSymbol, TO_STRING_NAME.get(state), ImmutableList.of(), ImmutableList.of());
         if (toStringSymbol == null) {
             return Description.NO_MATCH;
         }
