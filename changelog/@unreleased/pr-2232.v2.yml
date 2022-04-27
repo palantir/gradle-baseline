@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Results of boolean logic are considered safe
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2232
