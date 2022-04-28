@@ -71,7 +71,7 @@ public final class SafeLoggingPropagation extends BugChecker
             Matchers.isSameType(SafetyAnnotations.DO_NOT_LOG));
 
     private static final Matcher<MethodTree> METHOD_RETURNS_VOID = Matchers.methodReturns(Matchers.isVoidType());
-    private static final Matcher<MethodTree> NON_PRIVATE_NON_STATIC_NON_CTOR =
+    private static final Matcher<MethodTree> NON_STATIC_NON_CTOR =
             Matchers.not(Matchers.anyOf(Matchers.hasModifier(Modifier.STATIC), Matchers.methodIsConstructor()));
 
     private static final Matcher<MethodTree> IS_IMMUTABLES_FIELD = Matchers.anyOf(
@@ -86,7 +86,7 @@ public final class SafeLoggingPropagation extends BugChecker
                     })),
             (methodTree, state) -> hasJacksonAnnotation(ASTHelpers.getSymbol(methodTree), state));
     private static final Matcher<MethodTree> GETTER_METHOD_MATCHER = Matchers.allOf(
-            NON_PRIVATE_NON_STATIC_NON_CTOR,
+            NON_STATIC_NON_CTOR,
             Matchers.not(METHOD_RETURNS_VOID),
             Matchers.methodHasNoParameters(),
             IS_IMMUTABLES_FIELD);
