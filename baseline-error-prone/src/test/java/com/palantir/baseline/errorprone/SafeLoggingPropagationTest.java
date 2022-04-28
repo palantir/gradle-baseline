@@ -429,6 +429,62 @@ class SafeLoggingPropagationTest {
     }
 
     @Test
+    void testIncludesJacksonAnnotatedHelperMethods_iface() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.fasterxml.jackson.annotation.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  @JsonProperty",
+                        "  default String token() { return \"\"; }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.fasterxml.jackson.annotation.*;",
+                        "import org.immutables.value.Value;",
+                        "@DoNotLog",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  @JsonProperty",
+                        "  default String token() { return \"\"; }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testIncludesJacksonAnnotatedHelperMethods_abstract() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.fasterxml.jackson.annotation.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
+                        "abstract class Test {",
+                        "  @DoNotLog",
+                        "  @JsonProperty",
+                        "  String token() { return \"\"; }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.fasterxml.jackson.annotation.*;",
+                        "import org.immutables.value.Value;",
+                        "@DoNotLog",
+                        "@Value.Immutable",
+                        "abstract class Test {",
+                        "  @DoNotLog",
+                        "  @JsonProperty",
+                        "  String token() { return \"\"; }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     void testIgnoresVoidMethods() {
         fix().addInputLines(
                         "Test.java",
