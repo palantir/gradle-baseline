@@ -272,21 +272,6 @@ class SafeLoggingPropagationTest {
     }
 
     @Test
-    void ignoresDefaultMethod() {
-        fix().addInputLines(
-                        "Test.java",
-                        "import com.palantir.logsafe.*;",
-                        "import org.immutables.value.Value;",
-                        "@Value.Immutable",
-                        "interface Test {",
-                        "  @DoNotLog",
-                        "  default String token() { return \"\"; }",
-                        "}")
-                .expectUnchanged()
-                .doTest();
-    }
-
-    @Test
     void includesDefaultMethodWhenDefaultAsDefault() {
         fix().addInputLines(
                         "Test.java",
