@@ -28,7 +28,7 @@ final class BaselineJavaLauncher implements JavaLauncher {
     }
 
     @Override
-    public org.gradle.jvm.toolchain.JavaInstallationMetadata getMetadata() {
+    public JavaInstallationMetadata getMetadata() {
         return javaInstallationMetadata;
     }
 

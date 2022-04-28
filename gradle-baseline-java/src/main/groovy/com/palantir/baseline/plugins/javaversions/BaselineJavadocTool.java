@@ -28,7 +28,7 @@ final class BaselineJavadocTool implements JavadocTool {
     }
 
     @Override
-    public org.gradle.jvm.toolchain.JavaInstallationMetadata getMetadata() {
+    public JavaInstallationMetadata getMetadata() {
         return javaInstallationMetadata;
     }
 

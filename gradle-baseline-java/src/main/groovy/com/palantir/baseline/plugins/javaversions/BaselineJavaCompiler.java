@@ -28,7 +28,7 @@ final class BaselineJavaCompiler implements JavaCompiler {
     }
 
     @Override
-    public org.gradle.jvm.toolchain.JavaInstallationMetadata getMetadata() {
+    public JavaInstallationMetadata getMetadata() {
         return javaInstallationMetadata;
     }
 

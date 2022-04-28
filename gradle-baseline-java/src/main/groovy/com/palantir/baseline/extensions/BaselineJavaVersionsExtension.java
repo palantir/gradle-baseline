@@ -42,7 +42,6 @@ public class BaselineJavaVersionsExtension {
         distributionTarget.convention(libraryTarget);
         // runtime defaults to the distribution value
         runtime.convention(distributionTarget);
-        runtime.convention(distributionTarget);
         libraryTarget.finalizeValueOnRead();
         distributionTarget.finalizeValueOnRead();
         runtime.finalizeValueOnRead();
