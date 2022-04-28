@@ -496,7 +496,7 @@ class SafeLoggingPropagationTest {
     }
 
     @Test
-    void testIgnoresJsonIgnoreHelperMethod() throws Exception {
+    void testIgnoresJsonIgnoreHelperMethod() {
         fix().addInputLines(
                         "Test.java",
                         "import com.palantir.logsafe.*;",
@@ -509,6 +509,36 @@ class SafeLoggingPropagationTest {
                         "  default String token() { return \"\"; }",
                         "}")
                 .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void testIncludesJsonIgnored() {
+        // JsonIgnored methods are included in safety because they're
+        // still included in the toString value.
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.fasterxml.jackson.annotation.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  @JsonIgnore",
+                        "  String token();",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.fasterxml.jackson.annotation.*;",
+                        "import org.immutables.value.Value;",
+                        "@DoNotLog",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  @JsonIgnore",
+                        "  String token();",
+                        "}")
                 .doTest();
     }
 
