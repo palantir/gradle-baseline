@@ -18,7 +18,9 @@ package com.palantir.baseline.extensions;
 
 import javax.inject.Inject;
 import org.gradle.api.Project;
+import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
+import org.gradle.jvm.toolchain.JavaInstallationMetadata;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 
 /**
@@ -26,10 +28,10 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion;
  * with consistent java toolchains.
  */
 public class BaselineJavaVersionsExtension {
-
     private final Property<JavaLanguageVersion> libraryTarget;
     private final Property<JavaLanguageVersion> distributionTarget;
     private final Property<JavaLanguageVersion> runtime;
+    private final MapProperty<JavaLanguageVersion, JavaInstallationMetadata> jdks;
 
     @Inject
     public BaselineJavaVersionsExtension(Project project) {
@@ -43,6 +45,9 @@ public class BaselineJavaVersionsExtension {
         libraryTarget.finalizeValueOnRead();
         distributionTarget.finalizeValueOnRead();
         runtime.finalizeValueOnRead();
+
+        jdks = project.getObjects().mapProperty(JavaLanguageVersion.class, JavaInstallationMetadata.class);
+        jdks.finalizeValueOnRead();
     }
 
     /** Target {@link JavaLanguageVersion} for compilation of libraries that are published. */
@@ -73,5 +78,9 @@ public class BaselineJavaVersionsExtension {
 
     public final void setRuntime(int value) {
         runtime.set(JavaLanguageVersion.of(value));
+    }
+
+    public final MapProperty<JavaLanguageVersion, JavaInstallationMetadata> getJdks() {
+        return jdks;
     }
 }

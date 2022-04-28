@@ -16,10 +16,12 @@
 
 package com.palantir.baseline
 
-
 import nebula.test.IntegrationSpec
 import nebula.test.functional.ExecutionResult
-import spock.lang.Unroll
+
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 
 class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
     private static final int JAVA_8_BYTECODE = 52
@@ -71,7 +73,10 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         '''.stripIndent(true)
 
     def setup() {
+        // Fork needed or build fails on circleci with "SystemInfo is not supported on this operating system."
+        // Comment out locally in order to get debugging to work
         setFork(true)
+
         buildFile << standardBuildFile
     }
 
@@ -285,6 +290,50 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
 
         then:
         runTasksSuccessfully('checkJavaVersions')
+    }
+
+    def 'can configure a jdk path to be used'() {
+        Path newJavaHome = Files.createSymbolicLink(
+                projectDir.toPath().resolve("jdk"),
+                Paths.get(System.getProperty("java.home")))
+
+        // language=gradle
+        buildFile << """
+            javaVersions {
+                libraryTarget = 11
+                
+                jdks.put JavaLanguageVersion.of(11), new JavaInstallationMetadata() {   
+                    @Override
+                    JavaLanguageVersion getLanguageVersion() {
+                        return JavaLanguageVersion.of(11)
+                    }
+                    @Override
+                    String getJavaRuntimeVersion() {
+                        return '11.0.222'
+                    }
+                    @Override
+                    String getJvmVersion() {
+                        return '11.33.44'
+                    }
+                    @Override
+                    String getVendor() {
+                        return 'vendor'
+                    }
+                    @Override
+                    Directory getInstallationPath() {
+                        return layout.dir(provider { new File('$newJavaHome') }).get()
+                    }
+                }
+            }
+        """.stripIndent(true)
+
+        writeJavaSourceFile java11CompatibleCode
+
+        when:
+        def stdout = runTasksSuccessfully('compileJava', '--stacktrace').standardOutput
+
+        then:
+        stdout.contains(newJavaHome.toString())
     }
 
     private static final int BYTECODE_IDENTIFIER = (int) 0xCAFEBABE
