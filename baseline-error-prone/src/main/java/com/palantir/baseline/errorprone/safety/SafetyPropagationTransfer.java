@@ -207,6 +207,74 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
             .named("getStackTraceAsString")
             .withParameters(Throwable.class.getName());
 
+    private static final Matcher<ExpressionTree> PRIMITIVE_BOXING = Matchers.anyOf(
+            MethodMatchers.staticMethod()
+                    .onClass(Boolean.class.getName())
+                    .named("valueOf")
+                    .withParameters("boolean"),
+            MethodMatchers.staticMethod()
+                    .onClass(Integer.class.getName())
+                    .named("valueOf")
+                    .withParameters("int"),
+            MethodMatchers.staticMethod()
+                    .onClass(Byte.class.getName())
+                    .named("valueOf")
+                    .withParameters("byte"),
+            MethodMatchers.staticMethod()
+                    .onClass(Character.class.getName())
+                    .named("valueOf")
+                    .withParameters("char"),
+            MethodMatchers.staticMethod()
+                    .onClass(Double.class.getName())
+                    .named("valueOf")
+                    .withParameters("double"),
+            MethodMatchers.staticMethod()
+                    .onClass(Float.class.getName())
+                    .named("valueOf")
+                    .withParameters("float"),
+            MethodMatchers.staticMethod()
+                    .onClass(Long.class.getName())
+                    .named("valueOf")
+                    .withParameters("long"),
+            MethodMatchers.staticMethod()
+                    .onClass(Short.class.getName())
+                    .named("valueOf")
+                    .withParameters("short"));
+
+    private static final Matcher<ExpressionTree> PRIMITIVE_UNBOXING = Matchers.anyOf(
+            MethodMatchers.instanceMethod()
+                    .onExactClass(Boolean.class.getName())
+                    .named("booleanValue")
+                    .withNoParameters(),
+            MethodMatchers.instanceMethod()
+                    .onExactClass(Integer.class.getName())
+                    .named("intValue")
+                    .withNoParameters(),
+            MethodMatchers.instanceMethod()
+                    .onExactClass(Byte.class.getName())
+                    .named("byteValue")
+                    .withNoParameters(),
+            MethodMatchers.instanceMethod()
+                    .onExactClass(Character.class.getName())
+                    .named("charValue")
+                    .withNoParameters(),
+            MethodMatchers.instanceMethod()
+                    .onExactClass(Double.class.getName())
+                    .named("doubleValue")
+                    .withNoParameters(),
+            MethodMatchers.instanceMethod()
+                    .onExactClass(Float.class.getName())
+                    .named("floatValue")
+                    .withNoParameters(),
+            MethodMatchers.instanceMethod()
+                    .onExactClass(Long.class.getName())
+                    .named("longValue")
+                    .withNoParameters(),
+            MethodMatchers.instanceMethod()
+                    .onExactClass(Short.class.getName())
+                    .named("shortValue")
+                    .withNoParameters());
+
     // These methods do not take the receiver (generally a static class) into account, only the inputs.
     private static final Matcher<ExpressionTree> RETURNS_SAFETY_COMBINATION_OF_ARGS = Matchers.anyOf(
             STRING_FORMAT,
@@ -215,7 +283,8 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
             OPTIONAL_FACTORIES,
             STATIC_STREAM_FACTORIES,
             RID_FACTORY,
-            THROWABLES_STACK_TRACE_AS_STRING);
+            THROWABLES_STACK_TRACE_AS_STRING,
+            PRIMITIVE_BOXING);
 
     private static final Matcher<ExpressionTree> OPTIONAL_ACCESSORS = Matchers.anyOf(
             MethodMatchers.instanceMethod()
@@ -278,7 +347,8 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
                     .withNoParameters(),
             OPTIONAL_ACCESSORS,
             STREAM_ACCESSORS,
-            THROWABLE_GET_MESSAGE);
+            THROWABLE_GET_MESSAGE,
+            PRIMITIVE_UNBOXING);
 
     private static final Matcher<ExpressionTree> RETURNS_SAFETY_OF_FIRST_ARG = Matchers.anyOf(
             MethodMatchers.staticMethod().onClass(Objects.class.getName()).named("requireNonNull"),
@@ -616,49 +686,57 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitLessThan(
             LessThanNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return binary(node, input);
+        // 'a < b' in source is safe, regardless of 'a' and 'b'.
+        return noStoreChanges(Safety.SAFE, input);
     }
 
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitLessThanOrEqual(
             LessThanOrEqualNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return binary(node, input);
+        // 'a <= b' in source is safe, regardless of 'a' and 'b'.
+        return noStoreChanges(Safety.SAFE, input);
     }
 
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitGreaterThan(
-            GreaterThanNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return binary(node, input);
+            GreaterThanNode _node, TransferInput<Safety, AccessPathStore<Safety>> input) {
+        // 'a > b' in source is safe, regardless of 'a' and 'b'.
+        return noStoreChanges(Safety.SAFE, input);
     }
 
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitGreaterThanOrEqual(
-            GreaterThanOrEqualNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return binary(node, input);
+            GreaterThanOrEqualNode _node, TransferInput<Safety, AccessPathStore<Safety>> input) {
+        // 'a >= b' in source is safe, regardless of 'a' and 'b'.
+        return noStoreChanges(Safety.SAFE, input);
     }
 
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitEqualTo(
-            EqualToNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return binary(node, input);
+            EqualToNode _node, TransferInput<Safety, AccessPathStore<Safety>> input) {
+        // 'a == b' in source is safe, regardless of 'a' and 'b'.
+        return noStoreChanges(Safety.SAFE, input);
     }
 
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitNotEqual(
-            NotEqualNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return binary(node, input);
+            NotEqualNode _node, TransferInput<Safety, AccessPathStore<Safety>> input) {
+        // 'a != b' in source is safe, regardless of 'a' and 'b'.
+        return noStoreChanges(Safety.SAFE, input);
     }
 
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitConditionalAnd(
             ConditionalAndNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return binary(node, input);
+        // 'a && b' in source is safe, regardless of 'a' and 'b'.
+        return noStoreChanges(Safety.SAFE, input);
     }
 
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitConditionalOr(
             ConditionalOrNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return binary(node, input);
+        // 'a || b' in source is safe, regardless of 'a' and 'b'.
+        return noStoreChanges(Safety.SAFE, input);
     }
 
     @Override
@@ -972,7 +1050,8 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitInstanceOf(
             InstanceOfNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return unknown(input);
+        // types themselves are generally safe, boolean results of type checks are always safe.
+        return noStoreChanges(Safety.SAFE, input);
     }
 
     @Override
