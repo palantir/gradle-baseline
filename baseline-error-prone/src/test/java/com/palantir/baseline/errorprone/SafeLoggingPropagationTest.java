@@ -16,7 +16,6 @@
 
 package com.palantir.baseline.errorprone;
 
-import org.immutables.value.Value;
 import org.junit.jupiter.api.Test;
 
 class SafeLoggingPropagationTest {
@@ -397,46 +396,6 @@ class SafeLoggingPropagationTest {
                         "  default String token() { return \"\"; }",
                         "}")
                 .doTest();
-    }
-
-    @Value.Immutable
-    @Value.Style(defaultAsDefault = true)
-    interface Foo {
-        String message();
-
-        @Value.Derived
-        default String other() {
-            return "derived";
-        }
-
-        //        @Value.Default
-        default String def() {
-            return "default";
-        }
-
-        default String bare() {
-            return "bare";
-        }
-    }
-
-    @Value.Immutable
-    @Value.Style(defaultAsDefault = true)
-    abstract static class Bar {
-        abstract String message();
-
-        @Value.Derived
-        String other() {
-            return "derived";
-        }
-
-        @Value.Default
-        String def() {
-            return "default";
-        }
-
-        String bare() {
-            return "bare";
-        }
     }
 
     @Test
