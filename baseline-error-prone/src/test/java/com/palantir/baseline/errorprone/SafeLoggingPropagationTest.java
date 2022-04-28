@@ -511,6 +511,23 @@ class SafeLoggingPropagationTest {
     }
 
     @Test
+    void testIgnoresJsonIgnoreHelperMethod() throws Exception {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.fasterxml.jackson.annotation.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  @JsonIgnore",
+                        "  default String token() { return \"\"; }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
     void testIgnoresVoidMethods() {
         fix().addInputLines(
                         "Test.java",
