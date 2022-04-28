@@ -116,6 +116,8 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
 
         def apacheCopyright = new File(copyrightDir, "001_apache-2.0.xml").text
         apacheCopyright.contains('<option name="myName" value="001_apache-2.0.txt"/>')
+        // Ensure correct xml encoding (not double-encoded)
+        apacheCopyright.contains('Apache License, Version 2.0 (the &quot;License&quot;)')
 
         def palantirCopyright = new File(copyrightDir, "999_palantir.xml").text
         palantirCopyright.contains('<option name="myName" value="999_palantir.txt"/>')
