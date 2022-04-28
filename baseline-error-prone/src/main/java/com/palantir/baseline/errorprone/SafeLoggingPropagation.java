@@ -78,6 +78,7 @@ public final class SafeLoggingPropagation extends BugChecker
             Matchers.hasModifier(Modifier.ABSTRACT),
             Matchers.symbolHasAnnotation("org.immutables.value.Value.Default"),
             Matchers.symbolHasAnnotation("org.immutables.value.Value.Derived"),
+            Matchers.symbolHasAnnotation("org.immutables.value.Value.Lazy"),
             Matchers.allOf(Matchers.hasModifier(Modifier.DEFAULT), Matchers.enclosingClass((Matcher<ClassTree>)
                     (classTree, state) -> {
                         ClassSymbol classSymbol = ASTHelpers.getSymbol(classTree);

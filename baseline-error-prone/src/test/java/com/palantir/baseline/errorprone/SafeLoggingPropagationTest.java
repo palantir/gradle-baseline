@@ -399,6 +399,32 @@ class SafeLoggingPropagationTest {
     }
 
     @Test
+    void includesDefaultMethodWhenLazy() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  @Value.Lazy",
+                        "  default String token() { return \"\"; }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "@DoNotLog",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  @Value.Lazy",
+                        "  default String token() { return \"\"; }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     void testIgnoresHelperMethods_iface() {
         fix().addInputLines(
                         "Test.java",
