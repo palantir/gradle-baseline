@@ -62,7 +62,6 @@ public class BaselineErrorProneExtension {
             "PreferSafeLoggingPreconditions",
             "PreferStaticLoggers",
             "ProxyNonConstantType",
-            "PublicConstructorForAbstractClass",
             "ReadReturnValueIgnored",
             "RedundantMethodReference",
             "RedundantModifier",
@@ -84,6 +83,7 @@ public class BaselineErrorProneExtension {
             // Built-in checks
             "ArrayEquals",
             "BadImport",
+            "LongDoubleConversion",
             "LoopOverCharArray",
             "MissingBraces",
             "MissingOverride",

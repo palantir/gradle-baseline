@@ -88,10 +88,14 @@ public final class IllegalSafeLoggingArgument extends BugChecker
             // List<String> -> Collection<E> gives us Collection<String>
             Type boundToMethodOwner = state.getTypes().asSuper(receiver, methodSymbol.owner);
             List<TypeVariableSymbol> ownerTypeVars = methodSymbol.owner.getTypeParameters();
-            for (int i = 0; i < ownerTypeVars.size(); i++) {
-                TypeVariableSymbol ownerVar = ownerTypeVars.get(i);
-                if (Objects.equals(ownerVar, typeVar.tsym)) {
-                    return boundToMethodOwner.getTypeArguments().get(i);
+            // Validate that the type parameters match -- it's possible raw types are used, and
+            // no type variables are bound. See IllegalSafeLoggingArgumentTest.testRawTypes.
+            if (ownerTypeVars.size() == boundToMethodOwner.getTypeArguments().size()) {
+                for (int i = 0; i < ownerTypeVars.size(); i++) {
+                    TypeVariableSymbol ownerVar = ownerTypeVars.get(i);
+                    if (Objects.equals(ownerVar, typeVar.tsym)) {
+                        return boundToMethodOwner.getTypeArguments().get(i);
+                    }
                 }
             }
         }

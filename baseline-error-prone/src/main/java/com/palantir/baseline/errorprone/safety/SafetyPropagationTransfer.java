@@ -196,13 +196,26 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     private static final Matcher<ExpressionTree> STATIC_STREAM_FACTORIES =
             MethodMatchers.staticMethod().onClass(Stream.class.getName()).namedAnyOf("of", "ofNullable", "concat");
 
+    private static final Matcher<ExpressionTree> RID_FACTORY = MethodMatchers.staticMethod()
+            .onClass("com.palantir.ri.ResourceIdentifier")
+            // capture all overloads -- in the case of the multi-parameter methods, only the 'locator' components
+            // really matter, however the rest are required to be safe, so they cannot poison results.
+            .namedAnyOf("of", "valueOf");
+
+    private static final Matcher<ExpressionTree> THROWABLES_STACK_TRACE_AS_STRING = MethodMatchers.staticMethod()
+            .onClass("com.google.common.base.Throwables")
+            .named("getStackTraceAsString")
+            .withParameters(Throwable.class.getName());
+
     // These methods do not take the receiver (generally a static class) into account, only the inputs.
     private static final Matcher<ExpressionTree> RETURNS_SAFETY_COMBINATION_OF_ARGS = Matchers.anyOf(
             STRING_FORMAT,
             OBJECTS_TO_STRING,
             IMMUTABLE_COLLECTION_FACTORY,
             OPTIONAL_FACTORIES,
-            STATIC_STREAM_FACTORIES);
+            STATIC_STREAM_FACTORIES,
+            RID_FACTORY,
+            THROWABLES_STACK_TRACE_AS_STRING);
 
     private static final Matcher<ExpressionTree> OPTIONAL_ACCESSORS = Matchers.anyOf(
             MethodMatchers.instanceMethod()
@@ -258,8 +271,14 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
                     .onDescendantOf(Iterator.class.getName())
                     .named("next")
                     .withNoParameters(),
+            // Rid components are considered safe, except for 'locator' which inherits the safety of the rid object.
+            MethodMatchers.instanceMethod()
+                    .onDescendantOf("com.palantir.ri.ResourceIdentifier")
+                    .named("getLocator")
+                    .withNoParameters(),
             OPTIONAL_ACCESSORS,
-            STREAM_ACCESSORS);
+            STREAM_ACCESSORS,
+            THROWABLE_GET_MESSAGE);
 
     private static final Matcher<ExpressionTree> RETURNS_SAFETY_OF_FIRST_ARG = Matchers.anyOf(
             MethodMatchers.staticMethod().onClass(Objects.class.getName()).named("requireNonNull"),
@@ -703,7 +722,7 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
 
             // Cast a wide net for all throwables (covers catch statements)
             if (THROWABLE_SUBTYPE.matches(node.getTree(), state)) {
-                safety = Safety.UNSAFE;
+                safety = Safety.UNSAFE.leastUpperBound(SafetyAnnotations.getSafety(node.getTree(), state));
             } else {
                 // No safety information found, likely a captured reference used within a lambda or anonymous class.
                 safety = getCapturedLocalVariableSafety(node);
@@ -991,11 +1010,7 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
 
     private Safety getKnownMethodSafety(
             MethodInvocationNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        if (THROWABLE_GET_MESSAGE.matches(node.getTree(), state)) {
-            // Auth failures are sometimes annotated '@DoNotLog', which getMessage should inherit.
-            return Safety.mergeAssumingUnknownIsSame(
-                    Safety.UNSAFE, getValueOfSubNode(input, node.getTarget().getReceiver()));
-        } else if (RETURNS_SAFETY_OF_ARGS_AND_RECEIVER.matches(node.getTree(), state)) {
+        if (RETURNS_SAFETY_OF_ARGS_AND_RECEIVER.matches(node.getTree(), state)) {
             Safety safety = getValueOfSubNode(input, node.getTarget().getReceiver());
             for (Node argument : node.getArguments()) {
                 safety = safety.leastUpperBound(getValueOfSubNode(input, argument));

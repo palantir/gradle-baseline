@@ -41,9 +41,12 @@ import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 
 public final class SafetyAnnotations {
-    private static final String SAFE = "com.palantir.logsafe.Safe";
-    private static final String UNSAFE = "com.palantir.logsafe.Unsafe";
-    private static final String DO_NOT_LOG = "com.palantir.logsafe.DoNotLog";
+    public static final String SAFE = "com.palantir.logsafe.Safe";
+    public static final String UNSAFE = "com.palantir.logsafe.Unsafe";
+    public static final String DO_NOT_LOG = "com.palantir.logsafe.DoNotLog";
+
+    private static final com.google.errorprone.suppliers.Supplier<Type> throwableSupplier =
+            Suppliers.typeFromClass(Throwable.class);
 
     private static final TypeArgumentHandlers SAFETY_IS_COMBINATION_OF_TYPE_ARGUMENTS = new TypeArgumentHandlers(
             new TypeArgumentHandler(Iterable.class),
@@ -115,7 +118,10 @@ public final class SafetyAnnotations {
                 return Safety.SAFE;
             }
         }
-        return SAFETY_IS_COMBINATION_OF_TYPE_ARGUMENTS.getSafety(type, state, dejaVu);
+        Safety typeArgumentCombination = SAFETY_IS_COMBINATION_OF_TYPE_ARGUMENTS.getSafety(type, state, dejaVu);
+        return ASTHelpers.isSubtype(type, throwableSupplier.get(state), state)
+                ? Safety.UNSAFE.leastUpperBound(typeArgumentCombination)
+                : typeArgumentCombination;
     }
 
     private static final class TypeArgumentHandlers {

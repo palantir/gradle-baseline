@@ -679,7 +679,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
         @Override
         @SuppressWarnings("SwitchStatementDefaultCase")
         public Void visitVariable(VariableTree variableTree, Void unused) {
-            if (isSuppressed(variableTree)) {
+            if (isSuppressed(variableTree, state)) {
                 return null;
             }
             Symbol.VarSymbol symbol = getSymbol(variableTree);
@@ -757,7 +757,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
 
         @Override
         public Void visitClass(ClassTree tree, Void unused) {
-            if (isSuppressed(tree)) {
+            if (isSuppressed(tree, state)) {
                 return null;
             }
             if (EXEMPTING_SUPER_TYPES.stream()
@@ -777,7 +777,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
 
         @Override
         public Void visitMethod(MethodTree tree, Void unused) {
-            return isSuppressed(tree) ? null : super.visitMethod(tree, unused);
+            return isSuppressed(tree, state) ? null : super.visitMethod(tree, unused);
         }
     }
 
