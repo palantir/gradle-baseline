@@ -319,7 +319,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
     }
 
     private static void createOrUpdateCopyrightFile(Node node, File file, String fileName) {
-        def copyrightText = XmlUtil.escapeControlCharacters(XmlUtil.escapeXml(file.text.trim()))
+        def copyrightText = file.text.trim()
         // Ensure that subsequent runs don't produce duplicate entries
         Node copyrightNode = GroovyXmlUtils.matchOrCreateChild(node, "copyright")
         Node noticeNode = GroovyXmlUtils.matchOrCreateChild(copyrightNode, "option", ["name": "notice"])
