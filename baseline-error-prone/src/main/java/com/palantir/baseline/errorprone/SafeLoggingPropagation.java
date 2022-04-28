@@ -27,6 +27,7 @@ import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.util.ASTHelpers;
+import com.google.errorprone.util.MoreAnnotations;
 import com.palantir.baseline.errorprone.safety.Safety;
 import com.palantir.baseline.errorprone.safety.SafetyAnalysis;
 import com.palantir.baseline.errorprone.safety.SafetyAnnotations;
@@ -41,9 +42,12 @@ import com.sun.source.tree.ReturnTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.TreeScanner;
+import com.sun.tools.javac.code.Attribute;
 import com.sun.tools.javac.code.Flags;
+import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
+import com.sun.tools.javac.code.Symbol.TypeSymbol;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
 import com.sun.tools.javac.util.Name;
 import java.util.List;
@@ -69,11 +73,32 @@ public final class SafeLoggingPropagation extends BugChecker
     private static final Matcher<MethodTree> METHOD_RETURNS_VOID = Matchers.methodReturns(Matchers.isVoidType());
     private static final Matcher<MethodTree> NON_STATIC_NON_CTOR =
             Matchers.not(Matchers.anyOf(Matchers.hasModifier(Modifier.STATIC), Matchers.methodIsConstructor()));
-    private static final Matcher<MethodTree> GETTER_METHOD_MATCHER =
-            Matchers.allOf(NON_STATIC_NON_CTOR, Matchers.not(METHOD_RETURNS_VOID), Matchers.methodHasNoParameters());
+
+    private static final Matcher<MethodTree> IS_IMMUTABLES_FIELD = Matchers.anyOf(
+            Matchers.hasModifier(Modifier.ABSTRACT),
+            Matchers.symbolHasAnnotation("org.immutables.value.Value.Default"),
+            Matchers.symbolHasAnnotation("org.immutables.value.Value.Derived"),
+            Matchers.symbolHasAnnotation("org.immutables.value.Value.Lazy"),
+            Matchers.allOf(Matchers.hasModifier(Modifier.DEFAULT), Matchers.enclosingClass((Matcher<ClassTree>)
+                    (classTree, state) -> {
+                        ClassSymbol classSymbol = ASTHelpers.getSymbol(classTree);
+                        return classSymbol != null && immutablesDefaultAsDefault(classSymbol, state);
+                    })),
+            (methodTree, state) -> hasJacksonAnnotation(ASTHelpers.getSymbol(methodTree), state));
+    private static final Matcher<MethodTree> GETTER_METHOD_MATCHER = Matchers.allOf(
+            NON_STATIC_NON_CTOR,
+            Matchers.not(METHOD_RETURNS_VOID),
+            Matchers.methodHasNoParameters(),
+            IS_IMMUTABLES_FIELD);
 
     private static final com.google.errorprone.suppliers.Supplier<Name> TO_STRING_NAME =
             VisitorState.memoize(state -> state.getName("toString"));
+
+    private static final com.google.errorprone.suppliers.Supplier<Name> IMMUTABLES_STYLE =
+            VisitorState.memoize(state -> state.getName("org.immutables.value.Value.Style"));
+
+    private static final com.google.errorprone.suppliers.Supplier<Name> JACKSON_ANNOTATION =
+            VisitorState.memoize(state -> state.getName("com.fasterxml.jackson.annotation.JacksonAnnotation"));
 
     @Override
     public Description matchClass(ClassTree classTree, VisitorState state) {
@@ -86,6 +111,50 @@ public final class SafeLoggingPropagation extends BugChecker
         } else {
             return matchClassOrInterface(classTree, classSymbol, state);
         }
+    }
+
+    /** Matches any jackson annotation based on the meta-annotation {@code @JacksonAnnotation}. */
+    private static boolean hasJacksonAnnotation(Symbol typeSymbol, VisitorState state) {
+        return hasJacksonAnnotation(typeSymbol, state, 1)
+                && !ASTHelpers.hasAnnotation(typeSymbol, "com.fasterxml.jackson.annotation.JsonIgnore", state);
+    }
+
+    private static boolean hasJacksonAnnotation(Symbol typeSymbol, VisitorState state, int nestedDepth) {
+        if (typeSymbol != null) {
+            Name jacksonAnnotationName = JACKSON_ANNOTATION.get(state);
+            for (Attribute.Compound metadata : typeSymbol.getRawAttributes()) {
+                if (jacksonAnnotationName.equals(metadata.type.tsym.getQualifiedName())) {
+                    return true;
+                }
+                if (nestedDepth > 0 && hasJacksonAnnotation(metadata.type.tsym, state, nestedDepth - 1)) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    private static boolean immutablesDefaultAsDefault(TypeSymbol typeSymbol, VisitorState state) {
+        return immutablesDefaultAsDefault(typeSymbol, state, 1);
+    }
+
+    private static boolean immutablesDefaultAsDefault(TypeSymbol typeSymbol, VisitorState state, int nestedDepth) {
+        Name styleName = IMMUTABLES_STYLE.get(state);
+        for (Attribute.Compound metadata : typeSymbol.getRawAttributes()) {
+            if (styleName.equals(metadata.type.tsym.getQualifiedName())) {
+                return immutablesDefaultAsDefault(metadata);
+            }
+            if (nestedDepth > 0 && immutablesDefaultAsDefault(metadata.type.tsym, state, nestedDepth - 1)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean immutablesDefaultAsDefault(Attribute.Compound styleAnnotation) {
+        return MoreAnnotations.getValue(styleAnnotation, "defaultAsDefault")
+                .map(attr -> (boolean) attr.getValue())
+                .orElse(false);
     }
 
     private static boolean isRecord(ClassSymbol classSymbol) {

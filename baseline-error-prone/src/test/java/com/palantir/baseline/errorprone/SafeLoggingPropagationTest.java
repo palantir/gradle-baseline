@@ -249,10 +249,296 @@ class SafeLoggingPropagationTest {
                         "import org.immutables.value.Value;",
                         "@Value.Immutable",
                         "interface Test {",
-                        "  @Safe",
+                        "  @DoNotLog",
                         "  static String token() { return \"\"; }",
                         "}")
                 .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void testIgnoresPrivateMethods() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  private String token() { return \"\"; }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void includesDefaultMethodWhenDefaultAsDefault() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
+                        "@Value.Style(defaultAsDefault = true)",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  default String token() { return \"\"; }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "@DoNotLog",
+                        "@Value.Immutable",
+                        "@Value.Style(defaultAsDefault = true)",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  default String token() { return \"\"; }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void includesDefaultMethodWhenDefaultAsDefault_indirectAnnotation() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "interface Test {",
+                        "  @Value.Immutable",
+                        "  @CustomStyle",
+                        "  interface Sub {",
+                        "    @DoNotLog",
+                        "    default String token() { return \"\"; }",
+                        "  }",
+                        "  @Value.Style(defaultAsDefault = true)",
+                        "  public @interface CustomStyle {}",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  @Value.Immutable",
+                        "  @CustomStyle",
+                        "  interface Sub {",
+                        "    @DoNotLog",
+                        "    default String token() { return \"\"; }",
+                        "  }",
+                        "  @Value.Style(defaultAsDefault = true)",
+                        "  public @interface CustomStyle {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void includesDefaultMethodWhenDefault() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  @Value.Default",
+                        "  default String token() { return \"\"; }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "@DoNotLog",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  @Value.Default",
+                        "  default String token() { return \"\"; }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void includesDefaultMethodWhenDerived() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  @Value.Derived",
+                        "  default String token() { return \"\"; }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "@DoNotLog",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  @Value.Derived",
+                        "  default String token() { return \"\"; }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void includesDefaultMethodWhenLazy() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  @Value.Lazy",
+                        "  default String token() { return \"\"; }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "@DoNotLog",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  @Value.Lazy",
+                        "  default String token() { return \"\"; }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testIgnoresHelperMethods_iface() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  default String token() { return \"\"; }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void testIgnoresHelperMethods_abstract() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
+                        "abstract class Test {",
+                        "  @DoNotLog",
+                        "  String token() { return \"\"; }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void testIncludesJacksonAnnotatedHelperMethods_iface() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.fasterxml.jackson.annotation.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  @JsonProperty",
+                        "  default String token() { return \"\"; }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.fasterxml.jackson.annotation.*;",
+                        "import org.immutables.value.Value;",
+                        "@DoNotLog",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  @JsonProperty",
+                        "  default String token() { return \"\"; }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testIncludesJacksonAnnotatedHelperMethods_abstract() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.fasterxml.jackson.annotation.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
+                        "abstract class Test {",
+                        "  @DoNotLog",
+                        "  @JsonProperty",
+                        "  String token() { return \"\"; }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.fasterxml.jackson.annotation.*;",
+                        "import org.immutables.value.Value;",
+                        "@DoNotLog",
+                        "@Value.Immutable",
+                        "abstract class Test {",
+                        "  @DoNotLog",
+                        "  @JsonProperty",
+                        "  String token() { return \"\"; }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testIgnoresJsonIgnoreHelperMethod() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.fasterxml.jackson.annotation.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  @JsonIgnore",
+                        "  default String token() { return \"\"; }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void testIncludesJsonIgnored() {
+        // JsonIgnored methods are included in safety because they're
+        // still included in the toString value.
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.fasterxml.jackson.annotation.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  @JsonIgnore",
+                        "  String token();",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.fasterxml.jackson.annotation.*;",
+                        "import org.immutables.value.Value;",
+                        "@DoNotLog",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  @JsonIgnore",
+                        "  String token();",
+                        "}")
                 .doTest();
     }
 
