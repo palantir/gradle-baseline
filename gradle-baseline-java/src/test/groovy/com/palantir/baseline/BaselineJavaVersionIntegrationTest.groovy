@@ -73,7 +73,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         '''.stripIndent(true)
 
     def setup() {
-//        setFork(true)
+        setFork(true)
         buildFile << standardBuildFile
     }
 
