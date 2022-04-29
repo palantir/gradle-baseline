@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Automatically fix upstream `NarrowCalculation`
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2240

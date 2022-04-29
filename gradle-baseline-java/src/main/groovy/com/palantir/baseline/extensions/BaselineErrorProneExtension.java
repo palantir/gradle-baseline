@@ -87,6 +87,7 @@ public class BaselineErrorProneExtension {
             "LoopOverCharArray",
             "MissingBraces",
             "MissingOverride",
+            "NarrowCalculation",
             "ObjectsHashCodePrimitive",
             "PreferJavaTimeOverload",
             "ProtectedMembersInFinalClass",
