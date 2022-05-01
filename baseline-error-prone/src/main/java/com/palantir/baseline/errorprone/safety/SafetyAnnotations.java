@@ -61,15 +61,20 @@ public final class SafetyAnnotations {
         // Check the symbol itself:
         Symbol treeSymbol = ASTHelpers.getSymbol(tree);
         Safety symbolSafety = getSafety(treeSymbol, state);
-        Type type = tree instanceof ExpressionTree
+        Type treeType = tree instanceof ExpressionTree
                 ? ASTHelpers.getResultType((ExpressionTree) tree)
                 : ASTHelpers.getType(tree);
-
-        if (type == null) {
-            return symbolSafety;
-        } else {
-            return Safety.mergeAssumingUnknownIsSame(symbolSafety, getSafety(type, state), getSafety(type.tsym, state));
-        }
+        Safety treeTypeSafety = treeType == null
+                ? Safety.UNKNOWN
+                : Safety.mergeAssumingUnknownIsSame(getSafety(treeType, state), getSafety(treeType.tsym, state));
+        Type symbolType = treeSymbol == null ? null : treeSymbol.type;
+        // If the type extracted from the symbol matches the type extracted from the tree, avoid duplicate work.
+        // However, in some cases type parameter information is excluded from one, but not the other.
+        Safety symbolTypeSafety = symbolType == null
+                        || (treeType != null && state.getTypes().isSameType(treeType, symbolType))
+                ? Safety.UNKNOWN
+                : Safety.mergeAssumingUnknownIsSame(getSafety(symbolType, state), getSafety(symbolType.tsym, state));
+        return Safety.mergeAssumingUnknownIsSame(symbolSafety, treeTypeSafety, symbolTypeSafety);
     }
 
     public static Safety getSafety(@Nullable Symbol symbol, VisitorState state) {
