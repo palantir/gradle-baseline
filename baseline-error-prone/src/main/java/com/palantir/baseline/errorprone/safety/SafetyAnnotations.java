@@ -184,6 +184,10 @@ public final class SafetyAnnotations {
                 }
                 Safety safety = Safety.SAFE;
                 List<Type> typeArguments = asSubtype.getTypeArguments();
+                if (typeArguments.isEmpty()) {
+                    // Type information is not available, not enough data to make a decision
+                    return null;
+                }
                 for (Type typeArgument : typeArguments) {
                     Safety safetyBasedOnType = SafetyAnnotations.getSafetyInternal(typeArgument, state, deJaVuToPass);
                     Safety safetyBasedOnSymbol = SafetyAnnotations.getSafety(typeArgument.tsym, state);
