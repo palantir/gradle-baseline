@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Fix safety evaluation requiring lhs of an assignment to be safe unnecessarily
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2242
