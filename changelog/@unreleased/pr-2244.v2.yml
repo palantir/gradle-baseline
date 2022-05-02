@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: VarUsage failures reference a real tree
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2244
