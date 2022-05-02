@@ -1443,6 +1443,50 @@ class IllegalSafeLoggingArgumentTest {
                 .doTest();
     }
 
+    @Test
+    public void testStringBuilder() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  void f(@Safe String safe, @Unsafe String unsafe) {",
+                        "    fun(new StringBuilder(safe));",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
+                        "    fun(new StringBuilder(unsafe));",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
+                        "    fun(new StringBuilder(safe).append(unsafe).toString());",
+                        "    StringBuilder sb = new StringBuilder().append(safe);",
+                        "    sb.append(safe).append(unsafe);",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
+                        "    fun(sb.append(safe).toString());",
+                        "  }",
+                        "  private static void fun(@Safe Object value) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testStringBuffer() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  void f(@Safe String safe, @Unsafe String unsafe) {",
+                        "    fun(new StringBuffer(safe));",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
+                        "    fun(new StringBuffer(unsafe));",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
+                        "    fun(new StringBuffer(safe).append(unsafe).toString());",
+                        "    StringBuffer sb = new StringBuffer().append(safe);",
+                        "    sb.append(safe).append(unsafe);",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
+                        "    fun(sb.append(safe).toString());",
+                        "  }",
+                        "  private static void fun(@Safe Object value) {}",
+                        "}")
+                .doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(IllegalSafeLoggingArgument.class, getClass());
     }
