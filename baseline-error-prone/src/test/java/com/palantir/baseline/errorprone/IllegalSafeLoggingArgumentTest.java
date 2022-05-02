@@ -1096,6 +1096,26 @@ class IllegalSafeLoggingArgumentTest {
     }
 
     @Test
+    public void testThrowableFieldAssignment() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.*;",
+                        "class Test<OutputT> {",
+                        "  private volatile Set<Throwable> fieldValue = null;",
+                        "  static final class Other {",
+                        "  void f(Test obj, Set<Throwable> newValue) {",
+                        "    synchronized (obj) {",
+                        "      if (obj.fieldValue != newValue)",
+                        "      obj.fieldValue = newValue;",
+                        "    }",
+                        "  }",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void disagreeingSafetyAnnotations() {
         helper().addSourceLines(
                         "Test.java",
