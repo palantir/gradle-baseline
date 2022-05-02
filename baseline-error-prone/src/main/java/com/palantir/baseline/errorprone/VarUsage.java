@@ -64,7 +64,7 @@ public final class VarUsage extends BugChecker implements BugChecker.VariableTre
                     && token.hasName()
                     && token.name().contentEquals("var")) {
                 SuggestedFix.Builder fix = SuggestedFix.builder();
-                return buildDescription(typeTree)
+                return buildDescription(tree)
                         .addFix(fix.replace(
                                         token.pos(),
                                         token.endPos(),
