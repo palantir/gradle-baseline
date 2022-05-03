@@ -70,6 +70,11 @@ public final class SafeLoggingPropagation extends BugChecker
             Matchers.isSameType(SafetyAnnotations.UNSAFE),
             Matchers.isSameType(SafetyAnnotations.DO_NOT_LOG));
 
+    private static final Matcher<MethodTree> TO_STRING = Matchers.allOf(
+            Matchers.methodIsNamed("toString"),
+            Matchers.methodHasNoParameters(),
+            Matchers.not(Matchers.isStatic()),
+            Matchers.methodReturns(Matchers.isSameType(String.class)));
     private static final Matcher<MethodTree> METHOD_RETURNS_VOID = Matchers.methodReturns(Matchers.isVoidType());
     private static final Matcher<MethodTree> NON_STATIC_NON_CTOR =
             Matchers.not(Matchers.anyOf(Matchers.hasModifier(Modifier.STATIC), Matchers.methodIsConstructor()));
@@ -85,11 +90,14 @@ public final class SafeLoggingPropagation extends BugChecker
                         return classSymbol != null && immutablesDefaultAsDefault(classSymbol, state);
                     })),
             (methodTree, state) -> hasJacksonAnnotation(ASTHelpers.getSymbol(methodTree), state));
-    private static final Matcher<MethodTree> GETTER_METHOD_MATCHER = Matchers.allOf(
-            NON_STATIC_NON_CTOR,
-            Matchers.not(METHOD_RETURNS_VOID),
-            Matchers.methodHasNoParameters(),
-            IS_IMMUTABLES_FIELD);
+    private static final Matcher<MethodTree> GETTER_METHOD_MATCHER = Matchers.anyOf(
+            Matchers.allOf(
+                    NON_STATIC_NON_CTOR,
+                    Matchers.not(METHOD_RETURNS_VOID),
+                    Matchers.methodHasNoParameters(),
+                    IS_IMMUTABLES_FIELD),
+            // Always include toString safety
+            TO_STRING);
 
     private static final com.google.errorprone.suppliers.Supplier<Name> TO_STRING_NAME =
             VisitorState.memoize(state -> state.getName("toString"));
@@ -186,17 +194,35 @@ public final class SafeLoggingPropagation extends BugChecker
     }
 
     private Description matchClassOrInterface(ClassTree classTree, ClassSymbol classSymbol, VisitorState state) {
-        if (!ASTHelpers.hasAnnotation(classSymbol, "org.immutables.value.Value.Immutable", state)) {
-            return matchBasedOnToString(classTree, classSymbol, state);
+        if (ASTHelpers.hasAnnotation(classSymbol, "org.immutables.value.Value.Immutable", state)) {
+            return matchImmutables(classTree, classSymbol, state);
         }
+        return matchBasedOnToString(classTree, classSymbol, state);
+    }
+
+    private Description matchImmutables(ClassTree classTree, ClassSymbol classSymbol, VisitorState state) {
         Safety existingClassSafety = SafetyAnnotations.getSafety(classTree, state);
         Safety safety = getTypeSafetyFromAncestors(classTree, state);
         boolean hasKnownGetter = false;
+        boolean isJson = hasJacksonAnnotation(classSymbol, state);
         for (Tree member : classTree.getMembers()) {
             if (member instanceof MethodTree) {
                 MethodTree methodMember = (MethodTree) member;
                 if (GETTER_METHOD_MATCHER.matches(methodMember, state)) {
-                    Safety getterSafety = SafetyAnnotations.getSafety(methodMember.getReturnType(), state);
+                    MethodSymbol methodSymbol = ASTHelpers.getSymbol(methodMember);
+                    boolean redacted =
+                            ASTHelpers.hasAnnotation(methodSymbol, "org.immutables.value.Value.Redacted", state);
+                    if (redacted && !isJson && !hasJacksonAnnotation(methodSymbol, state)) {
+                        // Redacted fields can be ignored so long as the object is not json-serializable, in which
+                        // case logging may occur using jackson rather than toString.
+                        continue;
+                    }
+                    // The redaction check allows us to add @DoNotLog to redacted fields in the same sweep as
+                    // adding class-level safety annotations. Otherwise, we would have to run the automatic
+                    // fixes twice.
+                    Safety getterSafety = redacted
+                            ? Safety.DO_NOT_LOG
+                            : SafetyAnnotations.getSafety(methodMember.getReturnType(), state);
                     if (getterSafety != Safety.UNKNOWN) {
                         hasKnownGetter = true;
                     }
@@ -274,9 +300,6 @@ public final class SafeLoggingPropagation extends BugChecker
             return Description.NO_MATCH;
         }
         MethodSymbol methodSymbol = ASTHelpers.getSymbol(method);
-        if ((methodSymbol.flags() & Flags.ABSTRACT) != 0) {
-            return Description.NO_MATCH;
-        }
         // Removing this check may be helpful once we begin to use the 'var' keyword.
         if (methodSymbol.owner.isAnonymous()) {
             return Description.NO_MATCH;
@@ -284,8 +307,15 @@ public final class SafeLoggingPropagation extends BugChecker
         Safety methodDeclaredSafety = Safety.mergeAssumingUnknownIsSame(
                 SafetyAnnotations.getSafety(methodSymbol, state),
                 SafetyAnnotations.getSafety(method.getReturnType(), state));
+        if (methodDeclaredSafety != Safety.DO_NOT_LOG
+                && ASTHelpers.hasAnnotation(methodSymbol, "org.immutables.value.Value.Redacted", state)) {
+            return handleSafety(method, method.getModifiers(), state, methodDeclaredSafety, Safety.DO_NOT_LOG);
+        }
         if (methodDeclaredSafety != Safety.UNKNOWN) {
             // No need to verify, that's handled by 'IllegalSafeLoggingArgument'
+            return Description.NO_MATCH;
+        }
+        if ((methodSymbol.flags() & Flags.ABSTRACT) != 0) {
             return Description.NO_MATCH;
         }
         // Don't cause churn in test-code. This is checked prior to the more expensive safety analysis
