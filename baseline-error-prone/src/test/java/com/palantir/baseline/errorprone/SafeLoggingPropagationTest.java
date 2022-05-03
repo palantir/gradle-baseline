@@ -543,6 +543,153 @@ class SafeLoggingPropagationTest {
     }
 
     @Test
+    void testRedactedIsDoNotLog() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @Value.Redacted",
+                        "  String token();",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  @Value.Redacted",
+                        "  String token();",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testRedactedIsDoNotLog_jsonSerializable() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.fasterxml.jackson.databind.annotation.*;",
+                        "import org.immutables.value.Value;",
+                        "@JsonSerialize",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @Value.Redacted",
+                        "  String token();",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.fasterxml.jackson.databind.annotation.*;",
+                        "import org.immutables.value.Value;",
+                        "@DoNotLog",
+                        "@JsonSerialize",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  @Value.Redacted",
+                        "  String token();",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testIgnoresRedacted() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  @Value.Redacted",
+                        "  String token();",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void testIgnoresRedacted_jsonIgnore() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.fasterxml.jackson.annotation.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  @JsonIgnore",
+                        "  @Value.Redacted",
+                        "  String token();",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void testRedacted_jsonValue() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.fasterxml.jackson.annotation.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  @JsonValue",
+                        "  @Value.Redacted",
+                        "  String token();",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.fasterxml.jackson.annotation.*;",
+                        "import org.immutables.value.Value;",
+                        "@DoNotLog",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  @JsonValue",
+                        "  @Value.Redacted",
+                        "  String token();",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testRedacted_jsonSerialize() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.fasterxml.jackson.databind.annotation.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
+                        "@JsonSerialize",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  @Value.Redacted",
+                        "  String token();",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.fasterxml.jackson.databind.annotation.*;",
+                        "import org.immutables.value.Value;",
+                        "@DoNotLog",
+                        "@Value.Immutable",
+                        "@JsonSerialize",
+                        "interface Test {",
+                        "  @DoNotLog",
+                        "  @Value.Redacted",
+                        "  String token();",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     void testIgnoresVoidMethods() {
         fix().addInputLines(
                         "Test.java",
