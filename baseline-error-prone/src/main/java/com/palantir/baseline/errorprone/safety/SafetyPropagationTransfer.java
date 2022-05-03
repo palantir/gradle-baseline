@@ -286,6 +286,16 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
             THROWABLES_STACK_TRACE_AS_STRING,
             PRIMITIVE_BOXING);
 
+    private static final Matcher<ExpressionTree> CONSTRUCTOR_SAFETY_COMBINATION_OF_ARGS = Matchers.anyOf(
+            MethodMatchers.constructor().forClass(StringBuilder.class.getName()).withParameters(String.class.getName()),
+            MethodMatchers.constructor()
+                    .forClass(StringBuilder.class.getName())
+                    .withParameters(CharSequence.class.getName()),
+            MethodMatchers.constructor().forClass(StringBuffer.class.getName()).withParameters(String.class.getName()),
+            MethodMatchers.constructor()
+                    .forClass(StringBuffer.class.getName())
+                    .withParameters(CharSequence.class.getName()));
+
     private static final Matcher<ExpressionTree> OPTIONAL_ACCESSORS = Matchers.anyOf(
             MethodMatchers.instanceMethod()
                     .onDescendantOf(Optional.class.getName())
@@ -359,6 +369,15 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
                     .onClass("com.palantir.logsafe.Preconditions")
                     .namedAnyOf("checkNotNull", "checkArgumentNotNull"));
 
+    // Similar to RETURNS_SAFETY_OF_ARGS_AND_RECEIVER, except the variable itself is assigned the safety result.
+    // For example, the following returns do-not-log due to a mutation on the second line:
+    // StringBuilder sb = new StringBuilder().append(safe);
+    // sb.append(doNotLog);
+    // return sb.append(safe).toString();
+    private static final Matcher<ExpressionTree> MUTABLE_BUILDER_METHODS =
+            Matchers.anyOf(MethodMatchers.instanceMethod()
+                    .onExactClassAny(StringBuilder.class.getName(), StringBuffer.class.getName())
+                    .namedAnyOf("append", "insert", "replace"));
     private static final Matcher<ExpressionTree> RETURNS_SAFETY_OF_ARGS_AND_RECEIVER = Matchers.anyOf(
             MethodMatchers.instanceMethod()
                     .onDescendantOf(Stream.class.getName())
@@ -366,7 +385,8 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
             MethodMatchers.instanceMethod()
                     .onDescendantOf(Optional.class.getName())
                     // TODO(ckozak): support 'or' and 'orElseGet' which require lambda support
-                    .named("orElse"));
+                    .named("orElse"),
+            MUTABLE_BUILDER_METHODS);
 
     private VisitorState state;
     private final Set<VarSymbol> traversed = new HashSet<>();
@@ -1084,7 +1104,22 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
         Safety methodSymbolSafety = getMethodSymbolSafety(node, input);
         Safety knownMethodSafety = getKnownMethodSafety(node, input);
         Safety result = Safety.mergeAssumingUnknownIsSame(methodSymbolSafety, knownMethodSafety);
-        return noStoreChanges(result, input);
+        if (MUTABLE_BUILDER_METHODS.matches(node.getTree(), state)) {
+            ReadableUpdates updates = new ReadableUpdates();
+            Node current = node.getTarget().getReceiver();
+            while (current instanceof MethodInvocationNode) {
+                MethodInvocationNode currentInvocation = (MethodInvocationNode) current;
+                if (MUTABLE_BUILDER_METHODS.matches(currentInvocation.getTree(), state)) {
+                    current = currentInvocation.getTarget().getReceiver();
+                } else {
+                    break;
+                }
+            }
+            updates.trySet(current, result);
+            return updateRegularStore(result, input, updates);
+        } else {
+            return noStoreChanges(result, input);
+        }
     }
 
     private Safety getKnownMethodSafety(
@@ -1127,6 +1162,13 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     public TransferResult<Safety, AccessPathStore<Safety>> visitObjectCreation(
             ObjectCreationNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
         Safety result = SafetyAnnotations.getSafety(node.getTree(), state);
+        if (CONSTRUCTOR_SAFETY_COMBINATION_OF_ARGS.matches(node.getTree(), state)) {
+            Safety safety = Safety.SAFE;
+            for (Node argument : node.getArguments()) {
+                safety = safety.leastUpperBound(getValueOfSubNode(input, argument));
+            }
+            result = Safety.mergeAssumingUnknownIsSame(result, safety);
+        }
         return noStoreChanges(result, input);
     }
 
