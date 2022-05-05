@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Implement method type argument validation
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2255
