@@ -116,6 +116,23 @@ class IllegalSafeLoggingArgumentTest {
     }
 
     @Test
+    public void testConstructor() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  void f(@Unsafe String value) {",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
+                        "    new Ob(value);",
+                        "  }",
+                        "  private static final class Ob {",
+                        "    Ob(@Safe Object obj) {}",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testVarArgParameter() {
         helper().addSourceLines(
                         "Test.java",
@@ -1483,6 +1500,41 @@ class IllegalSafeLoggingArgumentTest {
                         "    fun(sb.append(safe).toString());",
                         "  }",
                         "  private static void fun(@Safe Object value) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testTypeVariable() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test<@Unsafe T> {",
+                        "  void f(T value) {",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
+                        "    fun(value);",
+                        "  }",
+                        "  private static void fun(@Safe Object value) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testBindingToSafeTypeVariable() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  @Unsafe static final class UnsafeType {}",
+                        "  static final class One<@Safe T> {",
+                        "    static <U> One<U> of(U value) { return null; }",
+                        "  }",
+                        "  void f() {",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
+                        "    new One<UnsafeType>();",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
+                        "    One.of(new UnsafeType());",
+                        "  }",
                         "}")
                 .doTest();
     }

@@ -34,11 +34,13 @@ import com.sun.source.tree.CompoundAssignmentTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.MethodTree;
+import com.sun.source.tree.NewClassTree;
 import com.sun.source.tree.ReturnTree;
 import com.sun.source.tree.StatementTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.VariableTree;
 import com.sun.source.util.TreePath;
+import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Symbol.TypeVariableSymbol;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
@@ -69,14 +71,15 @@ public final class IllegalSafeLoggingArgument extends BugChecker
                 BugChecker.AssignmentTreeMatcher,
                 BugChecker.CompoundAssignmentTreeMatcher,
                 BugChecker.MethodTreeMatcher,
-                BugChecker.VariableTreeMatcher {
+                BugChecker.VariableTreeMatcher,
+                BugChecker.NewClassTreeMatcher {
 
     private static final String UNSAFE_ARG = "com.palantir.logsafe.UnsafeArg";
     private static final Matcher<ExpressionTree> SAFE_ARG_OF_METHOD_MATCHER = MethodMatchers.staticMethod()
             .onClass("com.palantir.logsafe.SafeArg")
             .named("of");
 
-    private static Type resolveParameterType(Type input, MethodInvocationTree tree, VisitorState state) {
+    private static Type resolveParameterType(Type input, ExpressionTree tree, VisitorState state) {
         if (input instanceof TypeVar) {
             TypeVar typeVar = (TypeVar) input;
 
@@ -84,10 +87,10 @@ public final class IllegalSafeLoggingArgument extends BugChecker
             if (receiver == null) {
                 return input;
             }
-            MethodSymbol methodSymbol = ASTHelpers.getSymbol(tree);
+            Symbol symbol = ASTHelpers.getSymbol(tree);
             // List<String> -> Collection<E> gives us Collection<String>
-            Type boundToMethodOwner = state.getTypes().asSuper(receiver, methodSymbol.owner);
-            List<TypeVariableSymbol> ownerTypeVars = methodSymbol.owner.getTypeParameters();
+            Type boundToMethodOwner = state.getTypes().asSuper(receiver, symbol.owner);
+            List<TypeVariableSymbol> ownerTypeVars = symbol.owner.getTypeParameters();
             // Validate that the type parameters match -- it's possible raw types are used, and
             // no type variables are bound. See IllegalSafeLoggingArgumentTest.testRawTypes.
             if (ownerTypeVars.size() == boundToMethodOwner.getTypeArguments().size()) {
@@ -104,12 +107,25 @@ public final class IllegalSafeLoggingArgument extends BugChecker
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
-        List<? extends ExpressionTree> arguments = tree.getArguments();
-        if (arguments.isEmpty()) {
+        return matchCtorOrMethodInvocation(tree, tree.getArguments(), ASTHelpers.getSymbol(tree), state);
+    }
+
+    @Override
+    public Description matchNewClass(NewClassTree tree, VisitorState state) {
+        return matchCtorOrMethodInvocation(tree, tree.getArguments(), ASTHelpers.getSymbol(tree), state);
+    }
+
+    @SuppressWarnings("CheckStyle")
+    private Description matchCtorOrMethodInvocation(
+            ExpressionTree tree,
+            List<? extends ExpressionTree> arguments,
+            MethodSymbol methodSymbol,
+            VisitorState state) {
+        if (methodSymbol == null) {
             return Description.NO_MATCH;
         }
-        MethodSymbol methodSymbol = ASTHelpers.getSymbol(tree);
-        if (methodSymbol == null) {
+        handleTypeArguments(tree, state);
+        if (arguments.isEmpty()) {
             return Description.NO_MATCH;
         }
         List<VarSymbol> parameters = methodSymbol.getParameters();
@@ -144,12 +160,42 @@ public final class IllegalSafeLoggingArgument extends BugChecker
         return Description.NO_MATCH;
     }
 
-    private static SuggestedFix getSuggestedFix(MethodInvocationTree tree, VisitorState state, Safety argumentSafety) {
+    private void handleTypeArguments(ExpressionTree tree, VisitorState state) {
+        Type type = ASTHelpers.getResultType(tree);
+        if (type != null && !type.getTypeArguments().isEmpty()) {
+            List<Type> resultTypeArguments = type.getTypeArguments();
+            List<TypeVariableSymbol> parameterTypes = type.tsym.getTypeParameters();
+            if (parameterTypes.size() == resultTypeArguments.size()) {
+                for (int i = 0; i < parameterTypes.size(); i++) {
+                    TypeVariableSymbol typeVar = parameterTypes.get(i);
+                    Type typeArgumentType = resultTypeArguments.get(i);
+                    Safety typeVarSafety = Safety.mergeAssumingUnknownIsSame(
+                            SafetyAnnotations.getSafety(typeVar, state),
+                            SafetyAnnotations.getSafety(typeVar.type, state),
+                            SafetyAnnotations.getSafety(typeVar.type.tsym, state));
+                    Safety typeArgumentSafety = Safety.mergeAssumingUnknownIsSame(
+                            SafetyAnnotations.getSafety(typeArgumentType, state),
+                            SafetyAnnotations.getSafety(typeArgumentType.tsym, state));
+                    if (!typeVarSafety.allowsAll() && !typeVarSafety.allowsValueWith(typeArgumentSafety)) {
+                        // use state.reportMatch to report all failing arguments if multiple are invalid
+                        state.reportMatch(buildDescription(tree)
+                                .setMessage(String.format(
+                                        "Dangerous argument value: arg is '%s' but the parameter requires '%s'.",
+                                        typeArgumentSafety, typeVarSafety))
+                                .build());
+                    }
+                }
+            }
+        }
+    }
+
+    private static SuggestedFix getSuggestedFix(ExpressionTree tree, VisitorState state, Safety argumentSafety) {
         if (SAFE_ARG_OF_METHOD_MATCHER.matches(tree, state) && Safety.UNSAFE.allowsValueWith(argumentSafety)) {
             SuggestedFix.Builder fix = SuggestedFix.builder();
             String unsafeQualifiedClassName = SuggestedFixes.qualifyType(state, fix, UNSAFE_ARG);
             String replacement = String.format("%s.of", unsafeQualifiedClassName);
-            return fix.replace(tree.getMethodSelect(), replacement).build();
+            return fix.replace(((MethodInvocationTree) tree).getMethodSelect(), replacement)
+                    .build();
         }
 
         return SuggestedFix.emptyFix();
