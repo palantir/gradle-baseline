@@ -1539,6 +1539,41 @@ class IllegalSafeLoggingArgumentTest {
                 .doTest();
     }
 
+    @Test
+    public void testMethodTypeVariable() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  private static void fun(@Safe Object value) {}",
+                        "  private static <@Unsafe T> void handle(T input) {",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
+                        "    fun(input);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testBindingToSafeMethodTypeVariable() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.Optional;",
+                        "class Test {",
+                        "  @Unsafe static final class UnsafeType {}",
+                        "  static <@Safe U> Optional<U> of(U value) { return Optional.empty(); }",
+                        "  static <@Safe U> Optional<U> empty() { return Optional.empty(); }",
+                        "  void f() {",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
+                        "    Test.of(new UnsafeType());",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
+                        "    Test.<UnsafeType>empty();",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(IllegalSafeLoggingArgument.class, getClass());
     }

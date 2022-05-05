@@ -107,24 +107,28 @@ public final class IllegalSafeLoggingArgument extends BugChecker
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
-        return matchCtorOrMethodInvocation(tree, tree.getArguments(), ASTHelpers.getSymbol(tree), state);
+        return matchCtorOrMethodInvocation(
+                tree, tree.getTypeArguments(), tree.getArguments(), ASTHelpers.getSymbol(tree), state);
     }
 
     @Override
     public Description matchNewClass(NewClassTree tree, VisitorState state) {
-        return matchCtorOrMethodInvocation(tree, tree.getArguments(), ASTHelpers.getSymbol(tree), state);
+        return matchCtorOrMethodInvocation(
+                tree, tree.getTypeArguments(), tree.getArguments(), ASTHelpers.getSymbol(tree), state);
     }
 
-    @SuppressWarnings("CheckStyle")
+    @SuppressWarnings({"CheckStyle", "ReferenceEquality"})
     private Description matchCtorOrMethodInvocation(
             ExpressionTree tree,
+            List<? extends Tree> typeArguments,
             List<? extends ExpressionTree> arguments,
             MethodSymbol methodSymbol,
             VisitorState state) {
         if (methodSymbol == null) {
             return Description.NO_MATCH;
         }
-        handleTypeArguments(tree, state);
+        handleResultTypeArguments(tree, state);
+        handleMethodTypeArguments(tree, typeArguments, methodSymbol, state);
         if (arguments.isEmpty()) {
             return Description.NO_MATCH;
         }
@@ -134,7 +138,17 @@ public final class IllegalSafeLoggingArgument extends BugChecker
             Type resolvedParameterType = resolveParameterType(parameter.type, tree, state);
             Safety parameterSafety = Safety.mergeAssumingUnknownIsSame(
                     SafetyAnnotations.getSafety(parameter, state),
-                    SafetyAnnotations.getSafety(resolvedParameterType, state));
+                    SafetyAnnotations.getSafety(resolvedParameterType, state),
+                    SafetyAnnotations.getSafety(resolvedParameterType.tsym, state));
+            // Collect additional safety info from the declared type
+            // Reference equality is okay because 'resolveParameterType' returns the input if the type doesn't need to
+            // be resolved.
+            if (parameter.type != resolvedParameterType) {
+                parameterSafety = Safety.mergeAssumingUnknownIsSame(
+                        parameterSafety,
+                        SafetyAnnotations.getSafety(parameter.type, state),
+                        SafetyAnnotations.getSafety(parameter.type.tsym, state));
+            }
             if (parameterSafety.allowsAll()) {
                 // Fast path: all types are accepted, there's no reason to do further analysis.
                 continue;
@@ -160,7 +174,7 @@ public final class IllegalSafeLoggingArgument extends BugChecker
         return Description.NO_MATCH;
     }
 
-    private void handleTypeArguments(ExpressionTree tree, VisitorState state) {
+    private void handleResultTypeArguments(ExpressionTree tree, VisitorState state) {
         Type type = ASTHelpers.getResultType(tree);
         if (type != null && !type.getTypeArguments().isEmpty()) {
             List<Type> resultTypeArguments = type.getTypeArguments();
@@ -185,6 +199,35 @@ public final class IllegalSafeLoggingArgument extends BugChecker
                                 .build());
                     }
                 }
+            }
+        }
+    }
+
+    private void handleMethodTypeArguments(
+            ExpressionTree tree, List<? extends Tree> typeArguments, MethodSymbol methodSymbol, VisitorState state) {
+        List<TypeVariableSymbol> typeParameters = methodSymbol.getTypeParameters();
+        if (typeParameters == null
+                || typeParameters.isEmpty()
+                || typeArguments == null
+                || typeArguments.isEmpty()
+                || typeArguments.size() != typeParameters.size()) {
+            return;
+        }
+        for (int i = 0; i < typeParameters.size(); i++) {
+            TypeVariableSymbol parameter = typeParameters.get(i);
+            Tree argument = typeArguments.get(i);
+            Safety required = Safety.mergeAssumingUnknownIsSame(
+                    SafetyAnnotations.getSafety(parameter, state),
+                    SafetyAnnotations.getSafety(parameter.type, state),
+                    SafetyAnnotations.getSafety(parameter.type.tsym, state));
+            Safety given = SafetyAnnotations.getSafety(argument, state);
+            if (!required.allowsValueWith(given)) {
+                // use state.reportMatch to report all failing arguments if multiple are invalid
+                state.reportMatch(buildDescription(tree)
+                        .setMessage(String.format(
+                                "Dangerous argument value: arg is '%s' but the parameter requires '%s'.",
+                                given, required))
+                        .build());
             }
         }
     }
