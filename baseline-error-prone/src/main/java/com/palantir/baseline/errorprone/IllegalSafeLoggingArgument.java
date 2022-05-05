@@ -117,7 +117,7 @@ public final class IllegalSafeLoggingArgument extends BugChecker
                 tree, tree.getTypeArguments(), tree.getArguments(), ASTHelpers.getSymbol(tree), state);
     }
 
-    @SuppressWarnings("CheckStyle")
+    @SuppressWarnings({"CheckStyle", "ReferenceEquality"})
     private Description matchCtorOrMethodInvocation(
             ExpressionTree tree,
             List<? extends Tree> typeArguments,
@@ -141,7 +141,9 @@ public final class IllegalSafeLoggingArgument extends BugChecker
                     SafetyAnnotations.getSafety(resolvedParameterType, state),
                     SafetyAnnotations.getSafety(resolvedParameterType.tsym, state));
             // Collect additional safety info from the declared type
-            if (!state.getTypes().isSameType(parameter.type, resolvedParameterType)) {
+            // Reference equality is okay because 'resolveParameterType' returns the input if the type doesn't need to
+            // be resolved.
+            if (parameter.type != resolvedParameterType) {
                 parameterSafety = Safety.mergeAssumingUnknownIsSame(
                         parameterSafety,
                         SafetyAnnotations.getSafety(parameter.type, state),
