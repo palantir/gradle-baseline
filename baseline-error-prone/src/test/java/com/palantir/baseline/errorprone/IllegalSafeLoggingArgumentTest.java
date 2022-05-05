@@ -1592,6 +1592,39 @@ class IllegalSafeLoggingArgumentTest {
                 .doTest();
     }
 
+    @Test
+    public void testRecordConstruction() {
+        helper().setArgs("--release", "15", "--enable-preview")
+                .addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  record MyRecord(@Safe String value) {}",
+                        "  void f(@Unsafe String value) {",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
+                        "    new MyRecord(value);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testRecordComponentUsage() {
+        helper().setArgs("--release", "15", "--enable-preview")
+                .addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  record MyRecord(@Unsafe String value) {}",
+                        "  void f(MyRecord rec) {",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
+                        "    fun(rec.value());",
+                        "  }",
+                        "  private static void fun(@Safe Object value) {}",
+                        "}")
+                .doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(IllegalSafeLoggingArgument.class, getClass());
     }
