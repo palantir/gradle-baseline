@@ -120,7 +120,9 @@ public final class SafetyAnnotations {
                 continue;
             }
             for (Attribute.TypeCompound attr : metadata.getTypeAttributes()) {
-                if (attr.position.type == TargetType.CLASS_TYPE_PARAMETER && attr.position.parameter_index == i) {
+                if ((attr.position.type == TargetType.CLASS_TYPE_PARAMETER
+                                || attr.position.type == TargetType.METHOD_TYPE_PARAMETER)
+                        && attr.position.parameter_index == i) {
                     Safety maybeSafety = getSafetyAnnotationValue(attr);
                     if (maybeSafety != null) {
                         return maybeSafety;
