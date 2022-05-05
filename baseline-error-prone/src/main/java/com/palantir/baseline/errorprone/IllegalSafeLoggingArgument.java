@@ -80,7 +80,8 @@ public final class IllegalSafeLoggingArgument extends BugChecker
             .named("of");
 
     private static Type resolveParameterType(Type input, ExpressionTree tree, VisitorState state) {
-        if (input instanceof TypeVar) {
+        // Important not to call getReceiver/getReceiverType on a NewClassTree, which throws.
+        if (input instanceof TypeVar && tree instanceof MethodInvocationTree) {
             TypeVar typeVar = (TypeVar) input;
 
             Type receiver = ASTHelpers.getReceiverType(tree);

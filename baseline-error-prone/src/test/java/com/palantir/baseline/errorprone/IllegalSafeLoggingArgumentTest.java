@@ -1574,6 +1574,24 @@ class IllegalSafeLoggingArgumentTest {
                 .doTest();
     }
 
+    @Test
+    public void testTypeVariablesInConstructor() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.*;",
+                        "import java.util.function.*;",
+                        "class Test {",
+                        "  static final class Foo<T> {",
+                        "    Foo(T input) {}",
+                        "  }",
+                        "  static Foo<String> f(Supplier<String> value) {",
+                        "    return new Foo<>(value.get());",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(IllegalSafeLoggingArgument.class, getClass());
     }
