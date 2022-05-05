@@ -140,8 +140,8 @@ public final class IllegalSafeLoggingArgument extends BugChecker
                     SafetyAnnotations.getSafety(parameter, state),
                     SafetyAnnotations.getSafety(resolvedParameterType, state),
                     SafetyAnnotations.getSafety(resolvedParameterType.tsym, state));
-            // Collect additional safety info from the declared type type
-            if (!Objects.equals(parameter.type, resolvedParameterType)) {
+            // Collect additional safety info from the declared type
+            if (!state.getTypes().isSameType(parameter.type, resolvedParameterType)) {
                 parameterSafety = Safety.mergeAssumingUnknownIsSame(
                         parameterSafety,
                         SafetyAnnotations.getSafety(parameter.type, state),
