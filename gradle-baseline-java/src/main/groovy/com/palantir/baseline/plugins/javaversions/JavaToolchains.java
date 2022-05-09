@@ -21,6 +21,7 @@ import org.gradle.api.Project;
 import org.gradle.api.provider.Provider;
 import org.gradle.jvm.toolchain.JavaInstallationMetadata;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
+import org.gradle.jvm.toolchain.JavaToolchainService;
 
 public final class JavaToolchains {
     private final Project project;
@@ -33,16 +34,18 @@ public final class JavaToolchains {
 
     public Provider<BaselineJavaToolchain> forVersion(Provider<JavaLanguageVersion> javaLanguageVersionProvider) {
         return javaLanguageVersionProvider.map(javaLanguageVersion -> {
-            Provider<JavaInstallationMetadata> configuredJdk =
-                    baselineJavaVersionsExtension.getJdks().getting(javaLanguageVersion);
+            Provider<JavaInstallationMetadata> configuredJdkMetadata = baselineJavaVersionsExtension
+                    .getJdks()
+                    .getting(javaLanguageVersion)
+                    .orElse(project.provider(() -> project.getExtensions()
+                            .getByType(JavaToolchainService.class)
+                            .launcherFor(javaToolchainSpec ->
+                                    javaToolchainSpec.getLanguageVersion().set(javaLanguageVersion))
+                            .get()
+                            .getMetadata()));
 
-            return new ConfiguredJavaToolchain(
-                    project.provider(() -> new JavaInstallationMetadataWrapper(javaLanguageVersion, configuredJdk)));
-
-            //                    () -> new FallbackGradleJavaToolchain(
-            //                            project.getExtensions().getByType(JavaToolchainService.class),
-            //                            javaToolchainSpec ->
-            //                                    javaToolchainSpec.getLanguageVersion().set(javaLanguageVersion))));
+            return new ConfiguredJavaToolchain(project.provider(
+                    () -> new JavaInstallationMetadataWrapper(javaLanguageVersion, configuredJdkMetadata)));
         });
     }
 }
