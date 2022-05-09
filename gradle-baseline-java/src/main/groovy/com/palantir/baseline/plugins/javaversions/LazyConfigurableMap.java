@@ -21,20 +21,26 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import org.gradle.api.Action;
+import org.gradle.api.provider.Provider;
 
-final class LazyConfigurableMap<K, V> {
+public final class LazyConfigurableMap<K, V> {
     private final Supplier<V> valueFactory;
-    private final List<LazyEntry<K, V>> entries = new ArrayList<>();
-    private final Map<K, V> computedValues = new HashMap<>();
+    private final List<LazyValues<K, V>> values = new ArrayList<>();
+    private final Map<K, Lol<V>> computedValues = new HashMap<>();
 
-    LazyConfigurableMap(Supplier<V> valueFactory) {
+    public LazyConfigurableMap(Supplier<V> valueFactory) {
         this.valueFactory = valueFactory;
     }
 
+    public void put(LazyValues<K, V> lazyValues) {
+        values.add(lazyValues);
+    }
+
     public void put(K key, Action<V> value) {
-        entries.add(0, requestedKey -> {
+        put(requestedKey -> {
             if (requestedKey.equals(key)) {
                 return Optional.of(value);
             }
@@ -43,21 +49,67 @@ final class LazyConfigurableMap<K, V> {
         });
     }
 
-    public void put(LazyEntry<K, V> lazyEntry) {
-        entries.add(0, lazyEntry);
+    public void put(Provider<Map<K, Action<V>>> map) {
+        put(key -> Optional.ofNullable(map.get().get(key)));
     }
 
     public V get(K key) {
-        return computedValues.computeIfAbsent(key, _ignored -> {
-            V value = valueFactory.get();
-            entries.forEach(lazyEntry -> {
-                lazyEntry.blah(key).ifPresent(action -> action.execute(value));
+        Optional<Lol<V>> existing = Optional.ofNullable(computedValues.get(key));
+        Lol<V> lol = existing.orElseGet(() -> new Lol<>(0, valueFactory.get()));
+        AtomicBoolean exists = new AtomicBoolean(existing.isPresent());
+
+        values.stream().skip(lol.upTo).forEach(lazyValues -> {
+            lazyValues.blah(key).ifPresent(action -> {
+                exists.set(true);
+                action.execute(lol.value);
             });
-            return value;
         });
+
+        if (exists.get()) {
+            lol.upTo = values.size();
+            computedValues.put(key, lol);
+            return lol.value;
+        }
+
+        throw new RuntimeException("can't find it");
+
+        //        computedValues.computeIfAbsent(key, _ignored -> {
+        //            V value = valueFactory.get();
+        //            values.forEach(lazyValues -> {
+        //                lazyValues.blah(key).ifPresent(action -> {
+        //                    exists.set(true);
+        //                    action.execute(value);
+        //                });
+        //            });
+        //
+        //            if (exists.get()) {}
+        //
+        //            for (int i = values.size() - 1; i >= 0; i--) {
+        //                values.get(i).blah(key).ifPresent(action -> action.execute(value));
+        //            }
+        //            return value;
+        //        });
+        //
+        //        return computedValues.computeIfAbsent(key, _ignored -> {
+        //            V value = valueFactory.get();
+        //            for (int i = values.size() - 1; i >= 0; i--) {
+        //                values.get(i).blah(key).ifPresent(action -> action.execute(value));
+        //            }
+        //            return value;
+        //        });
     }
 
-    interface LazyEntry<K, V> {
+    private static final class Lol<V> {
+        private int upTo;
+        private final V value;
+
+        Lol(int upTo, V value) {
+            this.upTo = upTo;
+            this.value = value;
+        }
+    }
+
+    public interface LazyValues<K, V> {
         Optional<Action<V>> blah(K key);
     }
 }

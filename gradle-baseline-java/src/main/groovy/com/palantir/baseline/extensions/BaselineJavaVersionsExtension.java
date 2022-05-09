@@ -16,6 +16,9 @@
 
 package com.palantir.baseline.extensions;
 
+import com.palantir.baseline.plugins.javaversions.LazyConfigurableMap;
+import java.util.Optional;
+import java.util.concurrent.atomic.AtomicReference;
 import javax.inject.Inject;
 import org.gradle.api.Project;
 import org.gradle.api.provider.MapProperty;
@@ -32,6 +35,9 @@ public class BaselineJavaVersionsExtension {
     private final Property<JavaLanguageVersion> distributionTarget;
     private final Property<JavaLanguageVersion> runtime;
     private final MapProperty<JavaLanguageVersion, JavaInstallationMetadata> jdks;
+
+    private final LazyConfigurableMap<JavaLanguageVersion, AtomicReference<JavaInstallationMetadata>> newJdks =
+            new LazyConfigurableMap<>(AtomicReference::new);
 
     @Inject
     public BaselineJavaVersionsExtension(Project project) {
@@ -82,5 +88,18 @@ public class BaselineJavaVersionsExtension {
 
     public final MapProperty<JavaLanguageVersion, JavaInstallationMetadata> getJdks() {
         return jdks;
+    }
+
+    public final void jdk(JavaLanguageVersion javaLanguageVersion, JavaInstallationMetadata javaInstallationMetadata) {
+        newJdks.put(javaLanguageVersion, ref -> ref.set(javaInstallationMetadata));
+    }
+
+    public final void jdks(LazyJdks lazyJdks) {
+        newJdks.put(javaLanguageVersion -> lazyJdks.jdkFor(javaLanguageVersion)
+                .map(javaInstallationMetadata -> ref -> ref.set(javaInstallationMetadata)));
+    }
+
+    public interface LazyJdks {
+        Optional<JavaInstallationMetadata> jdkFor(JavaLanguageVersion javaLanguageVersion);
     }
 }
