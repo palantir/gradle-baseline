@@ -21,6 +21,12 @@ import org.gradle.api.provider.Provider;
 import org.gradle.jvm.toolchain.JavaInstallationMetadata;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 
+/**
+ * The purpose of this class is to provide the JavaLanguageVersion, which we know upfront, without having to resolve an
+ * entire JDK, which often involves resolution, which causes Gradle to resolve the JavaCompiler/JavaLauncher etc to
+ * check if toolchains are enabled. That can cause a dependency cycle, which causes a StackOverflowException.
+ * This class breaks that cycle by immediately providing the JavaLanguageVersion without possibly causing a resolution.
+ */
 final class JavaInstallationMetadataWrapper implements JavaInstallationMetadata {
     private final JavaLanguageVersion javaLanguageVersion;
     private final Provider<JavaInstallationMetadata> delegate;
