@@ -44,8 +44,10 @@ public final class JavaToolchains {
                             .get()
                             .getMetadata()));
 
-            return new ConfiguredJavaToolchain(project.provider(
-                    () -> new JavaInstallationMetadataWrapper(javaLanguageVersion, configuredJdkMetadata)));
+            return new ConfiguredJavaToolchain(
+                    project.getObjects(),
+                    project.provider(
+                            () -> new JavaInstallationMetadataWrapper(javaLanguageVersion, configuredJdkMetadata)));
         });
     }
 }
