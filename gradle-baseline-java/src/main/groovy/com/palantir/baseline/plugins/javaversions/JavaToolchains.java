@@ -33,16 +33,21 @@ public final class JavaToolchains {
     }
 
     public Provider<BaselineJavaToolchain> forVersion(Provider<JavaLanguageVersion> javaLanguageVersionProvider) {
-        return javaLanguageVersionProvider.flatMap(javaLanguageVersion -> {
-            Provider<JavaInstallationMetadata> configuredJdk =
-                    baselineJavaVersionsExtension.getJdks().getting(javaLanguageVersion);
+        return javaLanguageVersionProvider.map(javaLanguageVersion -> {
+            Provider<JavaInstallationMetadata> configuredJdkMetadata = baselineJavaVersionsExtension
+                    .getJdks()
+                    .getting(javaLanguageVersion)
+                    .orElse(project.provider(() -> project.getExtensions()
+                            .getByType(JavaToolchainService.class)
+                            .launcherFor(javaToolchainSpec ->
+                                    javaToolchainSpec.getLanguageVersion().set(javaLanguageVersion))
+                            .get()
+                            .getMetadata()));
 
-            return configuredJdk
-                    .<BaselineJavaToolchain>map(_ignored -> new ConfiguredJavaToolchain(configuredJdk))
-                    .orElse(project.provider(() -> new FallbackGradleJavaToolchain(
-                            project.getExtensions().getByType(JavaToolchainService.class),
-                            javaToolchainSpec ->
-                                    javaToolchainSpec.getLanguageVersion().set(javaLanguageVersion))));
+            return new ConfiguredJavaToolchain(
+                    project.getObjects(),
+                    project.provider(
+                            () -> new JavaInstallationMetadataWrapper(javaLanguageVersion, configuredJdkMetadata)));
         });
     }
 }

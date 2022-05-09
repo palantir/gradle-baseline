@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: Make interactions with gradle java toolchains more lazy, so `StackOverflowError`s
+    do not occur
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2260

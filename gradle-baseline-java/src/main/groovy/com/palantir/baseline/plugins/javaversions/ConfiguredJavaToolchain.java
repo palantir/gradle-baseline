@@ -16,6 +16,7 @@
 
 package com.palantir.baseline.plugins.javaversions;
 
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Provider;
 import org.gradle.jvm.toolchain.JavaCompiler;
 import org.gradle.jvm.toolchain.JavaInstallationMetadata;
@@ -23,9 +24,11 @@ import org.gradle.jvm.toolchain.JavaLauncher;
 import org.gradle.jvm.toolchain.JavadocTool;
 
 final class ConfiguredJavaToolchain implements BaselineJavaToolchain {
+    private final ObjectFactory objectFactory;
     private final Provider<JavaInstallationMetadata> javaInstallationMetadata;
 
-    ConfiguredJavaToolchain(Provider<JavaInstallationMetadata> javaInstallationMetadata) {
+    ConfiguredJavaToolchain(ObjectFactory objectFactory, Provider<JavaInstallationMetadata> javaInstallationMetadata) {
+        this.objectFactory = objectFactory;
         this.javaInstallationMetadata = javaInstallationMetadata;
     }
 
@@ -36,7 +39,11 @@ final class ConfiguredJavaToolchain implements BaselineJavaToolchain {
 
     @Override
     public Provider<JavadocTool> javadocTool() {
-        return javaInstallationMetadata.map(BaselineJavadocTool::new);
+        return javaInstallationMetadata
+                .map(BaselineJavadocTool::new)
+                // Gradle casts to the internal type JavadocToolAdapter in the Javadoc class - so unfortunately we have
+                // to use that instead of just returning the interface.
+                .map(javadocTool -> BaselineJavadocToolAdapter.create(objectFactory, javadocTool));
     }
 
     @Override
