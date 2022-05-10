@@ -21,7 +21,6 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.inject.Inject;
 import org.gradle.api.Project;
-import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.jvm.toolchain.JavaInstallationMetadata;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
@@ -34,9 +33,7 @@ public class BaselineJavaVersionsExtension {
     private final Property<JavaLanguageVersion> libraryTarget;
     private final Property<JavaLanguageVersion> distributionTarget;
     private final Property<JavaLanguageVersion> runtime;
-    private final MapProperty<JavaLanguageVersion, JavaInstallationMetadata> jdks;
-
-    private final LazilyConfiguredMapping<JavaLanguageVersion, AtomicReference<JavaInstallationMetadata>> newJdks =
+    private final LazilyConfiguredMapping<JavaLanguageVersion, AtomicReference<JavaInstallationMetadata>> jdks =
             new LazilyConfiguredMapping<>(AtomicReference::new);
 
     @Inject
@@ -51,9 +48,6 @@ public class BaselineJavaVersionsExtension {
         libraryTarget.finalizeValueOnRead();
         distributionTarget.finalizeValueOnRead();
         runtime.finalizeValueOnRead();
-
-        jdks = project.getObjects().mapProperty(JavaLanguageVersion.class, JavaInstallationMetadata.class);
-        jdks.finalizeValueOnRead();
     }
 
     /** Target {@link JavaLanguageVersion} for compilation of libraries that are published. */
@@ -86,16 +80,16 @@ public class BaselineJavaVersionsExtension {
         runtime.set(JavaLanguageVersion.of(value));
     }
 
-    public final MapProperty<JavaLanguageVersion, JavaInstallationMetadata> getJdks() {
-        return jdks;
+    public final Optional<JavaInstallationMetadata> jdkMetadataFor(JavaLanguageVersion javaLanguageVersion) {
+        return jdks.get(javaLanguageVersion).map(AtomicReference::get);
     }
 
     public final void jdk(JavaLanguageVersion javaLanguageVersion, JavaInstallationMetadata javaInstallationMetadata) {
-        newJdks.put(javaLanguageVersion, ref -> ref.set(javaInstallationMetadata));
+        jdks.put(javaLanguageVersion, ref -> ref.set(javaInstallationMetadata));
     }
 
     public final void jdks(LazyJdks lazyJdks) {
-        newJdks.put(javaLanguageVersion -> lazyJdks.jdkFor(javaLanguageVersion)
+        jdks.put(javaLanguageVersion -> lazyJdks.jdkFor(javaLanguageVersion)
                 .map(javaInstallationMetadata -> ref -> ref.set(javaInstallationMetadata)));
     }
 
