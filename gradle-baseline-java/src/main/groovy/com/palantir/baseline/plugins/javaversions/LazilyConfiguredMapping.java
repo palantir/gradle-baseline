@@ -24,22 +24,26 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import org.gradle.api.Action;
-import org.gradle.api.provider.Provider;
 
-public final class LazilyConfiguredMap<K, V> {
+public final class LazilyConfiguredMapping<K, V> {
     private final Supplier<V> valueFactory;
     private final List<LazyValues<K, V>> values = new ArrayList<>();
-    private final Map<K, Tracking<V>> computedValues = new HashMap<>();
+    private final Map<K, Optional<V>> computedValues = new HashMap<>();
+    private boolean finalized = false;
 
-    public LazilyConfiguredMap(Supplier<V> valueFactory) {
+    public LazilyConfiguredMapping(Supplier<V> valueFactory) {
         this.valueFactory = valueFactory;
     }
 
     public void put(LazyValues<K, V> lazyValues) {
+        ensureNotFinalized();
+
         values.add(lazyValues);
     }
 
     public void put(K key, Action<V> value) {
+        ensureNotFinalized();
+
         put(requestedKey -> {
             if (requestedKey.equals(key)) {
                 return Optional.of(value);
@@ -49,38 +53,34 @@ public final class LazilyConfiguredMap<K, V> {
         });
     }
 
-    public void put(Provider<Map<K, Action<V>>> map) {
-        put(key -> Optional.ofNullable(map.get().get(key)));
+    private void ensureNotFinalized() {
+        if (finalized) {
+            throw new IllegalStateException(String.format(
+                    "This %s has already been finalized as get() hase been called. "
+                            + "No further elements can be added to it",
+                    LazilyConfiguredMapping.class.getSimpleName()));
+        }
     }
 
-    public V get(K key) {
-        Optional<Tracking<V>> maybeExistingTracking = Optional.ofNullable(computedValues.get(key));
-        Tracking<V> tracking = maybeExistingTracking.orElseGet(() -> new Tracking<>(valueFactory.get()));
-        AtomicBoolean exists = new AtomicBoolean(maybeExistingTracking.isPresent());
+    public Optional<V> get(K key) {
+        finalized = true;
 
-        values.stream().skip(tracking.upTo).forEach(lazyValues -> {
-            lazyValues.compute(key).ifPresent(action -> {
-                exists.set(true);
-                action.execute(tracking.value);
+        return computedValues.computeIfAbsent(key, _ignored -> {
+            V value = valueFactory.get();
+            AtomicBoolean created = new AtomicBoolean(false);
+            values.forEach(lazyValues -> {
+                lazyValues.compute(key).ifPresent(action -> {
+                    created.set(true);
+                    action.execute(value);
+                });
             });
+
+            if (created.get()) {
+                return Optional.of(value);
+            }
+
+            return Optional.empty();
         });
-
-        if (!exists.get()) {
-            throw new RuntimeException("can't find it");
-        }
-
-        tracking.upTo = values.size();
-        computedValues.put(key, tracking);
-        return tracking.value;
-    }
-
-    private static final class Tracking<V> {
-        private int upTo = 0;
-        private final V value;
-
-        Tracking(V value) {
-            this.value = value;
-        }
     }
 
     public interface LazyValues<K, V> {

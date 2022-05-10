@@ -16,7 +16,7 @@
 
 package com.palantir.baseline.extensions;
 
-import com.palantir.baseline.plugins.javaversions.LazilyConfiguredMap;
+import com.palantir.baseline.plugins.javaversions.LazilyConfiguredMapping;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.inject.Inject;
@@ -36,8 +36,8 @@ public class BaselineJavaVersionsExtension {
     private final Property<JavaLanguageVersion> runtime;
     private final MapProperty<JavaLanguageVersion, JavaInstallationMetadata> jdks;
 
-    private final LazilyConfiguredMap<JavaLanguageVersion, AtomicReference<JavaInstallationMetadata>> newJdks =
-            new LazilyConfiguredMap<>(AtomicReference::new);
+    private final LazilyConfiguredMapping<JavaLanguageVersion, AtomicReference<JavaInstallationMetadata>> newJdks =
+            new LazilyConfiguredMapping<>(AtomicReference::new);
 
     @Inject
     public BaselineJavaVersionsExtension(Project project) {
