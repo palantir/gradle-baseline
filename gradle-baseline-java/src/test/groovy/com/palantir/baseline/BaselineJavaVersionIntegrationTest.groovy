@@ -302,7 +302,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             javaVersions {
                 libraryTarget = 11
                 
-                jdks.put JavaLanguageVersion.of(11), new JavaInstallationMetadata() {   
+                jdk JavaLanguageVersion.of(11), new JavaInstallationMetadata() {   
                     @Override
                     JavaLanguageVersion getLanguageVersion() {
                         return JavaLanguageVersion.of(11)
