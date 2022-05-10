@@ -55,7 +55,6 @@ public final class BaselineJavaVersions implements Plugin<Project> {
             throw new GradleException(String.format(
                     "BaselineJavaVersions requires %s. %s is not supported", MIN_GRADLE_VERSION, currentGradleVersion));
         }
-
         BaselineJavaVersionsExtension rootExtension =
                 project.getExtensions().create(EXTENSION_NAME, BaselineJavaVersionsExtension.class, project);
         project.allprojects(proj -> proj.getPluginManager().withPlugin("java", unused -> {
