@@ -18,6 +18,7 @@ package com.palantir.baseline.plugins.javaversions;
 
 import com.palantir.baseline.extensions.BaselineJavaVersionsExtension;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.provider.Provider;
 import org.gradle.jvm.toolchain.JavaInstallationMetadata;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
@@ -32,11 +33,12 @@ public final class JavaToolchains {
         this.baselineJavaVersionsExtension = baselineJavaVersionsExtension;
     }
 
-    public Provider<BaselineJavaToolchain> forVersion(Provider<JavaLanguageVersion> javaLanguageVersionProvider) {
+    public Provider<BaselineJavaToolchain> forVersion(
+            Provider<JavaLanguageVersion> javaLanguageVersionProvider, Task task) {
         return javaLanguageVersionProvider.map(javaLanguageVersion -> {
             Provider<JavaInstallationMetadata> configuredJdkMetadata =
                     project.provider(() -> baselineJavaVersionsExtension
-                            .jdkMetadataFor(javaLanguageVersion)
+                            .jdkMetadataFor(javaLanguageVersion, task)
                             .orElseGet(() -> project.getExtensions()
                                     .getByType(JavaToolchainService.class)
                                     .launcherFor(javaToolchainSpec -> javaToolchainSpec

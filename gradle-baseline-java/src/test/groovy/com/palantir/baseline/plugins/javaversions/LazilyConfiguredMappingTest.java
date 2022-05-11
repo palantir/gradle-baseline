@@ -23,57 +23,61 @@ import java.util.Optional;
 import org.junit.jupiter.api.Test;
 
 class LazilyConfiguredMappingTest {
-    private final LazilyConfiguredMapping<String, Extension> lazilyConfiguredMapping =
+    private final LazilyConfiguredMapping<String, Extension, Character> lazilyConfiguredMapping =
             new LazilyConfiguredMapping<>(() -> new Extension(0));
 
     @Test
     void empty_mapping_returns_optional_empty() {
-        assertThat(lazilyConfiguredMapping.get("abc")).isEmpty();
+        assertThat(lazilyConfiguredMapping.get("abc", 'a')).isEmpty();
     }
 
     @Test
     void can_put_a_value_and_get_it_out_again() {
         lazilyConfiguredMapping.put("foo", extension -> extension.number = 4);
 
-        assertThat(lazilyConfiguredMapping.get("foo")).hasValue(new Extension(4));
+        assertThat(lazilyConfiguredMapping.get("foo", 'a')).hasValue(new Extension(4));
     }
 
     @Test
     void can_put_a_lazy_value_in_and_get_it_out_again() {
-        lazilyConfiguredMapping.put(key -> Optional.of(extension -> extension.number = Integer.parseInt(key)));
+        lazilyConfiguredMapping.put((key, additionalData) -> {
+            assertThat(additionalData).isEqualTo('b');
+            return Optional.of(extension -> extension.number = Integer.parseInt(key));
+        });
 
-        assertThat(lazilyConfiguredMapping.get("3")).hasValue(new Extension(3));
-        assertThat(lazilyConfiguredMapping.get("9")).hasValue(new Extension(9));
+        assertThat(lazilyConfiguredMapping.get("3", 'b')).hasValue(new Extension(3));
+        assertThat(lazilyConfiguredMapping.get("9", 'b')).hasValue(new Extension(9));
     }
 
     @Test
     void lazy_values_are_able_to_not_return_values() {
-        lazilyConfiguredMapping.put(_key -> Optional.empty());
+        lazilyConfiguredMapping.put((_key, _additionalData) -> Optional.empty());
 
-        assertThat(lazilyConfiguredMapping.get("abc")).isEmpty();
+        assertThat(lazilyConfiguredMapping.get("abc", 'a')).isEmpty();
     }
 
     @Test
     void interspersing_putting_values_takes_the_last_set_value() {
         lazilyConfiguredMapping.put("1", extension -> extension.number = 80);
-        lazilyConfiguredMapping.put(key -> Optional.of(extension -> extension.number = Integer.parseInt(key)));
+        lazilyConfiguredMapping.put(
+                (key, _ignored) -> Optional.of(extension -> extension.number = Integer.parseInt(key)));
         lazilyConfiguredMapping.put("4", extension -> extension.number = 99);
 
-        assertThat(lazilyConfiguredMapping.get("1")).hasValue(new Extension(1));
-        assertThat(lazilyConfiguredMapping.get("3")).hasValue(new Extension(3));
-        assertThat(lazilyConfiguredMapping.get("4")).hasValue(new Extension(99));
+        assertThat(lazilyConfiguredMapping.get("1", 'c')).hasValue(new Extension(1));
+        assertThat(lazilyConfiguredMapping.get("3", 'c')).hasValue(new Extension(3));
+        assertThat(lazilyConfiguredMapping.get("4", 'c')).hasValue(new Extension(99));
     }
 
     @Test
     void throws_if_putting_values_after_being_finalized() {
-        lazilyConfiguredMapping.get("abc");
+        lazilyConfiguredMapping.get("abc", 'c');
 
         assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> {
             lazilyConfiguredMapping.put("foo", extension -> {});
         });
 
         assertThatExceptionOfType(IllegalStateException.class).isThrownBy(() -> {
-            lazilyConfiguredMapping.put(key -> Optional.of(extension -> {}));
+            lazilyConfiguredMapping.put((_key, _additionalData) -> Optional.of(extension -> {}));
         });
     }
 

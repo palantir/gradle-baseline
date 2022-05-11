@@ -21,6 +21,7 @@ import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.inject.Inject;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.provider.Property;
 import org.gradle.jvm.toolchain.JavaInstallationMetadata;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
@@ -33,7 +34,7 @@ public class BaselineJavaVersionsExtension {
     private final Property<JavaLanguageVersion> libraryTarget;
     private final Property<JavaLanguageVersion> distributionTarget;
     private final Property<JavaLanguageVersion> runtime;
-    private final LazilyConfiguredMapping<JavaLanguageVersion, AtomicReference<JavaInstallationMetadata>> jdks =
+    private final LazilyConfiguredMapping<JavaLanguageVersion, AtomicReference<JavaInstallationMetadata>, Task> jdks =
             new LazilyConfiguredMapping<>(AtomicReference::new);
 
     @Inject
@@ -80,8 +81,8 @@ public class BaselineJavaVersionsExtension {
         runtime.set(JavaLanguageVersion.of(value));
     }
 
-    public final Optional<JavaInstallationMetadata> jdkMetadataFor(JavaLanguageVersion javaLanguageVersion) {
-        return jdks.get(javaLanguageVersion).map(AtomicReference::get);
+    public final Optional<JavaInstallationMetadata> jdkMetadataFor(JavaLanguageVersion javaLanguageVersion, Task task) {
+        return jdks.get(javaLanguageVersion, task).map(AtomicReference::get);
     }
 
     public final void jdk(JavaLanguageVersion javaLanguageVersion, JavaInstallationMetadata javaInstallationMetadata) {
@@ -89,11 +90,14 @@ public class BaselineJavaVersionsExtension {
     }
 
     public final void jdks(LazyJdks lazyJdks) {
-        jdks.put(javaLanguageVersion -> lazyJdks.jdkFor(javaLanguageVersion)
+        jdks.put((javaLanguageVersion, task) -> lazyJdks.jdkFor(javaLanguageVersion, task)
                 .map(javaInstallationMetadata -> ref -> ref.set(javaInstallationMetadata)));
     }
 
     public interface LazyJdks {
-        Optional<JavaInstallationMetadata> jdkFor(JavaLanguageVersion javaLanguageVersion);
+        // We pass through Task here as it's an easy way to get the Project, so if something needs to resolve a
+        // configuration it can do so without resolving in a different Project, which is deprecated and will be
+        // banned come Gradle 8
+        Optional<JavaInstallationMetadata> jdkFor(JavaLanguageVersion javaLanguageVersion, Task task);
     }
 }

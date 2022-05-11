@@ -25,9 +25,9 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import org.gradle.api.Action;
 
-public final class LazilyConfiguredMapping<K, V> {
+public final class LazilyConfiguredMapping<K, V, A> {
     private final Supplier<V> valueFactory;
-    private final List<LazyValues<K, V>> values = new ArrayList<>();
+    private final List<LazyValues<K, V, A>> values = new ArrayList<>();
     private final Map<K, Optional<V>> computedValues = new HashMap<>();
     private boolean finalized = false;
 
@@ -35,7 +35,7 @@ public final class LazilyConfiguredMapping<K, V> {
         this.valueFactory = valueFactory;
     }
 
-    public void put(LazyValues<K, V> lazyValues) {
+    public void put(LazyValues<K, V, A> lazyValues) {
         ensureNotFinalized();
 
         values.add(lazyValues);
@@ -44,7 +44,7 @@ public final class LazilyConfiguredMapping<K, V> {
     public void put(K key, Action<V> value) {
         ensureNotFinalized();
 
-        put(requestedKey -> {
+        put((requestedKey, _ignored) -> {
             if (requestedKey.equals(key)) {
                 return Optional.of(value);
             }
@@ -62,14 +62,14 @@ public final class LazilyConfiguredMapping<K, V> {
         }
     }
 
-    public Optional<V> get(K key) {
+    public Optional<V> get(K key, A additionalData) {
         finalized = true;
 
         return computedValues.computeIfAbsent(key, _ignored -> {
             V value = valueFactory.get();
             AtomicBoolean created = new AtomicBoolean(false);
             values.forEach(lazyValues -> {
-                lazyValues.compute(key).ifPresent(action -> {
+                lazyValues.compute(key, additionalData).ifPresent(action -> {
                     created.set(true);
                     action.execute(value);
                 });
@@ -83,7 +83,7 @@ public final class LazilyConfiguredMapping<K, V> {
         });
     }
 
-    public interface LazyValues<K, V> {
-        Optional<Action<V>> compute(K key);
+    public interface LazyValues<K, V, A> {
+        Optional<Action<V>> compute(K key, A additionalData);
     }
 }
