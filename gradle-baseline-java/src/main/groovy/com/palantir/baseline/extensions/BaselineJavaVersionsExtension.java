@@ -33,8 +33,8 @@ public class BaselineJavaVersionsExtension {
     private final Property<JavaLanguageVersion> libraryTarget;
     private final Property<JavaLanguageVersion> distributionTarget;
     private final Property<JavaLanguageVersion> runtime;
-    private final LazilyConfiguredMapping<JavaLanguageVersion, AtomicReference<JavaInstallationMetadata>> jdks =
-            new LazilyConfiguredMapping<>(AtomicReference::new);
+    private final LazilyConfiguredMapping<JavaLanguageVersion, AtomicReference<JavaInstallationMetadata>, Project>
+            jdks = new LazilyConfiguredMapping<>(AtomicReference::new);
 
     @Inject
     public BaselineJavaVersionsExtension(Project project) {
@@ -80,8 +80,9 @@ public class BaselineJavaVersionsExtension {
         runtime.set(JavaLanguageVersion.of(value));
     }
 
-    public final Optional<JavaInstallationMetadata> jdkMetadataFor(JavaLanguageVersion javaLanguageVersion) {
-        return jdks.get(javaLanguageVersion).map(AtomicReference::get);
+    public final Optional<JavaInstallationMetadata> jdkMetadataFor(
+            JavaLanguageVersion javaLanguageVersion, Project project) {
+        return jdks.get(javaLanguageVersion, project).map(AtomicReference::get);
     }
 
     public final void jdk(JavaLanguageVersion javaLanguageVersion, JavaInstallationMetadata javaInstallationMetadata) {
@@ -89,11 +90,11 @@ public class BaselineJavaVersionsExtension {
     }
 
     public final void jdks(LazyJdks lazyJdks) {
-        jdks.put(javaLanguageVersion -> lazyJdks.jdkFor(javaLanguageVersion)
+        jdks.put((javaLanguageVersion, project) -> lazyJdks.jdkFor(javaLanguageVersion, project)
                 .map(javaInstallationMetadata -> ref -> ref.set(javaInstallationMetadata)));
     }
 
     public interface LazyJdks {
-        Optional<JavaInstallationMetadata> jdkFor(JavaLanguageVersion javaLanguageVersion);
+        Optional<JavaInstallationMetadata> jdkFor(JavaLanguageVersion javaLanguageVersion, Project project);
     }
 }

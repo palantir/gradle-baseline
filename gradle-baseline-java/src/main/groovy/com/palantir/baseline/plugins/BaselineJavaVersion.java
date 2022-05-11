@@ -69,11 +69,10 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                     project, project.getRootProject().getExtensions().getByType(BaselineJavaVersionsExtension.class));
 
             // Compilation tasks (using target version)
-            configureCompilationTasks(
-                    project, extension.target(), javaToolchains.forVersion(extension.target(), project));
+            configureCompilationTasks(project, extension.target(), javaToolchains.forVersion(extension.target()));
 
             // Execution tasks (using the runtime version)
-            configureExecutionTasks(project, javaToolchains.forVersion(extension.runtime(), project));
+            configureExecutionTasks(project, javaToolchains.forVersion(extension.runtime()));
 
             // Validation
             project.getTasks()
