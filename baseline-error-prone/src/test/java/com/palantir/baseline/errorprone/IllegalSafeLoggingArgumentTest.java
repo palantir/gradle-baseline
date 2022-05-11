@@ -1625,6 +1625,37 @@ class IllegalSafeLoggingArgumentTest {
                 .doTest();
     }
 
+    @Test
+    public void testTransformingStreamCollectors() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.*;",
+                        "import java.util.function.*;",
+                        "import java.util.stream.*;",
+                        "import com.google.common.collect.*;",
+                        "class Test {",
+                        "  @DoNotLog",
+                        "  interface TopLevel {",
+                        "     @Safe String name();",
+                        "     @Safe String value();",
+                        "     @DoNotLog String token();",
+                        "  }",
+                        "  void f(@Unsafe Stream<TopLevel> stream) {",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'DO_NOT_LOG'",
+                        "    fun(stream.collect(Collectors.toList()));",
+                        "    fun(stream.collect(Collectors.counting()));",
+                        "    fun(stream.collect(Collectors.toMap(TopLevel::name, TopLevel::value)));",
+                        "    fun(stream.collect(Collectors.toConcurrentMap(TopLevel::name, TopLevel::value)));",
+                        "    fun(stream.collect(Collectors.toUnmodifiableMap(TopLevel::name, TopLevel::value)));",
+                        "    fun(stream.collect(ImmutableMap.toImmutableMap(TopLevel::name, TopLevel::value)));",
+                        "    fun(stream.collect(ImmutableBiMap.toImmutableBiMap(TopLevel::name, TopLevel::value)));",
+                        "  }",
+                        "  private static void fun(@Safe Object value) {}",
+                        "}")
+                .doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(IllegalSafeLoggingArgument.class, getClass());
     }

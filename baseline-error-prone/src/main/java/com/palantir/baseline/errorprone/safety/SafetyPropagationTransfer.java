@@ -16,6 +16,7 @@
 
 package com.palantir.baseline.errorprone.safety;
 
+import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
@@ -27,6 +28,7 @@ import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.dataflow.AccessPath;
 import com.google.errorprone.dataflow.AccessPathStore;
 import com.google.errorprone.dataflow.AccessPathValues;
+import com.google.errorprone.matchers.ChildMultiMatcher;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
@@ -62,6 +64,7 @@ import java.util.OptionalInt;
 import java.util.OptionalLong;
 import java.util.Set;
 import java.util.stream.BaseStream;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import javax.lang.model.element.VariableElement;
@@ -378,10 +381,29 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
             Matchers.anyOf(MethodMatchers.instanceMethod()
                     .onExactClassAny(StringBuilder.class.getName(), StringBuffer.class.getName())
                     .namedAnyOf("append", "insert", "replace"));
-    private static final Matcher<ExpressionTree> RETURNS_SAFETY_OF_ARGS_AND_RECEIVER = Matchers.anyOf(
+
+    private static final Matcher<ExpressionTree> UNKNOWN_COLLECTORS = Matchers.anyOf(
+            MethodMatchers.staticMethod()
+                    .onClass(Collectors.class.getName())
+                    .named("counting")
+                    .withNoParameters(),
+            MethodMatchers.staticMethod()
+                    .onClass(Collectors.class.getName())
+                    .namedAnyOf("toMap", "toUnmodifiableMap", "toConcurrentMap"),
+            MethodMatchers.staticMethod().onClass(ImmutableMap.class.getName()).named("toImmutableMap"),
+            MethodMatchers.staticMethod()
+                    .onClass(ImmutableBiMap.class.getName())
+                    .named("toImmutableBiMap"));
+
+    private static final Matcher<ExpressionTree> COLLECT_INCLUDES_STREAM_SAFETY = Matchers.methodInvocation(
             MethodMatchers.instanceMethod()
                     .onDescendantOf(Stream.class.getName())
                     .namedAnyOf("collect"),
+            ChildMultiMatcher.MatchType.LAST,
+            Matchers.not(UNKNOWN_COLLECTORS));
+
+    private static final Matcher<ExpressionTree> RETURNS_SAFETY_OF_ARGS_AND_RECEIVER = Matchers.anyOf(
+            COLLECT_INCLUDES_STREAM_SAFETY,
             MethodMatchers.instanceMethod()
                     .onDescendantOf(Optional.class.getName())
                     // TODO(ckozak): support 'or' and 'orElseGet' which require lambda support
