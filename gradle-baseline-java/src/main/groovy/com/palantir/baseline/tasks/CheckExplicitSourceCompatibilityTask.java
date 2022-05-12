@@ -16,7 +16,7 @@
 
 package com.palantir.baseline.tasks;
 
-import com.palantir.baseline.plugins.BaselineJavaVersion;
+import com.palantir.baseline.plugins.javaversions.BaselineJavaVersion;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;

@@ -18,8 +18,8 @@ package com.palantir.baseline.plugins
 
 import com.google.common.collect.ImmutableMap
 import com.palantir.baseline.IntellijSupport
-import com.palantir.baseline.extensions.BaselineJavaVersionExtension
-import com.palantir.baseline.extensions.BaselineJavaVersionsExtension
+import com.palantir.baseline.plugins.javaversions.BaselineJavaVersionExtension
+import com.palantir.baseline.plugins.javaversions.BaselineJavaVersionsExtension
 import com.palantir.baseline.util.GitUtils
 import groovy.transform.CompileStatic
 import groovy.xml.XmlUtil

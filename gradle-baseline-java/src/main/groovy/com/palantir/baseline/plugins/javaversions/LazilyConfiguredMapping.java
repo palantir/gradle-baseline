@@ -25,13 +25,13 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
 import org.gradle.api.Action;
 
-public final class LazilyConfiguredMapping<K, V, A> {
+final class LazilyConfiguredMapping<K, V, A> {
     private final Supplier<V> valueFactory;
     private final List<LazyValues<K, V, A>> values = new ArrayList<>();
     private final Map<K, Optional<V>> computedValues = new HashMap<>();
     private boolean finalized = false;
 
-    public LazilyConfiguredMapping(Supplier<V> valueFactory) {
+    LazilyConfiguredMapping(Supplier<V> valueFactory) {
         this.valueFactory = valueFactory;
     }
 

@@ -16,7 +16,6 @@
 
 package com.palantir.baseline.plugins.javaversions;
 
-import com.palantir.baseline.extensions.BaselineJavaVersionsExtension;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Provider;
 import org.gradle.jvm.toolchain.JavaInstallationMetadata;
