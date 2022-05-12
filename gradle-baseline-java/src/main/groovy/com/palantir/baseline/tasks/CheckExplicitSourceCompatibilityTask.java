@@ -16,7 +16,7 @@
 
 package com.palantir.baseline.tasks;
 
-import com.palantir.baseline.plugins.BaselineJavaVersion;
+import com.palantir.baseline.plugins.javaversions.BaselineJavaVersion;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
@@ -43,7 +43,7 @@ import org.gradle.util.GradleVersion;
 /**
  * By default, Gradle will infer sourceCompat based on whatever JVM is currently being used to evaluate the
  * build.gradle files. This is bad for reproducibility because if we make an automated PR to upgrade the Java major
- * version (e.g. 11 -> 15) then a library might unintentionally start publishing jars containing Java15 bytecode!
+ * version (e.g. 11 to 15) then a library might unintentionally start publishing jars containing Java15 bytecode!
  *
  * Better to just require everyone to specify sourceCompatibility explicitly!
  */

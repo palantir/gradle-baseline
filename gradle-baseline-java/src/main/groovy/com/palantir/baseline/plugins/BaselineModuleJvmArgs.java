@@ -21,6 +21,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.palantir.baseline.extensions.BaselineModuleJvmArgsExtension;
+import com.palantir.baseline.plugins.javaversions.BaselineJavaVersion;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;

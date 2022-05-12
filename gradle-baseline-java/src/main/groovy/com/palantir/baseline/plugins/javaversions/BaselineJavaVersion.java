@@ -1,5 +1,5 @@
 /*
- * (c) Copyright 2021 Palantir Technologies Inc. All rights reserved.
+ * (c) Copyright 2022 Palantir Technologies Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,12 +14,8 @@
  * limitations under the License.
  */
 
-package com.palantir.baseline.plugins;
+package com.palantir.baseline.plugins.javaversions;
 
-import com.palantir.baseline.extensions.BaselineJavaVersionExtension;
-import com.palantir.baseline.extensions.BaselineJavaVersionsExtension;
-import com.palantir.baseline.plugins.javaversions.BaselineJavaToolchain;
-import com.palantir.baseline.plugins.javaversions.JavaToolchains;
 import javax.inject.Inject;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
