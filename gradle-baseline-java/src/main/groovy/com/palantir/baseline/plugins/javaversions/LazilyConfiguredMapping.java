@@ -23,25 +23,32 @@ import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.function.Supplier;
+import javax.annotation.concurrent.GuardedBy;
 import org.gradle.api.Action;
 
 final class LazilyConfiguredMapping<K, V, A> {
     private final Supplier<V> valueFactory;
+
+    @GuardedBy("this")
     private final List<LazyValues<K, V, A>> values = new ArrayList<>();
+
+    @GuardedBy("this")
     private final Map<K, Optional<V>> computedValues = new HashMap<>();
+
+    @GuardedBy("this")
     private boolean finalized = false;
 
     LazilyConfiguredMapping(Supplier<V> valueFactory) {
         this.valueFactory = valueFactory;
     }
 
-    public void put(LazyValues<K, V, A> lazyValues) {
+    public synchronized void put(LazyValues<K, V, A> lazyValues) {
         ensureNotFinalized();
 
         values.add(lazyValues);
     }
 
-    public void put(K key, Action<V> value) {
+    public synchronized void put(K key, Action<V> value) {
         ensureNotFinalized();
 
         put((requestedKey, _ignored) -> {
@@ -62,7 +69,7 @@ final class LazilyConfiguredMapping<K, V, A> {
         }
     }
 
-    public Optional<V> get(K key, A additionalData) {
+    public synchronized Optional<V> get(K key, A additionalData) {
         finalized = true;
 
         return computedValues.computeIfAbsent(key, _ignored -> {
