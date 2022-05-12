@@ -24,6 +24,7 @@ import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.Attribute;
 import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Symbol.TypeVariableSymbol;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
@@ -101,6 +102,14 @@ public final class SafetyAnnotations {
             if (symbol instanceof VarSymbol) {
                 VarSymbol varSymbol = (VarSymbol) symbol;
                 return getSuperMethodParameterSafety(varSymbol, state);
+            }
+            if (symbol instanceof ClassSymbol) {
+                ClassSymbol classSymbol = (ClassSymbol) symbol;
+                Safety safety = Safety.UNKNOWN;
+                for (Type type : classSymbol.getInterfaces()) {
+                    safety = Safety.mergeAssumingUnknownIsSame(safety, getSafety(type.tsym, state));
+                }
+                return safety;
             }
         }
         return Safety.UNKNOWN;
