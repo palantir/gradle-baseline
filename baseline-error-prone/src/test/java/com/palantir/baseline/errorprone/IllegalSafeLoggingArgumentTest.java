@@ -1656,6 +1656,26 @@ class IllegalSafeLoggingArgumentTest {
                 .doTest();
     }
 
+    @Test
+    public void testResultOfInvocationSuperInterfaceAnnotated() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.function.*;",
+                        "class Test {",
+                        "  @Unsafe",
+                        "  interface Iface {",
+                        "  }",
+                        "  static final class Impl implements Iface {}",
+                        "  void f(Supplier<Impl> supplier) {",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
+                        "    fun(supplier.get());",
+                        "  }",
+                        "  private static void fun(@Safe Object value) {}",
+                        "}")
+                .doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(IllegalSafeLoggingArgument.class, getClass());
     }
