@@ -1676,6 +1676,48 @@ class IllegalSafeLoggingArgumentTest {
                 .doTest();
     }
 
+    @Test
+    public void testSuperClassInterfaceAnnotated() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  @Unsafe",
+                        "  interface Iface {",
+                        "  }",
+                        "  static class Sup implements Iface {}",
+                        "  static class Sub extends Sup {}",
+                        "  void f(Sub value) {",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
+                        "    fun(value);",
+                        "  }",
+                        "  private static void fun(@Safe Object value) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testMultipleInterfacesDifferentSafety() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  @Unsafe interface UnsafeIface {}",
+                        "  @Safe interface SafeIface {}",
+                        "  @DoNotLog interface DnlIface {}",
+                        "  static class One implements SafeIface, UnsafeIface {}",
+                        "  static class Two implements SafeIface, DnlIface, UnsafeIface {}",
+                        "  void f(One one, Two two) {",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
+                        "    fun(one);",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'DO_NOT_LOG'",
+                        "    fun(two);",
+                        "  }",
+                        "  private static void fun(@Safe Object value) {}",
+                        "}")
+                .doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(IllegalSafeLoggingArgument.class, getClass());
     }

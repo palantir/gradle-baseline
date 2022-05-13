@@ -105,7 +105,7 @@ public final class SafetyAnnotations {
             }
             if (symbol instanceof ClassSymbol) {
                 ClassSymbol classSymbol = (ClassSymbol) symbol;
-                Safety safety = Safety.UNKNOWN;
+                Safety safety = getSafety(classSymbol.getSuperclass().tsym, state);
                 for (Type type : classSymbol.getInterfaces()) {
                     safety = Safety.mergeAssumingUnknownIsSame(safety, getSafety(type.tsym, state));
                 }
