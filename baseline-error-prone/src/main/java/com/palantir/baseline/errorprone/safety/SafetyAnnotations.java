@@ -49,6 +49,13 @@ public final class SafetyAnnotations {
     public static final String UNSAFE = "com.palantir.logsafe.Unsafe";
     public static final String DO_NOT_LOG = "com.palantir.logsafe.DoNotLog";
 
+    private static final com.google.errorprone.suppliers.Supplier<Name> safeName =
+            VisitorState.memoize(state -> state.getName(SAFE));
+    private static final com.google.errorprone.suppliers.Supplier<Name> unsafeName =
+            VisitorState.memoize(state -> state.getName(UNSAFE));
+    private static final com.google.errorprone.suppliers.Supplier<Name> doNotLogName =
+            VisitorState.memoize(state -> state.getName(DO_NOT_LOG));
+
     private static final com.google.errorprone.suppliers.Supplier<Type> throwableSupplier =
             Suppliers.typeFromClass(Throwable.class);
 
@@ -83,14 +90,9 @@ public final class SafetyAnnotations {
 
     public static Safety getSafety(@Nullable Symbol symbol, VisitorState state) {
         if (symbol != null) {
-            if (ASTHelpers.hasAnnotation(symbol, DO_NOT_LOG, state)) {
-                return Safety.DO_NOT_LOG;
-            }
-            if (ASTHelpers.hasAnnotation(symbol, UNSAFE, state)) {
-                return Safety.UNSAFE;
-            }
-            if (ASTHelpers.hasAnnotation(symbol, SAFE, state)) {
-                return Safety.SAFE;
+            Safety direct = getDirectSafety(symbol, state);
+            if (direct != Safety.UNKNOWN) {
+                return direct;
             }
             // Check super-methods
             if (symbol instanceof MethodSymbol) {
@@ -120,6 +122,30 @@ public final class SafetyAnnotations {
             return getSafetyInternal(type, state, null);
         }
         return Safety.UNKNOWN;
+    }
+
+    public static Safety getDirectSafety(@Nullable Symbol symbol, VisitorState state) {
+        if (symbol != null) {
+            if (containsAttributeNamed(symbol, doNotLogName.get(state))) {
+                return Safety.DO_NOT_LOG;
+            }
+            if (containsAttributeNamed(symbol, unsafeName.get(state))) {
+                return Safety.UNSAFE;
+            }
+            if (containsAttributeNamed(symbol, safeName.get(state))) {
+                return Safety.SAFE;
+            }
+        }
+        return Safety.UNKNOWN;
+    }
+
+    private static boolean containsAttributeNamed(Symbol symbol, Name annotationName) {
+        for (Attribute.Compound compound : symbol.getRawAttributes()) {
+            if (compound.type.tsym.getQualifiedName().equals(annotationName)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     private static Safety getTypeVariableSymbolSafety(TypeVariableSymbol typeVariableSymbol) {
