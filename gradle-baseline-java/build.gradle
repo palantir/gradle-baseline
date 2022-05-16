@@ -20,7 +20,6 @@ dependencies {
     // Add an explicit dependency to ensure consumers can use JDK14 source compat
     implementation 'org.ow2.asm:asm'
     implementation 'com.googlecode.java-diff-utils:diffutils'
-    implementation 'com.diffplug.gradle:goomph'
     implementation 'com.palantir.gradle.utils:lazily-configured-mapping'
 
     runtimeOnly 'com.palantir.javaformat:gradle-palantir-java-format'
