@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Rerelease due to failed publish
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2280
