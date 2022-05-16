@@ -7,7 +7,6 @@ com.palantir.safe-logging:* = 1.26.0
 commons-lang:commons-lang = 2.6
 org.apache.maven.shared:maven-dependency-analyzer = 1.12.0
 org.apache.maven:maven-core = 3.8.5
-org.codehaus.plexus:plexus-container-default = 2.1.1
 org.inferred:freebuilder = 1.14.6
 org.jooq:jooq = 3.16.6
 org.slf4j:slf4j-api = 1.7.36
