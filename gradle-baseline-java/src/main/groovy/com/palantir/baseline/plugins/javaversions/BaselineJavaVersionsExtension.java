@@ -16,6 +16,7 @@
 
 package com.palantir.baseline.plugins.javaversions;
 
+import com.palantir.gradle.utils.lazilyconfiguredmapping.LazilyConfiguredMapping;
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.inject.Inject;
