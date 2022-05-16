@@ -567,6 +567,36 @@ class SafeLoggingPropagationTest {
     }
 
     @Test
+    void testRedactedMayBeUnsafe() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.fasterxml.jackson.annotation.*;",
+                        "import org.immutables.value.Value;",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @Unsafe",
+                        "  @JsonValue",
+                        "  @Value.Redacted",
+                        "  String token();",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.fasterxml.jackson.annotation.*;",
+                        "import org.immutables.value.Value;",
+                        "@Unsafe",
+                        "@Value.Immutable",
+                        "interface Test {",
+                        "  @Unsafe",
+                        "  @JsonValue",
+                        "  @Value.Redacted",
+                        "  String token();",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     void testRedactedIsDoNotLog_jsonSerializable() {
         fix().addInputLines(
                         "Test.java",

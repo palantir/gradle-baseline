@@ -200,6 +200,7 @@ public final class SafeLoggingPropagation extends BugChecker
         return matchBasedOnToString(classTree, classSymbol, state);
     }
 
+    @SuppressWarnings("checkstyle:CyclomaticComplexity")
     private Description matchImmutables(ClassTree classTree, ClassSymbol classSymbol, VisitorState state) {
         Safety existingClassSafety = SafetyAnnotations.getSafety(classTree, state);
         Safety safety = getTypeSafetyFromAncestors(classTree, state);
@@ -220,9 +221,11 @@ public final class SafeLoggingPropagation extends BugChecker
                     // The redaction check allows us to add @DoNotLog to redacted fields in the same sweep as
                     // adding class-level safety annotations. Otherwise, we would have to run the automatic
                     // fixes twice.
-                    Safety getterSafety = redacted
-                            ? Safety.DO_NOT_LOG
-                            : SafetyAnnotations.getSafety(methodMember.getReturnType(), state);
+                    Safety getterSafety = SafetyAnnotations.getSafety(methodMember.getReturnType(), state);
+                    if (redacted && (getterSafety == Safety.UNKNOWN || getterSafety == Safety.SAFE)) {
+                        // unsafe data may be redacted, however we assume redaction means do-not-log by default
+                        getterSafety = Safety.DO_NOT_LOG;
+                    }
                     if (getterSafety != Safety.UNKNOWN) {
                         hasKnownGetter = true;
                     }
@@ -295,6 +298,7 @@ public final class SafeLoggingPropagation extends BugChecker
     }
 
     @Override
+    @SuppressWarnings("checkstyle:CyclomaticComplexity")
     public Description matchMethod(MethodTree method, VisitorState state) {
         if (METHOD_RETURNS_VOID.matches(method, state) || method.getReturnType() == null) {
             return Description.NO_MATCH;
@@ -307,7 +311,9 @@ public final class SafeLoggingPropagation extends BugChecker
         Safety methodDeclaredSafety = Safety.mergeAssumingUnknownIsSame(
                 SafetyAnnotations.getSafety(methodSymbol, state),
                 SafetyAnnotations.getSafety(method.getReturnType(), state));
+        // Redacted is do-not-log by default, but may be unsafe.
         if (methodDeclaredSafety != Safety.DO_NOT_LOG
+                && methodDeclaredSafety != Safety.UNSAFE
                 && ASTHelpers.hasAnnotation(methodSymbol, "org.immutables.value.Value.Redacted", state)) {
             return handleSafety(method, method.getModifiers(), state, methodDeclaredSafety, Safety.DO_NOT_LOG);
         }
