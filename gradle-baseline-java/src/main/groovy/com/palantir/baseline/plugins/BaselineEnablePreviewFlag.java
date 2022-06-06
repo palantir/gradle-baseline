@@ -51,14 +51,14 @@ public final class BaselineEnablePreviewFlag implements Plugin<Project> {
         project.getExtensions().getExtraProperties().set("enablePreview", enablePreview);
 
         project.getPlugins().withId("java", _unused -> {
-            project.getTasks().withType(JavaCompile.class, t -> {
+            project.getTasks().withType(JavaCompile.class).configureEach(t -> {
                 List<CommandLineArgumentProvider> args = t.getOptions().getCompilerArgumentProviders();
                 args.add(new MaybeEnablePreview(enablePreview)); // mutation is gross, but it's the gradle convention
             });
-            project.getTasks().withType(Test.class, t -> {
+            project.getTasks().withType(Test.class).configureEach(t -> {
                 t.getJvmArgumentProviders().add(new MaybeEnablePreview(enablePreview));
             });
-            project.getTasks().withType(JavaExec.class, t -> {
+            project.getTasks().withType(JavaExec.class).configureEach(t -> {
                 t.getJvmArgumentProviders().add(new MaybeEnablePreview(enablePreview));
             });
 
@@ -68,7 +68,7 @@ public final class BaselineEnablePreviewFlag implements Plugin<Project> {
                     JavaVersion sourceCompat = project.getConvention()
                             .getPlugin(JavaPluginConvention.class)
                             .getSourceCompatibility();
-                    project.getTasks().withType(Javadoc.class, t -> {
+                    project.getTasks().withType(Javadoc.class).configureEach(t -> {
                         CoreJavadocOptions options = (CoreJavadocOptions) t.getOptions();
 
                         // Yes truly javadoc wants a single leading dash, other javac wants a double leading dash.

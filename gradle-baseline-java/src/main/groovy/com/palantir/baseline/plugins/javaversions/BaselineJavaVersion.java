@@ -87,7 +87,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             Project project,
             Provider<JavaLanguageVersion> targetVersionProvider,
             Provider<BaselineJavaToolchain> javaToolchain) {
-        project.getTasks().withType(JavaCompile.class, new Action<JavaCompile>() {
+        project.getTasks().withType(JavaCompile.class).configureEach(new Action<JavaCompile>() {
             @Override
             public void execute(JavaCompile javaCompile) {
                 javaCompile.getJavaCompiler().set(javaToolchain.flatMap(BaselineJavaToolchain::javaCompiler));
@@ -103,14 +103,14 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             }
         });
 
-        project.getTasks().withType(Javadoc.class, new Action<Javadoc>() {
+        project.getTasks().withType(Javadoc.class).configureEach(new Action<Javadoc>() {
             @Override
             public void execute(Javadoc javadoc) {
                 javadoc.getJavadocTool().set(javaToolchain.flatMap(BaselineJavaToolchain::javadocTool));
             }
         });
 
-        project.getTasks().withType(GroovyCompile.class, new Action<GroovyCompile>() {
+        project.getTasks().withType(GroovyCompile.class).configureEach(new Action<GroovyCompile>() {
             @Override
             public void execute(GroovyCompile groovyCompile) {
                 groovyCompile.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));
@@ -126,7 +126,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             }
         });
 
-        project.getTasks().withType(ScalaCompile.class, new Action<ScalaCompile>() {
+        project.getTasks().withType(ScalaCompile.class).configureEach(new Action<ScalaCompile>() {
             @Override
             public void execute(ScalaCompile scalaCompile) {
                 scalaCompile.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));
@@ -142,7 +142,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             }
         });
 
-        project.getTasks().withType(ScalaDoc.class, new Action<ScalaDoc>() {
+        project.getTasks().withType(ScalaDoc.class).configureEach(new Action<ScalaDoc>() {
             @Override
             public void execute(ScalaDoc scalaDoc) {
                 scalaDoc.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));
@@ -151,14 +151,14 @@ public final class BaselineJavaVersion implements Plugin<Project> {
     }
 
     private static void configureExecutionTasks(Project project, Provider<BaselineJavaToolchain> javaToolchain) {
-        project.getTasks().withType(JavaExec.class, new Action<JavaExec>() {
+        project.getTasks().withType(JavaExec.class).configureEach(new Action<JavaExec>() {
             @Override
             public void execute(JavaExec javaExec) {
                 javaExec.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));
             }
         });
 
-        project.getTasks().withType(Test.class, new Action<Test>() {
+        project.getTasks().withType(Test.class).configureEach(new Action<Test>() {
             @Override
             public void execute(Test test) {
                 test.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));

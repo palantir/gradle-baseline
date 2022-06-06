@@ -35,7 +35,7 @@ public final class JunitReportsPlugin implements Plugin<Project> {
         JunitReportsExtension rootExt = project.getRootProject().getExtensions().getByType(JunitReportsExtension.class);
         JunitTaskResultExtension ext = JunitTaskResultExtension.register(project);
 
-        project.getTasks().withType(Test.class, test -> {
+        project.getTasks().withType(Test.class).configureEach(test -> {
             test.getReports().getJunitXml().getRequired().set(true);
             test.getReports()
                     .getJunitXml()
@@ -43,12 +43,12 @@ public final class JunitReportsPlugin implements Plugin<Project> {
                     .fileProvider(junitPath(rootExt.getReportsDirectory(), test.getPath()));
         });
 
-        project.getTasks().withType(Checkstyle.class, checkstyle -> {
+        project.getTasks().withType(Checkstyle.class).configureEach(checkstyle -> {
             ext.registerTask(
                     checkstyle.getName(), XmlReportFailuresSupplier.create(checkstyle, new CheckstyleReportHandler()));
         });
 
-        project.getTasks().withType(JavaCompile.class, javac -> {
+        project.getTasks().withType(JavaCompile.class).configureEach(javac -> {
             ext.registerTask(javac.getName(), JavacFailuresSupplier.create(javac));
         });
 

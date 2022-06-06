@@ -204,12 +204,15 @@ class BaselineFormat extends AbstractBaselinePlugin {
         });
 
         project.afterEvaluate(p -> {
-            Task spotlessJava = project.getTasks().getByName("spotlessJava");
             if (eclipseFormattingEnabled(project) && !Files.exists(eclipseXml)) {
-                spotlessJava.dependsOn(":baselineUpdateConfig");
+                TaskProvider<Task> spotlessJava = project.getTasks().named("spotlessJava");
+                spotlessJava.configure(t -> t.dependsOn(":baselineUpdateConfig"));
             }
 
-            project.getTasks().withType(JavaCompile.class).configureEach(spotlessJava::mustRunAfter);
+            project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
+                Task spotlessJava = project.getTasks().getByName("spotlessJava");
+                spotlessJava.mustRunAfter(javaCompile);
+            });
         });
     }
 
