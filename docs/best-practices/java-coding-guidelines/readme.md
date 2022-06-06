@@ -651,15 +651,15 @@ non-primitive types such as Java8/Joda-Time
 
 ### Avoid new HashMap(int)
 
-Avoid new HashMap(int), use Maps#newHashMapWithExpectedSize(int) instead.
+Avoid `new HashMap(int)` and `new HashSet(int)`, use `Maps#newHashMapWithExpectedSize(int)` and `Sets#newHashSetWithExpectedSize(int)` instead.
 
-The behavior of `new HashMap(int)` is misleading -- the parameter represents an
+The behavior of `new HashMap(int)`/`new HashSet(int)` is misleading -- the parameter represents an
 internal size rather than an ability to hold that number of elements.  If a HashMap
 with capacity K receives K elements, it will increase its capacity to 2*K along the way.
 This is because HashMap doubles its internal storage by 2 once it reaches 75% capacity.
 
-The Guava static method `Maps.newHashMapWithExpectedSize(int)` creates a HashMap which
-will not resize if provided the given number of elements.
+The Guava static methods `Maps.newHashMapWithExpectedSize(int)` and `Sets#newHashSetWithExpectedSize(int)` creates a
+HashMap which will not resize if provided the given number of elements.
 
 ## APIs and Interfaces
 
