@@ -1745,8 +1745,7 @@ class IllegalSafeLoggingArgumentTest {
                         "  @DoNotLog class DoNotLogClass {}",
                         "  @Safe interface SafeClass {}",
                         "  @Unsafe interface UnsafeClass {}",
-                        "  @Safe interface SafeSubclass extends UnsafeClass {}",
-                        "  void f(Object object, UnsafeClass unsafeObject) {",
+                        "  void f(Object object, UnsafeClass unsafeObject, @Unsafe Object unsafeAnnotatedObject) {",
                         "    fun(object);",
                         "    fun((SafeClass) object);",
                         "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
@@ -1755,9 +1754,22 @@ class IllegalSafeLoggingArgumentTest {
                         "    fun((DoNotLogClass) object);",
                         "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
                         "    fun((SafeClass) unsafeObject);",
-                        "    fun((SafeSubclass) unsafeObject);",
+                        "    fun((SafeClass) unsafeAnnotatedObject);",
                         "  }",
                         "  private static void fun(@Safe Object obj) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testSubclassWithLenientSafety() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  @Unsafe interface UnsafeClass {}",
+                        "  // BUG: Diagnostic contains: Dangerous type: annotated 'SAFE' but ancestors declare 'SAFE'.",
+                        "  @Safe interface SafeSubclass extends UnsafeClass {}",
                         "}")
                 .doTest();
     }
