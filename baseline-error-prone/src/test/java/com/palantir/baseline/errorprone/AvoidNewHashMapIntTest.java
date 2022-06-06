@@ -22,19 +22,36 @@ import org.junit.jupiter.api.Test;
 public final class AvoidNewHashMapIntTest {
 
     @Test
+    public void testRewriteHashSetConstructor() {
+        RefactoringValidator.of(AvoidNewHashMapInt.class, getClass())
+                .addInputLines(
+                        "Test.java",
+                        "import java.util.HashSet;",
+                        "import java.util.Set;",
+                        "class Test {{ Set<Integer> set = new HashSet<>(10); }}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.google.common.collect.Sets;",
+                        "import java.util.HashSet;", // HACK
+                        "import java.util.Set;",
+                        "class Test {{ Set<Integer> set = Sets.newHashSetWithExpectedSize(10); }}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
     public void testRewriteHashMapConstructor() {
         RefactoringValidator.of(AvoidNewHashMapInt.class, getClass())
                 .addInputLines(
                         "Test.java",
-                        "import java.util.Map;",
                         "import java.util.HashMap;",
-                        "class Test {{ Map<Integer, Integer> map = new HashMap<>(10);}}")
+                        "import java.util.Map;",
+                        "class Test {{ Map<Integer, Integer> map = new HashMap<>(10); }}")
                 .addOutputLines(
                         "Test.java",
                         "import com.google.common.collect.Maps;",
                         "import java.util.HashMap;", // HACK
                         "import java.util.Map;",
-                        "class Test {{ Map<Integer, Integer> map = Maps.newHashMapWithExpectedSize(10);}}")
+                        "class Test {{ Map<Integer, Integer> map = Maps.newHashMapWithExpectedSize(10); }}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 }
