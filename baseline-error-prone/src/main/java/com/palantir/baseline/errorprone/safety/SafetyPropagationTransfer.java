@@ -33,6 +33,7 @@ import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
+import com.palantir.baseline.errorprone.MoreASTHelpers;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.LambdaExpressionTree;
@@ -1083,9 +1084,20 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     /** Handles type changes (widen, narrow, and cast). */
     private TransferResult<Safety, AccessPathStore<Safety>> handleTypeConversion(
             Tree newType, Node original, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        Safety valueSafety = getValueOfSubNode(input, original);
-        Safety narrowTargetSafety = SafetyAnnotations.getSafety(newType, state);
-        Safety resultSafety = Safety.mergeAssumingUnknownIsSame(valueSafety, narrowTargetSafety);
+        Safety inputSafety = getValueOfSubNode(input, original);
+        Safety targetSafety = SafetyAnnotations.getSafety(newType, state);
+        Safety resultSafety;
+        if (!targetSafety.allowsValueWith(inputSafety)
+                && ASTHelpers.isSubtype(
+                        MoreASTHelpers.getResultType(newType),
+                        MoreASTHelpers.getResultType(original.getTree()),
+                        state)) {
+            // In the case that the cast target is more specific than the input, propagate the safety of the cast
+            // target. Validation occurs when the type itself is constructed, the cast exposes previous validation.
+            resultSafety = targetSafety;
+        } else {
+            resultSafety = Safety.mergeAssumingUnknownIsSame(inputSafety, targetSafety);
+        }
         return noStoreChanges(resultSafety, input);
     }
 

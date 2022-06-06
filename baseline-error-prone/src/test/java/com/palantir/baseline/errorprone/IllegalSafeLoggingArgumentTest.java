@@ -1736,6 +1736,32 @@ class IllegalSafeLoggingArgumentTest {
                 .doTest();
     }
 
+    @Test
+    public void testCastSafety() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  @DoNotLog class DoNotLogClass {}",
+                        "  @Safe interface SafeClass {}",
+                        "  @Unsafe interface UnsafeClass {}",
+                        "  @Safe interface SafeSubclass extends UnsafeClass {}",
+                        "  void f(Object object, UnsafeClass unsafeObject) {",
+                        "    fun(object);",
+                        "    fun((SafeClass) object);",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
+                        "    fun((UnsafeClass) object);",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'DO_NOT_LOG'",
+                        "    fun((DoNotLogClass) object);",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
+                        "    fun((SafeClass) unsafeObject);",
+                        "    fun((SafeSubclass) unsafeObject);",
+                        "  }",
+                        "  private static void fun(@Safe Object obj) {}",
+                        "}")
+                .doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(IllegalSafeLoggingArgument.class, getClass());
     }

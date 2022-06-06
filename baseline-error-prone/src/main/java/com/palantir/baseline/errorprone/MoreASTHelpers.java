@@ -22,6 +22,8 @@ import com.google.errorprone.VisitorState;
 import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.CatchTree;
+import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.Tree;
 import com.sun.source.tree.TryTree;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
@@ -32,7 +34,7 @@ import javax.annotation.Nullable;
 
 /** Utility functionality that does not exist in {@link com.google.errorprone.util.ASTHelpers}. */
 @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
-final class MoreASTHelpers {
+public final class MoreASTHelpers {
 
     /** Removes any type that is a subtype of another type in the set. */
     @SuppressWarnings("ReferenceEquality")
@@ -113,6 +115,12 @@ final class MoreASTHelpers {
             return ImmutableList.copyOf(unionType.getAlternativeTypes());
         }
         return ImmutableList.of(type);
+    }
+
+    public static Type getResultType(Tree tree) {
+        return tree instanceof ExpressionTree
+                ? ASTHelpers.getResultType((ExpressionTree) tree)
+                : ASTHelpers.getType(tree);
     }
 
     private MoreASTHelpers() {}
