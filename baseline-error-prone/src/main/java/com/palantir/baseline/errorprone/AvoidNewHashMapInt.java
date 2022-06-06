@@ -35,7 +35,7 @@ import com.sun.source.tree.NewClassTree;
         severity = BugPattern.SeverityLevel.WARNING,
         summary = "The HashMap(int) and HashSet(int) constructors are misleading: once the HashMap/HashSet reaches 3/4"
             + " of the supplied size, it resize. Instead use Maps.newHashMapWithExpectedSize or"
-            + " Sets.newHashSetWithExpextedSize which behaves as expected. See"
+            + " Sets.newHashSetWithExpectedSize which behaves as expected. See"
             + " https://github.com/palantir/gradle-baseline/blob/develop/docs/best-practices/java-coding-guidelines/readme.md#avoid-new-HashMap(int)"
             + " for more information.")
 public final class AvoidNewHashMapInt extends BugChecker implements BugChecker.NewClassTreeMatcher {
