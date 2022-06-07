@@ -183,7 +183,7 @@ public final class SafeLoggingPropagation extends BugChecker
 
     private Description matchRecord(ClassTree classTree, ClassSymbol classSymbol, VisitorState state) {
         Safety existingClassSafety = SafetyAnnotations.getSafety(classTree, state);
-        Safety safety = getTypeSafetyFromAncestors(classTree, state);
+        Safety safety = SafetyAnnotations.getTypeSafetyFromAncestors(classTree, state);
         for (VarSymbol recordComponent : getRecordComponents(classSymbol)) {
             Safety symbolSafety = SafetyAnnotations.getSafety(recordComponent, state);
             Safety typeSymSafety = SafetyAnnotations.getSafety(recordComponent.type.tsym, state);
@@ -203,7 +203,7 @@ public final class SafeLoggingPropagation extends BugChecker
     @SuppressWarnings("checkstyle:CyclomaticComplexity")
     private Description matchImmutables(ClassTree classTree, ClassSymbol classSymbol, VisitorState state) {
         Safety existingClassSafety = SafetyAnnotations.getSafety(classTree, state);
-        Safety safety = getTypeSafetyFromAncestors(classTree, state);
+        Safety safety = SafetyAnnotations.getTypeSafetyFromAncestors(classTree, state);
         boolean hasKnownGetter = false;
         boolean isJson = hasJacksonAnnotation(classSymbol, state);
         for (Tree member : classTree.getMembers()) {
@@ -249,14 +249,6 @@ public final class SafeLoggingPropagation extends BugChecker
         Safety existingClassSafety = SafetyAnnotations.getSafety(classTree, state);
         Safety symbolSafety = SafetyAnnotations.getSafety(toStringSymbol, state);
         return handleSafety(classTree, classTree.getModifiers(), state, existingClassSafety, symbolSafety);
-    }
-
-    private static Safety getTypeSafetyFromAncestors(ClassTree classTree, VisitorState state) {
-        Safety safety = SafetyAnnotations.getSafety(classTree.getExtendsClause(), state);
-        for (Tree implemented : classTree.getImplementsClause()) {
-            safety = safety.leastUpperBound(SafetyAnnotations.getSafety(implemented, state));
-        }
-        return safety;
     }
 
     private Description handleSafety(

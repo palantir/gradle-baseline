@@ -30,6 +30,7 @@ import com.palantir.baseline.errorprone.safety.Safety;
 import com.palantir.baseline.errorprone.safety.SafetyAnalysis;
 import com.palantir.baseline.errorprone.safety.SafetyAnnotations;
 import com.sun.source.tree.AssignmentTree;
+import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompoundAssignmentTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
@@ -72,7 +73,8 @@ public final class IllegalSafeLoggingArgument extends BugChecker
                 BugChecker.CompoundAssignmentTreeMatcher,
                 BugChecker.MethodTreeMatcher,
                 BugChecker.VariableTreeMatcher,
-                BugChecker.NewClassTreeMatcher {
+                BugChecker.NewClassTreeMatcher,
+                BugChecker.ClassTreeMatcher {
 
     private static final String UNSAFE_ARG = "com.palantir.logsafe.UnsafeArg";
     private static final Matcher<ExpressionTree> SAFE_ARG_OF_METHOD_MATCHER = MethodMatchers.staticMethod()
@@ -337,6 +339,23 @@ public final class IllegalSafeLoggingArgument extends BugChecker
                 .setMessage(String.format(
                         "Dangerous variable: type is '%s' but the variable is annotated '%s'.",
                         variableTypeSafety, parameterSafetyAnnotation))
+                .build();
+    }
+
+    @Override
+    public Description matchClass(ClassTree tree, VisitorState state) {
+        Safety directSafety = SafetyAnnotations.getDirectSafety(ASTHelpers.getSymbol(tree), state);
+        if (directSafety.allowsAll()) {
+            return Description.NO_MATCH;
+        }
+        Safety ancestorSafety = SafetyAnnotations.getTypeSafetyFromAncestors(tree, state);
+        if (directSafety.allowsValueWith(ancestorSafety)) {
+            return Description.NO_MATCH;
+        }
+        return buildDescription(tree)
+                .setMessage(String.format(
+                        "Dangerous type: annotated '%s' but ancestors declare '%s'.",
+                        directSafety, SafetyAnnotations.getSafety(tree, state)))
                 .build();
     }
 }

@@ -20,6 +20,7 @@ import com.google.common.collect.Multimap;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.suppliers.Suppliers;
 import com.google.errorprone.util.ASTHelpers;
+import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.Attribute;
@@ -122,6 +123,14 @@ public final class SafetyAnnotations {
             return getSafetyInternal(type, state, null);
         }
         return Safety.UNKNOWN;
+    }
+
+    public static Safety getTypeSafetyFromAncestors(ClassTree classTree, VisitorState state) {
+        Safety safety = SafetyAnnotations.getSafety(classTree.getExtendsClause(), state);
+        for (Tree implemented : classTree.getImplementsClause()) {
+            safety = safety.leastUpperBound(SafetyAnnotations.getSafety(implemented, state));
+        }
+        return safety;
     }
 
     public static Safety getDirectSafety(@Nullable Symbol symbol, VisitorState state) {
