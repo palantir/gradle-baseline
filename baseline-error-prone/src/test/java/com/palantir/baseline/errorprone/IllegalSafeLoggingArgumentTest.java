@@ -1768,7 +1768,8 @@ class IllegalSafeLoggingArgumentTest {
                         "import com.palantir.logsafe.*;",
                         "class Test {",
                         "  @Unsafe interface UnsafeClass {}",
-                        "  // BUG: Diagnostic contains: Dangerous type: annotated 'SAFE' but ancestors declare 'SAFE'.",
+                        "  // BUG: Diagnostic contains: "
+                                + "Dangerous type: annotated 'SAFE' but ancestors declare 'UNSAFE'.",
                         "  @Safe interface SafeSubclass extends UnsafeClass {}",
                         "}")
                 .doTest();

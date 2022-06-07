@@ -354,8 +354,7 @@ public final class IllegalSafeLoggingArgument extends BugChecker
         }
         return buildDescription(tree)
                 .setMessage(String.format(
-                        "Dangerous type: annotated '%s' but ancestors declare '%s'.",
-                        directSafety, SafetyAnnotations.getSafety(tree, state)))
+                        "Dangerous type: annotated '%s' but ancestors declare '%s'.", directSafety, ancestorSafety))
                 .build();
     }
 }
