@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Fix class hierarchy safe-logging error message agreement
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2295
