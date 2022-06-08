@@ -43,12 +43,12 @@ public final class JunitReportsPlugin implements Plugin<Project> {
                     .fileProvider(junitPath(rootExt.getReportsDirectory(), test.getPath()));
         });
 
-        project.getTasks().withType(Checkstyle.class).configureEach(checkstyle -> {
+        project.getTasks().withType(Checkstyle.class, checkstyle -> {
             ext.registerTask(
                     checkstyle.getName(), XmlReportFailuresSupplier.create(checkstyle, new CheckstyleReportHandler()));
         });
 
-        project.getTasks().withType(JavaCompile.class).configureEach(javac -> {
+        project.getTasks().withType(JavaCompile.class, javac -> {
             ext.registerTask(javac.getName(), JavacFailuresSupplier.create(javac));
         });
 
