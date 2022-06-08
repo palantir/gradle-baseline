@@ -65,10 +65,11 @@ public final class BaselineCircleCi implements Plugin<Project> {
             throw new RuntimeException("failed to create CIRCLE_ARTIFACTS directory", e);
         }
 
-        project.getRootProject().allprojects(proj -> proj.getTasks().withType(Test.class, test -> {
-            test.getReports().getHtml().getRequired().set(true);
-            test.getReports().getHtml().getOutputLocation().set(junitPath(circleArtifactsDir, test.getPath()));
-        }));
+        project.getRootProject()
+                .allprojects(proj -> proj.getTasks().withType(Test.class).configureEach(test -> {
+                    test.getReports().getHtml().getRequired().set(true);
+                    test.getReports().getHtml().getOutputLocation().set(junitPath(circleArtifactsDir, test.getPath()));
+                }));
     }
 
     private void configurePluginsForReports(Project project) {
