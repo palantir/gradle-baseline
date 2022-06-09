@@ -7,6 +7,8 @@ buildscript {
     }
 
     dependencies {
+        classpath 'com.palantir.gradle.jdks:gradle-jdks:0.16.0'
+        classpath 'com.palantir.gradle.jdkslatest:gradle-jdks-latest:0.1.0'
         classpath 'com.diffplug.gradle:goomph:3.32.1'
         classpath 'com.palantir.gradle.externalpublish:gradle-external-publish-plugin:1.11.0'
         classpath 'com.palantir.gradle.consistentversions:gradle-consistent-versions:2.11.0'
@@ -25,6 +27,7 @@ apply plugin: 'com.palantir.external-publish'
 apply plugin: 'com.palantir.consistent-versions'
 apply plugin: 'com.palantir.baseline'
 apply plugin: 'com.palantir.baseline-java-versions'
+apply plugin: 'com.palantir.jdks.latest'
 
 allprojects {
     repositories {
