@@ -85,7 +85,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
             }
         }
 
-        project.getTasks().findByName("idea").doLast(cleanup)
+        project.getTasks().named("idea").configure(idea -> idea.doLast(cleanup))
     }
 
     void applyToRootProject(Project rootProject) {

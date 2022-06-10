@@ -30,6 +30,7 @@ import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.GroovyCompile;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
@@ -71,15 +72,15 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             configureExecutionTasks(project, javaToolchains.forVersion(extension.runtime()));
 
             // Validation
-            project.getTasks()
+            TaskProvider<CheckJavaVersionsTask> checkJavaVersions = project.getTasks()
                     .register("checkJavaVersions", CheckJavaVersionsTask.class, new Action<CheckJavaVersionsTask>() {
                         @Override
                         public void execute(CheckJavaVersionsTask task) {
                             task.getTargetVersion().set(extension.target());
                             task.getRuntimeVersion().set(extension.runtime());
-                            project.getTasks().getByName("check").dependsOn(task);
                         }
                     });
+            project.getTasks().named("check").configure(check -> check.dependsOn(checkJavaVersions));
         });
     }
 
