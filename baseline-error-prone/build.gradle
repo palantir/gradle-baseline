@@ -25,6 +25,7 @@ dependencies {
     testImplementation 'com.palantir.tritium:tritium-registry'
     testImplementation 'com.palantir.conjure.java:conjure-lib'
     testImplementation 'com.palantir.conjure.java.api:test-utils'
+    testImplementation 'com.palantir.atlasdb:atlasdb-client'
     testCompileOnly 'org.immutables:value::annotations'
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-migrationsupport'
