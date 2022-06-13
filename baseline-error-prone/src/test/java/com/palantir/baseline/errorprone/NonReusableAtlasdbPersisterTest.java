@@ -86,9 +86,10 @@ class NonReusableAtlasdbPersisterTest {
                         "}")
                 .addOutputLines(
                         "Test.java",
+                        "import com.palantir.atlasdb.annotation.Reusable;",
                         "import com.palantir.atlasdb.persister.JacksonPersister;",
                         "class Test {",
-                        "    @com.palantir.atlasdb.annotation.Reusable",
+                        "    @Reusable",
                         "    static class MyPersister extends JacksonPersister<String> {",
                         "        public MyPersister() {",
                         "            super(String.class, null);",
