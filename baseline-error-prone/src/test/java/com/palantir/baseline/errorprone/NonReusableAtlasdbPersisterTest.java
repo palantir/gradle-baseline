@@ -72,6 +72,33 @@ class NonReusableAtlasdbPersisterTest {
     }
 
     @Test
+    public void suppliesFix() {
+        RefactoringValidator.of(NonReusableAtlasdbPersister.class, getClass())
+                .addInputLines(
+                        "Test.java",
+                        "import com.palantir.atlasdb.persister.JacksonPersister;",
+                        "class Test {",
+                        "    static class MyPersister extends JacksonPersister<String> {",
+                        "        public MyPersister() {",
+                        "            super(String.class, null);",
+                        "        }",
+                        "    }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.atlasdb.persister.JacksonPersister;",
+                        "class Test {",
+                        "    @com.palantir.atlasdb.annotation.Reusable",
+                        "    static class MyPersister extends JacksonPersister<String> {",
+                        "        public MyPersister() {",
+                        "            super(String.class, null);",
+                        "        }",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void failIfNonReusablePersister() {
         compilationHelper
                 .addSourceLines(

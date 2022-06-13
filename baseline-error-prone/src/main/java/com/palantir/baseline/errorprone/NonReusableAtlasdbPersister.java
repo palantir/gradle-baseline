@@ -21,6 +21,7 @@ import com.google.errorprone.BugPattern;
 import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
+import com.google.errorprone.fixes.SuggestedFix;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
@@ -58,6 +59,9 @@ public final class NonReusableAtlasdbPersister extends BugChecker implements Bug
             return Description.NO_MATCH;
         }
 
-        return buildDescription(tree).setMessage(ERROR_MESSAGE).build();
+        return buildDescription(tree)
+                .addFix(SuggestedFix.prefixWith(tree, "@com.palantir.atlasdb.annotation.Reusable\n"))
+                .setMessage(ERROR_MESSAGE)
+                .build();
     }
 }
