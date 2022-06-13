@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Enforce all AtlasDB persisters to be marked as reusable
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2300
