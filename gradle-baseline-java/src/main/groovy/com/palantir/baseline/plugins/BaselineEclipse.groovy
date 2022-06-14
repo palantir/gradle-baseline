@@ -127,14 +127,18 @@ class BaselineEclipse extends AbstractBaselinePlugin {
                 }
 
                 // Run eclipseTemplate when eclipse task is run
-                project.tasks.eclipse.dependsOn(eclipseTemplate)
+                project.tasks.named("eclipse").configure {
+                    dependsOn(eclipseTemplate)
+                }
 
                 // Override default Eclipse JRE.
-                project.tasks.eclipseClasspath.doFirst {
-                    String eclipseClassPath = "org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-" + project.sourceCompatibility;
-                    project.eclipse.classpath {
-                        containers.clear()
-                        containers.add(eclipseClassPath)
+                project.tasks.named("eclipseClasspath").configure {
+                    doFirst {
+                        String eclipseClassPath = "org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-" + project.sourceCompatibility;
+                        project.eclipse.classpath {
+                            containers.clear()
+                            containers.add(eclipseClassPath)
+                        }
                     }
                 }
             }

@@ -34,19 +34,21 @@ public final class BaselineImmutables implements Plugin<Project> {
             project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
                 project.getTasks()
                         .named(sourceSet.getCompileJavaTaskName(), JavaCompile.class)
-                        .get()
-                        .getOptions()
-                        .getCompilerArgumentProviders()
-                        // Use an anonymous class because tasks with lambda inputs cannot be cached
-                        .add(new CommandLineArgumentProvider() {
-                            @Override
-                            public Iterable<String> asArguments() {
-                                if (hasImmutablesProcessor(project, sourceSet)) {
-                                    return Collections.singletonList("-Aimmutables.gradle.incremental");
-                                }
+                        .configure(javaCompileTask -> {
+                            javaCompileTask
+                                    .getOptions()
+                                    .getCompilerArgumentProviders()
+                                    // Use an anonymous class because tasks with lambda inputs cannot be cached
+                                    .add(new CommandLineArgumentProvider() {
+                                        @Override
+                                        public Iterable<String> asArguments() {
+                                            if (hasImmutablesProcessor(project, sourceSet)) {
+                                                return Collections.singletonList("-Aimmutables.gradle.incremental");
+                                            }
 
-                                return Collections.emptyList();
-                            }
+                                            return Collections.emptyList();
+                                        }
+                                    });
                         });
             });
         });
