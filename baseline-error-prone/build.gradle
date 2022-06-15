@@ -7,7 +7,6 @@ dependencies {
     implementation 'com.google.errorprone:error_prone_core'
     // Ensure a new enough version of dataflow-errorprone is available
     implementation 'org.checkerframework:dataflow-errorprone'
-    runtimeOnly 'org.mockito:mockito-errorprone'
 
     testImplementation gradleApi()
     testImplementation 'com.palantir.tokens:auth-tokens'
