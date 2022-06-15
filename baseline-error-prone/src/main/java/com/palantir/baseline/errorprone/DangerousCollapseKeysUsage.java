@@ -17,6 +17,7 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
+import com.google.common.collect.ImmutableList;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
@@ -26,6 +27,8 @@ import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
+import com.sun.tools.javac.parser.Tokens.TokenKind;
+import java.util.List;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -44,9 +47,11 @@ public final class DangerousCollapseKeysUsage extends BugChecker implements BugC
             + "leads to code that is error prone or surprising.\nHence in place of collapseKeys() we recommend using "
             + "grouping operations which may require creation of intermediate maps but should avoid surprising code.";
 
+    private static final String COLLAPSE_KEYS_METHOD = "collapseKeys";
+
     private static final Matcher<ExpressionTree> COLLAPSE_KEYS_CALL = MethodMatchers.instanceMethod()
             .onExactClass("one.util.streamex.EntryStream")
-            .named("collapseKeys");
+            .named(COLLAPSE_KEYS_METHOD);
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
@@ -54,7 +59,32 @@ public final class DangerousCollapseKeysUsage extends BugChecker implements BugC
             return Description.NO_MATCH;
         }
 
-        // Fail on any 'parallel(...)' implementation, regardless of how many parameters it takes
+        if (usesSortedBeforeCollapseKeys(tree, state)) {
+            return Description.NO_MATCH;
+        }
+
         return buildDescription(tree).setMessage(ERROR_MESSAGE).build();
+    }
+
+    private boolean usesSortedBeforeCollapseKeys(MethodInvocationTree tree, VisitorState state) {
+        // Fast check to avoid tokenizing the source if ".sorted()" is not used at all.
+        String sourceForNode = state.getSourceForNode(tree);
+        if (sourceForNode != null && !sourceForNode.contains(".sorted()")) {
+            return false;
+        }
+
+        List<String> tokenIdentifiers = state.getTokensForNode(tree).stream()
+                .filter(token -> token.kind() == TokenKind.IDENTIFIER)
+                .map(token -> token.name().toString())
+                .collect(ImmutableList.toImmutableList());
+
+        for (int i = 0; i < tokenIdentifiers.size(); i++) {
+            if (tokenIdentifiers.get(i).equals(COLLAPSE_KEYS_METHOD)) {
+                if (i == 0 || !tokenIdentifiers.get(i - 1).equals("sorted")) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 }
