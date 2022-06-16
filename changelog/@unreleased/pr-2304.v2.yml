@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: Don't count identifier expressions as variable usages in `StrictUnusedVariable`
+    check
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2304
