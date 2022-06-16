@@ -91,6 +91,7 @@ import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.ReturnTree;
 import com.sun.source.tree.StatementTree;
 import com.sun.source.tree.Tree;
+import com.sun.source.tree.Tree.Kind;
 import com.sun.source.tree.TryTree;
 import com.sun.source.tree.UnaryTree;
 import com.sun.source.tree.VariableTree;
@@ -1054,7 +1055,9 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
 
         @Override
         public Void visitMemberSelect(MemberSelectTree memberSelectTree, Void unused) {
-            usageSites.put(getSymbol(memberSelectTree), getCurrentPath());
+            if (!memberSelectTree.getExpression().getKind().equals(Kind.IDENTIFIER)) {
+                usageSites.put(getSymbol(memberSelectTree), getCurrentPath());
+            }
             return super.visitMemberSelect(memberSelectTree, null);
         }
     }

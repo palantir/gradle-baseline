@@ -81,7 +81,7 @@ public class StrictUnusedVariableTest {
     }
 
     @Test
-    public void handles_classes_constructorFields() {
+    public void handles_classes_ignoresIdentifierExpressions() {
         compilationHelper
                 .addSourceLines(
                         "Test.java",
