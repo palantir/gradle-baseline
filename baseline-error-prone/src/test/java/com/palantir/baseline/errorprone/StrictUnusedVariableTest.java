@@ -81,6 +81,20 @@ public class StrictUnusedVariableTest {
     }
 
     @Test
+    public void handles_classes_constructorFields() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "class Test {",
+                        "  private final String _field;",
+                        "  public Test(String value) {",
+                        "    this._field = value;",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void handles_enums() {
         compilationHelper
                 .addSourceLines(
