@@ -35,7 +35,7 @@ import com.sun.source.tree.MethodInvocationTree;
         summary = "Disallow usage of .collapseKeys() in EntryStream(s).")
 public final class DangerousCollapseKeysUsage extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
     private static final long serialVersionUID = 1L;
-    private static final String ERROR_MESSAGE = "The collapseKeys API of EntryStream should be avoided. The "
+    private static final String ERROR_MESSAGE = "The collapseKeys API of EntryStream must be avoided. The "
             + "API is frequently used as a grouping operation but its not suitable for that use case. The contract "
             + "requires duplicate keys to be adjacent to each other in the stream, which is rarely the case in "
             + "production code paths. When this constraint is violated, it leads to a duplicate key error at runtime.\n"
