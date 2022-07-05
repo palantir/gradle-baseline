@@ -1,4 +1,4 @@
-com.diffplug.spotless:spotless-plugin-gradle = 6.6.0
+com.diffplug.spotless:spotless-plugin-gradle = 6.8.0
 com.fasterxml.jackson.core:jackson-databind = 2.13.3
 com.google.auto.service:auto-service = 1.0.1
 com.google.errorprone:error_prone_* = 2.13.1
@@ -8,13 +8,13 @@ commons-lang:commons-lang = 2.6
 org.apache.maven.shared:maven-dependency-analyzer = 1.12.0
 org.apache.maven:maven-core = 3.8.5
 org.inferred:freebuilder = 1.14.6
-org.jooq:jooq = 3.16.6
+org.jooq:jooq = 3.17.1
 org.slf4j:slf4j-api = 1.7.36
 org.immutables:* = 2.8.8
 org.ow2.asm:asm = 9.3
 com.googlecode.java-diff-utils:diffutils = 1.3.0
-com.puppycrawl.tools:checkstyle = 10.2
-org.checkerframework:* = 3.22.0
+com.puppycrawl.tools:checkstyle = 10.3.1
+org.checkerframework:* = 3.22.2
 com.palantir.gradle.utils:* = 0.1.0
 
 # test deps
@@ -24,18 +24,18 @@ com.netflix.nebula:nebula-test = 10.1.0
 com.palantir.conjure.java:* = 6.52.0
 com.palantir.conjure.java.api:* = 2.25.0
 com.palantir.tokens:auth-tokens = 3.14.0
-com.palantir.tritium:tritium-registry = 0.48.0
+com.palantir.tritium:tritium-registry = 0.49.0
 junit:junit = 4.13.2
 net.lingala.zip4j:zip4j = 1.3.2
 net.ltgt.gradle:gradle-errorprone-plugin = 2.0.2
 one.util:streamex = 0.8.1
 org.apache.commons:commons-lang3 = 3.12.0
-org.assertj:assertj-core = 3.22.0
+org.assertj:assertj-core = 3.23.1
 org.hamcrest:hamcrest-core = 2.2
 org.junit.jupiter:* = 5.8.2
 org.junit.vintage:* = 5.8.2
 org.junit.platform:* = 1.8.2
-org.mockito:* = 4.5.1
+org.mockito:* = 4.6.1
 
 # dependency-upgrader:OFF
 # Don't upgrade, we will remove this in a future release.

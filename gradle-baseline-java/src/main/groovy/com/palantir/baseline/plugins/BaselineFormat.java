@@ -192,7 +192,11 @@ class BaselineFormat extends AbstractBaselinePlugin {
                             .contains(GENERATED_MARKER))));
 
             java.target(allJavaFiles);
-            java.removeUnusedImports();
+            if (!project.getPluginManager().hasPlugin(PJF_PLUGIN)) {
+                // The palantir-java-format plugin removes unused imports already, there's no reason to
+                // rerun this step resolving google-java-format.
+                java.removeUnusedImports();
+            }
             // use empty string to specify one group for all non-static imports
             java.importOrder("");
 
