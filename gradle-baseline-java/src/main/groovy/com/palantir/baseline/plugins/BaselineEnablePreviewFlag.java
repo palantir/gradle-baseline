@@ -16,7 +16,8 @@
 
 package com.palantir.baseline.plugins;
 
-import com.palantir.baseline.extensions.BaselineJavaVersionExtension;
+import com.palantir.baseline.plugins.javaversions.BaselineJavaVersionExtension;
+import com.palantir.baseline.plugins.javaversions.BaselineJavaVersions;
 import java.util.Collections;
 import java.util.List;
 import org.gradle.api.JavaVersion;
@@ -30,7 +31,6 @@ import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.external.javadoc.CoreJavadocOptions;
 import org.gradle.process.CommandLineArgumentProvider;
-
 public final class BaselineEnablePreviewFlag implements Plugin<Project> {
 
     private static final String FLAG = "--enable-preview";
