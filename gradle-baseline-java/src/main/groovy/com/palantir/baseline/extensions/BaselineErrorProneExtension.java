@@ -50,6 +50,7 @@ public class BaselineErrorProneExtension {
             "LambdaMethodReference",
             "LoggerEnclosingClass",
             "LogsafeArgName",
+            "NonReusableAtlasdbPersister",
             "ObjectsHashCodeUnnecessaryVarargs",
             "OptionalFlatMapOfNullable",
             "OptionalOrElseMethodInvocation",
