@@ -94,6 +94,10 @@ public final class BaselineEnablePreviewFlag implements Plugin<Project> {
                 return false;
             }
 
+            if (maybeProvider instanceof Boolean) {
+                return (Boolean) maybeProvider;
+            }
+
             return ((Provider<Boolean>) maybeProvider).get();
         });
     }
