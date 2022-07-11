@@ -29,13 +29,14 @@ class NonReusableAtlasdbPersisterTest {
     }
 
     @Test
-    public void succeedIfReusablePersister() {
+    public void failIfReusablePersisterAnnotation() {
         compilationHelper
                 .addSourceLines(
                         "MyPersister.java",
                         "import com.palantir.atlasdb.persist.api.Persister;",
                         "import com.palantir.atlasdb.annotation.Reusable;",
                         "@Reusable",
+                        "// BUG: Diagnostic contains: All AtlasDB persisters must be re-usable.",
                         "class MyPersister implements Persister<String> {",
                         "    @Override",
                         "    public final byte[] persistToBytes(String input) {",
@@ -54,14 +55,13 @@ class NonReusableAtlasdbPersisterTest {
     }
 
     @Test
-    public void succeedIfNestedReusableJacksonPersister() {
+    public void succeedIfNestedJacksonPersister() {
         compilationHelper
                 .addSourceLines(
                         "Test.java",
                         "import com.palantir.atlasdb.persister.JacksonPersister;",
                         "import com.palantir.atlasdb.annotation.Reusable;",
                         "class Test {",
-                        "    @Reusable",
                         "    static class MyPersister extends JacksonPersister<String> {",
                         "        public MyPersister() {",
                         "            super(String.class, null);",
@@ -76,79 +76,41 @@ class NonReusableAtlasdbPersisterTest {
         RefactoringValidator.of(NonReusableAtlasdbPersister.class, getClass())
                 .addInputLines(
                         "Test.java",
-                        "import com.palantir.atlasdb.persister.JacksonPersister;",
+                        "import com.palantir.atlasdb.annotation.Reusable;",
+                        "import com.palantir.atlasdb.persist.api.Persister;",
                         "class Test {",
-                        "    static class MyPersister extends JacksonPersister<String> {",
-                        "        public MyPersister() {",
-                        "            super(String.class, null);",
+                        "    @Reusable",
+                        "    static class MyPersister implements Persister<String> {",
+                        "        @Override",
+                        "        public final byte[] persistToBytes(String input) {",
+                        "            return null;",
+                        "        }",
+                        "        @Override",
+                        "        public final String hydrateFromBytes(byte[] input) {",
+                        "            return null;",
+                        "        }",
+                        "        @Override",
+                        "        public final Class<String> getPersistingClassType() {",
+                        "            return String.class;",
                         "        }",
                         "    }",
                         "}")
                 .addOutputLines(
                         "Test.java",
-                        "import com.palantir.atlasdb.annotation.Reusable;",
-                        "import com.palantir.atlasdb.persister.JacksonPersister;",
+                        "import com.palantir.atlasdb.persist.api.ReusablePersister;",
                         "class Test {",
-                        "    @Reusable",
-                        "    static class MyPersister extends JacksonPersister<String> {",
-                        "        public MyPersister() {",
-                        "            super(String.class, null);",
+                        "    static class MyPersister implements ReusablePersister<String> {",
+                        "        @Override",
+                        "        public final byte[] persistToBytes(String input) {",
+                        "            return null;",
                         "        }",
-                        "    }",
-                        "}")
-                .doTest();
-    }
-
-    @Test
-    public void failIfNonReusablePersister() {
-        compilationHelper
-                .addSourceLines(
-                        "MyPersister.java",
-                        "import com.palantir.atlasdb.persist.api.Persister;",
-                        "// BUG: Diagnostic contains: All AtlasDB persisters must be re-usable.",
-                        "class MyPersister implements Persister<String> {",
-                        "    @Override",
-                        "    public final byte[] persistToBytes(String input) {",
-                        "        return null;",
-                        "    }",
-                        "    @Override",
-                        "    public final String hydrateFromBytes(byte[] input) {",
-                        "        return null;",
-                        "    }",
-                        "    @Override",
-                        "    public final Class<String> getPersistingClassType() {",
-                        "        return String.class;",
-                        "    }",
-                        "}")
-                .doTest();
-    }
-
-    @Test
-    public void failIfNonReusableJacksonPersister() {
-        compilationHelper
-                .addSourceLines(
-                        "MyPersister.java",
-                        "import com.palantir.atlasdb.persister.JacksonPersister;",
-                        "// BUG: Diagnostic contains: All AtlasDB persisters must be re-usable.",
-                        "class MyPersister extends JacksonPersister<String> {",
-                        "    public MyPersister() {",
-                        "        super(String.class, null);",
-                        "    }",
-                        "}")
-                .doTest();
-    }
-
-    @Test
-    public void failIfNestedNonReusableJacksonPersister() {
-        compilationHelper
-                .addSourceLines(
-                        "Test.java",
-                        "import com.palantir.atlasdb.persister.JacksonPersister;",
-                        "class Test {",
-                        "    // BUG: Diagnostic contains: All AtlasDB persisters must be re-usable.",
-                        "    static class MyPersister extends JacksonPersister<String> {",
-                        "        public MyPersister() {",
-                        "            super(String.class, null);",
+                        "        @Override",
+                        "        public final String hydrateFromBytes(byte[] input) {",
+                        "            return null;",
+                        "        }",
+                        "        @Override",
+                        "        public final Class<String> getPersistingClassType() {",
+                        "            return String.class;",
                         "        }",
                         "    }",
                         "}")

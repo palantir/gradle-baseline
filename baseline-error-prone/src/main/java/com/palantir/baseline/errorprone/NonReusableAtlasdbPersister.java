@@ -26,7 +26,12 @@ import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
+import com.google.errorprone.util.ASTHelpers;
+import com.sun.source.tree.AnnotationTree;
 import com.sun.source.tree.ClassTree;
+import com.sun.source.tree.Tree;
+import java.util.Optional;
+import java.util.stream.Collectors;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -42,31 +47,61 @@ public final class NonReusableAtlasdbPersister extends BugChecker implements Bug
             + "currently reusable. If you have questions here, feel free to ask around internally, or "
             + "read the source.";
 
-    private static final String ATLASDB_PERSISTER = "com.palantir.atlasdb.persist.api.Persister";
-    private static final Matcher<ClassTree> persisterClass = MoreMatchers.isSubtypeOf(ATLASDB_PERSISTER);
+    private static final String LEGACY_ATLASDB_PERSISTER = "com.palantir.atlasdb.persist.api.Persister";
+    private static final Matcher<ClassTree> implementsLegacyPersister =
+            Matchers.isDirectImplementationOf(LEGACY_ATLASDB_PERSISTER);
+    private static final Matcher<Tree> legacyPersister = Matchers.isSameType(LEGACY_ATLASDB_PERSISTER);
 
     private static final String REUSABLE_ANNOTATION = "com.palantir.atlasdb.annotation.Reusable";
-    private static final Matcher<ClassTree> reusableAnnotationMatcher = Matchers.hasAnnotation(REUSABLE_ANNOTATION);
+    private static final Matcher<ClassTree> hasReusableAnnotationMatcher = Matchers.hasAnnotation(REUSABLE_ANNOTATION);
+    private static final Matcher<AnnotationTree> reusableAnnotationMatcher = Matchers.isType(REUSABLE_ANNOTATION);
+
+    private static final String ATLASDB_REUSABLE_PERSISTER = "com.palantir.atlasdb.persist.api.ReusablePersister";
 
     private static final long serialVersionUID = 1L;
 
     @Override
     public Description matchClass(ClassTree tree, VisitorState state) {
-        if (!persisterClass.matches(tree, state)) {
+        if (!implementsLegacyPersister.matches(tree, state)) {
             return Description.NO_MATCH;
         }
 
-        if (reusableAnnotationMatcher.matches(tree, state)) {
+        Optional<? extends Tree> legacyImplementClauseOpt = tree.getImplementsClause().stream()
+                .filter(clause -> legacyPersister.matches(clause, state))
+                .findAny();
+
+        if (legacyImplementClauseOpt.isEmpty()) {
             return Description.NO_MATCH;
         }
 
         SuggestedFix.Builder fixBuilder = SuggestedFix.builder();
-        String annotation = SuggestedFixes.qualifyType(state, fixBuilder, REUSABLE_ANNOTATION);
-        fixBuilder.prefixWith(tree, "@" + annotation + "\n");
-        SuggestedFix addAnnotation = fixBuilder.build();
+        String reusablePersister = SuggestedFixes.qualifyType(state, fixBuilder, ATLASDB_REUSABLE_PERSISTER);
+
+        Tree legacyImplementCause = legacyImplementClauseOpt.get();
+
+        // Extract the generic type
+        String typeSuffix = Optional.ofNullable(
+                        ASTHelpers.getType(legacyImplementCause).getTypeArguments())
+                .map(typeArgs -> typeArgs.stream()
+                        .map(typeArg -> SuggestedFixes.qualifyType(state, fixBuilder, typeArg.toString()))
+                        .collect(Collectors.joining(", ", "<", ">")))
+                .orElse("");
+        fixBuilder.replace(legacyImplementCause, reusablePersister + typeSuffix);
+
+        // There isn't a valid use of this import anymore, clean it up!
+        fixBuilder.removeImport(LEGACY_ATLASDB_PERSISTER);
+
+        // Remove the now defunct reusable annotations
+        if (hasReusableAnnotationMatcher.matches(tree, state)) {
+            ASTHelpers.getAnnotations(tree).stream()
+                    .filter(annotation -> reusableAnnotationMatcher.matches(annotation, state))
+                    .forEach(reusableAnnotation -> fixBuilder.replace(reusableAnnotation, ""));
+            // Same here, there isn't a valid use of this import anymore, clean it up!
+            fixBuilder.removeImport(REUSABLE_ANNOTATION);
+        }
 
         return buildDescription(tree)
-                .addFix(addAnnotation)
+                .addFix(fixBuilder.build())
                 .setMessage(ERROR_MESSAGE)
                 .build();
     }
