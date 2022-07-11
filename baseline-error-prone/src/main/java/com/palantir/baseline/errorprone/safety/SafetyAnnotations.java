@@ -20,12 +20,17 @@ import com.google.common.collect.Multimap;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.suppliers.Suppliers;
 import com.google.errorprone.util.ASTHelpers;
+import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.Attribute;
 import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
+import com.sun.tools.javac.code.Symbol.TypeVariableSymbol;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
+import com.sun.tools.javac.code.SymbolMetadata;
+import com.sun.tools.javac.code.TargetType;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Type.WildcardType;
 import com.sun.tools.javac.util.List;
@@ -41,9 +46,19 @@ import javax.lang.model.element.Name;
 import javax.lang.model.element.TypeElement;
 
 public final class SafetyAnnotations {
-    private static final String SAFE = "com.palantir.logsafe.Safe";
-    private static final String UNSAFE = "com.palantir.logsafe.Unsafe";
-    private static final String DO_NOT_LOG = "com.palantir.logsafe.DoNotLog";
+    public static final String SAFE = "com.palantir.logsafe.Safe";
+    public static final String UNSAFE = "com.palantir.logsafe.Unsafe";
+    public static final String DO_NOT_LOG = "com.palantir.logsafe.DoNotLog";
+
+    private static final com.google.errorprone.suppliers.Supplier<Name> safeName =
+            VisitorState.memoize(state -> state.getName(SAFE));
+    private static final com.google.errorprone.suppliers.Supplier<Name> unsafeName =
+            VisitorState.memoize(state -> state.getName(UNSAFE));
+    private static final com.google.errorprone.suppliers.Supplier<Name> doNotLogName =
+            VisitorState.memoize(state -> state.getName(DO_NOT_LOG));
+
+    private static final com.google.errorprone.suppliers.Supplier<Type> throwableSupplier =
+            Suppliers.typeFromClass(Throwable.class);
 
     private static final TypeArgumentHandlers SAFETY_IS_COMBINATION_OF_TYPE_ARGUMENTS = new TypeArgumentHandlers(
             new TypeArgumentHandler(Iterable.class),
@@ -58,35 +73,46 @@ public final class SafetyAnnotations {
         // Check the symbol itself:
         Symbol treeSymbol = ASTHelpers.getSymbol(tree);
         Safety symbolSafety = getSafety(treeSymbol, state);
-        Type type = tree instanceof ExpressionTree
+        Type treeType = tree instanceof ExpressionTree
                 ? ASTHelpers.getResultType((ExpressionTree) tree)
                 : ASTHelpers.getType(tree);
-
-        if (type == null) {
-            return symbolSafety;
-        } else {
-            return Safety.mergeAssumingUnknownIsSame(symbolSafety, getSafety(type, state), getSafety(type.tsym, state));
-        }
+        Safety treeTypeSafety = treeType == null
+                ? Safety.UNKNOWN
+                : Safety.mergeAssumingUnknownIsSame(getSafety(treeType, state), getSafety(treeType.tsym, state));
+        Type symbolType = treeSymbol == null ? null : treeSymbol.type;
+        // If the type extracted from the symbol matches the type extracted from the tree, avoid duplicate work.
+        // However, in some cases type parameter information is excluded from one, but not the other.
+        Safety symbolTypeSafety = symbolType == null
+                        || (treeType != null && state.getTypes().isSameType(treeType, symbolType))
+                ? Safety.UNKNOWN
+                : Safety.mergeAssumingUnknownIsSame(getSafety(symbolType, state), getSafety(symbolType.tsym, state));
+        return Safety.mergeAssumingUnknownIsSame(symbolSafety, treeTypeSafety, symbolTypeSafety);
     }
 
     public static Safety getSafety(@Nullable Symbol symbol, VisitorState state) {
         if (symbol != null) {
-            if (ASTHelpers.hasAnnotation(symbol, DO_NOT_LOG, state)) {
-                return Safety.DO_NOT_LOG;
-            }
-            if (ASTHelpers.hasAnnotation(symbol, UNSAFE, state)) {
-                return Safety.UNSAFE;
-            }
-            if (ASTHelpers.hasAnnotation(symbol, SAFE, state)) {
-                return Safety.SAFE;
+            Safety direct = getDirectSafety(symbol, state);
+            if (direct != Safety.UNKNOWN) {
+                return direct;
             }
             // Check super-methods
             if (symbol instanceof MethodSymbol) {
                 return getSuperMethodSafety((MethodSymbol) symbol, state);
             }
+            if (symbol instanceof TypeVariableSymbol) {
+                return getTypeVariableSymbolSafety((TypeVariableSymbol) symbol);
+            }
             if (symbol instanceof VarSymbol) {
                 VarSymbol varSymbol = (VarSymbol) symbol;
                 return getSuperMethodParameterSafety(varSymbol, state);
+            }
+            if (symbol instanceof ClassSymbol) {
+                ClassSymbol classSymbol = (ClassSymbol) symbol;
+                Safety safety = getSafety(classSymbol.getSuperclass().tsym, state);
+                for (Type type : classSymbol.getInterfaces()) {
+                    safety = Safety.mergeAssumingUnknownIsSame(safety, getSafety(type.tsym, state));
+                }
+                return safety;
             }
         }
         return Safety.UNKNOWN;
@@ -99,23 +125,87 @@ public final class SafetyAnnotations {
         return Safety.UNKNOWN;
     }
 
-    private static Safety getSafetyInternal(Type type, VisitorState state, Set<String> dejaVu) {
-        List<Attribute.TypeCompound> typeAnnotations = type.getAnnotationMirrors();
-        for (Attribute.TypeCompound annotation : typeAnnotations) {
-            TypeElement annotationElement =
-                    (TypeElement) annotation.getAnnotationType().asElement();
-            Name name = annotationElement.getQualifiedName();
-            if (name.contentEquals(DO_NOT_LOG)) {
+    public static Safety getTypeSafetyFromAncestors(ClassTree classTree, VisitorState state) {
+        Safety safety = SafetyAnnotations.getSafety(classTree.getExtendsClause(), state);
+        for (Tree implemented : classTree.getImplementsClause()) {
+            safety = safety.leastUpperBound(SafetyAnnotations.getSafety(implemented, state));
+        }
+        return safety;
+    }
+
+    public static Safety getDirectSafety(@Nullable Symbol symbol, VisitorState state) {
+        if (symbol != null) {
+            if (containsAttributeNamed(symbol, doNotLogName.get(state))) {
                 return Safety.DO_NOT_LOG;
             }
-            if (name.contentEquals(UNSAFE)) {
+            if (containsAttributeNamed(symbol, unsafeName.get(state))) {
                 return Safety.UNSAFE;
             }
-            if (name.contentEquals(SAFE)) {
+            if (containsAttributeNamed(symbol, safeName.get(state))) {
                 return Safety.SAFE;
             }
         }
-        return SAFETY_IS_COMBINATION_OF_TYPE_ARGUMENTS.getSafety(type, state, dejaVu);
+        return Safety.UNKNOWN;
+    }
+
+    private static boolean containsAttributeNamed(Symbol symbol, Name annotationName) {
+        for (Attribute.Compound compound : symbol.getRawAttributes()) {
+            if (compound.type.tsym.getQualifiedName().equals(annotationName)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static Safety getTypeVariableSymbolSafety(TypeVariableSymbol typeVariableSymbol) {
+        for (int i = 0; i < typeVariableSymbol.owner.getTypeParameters().size(); i++) {
+            SymbolMetadata metadata = typeVariableSymbol.owner.getMetadata();
+            if (metadata == null) {
+                continue;
+            }
+            for (Attribute.TypeCompound attr : metadata.getTypeAttributes()) {
+                if ((attr.position.type == TargetType.CLASS_TYPE_PARAMETER
+                                || attr.position.type == TargetType.METHOD_TYPE_PARAMETER)
+                        && attr.position.parameter_index == i) {
+                    Safety maybeSafety = getSafetyAnnotationValue(attr);
+                    if (maybeSafety != null) {
+                        return maybeSafety;
+                    }
+                }
+            }
+        }
+        return Safety.UNKNOWN;
+    }
+
+    private static Safety getSafetyInternal(Type type, VisitorState state, Set<String> dejaVu) {
+        List<Attribute.TypeCompound> typeAnnotations = type.getAnnotationMirrors();
+        for (Attribute.TypeCompound annotation : typeAnnotations) {
+            Safety maybeSafety = getSafetyAnnotationValue(annotation);
+            if (maybeSafety != null) {
+                return maybeSafety;
+            }
+        }
+        Safety typeArgumentCombination = SAFETY_IS_COMBINATION_OF_TYPE_ARGUMENTS.getSafety(type, state, dejaVu);
+        return ASTHelpers.isSubtype(type, throwableSupplier.get(state), state)
+                ? Safety.UNSAFE.leastUpperBound(typeArgumentCombination)
+                : typeArgumentCombination;
+    }
+
+    @Nullable
+    private static Safety getSafetyAnnotationValue(Attribute.TypeCompound annotation) {
+        TypeElement annotationElement =
+                (TypeElement) annotation.getAnnotationType().asElement();
+        Name name = annotationElement.getQualifiedName();
+        if (name.contentEquals(DO_NOT_LOG)) {
+            return Safety.DO_NOT_LOG;
+        }
+        if (name.contentEquals(UNSAFE)) {
+            return Safety.UNSAFE;
+        }
+        if (name.contentEquals(SAFE)) {
+            return Safety.SAFE;
+        }
+        return null;
     }
 
     private static final class TypeArgumentHandlers {
@@ -178,6 +268,10 @@ public final class SafetyAnnotations {
                 }
                 Safety safety = Safety.SAFE;
                 List<Type> typeArguments = asSubtype.getTypeArguments();
+                if (typeArguments.isEmpty()) {
+                    // Type information is not available, not enough data to make a decision
+                    return null;
+                }
                 for (Type typeArgument : typeArguments) {
                     Safety safetyBasedOnType = SafetyAnnotations.getSafetyInternal(typeArgument, state, deJaVuToPass);
                     Safety safetyBasedOnSymbol = SafetyAnnotations.getSafety(typeArgument.tsym, state);

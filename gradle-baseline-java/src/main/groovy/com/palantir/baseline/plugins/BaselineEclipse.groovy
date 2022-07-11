@@ -19,8 +19,6 @@ package com.palantir.baseline.plugins
 import org.gradle.api.Project
 import org.gradle.api.plugins.JavaPlugin
 import org.gradle.plugins.ide.eclipse.EclipsePlugin
-import org.gradle.plugins.ide.eclipse.model.ClasspathEntry
-import org.gradle.plugins.ide.eclipse.model.SourceFolder
 
 /**
  * Configures the Gradle 'eclipse' task with Baseline settings.
@@ -67,26 +65,12 @@ class BaselineEclipse extends AbstractBaselinePlugin {
         return sb.toString()
     }
 
-    static void ignoreOptionalProblems(def entries, String pathParam, boolean isTest) {
-        ClasspathEntry entry = entries.find { it.path == pathParam }
-        if (entry instanceof SourceFolder) {
-            SourceFolder sf = (SourceFolder) entry
-            Map<String, Object> attributes = sf.getEntryAttributes()
-            attributes.put('ignore_optional_problems', 'true')
-            attributes.put('optional', 'true')
-            if (isTest) {
-                attributes.put('test', 'true')
-            }
-        }
-    }
-
     void apply(Project project) {
         this.project = project
 
         // Configure Eclipse JDT Core by merging in Baseline settings.
         project.plugins.withType(JavaPlugin, { plugin ->
             project.plugins.apply EclipsePlugin
-            project.plugins.apply 'com.diffplug.eclipse.apt'
             project.afterEvaluate {
                 project.eclipse {
                     if (jdt != null) {
@@ -143,29 +127,19 @@ class BaselineEclipse extends AbstractBaselinePlugin {
                 }
 
                 // Run eclipseTemplate when eclipse task is run
-                project.tasks.eclipse.dependsOn(eclipseTemplate)
+                project.tasks.named("eclipse").configure {
+                    dependsOn(eclipseTemplate)
+                }
 
                 // Override default Eclipse JRE.
-                project.tasks.eclipseClasspath.doFirst {
-                    String eclipseClassPath = "org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-" + project.sourceCompatibility;
-                    project.eclipse.classpath {
-                        containers.clear()
-                        containers.add(eclipseClassPath)
+                project.tasks.named("eclipseClasspath").configure {
+                    doFirst {
+                        String eclipseClassPath = "org.eclipse.jdt.launching.JRE_CONTAINER/org.eclipse.jdt.internal.debug.ui.launcher.StandardVMType/JavaSE-" + project.sourceCompatibility;
+                        project.eclipse.classpath {
+                            containers.clear()
+                            containers.add(eclipseClassPath)
+                        }
                     }
-                }
-
-                project.eclipse.jdt.apt {
-                    genSrcDir = "generated_src"
-                    genTestSrcDir = "generated_testSrc"
-                }
-                project.eclipse.classpath?.file?.whenMerged {
-                    ignoreOptionalProblems(entries, "generated_src", false)
-                    ignoreOptionalProblems(entries, "generated_testSrc", true)
-                }
-                // entries are appended instead of replaced, so delete the file first
-                project.tasks.eclipseFactorypath.doFirst {
-                    def factoryPath = project.file(".factorypath")
-                    factoryPath.delete()
                 }
             }
         })

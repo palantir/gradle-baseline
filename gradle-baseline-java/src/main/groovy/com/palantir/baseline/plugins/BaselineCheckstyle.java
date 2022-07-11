@@ -51,11 +51,10 @@ public final class BaselineCheckstyle extends AbstractBaselinePlugin {
             // Java 8+ new doclint compiler feature redundant.
             if (javaConvention.getSourceCompatibility().isJava8Compatible()) {
                 project.getTasks()
-                        .withType(
-                                Javadoc.class,
-                                javadoc -> javadoc.options(
-                                        javadocOptions -> ((StandardJavadocDocletOptions) javadocOptions)
-                                                .addStringOption("Xdoclint:none", "-quiet")));
+                        .withType(Javadoc.class)
+                        .configureEach(javadoc ->
+                                javadoc.options(javadocOptions -> ((StandardJavadocDocletOptions) javadocOptions)
+                                        .addStringOption("Xdoclint:none", "-quiet")));
             }
         });
 

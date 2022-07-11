@@ -21,6 +21,7 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.palantir.baseline.extensions.BaselineModuleJvmArgsExtension;
+import com.palantir.baseline.plugins.javaversions.BaselineJavaVersion;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
@@ -33,12 +34,14 @@ import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.UnknownTaskException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.java.archives.Manifest;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradle.api.tasks.testing.Test;
@@ -74,96 +77,106 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
             // https://github.com/gradle/gradle/issues/18824
             // However, we set sourceCompatibility in BaselineJavaVersion to opt out of the '--release' flag.
             project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
-                JavaCompile javaCompile = project.getTasks()
-                        .named(sourceSet.getCompileJavaTaskName(), JavaCompile.class)
-                        .get();
-                javaCompile
-                        .getOptions()
-                        .getCompilerArgumentProviders()
-                        // Use an anonymous class because tasks with lambda inputs cannot be cached
-                        .add(new CommandLineArgumentProvider() {
+                TaskProvider<JavaCompile> javaCompileProvider =
+                        project.getTasks().named(sourceSet.getCompileJavaTaskName(), JavaCompile.class);
+                javaCompileProvider.configure(javaCompile -> {
+                    javaCompile
+                            .getOptions()
+                            .getCompilerArgumentProviders()
+                            // Use an anonymous class because tasks with lambda inputs cannot be cached
+                            .add(new CommandLineArgumentProvider() {
+                                @Override
+                                public Iterable<String> asArguments() {
+                                    // The '--release' flag is set when BaselineJavaVersion is not used.
+                                    if (!project.getPlugins().hasPlugin(BaselineJavaVersion.class)) {
+                                        project.getLogger()
+                                                .debug(
+                                                        "BaselineModuleJvmArgs not applying args to compilation task "
+                                                                + "{} on {} due to lack of BaselineJavaVersion",
+                                                        javaCompile.getName(),
+                                                        project);
+                                        return ImmutableList.of();
+                                    }
+                                    ImmutableList<String> arguments =
+                                            collectCompilationArgs(project, extension, sourceSet);
+                                    project.getLogger()
+                                            .debug(
+                                                    "BaselineModuleJvmArgs compiling {} on {} with exports: {}",
+                                                    javaCompile.getName(),
+                                                    project,
+                                                    arguments);
+                                    return arguments;
+                                }
+                            });
+                });
+
+                TaskProvider<Task> javadocTaskProvider = null;
+                try {
+                    javadocTaskProvider = project.getTasks().named(sourceSet.getJavadocTaskName());
+                } catch (UnknownTaskException e) {
+                    // skip
+                }
+                if (javadocTaskProvider != null) {
+                    javadocTaskProvider.configure(javadocTask -> {
+                        javadocTask.doFirst(new Action<Task>() {
                             @Override
-                            public Iterable<String> asArguments() {
+                            public void execute(Task task) {
                                 // The '--release' flag is set when BaselineJavaVersion is not used.
                                 if (!project.getPlugins().hasPlugin(BaselineJavaVersion.class)) {
                                     project.getLogger()
                                             .debug(
                                                     "BaselineModuleJvmArgs not applying args to compilation task "
                                                             + "{} on {} due to lack of BaselineJavaVersion",
-                                                    javaCompile.getName(),
+                                                    task.getName(),
                                                     project);
-                                    return ImmutableList.of();
+                                    return;
                                 }
-                                ImmutableList<String> arguments = collectCompilationArgs(project, extension, sourceSet);
-                                project.getLogger()
-                                        .debug(
-                                                "BaselineModuleJvmArgs compiling {} on {} with exports: {}",
-                                                javaCompile.getName(),
-                                                project,
-                                                arguments);
-                                return arguments;
+
+                                Javadoc javadoc = (Javadoc) task;
+
+                                MinimalJavadocOptions options = javadoc.getOptions();
+                                if (options instanceof CoreJavadocOptions) {
+                                    CoreJavadocOptions coreOptions = (CoreJavadocOptions) options;
+                                    ImmutableList<JarManifestModuleInfo> info =
+                                            collectClasspathInfo(project, sourceSet);
+                                    List<String> exportValues = Stream.concat(
+                                                    // Compilation only supports exports, so we union with opens.
+                                                    Stream.concat(
+                                                            extension.exports().get().stream(),
+                                                            extension.opens().get().stream()),
+                                                    info.stream()
+                                                            .flatMap(item -> Stream.concat(
+                                                                    item.exports().stream(), item.opens().stream())))
+                                            .distinct()
+                                            .sorted()
+                                            .map(item -> item + "=ALL-UNNAMED")
+                                            .collect(ImmutableList.toImmutableList());
+                                    project.getLogger()
+                                            .debug(
+                                                    "BaselineModuleJvmArgs building {} on {} " + "with exports: {}",
+                                                    javadoc.getName(),
+                                                    project,
+                                                    exportValues);
+                                    if (!exportValues.isEmpty()) {
+                                        coreOptions
+                                                // options are automatically prefixed with '-' internally
+                                                .addMultilineStringsOption("-add-exports")
+                                                .setValue(exportValues);
+                                    }
+                                } else {
+                                    project.getLogger()
+                                            .error(
+                                                    "MinimalJavadocOptions implementation was "
+                                                            + "not CoreJavadocOptions, rather '{}'",
+                                                    options.getClass().getName());
+                                }
                             }
                         });
-
-                Task maybeJavadocTask = project.getTasks().findByName(sourceSet.getJavadocTaskName());
-                if (maybeJavadocTask instanceof Javadoc) {
-                    maybeJavadocTask.doFirst(new Action<Task>() {
-                        @Override
-                        public void execute(Task task) {
-                            // The '--release' flag is set when BaselineJavaVersion is not used.
-                            if (!project.getPlugins().hasPlugin(BaselineJavaVersion.class)) {
-                                project.getLogger()
-                                        .debug(
-                                                "BaselineModuleJvmArgs not applying args to compilation task "
-                                                        + "{} on {} due to lack of BaselineJavaVersion",
-                                                task.getName(),
-                                                project);
-                                return;
-                            }
-
-                            Javadoc javadoc = (Javadoc) task;
-
-                            MinimalJavadocOptions options = javadoc.getOptions();
-                            if (options instanceof CoreJavadocOptions) {
-                                CoreJavadocOptions coreOptions = (CoreJavadocOptions) options;
-                                ImmutableList<JarManifestModuleInfo> info = collectClasspathInfo(project, sourceSet);
-                                List<String> exportValues = Stream.concat(
-                                                // Compilation only supports exports, so we union with opens.
-                                                Stream.concat(
-                                                        extension.exports().get().stream(),
-                                                        extension.opens().get().stream()),
-                                                info.stream()
-                                                        .flatMap(item -> Stream.concat(
-                                                                item.exports().stream(), item.opens().stream())))
-                                        .distinct()
-                                        .sorted()
-                                        .map(item -> item + "=ALL-UNNAMED")
-                                        .collect(ImmutableList.toImmutableList());
-                                project.getLogger()
-                                        .debug(
-                                                "BaselineModuleJvmArgs building {} on {} " + "with exports: {}",
-                                                javadoc.getName(),
-                                                project,
-                                                exportValues);
-                                if (!exportValues.isEmpty()) {
-                                    coreOptions
-                                            // options are automatically prefixed with '-' internally
-                                            .addMultilineStringsOption("-add-exports")
-                                            .setValue(exportValues);
-                                }
-                            } else {
-                                project.getLogger()
-                                        .error(
-                                                "MinimalJavadocOptions implementation was "
-                                                        + "not CoreJavadocOptions, rather '{}'",
-                                                options.getClass().getName());
-                            }
-                        }
                     });
                 }
             });
 
-            project.getTasks().withType(Test.class, new Action<Test>() {
+            project.getTasks().withType(Test.class).configureEach(new Action<Test>() {
 
                 @Override
                 public void execute(Test test) {
@@ -185,7 +198,7 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                 }
             });
 
-            project.getTasks().withType(JavaExec.class, new Action<JavaExec>() {
+            project.getTasks().withType(JavaExec.class).configureEach(new Action<JavaExec>() {
 
                 @Override
                 public void execute(JavaExec javaExec) {
@@ -207,7 +220,7 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                 }
             });
 
-            project.getTasks().withType(Jar.class, new Action<Jar>() {
+            project.getTasks().withType(Jar.class).configureEach(new Action<Jar>() {
                 @Override
                 public void execute(Jar jar) {
                     jar.doFirst(new Action<Task>() {

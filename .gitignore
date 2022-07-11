@@ -16,3 +16,5 @@ out/
 docs/node_modules/
 generated_src
 generated_testSrc
+generated
+generated_tests

@@ -192,7 +192,11 @@ class BaselineFormat extends AbstractBaselinePlugin {
                             .contains(GENERATED_MARKER))));
 
             java.target(allJavaFiles);
-            java.removeUnusedImports();
+            if (!project.getPluginManager().hasPlugin(PJF_PLUGIN)) {
+                // The palantir-java-format plugin removes unused imports already, there's no reason to
+                // rerun this step resolving google-java-format.
+                java.removeUnusedImports();
+            }
             // use empty string to specify one group for all non-static imports
             java.importOrder("");
 
@@ -204,12 +208,15 @@ class BaselineFormat extends AbstractBaselinePlugin {
         });
 
         project.afterEvaluate(p -> {
-            Task spotlessJava = project.getTasks().getByName("spotlessJava");
             if (eclipseFormattingEnabled(project) && !Files.exists(eclipseXml)) {
-                spotlessJava.dependsOn(":baselineUpdateConfig");
+                TaskProvider<Task> spotlessJava = project.getTasks().named("spotlessJava");
+                spotlessJava.configure(t -> t.dependsOn(":baselineUpdateConfig"));
             }
 
-            project.getTasks().withType(JavaCompile.class).configureEach(spotlessJava::mustRunAfter);
+            project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
+                Task spotlessJava = project.getTasks().getByName("spotlessJava");
+                spotlessJava.mustRunAfter(javaCompile);
+            });
         });
     }
 

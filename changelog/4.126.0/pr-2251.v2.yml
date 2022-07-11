@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Safety propagation takes immutables redaction into account
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2251

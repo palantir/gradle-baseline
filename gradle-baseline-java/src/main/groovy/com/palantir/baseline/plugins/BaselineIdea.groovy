@@ -18,8 +18,8 @@ package com.palantir.baseline.plugins
 
 import com.google.common.collect.ImmutableMap
 import com.palantir.baseline.IntellijSupport
-import com.palantir.baseline.extensions.BaselineJavaVersionExtension
-import com.palantir.baseline.extensions.BaselineJavaVersionsExtension
+import com.palantir.baseline.plugins.javaversions.BaselineJavaVersionExtension
+import com.palantir.baseline.plugins.javaversions.BaselineJavaVersionsExtension
 import com.palantir.baseline.util.GitUtils
 import groovy.transform.CompileStatic
 import groovy.xml.XmlUtil
@@ -85,7 +85,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
             }
         }
 
-        project.getTasks().findByName("idea").doLast(cleanup)
+        project.getTasks().named("idea").configure(idea -> idea.doLast(cleanup))
     }
 
     void applyToRootProject(Project rootProject) {
@@ -321,7 +321,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
     }
 
     private static void createOrUpdateCopyrightFile(Node node, File file, String fileName) {
-        def copyrightText = XmlUtil.escapeControlCharacters(XmlUtil.escapeXml(file.text.trim()))
+        def copyrightText = file.text.trim()
         // Ensure that subsequent runs don't produce duplicate entries
         Node copyrightNode = GroovyXmlUtils.matchOrCreateChild(node, "copyright")
         Node noticeNode = GroovyXmlUtils.matchOrCreateChild(copyrightNode, "option", ["name": "notice"])
@@ -447,6 +447,8 @@ class BaselineIdea extends AbstractBaselinePlugin {
                     </inspection_tool>
                         
                     <inspection_tool class="PlaceholderCountMatchesArgumentCount" enabled="false" level="WARNING" enabled_by_default="false" />
+                    
+                    <inspection_tool class="ClassCanBeRecord" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
 
                     <inspection_tool class="UnstableApiUsage" enabled="true" level="WARNING" enabled_by_default="true">
                         <option name="unstableApiAnnotations">

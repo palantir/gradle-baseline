@@ -30,15 +30,18 @@ import com.palantir.baseline.errorprone.safety.Safety;
 import com.palantir.baseline.errorprone.safety.SafetyAnalysis;
 import com.palantir.baseline.errorprone.safety.SafetyAnnotations;
 import com.sun.source.tree.AssignmentTree;
+import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompoundAssignmentTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.MethodTree;
+import com.sun.source.tree.NewClassTree;
 import com.sun.source.tree.ReturnTree;
 import com.sun.source.tree.StatementTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.VariableTree;
 import com.sun.source.util.TreePath;
+import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Symbol.TypeVariableSymbol;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
@@ -69,29 +72,36 @@ public final class IllegalSafeLoggingArgument extends BugChecker
                 BugChecker.AssignmentTreeMatcher,
                 BugChecker.CompoundAssignmentTreeMatcher,
                 BugChecker.MethodTreeMatcher,
-                BugChecker.VariableTreeMatcher {
+                BugChecker.VariableTreeMatcher,
+                BugChecker.NewClassTreeMatcher,
+                BugChecker.ClassTreeMatcher {
 
     private static final String UNSAFE_ARG = "com.palantir.logsafe.UnsafeArg";
     private static final Matcher<ExpressionTree> SAFE_ARG_OF_METHOD_MATCHER = MethodMatchers.staticMethod()
             .onClass("com.palantir.logsafe.SafeArg")
             .named("of");
 
-    private static Type resolveParameterType(Type input, MethodInvocationTree tree, VisitorState state) {
-        if (input instanceof TypeVar) {
+    private static Type resolveParameterType(Type input, ExpressionTree tree, VisitorState state) {
+        // Important not to call getReceiver/getReceiverType on a NewClassTree, which throws.
+        if (input instanceof TypeVar && tree instanceof MethodInvocationTree) {
             TypeVar typeVar = (TypeVar) input;
 
             Type receiver = ASTHelpers.getReceiverType(tree);
             if (receiver == null) {
                 return input;
             }
-            MethodSymbol methodSymbol = ASTHelpers.getSymbol(tree);
+            Symbol symbol = ASTHelpers.getSymbol(tree);
             // List<String> -> Collection<E> gives us Collection<String>
-            Type boundToMethodOwner = state.getTypes().asSuper(receiver, methodSymbol.owner);
-            List<TypeVariableSymbol> ownerTypeVars = methodSymbol.owner.getTypeParameters();
-            for (int i = 0; i < ownerTypeVars.size(); i++) {
-                TypeVariableSymbol ownerVar = ownerTypeVars.get(i);
-                if (Objects.equals(ownerVar, typeVar.tsym)) {
-                    return boundToMethodOwner.getTypeArguments().get(i);
+            Type boundToMethodOwner = state.getTypes().asSuper(receiver, symbol.owner);
+            List<TypeVariableSymbol> ownerTypeVars = symbol.owner.getTypeParameters();
+            // Validate that the type parameters match -- it's possible raw types are used, and
+            // no type variables are bound. See IllegalSafeLoggingArgumentTest.testRawTypes.
+            if (ownerTypeVars.size() == boundToMethodOwner.getTypeArguments().size()) {
+                for (int i = 0; i < ownerTypeVars.size(); i++) {
+                    TypeVariableSymbol ownerVar = ownerTypeVars.get(i);
+                    if (Objects.equals(ownerVar, typeVar.tsym)) {
+                        return boundToMethodOwner.getTypeArguments().get(i);
+                    }
                 }
             }
         }
@@ -100,12 +110,29 @@ public final class IllegalSafeLoggingArgument extends BugChecker
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
-        List<? extends ExpressionTree> arguments = tree.getArguments();
-        if (arguments.isEmpty()) {
+        return matchCtorOrMethodInvocation(
+                tree, tree.getTypeArguments(), tree.getArguments(), ASTHelpers.getSymbol(tree), state);
+    }
+
+    @Override
+    public Description matchNewClass(NewClassTree tree, VisitorState state) {
+        return matchCtorOrMethodInvocation(
+                tree, tree.getTypeArguments(), tree.getArguments(), ASTHelpers.getSymbol(tree), state);
+    }
+
+    @SuppressWarnings({"CheckStyle", "ReferenceEquality"})
+    private Description matchCtorOrMethodInvocation(
+            ExpressionTree tree,
+            List<? extends Tree> typeArguments,
+            List<? extends ExpressionTree> arguments,
+            MethodSymbol methodSymbol,
+            VisitorState state) {
+        if (methodSymbol == null) {
             return Description.NO_MATCH;
         }
-        MethodSymbol methodSymbol = ASTHelpers.getSymbol(tree);
-        if (methodSymbol == null) {
+        handleResultTypeArguments(tree, state);
+        handleMethodTypeArguments(tree, typeArguments, methodSymbol, state);
+        if (arguments.isEmpty()) {
             return Description.NO_MATCH;
         }
         List<VarSymbol> parameters = methodSymbol.getParameters();
@@ -114,7 +141,17 @@ public final class IllegalSafeLoggingArgument extends BugChecker
             Type resolvedParameterType = resolveParameterType(parameter.type, tree, state);
             Safety parameterSafety = Safety.mergeAssumingUnknownIsSame(
                     SafetyAnnotations.getSafety(parameter, state),
-                    SafetyAnnotations.getSafety(resolvedParameterType, state));
+                    SafetyAnnotations.getSafety(resolvedParameterType, state),
+                    SafetyAnnotations.getSafety(resolvedParameterType.tsym, state));
+            // Collect additional safety info from the declared type
+            // Reference equality is okay because 'resolveParameterType' returns the input if the type doesn't need to
+            // be resolved.
+            if (parameter.type != resolvedParameterType) {
+                parameterSafety = Safety.mergeAssumingUnknownIsSame(
+                        parameterSafety,
+                        SafetyAnnotations.getSafety(parameter.type, state),
+                        SafetyAnnotations.getSafety(parameter.type.tsym, state));
+            }
             if (parameterSafety.allowsAll()) {
                 // Fast path: all types are accepted, there's no reason to do further analysis.
                 continue;
@@ -140,12 +177,71 @@ public final class IllegalSafeLoggingArgument extends BugChecker
         return Description.NO_MATCH;
     }
 
-    private static SuggestedFix getSuggestedFix(MethodInvocationTree tree, VisitorState state, Safety argumentSafety) {
+    private void handleResultTypeArguments(ExpressionTree tree, VisitorState state) {
+        Type type = ASTHelpers.getResultType(tree);
+        if (type != null && !type.getTypeArguments().isEmpty()) {
+            List<Type> resultTypeArguments = type.getTypeArguments();
+            List<TypeVariableSymbol> parameterTypes = type.tsym.getTypeParameters();
+            if (parameterTypes.size() == resultTypeArguments.size()) {
+                for (int i = 0; i < parameterTypes.size(); i++) {
+                    TypeVariableSymbol typeVar = parameterTypes.get(i);
+                    Type typeArgumentType = resultTypeArguments.get(i);
+                    Safety typeVarSafety = Safety.mergeAssumingUnknownIsSame(
+                            SafetyAnnotations.getSafety(typeVar, state),
+                            SafetyAnnotations.getSafety(typeVar.type, state),
+                            SafetyAnnotations.getSafety(typeVar.type.tsym, state));
+                    Safety typeArgumentSafety = Safety.mergeAssumingUnknownIsSame(
+                            SafetyAnnotations.getSafety(typeArgumentType, state),
+                            SafetyAnnotations.getSafety(typeArgumentType.tsym, state));
+                    if (!typeVarSafety.allowsAll() && !typeVarSafety.allowsValueWith(typeArgumentSafety)) {
+                        // use state.reportMatch to report all failing arguments if multiple are invalid
+                        state.reportMatch(buildDescription(tree)
+                                .setMessage(String.format(
+                                        "Dangerous argument value: arg is '%s' but the parameter requires '%s'.",
+                                        typeArgumentSafety, typeVarSafety))
+                                .build());
+                    }
+                }
+            }
+        }
+    }
+
+    private void handleMethodTypeArguments(
+            ExpressionTree tree, List<? extends Tree> typeArguments, MethodSymbol methodSymbol, VisitorState state) {
+        List<TypeVariableSymbol> typeParameters = methodSymbol.getTypeParameters();
+        if (typeParameters == null
+                || typeParameters.isEmpty()
+                || typeArguments == null
+                || typeArguments.isEmpty()
+                || typeArguments.size() != typeParameters.size()) {
+            return;
+        }
+        for (int i = 0; i < typeParameters.size(); i++) {
+            TypeVariableSymbol parameter = typeParameters.get(i);
+            Tree argument = typeArguments.get(i);
+            Safety required = Safety.mergeAssumingUnknownIsSame(
+                    SafetyAnnotations.getSafety(parameter, state),
+                    SafetyAnnotations.getSafety(parameter.type, state),
+                    SafetyAnnotations.getSafety(parameter.type.tsym, state));
+            Safety given = SafetyAnnotations.getSafety(argument, state);
+            if (!required.allowsValueWith(given)) {
+                // use state.reportMatch to report all failing arguments if multiple are invalid
+                state.reportMatch(buildDescription(tree)
+                        .setMessage(String.format(
+                                "Dangerous argument value: arg is '%s' but the parameter requires '%s'.",
+                                given, required))
+                        .build());
+            }
+        }
+    }
+
+    private static SuggestedFix getSuggestedFix(ExpressionTree tree, VisitorState state, Safety argumentSafety) {
         if (SAFE_ARG_OF_METHOD_MATCHER.matches(tree, state) && Safety.UNSAFE.allowsValueWith(argumentSafety)) {
             SuggestedFix.Builder fix = SuggestedFix.builder();
             String unsafeQualifiedClassName = SuggestedFixes.qualifyType(state, fix, UNSAFE_ARG);
             String replacement = String.format("%s.of", unsafeQualifiedClassName);
-            return fix.replace(tree.getMethodSelect(), replacement).build();
+            return fix.replace(((MethodInvocationTree) tree).getMethodSelect(), replacement)
+                    .build();
         }
 
         return SuggestedFix.emptyFix();
@@ -243,6 +339,22 @@ public final class IllegalSafeLoggingArgument extends BugChecker
                 .setMessage(String.format(
                         "Dangerous variable: type is '%s' but the variable is annotated '%s'.",
                         variableTypeSafety, parameterSafetyAnnotation))
+                .build();
+    }
+
+    @Override
+    public Description matchClass(ClassTree tree, VisitorState state) {
+        Safety directSafety = SafetyAnnotations.getDirectSafety(ASTHelpers.getSymbol(tree), state);
+        if (directSafety.allowsAll()) {
+            return Description.NO_MATCH;
+        }
+        Safety ancestorSafety = SafetyAnnotations.getTypeSafetyFromAncestors(tree, state);
+        if (directSafety.allowsValueWith(ancestorSafety)) {
+            return Description.NO_MATCH;
+        }
+        return buildDescription(tree)
+                .setMessage(String.format(
+                        "Dangerous type: annotated '%s' but ancestors declare '%s'.", directSafety, ancestorSafety))
                 .build();
     }
 }

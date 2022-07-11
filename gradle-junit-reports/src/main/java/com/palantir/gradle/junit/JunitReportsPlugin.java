@@ -35,7 +35,7 @@ public final class JunitReportsPlugin implements Plugin<Project> {
         JunitReportsExtension rootExt = project.getRootProject().getExtensions().getByType(JunitReportsExtension.class);
         JunitTaskResultExtension ext = JunitTaskResultExtension.register(project);
 
-        project.getTasks().withType(Test.class, test -> {
+        project.getTasks().withType(Test.class).configureEach(test -> {
             test.getReports().getJunitXml().getRequired().set(true);
             test.getReports()
                     .getJunitXml()

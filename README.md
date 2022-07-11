@@ -192,6 +192,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `OptionalFlatMapOfNullable`: Optional.map functions may return null to safely produce an empty result.
 - `ExtendsErrorOrThrowable`: Avoid extending Error (or subclasses of it) or Throwable directly.
 - `ImmutablesStyle`: Disallow the use of inline immutables style annotations to avoid forcing compile dependencies on consumers.
+- `ImmutablesReferenceEquality`: Comparison of Immutables value using reference equality instead of value equality.
 - `TooManyArguments`: Prefer Interface that take few arguments rather than many.
 - `ObjectsHashCodeUnnecessaryVarargs`: java.util.Objects.hash(non-varargs) should be replaced with java.util.Objects.hashCode(value) to avoid unnecessary varargs array allocations.
 - `PreferStaticLoggers`: Prefer static loggers over instance loggers.

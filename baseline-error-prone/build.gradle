@@ -7,8 +7,6 @@ dependencies {
     implementation 'com.google.errorprone:error_prone_core'
     // Ensure a new enough version of dataflow-errorprone is available
     implementation 'org.checkerframework:dataflow-errorprone'
-    // bring back mockito-errorprone once it is updated for 2.11.0+
-    //implementation 'org.mockito:mockito-errorprone'
 
     testImplementation gradleApi()
     testImplementation 'com.palantir.tokens:auth-tokens'
@@ -70,4 +68,5 @@ moduleJvmArgs {
         'jdk.compiler/com.sun.tools.javac.tree',
         'jdk.compiler/com.sun.tools.javac.util'
     ]
+    opens = ['jdk.compiler/com.sun.tools.javac.comp']
 }

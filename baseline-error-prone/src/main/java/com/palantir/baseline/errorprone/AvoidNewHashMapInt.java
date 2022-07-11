@@ -17,7 +17,6 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
-import com.google.common.collect.Maps;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
@@ -34,30 +33,42 @@ import com.sun.source.tree.NewClassTree;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,
-        summary = "The HashMap(int) constructor is misleading: once the HashMap reaches 3/4 of the supplied size, it"
-            + " will double its internal storage array. Instead use Maps.newHashMapWithExpectedSize which behaves as"
-            + " expected.See"
+        summary = "The HashMap(int) and HashSet(int) constructors are misleading: once the HashMap/HashSet reaches 3/4"
+            + " of the supplied size, it resize. Instead use Maps.newHashMapWithExpectedSize or"
+            + " Sets.newHashSetWithExpectedSize which behaves as expected. See"
             + " https://github.com/palantir/gradle-baseline/blob/develop/docs/best-practices/java-coding-guidelines/readme.md#avoid-new-HashMap(int)"
             + " for more information.")
 public final class AvoidNewHashMapInt extends BugChecker implements BugChecker.NewClassTreeMatcher {
 
     private static final long serialVersionUID = 1L;
 
+    private static final Matcher<ExpressionTree> NEW_HASH_SET =
+            MethodMatchers.constructor().forClass("java.util.HashSet").withParameters("int");
     private static final Matcher<ExpressionTree> NEW_HASH_MAP =
             MethodMatchers.constructor().forClass("java.util.HashMap").withParameters("int");
 
     @Override
     public Description matchNewClass(NewClassTree tree, VisitorState state) {
-        if (!NEW_HASH_MAP.matches(tree, state)) {
-            return Description.NO_MATCH;
+        if (NEW_HASH_SET.matches(tree, state)) {
+            SuggestedFix.Builder fixBuilder = SuggestedFix.builder();
+            String newType = SuggestedFixes.qualifyType(state, fixBuilder, "com.google.common.collect.Sets");
+            String arg = state.getSourceForNode(tree.getArguments().get(0));
+            String replacement = newType + ".newHashSetWithExpectedSize(" + arg + ")";
+            return buildDescription(tree)
+                    .addFix(fixBuilder.replace(tree, replacement).build())
+                    .build();
         }
 
-        SuggestedFix.Builder fixBuilder = SuggestedFix.builder();
-        String newType = SuggestedFixes.qualifyType(state, fixBuilder, Maps.class.getName());
-        String arg = state.getSourceForNode(tree.getArguments().get(0));
-        String replacement = newType + ".newHashMapWithExpectedSize(" + arg + ")";
-        return buildDescription(tree)
-                .addFix(fixBuilder.replace(tree, replacement).build())
-                .build();
+        if (NEW_HASH_MAP.matches(tree, state)) {
+            SuggestedFix.Builder fixBuilder = SuggestedFix.builder();
+            String newType = SuggestedFixes.qualifyType(state, fixBuilder, "com.google.common.collect.Maps");
+            String arg = state.getSourceForNode(tree.getArguments().get(0));
+            String replacement = newType + ".newHashMapWithExpectedSize(" + arg + ")";
+            return buildDescription(tree)
+                    .addFix(fixBuilder.replace(tree, replacement).build())
+                    .build();
+        }
+
+        return Description.NO_MATCH;
     }
 }

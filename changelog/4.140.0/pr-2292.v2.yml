@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Update `AvoidNewHashMapInt` to warn on uses of `new HashSet(int)`.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2292

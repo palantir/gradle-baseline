@@ -44,7 +44,7 @@ public class BaselineClassUniquenessPlugin extends AbstractBaselinePlugin {
                     task.usesService(jarClassHasher);
                 });
         project.getPlugins().apply(LifecycleBasePlugin.class);
-        project.getTasks().getByName(LifecycleBasePlugin.CHECK_TASK_NAME).dependsOn(checkClassUniqueness);
+        project.getTasks().named(LifecycleBasePlugin.CHECK_TASK_NAME).configure(t -> t.dependsOn(checkClassUniqueness));
 
         project.getPlugins().withId("java", plugin -> {
             checkClassUniqueness.configure(t -> {

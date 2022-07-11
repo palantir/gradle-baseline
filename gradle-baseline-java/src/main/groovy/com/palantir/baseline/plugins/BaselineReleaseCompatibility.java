@@ -17,6 +17,7 @@
 package com.palantir.baseline.plugins;
 
 import com.google.common.collect.ImmutableList;
+import com.palantir.baseline.plugins.javaversions.BaselineJavaVersion;
 import java.util.Collections;
 import java.util.Optional;
 import org.gradle.api.JavaVersion;
