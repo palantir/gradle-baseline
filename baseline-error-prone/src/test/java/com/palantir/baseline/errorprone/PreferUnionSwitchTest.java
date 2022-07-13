@@ -32,20 +32,19 @@ class PreferUnionSwitchTest {
      * - one line expressions (involving the variable)
      * - multiline expressions including return keyword (replace with yield)
      */
-
     @Test
     public void auto_fix_straightforward_lambdas() {
-        RefactoringValidator.of(PreferUnionSwitch.class, getClass())
+        RefactoringValidator.of(PreferUnionSwitch.class, getClass(), "--enable-preview", "--release=17")
                 .addInputLines(
                         "Test.java",
                         "import com.palantir.baseline.errorprone.SampleConjureUnion;",
                         "class Test {",
                         "public static boolean isAssetInfo(SampleConjureUnion myUnion) {",
                         "    return myUnion.accept(SampleConjureUnion.Visitor.<Boolean>builder()",
-                        "            .bar(bar -> false)",
-                        "            .baz(baz -> false)",
-                        "            .foo(foo -> true)",
-                        "            .unknown(unknown -> false)",
+                        "            .bar(_bar -> false)",
+                        "            .baz(_baz -> false)",
+                        "            .foo(_foo -> true)",
+                        "            .unknown(_unknown -> false)",
                         "            .build());",
                         "}",
                         "}")
@@ -55,10 +54,10 @@ class PreferUnionSwitchTest {
                         "class Test {",
                         "public static boolean isAssetInfo(SampleConjureUnion myUnion) {",
                         "    return switch (myUnion) {",
-                        "        case SampleConjureUnion.Bar bar -> false;",
-                        "        case SampleConjureUnion.Baz baz -> false;",
-                        "        case SampleConjureUnion.Foo foo -> true;",
-                        "        case SampleConjureUnion.Unknown unknown -> false;",
+                        "        case SampleConjureUnion.Bar _bar -> false;",
+                        "        case SampleConjureUnion.Baz _baz -> false;",
+                        "        case SampleConjureUnion.Foo _foo -> true;",
+                        "        case SampleConjureUnion.Unknown _unknown -> false;",
                         "    };",
                         "}",
                         "}")
