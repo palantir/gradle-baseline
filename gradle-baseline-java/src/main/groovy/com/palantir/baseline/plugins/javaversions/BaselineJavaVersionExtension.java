@@ -29,21 +29,37 @@ public class BaselineJavaVersionExtension {
 
     private final Property<JavaLanguageVersion> target;
     private final Property<JavaLanguageVersion> runtime;
+
+    private final Property<Boolean> targetEnablePreview;
+    private final Property<Boolean> runtimeEnablePreview;
     private final Property<Boolean> overrideLibraryAutoDetection;
 
     @Inject
     public BaselineJavaVersionExtension(Project project) {
         target = project.getObjects().property(JavaLanguageVersion.class);
         runtime = project.getObjects().property(JavaLanguageVersion.class);
+        targetEnablePreview = project.getObjects().property(Boolean.class);
+        runtimeEnablePreview = project.getObjects().property(Boolean.class);
         overrideLibraryAutoDetection = project.getObjects().property(Boolean.class);
+
         target.finalizeValueOnRead();
         runtime.finalizeValueOnRead();
+        targetEnablePreview.finalizeValueOnRead();
+        runtimeEnablePreview.finalizeValueOnRead();
         overrideLibraryAutoDetection.finalizeValueOnRead();
     }
 
     /** Target {@link JavaLanguageVersion} for compilation. */
     public final Property<JavaLanguageVersion> target() {
         return target;
+    }
+
+    /**
+     * Whether the `--enable-preview` flag should be used for compilation, producing bytecode with a minor version of
+     * '65535'. Unlike normal bytecode, this bytecode cannot be run by a higher version of Java that it was compiled by.
+     */
+    public final Property<Boolean> targetEnablePreview() {
+        return targetEnablePreview;
     }
 
     public final void setTarget(int value) {
@@ -53,6 +69,14 @@ public class BaselineJavaVersionExtension {
     /** Runtime {@link JavaLanguageVersion} for testing and distributions. */
     public final Property<JavaLanguageVersion> runtime() {
         return runtime;
+    }
+
+    /**
+     * Whether the `--enable-preview` flag should be passed to the java executable when running this project.
+     * Must be true if {@link #targetEnablePreview} is true.
+     */
+    public final Property<Boolean> runtimeEnablePreview() {
+        return runtimeEnablePreview;
     }
 
     public final void setRuntime(int value) {

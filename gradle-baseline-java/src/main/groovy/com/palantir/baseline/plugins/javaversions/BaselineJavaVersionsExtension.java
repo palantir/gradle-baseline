@@ -30,9 +30,12 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion;
  * with consistent java toolchains.
  */
 public class BaselineJavaVersionsExtension {
+    private static final String PREVIEW_SUFFIX = "_PREVIEW";
     private final Property<JavaLanguageVersion> libraryTarget;
     private final Property<JavaLanguageVersion> distributionTarget;
     private final Property<JavaLanguageVersion> runtime;
+    private final Property<Boolean> distributionEnablePreview;
+    private final Property<Boolean> runtimeEnablePreview;
     private final LazilyConfiguredMapping<JavaLanguageVersion, AtomicReference<JavaInstallationMetadata>, Project>
             jdks = new LazilyConfiguredMapping<>(AtomicReference::new);
 
@@ -40,14 +43,23 @@ public class BaselineJavaVersionsExtension {
     public BaselineJavaVersionsExtension(Project project) {
         this.libraryTarget = project.getObjects().property(JavaLanguageVersion.class);
         this.distributionTarget = project.getObjects().property(JavaLanguageVersion.class);
+        this.distributionEnablePreview = project.getObjects().property(Boolean.class);
         this.runtime = project.getObjects().property(JavaLanguageVersion.class);
+        this.runtimeEnablePreview = project.getObjects().property(Boolean.class);
+
         // distribution defaults to the library value
         distributionTarget.convention(libraryTarget);
         // runtime defaults to the distribution value
         runtime.convention(distributionTarget);
+        // distributionEnablePreview=true implicitly sets runtimeEnablePreview=true. In theory you *might* want to set
+        // runtimeEnablePreview=true and distributionEnablePreview=false, but never the other way round (fail to start).
+        runtimeEnablePreview.convention(distributionEnablePreview);
+
         libraryTarget.finalizeValueOnRead();
         distributionTarget.finalizeValueOnRead();
         runtime.finalizeValueOnRead();
+        distributionEnablePreview.finalizeValueOnRead();
+        runtimeEnablePreview.finalizeValueOnRead();
     }
 
     /** Target {@link JavaLanguageVersion} for compilation of libraries that are published. */
@@ -71,6 +83,12 @@ public class BaselineJavaVersionsExtension {
         distributionTarget.set(JavaLanguageVersion.of(value));
     }
 
+    /** Accepts inputs such as '17_PREVIEW'. */
+    public final void setDistributionTarget(String value) {
+        distributionEnablePreview.set(value.contains(PREVIEW_SUFFIX));
+        setDistributionTarget(Integer.parseInt(value.replaceAll(PREVIEW_SUFFIX, "")));
+    }
+
     /** Runtime {@link JavaLanguageVersion} for testing and packaging distributions. */
     public final Property<JavaLanguageVersion> runtime() {
         return runtime;
@@ -78,6 +96,12 @@ public class BaselineJavaVersionsExtension {
 
     public final void setRuntime(int value) {
         runtime.set(JavaLanguageVersion.of(value));
+    }
+
+    /** Accepts inputs such as '17_PREVIEW'. */
+    public final void setRuntime(String value) {
+        runtimeEnablePreview.set(value.contains(PREVIEW_SUFFIX));
+        setRuntime(Integer.parseInt(value.replaceAll(PREVIEW_SUFFIX, "")));
     }
 
     public final Optional<JavaInstallationMetadata> jdkMetadataFor(
