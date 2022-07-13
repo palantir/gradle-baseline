@@ -237,7 +237,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
                 String preview = BaselineEnablePreviewFlag.shouldEnablePreview(project) ? "_PREVIEW" : ""
                 Node node = provider.asNode()
                 Node newModuleRootManager = node.component.find { it.'@name' == 'NewModuleRootManager' }
-                newModuleRootManager.attributes().put("LANGUAGE_LEVEL", new IdeaLanguageLevel(javaVersion).getLevel())
+                newModuleRootManager.attributes().put("LANGUAGE_LEVEL", new IdeaLanguageLevel(javaVersion).getLevel() + preview)
             }
         }
     }
