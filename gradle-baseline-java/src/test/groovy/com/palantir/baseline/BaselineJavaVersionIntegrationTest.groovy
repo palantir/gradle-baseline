@@ -319,6 +319,34 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         result.standardError.contains 'The requested compilation target'
     }
 
+    def 'verification should fail when --enable-preview is on, but versions differ'() {
+        when:
+        buildFile << '''
+        javaVersions {
+            distributionTarget = '11_PREVIEW'
+            runtime = '15_PREVIEW'
+        }
+        '''.stripIndent(true)
+
+        then:
+        ExecutionResult result = runTasksWithFailure('checkJavaVersions')
+        result.standardError.contains 'Runtime Java version (15_PREVIEW) must be exactly the same as the compilation target (11_PREVIEW)'
+    }
+
+    def 'verification should fail when runtime does not use --enable-preview but compilation does'() {
+        when:
+        buildFile << '''
+        javaVersions {
+            distributionTarget = '17_PREVIEW'
+            runtime = '17'
+        }
+        '''.stripIndent(true)
+
+        then:
+        ExecutionResult result = runTasksWithFailure('checkJavaVersions')
+        result.standardError.contains 'Runtime Java version (17) must be exactly the same as the compilation target (17_PREVIEW)'
+    }
+
     def 'verification should succeed when target and runtime versions match'() {
         when:
         buildFile << '''
