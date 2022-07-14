@@ -30,16 +30,16 @@ public class BaselineJavaVersionExtension {
     private final Property<JavaLanguageVersion> target;
     private final Property<JavaLanguageVersion> runtime;
 
-    private final Property<Boolean> targetEnablePreview;
-    private final Property<Boolean> runtimeEnablePreview;
+    private final Property<EnablePreview> targetEnablePreview;
+    private final Property<EnablePreview> runtimeEnablePreview;
     private final Property<Boolean> overrideLibraryAutoDetection;
 
     @Inject
     public BaselineJavaVersionExtension(Project project) {
         target = project.getObjects().property(JavaLanguageVersion.class);
         runtime = project.getObjects().property(JavaLanguageVersion.class);
-        targetEnablePreview = project.getObjects().property(Boolean.class);
-        runtimeEnablePreview = project.getObjects().property(Boolean.class);
+        targetEnablePreview = project.getObjects().property(EnablePreview.class);
+        runtimeEnablePreview = project.getObjects().property(EnablePreview.class);
         overrideLibraryAutoDetection = project.getObjects().property(Boolean.class);
 
         target.finalizeValueOnRead();
@@ -58,7 +58,7 @@ public class BaselineJavaVersionExtension {
      * Whether the `--enable-preview` flag should be used for compilation, producing bytecode with a minor version of
      * '65535'. Unlike normal bytecode, this bytecode cannot be run by a higher version of Java that it was compiled by.
      */
-    public final Property<Boolean> targetEnablePreview() {
+    public final Property<EnablePreview> targetEnablePreview() {
         return targetEnablePreview;
     }
 
@@ -75,7 +75,7 @@ public class BaselineJavaVersionExtension {
      * Whether the `--enable-preview` flag should be passed to the java executable when running this project.
      * Must be true if {@link #targetEnablePreview} is true.
      */
-    public final Property<Boolean> runtimeEnablePreview() {
+    public final Property<EnablePreview> runtimeEnablePreview() {
         return runtimeEnablePreview;
     }
 

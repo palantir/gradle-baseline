@@ -16,6 +16,7 @@
 
 package com.palantir.baseline.plugins.javaversions;
 
+import java.util.Collections;
 import javax.inject.Inject;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
@@ -37,8 +38,10 @@ import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradle.api.tasks.scala.ScalaCompile;
 import org.gradle.api.tasks.scala.ScalaDoc;
 import org.gradle.api.tasks.testing.Test;
+import org.gradle.external.javadoc.CoreJavadocOptions;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.jvm.toolchain.JavaToolchainSpec;
+import org.gradle.process.CommandLineArgumentProvider;
 
 public final class BaselineJavaVersion implements Plugin<Project> {
 
@@ -66,10 +69,15 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                     project, project.getRootProject().getExtensions().getByType(BaselineJavaVersionsExtension.class));
 
             // Compilation tasks (using target version)
-            configureCompilationTasks(project, extension.target(), javaToolchains.forVersion(extension.target()));
+            configureCompilationTasks(
+                    project,
+                    extension.target(),
+                    extension.targetEnablePreview(),
+                    javaToolchains.forVersion(extension.target()));
 
             // Execution tasks (using the runtime version)
-            configureExecutionTasks(project, javaToolchains.forVersion(extension.runtime()));
+            configureExecutionTasks(
+                    project, extension.runtimeEnablePreview(), javaToolchains.forVersion(extension.runtime()));
 
             // Validation
             TaskProvider<CheckJavaVersionsTask> checkJavaVersions = project.getTasks()
@@ -87,13 +95,19 @@ public final class BaselineJavaVersion implements Plugin<Project> {
     private static void configureCompilationTasks(
             Project project,
             Provider<JavaLanguageVersion> targetVersionProvider,
+            Property<EnablePreview> targetEnablePreview,
             Provider<BaselineJavaToolchain> javaToolchain) {
         project.getTasks().withType(JavaCompile.class).configureEach(new Action<JavaCompile>() {
             @Override
-            public void execute(JavaCompile javaCompile) {
-                javaCompile.getJavaCompiler().set(javaToolchain.flatMap(BaselineJavaToolchain::javaCompiler));
+            public void execute(JavaCompile javaCompileTask) {
+                javaCompileTask.getJavaCompiler().set(javaToolchain.flatMap(BaselineJavaToolchain::javaCompiler));
+                javaCompileTask
+                        .getOptions()
+                        .getCompilerArgumentProviders()
+                        .add(new EnablePreviewArgumentProvider(targetEnablePreview));
+
                 // Set sourceCompatibility to opt out of '-release', allowing opens/exports to be used.
-                javaCompile.doFirst(new Action<Task>() {
+                javaCompileTask.doFirst(new Action<Task>() {
                     @Override
                     public void execute(Task task) {
                         ((JavaCompile) task)
@@ -106,17 +120,34 @@ public final class BaselineJavaVersion implements Plugin<Project> {
 
         project.getTasks().withType(Javadoc.class).configureEach(new Action<Javadoc>() {
             @Override
-            public void execute(Javadoc javadoc) {
-                javadoc.getJavadocTool().set(javaToolchain.flatMap(BaselineJavaToolchain::javadocTool));
+            public void execute(Javadoc javadocTask) {
+                javadocTask.getJavadocTool().set(javaToolchain.flatMap(BaselineJavaToolchain::javadocTool));
+
+                // javadocTask doesn't allow us to add a CommandLineArgumentProvider, so we do it just in time
+                // TODO(dfox): will the out-of-date checking be correct with these 'doFirst' configuration things?
+                javadocTask.doFirst(new Action<Task>() {
+                    @Override
+                    public void execute(Task task) {
+                        CoreJavadocOptions options = (CoreJavadocOptions) ((Javadoc) task).getOptions();
+                        if (targetEnablePreview.get() == EnablePreview.ENABLE_PREVIEW) {
+                            options.addBooleanOption(EnablePreview.JAVADOC_FLAG, true);
+                        }
+                    }
+                });
             }
         });
 
         project.getTasks().withType(GroovyCompile.class).configureEach(new Action<GroovyCompile>() {
             @Override
-            public void execute(GroovyCompile groovyCompile) {
-                groovyCompile.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));
+            public void execute(GroovyCompile groovyCompileTask) {
+                groovyCompileTask.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));
+                groovyCompileTask
+                        .getOptions()
+                        .getCompilerArgumentProviders()
+                        .add(new EnablePreviewArgumentProvider(targetEnablePreview));
+
                 // Set sourceCompatibility to opt out of '-release', allowing opens/exports to be used.
-                groovyCompile.doFirst(new Action<Task>() {
+                groovyCompileTask.doFirst(new Action<Task>() {
                     @Override
                     public void execute(Task task) {
                         ((GroovyCompile) task)
@@ -129,10 +160,15 @@ public final class BaselineJavaVersion implements Plugin<Project> {
 
         project.getTasks().withType(ScalaCompile.class).configureEach(new Action<ScalaCompile>() {
             @Override
-            public void execute(ScalaCompile scalaCompile) {
-                scalaCompile.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));
+            public void execute(ScalaCompile scalaCompileTask) {
+                scalaCompileTask.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));
+                scalaCompileTask
+                        .getOptions()
+                        .getCompilerArgumentProviders()
+                        .add(new EnablePreviewArgumentProvider(targetEnablePreview));
+
                 // Set sourceCompatibility to opt out of '-release', allowing opens/exports to be used.
-                scalaCompile.doFirst(new Action<Task>() {
+                scalaCompileTask.doFirst(new Action<Task>() {
                     @Override
                     public void execute(Task task) {
                         ((ScalaCompile) task)
@@ -151,11 +187,15 @@ public final class BaselineJavaVersion implements Plugin<Project> {
         });
     }
 
-    private static void configureExecutionTasks(Project project, Provider<BaselineJavaToolchain> javaToolchain) {
+    private static void configureExecutionTasks(
+            Project project,
+            Property<EnablePreview> runtimeEnablePreview,
+            Provider<BaselineJavaToolchain> javaToolchain) {
         project.getTasks().withType(JavaExec.class).configureEach(new Action<JavaExec>() {
             @Override
             public void execute(JavaExec javaExec) {
                 javaExec.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));
+                javaExec.getJvmArgumentProviders().add(new EnablePreviewArgumentProvider(runtimeEnablePreview));
             }
         });
 
@@ -163,6 +203,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             @Override
             public void execute(Test test) {
                 test.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));
+                test.getJvmArgumentProviders().add(new EnablePreviewArgumentProvider(runtimeEnablePreview));
             }
         });
     }
@@ -209,6 +250,22 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                                 + "exceed the requested runtime Java version (%s)",
                         target, runtime));
             }
+        }
+    }
+
+    private static class EnablePreviewArgumentProvider implements CommandLineArgumentProvider {
+
+        private final Provider<EnablePreview> provider;
+
+        private EnablePreviewArgumentProvider(Provider<EnablePreview> provider) {
+            this.provider = provider;
+        }
+
+        @Override
+        public Iterable<String> asArguments() {
+            return provider.get() == EnablePreview.ENABLE_PREVIEW
+                    ? Collections.singletonList(EnablePreview.FLAG)
+                    : Collections.emptyList();
         }
     }
 }

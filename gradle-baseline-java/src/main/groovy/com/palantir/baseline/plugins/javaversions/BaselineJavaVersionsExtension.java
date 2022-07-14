@@ -30,12 +30,11 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion;
  * with consistent java toolchains.
  */
 public class BaselineJavaVersionsExtension {
-    private static final String PREVIEW_SUFFIX = "_PREVIEW";
     private final Property<JavaLanguageVersion> libraryTarget;
     private final Property<JavaLanguageVersion> distributionTarget;
     private final Property<JavaLanguageVersion> runtime;
-    private final Property<Boolean> distributionEnablePreview;
-    private final Property<Boolean> runtimeEnablePreview;
+    private final Property<EnablePreview> distributionEnablePreview;
+    private final Property<EnablePreview> runtimeEnablePreview;
     private final LazilyConfiguredMapping<JavaLanguageVersion, AtomicReference<JavaInstallationMetadata>, Project>
             jdks = new LazilyConfiguredMapping<>(AtomicReference::new);
 
@@ -43,9 +42,9 @@ public class BaselineJavaVersionsExtension {
     public BaselineJavaVersionsExtension(Project project) {
         this.libraryTarget = project.getObjects().property(JavaLanguageVersion.class);
         this.distributionTarget = project.getObjects().property(JavaLanguageVersion.class);
-        this.distributionEnablePreview = project.getObjects().property(Boolean.class);
+        this.distributionEnablePreview = project.getObjects().property(EnablePreview.class);
         this.runtime = project.getObjects().property(JavaLanguageVersion.class);
-        this.runtimeEnablePreview = project.getObjects().property(Boolean.class);
+        this.runtimeEnablePreview = project.getObjects().property(EnablePreview.class);
 
         // distribution defaults to the library value
         distributionTarget.convention(libraryTarget);
@@ -53,6 +52,7 @@ public class BaselineJavaVersionsExtension {
         runtime.convention(distributionTarget);
         // distributionEnablePreview=true implicitly sets runtimeEnablePreview=true. In theory you *might* want to set
         // runtimeEnablePreview=true and distributionEnablePreview=false, but never the other way round (fail to start).
+        distributionEnablePreview.convention(EnablePreview.DEFAULT_OFF);
         runtimeEnablePreview.convention(distributionEnablePreview);
 
         libraryTarget.finalizeValueOnRead();
@@ -85,8 +85,16 @@ public class BaselineJavaVersionsExtension {
 
     /** Accepts inputs such as '17_PREVIEW'. */
     public final void setDistributionTarget(String value) {
-        distributionEnablePreview.set(value.contains(PREVIEW_SUFFIX));
-        setDistributionTarget(Integer.parseInt(value.replaceAll(PREVIEW_SUFFIX, "")));
+        distributionEnablePreview.set(EnablePreview.fromString(value));
+        setDistributionTarget(Integer.parseInt(value.replaceAll(EnablePreview.SUFFIX, "")));
+    }
+
+    /**
+     * Whether the `--enable-preview` flag should be used for compilation, producing bytecode with a minor version of
+     * '65535'. Unlike normal bytecode, this bytecode cannot be run by a higher version of Java that it was compiled by.
+     */
+    public final Property<EnablePreview> distributionEnablePreview() {
+        return distributionEnablePreview;
     }
 
     /** Runtime {@link JavaLanguageVersion} for testing and packaging distributions. */
@@ -100,8 +108,16 @@ public class BaselineJavaVersionsExtension {
 
     /** Accepts inputs such as '17_PREVIEW'. */
     public final void setRuntime(String value) {
-        runtimeEnablePreview.set(value.contains(PREVIEW_SUFFIX));
-        setRuntime(Integer.parseInt(value.replaceAll(PREVIEW_SUFFIX, "")));
+        runtimeEnablePreview.set(EnablePreview.fromString(value));
+        setRuntime(Integer.parseInt(value.replaceAll(EnablePreview.SUFFIX, "")));
+    }
+
+    /**
+     * Whether the `--enable-preview` flag should be passed to the java executable in order to run compiled code.
+     * Must be true if {@link #distributionEnablePreview()} is true.
+     */
+    public final Property<EnablePreview> runtimeEnablePreview() {
+        return runtimeEnablePreview;
     }
 
     public final Optional<JavaInstallationMetadata> jdkMetadataFor(
