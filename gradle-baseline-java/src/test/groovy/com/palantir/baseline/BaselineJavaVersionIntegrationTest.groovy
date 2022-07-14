@@ -21,7 +21,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import nebula.test.IntegrationSpec
 import nebula.test.functional.ExecutionResult
-import spock.lang.Ignore
+import org.assertj.core.api.Assumptions
 
 /**
  * This test exercises both the root-plugin {@code BaselineJavaVersions} AND the subproject
@@ -97,7 +97,6 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         // Fork needed or build fails on circleci with "SystemInfo is not supported on this operating system."
         // Comment out locally in order to get debugging to work
         setFork(true)
-//        setJvmArguments(List.of("-Dgradle.user.home=/Users/dfox/Downloads/gradle-test"))
 
         buildFile << standardBuildFile
     }
@@ -251,8 +250,10 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
     }
 
-    @Ignore // fails to download https://api.adoptopenjdk.net/v3/binary/latest/8/ga/mac/aarch64/jdk/hotspot/normal/adoptopenjdk
     def 'java 8 execution succeeds on java 8'() {
+        Assumptions.assumeThat(System.getProperty("os.arch")).describedAs(
+                "On an M1 mac, this test will fail to download https://api.adoptopenjdk.net/v3/binary/latest/8/ga/mac/aarch64/jdk/hotspot/normal/adoptopenjdk")
+                .isNotEqualTo("aarch64");
         when:
         buildFile << '''
         javaVersions {
@@ -266,8 +267,11 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         result.standardOutput.contains 'jdk8 features on runtime 1.8'
     }
 
-    @Ignore // fails to download https://api.adoptopenjdk.net/v3/binary/latest/8/ga/mac/aarch64/jdk/hotspot/normal/adoptopenjdk
     def 'java 8 execution succeeds on java 11'() {
+        Assumptions.assumeThat(System.getProperty("os.arch")).describedAs(
+                "On an M1 mac, this test will fail to download https://api.adoptopenjdk.net/v3/binary/latest/8/ga/mac/aarch64/jdk/hotspot/normal/adoptopenjdk")
+                .isNotEqualTo("aarch64");
+
         when:
         buildFile << '''
         javaVersions {
@@ -360,8 +364,10 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         runTasksSuccessfully('checkJavaVersions')
     }
 
-    @Ignore // deletes a dir locally.
     def 'can configure a jdk path to be used'() {
+        Assumptions.assumeThat(System.getenv("CI")).describedAs(
+                "This test deletes a directory locally, you don't want to run it on your mac").isNotNull();
+
         Path newJavaHome = Files.createSymbolicLink(
                 projectDir.toPath().resolve("jdk"),
                 Paths.get(System.getProperty("java.home")))
@@ -408,7 +414,8 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
     private static final int BYTECODE_IDENTIFIER = (int) 0xCAFEBABE
 
     // See http://illegalargumentexception.blogspot.com/2009/07/java-finding-class-versions.html
-    private static void assertBytecodeVersion(File file, int expectedMajorBytecodeVersion, int expectedMinorBytecodeVersion) {
+    private static void assertBytecodeVersion(File file, int expectedMajorBytecodeVersion,
+                                              int expectedMinorBytecodeVersion) {
         try (InputStream stream = new FileInputStream(file)
              DataInputStream dis = new DataInputStream(stream)) {
             int magic = dis.readInt()
