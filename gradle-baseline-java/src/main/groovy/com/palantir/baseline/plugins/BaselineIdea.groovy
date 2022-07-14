@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableMap
 import com.palantir.baseline.IntellijSupport
 import com.palantir.baseline.plugins.javaversions.BaselineJavaVersionExtension
 import com.palantir.baseline.plugins.javaversions.BaselineJavaVersionsExtension
+import com.palantir.baseline.plugins.javaversions.EnablePreview
 import com.palantir.baseline.util.GitUtils
 import groovy.transform.CompileStatic
 import groovy.xml.XmlUtil
@@ -222,7 +223,9 @@ class BaselineIdea extends AbstractBaselinePlugin {
         Node projectRootManager = node.component.find { it.'@name' == 'ProjectRootManager' }
         int featureRelease = versions.distributionTarget().get().asInt()
         JavaVersion javaVersion = JavaVersion.toVersion(featureRelease)
-        String preview = BaselineEnablePreviewFlag.shouldEnablePreview(project) ? "_PREVIEW" : ""
+        String preview = versions.distributionEnablePreview().get() == EnablePreview.ENABLE_PREVIEW
+                ? EnablePreview.SUFFIX
+                : ""
         projectRootManager.attributes().put("project-jdk-name", featureRelease)
         projectRootManager.attributes().put("languageLevel", new IdeaLanguageLevel(javaVersion).getLevel() + preview)
     }
@@ -234,7 +237,9 @@ class BaselineIdea extends AbstractBaselinePlugin {
             if (version != null) {
                 int featureRelease = version.target().get().asInt()
                 JavaVersion javaVersion = JavaVersion.toVersion(featureRelease)
-                String preview = BaselineEnablePreviewFlag.shouldEnablePreview(project) ? "_PREVIEW" : ""
+                String preview = version.distributionEnablePreview().get() == EnablePreview.ENABLE_PREVIEW
+                        ? EnablePreview.SUFFIX
+                        : ""
                 Node node = provider.asNode()
                 Node newModuleRootManager = node.component.find { it.'@name' == 'NewModuleRootManager' }
                 newModuleRootManager.attributes().put("LANGUAGE_LEVEL", new IdeaLanguageLevel(javaVersion).getLevel() + preview)
