@@ -64,14 +64,48 @@ class PreferUnionSwitchTest {
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
-    // class Sample {
-    //     public static boolean isAssetInfo(SampleConjureUnion myUnion) {
-    //         return switch (myUnion) {
-    //             case SampleConjureUnion.Bar bar -> false;
-    //             case SampleConjureUnion.Baz baz -> false;
-    //             case SampleConjureUnion.Foo foo -> true;
-    //             case SampleConjureUnion.Unknown unknown -> false;
-    //         };
-    //     }
+    @Test
+    public void auto_fix_complex_one_liners() {
+        RefactoringValidator.of(PreferUnionSwitch.class, getClass(), "--enable-preview", "--release=17")
+                .addInputLines(
+                        "Test.java",
+                        "import com.palantir.baseline.errorprone.SampleConjureUnion;",
+                        "import java.util.function.Function;",
+                        "class Test {",
+                        "public static long getLong(SampleConjureUnion myUnion) {",
+                        "    return myUnion.accept(SampleConjureUnion.Visitor.<Long>builder()",
+                        "            .bar(bar -> (long) bar)",
+                        "            .baz(Function.identity())",
+                        "            .foo(Long::parseLong)",
+                        "            .unknown(_unknown -> 0L)",
+                        "            .build());",
+                        "}",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.baseline.errorprone.SampleConjureUnion;",
+                        "import java.util.function.Function;",
+                        "class Test {",
+                        "public static long getLong(SampleConjureUnion myUnion) {",
+                        "    return switch (myUnion) {",
+                        "        case SampleConjureUnion.Bar bar -> (long) bar.value();",
+                        "        case SampleConjureUnion.Baz baz -> baz.value();",
+                        "        case SampleConjureUnion.Foo foo -> Long.parseLong(foo.value());",
+                        "        case SampleConjureUnion.Unknown _unknown -> 0L;",
+                        "    };",
+                        "}",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    // class Test {
+    //    public static long getLong(SampleConjureUnion myUnion) {
+    //        return switch (myUnion) {
+    //            case SampleConjureUnion.Bar bar -> (long) bar.value();
+    //            case SampleConjureUnion.Baz baz -> baz.value();
+    //            case SampleConjureUnion.Foo foo -> Long.parseLong(foo.value());
+    //            case SampleConjureUnion.Unknown _unknown -> 0L;
+    //        };
+    //    }
     // }
 }

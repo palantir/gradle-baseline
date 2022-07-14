@@ -17,7 +17,9 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
+import com.google.common.collect.Lists;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
@@ -29,10 +31,12 @@ import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.LambdaExpressionTree;
+import com.sun.source.tree.MemberReferenceTree;
 import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.VariableTree;
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -83,6 +87,11 @@ public final class PreferUnionSwitch extends BugChecker implements MethodInvocat
         }
         String unionName = parts[0];
 
+        List<UnionCase> unionCases = getUnionCases(state, visitorBuilder);
+        if (unionCases.isEmpty()) {
+            return Description.NO_MATCH;
+        }
+
         SuggestedFix.Builder fix = SuggestedFix.builder();
         StringBuilder replacementBuilder = new StringBuilder();
 
@@ -90,8 +99,16 @@ public final class PreferUnionSwitch extends BugChecker implements MethodInvocat
         String receiverOnly = methodInvocation.replaceAll("\\.accept", "");
         replacementBuilder.append(String.format("switch (%s) {", receiverOnly));
 
-        if (!iterateChain(state, replacementBuilder, unionName, visitorBuilder)) {
-            return Description.NO_MATCH;
+        for (UnionCase unionCase : unionCases) {
+            replacementBuilder.append(String.format(
+                    "case %s.%s %s -> %s;",
+                    unionName,
+                    unionCase.getCaseName(),
+                    unionCase.getVariableName(),
+                    unionCase
+                            .getStatement()
+                            // This is shit.
+                            .replaceAll(unionCase.getVariableName(), unionCase.getVariableName() + ".value()")));
         }
 
         replacementBuilder.append("}");
@@ -103,51 +120,97 @@ public final class PreferUnionSwitch extends BugChecker implements MethodInvocat
                 .build();
     }
 
-    private static boolean iterateChain(
-            VisitorState state, StringBuilder replacementBuilder, String unionName, MethodInvocationTree tree) {
-        if (!(tree.getMethodSelect() instanceof MemberSelectTree)) {
-            return false;
-        }
-        MemberSelectTree memberSelect = (MemberSelectTree) tree.getMethodSelect();
-        if (memberSelect.getIdentifier().toString().equals("builder")) {
-            return true;
-        }
-        if (memberSelect.getExpression() instanceof MethodInvocationTree) {
-            if (!iterateChain(
-                    state, replacementBuilder, unionName, (MethodInvocationTree) memberSelect.getExpression())) {
-                return false;
+    private static List<UnionCase> getUnionCases(VisitorState state, MethodInvocationTree visitorBuilder) {
+        MethodInvocationTree tree = visitorBuilder;
+        List<UnionCase> cases = new ArrayList<>();
+        while (true) {
+            if (!(tree.getMethodSelect() instanceof MemberSelectTree memberSelect)) {
+                return List.of();
             }
-        }
-        if (!memberSelect.getIdentifier().toString().equals("build")) {
-            if (tree.getArguments().size() == 1) {
-                ExpressionTree argument = Iterables.getOnlyElement(tree.getArguments());
 
-                if (argument instanceof LambdaExpressionTree) {
-                    LambdaExpressionTree lambda = (LambdaExpressionTree) argument;
+            if (memberSelect.getIdentifier().toString().equals("builder")) {
+                break;
+            }
 
-                    if (lambda.getParameters().size() == 1) {
-                        VariableTree variable = Iterables.getOnlyElement(lambda.getParameters());
-                        Tree statement = lambda.getBody();
+            if (!memberSelect.getIdentifier().toString().equals("build")) {
+                if (tree.getArguments().size() == 1) {
+                    ExpressionTree argument = Iterables.getOnlyElement(tree.getArguments());
+                    if (argument instanceof LambdaExpressionTree lambda) {
+                        if (lambda.getParameters().size() == 1) {
+                            VariableTree variable = Iterables.getOnlyElement(lambda.getParameters());
+                            Tree statement = lambda.getBody();
 
-                        replacementBuilder.append(String.format(
-                                "case %s.%s %s -> %s;",
-                                unionName,
+                            cases.add(new UnionCase(
+                                    uppercase(memberSelect.getIdentifier().toString()),
+                                    state.getSourceForNode(variable),
+                                    state.getSourceForNode(statement)));
+                        } else {
+                            return List.of();
+                        }
+                    } else if (argument instanceof MemberReferenceTree memberReference) {
+                        String statement = String.format(
+                                "%s.%s(%s)",
+                                state.getSourceForNode(memberReference.getQualifierExpression()),
+                                memberReference.getName().toString(),
+                                memberSelect.getIdentifier().toString());
+
+                        cases.add(new UnionCase(
                                 uppercase(memberSelect.getIdentifier().toString()),
-                                state.getSourceForNode(variable),
-                                state.getSourceForNode(statement)));
+                                memberSelect.getIdentifier().toString(),
+                                statement));
+                    } else if (argument instanceof MethodInvocationTree methodInvocation) {
+                        String method = state.getSourceForNode(methodInvocation.getMethodSelect());
+                        if (method.equals("Function.identity")) {
+                            cases.add(new UnionCase(
+                                    uppercase(memberSelect.getIdentifier().toString()),
+                                    memberSelect.getIdentifier().toString(),
+                                    memberSelect.getIdentifier().toString()));
+                        } else {
+                            return List.of();
+                        }
                     } else {
-                        return false;
+                        return List.of();
                     }
+                } else {
+                    return List.of();
                 }
+            }
+
+            if (memberSelect.getExpression() instanceof MethodInvocationTree nextMethod) {
+                tree = nextMethod;
             } else {
-                return false;
+                return List.of();
             }
         }
-        return true;
+        return ImmutableList.copyOf(Lists.reverse(cases));
     }
 
     private static String uppercase(String name) {
         String cleanName = name.endsWith("_") ? name.substring(0, name.length() - 1) : name;
         return cleanName.substring(0, 1).toUpperCase() + cleanName.substring(1);
+    }
+
+    private static class UnionCase {
+        private final String caseName;
+        private final String variableName;
+        private final String statement;
+
+        UnionCase(String caseName, String variableName, String statement) {
+            this.caseName = caseName;
+            this.variableName = variableName;
+            this.statement = statement;
+        }
+
+        public String getCaseName() {
+            return caseName;
+        }
+
+        public String getVariableName() {
+            return variableName;
+        }
+
+        public String getStatement() {
+            return statement;
+        }
     }
 }
