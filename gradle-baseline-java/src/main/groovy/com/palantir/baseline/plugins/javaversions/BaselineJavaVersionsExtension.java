@@ -31,35 +31,25 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion;
  */
 public class BaselineJavaVersionsExtension {
     private final Property<JavaLanguageVersion> libraryTarget;
-    private final Property<JavaLanguageVersion> distributionTarget;
-    private final Property<JavaLanguageVersion> runtime;
-    private final Property<EnablePreview> distributionEnablePreview;
-    private final Property<EnablePreview> runtimeEnablePreview;
+    private final Property<ChosenJavaVersion> distributionTarget;
+    private final Property<ChosenJavaVersion> runtime;
     private final LazilyConfiguredMapping<JavaLanguageVersion, AtomicReference<JavaInstallationMetadata>, Project>
             jdks = new LazilyConfiguredMapping<>(AtomicReference::new);
 
     @Inject
     public BaselineJavaVersionsExtension(Project project) {
         this.libraryTarget = project.getObjects().property(JavaLanguageVersion.class);
-        this.distributionTarget = project.getObjects().property(JavaLanguageVersion.class);
-        this.distributionEnablePreview = project.getObjects().property(EnablePreview.class);
-        this.runtime = project.getObjects().property(JavaLanguageVersion.class);
-        this.runtimeEnablePreview = project.getObjects().property(EnablePreview.class);
+        this.distributionTarget = project.getObjects().property(ChosenJavaVersion.class);
+        this.runtime = project.getObjects().property(ChosenJavaVersion.class);
 
         // distribution defaults to the library value
-        distributionTarget.convention(libraryTarget);
+        distributionTarget.convention(libraryTarget.map(ChosenJavaVersion::of));
         // runtime defaults to the distribution value
         runtime.convention(distributionTarget);
-        // distributionEnablePreview=true implicitly sets runtimeEnablePreview=true. In theory you *might* want to set
-        // runtimeEnablePreview=true and distributionEnablePreview=false, but never the other way round (fail to start).
-        distributionEnablePreview.convention(EnablePreview.DEFAULT_OFF);
-        runtimeEnablePreview.convention(distributionEnablePreview);
 
         libraryTarget.finalizeValueOnRead();
         distributionTarget.finalizeValueOnRead();
         runtime.finalizeValueOnRead();
-        distributionEnablePreview.finalizeValueOnRead();
-        runtimeEnablePreview.finalizeValueOnRead();
     }
 
     /** Target {@link JavaLanguageVersion} for compilation of libraries that are published. */
@@ -72,52 +62,34 @@ public class BaselineJavaVersionsExtension {
     }
 
     /**
-     * Target {@link JavaLanguageVersion} for compilation of code used within distributions,
+     * Target {@link ChosenJavaVersion} for compilation of code used within distributions,
      * but not published externally.
      */
-    public final Property<JavaLanguageVersion> distributionTarget() {
+    public final Property<ChosenJavaVersion> distributionTarget() {
         return distributionTarget;
     }
 
     public final void setDistributionTarget(int value) {
-        distributionTarget.set(JavaLanguageVersion.of(value));
+        distributionTarget.set(ChosenJavaVersion.of(value));
     }
 
     /** Accepts inputs such as '17_PREVIEW'. */
     public final void setDistributionTarget(String value) {
-        distributionEnablePreview.set(EnablePreview.fromString(value));
-        setDistributionTarget(Integer.parseInt(value.replaceAll(EnablePreview.SUFFIX, "")));
+        distributionTarget.set(ChosenJavaVersion.fromString(value));
     }
 
-    /**
-     * Whether the `--enable-preview` flag should be used for compilation, producing bytecode with a minor version of
-     * '65535'. Unlike normal bytecode, this bytecode cannot be run by a higher version of Java that it was compiled by.
-     */
-    public final Property<EnablePreview> distributionEnablePreview() {
-        return distributionEnablePreview;
-    }
-
-    /** Runtime {@link JavaLanguageVersion} for testing and packaging distributions. */
-    public final Property<JavaLanguageVersion> runtime() {
+    /** Runtime {@link ChosenJavaVersion} for testing and packaging distributions. */
+    public final Property<ChosenJavaVersion> runtime() {
         return runtime;
     }
 
     public final void setRuntime(int value) {
-        runtime.set(JavaLanguageVersion.of(value));
+        runtime.set(ChosenJavaVersion.of(value));
     }
 
     /** Accepts inputs such as '17_PREVIEW'. */
     public final void setRuntime(String value) {
-        runtimeEnablePreview.set(EnablePreview.fromString(value));
-        setRuntime(Integer.parseInt(value.replaceAll(EnablePreview.SUFFIX, "")));
-    }
-
-    /**
-     * Whether the `--enable-preview` flag should be passed to the java executable in order to run compiled code.
-     * Must be true if {@link #distributionEnablePreview()} is true.
-     */
-    public final Property<EnablePreview> runtimeEnablePreview() {
-        return runtimeEnablePreview;
+        runtime.set(ChosenJavaVersion.fromString(value));
     }
 
     public final Optional<JavaInstallationMetadata> jdkMetadataFor(

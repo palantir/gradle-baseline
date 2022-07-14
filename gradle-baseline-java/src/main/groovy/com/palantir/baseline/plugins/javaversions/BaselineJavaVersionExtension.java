@@ -19,7 +19,6 @@ package com.palantir.baseline.plugins.javaversions;
 import javax.inject.Inject;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Property;
-import org.gradle.jvm.toolchain.JavaLanguageVersion;
 
 /**
  * Extension named {@code javaVersion} used to set the
@@ -27,60 +26,44 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion;
  */
 public class BaselineJavaVersionExtension {
 
-    private final Property<JavaLanguageVersion> target;
-    private final Property<JavaLanguageVersion> runtime;
+    private final Property<ChosenJavaVersion> target;
+    private final Property<ChosenJavaVersion> runtime;
 
-    private final Property<EnablePreview> targetEnablePreview;
-    private final Property<EnablePreview> runtimeEnablePreview;
     private final Property<Boolean> overrideLibraryAutoDetection;
 
     @Inject
     public BaselineJavaVersionExtension(Project project) {
-        target = project.getObjects().property(JavaLanguageVersion.class);
-        runtime = project.getObjects().property(JavaLanguageVersion.class);
-        targetEnablePreview = project.getObjects().property(EnablePreview.class);
-        runtimeEnablePreview = project.getObjects().property(EnablePreview.class);
+        target = project.getObjects().property(ChosenJavaVersion.class);
+        runtime = project.getObjects().property(ChosenJavaVersion.class);
         overrideLibraryAutoDetection = project.getObjects().property(Boolean.class);
 
         target.finalizeValueOnRead();
         runtime.finalizeValueOnRead();
-        targetEnablePreview.finalizeValueOnRead();
-        runtimeEnablePreview.finalizeValueOnRead();
         overrideLibraryAutoDetection.finalizeValueOnRead();
     }
 
-    /** Target {@link JavaLanguageVersion} for compilation. */
-    public final Property<JavaLanguageVersion> target() {
+    /**
+     * Target {@link ChosenJavaVersion} for compilation.
+     *
+     * Also determines whether the `--enable-preview` flag should be used for compilation, producing bytecode with a
+     * minor version of '65535'. Unlike normal bytecode, this bytecode cannot be run by a higher version of Java that
+     * it was compiled by.
+     */
+    public final Property<ChosenJavaVersion> target() {
         return target;
     }
 
-    /**
-     * Whether the `--enable-preview` flag should be used for compilation, producing bytecode with a minor version of
-     * '65535'. Unlike normal bytecode, this bytecode cannot be run by a higher version of Java that it was compiled by.
-     */
-    public final Property<EnablePreview> targetEnablePreview() {
-        return targetEnablePreview;
-    }
-
     public final void setTarget(int value) {
-        target.set(JavaLanguageVersion.of(value));
+        target.set(ChosenJavaVersion.of(value));
     }
 
-    /** Runtime {@link JavaLanguageVersion} for testing and distributions. */
-    public final Property<JavaLanguageVersion> runtime() {
+    /** Runtime {@link ChosenJavaVersion} for testing and distributions. */
+    public final Property<ChosenJavaVersion> runtime() {
         return runtime;
     }
 
-    /**
-     * Whether the `--enable-preview` flag should be passed to the java executable when running this project.
-     * Must be true if {@link #targetEnablePreview} is true.
-     */
-    public final Property<EnablePreview> runtimeEnablePreview() {
-        return runtimeEnablePreview;
-    }
-
     public final void setRuntime(int value) {
-        runtime.set(JavaLanguageVersion.of(value));
+        runtime.set(ChosenJavaVersion.of(value));
     }
 
     /**

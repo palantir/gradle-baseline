@@ -19,7 +19,6 @@ package com.palantir.baseline.plugins.javaversions;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Provider;
 import org.gradle.jvm.toolchain.JavaInstallationMetadata;
-import org.gradle.jvm.toolchain.JavaLanguageVersion;
 import org.gradle.jvm.toolchain.JavaToolchainService;
 
 public final class JavaToolchains {
@@ -31,23 +30,23 @@ public final class JavaToolchains {
         this.baselineJavaVersionsExtension = baselineJavaVersionsExtension;
     }
 
-    public Provider<BaselineJavaToolchain> forVersion(Provider<JavaLanguageVersion> javaLanguageVersionProvider) {
-        return javaLanguageVersionProvider.map(javaLanguageVersion -> {
+    public Provider<BaselineJavaToolchain> forVersion(Provider<ChosenJavaVersion> javaLanguageVersionProvider) {
+        return javaLanguageVersionProvider.map(chosenJavaVersion -> {
             Provider<JavaInstallationMetadata> configuredJdkMetadata =
                     project.provider(() -> baselineJavaVersionsExtension
-                            .jdkMetadataFor(javaLanguageVersion, project)
+                            .jdkMetadataFor(chosenJavaVersion.javaLanguageVersion(), project)
                             .orElseGet(() -> project.getExtensions()
                                     .getByType(JavaToolchainService.class)
                                     .launcherFor(javaToolchainSpec -> javaToolchainSpec
                                             .getLanguageVersion()
-                                            .set(javaLanguageVersion))
+                                            .set(chosenJavaVersion.javaLanguageVersion()))
                                     .get()
                                     .getMetadata()));
 
             return new ConfiguredJavaToolchain(
                     project.getObjects(),
-                    project.provider(
-                            () -> new JavaInstallationMetadataWrapper(javaLanguageVersion, configuredJdkMetadata)));
+                    project.provider(() -> new JavaInstallationMetadataWrapper(
+                            chosenJavaVersion.javaLanguageVersion(), configuredJdkMetadata)));
         });
     }
 }
