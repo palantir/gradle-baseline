@@ -37,8 +37,7 @@ public final class ChosenJavaVersion implements Serializable {
     /** Accepts inputs like '17_PREVIEW' or '17'. */
     public static ChosenJavaVersion fromString(String string) {
         return new ChosenJavaVersion(
-                JavaLanguageVersion.of(Integer.parseInt(string.replaceAll("_PREVIEW", ""))),
-                string.endsWith("_PREVIEW"));
+                JavaLanguageVersion.of(string.replaceAll("_PREVIEW", "")), string.endsWith("_PREVIEW"));
     }
 
     public static ChosenJavaVersion of(int number) {
@@ -57,13 +56,13 @@ public final class ChosenJavaVersion implements Serializable {
         return enablePreview;
     }
 
+    public String asIdeaLanguageLevel() {
+        return "JDK_" + javaLanguageVersion.toString() + (enablePreview ? "_PREVIEW" : "");
+    }
+
     @Override
     public String toString() {
         return javaLanguageVersion.toString() + (enablePreview ? "_PREVIEW" : "");
-    }
-
-    public String asIdeaLanguageLevel() {
-        return "JDK_" + javaLanguageVersion.toString() + (enablePreview ? "_PREVIEW" : "");
     }
 
     @Override
