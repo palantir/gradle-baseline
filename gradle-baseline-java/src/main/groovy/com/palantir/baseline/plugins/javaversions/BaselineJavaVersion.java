@@ -124,7 +124,6 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                 javadocTask.getJavadocTool().set(javaToolchain.flatMap(BaselineJavaToolchain::javadocTool));
 
                 // javadocTask doesn't allow us to add a CommandLineArgumentProvider, so we do it just in time
-                // TODO(dfox): will the out-of-date checking be correct with these 'doFirst' configuration things?
                 javadocTask.doFirst(new Action<Task>() {
                     @Override
                     public void execute(Task task) {
