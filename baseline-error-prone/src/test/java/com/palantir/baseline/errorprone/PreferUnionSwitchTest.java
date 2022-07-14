@@ -98,14 +98,57 @@ class PreferUnionSwitchTest {
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
-    // class Test {
-    //    public static long getLong(SampleConjureUnion myUnion) {
-    //        return switch (myUnion) {
-    //            case SampleConjureUnion.Bar bar -> (long) bar.value();
-    //            case SampleConjureUnion.Baz baz -> baz.value();
-    //            case SampleConjureUnion.Foo foo -> Long.parseLong(foo.value());
-    //            case SampleConjureUnion.Unknown _unknown -> 0L;
-    //        };
-    //    }
-    // }
+    @Test
+    public void auto_fix_anonymous_class() {
+        RefactoringValidator.of(PreferUnionSwitch.class, getClass(), "--enable-preview", "--release=17")
+                .addInputLines(
+                        "Test.java",
+                        "import com.palantir.baseline.errorprone.SampleConjureUnion;",
+                        "import java.util.function.Function;",
+                        "class Test {",
+                        "public static long getLong(SampleConjureUnion myUnion) {",
+                        "        return myUnion.accept(new SampleConjureUnion.Visitor<Long>() {",
+                        "            @Override",
+                        "            public Long visitFoo(String value) {",
+                        "                return Long.parseLong(value);",
+                        "            }",
+                        "            @Override",
+                        "            public Long visitBar(int value) {",
+                        "                return (long) value;",
+                        "            }",
+                        "            @Override",
+                        "            public Long visitBaz(long value) {",
+                        "                return value;",
+                        "            }",
+                        "            @Override",
+                        "            public Long visitUnknown(String _unknownType, Object _unknownValue) {",
+                        "                return 0L;",
+                        "            }",
+                        "        });",
+                        "}",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.baseline.errorprone.SampleConjureUnion;",
+                        "import java.util.function.Function;",
+                        "class Test {",
+                        "public static long getLong(SampleConjureUnion myUnion) {",
+                        "    return switch (myUnion) {",
+                        "        case SampleConjureUnion.Foo value -> {",
+                        "            yield Long.parseLong(value.value());",
+                        "        }",
+                        "        case SampleConjureUnion.Bar value -> {",
+                        "            yield (long) value.value();",
+                        "        }",
+                        "        case SampleConjureUnion.Baz value -> {",
+                        "            yield value.value();",
+                        "        }",
+                        "        case SampleConjureUnion.Unknown _unknownType -> {",
+                        "            yield 0L;",
+                        "        }",
+                        "    };",
+                        "}",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
 }

@@ -29,13 +29,8 @@ import com.google.errorprone.fixes.SuggestedFix;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
-import com.sun.source.tree.ExpressionTree;
-import com.sun.source.tree.LambdaExpressionTree;
-import com.sun.source.tree.MemberReferenceTree;
-import com.sun.source.tree.MemberSelectTree;
-import com.sun.source.tree.MethodInvocationTree;
-import com.sun.source.tree.Tree;
-import com.sun.source.tree.VariableTree;
+import com.sun.source.tree.*;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -76,21 +71,6 @@ public final class PreferUnionSwitch extends BugChecker implements MethodInvocat
             return Description.NO_MATCH;
         }
         ExpressionTree onlyArgument = Iterables.getOnlyElement(arguments);
-        if (!(onlyArgument instanceof MethodInvocationTree)) {
-            return Description.NO_MATCH;
-        }
-        MethodInvocationTree visitorBuilder = (MethodInvocationTree) onlyArgument;
-
-        String[] parts = state.getSourceForNode(visitorBuilder).split("\\.");
-        if (parts.length == 0) {
-            return Description.NO_MATCH;
-        }
-        String unionName = parts[0];
-
-        List<UnionCase> unionCases = getUnionCases(state, visitorBuilder);
-        if (unionCases.isEmpty()) {
-            return Description.NO_MATCH;
-        }
 
         SuggestedFix.Builder fix = SuggestedFix.builder();
         StringBuilder replacementBuilder = new StringBuilder();
@@ -99,16 +79,38 @@ public final class PreferUnionSwitch extends BugChecker implements MethodInvocat
         String receiverOnly = methodInvocation.replaceAll("\\.accept", "");
         replacementBuilder.append(String.format("switch (%s) {", receiverOnly));
 
+        String unionName;
+        List<UnionCase> unionCases;
+
+        if (onlyArgument instanceof MethodInvocationTree methodTree) {
+            String[] parts = state.getSourceForNode(methodTree).split("\\.");
+            if (parts.length == 0) {
+                return Description.NO_MATCH;
+            }
+            unionName = parts[0];
+            unionCases = getUnionCases(state, methodTree);
+        } else if (onlyArgument instanceof NewClassTree newClass) {
+            String[] parts = state.getSourceForNode(newClass.getIdentifier()).split("\\.");
+            if (parts.length == 0) {
+                return Description.NO_MATCH;
+            }
+            unionName = parts[0];
+            unionCases = getUnionCasesFromClass(state, newClass);
+        } else {
+            return Description.NO_MATCH;
+        }
+
+        if (unionCases.isEmpty()) {
+            return Description.NO_MATCH;
+        }
         for (UnionCase unionCase : unionCases) {
-            replacementBuilder.append(String.format(
-                    "case %s.%s %s -> %s;",
-                    unionName,
-                    unionCase.getCaseName(),
-                    unionCase.getVariableName(),
-                    unionCase
-                            .getStatement()
-                            // This is shit.
-                            .replaceAll(unionCase.getVariableName(), unionCase.getVariableName() + ".value()")));
+            String caseStatement = String.format(
+                    "case %s.%s %s -> %s",
+                    unionName, unionCase.getCaseName(), unionCase.getVariableName(), unionCase.getStatement());
+            replacementBuilder.append(caseStatement);
+            if (!caseStatement.endsWith("}")) {
+                replacementBuilder.append(";");
+            }
         }
 
         replacementBuilder.append("}");
@@ -120,6 +122,45 @@ public final class PreferUnionSwitch extends BugChecker implements MethodInvocat
                 .build();
     }
 
+    private static List<UnionCase> getUnionCasesFromClass(VisitorState state, NewClassTree newClass) {
+        List<UnionCase> unionCases = new ArrayList<>();
+
+        for (Tree newClassTree : newClass.getClassBody().getMembers()) {
+            if (newClassTree instanceof MethodTree methodDeclaration) {
+                if (methodDeclaration.getName().toString().startsWith("visit")) {
+                    String caseName = methodDeclaration.getName().toString().substring(5);
+                    String statement = state.getSourceForNode(methodDeclaration.getBody());
+
+                    if (caseName.equals("Unknown")) {
+                        if (methodDeclaration.getParameters().size() == 0) {
+                            return List.of();
+                        }
+                        String variableName = methodDeclaration
+                                .getParameters()
+                                .get(0)
+                                .getName()
+                                .toString();
+
+                        unionCases.add(
+                                new UnionCase(caseName, variableName, transformUnknown(statement, variableName)));
+                    } else {
+                        if (methodDeclaration.getParameters().size() != 1) {
+                            return List.of();
+                        }
+                        String variableName = Iterables.getOnlyElement(methodDeclaration.getParameters())
+                                .getName()
+                                .toString();
+
+                        unionCases.add(new UnionCase(caseName, variableName, transformCase(statement, variableName)));
+                    }
+                }
+            }
+        }
+
+        return unionCases;
+    }
+
+    @SuppressWarnings("checkstyle:CyclomaticComplexity")
     private static List<UnionCase> getUnionCases(VisitorState state, MethodInvocationTree visitorBuilder) {
         MethodInvocationTree tree = visitorBuilder;
         List<UnionCase> cases = new ArrayList<>();
@@ -137,17 +178,24 @@ public final class PreferUnionSwitch extends BugChecker implements MethodInvocat
                     ExpressionTree argument = Iterables.getOnlyElement(tree.getArguments());
                     if (argument instanceof LambdaExpressionTree lambda) {
                         if (lambda.getParameters().size() == 1) {
-                            VariableTree variable = Iterables.getOnlyElement(lambda.getParameters());
-                            Tree statement = lambda.getBody();
+                            String caseName =
+                                    uppercase(memberSelect.getIdentifier().toString());
+                            String variableName =
+                                    state.getSourceForNode(Iterables.getOnlyElement(lambda.getParameters()));
+                            String statement = state.getSourceForNode(lambda.getBody());
 
                             cases.add(new UnionCase(
-                                    uppercase(memberSelect.getIdentifier().toString()),
-                                    state.getSourceForNode(variable),
-                                    state.getSourceForNode(statement)));
+                                    caseName,
+                                    variableName,
+                                    caseName.equals("Unknown")
+                                            ? transformUnknown(statement, variableName)
+                                            : transformCase(statement, variableName)));
                         } else {
                             return List.of();
                         }
                     } else if (argument instanceof MemberReferenceTree memberReference) {
+                        String caseName = uppercase(memberSelect.getIdentifier().toString());
+                        String variableName = memberSelect.getIdentifier().toString();
                         String statement = String.format(
                                 "%s.%s(%s)",
                                 state.getSourceForNode(memberReference.getQualifierExpression()),
@@ -155,16 +203,25 @@ public final class PreferUnionSwitch extends BugChecker implements MethodInvocat
                                 memberSelect.getIdentifier().toString());
 
                         cases.add(new UnionCase(
-                                uppercase(memberSelect.getIdentifier().toString()),
-                                memberSelect.getIdentifier().toString(),
-                                statement));
+                                caseName,
+                                variableName,
+                                caseName.equals("Unknown")
+                                        ? transformUnknown(statement, variableName)
+                                        : transformCase(statement, variableName)));
                     } else if (argument instanceof MethodInvocationTree methodInvocation) {
                         String method = state.getSourceForNode(methodInvocation.getMethodSelect());
                         if (method.equals("Function.identity")) {
+                            String caseName =
+                                    uppercase(memberSelect.getIdentifier().toString());
+                            String variableName = memberSelect.getIdentifier().toString();
+                            String statement = memberSelect.getIdentifier().toString();
+
                             cases.add(new UnionCase(
-                                    uppercase(memberSelect.getIdentifier().toString()),
-                                    memberSelect.getIdentifier().toString(),
-                                    memberSelect.getIdentifier().toString()));
+                                    caseName,
+                                    variableName,
+                                    caseName.equals("Unknown")
+                                            ? transformUnknown(statement, variableName)
+                                            : transformCase(statement, variableName)));
                         } else {
                             return List.of();
                         }
@@ -188,6 +245,16 @@ public final class PreferUnionSwitch extends BugChecker implements MethodInvocat
     private static String uppercase(String name) {
         String cleanName = name.endsWith("_") ? name.substring(0, name.length() - 1) : name;
         return cleanName.substring(0, 1).toUpperCase() + cleanName.substring(1);
+    }
+
+    private static String transformCase(String statement, String variableName) {
+        // This is shit.
+        return statement.replaceAll(variableName, variableName + ".value()").replaceAll("return", "yield");
+    }
+
+    private static String transformUnknown(String statement, String variableName) {
+        // This is shit.
+        return statement.replaceAll(variableName, variableName + ".getType()").replaceAll("return", "yield");
     }
 
     private static class UnionCase {

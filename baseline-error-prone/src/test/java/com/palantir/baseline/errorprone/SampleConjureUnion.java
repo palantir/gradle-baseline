@@ -16,15 +16,7 @@
 
 package com.palantir.baseline.errorprone;
 
-import com.fasterxml.jackson.annotation.JsonAnyGetter;
-import com.fasterxml.jackson.annotation.JsonAnySetter;
-import com.fasterxml.jackson.annotation.JsonCreator;
-import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.annotation.JsonSetter;
-import com.fasterxml.jackson.annotation.JsonSubTypes;
-import com.fasterxml.jackson.annotation.JsonTypeInfo;
-import com.fasterxml.jackson.annotation.JsonTypeName;
+import com.fasterxml.jackson.annotation.*;
 import com.palantir.baseline.errorprone.SampleConjureUnion.Bar;
 import com.palantir.baseline.errorprone.SampleConjureUnion.Baz;
 import com.palantir.baseline.errorprone.SampleConjureUnion.Foo;
@@ -32,14 +24,15 @@ import com.palantir.logsafe.Preconditions;
 import com.palantir.logsafe.Safe;
 import com.palantir.logsafe.SafeArg;
 import com.palantir.logsafe.exceptions.SafeIllegalArgumentException;
+
+import javax.annotation.Generated;
+import javax.annotation.Nonnull;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.IntFunction;
-import javax.annotation.Generated;
-import javax.annotation.Nonnull;
 
 @Generated("com.palantir.conjure.java.types.UnionGenerator")
 @JsonTypeInfo(
@@ -208,7 +201,7 @@ public sealed interface SampleConjureUnion {
         }
 
         @JsonProperty
-        private String getType() {
+        public String getType() {
             return type;
         }
 
@@ -279,10 +272,10 @@ public sealed interface SampleConjureUnion {
 
     final class VisitorBuilder<T>
             implements BarStageVisitorBuilder<T>,
-            BazStageVisitorBuilder<T>,
-            FooStageVisitorBuilder<T>,
-            UnknownStageVisitorBuilder<T>,
-            Completed_StageVisitorBuilder<T> {
+                    BazStageVisitorBuilder<T>,
+                    FooStageVisitorBuilder<T>,
+                    UnknownStageVisitorBuilder<T>,
+                    Completed_StageVisitorBuilder<T> {
         private IntFunction<T> barVisitor;
 
         private Function<Long, T> bazVisitor;
@@ -389,4 +382,3 @@ public sealed interface SampleConjureUnion {
         Visitor<T> build();
     }
 }
-
