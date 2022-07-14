@@ -184,4 +184,38 @@ class PreferUnionSwitchTest {
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
+
+    @Test
+    public void auto_fix_meaningful_unknown() {
+        RefactoringValidator.of(PreferUnionSwitch.class, getClass(), "--enable-preview", "--release=17")
+                .addInputLines(
+                        "Test.java",
+                        "import com.palantir.baseline.errorprone.SampleConjureUnion;",
+                        "import java.util.function.Function;",
+                        "class Test {",
+                        "public static String getType(SampleConjureUnion myUnion) {",
+                        "    return myUnion.accept(SampleConjureUnion.Visitor.<String>builder()",
+                        "            .bar(_bar -> \"bar\")",
+                        "            .baz(_baz -> \"baz\")",
+                        "            .foo(_foo -> \"foo\")",
+                        "            .unknown(Function.identity())",
+                        "            .build());",
+                        "}",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.baseline.errorprone.SampleConjureUnion;",
+                        "import java.util.function.Function;",
+                        "class Test {",
+                        "public static String getType(SampleConjureUnion myUnion) {",
+                        "    return switch (myUnion) {",
+                        "        case SampleConjureUnion.Bar _bar -> \"bar\";",
+                        "        case SampleConjureUnion.Baz _baz -> \"baz\";",
+                        "        case SampleConjureUnion.Foo _foo -> \"foo\";",
+                        "        case SampleConjureUnion.Unknown unknown -> unknown.getType();",
+                        "    };",
+                        "}",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
 }
