@@ -23,6 +23,10 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 
+/**
+ * This test exercises both the root-plugin {@code BaselineJavaVersions} AND the subproject
+ * specific plugin, {@code BaselineJavaVersion}.
+ */
 class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
     private static final int JAVA_8_BYTECODE = 52
     private static final int JAVA_11_BYTECODE = 55
@@ -72,6 +76,21 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         }
         '''.stripIndent(true)
 
+    def java17PreviewCode = '''
+        public class Java17PreviewDemo {
+            sealed interface MyUnion {
+                record Foo(int number) implements MyUnion {}
+            }
+        
+            public static void main(String[] args) {
+                MyUnion myUnion = new MyUnion.Foo(1234);
+                switch (myUnion) {
+                    case MyUnion.Foo foo -> System.out.println("Java 17 pattern matching switch: " + foo.number);
+                }
+            }
+        }
+        '''
+
     def setup() {
         // Fork needed or build fails on circleci with "SystemInfo is not supported on this operating system."
         // Comment out locally in order to get debugging to work
@@ -103,6 +122,22 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         }
         '''.stripIndent(true)
         file('src/main/java/Main.java') << java11CompatibleCode
+        File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
+
+        then:
+        runTasksSuccessfully('compileJava')
+        getBytecodeVersion(compiledClass) == JAVA_17_BYTECODE
+    }
+
+    def 'java 17 preview compilation works'() {
+        when:
+        buildFile << '''
+        javaVersions {
+            libraryTarget = 11
+            distributionTarget = '17_PREVIEW'
+        }
+        '''.stripIndent(true)
+        file('src/main/java/Main.java') << java17PreviewCode
         File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
 
         then:
