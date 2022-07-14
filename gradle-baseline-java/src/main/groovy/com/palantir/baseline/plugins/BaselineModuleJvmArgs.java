@@ -22,12 +22,14 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.palantir.baseline.extensions.BaselineModuleJvmArgsExtension;
 import com.palantir.baseline.plugins.javaversions.BaselineJavaVersion;
+import com.palantir.baseline.plugins.javaversions.BaselineJavaVersionsExtension;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.jar.JarFile;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import org.gradle.api.Action;
@@ -37,7 +39,7 @@ import org.gradle.api.Task;
 import org.gradle.api.UnknownTaskException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.java.archives.Manifest;
-import org.gradle.api.provider.SetProperty;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
@@ -60,6 +62,7 @@ import org.immutables.value.Value;
 public final class BaselineModuleJvmArgs implements Plugin<Project> {
 
     private static final String EXTENSION_NAME = "moduleJvmArgs";
+    private static final String ENABLE_PREVIEW_ATTRIBUTE = "Baseline-Enable-Preview";
     private static final String ADD_EXPORTS_ATTRIBUTE = "Add-Exports";
     private static final String ADD_OPENS_ATTRIBUTE = "Add-Opens";
 
@@ -220,6 +223,17 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                 }
             });
 
+            // Derive this plugin's `enablePreview` property from BaselineJavaVersion's extension
+            project.getPlugins().withType(BaselineJavaVersion.class, _unused -> {
+                BaselineJavaVersionsExtension javaVersionsExtension =
+                        project.getExtensions().getByType(BaselineJavaVersionsExtension.class);
+                extension.setEnablePreview(javaVersionsExtension.runtime().map(chosenJavaVersion -> {
+                    return chosenJavaVersion.enablePreview()
+                            ? Optional.of(chosenJavaVersion.javaLanguageVersion())
+                            : Optional.empty();
+                }));
+            });
+
             project.getTasks().withType(Jar.class).configureEach(new Action<Jar>() {
                 @Override
                 public void execute(Jar jar) {
@@ -231,6 +245,13 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                                 public void execute(Manifest manifest) {
                                     addManifestAttribute(jar, manifest, ADD_EXPORTS_ATTRIBUTE, extension.exports());
                                     addManifestAttribute(jar, manifest, ADD_OPENS_ATTRIBUTE, extension.opens());
+                                    addManifestAttribute(
+                                            jar,
+                                            manifest,
+                                            ENABLE_PREVIEW_ATTRIBUTE,
+                                            extension.getEnablePreview().map(maybeVersion -> maybeVersion.stream()
+                                                    .map(v -> Integer.toString(v.asInt()))
+                                                    .collect(Collectors.toSet())));
                                 }
                             });
                         }
@@ -241,7 +262,7 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
     }
 
     private static void addManifestAttribute(
-            Jar jarTask, Manifest manifest, String attributeName, SetProperty<String> valueProperty) {
+            Jar jarTask, Manifest manifest, String attributeName, Provider<Set<String>> valueProperty) {
         Project project = jarTask.getProject();
         // Only locally defined values are applied to jars
         Set<String> values = valueProperty.get();
