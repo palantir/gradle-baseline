@@ -237,7 +237,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
             if (version != null) {
                 int featureRelease = version.target().get().asInt()
                 JavaVersion javaVersion = JavaVersion.toVersion(featureRelease)
-                String preview = version.distributionEnablePreview().get() == EnablePreview.ENABLE_PREVIEW
+                String preview = version.targetEnablePreview().get() == EnablePreview.ENABLE_PREVIEW
                         ? EnablePreview.SUFFIX
                         : ""
                 Node node = provider.asNode()
