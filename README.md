@@ -474,4 +474,10 @@ tasks.withType(JavaExec) {
 }
 ```
 
+In the example above, the `Baseline-Enable-Preview: 17` attribute will be embedded in the resultant Jar's `META-INF/MANIFEST.MF` file. To see for yourself, run:
+
+```
+$ unzip -p /path/to/your-project-1.2.3.jar META-INF/MANIFEST.MF
+```
+
 _Note, this plugin should be used with **caution** because preview features may change or be removed, which might make upgrading to a new Java version harder._
