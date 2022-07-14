@@ -102,7 +102,6 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         buildFile << standardBuildFile
     }
 
-    @Ignore
     def 'java 11 compilation fails targeting java 8'() {
         when:
         buildFile << '''
@@ -117,7 +116,6 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         runTasksWithFailure('compileJava')
     }
 
-    @Ignore
     def 'distribution target is used when no artifacts are published'() {
         when:
         buildFile << '''
@@ -134,7 +132,6 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         getBytecodeVersion(compiledClass) == JAVA_17_BYTECODE
     }
 
-    @Ignore
     def 'java 17 preview compilation works'() {
         when:
         buildFile << '''
@@ -151,7 +148,6 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         getBytecodeVersion(compiledClass) == JAVA_17_BYTECODE
     }
 
-    @Ignore
     def 'library target is used when no artifacts are published but project is overridden as a library'() {
         when:
         buildFile << '''
@@ -171,7 +167,6 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         getBytecodeVersion(compiledClass) == JAVA_11_BYTECODE
     }
 
-    @Ignore
     def 'library target is used when nebula maven publishing plugin is applied'() {
         when:
         buildFile << '''
@@ -189,7 +184,6 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         getBytecodeVersion(compiledClass) == JAVA_11_BYTECODE
     }
 
-    @Ignore
     def 'library target is used when the palantir shadowjar plugin is applied'() {
         when:
         buildFile << '''
@@ -240,7 +234,6 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         getBytecodeVersion(compiledClass) == JAVA_11_BYTECODE
     }
 
-    @Ignore
     def 'java 11 execution succeeds on java 17'() {
         when:
         buildFile << '''
@@ -273,7 +266,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         result.standardOutput.contains 'jdk8 features on runtime 1.8'
     }
 
-    @Ignore
+    @Ignore // fails to download https://api.adoptopenjdk.net/v3/binary/latest/8/ga/mac/aarch64/jdk/hotspot/normal/adoptopenjdk
     def 'java 8 execution succeeds on java 11'() {
         when:
         buildFile << '''
@@ -291,7 +284,6 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         getBytecodeVersion(compiledClass) == JAVA_8_BYTECODE
     }
 
-    @Ignore
     def 'JavaPluginConvention.getTargetCompatibility() produces the runtime java version'() {
         when:
         buildFile << '''
@@ -313,7 +305,6 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         result.standardOutput.contains '[[[17]]]'
     }
 
-    @Ignore
     def 'verification should fail when target exceeds the runtime version'() {
         when:
         buildFile << '''
@@ -328,7 +319,6 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         result.standardError.contains 'The requested compilation target'
     }
 
-    @Ignore
     def 'verification should succeed when target and runtime versions match'() {
         when:
         buildFile << '''
@@ -342,7 +332,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         runTasksSuccessfully('checkJavaVersions')
     }
 
-    @Ignore
+    @Ignore // deletes a dir locally.
     def 'can configure a jdk path to be used'() {
         Path newJavaHome = Files.createSymbolicLink(
                 projectDir.toPath().resolve("jdk"),
