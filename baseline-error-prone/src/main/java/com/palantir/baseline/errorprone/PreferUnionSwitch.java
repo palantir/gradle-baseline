@@ -75,10 +75,6 @@ public final class PreferUnionSwitch extends BugChecker implements MethodInvocat
         SuggestedFix.Builder fix = SuggestedFix.builder();
         StringBuilder replacementBuilder = new StringBuilder();
 
-        String methodInvocation = state.getSourceForNode(tree.getMethodSelect());
-        String receiverOnly = methodInvocation.replaceAll("\\.accept", "");
-        replacementBuilder.append(String.format("switch (%s) {", receiverOnly));
-
         String unionName;
         List<UnionCase> unionCases;
 
@@ -103,6 +99,15 @@ public final class PreferUnionSwitch extends BugChecker implements MethodInvocat
         if (unionCases.isEmpty()) {
             return Description.NO_MATCH;
         }
+
+        String methodInvocation = state.getSourceForNode(tree.getMethodSelect());
+        String receiverOnly = methodInvocation.replaceAll("\\.accept", "");
+        replacementBuilder.append(String.format("switch (%s", receiverOnly));
+        if (!hasUnknown(unionCases)) {
+            replacementBuilder.append(".throwOnUnknown()");
+        }
+        replacementBuilder.append(") {");
+
         for (UnionCase unionCase : unionCases) {
             String caseStatement = String.format(
                     "case %s.%s %s -> %s",
@@ -173,7 +178,8 @@ public final class PreferUnionSwitch extends BugChecker implements MethodInvocat
                 break;
             }
 
-            if (!memberSelect.getIdentifier().toString().equals("build")) {
+            if (!memberSelect.getIdentifier().toString().equals("build")
+                    && !memberSelect.getIdentifier().toString().equals("throwOnUnknown")) {
                 if (tree.getArguments().size() == 1) {
                     ExpressionTree argument = Iterables.getOnlyElement(tree.getArguments());
                     if (argument instanceof LambdaExpressionTree lambda) {
@@ -255,6 +261,10 @@ public final class PreferUnionSwitch extends BugChecker implements MethodInvocat
     private static String transformUnknown(String statement, String variableName) {
         // This is shit.
         return statement.replaceAll(variableName, variableName + ".getType()").replaceAll("return", "yield");
+    }
+
+    private static boolean hasUnknown(List<UnionCase> unionCases) {
+        return unionCases.stream().anyMatch(unionCase -> unionCase.getCaseName().equals("Unknown"));
     }
 
     private static class UnionCase {

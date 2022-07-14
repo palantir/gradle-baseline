@@ -151,4 +151,37 @@ class PreferUnionSwitchTest {
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
+
+    @Test
+    public void auto_fix_throw_on_unknown() {
+        RefactoringValidator.of(PreferUnionSwitch.class, getClass(), "--enable-preview", "--release=17")
+                .addInputLines(
+                        "Test.java",
+                        "import com.palantir.baseline.errorprone.SampleConjureUnion;",
+                        "import java.util.function.Function;",
+                        "class Test {",
+                        "public static long getLong(SampleConjureUnion myUnion) {",
+                        "    return myUnion.accept(SampleConjureUnion.Visitor.<Long>builder()",
+                        "            .bar(bar -> (long) bar)",
+                        "            .baz(Function.identity())",
+                        "            .foo(Long::parseLong)",
+                        "            .throwOnUnknown()",
+                        "            .build());",
+                        "}",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.baseline.errorprone.SampleConjureUnion;",
+                        "import java.util.function.Function;",
+                        "class Test {",
+                        "public static long getLong(SampleConjureUnion myUnion) {",
+                        "    return switch (myUnion.throwOnUnknown()) {",
+                        "        case SampleConjureUnion.Bar bar -> (long) bar.value();",
+                        "        case SampleConjureUnion.Baz baz -> baz.value();",
+                        "        case SampleConjureUnion.Foo foo -> Long.parseLong(foo.value());",
+                        "    };",
+                        "}",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
 }
