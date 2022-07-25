@@ -3,8 +3,8 @@ import net.ltgt.gradle.errorprone.CheckSeverity
 apply plugin: 'java-library'
 apply plugin: 'com.palantir.external-publish-jar'
 
-javaVersions {
-    libraryTarget = 11
+javaVersion {
+    target = 11
     runtime = 17
 }
 
