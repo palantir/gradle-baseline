@@ -3,6 +3,11 @@ import net.ltgt.gradle.errorprone.CheckSeverity
 apply plugin: 'java-library'
 apply plugin: 'com.palantir.external-publish-jar'
 
+javaVersions {
+    libraryTarget = 11
+    runtime = 17
+}
+
 dependencies {
     implementation 'com.google.errorprone:error_prone_core'
     // Ensure a new enough version of dataflow-errorprone is available
