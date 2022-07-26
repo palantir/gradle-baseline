@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Handle safety flow through instanceof pattern matching
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2331

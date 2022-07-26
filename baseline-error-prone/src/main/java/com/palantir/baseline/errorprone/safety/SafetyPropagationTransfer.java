@@ -840,16 +840,39 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
             // 1. catch (SomeThrowable t)
             // 2. referencing a captured local variable within a lambda
             // 3. referencing a captured local variable within an anonymous class
+            // 4. Pattern matching (input instanceof String str)
 
             // Cast a wide net for all throwables (covers catch statements)
             if (THROWABLE_SUBTYPE.matches(node.getTree(), state)) {
                 safety = Safety.UNSAFE.leastUpperBound(SafetyAnnotations.getSafety(node.getTree(), state));
+            } else if (isPatternBinding(node, state)) {
+                safety = SafetyAnnotations.getSafety(node.getTree(), state);
             } else {
                 // No safety information found, likely a captured reference used within a lambda or anonymous class.
                 safety = getCapturedLocalVariableSafety(node);
             }
         }
         return noStoreChanges(safety, input);
+    }
+
+    private static boolean isPatternBinding(LocalVariableNode node, VisitorState state) {
+        TreePath varPath = TreePath.getPath(state.getPath().getCompilationUnit(), node.getTree());
+        if (varPath == null) {
+            // Synthetic expression
+            return false;
+        }
+        TreePath parentPath = varPath.getParentPath();
+        if (parentPath == null) {
+            return false;
+        }
+        Tree enclosing = parentPath.getLeaf();
+        if (enclosing == null) {
+            return false;
+        }
+        // JCBindingPattern is newer than our compilation target, so we match strings to avoid
+        // complex build-system configurations.
+        String kindString = enclosing.getKind().name();
+        return "BINDING_PATTERN".equals(kindString);
     }
 
     private Safety getCapturedLocalVariableSafety(LocalVariableNode node) {
@@ -1084,6 +1107,11 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     /** Handles type changes (widen, narrow, and cast). */
     private TransferResult<Safety, AccessPathStore<Safety>> handleTypeConversion(
             Tree newType, Node original, TransferInput<Safety, AccessPathStore<Safety>> input) {
+        return noStoreChanges(getTypeConversionSafety(newType, original, input), input);
+    }
+
+    private Safety getTypeConversionSafety(
+            Tree newType, Node original, TransferInput<Safety, AccessPathStore<Safety>> input) {
         Safety inputSafety = getValueOfSubNode(input, original);
         Safety targetSafety = SafetyAnnotations.getSafety(newType, state);
         Safety resultSafety;
@@ -1098,13 +1126,20 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
         } else {
             resultSafety = Safety.mergeAssumingUnknownIsSame(inputSafety, targetSafety);
         }
-        return noStoreChanges(resultSafety, input);
+        return resultSafety;
     }
 
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitInstanceOf(
             InstanceOfNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        // types themselves are generally safe, boolean results of type checks are always safe.
+        LocalVariableNode bindingVariable = node.getBindingVariable();
+        if (bindingVariable != null) {
+            Safety safety = getTypeConversionSafety(node.getTree().getType(), node.getOperand(), input);
+            ReadableUpdates updates = new ReadableUpdates();
+            updates.set(bindingVariable, safety);
+            return updateRegularStore(Safety.SAFE, input, updates);
+        }
+        // Otherwise types themselves are generally safe, boolean results of type checks are always safe.
         return noStoreChanges(Safety.SAFE, input);
     }
 
