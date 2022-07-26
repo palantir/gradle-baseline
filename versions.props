@@ -35,6 +35,7 @@ org.junit.jupiter:* = 5.8.2
 org.junit.vintage:* = 5.8.2
 org.junit.platform:* = 1.8.2
 org.mockito:* = 4.6.1
+org.codehaus.groovy:* = 3.0.10
 
 # dependency-upgrader:OFF
 # Don't upgrade, we will remove this in a future release.
