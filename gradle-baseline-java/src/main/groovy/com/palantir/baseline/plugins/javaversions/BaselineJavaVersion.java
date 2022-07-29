@@ -124,6 +124,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                         if (target.get().enablePreview()) {
                             // yes, javadoc truly takes a single-dash where everyone else takes a double dash
                             options.addBooleanOption("-enable-preview", true);
+                            options.setSource(target.get().javaLanguageVersion().toString());
                         }
                     }
                 });
