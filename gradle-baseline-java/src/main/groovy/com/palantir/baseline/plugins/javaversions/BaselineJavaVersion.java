@@ -114,6 +114,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
         project.getTasks().withType(Javadoc.class).configureEach(new Action<Javadoc>() {
             @Override
             public void execute(Javadoc javadocTask) {
+
                 javadocTask.getJavadocTool().set(javaToolchain.flatMap(BaselineJavaToolchain::javadocTool));
 
                 // javadocTask doesn't allow us to add a CommandLineArgumentProvider, so we do it just in time
@@ -124,6 +125,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                         if (target.get().enablePreview()) {
                             // yes, javadoc truly takes a single-dash where everyone else takes a double dash
                             options.addBooleanOption("-enable-preview", true);
+                            // options.setSource(target.get().javaLanguageVersion().toString());
                         }
                     }
                 });

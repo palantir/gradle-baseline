@@ -147,6 +147,20 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, ENABLE_PREVIEW_BYTECODE)
     }
 
+    def 'java 17 preview javadoc works'() {
+        when:
+        buildFile << '''
+        javaVersions {
+            libraryTarget = 11
+            distributionTarget = '17_PREVIEW'
+        }
+        '''.stripIndent(true)
+        file('src/main/java/Main.java') << java17PreviewCode
+
+        then:
+        runTasksSuccessfully('javadoc', '-i')
+    }
+
     def 'library target is used when no artifacts are published but project is overridden as a library'() {
         when:
         buildFile << '''
