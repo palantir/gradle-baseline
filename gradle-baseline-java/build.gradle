@@ -68,42 +68,52 @@ gradlePlugin {
     plugins {
         baselinePlugins {
             id = 'com.palantir.baseline'
+            displayName = 'Palantir Baseline Plugins'
             implementationClass = 'com.palantir.baseline.plugins.Baseline'
         }
         baselineCheckstylePlugin {
             id = 'com.palantir.baseline-checkstyle'
+            displayName = 'Palantir Baseline Checkstyle Plugin'
             implementationClass = 'com.palantir.baseline.plugins.BaselineCheckstyle'
         }
         baselineConfigPlugin {
             id = 'com.palantir.baseline-config'
+            displayName = 'Palantir Baseline Configuration Plugin'
             implementationClass = 'com.palantir.baseline.plugins.BaselineConfig'
         }
         baselineExactDependenciesPlugin {
             id = 'com.palantir.baseline-exact-dependencies'
+            displayName = 'Palantir Baseline Exact Dependencies Plugin'
             implementationClass = 'com.palantir.baseline.plugins.BaselineExactDependencies'
         }
         baselineEclipsePlugin {
             id = 'com.palantir.baseline-eclipse'
+            displayName = 'Palantir Baseline Eclipse Plugin'
             implementationClass = 'com.palantir.baseline.plugins.BaselineEclipse'
         }
         baselineIdeaPlugin {
             id = 'com.palantir.baseline-idea'
+            displayName = 'Palantir Baseline IntelliJ Plugin'
             implementationClass = 'com.palantir.baseline.plugins.BaselineIdea'
         }
         baselineClassUniquenessPlugin {
             id = 'com.palantir.baseline-class-uniqueness'
+            displayName = 'Palantir Baseline Class Uniqueness Plugin'
             implementationClass = 'com.palantir.baseline.plugins.BaselineClassUniquenessPlugin'
         }
         baselineCircleCiPlugin {
             id = 'com.palantir.baseline-circleci'
+            displayName = 'Palantir Baseline CircleCi Plugin'
             implementationClass = 'com.palantir.baseline.plugins.BaselineCircleCi'
         }
         baselineReleaseCompatibility {
             id = 'com.palantir.baseline-release-compatibility'
+            displayName = 'Palantir Baseline Release Compatibility Plugin'
             implementationClass = 'com.palantir.baseline.plugins.BaselineReleaseCompatibility'
         }
         baselinePreferProjectModules {
             id = 'com.palantir.baseline-prefer-project-modules'
+            displayName = 'Palantir Baseline Prefer Project Modules Plugin'
             implementationClass = 'com.palantir.baseline.plugins.BaselinePreferProjectModules'
         }
     }
@@ -114,39 +124,6 @@ pluginBundle {
     vcsUrl = 'https://github.com/palantir/gradle-baseline'
     description = 'Baseline Java is a collection of Gradle plugins for configuring code quality tools in builds and generated Eclipse/IntelliJ projects.'
     tags = ['java', 'checkstyle', 'code quality', 'eclipse', 'idea']
-
-    plugins {
-        baselinePlugins {
-            displayName = 'Palantir Baseline Plugins'
-        }
-        baselineCheckstylePlugin {
-            displayName = 'Palantir Baseline Checkstyle Plugin'
-        }
-        baselineConfigPlugin {
-            displayName = 'Palantir Baseline Configuration Plugin'
-        }
-        baselineExactDependenciesPlugin {
-            displayName = 'Palantir Baseline Exact Dependencies Plugin'
-        }
-        baselineEclipsePlugin {
-            displayName = 'Palantir Baseline Eclipse Plugin'
-        }
-        baselineIdeaPlugin {
-            displayName = 'Palantir Baseline IntelliJ Plugin'
-        }
-        baselineClassUniquenessPlugin {
-            displayName = 'Palantir Baseline Class Uniqueness Plugin'
-        }
-        baselineCircleCiPlugin {
-            displayName = 'Palantir Baseline CircleCi Plugin'
-        }
-        baselineReleaseCompatibility {
-            displayName = 'Palantir Baseline Release Compatibility Plugin'
-        }
-        baselinePreferProjectModules {
-            displayName = 'Palantir Baseline Prefer Project Modules Plugin'
-        }
-    }
 }
 
 tasks.named('processResources').configure {

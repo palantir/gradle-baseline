@@ -18,6 +18,7 @@ package com.palantir.baseline.errorprone;
 
 import com.google.errorprone.CompilationTestHelper;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Timeout;
 
 class IllegalSafeLoggingArgumentTest {
 
@@ -1594,7 +1595,7 @@ class IllegalSafeLoggingArgumentTest {
 
     @Test
     public void testRecordConstruction() {
-        helper().setArgs("--release", "15", "--enable-preview")
+        helper().setArgs("--release", "17")
                 .addSourceLines(
                         "Test.java",
                         "import com.palantir.logsafe.*;",
@@ -1610,7 +1611,7 @@ class IllegalSafeLoggingArgumentTest {
 
     @Test
     public void testRecordComponentUsage() {
-        helper().setArgs("--release", "15", "--enable-preview")
+        helper().setArgs("--release", "17")
                 .addSourceLines(
                         "Test.java",
                         "import com.palantir.logsafe.*;",
@@ -1771,6 +1772,77 @@ class IllegalSafeLoggingArgumentTest {
                         "  // BUG: Diagnostic contains: "
                                 + "Dangerous type: annotated 'SAFE' but ancestors declare 'UNSAFE'.",
                         "  @Safe interface SafeSubclass extends UnsafeClass {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    @Timeout(10) // https://github.com/palantir/gradle-baseline/issues/2328
+    public void testPatternMatching() {
+        helper().setArgs("--release", "17")
+                .addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  @DoNotLog static class DoNotLogClass {}",
+                        "  @Unsafe Object f(Object value) {",
+                        "    if (value instanceof Integer i) {",
+                        "        return i;",
+                        "    } else if (value instanceof Float f) {",
+                        "        return f;",
+                        "    } else if (value instanceof Double d) {",
+                        "        return d;",
+                        "    } else if (value instanceof Byte b) {",
+                        "        return b;",
+                        "    } else if (value instanceof CharSequence cs) {",
+                        "        return cs;",
+                        "    } else if (value instanceof String str) {",
+                        "        return str;",
+                        "    } else if (value instanceof Throwable t) {",
+                        "        return t;",
+                        "    } else if (value instanceof DoNotLogClass dnl) {",
+                        "        // BUG: Diagnostic contains: Dangerous return value: result is 'DO_NOT_LOG'",
+                        "        return dnl;",
+                        "    }",
+                        "    return null;",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testPatternMatchingUnsafeToSafeSubtype() {
+        helper().setArgs("--release", "17")
+                .addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  @Safe static class SafeClass {}",
+                        "  @Safe Object f(@Unsafe Object value) {",
+                        "    if (value instanceof SafeClass s) {",
+                        "        return s;",
+                        "    }",
+                        "    return null;",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testPatternMatchingUnsafeToUnknown() {
+        helper().setArgs("--release", "17")
+                .addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  @Safe static class SafeClass {}",
+                        "  @Safe Object f(@Unsafe Object value) {",
+                        "    if (value instanceof String s) {",
+                        "        // BUG: Diagnostic contains: Dangerous return value: result is 'UNSAFE'",
+                        "        return s;",
+                        "    }",
+                        "    return null;",
+                        "  }",
                         "}")
                 .doTest();
     }

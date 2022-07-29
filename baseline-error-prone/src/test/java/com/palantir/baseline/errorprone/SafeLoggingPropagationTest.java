@@ -211,7 +211,7 @@ class SafeLoggingPropagationTest {
 
     @Test
     void testRecordWithUnsafeTypes() {
-        fix("--release", "15", "--enable-preview")
+        fix("--release", "17")
                 .addInputLines(
                         "Test.java",
                         "import com.palantir.tokens.auth.*;",
