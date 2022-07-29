@@ -22,7 +22,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import com.palantir.baseline.extensions.BaselineModuleJvmArgsExtension;
 import com.palantir.baseline.plugins.javaversions.BaselineJavaVersion;
-import com.palantir.baseline.plugins.javaversions.BaselineJavaVersionsExtension;
+import com.palantir.baseline.plugins.javaversions.BaselineJavaVersionExtension;
 import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
@@ -225,8 +225,8 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
 
             // Derive this plugin's `enablePreview` property from BaselineJavaVersion's extension
             project.getPlugins().withType(BaselineJavaVersion.class, _unused -> {
-                BaselineJavaVersionsExtension javaVersionsExtension =
-                        project.getExtensions().getByType(BaselineJavaVersionsExtension.class);
+                BaselineJavaVersionExtension javaVersionsExtension =
+                        project.getExtensions().getByType(BaselineJavaVersionExtension.class);
                 extension.setEnablePreview(javaVersionsExtension.runtime().map(chosenJavaVersion -> {
                     return chosenJavaVersion.enablePreview()
                             ? Optional.of(chosenJavaVersion.javaLanguageVersion())
