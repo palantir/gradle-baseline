@@ -31,20 +31,22 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion;
  */
 public class BaselineJavaVersionsExtension {
     private final Property<JavaLanguageVersion> libraryTarget;
-    private final Property<JavaLanguageVersion> distributionTarget;
-    private final Property<JavaLanguageVersion> runtime;
+    private final Property<ChosenJavaVersion> distributionTarget;
+    private final Property<ChosenJavaVersion> runtime;
     private final LazilyConfiguredMapping<JavaLanguageVersion, AtomicReference<JavaInstallationMetadata>, Project>
             jdks = new LazilyConfiguredMapping<>(AtomicReference::new);
 
     @Inject
     public BaselineJavaVersionsExtension(Project project) {
         this.libraryTarget = project.getObjects().property(JavaLanguageVersion.class);
-        this.distributionTarget = project.getObjects().property(JavaLanguageVersion.class);
-        this.runtime = project.getObjects().property(JavaLanguageVersion.class);
+        this.distributionTarget = project.getObjects().property(ChosenJavaVersion.class);
+        this.runtime = project.getObjects().property(ChosenJavaVersion.class);
+
         // distribution defaults to the library value
-        distributionTarget.convention(libraryTarget);
+        distributionTarget.convention(libraryTarget.map(ChosenJavaVersion::of));
         // runtime defaults to the distribution value
         runtime.convention(distributionTarget);
+
         libraryTarget.finalizeValueOnRead();
         distributionTarget.finalizeValueOnRead();
         runtime.finalizeValueOnRead();
@@ -60,24 +62,34 @@ public class BaselineJavaVersionsExtension {
     }
 
     /**
-     * Target {@link JavaLanguageVersion} for compilation of code used within distributions,
+     * Target {@link ChosenJavaVersion} for compilation of code used within distributions,
      * but not published externally.
      */
-    public final Property<JavaLanguageVersion> distributionTarget() {
+    public final Property<ChosenJavaVersion> distributionTarget() {
         return distributionTarget;
     }
 
     public final void setDistributionTarget(int value) {
-        distributionTarget.set(JavaLanguageVersion.of(value));
+        distributionTarget.set(ChosenJavaVersion.of(value));
     }
 
-    /** Runtime {@link JavaLanguageVersion} for testing and packaging distributions. */
-    public final Property<JavaLanguageVersion> runtime() {
+    /** Accepts inputs such as '17_PREVIEW'. */
+    public final void setDistributionTarget(String value) {
+        distributionTarget.set(ChosenJavaVersion.fromString(value));
+    }
+
+    /** Runtime {@link ChosenJavaVersion} for testing and packaging distributions. */
+    public final Property<ChosenJavaVersion> runtime() {
         return runtime;
     }
 
     public final void setRuntime(int value) {
-        runtime.set(JavaLanguageVersion.of(value));
+        runtime.set(ChosenJavaVersion.of(value));
+    }
+
+    /** Accepts inputs such as '17_PREVIEW'. */
+    public final void setRuntime(String value) {
+        runtime.set(ChosenJavaVersion.fromString(value));
     }
 
     public final Optional<JavaInstallationMetadata> jdkMetadataFor(

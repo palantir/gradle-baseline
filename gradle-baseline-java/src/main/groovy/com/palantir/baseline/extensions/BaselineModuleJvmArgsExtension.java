@@ -17,9 +17,13 @@
 package com.palantir.baseline.extensions;
 
 import com.google.common.collect.ImmutableSet;
+import java.util.Optional;
+import java.util.Set;
 import javax.inject.Inject;
 import org.gradle.api.Project;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
+import org.gradle.jvm.toolchain.JavaLanguageVersion;
 
 /**
  * Extension to configure {@code --add-exports [VALUE]=ALL-UNNAMED} for the current module.
@@ -28,11 +32,13 @@ public class BaselineModuleJvmArgsExtension {
 
     private final SetProperty<String> exports;
     private final SetProperty<String> opens;
+    private final SetProperty<JavaLanguageVersion> enablePreview; // stores a singleton version or the empty set
 
     @Inject
     public BaselineModuleJvmArgsExtension(Project project) {
         exports = project.getObjects().setProperty(String.class);
         opens = project.getObjects().setProperty(String.class);
+        enablePreview = project.getObjects().setProperty(JavaLanguageVersion.class);
     }
 
     /**
@@ -69,6 +75,14 @@ public class BaselineModuleJvmArgsExtension {
             validateModulePackagePair(export);
         }
         opens.set(immutableDeduplicatedCopy);
+    }
+
+    public final void setEnablePreview(Provider<Optional<JavaLanguageVersion>> provider) {
+        enablePreview.set(provider.map(maybeValue -> maybeValue.map(Set::of).orElseGet(Set::of)));
+    }
+
+    public final Provider<Set<JavaLanguageVersion>> getEnablePreview() {
+        return enablePreview;
     }
 
     private static void validateModulePackagePair(String moduleAndPackage) {

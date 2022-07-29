@@ -416,40 +416,6 @@ This plugin adds the `-Aimmutables.gradle.incremental` compiler arg to the compi
 
 For more details, see the Immutables incremental compilation [tracking issue](https://github.com/immutables/immutables/issues/804).
 
-## com.palantir.baseline-enable-preview-flag (off by default)
-
-As described in [JEP 12](https://openjdk.java.net/jeps/12), Java allows you to use shiny new syntax features if you add
-the `--enable-preview` flag. However, gradle requires you to add it in multiple places. This plugin can be applied to
-within an allprojects block and it will automatically ugprade any project which is already using the latest
-sourceCompatibility by adding the necessary `--enable-preview` flags to all of the following task types.
-
-_Note, this plugin should be used with **caution** because preview features may change or be removed, and it
-is undesirable to deeply couple a repo to a particular Java version as it makes upgrading to a new major Java version harder._
-
-```gradle
-// root build.gradle
-allprojects {
-    apply plugin: 'com.palantir.baseline-enable-preview-flag'
-}
-```
-
-```gradle
-// shorthand for the below:
-tasks.withType(JavaCompile) {
-    options.compilerArgs += "--enable-preview"
-}
-tasks.withType(Test) {
-    jvmArgs += "--enable-preview"
-}
-tasks.withType(JavaExec) {
-    jvmArgs += "--enable-preview"
-}
-```
-
-If you've explicitly specified a lower sourceCompatibility (e.g. for a published API jar), then this plugin is a no-op.
-In fact, Java will actually error if you try to switch on the `--enable-preview` flag to get cutting edge syntax
-features but set `sourceCompatibility` (or `--release`) to an older Java version.
-
 ## com.palantir.baseline-java-versions
 
 This plugin allows consistent configuration of JDK versions via [Gradle Toolchains](https://docs.gradle.org/current/userguide/toolchains.html).
@@ -482,3 +448,36 @@ javaVersion {
 ```
 
 The optionally configurable fields of the `javaVersion` extension are `target`, for setting the target version used for compilation and `runtime`, for setting the runtime version used for testing and distributions.
+
+### Opting in to `--enable-preview` flag
+
+As described in [JEP 12](https://openjdk.java.net/jeps/12), Java allows you to use incubating syntax features if you add the `--enable-preview` flag. Gradle requires you to add it in many places (including on JavaCompile, Javadoc tasks, as well as in production and on execution tasks like Test, JavaExec). The baseline-java-versions plugin provides a shorthand way of enabling this:
+
+```gradle
+// root build.gradle
+apply plugin: 'com.palantir.baseline-java-versions'
+javaVersions {
+    libraryTarget = 11
+    distributionTarget = '17_PREVIEW'
+    runtime = '17_PREVIEW'
+}
+
+// shorthand for configuring all the tasks individually, e.g.
+tasks.withType(JavaCompile) {
+    options.compilerArgs += "--enable-preview"
+}
+tasks.withType(Test) {
+    jvmArgs += "--enable-preview"
+}
+tasks.withType(JavaExec) {
+    jvmArgs += "--enable-preview"
+}
+```
+
+In the example above, the `Baseline-Enable-Preview: 17` attribute will be embedded in the resultant Jar's `META-INF/MANIFEST.MF` file. To see for yourself, run:
+
+```
+$ unzip -p /path/to/your-project-1.2.3.jar META-INF/MANIFEST.MF
+```
+
+_Note, this plugin should be used with **caution** because preview features may change or be removed, which might make upgrading to a new Java version harder._

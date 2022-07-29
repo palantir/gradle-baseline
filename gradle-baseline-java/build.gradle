@@ -111,11 +111,6 @@ gradlePlugin {
             displayName = 'Palantir Baseline Release Compatibility Plugin'
             implementationClass = 'com.palantir.baseline.plugins.BaselineReleaseCompatibility'
         }
-        baselineEnablePreviewFlag {
-            id = 'com.palantir.baseline-enable-preview-flag'
-            displayName = 'Palantir Baseline --enable-preview Flag Plugin'
-            implementationClass = 'com.palantir.baseline.plugins.BaselineEnablePreviewFlag'
-        }
         baselinePreferProjectModules {
             id = 'com.palantir.baseline-prefer-project-modules'
             displayName = 'Palantir Baseline Prefer Project Modules Plugin'

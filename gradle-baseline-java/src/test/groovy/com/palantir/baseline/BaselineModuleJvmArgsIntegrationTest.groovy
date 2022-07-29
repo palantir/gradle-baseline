@@ -278,6 +278,33 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
                 .collect(MoreCollectors.onlyElement())
         String manifestValue = jarFile.getManifest().getMainAttributes().getValue('Add-Exports')
         manifestValue == 'java.management/sun.management'
+
+        !jarFile.getManifest().getMainAttributes().containsKey('Baseline-Enable-Preview')
+    }
+
+    def 'Adds Baseline-Enable-Preview attribute to jar manifest'() {
+        when:
+        buildFile << '''
+        javaVersions {
+            runtime = '11_PREVIEW'
+        }
+        '''.stripIndent(true)
+        writeJavaSourceFile('''
+        package com;
+        public class Example {
+            public static void main(String[] args) {
+            }
+        }
+        '''.stripIndent(true))
+
+        then:
+        runTasksSuccessfully('jar')
+        JarFile jarFile = Arrays.stream(directory("build/libs").listFiles())
+                .filter(file -> file.name.endsWith(".jar"))
+                .map(JarFile::new)
+                .collect(MoreCollectors.onlyElement())
+        String manifestValue = jarFile.getManifest().getMainAttributes().getValue('Baseline-Enable-Preview')
+        manifestValue == '11'
     }
 
     def 'Executes with externally defined exports'() {

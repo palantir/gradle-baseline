@@ -24,6 +24,7 @@ import org.gradle.api.Named;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.publish.Publication;
 import org.gradle.api.publish.PublishingExtension;
 import org.gradle.api.publish.ivy.IvyPublication;
@@ -59,11 +60,12 @@ public final class BaselineJavaVersions implements Plugin<Project> {
             proj.getPluginManager().apply(BaselineJavaVersion.class);
             BaselineJavaVersionExtension projectVersions =
                     proj.getExtensions().getByType(BaselineJavaVersionExtension.class);
-            projectVersions
-                    .target()
-                    .convention(proj.provider(() -> isLibrary(proj, projectVersions)
-                            ? rootExtension.libraryTarget().get()
-                            : rootExtension.distributionTarget().get()));
+
+            Provider<ChosenJavaVersion> suggestedTarget = proj.provider(() -> isLibrary(proj, projectVersions)
+                    ? ChosenJavaVersion.of(rootExtension.libraryTarget().get())
+                    : rootExtension.distributionTarget().get());
+
+            projectVersions.target().convention(suggestedTarget);
             projectVersions.runtime().convention(rootExtension.runtime());
         }));
     }
