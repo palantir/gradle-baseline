@@ -38,7 +38,6 @@ public class BaselineErrorProneExtension {
             "CompileTimeConstantViolatesLiskovSubstitution",
             "ConsistentLoggerName",
             "ConsistentOverrides",
-            "DefaultLocale",
             "DeprecatedGuavaObjects",
             "ExecutorSubmitRunnableFutureIgnored",
             "ExtendsErrorOrThrowable",

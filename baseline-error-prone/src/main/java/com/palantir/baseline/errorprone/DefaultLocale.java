@@ -22,6 +22,7 @@ import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.fixes.SuggestedFix;
+import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
@@ -34,7 +35,7 @@ import com.sun.source.tree.MethodInvocationTree;
         linkType = BugPattern.LinkType.CUSTOM,
         summary = "Implicit use of the platform default locale, which can result in differing behaviour between JVM"
                 + " executions.",
-        severity = SeverityLevel.WARNING)
+        severity = SeverityLevel.SUGGESTION)
 public final class DefaultLocale extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
@@ -47,13 +48,13 @@ public final class DefaultLocale extends BugChecker implements BugChecker.Method
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
         if (MATCHER.matches(tree, state)) {
+            SuggestedFix.Builder fix = SuggestedFix.builder();
             return buildDescription(tree)
-                    .addFix(SuggestedFix.builder()
-                            .addImport("java.util.Locale")
-                            .replace(
+                    .addFix(fix.replace(
                                     state.getEndPosition(tree.getMethodSelect()),
                                     state.getEndPosition(tree),
-                                    "(Locale.ROOT)")
+                                    String.format(
+                                            "(%s.ROOT)", SuggestedFixes.qualifyType(state, fix, "java.util.Locale")))
                             .build())
                     .build();
         }
