@@ -16,6 +16,7 @@
 
 package com.palantir.baseline.plugins.javaversions;
 
+import java.util.Collections;
 import javax.inject.Inject;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
@@ -37,8 +38,9 @@ import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradle.api.tasks.scala.ScalaCompile;
 import org.gradle.api.tasks.scala.ScalaDoc;
 import org.gradle.api.tasks.testing.Test;
-import org.gradle.jvm.toolchain.JavaLanguageVersion;
+import org.gradle.external.javadoc.CoreJavadocOptions;
 import org.gradle.jvm.toolchain.JavaToolchainSpec;
+import org.gradle.process.CommandLineArgumentProvider;
 
 public final class BaselineJavaVersion implements Plugin<Project> {
 
@@ -58,7 +60,9 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             javaPluginExtension.toolchain(new Action<JavaToolchainSpec>() {
                 @Override
                 public void execute(JavaToolchainSpec javaToolchainSpec) {
-                    javaToolchainSpec.getLanguageVersion().set(extension.runtime());
+                    javaToolchainSpec
+                            .getLanguageVersion()
+                            .set(extension.runtime().map(ChosenJavaVersion::javaLanguageVersion));
                 }
             });
 
@@ -69,7 +73,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             configureCompilationTasks(project, extension.target(), javaToolchains.forVersion(extension.target()));
 
             // Execution tasks (using the runtime version)
-            configureExecutionTasks(project, javaToolchains.forVersion(extension.runtime()));
+            configureExecutionTasks(project, extension.runtime(), javaToolchains.forVersion(extension.runtime()));
 
             // Validation
             TaskProvider<CheckJavaVersionsTask> checkJavaVersions = project.getTasks()
@@ -85,20 +89,23 @@ public final class BaselineJavaVersion implements Plugin<Project> {
     }
 
     private static void configureCompilationTasks(
-            Project project,
-            Provider<JavaLanguageVersion> targetVersionProvider,
-            Provider<BaselineJavaToolchain> javaToolchain) {
+            Project project, Property<ChosenJavaVersion> target, Provider<BaselineJavaToolchain> javaToolchain) {
         project.getTasks().withType(JavaCompile.class).configureEach(new Action<JavaCompile>() {
             @Override
-            public void execute(JavaCompile javaCompile) {
-                javaCompile.getJavaCompiler().set(javaToolchain.flatMap(BaselineJavaToolchain::javaCompiler));
+            public void execute(JavaCompile javaCompileTask) {
+                javaCompileTask.getJavaCompiler().set(javaToolchain.flatMap(BaselineJavaToolchain::javaCompiler));
+                javaCompileTask
+                        .getOptions()
+                        .getCompilerArgumentProviders()
+                        .add(new EnablePreviewArgumentProvider(target));
+
                 // Set sourceCompatibility to opt out of '-release', allowing opens/exports to be used.
-                javaCompile.doFirst(new Action<Task>() {
+                javaCompileTask.doFirst(new Action<Task>() {
                     @Override
                     public void execute(Task task) {
                         ((JavaCompile) task)
                                 .setSourceCompatibility(
-                                        targetVersionProvider.get().toString());
+                                        target.get().javaLanguageVersion().toString());
                     }
                 });
             }
@@ -106,22 +113,40 @@ public final class BaselineJavaVersion implements Plugin<Project> {
 
         project.getTasks().withType(Javadoc.class).configureEach(new Action<Javadoc>() {
             @Override
-            public void execute(Javadoc javadoc) {
-                javadoc.getJavadocTool().set(javaToolchain.flatMap(BaselineJavaToolchain::javadocTool));
+            public void execute(Javadoc javadocTask) {
+                javadocTask.getJavadocTool().set(javaToolchain.flatMap(BaselineJavaToolchain::javadocTool));
+
+                // javadocTask doesn't allow us to add a CommandLineArgumentProvider, so we do it just in time
+                javadocTask.doFirst(new Action<Task>() {
+                    @Override
+                    public void execute(Task task) {
+                        CoreJavadocOptions options = (CoreJavadocOptions) ((Javadoc) task).getOptions();
+                        if (target.get().enablePreview()) {
+                            // yes, javadoc truly takes a single-dash where everyone else takes a double dash
+                            options.addBooleanOption("-enable-preview", true);
+                            options.setSource(target.get().javaLanguageVersion().toString());
+                        }
+                    }
+                });
             }
         });
 
         project.getTasks().withType(GroovyCompile.class).configureEach(new Action<GroovyCompile>() {
             @Override
-            public void execute(GroovyCompile groovyCompile) {
-                groovyCompile.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));
+            public void execute(GroovyCompile groovyCompileTask) {
+                groovyCompileTask.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));
+                groovyCompileTask
+                        .getOptions()
+                        .getCompilerArgumentProviders()
+                        .add(new EnablePreviewArgumentProvider(target));
+
                 // Set sourceCompatibility to opt out of '-release', allowing opens/exports to be used.
-                groovyCompile.doFirst(new Action<Task>() {
+                groovyCompileTask.doFirst(new Action<Task>() {
                     @Override
                     public void execute(Task task) {
                         ((GroovyCompile) task)
                                 .setSourceCompatibility(
-                                        targetVersionProvider.get().toString());
+                                        target.get().javaLanguageVersion().toString());
                     }
                 });
             }
@@ -129,15 +154,20 @@ public final class BaselineJavaVersion implements Plugin<Project> {
 
         project.getTasks().withType(ScalaCompile.class).configureEach(new Action<ScalaCompile>() {
             @Override
-            public void execute(ScalaCompile scalaCompile) {
-                scalaCompile.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));
+            public void execute(ScalaCompile scalaCompileTask) {
+                scalaCompileTask.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));
+                scalaCompileTask
+                        .getOptions()
+                        .getCompilerArgumentProviders()
+                        .add(new EnablePreviewArgumentProvider(target));
+
                 // Set sourceCompatibility to opt out of '-release', allowing opens/exports to be used.
-                scalaCompile.doFirst(new Action<Task>() {
+                scalaCompileTask.doFirst(new Action<Task>() {
                     @Override
                     public void execute(Task task) {
                         ((ScalaCompile) task)
                                 .setSourceCompatibility(
-                                        targetVersionProvider.get().toString());
+                                        target.get().javaLanguageVersion().toString());
                     }
                 });
             }
@@ -151,11 +181,13 @@ public final class BaselineJavaVersion implements Plugin<Project> {
         });
     }
 
-    private static void configureExecutionTasks(Project project, Provider<BaselineJavaToolchain> javaToolchain) {
+    private static void configureExecutionTasks(
+            Project project, Provider<ChosenJavaVersion> runtime, Provider<BaselineJavaToolchain> javaToolchain) {
         project.getTasks().withType(JavaExec.class).configureEach(new Action<JavaExec>() {
             @Override
             public void execute(JavaExec javaExec) {
                 javaExec.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));
+                javaExec.getJvmArgumentProviders().add(new EnablePreviewArgumentProvider(runtime));
             }
         });
 
@@ -163,6 +195,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             @Override
             public void execute(Test test) {
                 test.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));
+                test.getJvmArgumentProviders().add(new EnablePreviewArgumentProvider(runtime));
             }
         });
     }
@@ -171,44 +204,70 @@ public final class BaselineJavaVersion implements Plugin<Project> {
     @SuppressWarnings("checkstyle:DesignForExtension")
     public static class CheckJavaVersionsTask extends DefaultTask {
 
-        private final Property<JavaLanguageVersion> targetVersion;
-        private final Property<JavaLanguageVersion> runtimeVersion;
+        private final Property<ChosenJavaVersion> targetVersion;
+        private final Property<ChosenJavaVersion> runtimeVersion;
 
         @Inject
         public CheckJavaVersionsTask() {
             setGroup("Verification");
             setDescription("Ensures configured java versions are compatible: "
                     + "The runtime version must be greater than or equal to the target version.");
-            targetVersion = getProject().getObjects().property(JavaLanguageVersion.class);
-            runtimeVersion = getProject().getObjects().property(JavaLanguageVersion.class);
+            targetVersion = getProject().getObjects().property(ChosenJavaVersion.class);
+            runtimeVersion = getProject().getObjects().property(ChosenJavaVersion.class);
         }
 
         @Input
-        public Property<JavaLanguageVersion> getTargetVersion() {
+        public Property<ChosenJavaVersion> getTargetVersion() {
             return targetVersion;
         }
 
         @Input
-        public Property<JavaLanguageVersion> getRuntimeVersion() {
+        public Property<ChosenJavaVersion> getRuntimeVersion() {
             return runtimeVersion;
         }
 
         @TaskAction
         public final void checkJavaVersions() {
-            JavaLanguageVersion target = getTargetVersion().get();
-            JavaLanguageVersion runtime = getRuntimeVersion().get();
+            ChosenJavaVersion target = getTargetVersion().get();
+            ChosenJavaVersion runtime = getRuntimeVersion().get();
             getLogger()
                     .debug(
                             "BaselineJavaVersion configured project {} with target version {} and runtime version {}",
                             getProject(),
                             target,
                             runtime);
-            if (target.asInt() > runtime.asInt()) {
+
+            if (target.enablePreview() && !target.equals(runtime)) {
+                throw new GradleException(String.format(
+                        "Runtime Java version (%s) must be exactly the same as the compilation target (%s), because "
+                                + "--enable-preview is enabled. Otherwise Java will fail to start. See "
+                                + "https://openjdk.org/jeps/12.",
+                        runtime, target));
+            }
+
+            if (target.javaLanguageVersion().asInt()
+                    > runtime.javaLanguageVersion().asInt()) {
                 throw new GradleException(String.format(
                         "The requested compilation target Java version (%s) must not "
                                 + "exceed the requested runtime Java version (%s)",
                         target, runtime));
             }
+        }
+    }
+
+    private static class EnablePreviewArgumentProvider implements CommandLineArgumentProvider {
+
+        public static final String FLAG = "--enable-preview";
+
+        private final Provider<ChosenJavaVersion> provider;
+
+        private EnablePreviewArgumentProvider(Provider<ChosenJavaVersion> provider) {
+            this.provider = provider;
+        }
+
+        @Override
+        public Iterable<String> asArguments() {
+            return provider.get().enablePreview() ? Collections.singletonList(FLAG) : Collections.emptyList();
         }
     }
 }
