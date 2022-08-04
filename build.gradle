@@ -19,8 +19,8 @@ buildscript {
 }
 
 plugins {
-    id 'com.palantir.git-version' version '0.15.0'
-    id 'org.inferred.processors' version '3.6.0'
+ id 'com.palantir.git-version' version '0.15.0'
+ id 'org.inferred.processors' version '3.6.0'
 }
 
 apply plugin: 'com.palantir.external-publish'
