@@ -25,6 +25,7 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.plugins.JavaPluginExtension;
+import org.gradle.api.plugins.quality.Checkstyle;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
@@ -196,6 +197,13 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             public void execute(Test test) {
                 test.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));
                 test.getJvmArgumentProviders().add(new EnablePreviewArgumentProvider(runtime));
+            }
+        });
+
+        project.getTasks().withType(Checkstyle.class).configureEach(new Action<Checkstyle>() {
+            @Override
+            public void execute(Checkstyle checkstyle) {
+                checkstyle.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));
             }
         });
     }
