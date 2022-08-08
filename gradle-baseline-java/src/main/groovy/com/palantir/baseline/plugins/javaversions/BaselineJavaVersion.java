@@ -180,6 +180,13 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                 scalaDoc.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));
             }
         });
+
+        project.getTasks().withType(Checkstyle.class).configureEach(new Action<Checkstyle>() {
+            @Override
+            public void execute(Checkstyle checkstyle) {
+                checkstyle.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));
+            }
+        });
     }
 
     private static void configureExecutionTasks(
@@ -197,13 +204,6 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             public void execute(Test test) {
                 test.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));
                 test.getJvmArgumentProviders().add(new EnablePreviewArgumentProvider(runtime));
-            }
-        });
-
-        project.getTasks().withType(Checkstyle.class).configureEach(new Action<Checkstyle>() {
-            @Override
-            public void execute(Checkstyle checkstyle) {
-                checkstyle.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));
             }
         });
     }
