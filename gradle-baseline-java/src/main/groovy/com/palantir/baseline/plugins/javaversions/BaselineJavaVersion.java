@@ -132,6 +132,13 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             }
         });
 
+        project.getTasks().withType(Checkstyle.class).configureEach(new Action<Checkstyle>() {
+            @Override
+            public void execute(Checkstyle checkstyle) {
+                checkstyle.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));
+            }
+        });
+
         project.getTasks().withType(GroovyCompile.class).configureEach(new Action<GroovyCompile>() {
             @Override
             public void execute(GroovyCompile groovyCompileTask) {
@@ -178,13 +185,6 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             @Override
             public void execute(ScalaDoc scalaDoc) {
                 scalaDoc.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));
-            }
-        });
-
-        project.getTasks().withType(Checkstyle.class).configureEach(new Action<Checkstyle>() {
-            @Override
-            public void execute(Checkstyle checkstyle) {
-                checkstyle.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));
             }
         });
     }
