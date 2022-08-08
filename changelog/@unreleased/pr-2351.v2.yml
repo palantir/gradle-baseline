@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Set the java launcher for Checkstyle tasks, too
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2351
