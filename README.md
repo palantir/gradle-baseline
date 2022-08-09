@@ -127,9 +127,11 @@ Error-prone rules can be suppressed on a per-line or per-block basis just like C
 Rules can be suppressed at the project level, or have their severity modified, by adding the following to the project's `build.gradle`:
 
 ```gradle
-tasks.withType(JavaCompile).configureEach {
-    options.errorprone.disable 'Slf4jLogsafeArgs'
-}
+tasks.withType(JavaCompile).configureEach(new Action<Task>() {
+    public void execute(Task task) {
+        task.options.errorprone.disable 'Slf4jLogsafeArgs'
+    }
+})
 ```
 
 More information on error-prone severity handling can be found at [errorprone.info/docs/flags](http://errorprone.info/docs/flags).
