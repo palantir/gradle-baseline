@@ -19,8 +19,6 @@ package com.palantir.baseline.plugins;
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
 import com.palantir.gradle.junit.JunitReportsExtension;
-import com.palantir.gradle.junit.JunitReportsPlugin;
-import com.palantir.gradle.junit.JunitReportsRootPlugin;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -40,9 +38,6 @@ public final class BaselineCircleCi implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
-        project.getPluginManager().apply(JunitReportsRootPlugin.class);
-        project.getPluginManager().apply(JunitReportsPlugin.class);
-
         configurePluginsForReports(project);
         configurePluginsForArtifacts(project);
 
@@ -84,9 +79,20 @@ public final class BaselineCircleCi implements Plugin<Project> {
             throw new RuntimeException("failed to create CIRCLE_TEST_REPORTS directory", e);
         }
 
-        project.getExtensions().configure(JunitReportsExtension.class, junitReports -> junitReports
-                .getReportsDirectory()
-                .set(new File(circleReportsDir)));
+        project.getRootProject()
+                .allprojects(proj -> proj.getTasks().withType(Test.class).configureEach(test -> {
+                    test.getReports().getJunitXml().getRequired().set(true);
+                    test.getReports()
+                            .getJunitXml()
+                            .getOutputLocation()
+                            .set(junitPath(circleReportsDir, test.getPath()));
+                }));
+
+        project.getPluginManager().withPlugin("com.palantir.junit-reports", unused -> {
+            project.getExtensions().configure(JunitReportsExtension.class, junitReports -> junitReports
+                    .getReportsDirectory()
+                    .set(new File(circleReportsDir)));
+        });
     }
 
     private static File junitPath(String basePath, String testPath) {
