@@ -18,7 +18,6 @@ package com.palantir.baseline.plugins;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.palantir.gradle.junit.JunitReportsExtension;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -87,12 +86,6 @@ public final class BaselineCircleCi implements Plugin<Project> {
                             .getOutputLocation()
                             .set(junitPath(circleReportsDir, test.getPath()));
                 }));
-
-        project.getPluginManager().withPlugin("com.palantir.junit-reports", unused -> {
-            project.getExtensions().configure(JunitReportsExtension.class, junitReports -> junitReports
-                    .getReportsDirectory()
-                    .set(new File(circleReportsDir)));
-        });
     }
 
     private static File junitPath(String basePath, String testPath) {

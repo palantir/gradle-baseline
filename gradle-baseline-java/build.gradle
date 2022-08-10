@@ -7,7 +7,6 @@ import org.gradle.api.internal.classpath.ModuleRegistry
 import org.gradle.api.internal.project.ProjectInternal
 
 dependencies {
-    implementation project(':gradle-junit-reports')
     implementation gradleApi()
     implementation 'org.apache.commons:commons-lang3'
     implementation 'com.diffplug.spotless:spotless-plugin-gradle'
