@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Fix BaselineJavaVersion checkstyle configuration on gradle < 7.5
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2360
