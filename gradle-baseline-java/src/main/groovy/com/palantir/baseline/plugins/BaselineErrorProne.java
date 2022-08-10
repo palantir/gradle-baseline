@@ -170,6 +170,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
         errorProneOptions.disable(
                 "AutoCloseableMustBeClosed",
                 "CatchSpecificity",
+                "CanIgnoreReturnValueSuggester",
                 "InlineMeSuggester",
                 "PreferImmutableStreamExCollections",
                 "UnusedVariable",
