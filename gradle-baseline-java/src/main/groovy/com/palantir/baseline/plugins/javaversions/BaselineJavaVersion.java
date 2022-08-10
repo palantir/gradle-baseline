@@ -42,6 +42,7 @@ import org.gradle.api.tasks.testing.Test;
 import org.gradle.external.javadoc.CoreJavadocOptions;
 import org.gradle.jvm.toolchain.JavaToolchainSpec;
 import org.gradle.process.CommandLineArgumentProvider;
+import org.gradle.util.GradleVersion;
 
 public final class BaselineJavaVersion implements Plugin<Project> {
 
@@ -132,12 +133,15 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             }
         });
 
-        project.getTasks().withType(Checkstyle.class).configureEach(new Action<Checkstyle>() {
-            @Override
-            public void execute(Checkstyle checkstyle) {
-                checkstyle.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));
-            }
-        });
+        // checkstyle.getJavaLauncher() was added in Gradle 7.5
+        if (GradleVersion.current().compareTo(GradleVersion.version("7.5")) >= 0) {
+            project.getTasks().withType(Checkstyle.class).configureEach(new Action<Checkstyle>() {
+                @Override
+                public void execute(Checkstyle checkstyle) {
+                    checkstyle.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher));
+                }
+            });
+        }
 
         project.getTasks().withType(GroovyCompile.class).configureEach(new Action<GroovyCompile>() {
             @Override
