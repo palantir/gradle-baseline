@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: The `CyclomaticComplexity` checkstyle check is no longer enabled by
+    default.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2365
