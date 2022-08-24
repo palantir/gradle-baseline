@@ -1,0 +1,131 @@
+/*
+ * (c) Copyright 2022 Palantir Technologies Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.palantir.baseline.errorprone;
+
+import com.google.errorprone.CompilationTestHelper;
+import org.junit.jupiter.api.Disabled;
+import org.junit.jupiter.api.Test;
+
+public class ForbidJavaxParameterTypeTest {
+
+    @Test
+    void failsIfIncorrectTypeIsSuppliedViaConstructor() {
+
+        helper().addSourceLines(
+                        "Test.java",
+                        "package test;",
+                        "import javax.ws.rs.Path;",
+                        "import javax.ws.rs.GET;",
+                        "import com.palantir.errorprone.ForbidJavax;",
+                        "class Test {",
+                        "  public void requiresJakarta(@ForbidJavax Object o) {}",
+                        "  ",
+                        "  public static class Inner {",
+                        "    @Path(\"foo\")",
+                        "    @GET",
+                        "    public String doGet() { return \"hi\"; }",
+                        "  }",
+                        "  public static void main(String[] args) {",
+                        "    // BUG: Diagnostic contains: ForbidJavaxParameterType",
+                        "    new Test().requiresJakarta(new Inner());",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void failsIfIncorrectTypeIsSuppliedViaParameter() {
+
+        helper().addSourceLines(
+                        "Test.java",
+                        "package test;",
+                        "import javax.ws.rs.Path;",
+                        "import javax.ws.rs.GET;",
+                        "import com.palantir.errorprone.ForbidJavax;",
+                        "class Test {",
+                        "  public void requiresJakarta(@ForbidJavax Object o) {}",
+                        "  ",
+                        "  public static class Inner {",
+                        "    @Path(\"foo\")",
+                        "    @GET",
+                        "    public String doGet() { return \"hi\"; }",
+                        "  }",
+                        "  public static void main(String[] args) {",
+                        "    Inner inner = new Inner();",
+                        "    // BUG: Diagnostic contains: ForbidJavaxParameterType",
+                        "    new Test().requiresJakarta(inner);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void failsIfIncorrectTypeIsSuppliedViaMethodReturn() {
+
+        helper().addSourceLines(
+                        "Test.java",
+                        "package test;",
+                        "import javax.ws.rs.Path;",
+                        "import javax.ws.rs.GET;",
+                        "import com.palantir.errorprone.ForbidJavax;",
+                        "class Test {",
+                        "  public void requiresJakarta(@ForbidJavax Object o) {}",
+                        "  ",
+                        "  public static class Inner {",
+                        "    @Path(\"foo\")",
+                        "    @GET",
+                        "    public String doGet() { return \"hi\"; }",
+                        "  }",
+                        "  public static Inner getInner() { return new Inner(); }",
+                        "  public static void main(String[] args) {",
+                        "    // BUG: Diagnostic contains: ForbidJavaxParameterType",
+                        "    new Test().requiresJakarta(getInner());",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    @Disabled("Unfortunately disabled because we can't have both annotation types on the classpath")
+    void succeedsIfGivenJakartaType() {
+
+        helper().addSourceLines(
+                        "Test.java",
+                        "package test;",
+                        "import jakarta.ws.rs.Path;",
+                        "import jakarta.ws.rs.GET;",
+                        "import com.palantir.errorprone.ForbidJavax;",
+                        "class Test {",
+                        "  public void requiresJakarta(@ForbidJavax Object o) {}",
+                        "  ",
+                        "  public static class Inner {",
+                        "    @Path(\"foo\")",
+                        "    @GET",
+                        "    public String doGet() { return \"hi\"; }",
+                        "  }",
+                        "  public static Inner getInner() { return new Inner(); }",
+                        "  public static void main(String[] args) {",
+                        "    new Test().requiresJakarta(getInner());",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    private CompilationTestHelper helper() {
+        return CompilationTestHelper.newInstance(ForbidJavaxParameterType.class, getClass());
+    }
+}
