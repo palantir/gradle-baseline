@@ -1,0 +1,25 @@
+type: improvement
+improvement:
+  description: |-
+    Add an errorprone check and typed annotation for Javax -> Jakarta
+
+    There is a certain class of very problematic cases whereby if you have
+    a method such as the following:
+
+    ```
+    myJerseyResource.register(/* this is of type Object */ object);
+    ```
+
+    Then if you supply a resource which includes any `javax.ws.rs`
+    annotations on it, then those will not be registered if your Jersey
+    version is 3.x or later (and you'll only find this out at runtime).
+
+    The opposite is also true if you try to supply resources annotated
+    with `jakarta.ws.rs` to Jersey 2.x.
+
+    To address this, this commit attempts to add an errorprone check
+    which lets implementors add an annotation `@ForbidJavax` to methods
+    which have been knowingly migrated to Jakarta EE9 and cannot
+    accept legacy javax types.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2366
