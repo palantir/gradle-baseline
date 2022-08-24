@@ -100,6 +100,34 @@ public class ForbidJavaxParameterTypeTest {
     }
 
     @Test
+    void stillFailsIfInnerIsSeparateClass() {
+        CompilationTestHelper helper = helper();
+
+        helper.addSourceLines(
+                "Outer.java",
+                "import javax.ws.rs.Path;",
+                "import javax.ws.rs.GET;",
+                "  public class Outer {",
+                "    @Path(\"foo\")",
+                "    @GET",
+                "    public String doGet() { return \"hi\"; }",
+                "  }");
+        helper.addSourceLines(
+                        "Test.java",
+                        "import com.palantir.errorprone.ForbidJavax;",
+                        "class Test {",
+                        "  public void requiresJakarta(@ForbidJavax Object o) {}",
+                        "  ",
+                        "  public static Outer getOuter() { return new Outer(); }",
+                        "  public static void main(String[] args) {",
+                        "    // BUG: Diagnostic contains: ForbidJavaxParameterType",
+                        "    new Test().requiresJakarta(getOuter());",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     @Disabled("Unfortunately disabled because we can't have both annotation types on the classpath")
     void succeedsIfGivenJakartaType() {
 
