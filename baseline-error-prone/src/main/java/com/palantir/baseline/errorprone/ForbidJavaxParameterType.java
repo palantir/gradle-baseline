@@ -28,7 +28,6 @@ import com.palantir.errorprone.ForbidJavax;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
-import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Symbol.TypeSymbol;
@@ -48,13 +47,8 @@ import java.util.List;
                 + "untyped Object. There is no auto-fix for this check, you must fix it manually")
 public final class ForbidJavaxParameterType extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
-    private static final Matcher<ClassTree> HAS_JAXRS_ANNOTATIONS = Matchers.hasMethod(Matchers.anyOf(
-            Matchers.hasAnnotation("javax.ws.rs.GET"),
-            Matchers.hasAnnotation("javax.ws.rs.POST"),
-            Matchers.hasAnnotation("javax.ws.rs.DELETE"),
-            Matchers.hasAnnotation("javax.ws.rs.PUT"),
-            Matchers.hasAnnotation("javax.ws.rs.HEAD"),
-            Matchers.hasAnnotation("javax.ws.rs.OPTIONS")));
+    private static final Matcher<ClassTree> HAS_JAXRS_ANNOTATIONS =
+            Matchers.hasMethod(MoreMatchers.hasAnnotationWithPackagePrefix("javax.ws.rs"));
 
     private static final Matcher<ClassTree> IMPLEMENTS_FEATURE = Matchers.isSubtypeOf("javax.ws.rs.core.Feature");
 
@@ -83,11 +77,11 @@ public final class ForbidJavaxParameterType extends BugChecker implements BugChe
                 continue;
             }
 
-            if (hasJavaxInclusions(ASTHelpers.getSymbol(argument), state)) {
+            Type resultType = ASTHelpers.getResultType(argument);
+            if (hasJavaxInclusions(resultType, state)) {
+                // we know that resultType is not-null here since hasJavaxInclusions returns false for null
                 return buildDescription(tree)
-                        .setMessage(ASTHelpers.getSymbol(argument)
-                                        .getQualifiedName()
-                                        .toString()
+                        .setMessage(resultType.asElement().getQualifiedName().toString()
                                 + " registers legacy javax imports but is being supplied to a method which"
                                 + " requires jakarta")
                         .build();
@@ -97,17 +91,12 @@ public final class ForbidJavaxParameterType extends BugChecker implements BugChe
         return Description.NO_MATCH;
     }
 
-    private boolean hasJavaxInclusions(Symbol symbol, VisitorState state) {
-        if (symbol instanceof MethodSymbol) {
-            MethodSymbol method = (MethodSymbol) symbol;
-            Type returnValue = method.isConstructor() ? method.owner.type : method.getReturnType();
-
-            return hasJavaxInclusionsOnType(returnValue.asElement(), state);
-        } else if (symbol instanceof VarSymbol) {
-            VarSymbol varSym = (VarSymbol) symbol;
-            return hasJavaxInclusionsOnType(varSym.type.asElement(), state);
+    private boolean hasJavaxInclusions(Type resultType, VisitorState state) {
+        if (resultType == null) {
+            return false;
         }
-        return false;
+
+        return hasJavaxInclusionsOnType(resultType.asElement(), state);
     }
 
     private boolean hasJavaxInclusionsOnType(TypeSymbol symbol, VisitorState state) {
