@@ -1,7 +1,6 @@
 rootProject.name = "gradle-baseline"
 
 include "baseline-error-prone"
-include "baseline-error-prone-annotations"
 include "baseline-refaster-javac-plugin"
 include "baseline-refaster-rules"
 include "baseline-refaster-testing"

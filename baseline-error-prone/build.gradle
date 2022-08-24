@@ -9,10 +9,11 @@ javaVersion {
 }
 
 dependencies {
-    implementation project(':baseline-error-prone-annotations')
     implementation 'com.google.errorprone:error_prone_core'
     // Ensure a new enough version of dataflow-errorprone is available
     implementation 'org.checkerframework:dataflow-errorprone'
+    // for ForbidJavax
+    implementation 'com.palantir.conjure.java.runtime:conjure-java-annotations'
 
     testImplementation gradleApi()
     testImplementation 'com.palantir.tokens:auth-tokens'
