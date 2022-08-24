@@ -21,13 +21,13 @@ import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.matchers.Description;
-import com.google.errorprone.matchers.Matcher;
-import com.google.errorprone.matchers.Matchers;
+import com.google.errorprone.predicates.TypePredicate;
+import com.google.errorprone.predicates.TypePredicates;
 import com.google.errorprone.util.ASTHelpers;
 import com.palantir.errorprone.ForbidJavax;
-import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
+import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Symbol.TypeSymbol;
@@ -35,6 +35,7 @@ import com.sun.tools.javac.code.Symbol.VarSymbol;
 import com.sun.tools.javac.code.Type;
 import java.lang.annotation.Annotation;
 import java.util.List;
+import java.util.function.Predicate;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -47,12 +48,10 @@ import java.util.List;
                 + "untyped Object. There is no auto-fix for this check, you must fix it manually")
 public final class ForbidJavaxParameterType extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
-    private static final Matcher<ClassTree> HAS_JAXRS_ANNOTATIONS =
-            Matchers.hasMethod(MoreMatchers.hasAnnotationWithPackagePrefix("javax.ws.rs"));
+    private static final Predicate<Symbol> HAS_JAXRS_ANNOTATION =
+            SymbolPredicates.hasAnnotationWithPackage("javax.ws.rs");
 
-    private static final Matcher<ClassTree> IMPLEMENTS_FEATURE = Matchers.isSubtypeOf("javax.ws.rs.core.Feature");
-
-    private static final Matcher<ClassTree> HAS_PATH_ANNOTATION = Matchers.hasAnnotation("javax.ws.rs.Path");
+    private static final TypePredicate IMPLEMENTS_FEATURE = TypePredicates.isDescendantOf("javax.ws.rs.core.Feature");
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
@@ -102,18 +101,19 @@ public final class ForbidJavaxParameterType extends BugChecker implements BugChe
     private boolean hasJavaxInclusionsOnType(TypeSymbol symbol, VisitorState state) {
         if (symbol instanceof ClassSymbol) {
             ClassSymbol classType = (ClassSymbol) symbol;
-            ClassTree classTree = ASTHelpers.findClass(classType, state);
 
-            if (HAS_PATH_ANNOTATION.matches(classTree, state)) {
+            if (IMPLEMENTS_FEATURE.apply(classType.type, state)) {
                 return true;
             }
 
-            if (IMPLEMENTS_FEATURE.matches(classTree, state)) {
+            if (HAS_JAXRS_ANNOTATION.test(classType)) {
                 return true;
             }
 
-            if (HAS_JAXRS_ANNOTATIONS.matches(classTree, state)) {
-                return true;
+            for (Symbol sym : classType.type.tsym.getEnclosedElements()) {
+                if (HAS_JAXRS_ANNOTATION.test(sym)) {
+                    return true;
+                }
             }
         }
 
