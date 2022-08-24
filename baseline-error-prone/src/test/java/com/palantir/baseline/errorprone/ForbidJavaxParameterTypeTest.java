@@ -133,6 +133,13 @@ public class ForbidJavaxParameterTypeTest {
         String doGet();
     }
 
+    public static final class JaxrsAnnotatedClass implements JaxrsAnnotatedIface {
+        @Override
+        public String doGet() {
+            return "PONG";
+        }
+    }
+
     @Test
     void stillFailsIfInnerIsSeparateJar() {
         helper().addSourceLines(
@@ -144,6 +151,40 @@ public class ForbidJavaxParameterTypeTest {
                         "  public static void f(JaxrsAnnotatedIface arg) {",
                         "    // BUG: Diagnostic contains: ForbidJavaxParameterType",
                         "    requiresJakarta(arg);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void failsIfGivenImplementationResource() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.errorprone.ForbidJavax;",
+                        "import " + JaxrsAnnotatedClass.class.getCanonicalName() + ';',
+                        "class Test {",
+                        "  public static void requiresJakarta(@ForbidJavax Object o) {}",
+                        "  public static void f() {",
+                        "    JaxrsAnnotatedClass jaxrs = new JaxrsAnnotatedClass();",
+                        "    // BUG: Diagnostic contains: ForbidJavaxParameterType",
+                        "    requiresJakarta(jaxrs);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void knowinglyFailsIfGivenBlankObject() {
+        // we can really only do so much, if all we're given is a blank object, we can't
+        // realistically handle this case, so at least have a test confirming this behavior
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.errorprone.ForbidJavax;",
+                        "import " + JaxrsAnnotatedClass.class.getCanonicalName() + ';',
+                        "class Test {",
+                        "  public static void requiresJakarta(@ForbidJavax Object o) {}",
+                        "  public static void f(Object jaxrs) {",
+                        "    requiresJakarta(jaxrs);",
                         "  }",
                         "}")
                 .doTest();

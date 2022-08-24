@@ -17,6 +17,7 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
+import com.google.common.collect.ImmutableList;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
@@ -110,9 +111,17 @@ public final class ForbidJavaxParameterType extends BugChecker implements BugChe
                 return true;
             }
 
-            for (Symbol sym : classType.type.tsym.getEnclosedElements()) {
-                if (HAS_JAXRS_ANNOTATION.test(sym)) {
-                    return true;
+            // this obviously fails if there is > 1 level of hierarchy where the JaxRS
+            // annotations exist. Fortunately this should be fine for most use cases
+            List<Type> thisAndParents = ImmutableList.<Type>builder()
+                    .add(classType.type)
+                    .addAll(classType.getInterfaces())
+                    .build();
+            for (Type t : thisAndParents) {
+                for (Symbol sym : t.tsym.getEnclosedElements()) {
+                    if (HAS_JAXRS_ANNOTATION.test(sym)) {
+                        return true;
+                    }
                 }
             }
         }
