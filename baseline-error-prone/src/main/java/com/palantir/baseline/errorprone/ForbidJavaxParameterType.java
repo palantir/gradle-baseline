@@ -87,11 +87,11 @@ public final class ForbidJavaxParameterType extends BugChecker implements BugChe
 
             if (hasJavaxInclusions(ASTHelpers.getSymbol(argument), state)) {
                 return descriptionBuilder
-                        .setMessage(
-                                ASTHelpers.getSymbol(argument)
-                                                .getQualifiedName()
-                                                .toString()
-                                        + " registers legacy javax imports but is being supplied to a method which requires jakarta")
+                        .setMessage(ASTHelpers.getSymbol(argument)
+                                        .getQualifiedName()
+                                        .toString()
+                                + " registers legacy javax imports but is being supplied to a method which"
+                                + " requires jakarta")
                         .build();
             }
         }
