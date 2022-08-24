@@ -17,6 +17,8 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.errorprone.CompilationTestHelper;
+import javax.ws.rs.GET;
+import javax.ws.rs.Path;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 
@@ -101,18 +103,16 @@ public class ForbidJavaxParameterTypeTest {
 
     @Test
     void stillFailsIfInnerIsSeparateClass() {
-        CompilationTestHelper helper = helper();
-
-        helper.addSourceLines(
-                "Outer.java",
-                "import javax.ws.rs.Path;",
-                "import javax.ws.rs.GET;",
-                "  public class Outer {",
-                "    @Path(\"foo\")",
-                "    @GET",
-                "    public String doGet() { return \"hi\"; }",
-                "  }");
-        helper.addSourceLines(
+        helper().addSourceLines(
+                        "Outer.java",
+                        "import javax.ws.rs.Path;",
+                        "import javax.ws.rs.GET;",
+                        "  public class Outer {",
+                        "    @Path(\"foo\")",
+                        "    @GET",
+                        "    public String doGet() { return \"hi\"; }",
+                        "  }")
+                .addSourceLines(
                         "Test.java",
                         "import com.palantir.errorprone.ForbidJavax;",
                         "class Test {",
@@ -122,6 +122,28 @@ public class ForbidJavaxParameterTypeTest {
                         "  public static void main(String[] args) {",
                         "    // BUG: Diagnostic contains: ForbidJavaxParameterType",
                         "    new Test().requiresJakarta(getOuter());",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    public interface JaxrsAnnotatedIface {
+        @Path("foo")
+        @GET
+        String doGet();
+    }
+
+    @Test
+    void stillFailsIfInnerIsSeparateJar() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.errorprone.ForbidJavax;",
+                        "import " + JaxrsAnnotatedIface.class.getCanonicalName() + ';',
+                        "class Test {",
+                        "  public static void requiresJakarta(@ForbidJavax Object o) {}",
+                        "  public static void f(JaxrsAnnotatedIface arg) {",
+                        "    // BUG: Diagnostic contains: ForbidJavaxParameterType",
+                        "    requiresJakarta(arg);",
                         "  }",
                         "}")
                 .doTest();
