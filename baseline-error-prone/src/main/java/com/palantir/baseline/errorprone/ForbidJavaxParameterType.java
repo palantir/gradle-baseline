@@ -21,7 +21,6 @@ import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.matchers.Description;
-import com.google.errorprone.matchers.Description.Builder;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.util.ASTHelpers;
@@ -75,7 +74,6 @@ public final class ForbidJavaxParameterType extends BugChecker implements BugChe
             return Description.NO_MATCH;
         }
 
-        Builder descriptionBuilder = buildDescription(tree);
         for (int i = 0; i < typeParameters.size(); ++i) {
             VarSymbol parameter = typeParameters.get(i);
             ExpressionTree argument = arguments.get(i);
@@ -86,7 +84,7 @@ public final class ForbidJavaxParameterType extends BugChecker implements BugChe
             }
 
             if (hasJavaxInclusions(ASTHelpers.getSymbol(argument), state)) {
-                return descriptionBuilder
+                return buildDescription(tree)
                         .setMessage(ASTHelpers.getSymbol(argument)
                                         .getQualifiedName()
                                         .toString()
