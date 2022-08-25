@@ -181,7 +181,11 @@ public final class BaselineExactDependencies implements Plugin<Project> {
         explicitCompile
                 .getIncoming()
                 .beforeResolve(ir -> Preconditions.checkState(
-                        projectsEvaluated.get(), "Tried to resolve %s too early.", explicitCompile));
+                        projectsEvaluated.get()
+                                || (project.getGradle().getStartParameter().isConfigureOnDemand()
+                                        && project.getState().getExecuted()),
+                        "Tried to resolve %s too early.",
+                        explicitCompile));
 
         TaskProvider<CheckUnusedDependenciesTask> sourceSetUnusedDependencies = project.getTasks()
                 .register(
