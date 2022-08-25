@@ -299,12 +299,11 @@ configurations.all {
 ```
 
 ## com.palantir.baseline-circleci
+
 The plugin surfaces failures using JUnit XML which is rendered nicely by CircleCI, by
 
 1. Storing JUnit test reports in `$CIRCLE_TEST_REPORTS/junit`
-2. Converting java compilation errors and checkstyle errors into test failures stored under `$CIRCLE_TEST_REPORTS/javac` and `$CIRCLE_TEST_REPORTS/checkstyle` respectively
-![CHECKSTYLE — 1 FAILURE](images/checkstyle-circle-failure.png?raw=true "CircleCI failure image")
-3. Storeing the HTML output of tests in `$CIRCLE_ARTIFACTS/junit`
+2. Storeing the HTML output of tests in `$CIRCLE_ARTIFACTS/junit`
 
 ## com.palantir.baseline-format
 

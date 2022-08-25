@@ -51,6 +51,18 @@ class BaselineCircleCiIntegrationTest extends AbstractPluginTest {
         new File(System.getenv('CIRCLE_ARTIFACTS')).toPath().deleteDir()
     }
 
+    def 'collects junit reports'() {
+        when:
+        buildFile << standardBuildFile
+        file('src/test/java/test/TestClass.java') << javaFile
+
+        String testReports = System.getenv('CIRCLE_TEST_REPORTS')
+        then:
+        BuildResult result = with('test').build()
+        result.task(':test').outcome == TaskOutcome.SUCCESS
+        new File(new File(testReports, 'junit'), 'test').list().toList().toSet() == ['TEST-test.TestClass.xml'].toSet()
+    }
+
     def 'collects html reports'() {
         when:
         buildFile << standardBuildFile
