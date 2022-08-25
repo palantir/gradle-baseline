@@ -25,7 +25,6 @@ import com.google.errorprone.matchers.Description;
 import com.google.errorprone.predicates.TypePredicate;
 import com.google.errorprone.predicates.TypePredicates;
 import com.google.errorprone.util.ASTHelpers;
-import com.palantir.errorprone.ForbidJavax;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.tools.javac.code.Symbol;
@@ -34,7 +33,6 @@ import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Symbol.TypeSymbol;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
 import com.sun.tools.javac.code.Type;
-import java.lang.annotation.Annotation;
 import java.util.List;
 import java.util.function.Predicate;
 
@@ -49,6 +47,8 @@ import java.util.function.Predicate;
                 + "untyped Object. There is no auto-fix for this check, you must fix it manually")
 public final class ForbidJavaxParameterType extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
+    private static final String FORBID_JAVAX_TYPE = "com.palantir.errorprone.ForbidJavax";
+
     private static final Predicate<Symbol> HAS_JAXRS_ANNOTATION =
             SymbolPredicates.hasAnnotationWithPackage("javax.ws.rs");
 
@@ -58,22 +58,24 @@ public final class ForbidJavaxParameterType extends BugChecker implements BugChe
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
         List<? extends ExpressionTree> arguments = tree.getArguments();
         MethodSymbol methodSymbol = ASTHelpers.getSymbol(tree);
-        List<VarSymbol> typeParameters = methodSymbol.getParameters();
+        List<VarSymbol> methodParameters = methodSymbol.getParameters();
 
-        if (typeParameters == null
-                || typeParameters.isEmpty()
+        if (methodParameters == null
+                || methodParameters.isEmpty()
                 || arguments == null
                 || arguments.isEmpty()
-                || arguments.size() != typeParameters.size()) {
+                || arguments.size() != methodParameters.size()) {
             return Description.NO_MATCH;
         }
 
-        for (int i = 0; i < typeParameters.size(); ++i) {
-            VarSymbol parameter = typeParameters.get(i);
+        for (int i = 0; i < methodParameters.size(); ++i) {
+            VarSymbol parameter = methodParameters.get(i);
             ExpressionTree argument = arguments.get(i);
 
-            Annotation maybeRequireJakarta = parameter.getAnnotation(ForbidJavax.class);
-            if (maybeRequireJakarta == null) {
+            boolean missingForbidJavaAnnotation = parameter.getAnnotationMirrors().stream()
+                    .noneMatch(
+                            c -> FORBID_JAVAX_TYPE.equals(c.type.tsym.flatName().toString()));
+            if (missingForbidJavaAnnotation) {
                 continue;
             }
 

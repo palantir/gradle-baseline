@@ -26,9 +26,7 @@ import com.sun.source.tree.ModifiersTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.VariableTree;
 import com.sun.source.util.TreePath;
-import com.sun.tools.javac.code.Attribute.Compound;
 import com.sun.tools.javac.code.Symbol;
-import com.sun.tools.javac.util.Name;
 import java.util.Locale;
 import javax.lang.model.element.Modifier;
 
@@ -71,19 +69,6 @@ final class MoreMatchers {
                     return matcher.matches((ClassTree) leaf, state);
                 }
                 currentPath = currentPath.getParentPath();
-            }
-            return false;
-        };
-    }
-
-    static <T extends Tree> Matcher<T> hasAnnotationWithPackagePrefix(String prefix) {
-        return (classTree, state) -> {
-            Name packageName = state.getName(prefix);
-            Symbol sym = ASTHelpers.getSymbol(classTree);
-            for (Compound a : sym.getRawAttributes()) {
-                if (a.type.tsym.flatName().startsWith(packageName)) {
-                    return true;
-                }
             }
             return false;
         };

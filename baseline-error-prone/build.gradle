@@ -12,8 +12,6 @@ dependencies {
     implementation 'com.google.errorprone:error_prone_core'
     // Ensure a new enough version of dataflow-errorprone is available
     implementation 'org.checkerframework:dataflow-errorprone'
-    // for ForbidJavax
-    implementation 'com.palantir.conjure.java.runtime:conjure-java-annotations'
 
     testImplementation gradleApi()
     testImplementation 'com.palantir.tokens:auth-tokens'
@@ -37,6 +35,8 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-migrationsupport'
     testRuntimeOnly 'one.util:streamex'
     testRuntimeOnly 'com.fasterxml.jackson.module:jackson-module-afterburner'
+    // for ForbidJavax
+    testRuntimeOnly 'com.palantir.conjure.java.runtime:conjure-java-annotations'
 
     annotationProcessor 'com.google.auto.service:auto-service'
     compileOnly 'org.immutables:value::annotations'
