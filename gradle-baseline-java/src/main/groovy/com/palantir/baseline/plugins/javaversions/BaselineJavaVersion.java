@@ -33,6 +33,7 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
+import org.gradle.api.tasks.compile.CompileOptions;
 import org.gradle.api.tasks.compile.GroovyCompile;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
@@ -96,10 +97,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             @Override
             public void execute(JavaCompile javaCompileTask) {
                 javaCompileTask.getJavaCompiler().set(javaToolchain.flatMap(BaselineJavaToolchain::javaCompiler));
-                javaCompileTask
-                        .getOptions()
-                        .getCompilerArgumentProviders()
-                        .add(new EnablePreviewArgumentProvider(target));
+                enablePreviewOnCompileTask(target, javaCompileTask.getOptions());
 
                 // Set sourceCompatibility to opt out of '-release', allowing opens/exports to be used.
                 javaCompileTask.doFirst(new Action<Task>() {
@@ -264,6 +262,16 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                                 + "exceed the requested runtime Java version (%s)",
                         target, runtime));
             }
+        }
+    }
+
+    /**
+     * <a href="https://github.com/JetBrains/intellij-community/pull/2135">Further details available here.</a>
+     */
+    private static void enablePreviewOnCompileTask(
+            Provider<ChosenJavaVersion> provider, CompileOptions compileOptions) {
+        if (provider.get().enablePreview()) {
+            compileOptions.getCompilerArgs().add(EnablePreviewArgumentProvider.FLAG);
         }
     }
 
