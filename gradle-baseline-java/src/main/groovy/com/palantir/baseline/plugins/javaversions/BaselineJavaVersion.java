@@ -33,7 +33,6 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
-import org.gradle.api.tasks.compile.CompileOptions;
 import org.gradle.api.tasks.compile.GroovyCompile;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
@@ -101,7 +100,6 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                         .getOptions()
                         .getCompilerArgumentProviders()
                         .add(new EnablePreviewArgumentProvider(target));
-                hackTryToMakePreviewFeaturesWorkInIntellij(target, javaCompileTask.getOptions());
 
                 // Set sourceCompatibility to opt out of '-release', allowing opens/exports to be used.
                 javaCompileTask.doFirst(new Action<Task>() {
@@ -266,21 +264,6 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                                 + "exceed the requested runtime Java version (%s)",
                         target, runtime));
             }
-        }
-    }
-
-    /**
-     * <a href="https://github.com/JetBrains/intellij-community/pull/2135">Further details available here.</a>
-     * This is not guaranteed to work - there's a race that depends on plugin application vs when the javaVersions
-     * closer is applied. However, based on the root project being configured before subprojects, this will likely
-     * catch practical occurrences.
-     * An artifact of this is that compile tasks will get _two_ --enable-preview flags set, although this is
-     * semantically meaningless.
-     */
-    private static void hackTryToMakePreviewFeaturesWorkInIntellij(
-            Provider<ChosenJavaVersion> provider, CompileOptions compileOptions) {
-        if (provider.get().enablePreview()) {
-            compileOptions.getCompilerArgs().add(EnablePreviewArgumentProvider.FLAG);
         }
     }
 
