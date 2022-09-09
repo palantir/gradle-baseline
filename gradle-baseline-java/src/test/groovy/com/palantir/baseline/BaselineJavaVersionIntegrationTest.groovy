@@ -16,12 +16,16 @@
 
 package com.palantir.baseline
 
+import org.junit.platform.engine.ExecutionRequest
+
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import nebula.test.IntegrationSpec
 import nebula.test.functional.ExecutionResult
 import org.assertj.core.api.Assumptions
+
+import java.util.concurrent.Executor
 
 /**
  * This test exercises both the root-plugin {@code BaselineJavaVersions} AND the subproject
@@ -147,6 +151,36 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, ENABLE_PREVIEW_BYTECODE)
     }
 
+    def 'setting library target to preview version fails'() {
+        when:
+        buildFile << '''
+        javaVersions {
+            libraryTarget = '17_PREVIEW'
+        }
+        '''.stripIndent(true)
+        file('src/main/java/Main.java') << java17PreviewCode
+
+        then:
+        ExecutionResult result = runTasksWithFailure('compileJava', '-i')
+        result.standardError.contains 'cannot be run on newer JVMs'
+    }
+
+    def 'java 17 preview on single project works'() {
+        when:
+        buildFile << '''
+        javaVersion {
+            runtime = '17_PREVIEW'
+            target = '17_PREVIEW'
+        }
+        '''.stripIndent(true)
+        file('src/main/java/Main.java') << java17PreviewCode
+        File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
+
+        then:
+        runTasksSuccessfully('compileJava', '-i')
+        assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, ENABLE_PREVIEW_BYTECODE)
+    }
+
     def 'java 17 preview javadoc works'() {
         when:
         buildFile << '''
@@ -220,7 +254,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         when:
         buildFile << '''
         javaVersions {
-            libraryTarget = 11
+            libraryTarget = '11'
         }
         '''.stripIndent(true)
         file('src/main/java/Main.java') << java11CompatibleCode
