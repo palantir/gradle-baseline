@@ -16,16 +16,12 @@
 
 package com.palantir.baseline
 
-import org.junit.platform.engine.ExecutionRequest
-
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import nebula.test.IntegrationSpec
 import nebula.test.functional.ExecutionResult
 import org.assertj.core.api.Assumptions
-
-import java.util.concurrent.Executor
 
 /**
  * This test exercises both the root-plugin {@code BaselineJavaVersions} AND the subproject
