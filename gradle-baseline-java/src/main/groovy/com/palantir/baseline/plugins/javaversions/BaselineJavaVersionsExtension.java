@@ -20,6 +20,7 @@ import com.palantir.gradle.utils.lazilyconfiguredmapping.LazilyConfiguredMapping
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.inject.Inject;
+import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Property;
 import org.gradle.jvm.toolchain.JavaInstallationMetadata;
@@ -38,6 +39,7 @@ public class BaselineJavaVersionsExtension {
 
     @Inject
     public BaselineJavaVersionsExtension(Project project) {
+        throwIfNotRootProject(project);
         this.libraryTarget = project.getObjects().property(JavaLanguageVersion.class);
         this.distributionTarget = project.getObjects().property(ChosenJavaVersion.class);
         this.runtime = project.getObjects().property(ChosenJavaVersion.class);
@@ -52,6 +54,13 @@ public class BaselineJavaVersionsExtension {
         runtime.finalizeValueOnRead();
     }
 
+    private static void throwIfNotRootProject(Project project) {
+        if (!project.equals(project.getRootProject())) {
+            throw new GradleException("The javaVersions extension can only be applied to the root project."
+                    + " Did you mean javaVersion, which can be used to override on a project-by-project basis?");
+        }
+    }
+
     /** Target {@link JavaLanguageVersion} for compilation of libraries that are published. */
     public final Property<JavaLanguageVersion> libraryTarget() {
         return libraryTarget;
@@ -59,6 +68,16 @@ public class BaselineJavaVersionsExtension {
 
     public final void setLibraryTarget(int value) {
         libraryTarget.set(JavaLanguageVersion.of(value));
+    }
+
+    public final void setLibraryTarget(String value) {
+        ChosenJavaVersion version = ChosenJavaVersion.fromString(value);
+        if (version.enablePreview()) {
+            throw new GradleException("Because code compiled with preview features cannot be run on newer JVMs, "
+                    + "(Java 15 preview cannot be run on Java 17, e.g.) it is unsuitable for use on projects that"
+                    + " are published as libraries.");
+        }
+        libraryTarget.set(version.javaLanguageVersion());
     }
 
     /**
