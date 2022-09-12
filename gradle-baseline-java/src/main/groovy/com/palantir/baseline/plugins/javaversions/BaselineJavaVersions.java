@@ -56,6 +56,9 @@ public final class BaselineJavaVersions implements Plugin<Project> {
         }
         BaselineJavaVersionsExtension rootExtension =
                 project.getExtensions().create(EXTENSION_NAME, BaselineJavaVersionsExtension.class, project);
+        project.subprojects(proj ->
+                proj.getExtensions().create(EXTENSION_NAME, SubprojectBaselineJavaVersionsExtension.class, project));
+
         project.allprojects(proj -> proj.getPluginManager().withPlugin("java", unused -> {
             proj.getPluginManager().apply(BaselineJavaVersion.class);
             BaselineJavaVersionExtension projectVersions =
