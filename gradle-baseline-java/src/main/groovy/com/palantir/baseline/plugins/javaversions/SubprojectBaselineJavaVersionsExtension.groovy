@@ -19,7 +19,7 @@ package com.palantir.baseline.plugins.javaversions
 import org.gradle.api.GradleException
 
 class SubprojectBaselineJavaVersionsExtension {
-    void methodMissing(String name, def args) {
+    void propertyMissing(String name) {
         throw new GradleException("The javaVersions extension can only be applied to the root project."
                 + " Did you mean javaVersion, which can be used to override on a project-by-project basis?")
     }
