@@ -20,7 +20,6 @@ import com.palantir.gradle.utils.lazilyconfiguredmapping.LazilyConfiguredMapping
 import java.util.Optional;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.inject.Inject;
-import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Property;
 import org.gradle.jvm.toolchain.JavaInstallationMetadata;
@@ -30,7 +29,7 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion;
  * Extension named {@code javaVersions} on the root project used to configure all java modules
  * with consistent java toolchains.
  */
-public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtensionSetters {
+public class BaselineJavaVersionsExtension {
     private final Property<JavaLanguageVersion> libraryTarget;
     private final Property<ChosenJavaVersion> distributionTarget;
     private final Property<ChosenJavaVersion> runtime;
@@ -58,20 +57,8 @@ public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtens
         return libraryTarget;
     }
 
-    @Override
     public final void setLibraryTarget(int value) {
         libraryTarget.set(JavaLanguageVersion.of(value));
-    }
-
-    @Override
-    public final void setLibraryTarget(String value) {
-        ChosenJavaVersion version = ChosenJavaVersion.fromString(value);
-        if (version.enablePreview()) {
-            throw new GradleException("Because code compiled with preview features cannot be run on newer JVMs, "
-                    + "(Java 15 preview cannot be run on Java 17, e.g.) it is unsuitable for use on projects that"
-                    + " are published as libraries.");
-        }
-        libraryTarget.set(version.javaLanguageVersion());
     }
 
     /**
@@ -82,13 +69,11 @@ public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtens
         return distributionTarget;
     }
 
-    @Override
     public final void setDistributionTarget(int value) {
         distributionTarget.set(ChosenJavaVersion.of(value));
     }
 
     /** Accepts inputs such as '17_PREVIEW'. */
-    @Override
     public final void setDistributionTarget(String value) {
         distributionTarget.set(ChosenJavaVersion.fromString(value));
     }
@@ -98,13 +83,11 @@ public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtens
         return runtime;
     }
 
-    @Override
     public final void setRuntime(int value) {
         runtime.set(ChosenJavaVersion.of(value));
     }
 
     /** Accepts inputs such as '17_PREVIEW'. */
-    @Override
     public final void setRuntime(String value) {
         runtime.set(ChosenJavaVersion.fromString(value));
     }
@@ -123,7 +106,7 @@ public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtens
                 .map(javaInstallationMetadata -> ref -> ref.set(javaInstallationMetadata)));
     }
 
-    interface LazyJdks {
+    public interface LazyJdks {
         Optional<JavaInstallationMetadata> jdkFor(JavaLanguageVersion javaLanguageVersion, Project project);
     }
 }
