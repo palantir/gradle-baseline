@@ -19,7 +19,7 @@ package com.palantir.baseline.plugins
 import com.google.common.collect.ImmutableMap
 import com.palantir.baseline.IntellijSupport
 import com.palantir.baseline.plugins.javaversions.BaselineJavaVersionExtension
-import com.palantir.baseline.plugins.javaversions.BaselineJavaVersionsExtension
+import com.palantir.baseline.plugins.javaversions.RootBaselineJavaVersionsExtension
 import com.palantir.baseline.plugins.javaversions.ChosenJavaVersion
 import com.palantir.baseline.util.GitUtils
 import groovy.transform.CompileStatic
@@ -194,14 +194,14 @@ class BaselineIdea extends AbstractBaselinePlugin {
     }
 
     private void setRootJavaVersions(Node node) {
-        BaselineJavaVersionsExtension versions = project.getExtensions().findByType(BaselineJavaVersionsExtension.class)
+        RootBaselineJavaVersionsExtension versions = project.getExtensions().findByType(RootBaselineJavaVersionsExtension.class)
         if (versions != null) {
             updateCompilerConfiguration(node, versions)
             updateProjectRootManager(node, versions)
         }
     }
 
-    private void updateCompilerConfiguration(Node node, BaselineJavaVersionsExtension versions) {
+    private void updateCompilerConfiguration(Node node, RootBaselineJavaVersionsExtension versions) {
         Node compilerConfiguration = node.component.find { it.'@name' == 'CompilerConfiguration' }
         Node bytecodeTargetLevel = GroovyXmlUtils.matchOrCreateChild(compilerConfiguration, "bytecodeTargetLevel")
         JavaLanguageVersion defaultBytecodeVersion = versions.libraryTarget().get()
@@ -216,7 +216,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
         })
     }
 
-    private void updateProjectRootManager(Node node, BaselineJavaVersionsExtension versions) {
+    private void updateProjectRootManager(Node node, RootBaselineJavaVersionsExtension versions) {
         Node projectRootManager = node.component.find { it.'@name' == 'ProjectRootManager' }
         ChosenJavaVersion chosenJavaVersion = versions.distributionTarget().get()
         int featureRelease = chosenJavaVersion.javaLanguageVersion().asInt()
