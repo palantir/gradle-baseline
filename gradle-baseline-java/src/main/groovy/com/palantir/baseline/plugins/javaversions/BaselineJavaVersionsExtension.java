@@ -123,7 +123,7 @@ public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtens
                 .map(javaInstallationMetadata -> ref -> ref.set(javaInstallationMetadata)));
     }
 
-    interface LazyJdks {
+    public interface LazyJdks {
         Optional<JavaInstallationMetadata> jdkFor(JavaLanguageVersion javaLanguageVersion, Project project);
     }
 }
