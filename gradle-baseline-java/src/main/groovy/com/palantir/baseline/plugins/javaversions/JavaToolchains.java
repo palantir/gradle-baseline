@@ -23,9 +23,9 @@ import org.gradle.jvm.toolchain.JavaToolchainService;
 
 public final class JavaToolchains {
     private final Project project;
-    private final RootBaselineJavaVersionsExtension baselineJavaVersionsExtension;
+    private final BaselineJavaVersionsExtension baselineJavaVersionsExtension;
 
-    public JavaToolchains(Project project, RootBaselineJavaVersionsExtension baselineJavaVersionsExtension) {
+    public JavaToolchains(Project project, BaselineJavaVersionsExtension baselineJavaVersionsExtension) {
         this.project = project;
         this.baselineJavaVersionsExtension = baselineJavaVersionsExtension;
     }

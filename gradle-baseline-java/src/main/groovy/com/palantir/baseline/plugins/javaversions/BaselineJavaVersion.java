@@ -69,8 +69,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             });
 
             JavaToolchains javaToolchains = new JavaToolchains(
-                    project,
-                    project.getRootProject().getExtensions().getByType(RootBaselineJavaVersionsExtension.class));
+                    project, project.getRootProject().getExtensions().getByType(BaselineJavaVersionsExtension.class));
 
             // Compilation tasks (using target version)
             configureCompilationTasks(project, extension.target(), javaToolchains.forVersion(extension.target()));

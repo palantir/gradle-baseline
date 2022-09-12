@@ -20,7 +20,7 @@ import javax.inject.Inject;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 
-public class SubprojectBaselineJavaVersionsExtension implements BaselineJavaVersionsExtension {
+public class SubprojectBaselineJavaVersionsExtension implements BaselineJavaVersionsExtensionSetters {
     private final Project project;
 
     @Inject
