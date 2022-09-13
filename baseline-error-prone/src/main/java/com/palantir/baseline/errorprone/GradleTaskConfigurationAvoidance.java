@@ -33,7 +33,7 @@ import com.sun.source.tree.MethodInvocationTree;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
-        summary = "Forbid gradle apis that eagerly create tasks.")
+        summary = "Forbid gradle apis that eagerly create tasks. Learn more at https://docs.gradle.org/current/userguide/task_configuration_avoidance.html")
 @SuppressWarnings("deprecation")
 public final class GradleTaskConfigurationAvoidance extends BugChecker
         implements BugChecker.MethodInvocationTreeMatcher {
