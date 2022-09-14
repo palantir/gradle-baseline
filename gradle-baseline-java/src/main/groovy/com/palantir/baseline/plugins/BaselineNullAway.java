@@ -30,10 +30,6 @@ public final class BaselineNullAway implements Plugin<Project> {
 
     private static final Logger log = Logging.getLogger(BaselineNullAway.class);
 
-    // This nullaway dependency in our plugin allows dependency upgrades on the baseline
-    // project to ensure nullaway remains up to date for all consumers.
-    private static final String NULLAWAY_VERSION = "0.10.1";
-
     @Override
     public void apply(Project project) {
         project.getPluginManager().withPlugin("com.palantir.baseline-error-prone", _unused0 -> {
