@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Implement a simple nullaway wrapper plugin `com.palantir.baseline-null-away`
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2382
