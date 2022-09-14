@@ -28,10 +28,14 @@ class BaselineNullAwayIntegrationTest extends AbstractPluginTest {
             id 'java'
             id 'com.palantir.baseline-error-prone'
             id 'com.palantir.baseline-null-away'
+            id 'com.palantir.baseline-java-versions'
         }
         repositories {
             mavenLocal()
             mavenCentral()
+        }
+        javaVersions {
+            libraryTarget = 17
         }
         tasks.withType(JavaCompile).configureEach {
             options.compilerArgs += ['-Werror']

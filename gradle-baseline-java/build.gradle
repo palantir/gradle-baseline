@@ -154,8 +154,3 @@ task writeCheckstyleVersion() {
 if (gradle.startParameter.isWriteDependencyLocks()) {
     gradle.startParameter.taskNames += 'writeCheckstyleVersion'
 }
-
-javaVersion {
-    target = 11
-    runtime = 17
-}
