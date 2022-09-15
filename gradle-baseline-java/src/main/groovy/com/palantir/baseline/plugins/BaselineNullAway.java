@@ -16,6 +16,7 @@
 
 package com.palantir.baseline.plugins;
 
+import com.google.common.collect.ImmutableSet;
 import java.util.Optional;
 import net.ltgt.gradle.errorprone.ErrorProneOptions;
 import org.gradle.api.Action;
@@ -29,6 +30,11 @@ import org.gradle.api.tasks.compile.JavaCompile;
 public final class BaselineNullAway implements Plugin<Project> {
 
     private static final Logger log = Logging.getLogger(BaselineNullAway.class);
+
+    private static final ImmutableSet<String> DEFAULT_ANNOTATED_PACKAGES = ImmutableSet.of(
+            "com.palantir",
+            // guava
+            "com.google.common");
 
     @Override
     public void apply(Project project) {
@@ -50,7 +56,7 @@ public final class BaselineNullAway implements Plugin<Project> {
         configureErrorProneOptions(project, new Action<ErrorProneOptions>() {
             @Override
             public void execute(ErrorProneOptions options) {
-                options.option("NullAway:AnnotatedPackages", "com.palantir");
+                options.option("NullAway:AnnotatedPackages", String.join(",", DEFAULT_ANNOTATED_PACKAGES));
                 options.option("NullAway:CheckOptionalEmptiness", "true");
             }
         });
