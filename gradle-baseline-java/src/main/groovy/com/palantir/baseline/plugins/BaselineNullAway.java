@@ -37,7 +37,7 @@ public final class BaselineNullAway implements Plugin<Project> {
     @Override
     public void apply(Project project) {
         project.getPluginManager().withPlugin("com.palantir.baseline-error-prone", _unused0 -> {
-            project.getPluginManager().withPlugin("java", _unused1 -> {
+            project.getPluginManager().withPlugin("java-base", _unused1 -> {
                 applyToProject(project);
             });
         });
@@ -60,18 +60,11 @@ public final class BaselineNullAway implements Plugin<Project> {
         });
     }
 
-    private static void configureErrorProneOptions(Project proj, Action<ErrorProneOptions> action) {
-        proj.afterEvaluate(new Action<Project>() {
+    private static void configureErrorProneOptions(Project project, Action<ErrorProneOptions> action) {
+        project.getTasks().withType(JavaCompile.class).configureEach(new Action<JavaCompile>() {
             @Override
-            public void execute(Project project) {
-                project.getTasks().withType(JavaCompile.class).configureEach(new Action<JavaCompile>() {
-                    @Override
-                    public void execute(JavaCompile javaCompile) {
-                        ((ExtensionAware) javaCompile.getOptions())
-                                .getExtensions()
-                                .configure(ErrorProneOptions.class, action);
-                    }
-                });
+            public void execute(JavaCompile javaCompile) {
+                ((ExtensionAware) javaCompile.getOptions()).getExtensions().configure(ErrorProneOptions.class, action);
             }
         });
     }
