@@ -31,6 +31,7 @@ public final class BaselineNullAway implements Plugin<Project> {
 
     private static final Logger log = Logging.getLogger(BaselineNullAway.class);
 
+    /** We may add a gradle extension in a future release allowing custom additional packages. */
     private static final ImmutableSet<String> DEFAULT_ANNOTATED_PACKAGES = ImmutableSet.of("com.palantir");
 
     @Override
