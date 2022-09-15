@@ -31,10 +31,7 @@ public final class BaselineNullAway implements Plugin<Project> {
 
     private static final Logger log = Logging.getLogger(BaselineNullAway.class);
 
-    private static final ImmutableSet<String> DEFAULT_ANNOTATED_PACKAGES = ImmutableSet.of(
-            "com.palantir",
-            // guava
-            "com.google.common");
+    private static final ImmutableSet<String> DEFAULT_ANNOTATED_PACKAGES = ImmutableSet.of("com.palantir");
 
     @Override
     public void apply(Project project) {
