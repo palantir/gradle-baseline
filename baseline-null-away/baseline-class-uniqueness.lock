@@ -1,0 +1,10 @@
+# Danger! Multiple jars contain identically named classes. This may cause different behaviour depending on classpath ordering.
+# Run ./gradlew checkClassUniqueness --write-locks to update this file
+
+## runtimeClasspath
+[org.checkerframework:checker-qual, org.checkerframework:dataflow-nullaway]
+  - org.checkerframework.dataflow.qual.Deterministic
+  - org.checkerframework.dataflow.qual.Pure
+  - org.checkerframework.dataflow.qual.Pure$Kind
+  - org.checkerframework.dataflow.qual.SideEffectFree
+  - org.checkerframework.dataflow.qual.TerminatesExecution

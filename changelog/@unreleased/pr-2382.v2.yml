@@ -1,0 +1,7 @@
+type: improvement
+improvement:
+  description: Implement a simple nullaway wrapper plugin `com.palantir.baseline-null-away`
+    which registers the `NullAway` check at `WARNING`. Projects which fail on warnings
+    will require this to pass pre-merge.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2382
