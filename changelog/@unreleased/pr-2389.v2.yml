@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Roll back nullaway+checkerframework for jdk15 support
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2389
