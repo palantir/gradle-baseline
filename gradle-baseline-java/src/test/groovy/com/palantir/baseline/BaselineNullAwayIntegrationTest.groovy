@@ -85,4 +85,24 @@ class BaselineNullAwayIntegrationTest extends AbstractPluginTest {
         BuildResult result = with('compileJava').build()
         result.task(":compileJava").outcome == TaskOutcome.SUCCESS
     }
+
+    def 'compileJava succeeds when null-away finds no errors on jdk15'() {
+        when:
+        buildFile << standardBuildFile.replace('libraryTarget = 17', 'libraryTarget = 15')
+        file('src/main/java/com/palantir/test/Test.java') << validJavaFile
+
+        then:
+        BuildResult result = with('compileJava').build()
+        result.task(":compileJava").outcome == TaskOutcome.SUCCESS
+    }
+
+    def 'compileJava succeeds when null-away finds no errors on jdk11'() {
+        when:
+        buildFile << standardBuildFile.replace('libraryTarget = 17', 'libraryTarget = 11')
+        file('src/main/java/com/palantir/test/Test.java') << validJavaFile
+
+        then:
+        BuildResult result = with('compileJava').build()
+        result.task(":compileJava").outcome == TaskOutcome.SUCCESS
+    }
 }
