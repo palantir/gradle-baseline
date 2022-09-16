@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: Restore the JUnit reports plugin by default so checkstyle, compile
+    errors and gradle task failures appear in an easy to read format on Circle.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2391
