@@ -39,6 +39,14 @@ public final class BaselineNullAway implements Plugin<Project> {
     /** We may add a gradle extension in a future release allowing custom additional packages. */
     private static final ImmutableSet<String> DEFAULT_ANNOTATED_PACKAGES = ImmutableSet.of("com.palantir");
 
+    private static final ImmutableList<String> NON_15_DEPS = ImmutableList.of(
+            "com.uber.nullaway:nullaway:0.10.1",
+            // align 'org.checkerframework' dependency versions on
+            // the current latest version.
+            "org.checkerframework:dataflow-errorprone:3.25.0",
+            "org.checkerframework:dataflow-nullaway:3.25.0",
+            "org.checkerframework:checker-qual:3.25.0");
+
     @Override
     public void apply(Project project) {
         project.getPluginManager().withPlugin("com.palantir.baseline-error-prone", _unused0 -> {
@@ -111,20 +119,16 @@ public final class BaselineNullAway implements Plugin<Project> {
                 .configureEach(new Action<Configuration>() {
                     @Override
                     public void execute(Configuration _files) {
-                        project.getDependencies().addProvider("errorprone", project.provider(() -> {
-                            if (anyProjectUsesJava15(project)) {
-                                // Cannot upgrade dependencies in this case because newer nullaway/checkerframework
-                                // are not compatible with java 15, but fully support jdk11 and jdk17.
-                                return ImmutableList.of();
-                            }
-                            return ImmutableList.of(
-                                    "com.uber.nullaway:nullaway:0.10.1",
-                                    // align 'org.checkerframework' dependency versions on
-                                    // the current latest version.
-                                    "org.checkerframework:dataflow-errorprone:3.25.0",
-                                    "org.checkerframework:dataflow-nullaway:3.25.0",
-                                    "org.checkerframework:checker-qual:3.25.0");
-                        }));
+                        for (String dep : NON_15_DEPS) {
+                            project.getDependencies().addProvider("errorprone", project.provider(() -> {
+                                if (anyProjectUsesJava15(project)) {
+                                    // Cannot upgrade dependencies in this case because newer nullaway/checkerframework
+                                    // are not compatible with java 15, but fully support jdk11 and jdk17.
+                                    return null;
+                                }
+                                return dep;
+                            }));
+                        }
                     }
                 });
     }
