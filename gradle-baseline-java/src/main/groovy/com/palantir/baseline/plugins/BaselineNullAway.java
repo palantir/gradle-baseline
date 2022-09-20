@@ -70,6 +70,7 @@ public final class BaselineNullAway implements Plugin<Project> {
             @Override
             public void execute(ErrorProneOptions options) {
                 options.option("NullAway:AnnotatedPackages", String.join(",", DEFAULT_ANNOTATED_PACKAGES));
+                options.option("NullAway:ExcludedFieldAnnotations", "org.mockito.Mock");
             }
         });
     }
