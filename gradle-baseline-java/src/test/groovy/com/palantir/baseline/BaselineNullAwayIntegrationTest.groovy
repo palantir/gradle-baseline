@@ -78,6 +78,15 @@ class BaselineNullAwayIntegrationTest extends IntegrationSpec {
         result.standardError.contains("[NullAway] dereferenced expression throwable.getMessage() is @Nullable")
     }
 
+    def 'Test tasks are not impacted by null-away'() {
+        when:
+        buildFile << standardBuildFile
+        writeJavaSourceFile(invalidJavaFile, "src/test/java")
+
+        then:
+        runTasksSuccessfully('compileTestJava')
+    }
+
     def 'compileJava succeeds when null-away finds no errors'() {
         when:
         buildFile << standardBuildFile
