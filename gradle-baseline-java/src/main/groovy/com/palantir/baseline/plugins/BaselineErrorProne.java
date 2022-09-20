@@ -188,6 +188,9 @@ public final class BaselineErrorProne implements Plugin<Project> {
         // Relax some checks for test code
         if (errorProneOptions.getCompilingTestOnlyCode().get()) {
             errorProneOptions.disable("UnnecessaryLambda");
+            // NullAway has some poor interactions with mockito and
+            // tests generally do some odd accesses for brevity
+            errorProneOptions.disable("NullAway");
         }
 
         if (javaCompile.getName().equals(compileRefaster.getName())) {
