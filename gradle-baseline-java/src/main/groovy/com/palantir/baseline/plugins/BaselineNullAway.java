@@ -119,12 +119,9 @@ public final class BaselineNullAway implements Plugin<Project> {
                     public void execute(Configuration _files) {
                         for (String dep : NON_15_DEPS) {
                             project.getDependencies().addProvider("errorprone", project.provider(() -> {
-                                if (anyProjectUsesJava15(project)) {
-                                    // Cannot upgrade dependencies in this case because newer nullaway/checkerframework
-                                    // are not compatible with java 15, but fully support jdk11 and jdk17.
-                                    return null;
-                                }
-                                return dep;
+                                // Cannot upgrade dependencies in this case because newer nullaway/checkerframework
+                                // are not compatible with java 15, but fully support jdk11 and jdk17.
+                                return anyProjectUsesJava15(project) ? null : dep;
                             }));
                         }
                     }
