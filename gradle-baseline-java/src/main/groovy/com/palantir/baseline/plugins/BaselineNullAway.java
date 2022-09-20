@@ -18,7 +18,6 @@ package com.palantir.baseline.plugins;
 
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
-import com.palantir.baseline.plugins.javaversions.BaselineJavaVersions;
 import java.util.Optional;
 import net.ltgt.gradle.errorprone.ErrorProneOptions;
 import org.gradle.api.Action;
