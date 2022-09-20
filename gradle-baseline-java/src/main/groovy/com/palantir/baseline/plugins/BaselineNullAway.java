@@ -107,8 +107,6 @@ public final class BaselineNullAway implements Plugin<Project> {
     // resolve a newer nullaway version with bug-fixes. This may be deleted after we've rolled everything
     // off jdk-15 MTS.
     private static void newerNullAwayInNonJdk15Projects(Project project) {
-        project.getRootProject().getPlugins().hasPlugin(BaselineJavaVersions.class);
-
         project.getConfigurations()
                 .matching(new Spec<Configuration>() {
                     @Override
