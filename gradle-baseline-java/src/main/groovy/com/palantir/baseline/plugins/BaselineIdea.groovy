@@ -24,6 +24,9 @@ import com.palantir.baseline.plugins.javaversions.ChosenJavaVersion
 import com.palantir.baseline.util.GitUtils
 import groovy.transform.CompileStatic
 import groovy.xml.XmlUtil
+import org.jetbrains.gradle.ext.IdeaExtPlugin
+import org.jetbrains.gradle.ext.ProjectSettings
+
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -54,6 +57,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
         this.project = project
 
         project.plugins.apply IdeaPlugin
+        project.plugins.apply IdeaExtPlugin
 
         if (project == project.rootProject) {
             applyToRootProject(project)
@@ -87,8 +91,18 @@ class BaselineIdea extends AbstractBaselinePlugin {
     }
 
     void applyToRootProject(Project rootProject) {
-        // Configure Idea project
+        // Configure IntelliJ settings in the project-local .idea/ directory
         IdeaModel ideaRootModel = rootProject.extensions.findByType(IdeaModel)
+        ProjectSettings settings = ideaRootModel.project.settings
+
+        settings.withIDEAFileXml('vcs.xml') { XmlProvider provider ->
+            println("Callback 1 executed with: " + provider)
+            Node node = provider.asNode()
+            addGitHubIssueNavigation(node)
+        }
+
+        // Configure Idea project using the legacy ipr file. These settings aren't respected when the project is
+        // opened in IntelliJ regularly.
         ideaRootModel.project.ipr.withXml {XmlProvider provider ->
             Node node = provider.asNode()
             addCodeStyle(node)
@@ -96,10 +110,8 @@ class BaselineIdea extends AbstractBaselinePlugin {
             addCopyright(node)
             addCheckstyle(node)
             addEclipseFormat(node)
-            addGit(node)
             addInspectionProjectProfile(node)
             addJavacSettings(node)
-            addGitHubIssueNavigation(node)
             addExcludedAutoImports(node)
         }
         configureProjectForIntellijImport(rootProject)
@@ -411,23 +423,6 @@ class BaselineIdea extends AbstractBaselinePlugin {
     private static void addCheckstyleExternalDependencies(node) {
         def externalDependencies = GroovyXmlUtils.matchOrCreateChild(node, 'component', [name: 'ExternalDependencies'])
         GroovyXmlUtils.matchOrCreateChild(externalDependencies, 'plugin', [id: 'CheckStyle-IDEA'])
-    }
-
-    /**
-     * Enables Git support for the given project configuration.
-     */
-    private void addGit(node) {
-        if (!project.file(".git").isDirectory()) {
-            project.logger.debug "Baseline: Skipping IDEA Git configuration since .git directory does not exist."
-            return
-        }
-
-        // language=xml
-        node.append(new XmlParser().parseText('''
-            <component name="VcsDirectoryMappings">
-                <mapping directory="$PROJECT_DIR$" vcs="Git" />
-            </component>
-            '''.stripIndent()))
     }
 
     private static void addInspectionProjectProfile(node) {
