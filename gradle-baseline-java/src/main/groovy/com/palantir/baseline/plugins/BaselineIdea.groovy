@@ -1,5 +1,5 @@
 /*
- * (c) Copyright 2015 Palantir Technologies Inc. All rights reserved.
+ * (c) Copyright 2022 Palantir Technologies Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,18 +19,11 @@ package com.palantir.baseline.plugins
 import com.google.common.collect.ImmutableMap
 import com.palantir.baseline.IntellijSupport
 import com.palantir.baseline.plugins.javaversions.BaselineJavaVersionExtension
-import com.palantir.baseline.plugins.javaversions.BaselineJavaVersionsExtension
 import com.palantir.baseline.plugins.javaversions.ChosenJavaVersion
 import com.palantir.baseline.util.GitUtils
 import groovy.transform.CompileStatic
+import groovy.xml.XmlParser
 import groovy.xml.XmlUtil
-import org.jetbrains.gradle.ext.IdeaExtPlugin
-import org.jetbrains.gradle.ext.ProjectSettings
-
-import java.nio.file.Files
-import java.nio.file.Path
-import java.nio.file.Paths
-import java.util.function.Supplier
 import org.gradle.api.Action
 import org.gradle.api.Project
 import org.gradle.api.Task
@@ -39,13 +32,18 @@ import org.gradle.api.file.FileTreeElement
 import org.gradle.api.plugins.quality.CheckstyleExtension
 import org.gradle.api.specs.Spec
 import org.gradle.api.tasks.util.PatternFilterable
-import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.plugins.ide.idea.GenerateIdeaModule
 import org.gradle.plugins.ide.idea.GenerateIdeaProject
 import org.gradle.plugins.ide.idea.GenerateIdeaWorkspace
 import org.gradle.plugins.ide.idea.IdeaPlugin
 import org.gradle.plugins.ide.idea.model.IdeaModel
 import org.gradle.plugins.ide.idea.model.ModuleDependency
+import org.jetbrains.gradle.ext.IdeaExtPlugin
+import org.jetbrains.gradle.ext.ProjectSettings
+
+import java.nio.file.Files
+import java.nio.file.Paths
+import java.util.function.Supplier
 
 // TODO(dfox): separate the xml manipulation (which really benefits from groovy syntax) from typed things
 //@CompileStatic
@@ -114,7 +112,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
         configureProjectForIntellijImport(rootProject)
 
         rootProject.afterEvaluate {
-            ideaRootModel.workspace.iws.withXml {XmlProvider provider ->
+            ideaRootModel.workspace.iws.withXml { XmlProvider provider ->
                 Node node = provider.asNode()
                 setRunManagerWorkingDirectory(node)
                 addEditorSettings(node)
@@ -125,18 +123,15 @@ class BaselineIdea extends AbstractBaselinePlugin {
         // This plugin can only be applied to the root project, and it applied as a side-effect of applying
         // 'com.palantir.java-format' to any subproject.
         rootProject.getPluginManager().withPlugin("com.palantir.java-format-idea") {
-            ideaRootModel.project.ipr.withXml {XmlProvider provider ->
-                Node node = provider.asNode()
-                configureSaveActions(node)
-                configureExternalDependencies(node)
+            settings.withIDEAFileXml('saveactions_settings.xml') { XmlProvider provider ->
+                configureSaveActions(provider.asNode())
             }
-            configureSaveActionsForIntellijImport(rootProject)
         }
     }
 
     @CompileStatic
     static Spec<FileTreeElement> isFile(File file) {
-        {FileTreeElement details -> details.file == file} as Spec<FileTreeElement>
+        { FileTreeElement details -> details.file == file } as Spec<FileTreeElement>
     }
 
     private void configureProjectForIntellijImport(Project project) {
@@ -165,7 +160,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
 
         def ideaStyle = new XmlParser().parse(ideaStyleFile)
                 .component
-                .find {it.'@name' == 'ProjectCodeStyleSettingsManager'}
+                .find { it.'@name' == 'ProjectCodeStyleSettingsManager' }
 
         XmlUtils.createOrUpdateXmlFile(
                 project.file(".idea/codeStyles/codeStyleConfig.xml"),
@@ -180,7 +175,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
                 })
 
 
-        def ideaStyleSettings = ideaStyle.option.find {it.'@name' == 'PER_PROJECT_SETTINGS'}
+        def ideaStyleSettings = ideaStyle.option.find { it.'@name' == 'PER_PROJECT_SETTINGS' }
 
         XmlUtils.createOrUpdateXmlFile(
                 project.file(".idea/codeStyles/Project.xml"),
@@ -219,13 +214,13 @@ class BaselineIdea extends AbstractBaselinePlugin {
      * Extracts copyright headers from Baseline directory and adds them to Idea project XML node.
      */
     private void addCopyright(Node node) {
-        Node copyrightManager = node.component.find {it.'@name' == 'CopyrightManager'}
+        Node copyrightManager = node.component.find { it.'@name' == 'CopyrightManager' }
         def copyrightDir = Paths.get("${configDir}/copyright/")
         def copyrightFiles = getCopyrightFiles(copyrightDir)
-        copyrightFiles.each {File file ->
+        copyrightFiles.each { File file ->
             def fileName = copyrightDir.relativize(file.toPath())
             def copyrightNode = copyrightManager.copyright.find {
-                it.option.find {it.@name == "myName"}?.@value == fileName
+                it.option.find { it.@name == "myName" }?.@value == fileName
             }
             if (copyrightNode == null) {
                 addCopyrightFile(copyrightManager, file, fileName.toString())
@@ -244,7 +239,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
             return new Node(null, "component", ImmutableMap.of("name", "CopyrightManager"))
         }
 
-        copyrightFiles.each {File file ->
+        copyrightFiles.each { File file ->
             def fileName = copyrightDir.relativize(file.toPath()).toString()
             def extensionIndex = fileName.lastIndexOf(".")
             if (extensionIndex == -1) {
@@ -255,7 +250,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
             XmlUtils.createOrUpdateXmlFile(
                     // Replace the extension by xml for the actual file
                     project.file(".idea/copyright/" + xmlFileName),
-                    {node ->
+                    { node ->
                         createOrUpdateCopyrightFile(node, file, fileName)
                     },
                     copyrightManagerNode)
@@ -265,7 +260,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
 
         XmlUtils.createOrUpdateXmlFile(
                 project.file(".idea/copyright/profiles_settings.xml"),
-                {node ->
+                { node ->
                     GroovyXmlUtils.matchOrCreateChild(node, "settings").attributes().'default' = lastFileName
                 },
                 copyrightManagerNode)
@@ -411,7 +406,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
     }
 
     private static void addGitHubIssueNavigation(Node node) {
-        GitUtils.maybeGitHubUri().ifPresent {githubUri ->
+        GitUtils.maybeGitHubUri().ifPresent { githubUri ->
             node.append(new XmlParser().parseText("""
              <component name="IssueNavigationConfiguration">
                <option name="links">
@@ -446,18 +441,6 @@ class BaselineIdea extends AbstractBaselinePlugin {
         '''.stripIndent()))
     }
 
-    private static void configureSaveActionsForIntellijImport(Project project) {
-        if (!IntellijSupport.isRunningInIntellij()) {
-            return
-        }
-        XmlUtils.createOrUpdateXmlFile(
-                project.file(".idea/externalDependencies.xml"),
-                BaselineIdea.&configureExternalDependencies)
-        XmlUtils.createOrUpdateXmlFile(
-                project.file(".idea/saveactions_settings.xml"),
-                BaselineIdea.&configureSaveActions)
-    }
-
     /**
      * Configure the default working directory of RunManager configurations to be the module directory.
      */
@@ -465,7 +448,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
         def runTypes = ['Application', 'JUnit'] as Set
 
         def runManager = GroovyXmlUtils.matchOrCreateChild(node, 'component', [name: 'RunManager'])
-        runTypes.each {runType ->
+        runTypes.each { runType ->
             def configuration = GroovyXmlUtils.matchOrCreateChild(runManager, 'configuration',
                     [default: 'true', type: runType],
                     [factoryName: runType])
@@ -491,42 +474,24 @@ class BaselineIdea extends AbstractBaselinePlugin {
      * between Gradle and IntelliJ.
      */
     private static void moveProjectReferencesToEnd(IdeaModel ideaModel) {
-        ideaModel.module.iml.whenMerged {module ->
-            def projectRefs = module.dependencies.findAll {it instanceof ModuleDependency}
+        ideaModel.module.iml.whenMerged { module ->
+            def projectRefs = module.dependencies.findAll { it instanceof ModuleDependency }
             module.dependencies.removeAll(projectRefs)
             module.dependencies.addAll(projectRefs)
         }
     }
 
     /**
-     * Configures some defaults on the save-actions plugin, but only if it hasn't been configured before.
+     * Configures formatting and optimizing imports using IntelliJ's "Actions On Save".
      */
     private static void configureSaveActions(Node rootNode) {
-        GroovyXmlUtils.matchOrCreateChild(rootNode, 'component', [name: 'SaveActionSettings'], [:]) {
-            // Configure defaults if this plugin is configured for the first time only
-            appendNode('option', [name: 'actions']).appendNode('set').with {
-                appendNode('option', [value: 'activate'])
-                appendNode('option', [value: 'noActionIfCompileErrors'])
-                appendNode('option', [value: 'organizeImports'])
-                appendNode('option', [value: 'reformat'])
-            }
-            appendNode('option', [name: 'configurationPath', value: ''])
-            appendNode('option', [name: 'inclusions']).appendNode('set').with {
-                appendNode('option', [value: "src${File.separator}.*\\.java"])
-            }
-        }
-    }
-
-    private static void configureExternalDependencies(Node rootNode) {
-        def externalDependencies =
-                GroovyXmlUtils.matchOrCreateChild(rootNode, 'component', [name: 'ExternalDependencies'])
-        // I kid you not, this is the id for the save actions plugin:
-        // https://github.com/dubreuia/intellij-plugin-save-actions/blob/v1.9.0/src/main/resources/META-INF/plugin.xml#L5
-        // https://plugins.jetbrains.com/plugin/7642-save-actions/
-        GroovyXmlUtils.matchOrCreateChild(
-                externalDependencies,
-                'plugin',
-                [id: 'com.dubreuia'],
-                ['min-version': SAVE_ACTIONS_PLUGIN_MINIMUM_VERSION])
+        rootNode.append(new XmlParser().parse('''
+          <component name="FormatOnSaveOptions">
+            <option name="myRunOnSave" value="true" />
+          </component>
+          <component name="OptimizeOnSaveOptions">
+            <option name="myRunOnSave" value="true" />
+          </component>
+        '''.stripIndent()))
     }
 }
