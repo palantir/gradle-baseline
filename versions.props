@@ -1,13 +1,10 @@
 com.fasterxml.jackson.core:jackson-databind = 2.13.3
 com.google.auto.service:auto-service = 1.0.1
-com.google.errorprone:error_prone_* = 2.15.0
 com.google.guava:guava = 31.1-jre
 com.palantir.safe-logging:* = 3.0.0
-com.uber.nullaway:nullaway = 0.9.9
 commons-lang:commons-lang = 2.6
 org.apache.maven.shared:maven-dependency-analyzer = 1.12.0
 org.apache.maven:maven-core = 3.8.5
-org.checkerframework:* = 3.23.0
 org.inferred:freebuilder = 1.14.6
 org.jooq:jooq = 3.17.2
 org.slf4j:* = 1.7.36
@@ -45,4 +42,9 @@ org.codehaus.groovy:* = 3.0.10
 com.palantir.javaformat:gradle-palantir-java-format = 1.1.0
 # Newer spotless versions have issues resolving dependencies at configuration time
 com.diffplug.spotless:spotless-plugin-gradle = 6.6.0
+# Newer releases of checkerframework do not support jdk15. These dependencies may
+# be moved back to hte upgradable block once we've removed uses of jdk-15 MTS
+com.google.errorprone:error_prone_* = 2.15.0
+com.uber.nullaway:nullaway = 0.9.9
+org.checkerframework:* = 3.23.0
 # dependency-upgrader:ON
