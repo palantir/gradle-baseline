@@ -95,24 +95,22 @@ class BaselineIdea extends AbstractBaselinePlugin {
         IdeaModel ideaRootModel = rootProject.extensions.findByType(IdeaModel)
         ProjectSettings settings = ideaRootModel.project.settings
 
-        settings.withIDEAFileXml('vcs.xml') { XmlProvider provider ->
-            Node node = provider.asNode()
-            addGitHubIssueNavigation(node)
+        settings.withIDEAFileXml('codeInsightSettings.xml') { XmlProvider provider ->
+            addExcludedAutoImports(provider.asNode())
         }
 
-        // Configure Idea project using the legacy ipr file. These settings aren't respected when the project is
-        // opened in IntelliJ regularly.
-        ideaRootModel.project.ipr.withXml {XmlProvider provider ->
-            Node node = provider.asNode()
-            addCodeStyle(node)
-            setRootJavaVersions(node)
-            addCopyright(node)
-            addCheckstyle(node)
-            addEclipseFormat(node)
-            addInspectionProjectProfile(node)
-            addJavacSettings(node)
-            addExcludedAutoImports(node)
+        settings.withIDEAFileXml('compiler.xml') { XmlProvider provider ->
+            addJavacSettings(provider.asNode())
         }
+
+        settings.withIDEAFileXml('vcs.xml') { XmlProvider provider ->
+            addGitHubIssueNavigation(provider.asNode())
+        }
+
+        settings.withIDEAFileXml('inspectionProfiles/Project_Default.xml') { XmlProvider provider ->
+            addInspectionProjectProfile(provider.asNode())
+        }
+
         configureProjectForIntellijImport(rootProject)
 
         rootProject.afterEvaluate {
@@ -202,37 +200,6 @@ class BaselineIdea extends AbstractBaselinePlugin {
                 {
                     new Node(null, "component", ImmutableMap.of("name", "ProjectCodeStyleConfiguration"))
                 })
-    }
-
-    private void setRootJavaVersions(Node node) {
-        BaselineJavaVersionsExtension versions = project.getExtensions().findByType(BaselineJavaVersionsExtension.class)
-        if (versions != null) {
-            updateCompilerConfiguration(node, versions)
-            updateProjectRootManager(node, versions)
-        }
-    }
-
-    private void updateCompilerConfiguration(Node node, BaselineJavaVersionsExtension versions) {
-        Node compilerConfiguration = node.component.find { it.'@name' == 'CompilerConfiguration' }
-        Node bytecodeTargetLevel = GroovyXmlUtils.matchOrCreateChild(compilerConfiguration, "bytecodeTargetLevel")
-        JavaLanguageVersion defaultBytecodeVersion = versions.libraryTarget().get()
-        bytecodeTargetLevel.attributes().put("target", defaultBytecodeVersion.toString())
-        project.allprojects.forEach({ project ->
-            BaselineJavaVersionExtension version = project.getExtensions().findByType(BaselineJavaVersionExtension.class)
-            if (version != null && version.target().get().javaLanguageVersion().asInt() != defaultBytecodeVersion.asInt()) {
-                bytecodeTargetLevel.appendNode("module", ImmutableMap.of(
-                        "name", project.getName(),
-                        "target", version.target().get().toString()))
-            }
-        })
-    }
-
-    private void updateProjectRootManager(Node node, BaselineJavaVersionsExtension versions) {
-        Node projectRootManager = node.component.find { it.'@name' == 'ProjectRootManager' }
-        ChosenJavaVersion chosenJavaVersion = versions.distributionTarget().get()
-        int featureRelease = chosenJavaVersion.javaLanguageVersion().asInt()
-        projectRootManager.attributes().put("project-jdk-name", featureRelease)
-        projectRootManager.attributes().put("languageLevel", chosenJavaVersion.asIdeaLanguageLevel())
     }
 
     private static void updateModuleLanguageVersion(IdeaModel ideaModel, Project currentProject) {
@@ -337,43 +304,6 @@ class BaselineIdea extends AbstractBaselinePlugin {
         GroovyXmlUtils.matchOrCreateChild(copyrightNode, "option", ["name": "allowReplaceKeyword"], ["value": ""])
         GroovyXmlUtils.matchOrCreateChild(copyrightNode, "option", ["name": "myName"], ["value": fileName])
         GroovyXmlUtils.matchOrCreateChild(copyrightNode, "option", ["name": "myLocal"], ["value": true])
-    }
-
-    private void addEclipseFormat(node) {
-        def baselineFormat = project.plugins.findPlugin(BaselineFormat)
-        if (baselineFormat == null) {
-            project.logger.debug "Baseline: Skipping IDEA eclipse format configuration since baseline-format not applied"
-            return
-        }
-
-        if (!BaselineFormat.eclipseFormattingEnabled(project)) {
-            project.logger.debug "Baseline: Not configuring EclipseCodeFormatter because com.palantir.baseline-format.eclipse is not enabled in gradle.properties"
-            return;
-        }
-
-        Path formatterConfig = BaselineFormat.eclipseConfigFile(project)
-        if (!Files.exists(formatterConfig)) {
-            project.logger.warn "Please run ./gradlew baselineUpdateConfig to create eclipse formatter config: " +
-                    formatterConfig
-            return
-        }
-
-        project.logger.debug "Baseline: Configuring EclipseCodeFormatter plugin for Idea"
-        // language=xml
-        node.append(new XmlParser().parseText("""
-             <component name="EclipseCodeFormatterProjectSettings">
-                <option name="projectSpecificProfile">
-                  <ProjectSpecificProfile>
-                    <option name="formatter" value="ECLIPSE" />
-                    <option name="importOrder" value="" />
-                    <option name="pathToConfigFileJava" value="\$PROJECT_DIR\$/.baseline/spotless/eclipse.xml" />
-                    <option name="selectedJavaProfile" value="PalantirStyle" />
-                  </ProjectSpecificProfile>
-                </option>
-              </component>
-            """))
-        def externalDependencies = GroovyXmlUtils.matchOrCreateChild(node, 'component', [name: 'ExternalDependencies'])
-        GroovyXmlUtils.matchOrCreateChild(externalDependencies, 'plugin', [id: 'EclipseCodeFormatter'])
     }
 
     private void addCheckstyle(Node node) {
