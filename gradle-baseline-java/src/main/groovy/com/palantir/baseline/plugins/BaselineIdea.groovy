@@ -96,7 +96,6 @@ class BaselineIdea extends AbstractBaselinePlugin {
         ProjectSettings settings = ideaRootModel.project.settings
 
         settings.withIDEAFileXml('vcs.xml') { XmlProvider provider ->
-            println("Callback 1 executed with: " + provider)
             Node node = provider.asNode()
             addGitHubIssueNavigation(node)
         }
