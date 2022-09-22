@@ -1,5 +1,5 @@
 /*
- * (c) Copyright 2015 Palantir Technologies Inc. All rights reserved.
+ * (c) Copyright 2022 Palantir Technologies Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         buildFile << standardBuildFile
 
         then:
-        BuildResult result = with('idea').build()
+        BuildResult result = with('processIdeaSettings').build()
         assert result.task(':idea').outcome == TaskOutcome.SUCCESS ?: result.output
     }
 
@@ -62,7 +62,7 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         """
 
         then:
-        BuildResult result = with('idea', '-Didea.active=true', '-is').build()
+        BuildResult result = with('processIdeaSettings', '-Didea.active=true', '-is').build()
         assert file(".idea/checkstyle-idea.xml").exists() ?: result.output
         assert result.task(':idea').outcome == TaskOutcome.SUCCESS ?: result.output
     }
@@ -73,7 +73,7 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         FileUtils.deleteDirectory(new File(projectDir, ".baseline"))
 
         then:
-        BuildResult result = with('idea').buildAndFail()
+        BuildResult result = with('processIdeaSettings').buildAndFail()
         result.task(":ideaProject").outcome == TaskOutcome.FAILED
         result.output.contains("java.io.FileNotFoundException:")
     }

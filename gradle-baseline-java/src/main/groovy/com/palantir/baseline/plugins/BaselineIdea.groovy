@@ -22,7 +22,6 @@ import com.palantir.baseline.plugins.javaversions.BaselineJavaVersionExtension
 import com.palantir.baseline.plugins.javaversions.ChosenJavaVersion
 import com.palantir.baseline.util.GitUtils
 import groovy.xml.XmlParser
-import groovy.xml.XmlUtil
 import org.gradle.api.Project
 import org.gradle.api.XmlProvider
 import org.gradle.api.plugins.quality.CheckstyleExtension
@@ -47,10 +46,10 @@ class BaselineIdea extends AbstractBaselinePlugin {
 
         project.plugins.apply IdeaExtPlugin
         if (project == project.rootProject) {
+            applyToRootProject(project)
+            
             // Ensure baseline config is up-to-date when opening in IntelliJ
             project.tasks.getByName("processIdeaSettings").dependsOn("baselineUpdateConfig")
-
-            applyToRootProject(project)
         }
 
         // Configure Idea module
@@ -187,20 +186,6 @@ class BaselineIdea extends AbstractBaselinePlugin {
         assert copyrightFiles.iterator().hasNext(), "${copyrightDir} must contain one or more copyright file"
 
         return copyrightFiles
-    }
-
-    private static void addCopyrightFile(Node node, File file, String fileName) {
-        def copyrightText = XmlUtil.escapeControlCharacters(XmlUtil.escapeXml(file.text.trim()))
-        node.append(new XmlParser().parseText("""
-            <copyright>
-                <option name="notice" value="${copyrightText}" />
-                <option name="keyword" value="Copyright" />
-                <option name="allowReplaceKeyword" value="" />
-                <option name="myName" value="${fileName}" />
-                <option name="myLocal" value="true" />
-            </copyright>
-            """.stripIndent()
-        ))
     }
 
     private static void createOrUpdateCopyrightFile(Node node, File file, String fileName) {
