@@ -16,6 +16,7 @@
 
 package com.palantir.baseline.plugins;
 
+import com.google.common.collect.ImmutableList;
 import java.util.Collections;
 import java.util.Objects;
 import org.gradle.api.Plugin;
@@ -27,6 +28,11 @@ import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.process.CommandLineArgumentProvider;
 
 public final class BaselineImmutables implements Plugin<Project> {
+
+    private static final ImmutableList<String> GRADLE_INCREMENTAL = ImmutableList.of("-Aimmutables.gradle.incremental");
+    // See https://github.com/immutables/immutables/issues/1379
+    private static final ImmutableList<String> EXPORTS =
+            ImmutableList.of("--add-exports=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED");
 
     @Override
     public void apply(Project project) {
@@ -42,11 +48,21 @@ public final class BaselineImmutables implements Plugin<Project> {
                                     .add(new CommandLineArgumentProvider() {
                                         @Override
                                         public Iterable<String> asArguments() {
-                                            if (hasImmutablesProcessor(project, sourceSet)) {
-                                                return Collections.singletonList("-Aimmutables.gradle.incremental");
-                                            }
-
-                                            return Collections.emptyList();
+                                            return hasImmutablesProcessor(project, sourceSet)
+                                                    ? GRADLE_INCREMENTAL
+                                                    : Collections.emptyList();
+                                        }
+                                    });
+                            javaCompileTask
+                                    .getOptions()
+                                    .getForkOptions()
+                                    .getJvmArgumentProviders()
+                                    .add(new CommandLineArgumentProvider() {
+                                        @Override
+                                        public Iterable<String> asArguments() {
+                                            return hasImmutablesProcessor(project, sourceSet)
+                                                    ? EXPORTS
+                                                    : Collections.emptyList();
                                         }
                                     });
                         });
