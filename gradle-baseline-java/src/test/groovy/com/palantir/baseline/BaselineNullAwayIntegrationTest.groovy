@@ -87,6 +87,25 @@ class BaselineNullAwayIntegrationTest extends IntegrationSpec {
         runTasksSuccessfully('compileTestJava')
     }
 
+    def 'Integration test tasks are not impacted by null-away'() {
+        when:
+        buildFile << '''
+        plugins {
+            id 'org.unbroken-dome.test-sets' version '4.0.0'
+        }
+        '''.stripIndent(true)
+        buildFile << standardBuildFile
+        buildFile << '''
+        testSets {
+            integrationTest
+        }
+        '''.stripIndent(true)
+        writeJavaSourceFile(invalidJavaFile, "src/integrationTest/java")
+
+        then:
+        runTasksSuccessfully('compileIntegrationTestJava')
+    }
+
     def 'compileJava succeeds when null-away finds no errors'() {
         when:
         buildFile << standardBuildFile
