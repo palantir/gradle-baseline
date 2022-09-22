@@ -21,21 +21,12 @@ import com.palantir.baseline.IntellijSupport
 import com.palantir.baseline.plugins.javaversions.BaselineJavaVersionExtension
 import com.palantir.baseline.plugins.javaversions.ChosenJavaVersion
 import com.palantir.baseline.util.GitUtils
-import groovy.transform.CompileStatic
 import groovy.xml.XmlParser
 import groovy.xml.XmlUtil
-import org.gradle.api.Action
 import org.gradle.api.Project
-import org.gradle.api.Task
 import org.gradle.api.XmlProvider
-import org.gradle.api.file.FileTreeElement
 import org.gradle.api.plugins.quality.CheckstyleExtension
-import org.gradle.api.specs.Spec
 import org.gradle.api.tasks.util.PatternFilterable
-import org.gradle.plugins.ide.idea.GenerateIdeaModule
-import org.gradle.plugins.ide.idea.GenerateIdeaProject
-import org.gradle.plugins.ide.idea.GenerateIdeaWorkspace
-import org.gradle.plugins.ide.idea.IdeaPlugin
 import org.gradle.plugins.ide.idea.model.IdeaModel
 import org.gradle.plugins.ide.idea.model.ModuleDependency
 import org.jetbrains.gradle.ext.IdeaExtPlugin
@@ -46,18 +37,19 @@ import java.nio.file.Paths
 import java.util.function.Supplier
 
 // TODO(dfox): separate the xml manipulation (which really benefits from groovy syntax) from typed things
-//@CompileStatic
 class BaselineIdea extends AbstractBaselinePlugin {
-
-    static SAVE_ACTIONS_PLUGIN_MINIMUM_VERSION = '1.9.0'
 
     void apply(Project project) {
         this.project = project
+        if (!IntellijSupport.isRunningInIntellij()) {
+            return;
+        }
 
-        project.plugins.apply IdeaPlugin
         project.plugins.apply IdeaExtPlugin
-
         if (project == project.rootProject) {
+            // Ensure baseline config is up-to-date when opening in IntelliJ
+            project.tasks.getByName("processIdeaSettings").dependsOn("baselineUpdateConfig")
+
             applyToRootProject(project)
         }
 
@@ -65,27 +57,6 @@ class BaselineIdea extends AbstractBaselinePlugin {
         IdeaModel ideaModuleModel = project.extensions.getByType(IdeaModel)
         moveProjectReferencesToEnd(ideaModuleModel)
         updateModuleLanguageVersion(ideaModuleModel, project)
-
-        // If someone renames a project, leftover {ipr,iml,ipr} files may still exist on disk and
-        // confuse users, so we proactively clean them up. Intentionally using an Action<Task> to allow up-to-dateness.
-        Action<Task> cleanup = new Action<Task>() {
-            void execute(Task t) {
-                if (t.project.rootProject == t.project) {
-                    def iprFile = t.project.tasks.withType(GenerateIdeaProject).find().outputFile
-                    def iwsFile = t.project.tasks.withType(GenerateIdeaWorkspace).find().outputFile
-                    project.delete(project.fileTree(
-                            dir: project.getProjectDir(), include: '*.ipr', exclude: isFile(iprFile)))
-                    project.delete(project.fileTree(
-                            dir: project.getProjectDir(), include: '*.iws', exclude: isFile(iwsFile)))
-                }
-
-                def imlFile = t.project.tasks.withType(GenerateIdeaModule).find().outputFile
-                project.delete(project.fileTree(
-                        dir: project.getProjectDir(), include: '*.iml', exclude: isFile(imlFile)))
-            }
-        }
-
-        project.getTasks().named("idea").configure(idea -> idea.doLast(cleanup))
     }
 
     void applyToRootProject(Project rootProject) {
@@ -93,108 +64,68 @@ class BaselineIdea extends AbstractBaselinePlugin {
         IdeaModel ideaRootModel = rootProject.extensions.findByType(IdeaModel)
         ProjectSettings settings = ideaRootModel.project.settings
 
-        settings.withIDEAFileXml('codeInsightSettings.xml') { XmlProvider provider ->
-            addExcludedAutoImports(provider.asNode())
-        }
+        addCodeStyleIntellijImport(settings)
+        addCheckstyleIntellijImport(settings)
+        addCopyrightIntellijImport(settings)
 
-        settings.withIDEAFileXml('compiler.xml') { XmlProvider provider ->
-            addJavacSettings(provider.asNode())
-        }
-
-        settings.withIDEAFileXml('vcs.xml') { XmlProvider provider ->
-            addGitHubIssueNavigation(provider.asNode())
-        }
-
-        settings.withIDEAFileXml('inspectionProfiles/Project_Default.xml') { XmlProvider provider ->
-            addInspectionProjectProfile(provider.asNode())
-        }
-
-        configureProjectForIntellijImport(rootProject)
+        addExcludedAutoImports(settings)
+        addJavacSettings(settings)
+        addGitHubIssueNavigation(settings)
+        addInspectionProjectProfile(settings)
+        configureActionsOnSave(settings)
 
         rootProject.afterEvaluate {
             ideaRootModel.workspace.iws.withXml { XmlProvider provider ->
                 Node node = provider.asNode()
                 setRunManagerWorkingDirectory(node)
-                addEditorSettings(node)
             }
-        }
-
-        // Suggest and configure the "save actions" plugin if Palantir Java Format is turned on.
-        // This plugin can only be applied to the root project, and it applied as a side-effect of applying
-        // 'com.palantir.java-format' to any subproject.
-        rootProject.getPluginManager().withPlugin("com.palantir.java-format-idea") {
-            settings.withIDEAFileXml('saveactions_settings.xml') { XmlProvider provider ->
-                configureSaveActions(provider.asNode())
-            }
-        }
-    }
-
-    @CompileStatic
-    static Spec<FileTreeElement> isFile(File file) {
-        { FileTreeElement details -> details.file == file } as Spec<FileTreeElement>
-    }
-
-    private void configureProjectForIntellijImport(Project project) {
-        if (IntellijSupport.isRunningInIntellij()) {
-            addCodeStyleIntellijImport()
-            addCheckstyleIntellijImport(project)
-            addCopyrightIntellijImport()
         }
     }
 
     /**
      * Extracts IDEA formatting configurations from Baseline directory and adds it to the Idea project XML node.
      */
-    private void addCodeStyle(node) {
-        def ideaStyleFile = project.file("${configDir}/idea/intellij-java-palantir-style.xml")
-        node.append(new XmlParser().parse(ideaStyleFile).component)
-    }
+    private void addCodeStyleIntellijImport(ProjectSettings settings) {
+        settings.withIDEADir { dir ->
+            XmlUtils.createOrUpdateXmlFile(new File(dir, 'inspectionProfiles/Project_Default.xml'), { node ->
+                def ideaStyle = new XmlParser().parse(project.file("${configDir}/idea/intellij-java-palantir-style.xml"))
+                        .component
+                        .find { it.'@name' == 'ProjectCodeStyleSettingsManager' }
 
-    private void addCodeStyleIntellijImport() {
-        def ideaStyleFile = project.file("${configDir}/idea/intellij-java-palantir-style.xml")
-        // This runs eagerly, so the file might not exist if we haven't run `baselineUpdateConfig` yet.
-        // Thus, don't do anything if the file is not there yet.
-        if (!ideaStyleFile.isFile()) {
-            return
+                XmlUtils.createOrUpdateXmlFile(
+                        new File(dir, 'codeStyles/codeStyleConfig.xml'),
+                        {
+                            def state = GroovyXmlUtils.matchOrCreateChild(it, "state")
+                            def perProjectSettings = GroovyXmlUtils.matchOrCreateChild(
+                                    state, "option", [name: 'USE_PER_PROJECT_SETTINGS'])
+                            perProjectSettings.attributes().'value' = "true"
+                        },
+                        {
+                            new Node(null, "component", ImmutableMap.of("name", "ProjectCodeStyleConfiguration"))
+                        })
+
+                def ideaStyleSettings = ideaStyle.option.find { it.'@name' == 'PER_PROJECT_SETTINGS' }
+
+                XmlUtils.createOrUpdateXmlFile(
+                        new File(dir, 'codeStyles/Project.xml'),
+                        {
+                            def codeScheme = GroovyXmlUtils.matchOrCreateChild(it, "code_scheme", [name: 'Project'])
+                            codeScheme.attributes().putIfAbsent("version", 173)
+                            def javaCodeStyleSettings = GroovyXmlUtils.matchOrCreateChild(codeScheme, "JavaCodeStyleSettings")
+                            // Avoid re-adding duplicate options to the project. This allows users to override settings based
+                            // on preference.
+                            ideaStyleSettings.value.option.forEach { ideaStyleSetting ->
+                                def settingName = ideaStyleSetting.attributes().get("name")
+                                if (settingName != null && javaCodeStyleSettings["option"].find { it.attributes().get("name") == settingName } == null) {
+                                    javaCodeStyleSettings.append(ideaStyleSetting)
+                                }
+                            }
+                        },
+                        {
+                            new Node(null, "component", ImmutableMap.of("name", "ProjectCodeStyleConfiguration"))
+                        })
+            })
         }
-
-        def ideaStyle = new XmlParser().parse(ideaStyleFile)
-                .component
-                .find { it.'@name' == 'ProjectCodeStyleSettingsManager' }
-
-        XmlUtils.createOrUpdateXmlFile(
-                project.file(".idea/codeStyles/codeStyleConfig.xml"),
-                {
-                    def state = GroovyXmlUtils.matchOrCreateChild(it, "state")
-                    def perProjectSettings = GroovyXmlUtils.matchOrCreateChild(
-                            state, "option", [name: 'USE_PER_PROJECT_SETTINGS'])
-                    perProjectSettings.attributes().'value' = "true"
-                },
-                {
-                    new Node(null, "component", ImmutableMap.of("name", "ProjectCodeStyleConfiguration"))
-                })
-
-
-        def ideaStyleSettings = ideaStyle.option.find { it.'@name' == 'PER_PROJECT_SETTINGS' }
-
-        XmlUtils.createOrUpdateXmlFile(
-                project.file(".idea/codeStyles/Project.xml"),
-                {
-                    def codeScheme = GroovyXmlUtils.matchOrCreateChild(it, "code_scheme", [name: 'Project'])
-                    codeScheme.attributes().putIfAbsent("version", 173)
-                    def javaCodeStyleSettings = GroovyXmlUtils.matchOrCreateChild(codeScheme, "JavaCodeStyleSettings")
-                    // Avoid re-adding duplicate options to the project. This allows users to override settings based
-                    // on preference.
-                    ideaStyleSettings.value.option.forEach { ideaStyleSetting ->
-                        def settingName = ideaStyleSetting.attributes().get("name")
-                        if (settingName != null && javaCodeStyleSettings["option"].find { it.attributes().get("name") == settingName } == null) {
-                            javaCodeStyleSettings.append(ideaStyleSetting)
-                        }
-                    }
-                },
-                {
-                    new Node(null, "component", ImmutableMap.of("name", "ProjectCodeStyleConfiguration"))
-                })
     }
 
     private static void updateModuleLanguageVersion(IdeaModel ideaModel, Project currentProject) {
@@ -213,57 +144,41 @@ class BaselineIdea extends AbstractBaselinePlugin {
     /**
      * Extracts copyright headers from Baseline directory and adds them to Idea project XML node.
      */
-    private void addCopyright(Node node) {
-        Node copyrightManager = node.component.find { it.'@name' == 'CopyrightManager' }
-        def copyrightDir = Paths.get("${configDir}/copyright/")
-        def copyrightFiles = getCopyrightFiles(copyrightDir)
-        copyrightFiles.each { File file ->
-            def fileName = copyrightDir.relativize(file.toPath())
-            def copyrightNode = copyrightManager.copyright.find {
-                it.option.find { it.@name == "myName" }?.@value == fileName
+    private void addCopyrightIntellijImport(ProjectSettings settings) {
+        settings.withIDEADir { dir ->
+            def copyrightDir = Paths.get("${configDir}/copyright/")
+            def copyrightFiles = getCopyrightFiles(copyrightDir)
+
+            Supplier<Node> copyrightManagerNode = {
+                return new Node(null, "component", ImmutableMap.of("name", "CopyrightManager"))
             }
-            if (copyrightNode == null) {
-                addCopyrightFile(copyrightManager, file, fileName.toString())
+
+            copyrightFiles.each { File file ->
+                def fileName = copyrightDir.relativize(file.toPath()).toString()
+                def extensionIndex = fileName.lastIndexOf(".")
+                if (extensionIndex == -1) {
+                    extensionIndex = fileName.length()
+                }
+                def xmlFileName = fileName.substring(0, extensionIndex) + ".xml"
+
+                XmlUtils.createOrUpdateXmlFile(
+                        // Replace the extension by xml for the actual file
+                        new File(dir, "copyright/" + xmlFileName),
+                        { node ->
+                            createOrUpdateCopyrightFile(node, file, fileName)
+                        },
+                        copyrightManagerNode)
             }
-        }
 
-        def lastFileName = copyrightDir.relativize(copyrightFiles.iterator().toList().sort().last().toPath())
-        copyrightManager.@default = lastFileName
-    }
-
-    private void addCopyrightIntellijImport() {
-        def copyrightDir = Paths.get("${configDir}/copyright/")
-        def copyrightFiles = getCopyrightFiles(copyrightDir)
-
-        Supplier<Node> copyrightManagerNode = {
-            return new Node(null, "component", ImmutableMap.of("name", "CopyrightManager"))
-        }
-
-        copyrightFiles.each { File file ->
-            def fileName = copyrightDir.relativize(file.toPath()).toString()
-            def extensionIndex = fileName.lastIndexOf(".")
-            if (extensionIndex == -1) {
-                extensionIndex = fileName.length()
-            }
-            def xmlFileName = fileName.substring(0, extensionIndex) + ".xml"
+            def lastFileName = copyrightDir.relativize(copyrightFiles.iterator().toList().sort().last().toPath())
 
             XmlUtils.createOrUpdateXmlFile(
-                    // Replace the extension by xml for the actual file
-                    project.file(".idea/copyright/" + xmlFileName),
+                    new File(dir, "copyright/profiles_settings.xml"),
                     { node ->
-                        createOrUpdateCopyrightFile(node, file, fileName)
+                        GroovyXmlUtils.matchOrCreateChild(node, "settings").attributes().'default' = lastFileName
                     },
                     copyrightManagerNode)
         }
-
-        def lastFileName = copyrightDir.relativize(copyrightFiles.iterator().toList().sort().last().toPath())
-
-        XmlUtils.createOrUpdateXmlFile(
-                project.file(".idea/copyright/profiles_settings.xml"),
-                { node ->
-                    GroovyXmlUtils.matchOrCreateChild(node, "settings").attributes().'default' = lastFileName
-                },
-                copyrightManagerNode)
     }
 
     private PatternFilterable getCopyrightFiles(copyrightDir) {
@@ -301,25 +216,18 @@ class BaselineIdea extends AbstractBaselinePlugin {
         GroovyXmlUtils.matchOrCreateChild(copyrightNode, "option", ["name": "myLocal"], ["value": true])
     }
 
-    private void addCheckstyle(Node node) {
+    private void addCheckstyleIntellijImport(ProjectSettings settings) {
         project.plugins.withType(BaselineCheckstyle) {
             project.logger.debug "Baseline: Configuring Checkstyle for Idea"
 
-            addCheckstyleNode(node)
-            addCheckstyleExternalDependencies(node)
-        }
-    }
-
-    private void addCheckstyleIntellijImport(Project project) {
-        project.plugins.withType(BaselineCheckstyle) {
-            project.logger.debug "Baseline: Configuring Checkstyle for Idea"
-
-            XmlUtils.createOrUpdateXmlFile(
-                    project.file(".idea/checkstyle-idea.xml"),
-                    { addCheckstyleNode(it) })
-            XmlUtils.createOrUpdateXmlFile(
-                    project.file(".idea/externalDependencies.xml"),
-                    BaselineIdea.&addCheckstyleExternalDependencies)
+            settings.withIDEADir { dir ->
+                XmlUtils.createOrUpdateXmlFile(
+                        new File(dir, "checkstyle-idea.xml"),
+                        { addCheckstyleNode(it) })
+                XmlUtils.createOrUpdateXmlFile(
+                        new File(dir, "externalDependencies.xml"),
+                        BaselineIdea.&addCheckstyleExternalDependencies)
+            }
         }
     }
 
@@ -349,96 +257,103 @@ class BaselineIdea extends AbstractBaselinePlugin {
         GroovyXmlUtils.matchOrCreateChild(externalDependencies, 'plugin', [id: 'CheckStyle-IDEA'])
     }
 
-    private static void addInspectionProjectProfile(node) {
-        // language=xml
-        node.append(new XmlParser().parseText("""
-            <component name="InspectionProjectProfileManager">
-                <profile version="1.0">
-                    <option name="myName" value="Project Default" />
-                    <inspection_tool class="MissingOverrideAnnotation" enabled="true" level="WARNING" enabled_by_default="true">
-                        <option name="ignoreObjectMethods" value="false" />
-                        <option name="ignoreAnonymousClassMethods" value="false" />
-                    </inspection_tool>
-                        
-                    <inspection_tool class="PlaceholderCountMatchesArgumentCount" enabled="false" level="WARNING" enabled_by_default="false" />
-                    
-                    <inspection_tool class="ClassCanBeRecord" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
-
-                    <inspection_tool class="UnstableApiUsage" enabled="true" level="WARNING" enabled_by_default="true">
-                        <option name="unstableApiAnnotations">
-                            <set>
-                                <option value="com.google.common.annotations.Beta" />
-                                <option value="com.palantir.conjure.java.lib.internal.Incubating" />
-                                <option value="io.reactivex.annotations.Beta" />
-                                <option value="io.reactivex.annotations.Experimental" />
-                                <option value="org.apache.http.annotation.Beta" />
-                                <option value="org.gradle.api.Incubating" />
-                                <option value="org.jetbrains.annotations.ApiStatus.Experimental" />
-                                <option value="org.jetbrains.annotations.ApiStatus.Internal" />
-                                <option value="org.jetbrains.annotations.ApiStatus.ScheduledForRemoval" />
-                                <option value="rx.annotations.Beta" />
-                                <option value="rx.annotations.Experimental" />
-                            </set>
-                        </option>
-                    </inspection_tool>
-                </profile>
-                <option name="PROJECT_PROFILE" value="Project Default" />
-                <option name="USE_PROJECT_PROFILE" value="true" />
-            </component>
-            """.stripIndent()))
-    }
-
-    private static void addJavacSettings(node) {
-        node.append(new XmlParser().parseText("""
-            <component name="JavacSettings">
-                <option name="PREFER_TARGET_JDK_COMPILER" value="false" />
-            </component>
-            """.stripIndent()))
-    }
-
-    private static void addEditorSettings(node) {
-        // language=xml
-        node.append(new XmlParser().parseText("""
-            <component name="CodeInsightWorkspaceSettings">
-                <option name="optimizeImportsOnTheFly" value="true" />
-              </component>
-            """.stripIndent()))
-    }
-
-    private static void addGitHubIssueNavigation(Node node) {
-        GitUtils.maybeGitHubUri().ifPresent { githubUri ->
-            node.append(new XmlParser().parseText("""
-             <component name="IssueNavigationConfiguration">
-               <option name="links">
-                 <list>
-                   <IssueNavigationLink>
-                     <option name="issueRegexp" value="TODO.*\\#([0-9]+)" />
-                     <option name="linkRegexp" value="${githubUri}/issues/\$1" />
-                   </IssueNavigationLink>
-                 </list>
-               </option>
-             </component>
-            """.stripIndent()))
+    private static void addInspectionProjectProfile(ProjectSettings settings) {
+        settings.withIDEADir { dir ->
+            XmlUtils.createOrUpdateXmlFile(new File(dir, 'inspectionProfiles/Project_Default.xml'), { node ->
+                // language=xml
+                node.append(new XmlParser().parseText("""
+                    <component name="InspectionProjectProfileManager">
+                        <profile version="1.0">
+                            <option name="myName" value="Project Default" />
+                            <inspection_tool class="MissingOverrideAnnotation" enabled="true" level="WARNING" enabled_by_default="true">
+                                <option name="ignoreObjectMethods" value="false" />
+                                <option name="ignoreAnonymousClassMethods" value="false" />
+                            </inspection_tool>
+                                
+                            <inspection_tool class="PlaceholderCountMatchesArgumentCount" enabled="false" level="WARNING" enabled_by_default="false" />
+                            
+                            <inspection_tool class="ClassCanBeRecord" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
+        
+                            <inspection_tool class="UnstableApiUsage" enabled="true" level="WARNING" enabled_by_default="true">
+                                <option name="unstableApiAnnotations">
+                                    <set>
+                                        <option value="com.google.common.annotations.Beta" />
+                                        <option value="com.palantir.conjure.java.lib.internal.Incubating" />
+                                        <option value="io.reactivex.annotations.Beta" />
+                                        <option value="io.reactivex.annotations.Experimental" />
+                                        <option value="org.apache.http.annotation.Beta" />
+                                        <option value="org.gradle.api.Incubating" />
+                                        <option value="org.jetbrains.annotations.ApiStatus.Experimental" />
+                                        <option value="org.jetbrains.annotations.ApiStatus.Internal" />
+                                        <option value="org.jetbrains.annotations.ApiStatus.ScheduledForRemoval" />
+                                        <option value="rx.annotations.Beta" />
+                                        <option value="rx.annotations.Experimental" />
+                                    </set>
+                                </option>
+                            </inspection_tool>
+                        </profile>
+                        <option name="PROJECT_PROFILE" value="Project Default" />
+                        <option name="USE_PROJECT_PROFILE" value="true" />
+                    </component>
+                    """.stripIndent()))
+            })
         }
     }
 
-    private static void addExcludedAutoImports(Node node) {
-        // language=xml
-        node.append(new XmlParser().parseText('''
-            <component name="JavaProjectCodeInsightSettings">
-              <excluded-names>
-                <name>shadow</name><!-- from gradle-shadow-jar -->
-                <name>org.junit.jupiter.params.shadow</name><!-- shaded deps from junit5 -->
-                <name>org.gradle.internal.impldep</name>
-                <name>autovalue.shaded</name>
-                <name>org.inferred.freebuilder.shaded</name>
-                <name>org.immutables.value.internal</name>
-                <name>com.palantir.conjure.java.client.config.ImmutablesStyle</name>
-                <name>com.palantir.sls.versions.ImmutablesStyle</name>
-                <name>com.palantir.tokens.auth.ImmutablesStyle</name>
-              </excluded-names>
-            </component>
-        '''.stripIndent()))
+    private static void addJavacSettings(ProjectSettings settings) {
+        settings.withIDEADir { dir ->
+            XmlUtils.createOrUpdateXmlFile(new File(dir, 'compiler.xml'), { node ->
+                node.append(new XmlParser().parseText("""
+                <component name="JavacSettings">
+                    <option name="PREFER_TARGET_JDK_COMPILER" value="false" />
+                </component>
+                """.stripIndent()))
+            })
+        }
+    }
+
+    private static void addGitHubIssueNavigation(ProjectSettings settings) {
+        settings.withIDEADir { dir ->
+            XmlUtils.createOrUpdateXmlFile(new File(dir, 'vcs.xml'), { node ->
+                GitUtils.maybeGitHubUri().ifPresent { githubUri ->
+                    node.append(new XmlParser().parseText("""
+                     <component name="IssueNavigationConfiguration">
+                       <option name="links">
+                         <list>
+                           <IssueNavigationLink>
+                             <option name="issueRegexp" value="TODO.*\\#([0-9]+)" />
+                             <option name="linkRegexp" value="${githubUri}/issues/\$1" />
+                           </IssueNavigationLink>
+                         </list>
+                       </option>
+                     </component>
+                    """.stripIndent()))
+                }
+            })
+        }
+    }
+
+    private static void addExcludedAutoImports(ProjectSettings settings) {
+        settings.withIDEADir { dir ->
+            XmlUtils.createOrUpdateXmlFile(new File(dir, 'codeInsightSettings.xml'), { node ->
+                // language=xml
+                node.append(new XmlParser().parseText('''
+                    <component name="JavaProjectCodeInsightSettings">
+                      <excluded-names>
+                        <name>shadow</name><!-- from gradle-shadow-jar -->
+                        <name>org.junit.jupiter.params.shadow</name><!-- shaded deps from junit5 -->
+                        <name>org.gradle.internal.impldep</name>
+                        <name>autovalue.shaded</name>
+                        <name>org.inferred.freebuilder.shaded</name>
+                        <name>org.immutables.value.internal</name>
+                        <name>com.palantir.conjure.java.client.config.ImmutablesStyle</name>
+                        <name>com.palantir.sls.versions.ImmutablesStyle</name>
+                        <name>com.palantir.tokens.auth.ImmutablesStyle</name>
+                      </excluded-names>
+                    </component>
+                '''.stripIndent()))
+            })
+        }
     }
 
     /**
@@ -484,14 +399,23 @@ class BaselineIdea extends AbstractBaselinePlugin {
     /**
      * Configures formatting and optimizing imports using IntelliJ's "Actions On Save".
      */
-    private static void configureSaveActions(Node rootNode) {
-        rootNode.append(new XmlParser().parse('''
-          <component name="FormatOnSaveOptions">
-            <option name="myRunOnSave" value="true" />
-          </component>
-          <component name="OptimizeOnSaveOptions">
-            <option name="myRunOnSave" value="true" />
-          </component>
-        '''.stripIndent()))
+    private static void configureActionsOnSave(ProjectSettings settings) {
+        settings.withIDEADir { dir ->
+            XmlUtils.createOrUpdateXmlFile(new File(dir, 'workspace.xml'), { node ->
+                // language=xml
+                node.append(new XmlParser().parseText('''
+                  <component name="FormatOnSaveOptions">
+                    <option name="myRunOnSave" value="true" />
+                  </component>
+                '''.stripIndent()))
+
+                // language=xml
+                node.append(new XmlParser().parseText('''
+                  <component name="OptimizeOnSaveOptions">
+                    <option name="myRunOnSave" value="true" />
+                  </component>
+                '''.stripIndent()))
+            })
+        }
     }
 }
