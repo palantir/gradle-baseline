@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Error-prone is enabled in idea for uniformity with CLI compilation
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2405

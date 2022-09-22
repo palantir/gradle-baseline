@@ -106,14 +106,16 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         result.task(":compileJava").outcome == TaskOutcome.SUCCESS
     }
 
-    def 'error-prone is disabled in IntelliJ'() {
+    def 'error-prone is not disabled in IntelliJ'() {
         when:
         buildFile << standardBuildFile
         file('src/main/java/test/Test.java') << invalidJavaFile
 
         then:
-        BuildResult result = with('compileJava', '-Didea.active=true').build()
-        result.task(":compileJava").outcome == TaskOutcome.SUCCESS
+        BuildResult result = with('compileJava', '-Didea.active=true').buildAndFail()
+        result.task(":compileJava").outcome == TaskOutcome.FAILED
+        result.output.contains("[ArrayEquals] Reference equality used to compare arrays")
+
     }
 
     def 'error-prone can be enabled using property'() {
