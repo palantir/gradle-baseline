@@ -112,7 +112,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         file('src/main/java/test/Test.java') << invalidJavaFile
 
         then:
-        BuildResult result = with('compileJava', '-Didea.active=true').build()
+        BuildResult result = with('compileJava', '-Didea.active=true').buildAndFail()
         result.task(":compileJava").outcome == TaskOutcome.FAILED
         result.output.contains("[ArrayEquals] Reference equality used to compare arrays")
 
