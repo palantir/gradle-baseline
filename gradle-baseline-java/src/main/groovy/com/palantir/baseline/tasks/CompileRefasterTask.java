@@ -31,6 +31,18 @@ import org.gradle.work.InputChanges;
 
 public class CompileRefasterTask extends JavaCompile {
 
+    // Match error-prone requirements
+    private static final ImmutableList<String> REFASTER_EXPORTS = ImmutableList.of(
+            "--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED",
+            "--add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED",
+            "--add-exports=jdk.compiler/com.sun.tools.javac.main=ALL-UNNAMED",
+            "--add-exports=jdk.compiler/com.sun.tools.javac.model=ALL-UNNAMED",
+            "--add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED",
+            "--add-exports=jdk.compiler/com.sun.tools.javac.processing=ALL-UNNAMED",
+            "--add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED",
+            "--add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED",
+            "--add-opens=jdk.compiler/com.sun.tools.javac.code=ALL-UNNAMED",
+            "--add-opens=jdk.compiler/com.sun.tools.javac.comp=ALL-UNNAMED");
     private final Property<Configuration> refasterSources =
             getProject().getObjects().property(Configuration.class);
     private final Property<File> refasterRulesFile = getProject().getObjects().property(File.class);
@@ -50,6 +62,7 @@ public class CompileRefasterTask extends JavaCompile {
         getOptions()
                 .setCompilerArgs(ImmutableList.of("-Xplugin:BaselineRefasterCompiler --out "
                         + refasterRulesFile.get().getAbsolutePath()));
+        getOptions().getForkOptions().getJvmArgs().addAll(REFASTER_EXPORTS);
 
         // Extract Java sources
         List<File> javaSources =
