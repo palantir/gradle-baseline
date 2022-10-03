@@ -66,7 +66,7 @@ public final class ValidateConstantMessage extends BugChecker implements BugChec
                     .put("validIndex", 3)
                     .put("validState", 2)
                     .put("allElementsOfType", 3) // commons-lang 2.x only
-                    .build();
+                    .buildOrThrow();
 
     private static final Supplier<Type> JAVA_STRING =
             VisitorState.memoize(state -> state.getTypeFromString("java.lang.String"));
