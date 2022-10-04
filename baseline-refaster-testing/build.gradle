@@ -24,6 +24,10 @@ dependencies {
     api 'com.google.guava:guava'
     api 'junit:junit'
     api 'org.assertj:assertj-core'
+
+    testRuntimeOnly 'org.junit.vintage:junit-vintage-engine', {
+        because 'allows JUnit 3 and JUnit 4 tests to run'
+    }
 }
 
 tasks.checkClassUniqueness.enabled = false
