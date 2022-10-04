@@ -1,15 +1,9 @@
-<?xml version="1.0"?>
-<!DOCTYPE module PUBLIC
-        "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
-        "https://checkstyle.org/dtds/configuration_1_3.dtd">
-
-<!--
+<?xml version="1.0" encoding="UTF-8" standalone="no"?><!--
     Palantir Baseline Checkstyle configuration.
     Authors: Robert Fink, Brian Worth, Merrick Zoubeiri, and many other contributors. Based in part on http://checkstyle.sourceforge.net/google_style.html
     Please keep checks alphabetized with one exception: "relaxed" checks are grouped together at the bottom for easier disabling.
     Check-specific comments reference documents internal to Palantir and can be safely ignored or removed.
- -->
-
+ --><!DOCTYPE module PUBLIC "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN" "https://checkstyle.org/dtds/configuration_1_3.dtd">
 <module name="Checker">
     <property name="charset" value="UTF-8"/>
     <property name="severity" value="error"/>
@@ -18,6 +12,68 @@
     <module name="NewlineAtEndOfFile"> <!-- Java Style Guide: Line ending: LF -->
         <property name="lineSeparator" value="lf"/>
     </module>
+    <!-- Inclusive Code checks: https://wiki.palantir.tech/display/DIVERSITY/Inclusive+Language+Glossary -->
+    <module name="RegexpSingleline"> 
+        <property name="format" value="ablebodied"/>
+        <property name="message" value="To convey the same idea and be more inclusive, consider nondisabled instead of ablebodied."/>
+    </module>
+    <module name="RegexpSingleline"> 
+        <property name="format" value="blackout"/>
+        <property name="message" value="To convey the same idea and be more inclusive, consider downtime instead of blackout."/>
+    </module>
+    <module name="RegexpSingleline"> 
+        <property name="format" value="blacklist"/>
+        <property name="message" value="To convey the same idea and be more inclusive, consider denylist instead of blacklist."/>
+    </module>
+    <module name="RegexpSingleline"> 
+        <property name="format" value="whitelist"/>
+        <property name="message" value="To convey the same idea and be more inclusive, consider allowlist instead of whitelist."/>
+    </module>
+    <module name="RegexpSingleline"> 
+        <property name="format" value="dummy"/>
+        <property name="message" value="To convey the same idea and be more inclusive, consider placeholder instead of dummy."/>
+    </module>
+    <module name="RegexpSingleline"> 
+        <property name="format" value="grandfather"/>
+        <property name="message" value="To convey the same idea and be more inclusive, consider legacy instead of grandfather."/>
+    </module>
+    <module name="RegexpSingleline"> 
+        <property name="format" value="guys"/>
+        <property name="message" value="To convey the same idea and be more inclusive, consider folks instead of guys."/>
+    </module>
+    <module name="RegexpSingleline"> 
+        <property name="format" value="gypped"/>
+        <property name="message" value="To convey the same idea and be more inclusive, consider swindled instead of gypped."/>
+    </module>
+    <module name="RegexpSingleline"> 
+        <property name="format" value="handicap"/>
+        <property name="message" value="To convey the same idea and be more inclusive, consider disable instead of handicap."/>
+    </module>
+    <module name="RegexpSingleline"> 
+        <property name="format" value="housekeeping"/>
+        <property name="message" value="To convey the same idea and be more inclusive, consider maintenance instead of housekeeping."/>
+    </module>
+    <module name="RegexpSingleline"> 
+        <property name="format" value="ladies"/>
+        <property name="message" value="To convey the same idea and be more inclusive, consider women instead of ladies."/>
+    </module>
+    <module name="RegexpSingleline"> 
+        <property name="format" value="master"/>
+        <property name="message" value="To convey the same idea and be more inclusive, consider primary instead of master."/>
+    </module>
+    <module name="RegexpSingleline"> 
+        <property name="format" value="slave"/>
+        <property name="message" value="To convey the same idea and be more inclusive, consider standby instead of slave."/>
+    </module>
+    <module name="RegexpSingleline"> 
+        <property name="format" value="nittygritty"/>
+        <property name="message" value="To convey the same idea and be more inclusive, consider core instead of nittygritty."/>
+    </module>
+    <module name="RegexpSingleline"> 
+        <property name="format" value="sanity"/>
+        <property name="message" value="To convey the same idea and be more inclusive, consider sense instead of sanity."/>
+    </module>
+
     <module name="RegexpSingleline"> <!-- No reference needed as this is evident. -->
         <property name="format" value="&lt;&lt;&lt;&lt;&lt;&lt;&lt;"/>
         <property name="message" value="Found (&lt;&lt;&lt;&lt;&lt;&lt;&lt;), so it looks like you had a merge conflict that compiles. Please fix it."/>
@@ -49,7 +105,7 @@
     </module>
     <module name="LineLength"> <!-- Java Style Guide: No line-wrapping -->
         <property name="max" value="120"/>
-        <property name="ignorePattern" value="^package.*|^import.*|a href|href|http://|https://|ftp://|\{@link"/>
+        <property name="ignorePattern" value="^package.*|^import.*|a href|href|http://|https://|ftp://"/>
     </module>
     <module name="TreeWalker">
         <module name="SuppressionCommentFilter"/> <!-- baseline-gradle: README.md -->
@@ -191,12 +247,9 @@
             <property name="separated" value="true"/>
             <property name="sortStaticImportsAlphabetically" value="true"/>
         </module>
-        <module name="Indentation"> <!-- Java Style Guide: Block indentation: +4 spaces -->
-            <property name="arrayInitIndent" value="8"/>
-            <property name="lineWrappingIndentation" value="8"/>
-        </module>
+        
         <module name="InnerAssignment"/> <!-- Java Coding Guidelines: Inner assignments: Not used -->
-        <module name="LeftCurly"/> <!-- Java Style Guide: Nonempty blocks: K & R style -->
+         <!-- Java Style Guide: Nonempty blocks: K & R style -->
         <module name="MemberName"> <!-- Java Style Guide: Non-constant field names -->
             <property name="format" value="^[a-z][a-zA-Z0-9]+$"/>
             <message key="name.invalidPattern" value="Member name ''{0}'' must match pattern ''{1}''."/>
@@ -237,7 +290,7 @@
             <message key="name.invalidPattern" value="Package name ''{0}'' must match pattern ''{1}''."/>
         </module>
         <module name="ParameterAssignment"/> <!-- Java Coding Guidelines: Final variables and parameters -->
-        <module name="ParenPad"/> <!-- Java Style Guide: Horizontal whitespace -->
+         <!-- Java Style Guide: Horizontal whitespace -->
         <module name="RedundantImport"/> <!-- Java Style Guide: No unused imports -->
         <module name="RedundantModifier"/> <!-- Java Coding Guidelines: Avoid redundant modifiers -->
         <module name="RegexpSinglelineJava"> <!-- Java Coding Guidelines: Use appropriate assertion methods -->
@@ -403,16 +456,7 @@
         <module name="UpperEll"/> <!-- Java Style Guide: Numeric Literals -->
         <module name="VisibilityModifier"/> <!-- Java Coding Guidelines: Minimize mutability -->
         <module name="WhitespaceAfter"/> <!-- Java Style Guide: Horizontal whitespace -->
-        <module name="WhitespaceAround"> <!-- Java Style Guide: Horizontal whitespace -->
-            <property name="allowEmptyConstructors" value="true"/>
-            <property name="allowEmptyMethods" value="true"/>
-            <property name="allowEmptyTypes" value="true"/>
-            <property name="allowEmptyLoops" value="true"/>
-            <property name="allowEmptyLambdas" value="true"/>
-            <property name="ignoreEnhancedForColon" value="false"/>
-            <message key="ws.notFollowed" value="WhitespaceAround: ''{0}'' is not followed by whitespace. Empty blocks may only be represented as '{}' when not part of a multi-block statement (4.1.3)"/>
-            <message key="ws.notPreceded" value="WhitespaceAround: ''{0}'' is not preceded with whitespace."/>
-        </module>
+        
 
         <!-- Stricter checks begin: delete some or all of the following for faster prototyping, but please restore before pushing to production. -->
 
