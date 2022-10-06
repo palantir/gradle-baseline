@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Fix ConcurrentModificationExceptions thrown from BaselineNullAway
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2427
