@@ -134,7 +134,7 @@ public final class BaselineNullAway implements Plugin<Project> {
 
     private static boolean anyProjectUsesJava15(Project proj) {
         return proj.getAllprojects().stream()
-                .anyMatch(project -> project.getTasks().withType(JavaCompile.class).stream()
+                .anyMatch(project -> ImmutableList.copyOf(project.getTasks().withType(JavaCompile.class)).stream()
                         .anyMatch(comp -> {
                             JavaVersion javaVersion = JavaVersion.toVersion(comp.getTargetCompatibility());
                             return javaVersion == JavaVersion.VERSION_15;
