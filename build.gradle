@@ -53,6 +53,11 @@ allprojects {
                 check("PreconditionsConstantMessage", CheckSeverity.OFF)
             }
         }
+        tasks.withType(Test) {
+            useJUnitPlatform {
+                includeEngines 'junit-vintage', 'junit-jupiter'
+            }
+        }
     }
 
     apply plugin: 'org.inferred.processors'

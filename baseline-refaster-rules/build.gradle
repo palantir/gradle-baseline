@@ -10,6 +10,10 @@ dependencies {
     testImplementation project(':baseline-refaster-testing')
     testImplementation 'org.immutables:value::annotations'
 
+    testRuntimeOnly 'org.junit.vintage:junit-vintage-engine', {
+        because 'allows JUnit 3 and JUnit 4 tests to run'
+    }
+
     compileOnly 'org.immutables:value::annotations'
 }
 
