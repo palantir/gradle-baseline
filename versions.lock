@@ -39,7 +39,7 @@ com.palantir.javaformat:gradle-palantir-java-format:1.1.0 (1 constraints: 0405f3
 com.palantir.javaformat:palantir-java-format-spi:1.1.0 (1 constraints: 711560be)
 com.palantir.safe-logging:preconditions:3.1.0 (6 constraints: 445723f0)
 com.palantir.safe-logging:safe-logging:3.1.0 (8 constraints: 587745d3)
-com.palantir.tritium:tritium-registry:0.56.0 (1 constraints: 3d05453b)
+com.palantir.tritium:tritium-registry:0.57.0 (1 constraints: 3e05483b)
 com.uber.nullaway:nullaway:0.9.9 (1 constraints: 14050f36)
 commons-io:commons-io:2.11.0 (1 constraints: 57119bcb)
 commons-lang:commons-lang:2.6 (1 constraints: ac04232c)
