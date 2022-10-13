@@ -44,7 +44,7 @@ com.palantir.javaformat:gradle-palantir-java-format = 1.1.0
 com.diffplug.spotless:spotless-plugin-gradle = 6.6.0
 # Newer releases of checkerframework do not support jdk15. These dependencies may
 # be moved back to hte upgradable block once we've removed uses of jdk-15 MTS
-com.google.errorprone:error_prone_* = 2.15.0
+com.google.errorprone:error_prone_* = 2.16
 com.uber.nullaway:nullaway = 0.9.9
 org.checkerframework:* = 3.23.0
 # Groovy versions must be compatible with gradle
