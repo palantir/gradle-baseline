@@ -171,7 +171,7 @@ public final class ClassInitializationDeadlock extends BugChecker implements Bug
         private boolean handleAssignment(ExpressionTree variable, VisitorState state) {
             // Matches if a subtype static field assignment occurs
             Symbol symbol = ASTHelpers.getSymbol(variable);
-            if (symbol != null && symbol.isStatic() && symbol instanceof VarSymbol) {
+            if (symbol != null && ASTHelpers.isStatic(symbol) && symbol instanceof VarSymbol) {
                 VarSymbol varSymbol = (VarSymbol) symbol;
                 if (isSubtype(varSymbol.owner.type, baseType, state)) {
                     state.reportMatch(describeMatch(variable));
@@ -184,7 +184,7 @@ public final class ClassInitializationDeadlock extends BugChecker implements Bug
         @Override
         public Void visitMemberSelect(MemberSelectTree node, VisitorState state) {
             Symbol symbol = ASTHelpers.getSymbol(node);
-            if (symbol != null && symbol.isStatic() && symbol instanceof VarSymbol) {
+            if (symbol != null && ASTHelpers.isStatic(symbol) && symbol instanceof VarSymbol) {
                 VarSymbol varSymbol = (VarSymbol) symbol;
                 // Constant values may be accessed without forcing initialization
                 if (varSymbol.getConstValue() == null
@@ -231,7 +231,7 @@ public final class ClassInitializationDeadlock extends BugChecker implements Bug
             case FIELD:
                 // fall through
             case METHOD:
-                if (symbol.isStatic() && !symbol.isPrivate()) {
+                if (ASTHelpers.isStatic(symbol) && !symbol.isPrivate()) {
                     return true;
                 }
                 break;
