@@ -23,11 +23,12 @@ import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.bugpatterns.StreamResourceLeak;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
+import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.suppliers.Supplier;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
-import com.sun.source.tree.MethodInvocationTree;
+import com.sun.source.tree.MethodTree;
 import com.sun.tools.javac.code.Type;
 
 @AutoService(BugChecker.class)
@@ -39,32 +40,28 @@ import com.sun.tools.javac.code.Type;
                 + " try-with-resources. Not doing so can result in leaked database resources (such as connections"
                 + " or cursors) in code paths that throw an exception or fail to call #close().")
 public final class JooqResultStreamLeak extends StreamResourceLeak {
-    private static final Matcher<ExpressionTree> MATCHER = MethodMatchers.instanceMethod()
-            .onDescendantOf("org.jooq.ResultQuery")
-            .withAnyName();
+    private static final Matcher<ExpressionTree> MATCHER = Matchers.allOf(
+            MethodMatchers.instanceMethod()
+                    .onDescendantOf("org.jooq.ResultQuery")
+                    .withAnyName(),
+            JooqResultStreamLeak::shouldBeAutoClosed);
 
     private static final Supplier<Type> JOOQ_QUERY_PART =
             VisitorState.memoize(state -> state.getTypeFromString("org.jooq.QueryPart"));
 
+    private static final Supplier<Type> AUTO_CLOSEABLE =
+            VisitorState.memoize(state -> state.getTypeFromString(AutoCloseable.class.getName()));
+
     @Override
-    public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
-        if (!MATCHER.matches(tree, state)) {
-            return Description.NO_MATCH;
-        }
-
-        if (!shouldBeAutoClosed(tree, state)) {
-            return Description.NO_MATCH;
-        }
-
-        return matchNewClassOrMethodInvocation(tree, state, findingPerSite());
+    public Description matchMethod(MethodTree tree, VisitorState state) {
+        return scanEntireMethodFor(MATCHER, tree, state);
     }
 
-    private static boolean shouldBeAutoClosed(MethodInvocationTree tree, VisitorState state) {
+    private static boolean shouldBeAutoClosed(ExpressionTree tree, VisitorState state) {
         Type returnType = ASTHelpers.getReturnType(tree);
 
         // Most auto-closeable returns should be auto-closed.
-        boolean isAutoCloseable =
-                ASTHelpers.isSubtype(returnType, state.getTypeFromString(AutoCloseable.class.getName()), state);
+        boolean isAutoCloseable = ASTHelpers.isSubtype(returnType, AUTO_CLOSEABLE.get(state), state);
 
         // QueryParts can hold resources but usually don't, so auto-tripping and trying to fix on things
         // like SelectConditionStep is unnecessary.
