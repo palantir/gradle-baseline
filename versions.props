@@ -35,8 +35,6 @@ org.junit.jupiter:* = 5.9.1
 org.junit.vintage:* = 5.9.1
 org.junit.platform:* = 1.9.1
 org.mockito:* = 4.8.0
-org.codehaus.groovy:* = 3.0.13
-org.spockframework:* = 2.3-groovy-3.0
 
 # dependency-upgrader:OFF
 # Don't upgrade, we will remove this in a future release.
@@ -49,4 +47,6 @@ com.diffplug.spotless:spotless-plugin-gradle = 6.6.0
 com.google.errorprone:error_prone_* = 2.15.0
 com.uber.nullaway:nullaway = 0.9.9
 org.checkerframework:* = 3.23.0
+# Groovy versions must be compatible with gradle
+org.codehaus.groovy:* = 3.0.10
 # dependency-upgrader:ON
