@@ -115,15 +115,6 @@ class BaselineNullAwayIntegrationTest extends IntegrationSpec {
         runTasksSuccessfully('compileJava')
     }
 
-    def 'compileJava succeeds when null-away finds no errors on jdk15'() {
-        when:
-        buildFile << standardBuildFile.replace('libraryTarget = 17', 'libraryTarget = 15')
-        writeJavaSourceFile(validJavaFile)
-
-        then:
-        runTasksSuccessfully('compileJava')
-    }
-
     def 'compileJava succeeds when null-away finds no errors on jdk11'() {
         when:
         buildFile << standardBuildFile.replace('libraryTarget = 17', 'libraryTarget = 11')
