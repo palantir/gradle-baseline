@@ -55,4 +55,21 @@ class BaselineCheckstyleIntegrationTest extends AbstractPluginTest {
         BuildResult result = with('checkstyleMain').build()
         result.task(":checkstyleMain").outcome == TaskOutcome.SUCCESS
     }
+    
+    def badJavaFile = '''
+    package blacklist;
+    
+    public class Blacklist {
+    }
+    '''.stripIndent()
+    
+    def 'inclusive code linter enabled by default'() {
+        when:
+        buildFile << standardBuildFile
+        file('src/main/java/example/Blacklist.java') << badJavaFile
+        
+        then:
+        BuildResult result = with('checkstyleMain').build()
+        result.task(":checkstyleMain").outcome == TaskOutcome.SUCCESS
+    }
 }
