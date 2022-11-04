@@ -35,8 +35,7 @@ import org.gradle.plugins.ide.eclipse.model.EclipseProject;
 /** Configures the Gradle "checkstyle" task with Baseline settings. */
 public final class BaselineCheckstyle extends AbstractBaselinePlugin {
 
-    private static final String INCLUSIVE_LANGUAGE_DISABLED =
-            "com.palantir.baseline-checkstyle.inclusive-language-disabled";
+    private static final String INCLUSIVE_LANGUAGE_DISABLED = "com.palantir.baseline-checkstyle.inclusive-language-off";
 
     @Override
     public void apply(Project project) {

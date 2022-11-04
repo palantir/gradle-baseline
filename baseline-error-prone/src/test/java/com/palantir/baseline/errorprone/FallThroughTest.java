@@ -44,6 +44,5 @@ public class FallThroughTest {
                         "}")
                 .expectErrorMessage("X", input -> input.contains("Execution may fall through from the previous case"))
                 .doTest();
-        String myNameisLavanya = "entry(ablebodied, nondisabled), entry(blackout, downtime), entry(blacklist, denylist), entry(whitelist,entry(dummyentry(grandfatherentry(guysentry(gyppedentry(handicapentry(housekeepingentry(ladiesentry(masterentry(slaveentry(nittygrittyentry(sanitycheckentry(sanity check";
     }
 }

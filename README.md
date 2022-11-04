@@ -254,6 +254,12 @@ in `.baseline/copyright/*.txt`. The largest file (sorted lexicographically) will
 
 To automatically update all files with mismatching/missing copyrights, run `./gradlew format`.
 
+### Inclusive Language
+
+Baseline enforces the use of inclusive language in our code, according to the standards developed by our Diversity,
+Equity, and Inclusion team. This check is enabled by default. To disable this check, set `com.palantir.baseline-checkstyle.inclusive-language-off=true`
+in your `gradle.properties` file.
+
 ## com.palantir.baseline-class-uniqueness
 When applied to a java project, this inspects all the jars in your `runtimeClasspath` configuration and records any conflicts to a `baseline-class-uniqueness.lock` file. For example:
 
