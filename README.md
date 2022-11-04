@@ -256,7 +256,7 @@ To automatically update all files with mismatching/missing copyrights, run `./gr
 
 ### Inclusive Language
 
-Baseline enforces the use of inclusive language in our code, according to the standards developed by our Diversity,
+Baseline enforces the use of inclusive language in our code, according to the [standards](docs/best-practices/java-coding-guidelines/inclusive_code.md) developed by our Diversity,
 Equity, and Inclusion team. This check is enabled by default. To disable this check, set `com.palantir.baseline-checkstyle.inclusive-language-off=true`
 in your `gradle.properties` file.
 
