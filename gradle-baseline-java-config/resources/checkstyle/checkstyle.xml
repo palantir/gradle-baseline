@@ -18,66 +18,66 @@
     <module name="NewlineAtEndOfFile"> <!-- Java Style Guide: Line ending: LF -->
         <property name="lineSeparator" value="lf"/>
     </module>
-    <!-- Inclusive Code checks: https://wiki.palantir.tech/display/DIVERSITY/Inclusive+Language+Glossary -->
+    <!-- Inclusive Code checks: TBD insert link to documentation -->
     <module name="RegexpSingleline"> 
-        <property name="format" value="ablebodied"/>
-        <property name="message" value="To convey the same idea and be more inclusive, consider nondisabled instead of ablebodied."/>
+        <property name="format" value="(?i)ablebodied"/>
+        <property name="message" value="To convey the same idea and be more inclusive, please use nondisabled instead of ablebodied."/>
     </module>
     <module name="RegexpSingleline"> 
-        <property name="format" value="blackout"/>
-        <property name="message" value="To convey the same idea and be more inclusive, consider downtime instead of blackout."/>
+        <property name="format" value="(?i)blackout"/>
+        <property name="message" value="To convey the same idea and be more inclusive, please use downtime, blockout, or maintenance window instead of blackout."/>
     </module>
     <module name="RegexpSingleline"> 
-        <property name="format" value="blacklist"/>
-        <property name="message" value="To convey the same idea and be more inclusive, consider denylist instead of blacklist."/>
+        <property name="format" value="(?i)blacklist"/>
+        <property name="message" value="To convey the same idea and be more inclusive, please use denylist, blocklist, banned, or disallowlist instead of blacklist."/>
     </module>
     <module name="RegexpSingleline"> 
-        <property name="format" value="whitelist"/>
-        <property name="message" value="To convey the same idea and be more inclusive, consider allowlist instead of whitelist."/>
+        <property name="format" value="(?i)whitelist"/>
+        <property name="message" value="To convey the same idea and be more inclusive, please use allowlist instead of whitelist."/>
     </module>
     <module name="RegexpSingleline"> 
-        <property name="format" value="dummy"/>
-        <property name="message" value="To convey the same idea and be more inclusive, consider placeholder instead of dummy."/>
+        <property name="format" value="(?i)dummy"/>
+        <property name="message" value="To convey the same idea and be more inclusive, please use placeholder, sample, or filler instead of dummy."/>
     </module>
     <module name="RegexpSingleline"> 
-        <property name="format" value="grandfather"/>
-        <property name="message" value="To convey the same idea and be more inclusive, consider legacy instead of grandfather."/>
+        <property name="format" value="(?i)grandfather"/>
+        <property name="message" value="To convey the same idea and be more inclusive, please use legacy instead of grandfather."/>
     </module>
     <module name="RegexpSingleline"> 
-        <property name="format" value="guys"/>
-        <property name="message" value="To convey the same idea and be more inclusive, consider folks instead of guys."/>
+        <property name="format" value="(?i)guys"/>
+        <property name="message" value="To convey the same idea and be more inclusive, please use folks, people, or you all instead of guys."/>
     </module>
     <module name="RegexpSingleline"> 
-        <property name="format" value="gypped"/>
-        <property name="message" value="To convey the same idea and be more inclusive, consider swindled instead of gypped."/>
+        <property name="format" value="(?i)gypped"/>
+        <property name="message" value="To convey the same idea and be more inclusive, please use swindled, defrauded, or cheated instead of gypped."/>
     </module>
     <module name="RegexpSingleline"> 
-        <property name="format" value="handicap"/>
-        <property name="message" value="To convey the same idea and be more inclusive, consider disable instead of handicap."/>
+        <property name="format" value="(?i)handicap"/>
+        <property name="message" value="To convey the same idea and be more inclusive, please use disable instead of handicap."/>
     </module>
     <module name="RegexpSingleline"> 
-        <property name="format" value="housekeeping"/>
-        <property name="message" value="To convey the same idea and be more inclusive, consider maintenance instead of housekeeping."/>
+        <property name="format" value="(?i)housekeeping"/>
+        <property name="message" value="To convey the same idea and be more inclusive, please use maintenance or cleanup instead of housekeeping."/>
     </module>
     <module name="RegexpSingleline"> 
-        <property name="format" value="ladies"/>
-        <property name="message" value="To convey the same idea and be more inclusive, consider women instead of ladies."/>
+        <property name="format" value="(?i)ladies"/>
+        <property name="message" value="To convey the same idea and be more inclusive, please use women or people instead of ladies."/>
     </module>
     <module name="RegexpSingleline"> 
-        <property name="format" value="master"/>
-        <property name="message" value="To convey the same idea and be more inclusive, consider primary instead of master."/>
+        <property name="format" value="(?i)master"/>
+        <property name="message" value="To convey the same idea and be more inclusive, please use primary or main instead of master."/>
     </module>
     <module name="RegexpSingleline"> 
-        <property name="format" value="slave"/>
-        <property name="message" value="To convey the same idea and be more inclusive, consider standby instead of slave."/>
+        <property name="format" value="(?i)slave"/>
+        <property name="message" value="To convey the same idea and be more inclusive, please use standby or replica instead of slave."/>
     </module>
     <module name="RegexpSingleline"> 
-        <property name="format" value="nittygritty"/>
-        <property name="message" value="To convey the same idea and be more inclusive, consider core instead of nittygritty."/>
+        <property name="format" value="(?i)nittygritty"/>
+        <property name="message" value="To convey the same idea and be more inclusive, please use core instead of nittygritty."/>
     </module>
     <module name="RegexpSingleline"> 
-        <property name="format" value="sanity"/>
-        <property name="message" value="To convey the same idea and be more inclusive, consider sense instead of sanity."/>
+        <property name="format" value="(?i)sanity"/>
+        <property name="message" value="To convey the same idea and be more inclusive, please use sense, confidence or soundness instead of sanity."/>
     </module>
     <module name="RegexpSingleline"> <!-- No reference needed as this is evident. -->
         <property name="format" value="&lt;&lt;&lt;&lt;&lt;&lt;&lt;"/>
