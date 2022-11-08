@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Refaster compilation uses exports matching error-prone compilation
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2407

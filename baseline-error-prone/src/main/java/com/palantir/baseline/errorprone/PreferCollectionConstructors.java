@@ -234,7 +234,7 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
                     .put(NEW_ENUM_MAP_WITH_CLASS, EnumMap.class)
                     .put(NEW_ENUM_MAP_WITH_MAP, EnumMap.class)
                     .put(NEW_IDENTITY_HASH_MAP, IdentityHashMap.class)
-                    .build();
+                    .buildOrThrow();
 
     private static final Set<Matcher<ExpressionTree>> requiresCollectionArg = ImmutableSet.of(
             NEW_ARRAY_LIST_WITH_ITERABLE,

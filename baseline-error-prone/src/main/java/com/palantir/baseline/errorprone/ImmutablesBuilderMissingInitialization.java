@@ -42,6 +42,7 @@ import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.util.Name;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -226,9 +227,9 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
      * the method methodName.
      */
     private Set<String> removeFieldsPotentiallyInitializedBy(Set<String> uninitializedFields, String methodName) {
-        String methodNameLowerCase = methodName.toLowerCase();
+        String methodNameLowerCase = methodName.toLowerCase(Locale.ROOT);
         return uninitializedFields.stream()
-                .filter(fieldName -> !methodNameLowerCase.endsWith(fieldName.toLowerCase()))
+                .filter(fieldName -> !methodNameLowerCase.endsWith(fieldName.toLowerCase(Locale.ROOT)))
                 .collect(Collectors.toSet());
     }
 

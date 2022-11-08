@@ -17,7 +17,7 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.errorprone.CompilationTestHelper;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public final class JooqResultStreamLeakTest {
 
@@ -26,31 +26,6 @@ public final class JooqResultStreamLeakTest {
 
     private final RefactoringValidator refactoringValidator =
             RefactoringValidator.of(JooqResultStreamLeak.class, getClass());
-
-    @Test
-    public void test_positive() {
-        testHelper
-                .addSourceLines(
-                        "JooqStream.java",
-                        "import java.util.stream.Collectors;",
-                        "import java.util.stream.Stream;",
-                        "import org.jooq.Record;",
-                        "import org.jooq.ResultQuery;",
-                        "class Test {",
-                        "  void f(ResultQuery<Record> rq) {",
-                        "    // BUG: Diagnostic contains: should be closed",
-                        "    rq.stream().map(r -> r.getValue(0));",
-                        "    // BUG: Diagnostic contains: should be closed",
-                        "    rq.fetchStream().map(r -> r.getValue(0));",
-                        "    // BUG: Diagnostic contains: should be closed",
-                        "    rq.fetchLazy();",
-                        "    try (Stream<String> stream = rq.stream().collect(Collectors.toList()).stream()) {",
-                        "      stream.collect(Collectors.joining(\", \"));",
-                        "    }",
-                        "  }",
-                        "}")
-                .doTest();
-    }
 
     @Test
     public void test_query_steps_ignored() {
@@ -64,27 +39,6 @@ public final class JooqResultStreamLeakTest {
                         "class Test {",
                         "  SelectConditionStep<Record> f(SelectConditionStep<Record> select) {",
                         "    return select.and(\"some_field <> 3\");",
-                        "  }",
-                        "}")
-                .doTest();
-    }
-
-    @Test
-    public void test_negative() {
-        testHelper
-                .addSourceLines(
-                        "JooqStream.java",
-                        "import java.util.stream.Stream;",
-                        "import org.jooq.Record;",
-                        "import org.jooq.ResultQuery;",
-                        "class Test {",
-                        "  void f(ResultQuery rq) {",
-                        "    try (Stream<Record> stream = rq.stream()) {",
-                        "      Stream<Field<?>> newStream = stream.map(r -> r.getValue(0));",
-                        "    }",
-                        "    try (Stream<Record> stream = rq.fetchStream()) {",
-                        "      Stream<Field<?>> newStream = stream.map(r -> r.getValue(0));",
-                        "    }",
                         "  }",
                         "}")
                 .doTest();

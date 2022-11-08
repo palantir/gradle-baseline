@@ -22,9 +22,11 @@ import net.ltgt.gradle.errorprone.ErrorProneOptions;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.ExtensionAware;
+import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.compile.JavaCompile;
 
 public final class BaselineNullAway implements Plugin<Project> {
@@ -50,21 +52,46 @@ public final class BaselineNullAway implements Plugin<Project> {
                             + "beware this compromises build reproducibility");
                     return "latest.release";
                 });
-        project.getDependencies().add("errorprone", "com.palantir.baseline:baseline-null-away:" + version);
+        project.getConfigurations()
+                .matching(new Spec<Configuration>() {
+                    @Override
+                    public boolean isSatisfiedBy(Configuration config) {
+                        return "errorprone".equals(config.getName());
+                    }
+                })
+                .configureEach(new Action<Configuration>() {
+                    @Override
+                    public void execute(Configuration _files) {
+                        project.getDependencies()
+                                .add("errorprone", "com.palantir.baseline:baseline-null-away:" + version);
+                    }
+                });
         configureErrorProneOptions(project, new Action<ErrorProneOptions>() {
             @Override
             public void execute(ErrorProneOptions options) {
                 options.option("NullAway:AnnotatedPackages", String.join(",", DEFAULT_ANNOTATED_PACKAGES));
-                options.option("NullAway:CheckOptionalEmptiness", "true");
+                // Relax some checks for test code
+                if (options.getCompilingTestOnlyCode().get()) {
+                    // NullAway has some poor interactions with mockito and
+                    // tests generally do some odd accesses for brevity
+                    options.disable("NullAway");
+                }
             }
         });
     }
 
-    private static void configureErrorProneOptions(Project project, Action<ErrorProneOptions> action) {
-        project.getTasks().withType(JavaCompile.class).configureEach(new Action<JavaCompile>() {
+    private static void configureErrorProneOptions(Project proj, Action<ErrorProneOptions> action) {
+        proj.afterEvaluate(new Action<Project>() {
             @Override
-            public void execute(JavaCompile javaCompile) {
-                ((ExtensionAware) javaCompile.getOptions()).getExtensions().configure(ErrorProneOptions.class, action);
+            public void execute(Project project) {
+                project.getTasks().withType(JavaCompile.class).configureEach(new Action<JavaCompile>() {
+                    @Override
+                    public void execute(JavaCompile javaCompile) {
+                        ((ExtensionAware) javaCompile.getOptions())
+                                .getExtensions()
+                                .configure(ErrorProneOptions.class, action);
+                    }
+                });
             }
         });
     }

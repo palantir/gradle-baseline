@@ -16,20 +16,16 @@
 
 package com.palantir.baseline
 
+import nebula.test.IntegrationSpec
+import nebula.test.functional.ExecutionResult
 
-import org.gradle.testkit.runner.BuildResult
-import org.gradle.testkit.runner.TaskOutcome
-import spock.lang.Unroll
-
-class BaselineNullAwayIntegrationTest extends AbstractPluginTest {
+class BaselineNullAwayIntegrationTest extends IntegrationSpec {
 
     def standardBuildFile = '''
-        plugins {
-            id 'java'
-            id 'com.palantir.baseline-error-prone'
-            id 'com.palantir.baseline-null-away'
-            id 'com.palantir.baseline-java-versions'
-        }
+        apply plugin: 'com.palantir.baseline-java-versions'
+        apply plugin: 'com.palantir.baseline-null-away'
+        apply plugin: 'com.palantir.baseline-error-prone'
+        apply plugin: 'java'
         repositories {
             mavenLocal()
             mavenCentral()
@@ -37,8 +33,15 @@ class BaselineNullAwayIntegrationTest extends AbstractPluginTest {
         javaVersions {
             libraryTarget = 17
         }
-        tasks.withType(JavaCompile).configureEach {
-            options.compilerArgs += ['-Werror']
+        allprojects {
+            afterEvaluate {
+                plugins.withId('net.ltgt.errorprone', {
+                    tasks.withType(JavaCompile).configureEach({
+                      options.errorprone.excludedPaths = null
+                      options.compilerArgs += ['-Werror']
+                    })
+                })
+            }
         }
     '''.stripIndent()
 
@@ -62,47 +65,62 @@ class BaselineNullAwayIntegrationTest extends AbstractPluginTest {
         buildFile << standardBuildFile
 
         then:
-        with('compileJava', '--info').build()
+        runTasksSuccessfully('compileJava', '--info')
     }
 
     def 'compileJava fails when null-away finds errors'() {
         when:
         buildFile << standardBuildFile
-        file('src/main/java/com/palantir/test/Test.java') << invalidJavaFile
+        writeJavaSourceFile(invalidJavaFile)
 
         then:
-        BuildResult result = with('compileJava').buildAndFail()
-        result.task(":compileJava").outcome == TaskOutcome.FAILED
-        result.output.contains("[NullAway] dereferenced expression throwable.getMessage() is @Nullable")
+        ExecutionResult result = runTasksWithFailure('compileJava')
+        result.standardError.contains("[NullAway] dereferenced expression throwable.getMessage() is @Nullable")
+    }
+
+    def 'Test tasks are not impacted by null-away'() {
+        when:
+        buildFile << standardBuildFile
+        writeJavaSourceFile(invalidJavaFile, "src/test/java")
+
+        then:
+        runTasksSuccessfully('compileTestJava')
+    }
+
+    def 'Integration test tasks are not impacted by null-away'() {
+        when:
+        buildFile << '''
+        plugins {
+            id 'org.unbroken-dome.test-sets' version '4.0.0'
+        }
+        '''.stripIndent(true)
+        buildFile << standardBuildFile
+        buildFile << '''
+        testSets {
+            integrationTest
+        }
+        '''.stripIndent(true)
+        writeJavaSourceFile(invalidJavaFile, "src/integrationTest/java")
+
+        then:
+        runTasksSuccessfully('compileIntegrationTestJava')
     }
 
     def 'compileJava succeeds when null-away finds no errors'() {
         when:
         buildFile << standardBuildFile
-        file('src/main/java/com/palantir/test/Test.java') << validJavaFile
+        writeJavaSourceFile(validJavaFile)
 
         then:
-        BuildResult result = with('compileJava').build()
-        result.task(":compileJava").outcome == TaskOutcome.SUCCESS
-    }
-
-    def 'compileJava succeeds when null-away finds no errors on jdk15'() {
-        when:
-        buildFile << standardBuildFile.replace('libraryTarget = 17', 'libraryTarget = 15')
-        file('src/main/java/com/palantir/test/Test.java') << validJavaFile
-
-        then:
-        BuildResult result = with('compileJava').build()
-        result.task(":compileJava").outcome == TaskOutcome.SUCCESS
+        runTasksSuccessfully('compileJava')
     }
 
     def 'compileJava succeeds when null-away finds no errors on jdk11'() {
         when:
         buildFile << standardBuildFile.replace('libraryTarget = 17', 'libraryTarget = 11')
-        file('src/main/java/com/palantir/test/Test.java') << validJavaFile
+        writeJavaSourceFile(validJavaFile)
 
         then:
-        BuildResult result = with('compileJava').build()
-        result.task(":compileJava").outcome == TaskOutcome.SUCCESS
+        runTasksSuccessfully('compileJava')
     }
 }

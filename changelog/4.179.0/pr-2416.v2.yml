@@ -1,0 +1,7 @@
+type: improvement
+improvement:
+  description: Implement ImmutableMapDuplicateKeyStrategy for obvious map construction.
+    By default we suggest replacing `build()` with the more descriptive `buildOrThrow()`,
+    however `buildKeepingLast()` may be the original intent in some cases.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2416

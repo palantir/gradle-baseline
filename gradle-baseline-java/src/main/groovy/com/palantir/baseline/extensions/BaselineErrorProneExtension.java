@@ -43,6 +43,7 @@ public class BaselineErrorProneExtension {
             "ExtendsErrorOrThrowable",
             "FinalClass",
             "IllegalSafeLoggingArgument",
+            "ImmutableMapDuplicateKeyStrategy",
             "ImmutablesStyle",
             "ImplicitPublicBuilderConstructor",
             "JavaTimeDefaultTimeZone",
