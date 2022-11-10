@@ -145,17 +145,6 @@ class BaselineConfigIntegrationTest extends AbstractPluginTest {
         """.stripIndent()
 
         buildFile << standardBuildFile
-        buildFile << """
-            repositories {
-                mavenCentral()
-                mavenLocal()
-            }
-            dependencies {
-                // NOTE: This only works on Git-clean repositories since it relies on the locally published config artifact,
-                // see ./gradle-baseline-java-config/build.gradle
-                baseline "com.palantir.baseline:gradle-baseline-java-config:${projectVersion}@zip"
-            }
-        """.stripIndent()
 
         when:
         with('baselineUpdateConfig').build()
