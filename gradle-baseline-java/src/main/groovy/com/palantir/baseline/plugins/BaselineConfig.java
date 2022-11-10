@@ -77,6 +77,8 @@ class BaselineConfig extends AbstractBaselinePlugin {
         private final Configuration configuration;
         private final Project rootProject;
 
+        private final String inclusiveCodeCheckOff = "inclusiveCodeCheckOff";
+
         BaselineUpdateConfigAction(Configuration configuration, Project rootProject) {
             this.configuration = configuration;
             this.rootProject = rootProject;
@@ -138,6 +140,45 @@ class BaselineConfig extends AbstractBaselinePlugin {
                     throw new RuntimeException("Unable to patch " + checkstyleXml, e);
                 }
             }
+
+            if (project.hasProperty(inclusiveCodeCheckOff)) {
+                Path checkstyleXml = configDir.resolve("checkstyle/checkstyle.xml");
+
+                try {
+                    DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
+                    DocumentBuilder builder = builderFactory.newDocumentBuilder();
+
+                    InputSource inputSource = new InputSource(new FileReader(checkstyleXml.toFile()));
+                    inputSource.setEncoding("UTF-8");
+                    Document document = builder.parse(inputSource);
+
+                    XPathFactory xPathFactory = XPathFactory.newInstance();
+                    XPath xPath = xPathFactory.newXPath();
+
+                    removeNodeParent(document, xPath, "//module/property[matches(., ' inclusive ')]");
+
+                    TransformerFactory transformerFactory = TransformerFactory.newInstance();
+                    Transformer transformer = transformerFactory.newTransformer();
+                    transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+                    transformer.setOutputProperty(
+                            OutputKeys.DOCTYPE_PUBLIC, document.getDoctype().getPublicId());
+                    transformer.setOutputProperty(
+                            OutputKeys.DOCTYPE_SYSTEM, document.getDoctype().getSystemId());
+
+                    DOMSource source = new DOMSource(document);
+                    StreamResult result = new StreamResult(new FileWriter(checkstyleXml.toFile()));
+                    transformer.transform(source, result);
+                } catch (Exception e) {
+                    throw new RuntimeException("Unable to patch " + checkstyleXml, e);
+                }
+            }
+        }
+
+        private void removeNodeParent(Document document, XPath xPath, String expression)
+                throws XPathExpressionException {
+            xPath.reset();
+            Node node = (Node) xPath.compile(expression).evaluate(document, XPathConstants.NODE);
+            node.getParentNode().getParentNode().removeChild(node);
         }
 
         private void removeNode(Document document, XPath xPath, String expression) throws XPathExpressionException {

@@ -12,68 +12,6 @@
     <module name="NewlineAtEndOfFile"> <!-- Java Style Guide: Line ending: LF -->
         <property name="lineSeparator" value="lf"/>
     </module>
-    <!-- Inclusive Code checks: https://wiki.palantir.tech/display/DIVERSITY/Inclusive+Language+Glossary -->
-    <module name="RegexpSingleline"> 
-        <property name="format" value="ablebodied"/>
-        <property name="message" value="To convey the same idea and be more inclusive, consider nondisabled instead of ablebodied."/>
-    </module>
-    <module name="RegexpSingleline"> 
-        <property name="format" value="blackout"/>
-        <property name="message" value="To convey the same idea and be more inclusive, consider downtime instead of blackout."/>
-    </module>
-    <module name="RegexpSingleline"> 
-        <property name="format" value="blacklist"/>
-        <property name="message" value="To convey the same idea and be more inclusive, consider denylist instead of blacklist."/>
-    </module>
-    <module name="RegexpSingleline"> 
-        <property name="format" value="whitelist"/>
-        <property name="message" value="To convey the same idea and be more inclusive, consider allowlist instead of whitelist."/>
-    </module>
-    <module name="RegexpSingleline"> 
-        <property name="format" value="dummy"/>
-        <property name="message" value="To convey the same idea and be more inclusive, consider placeholder instead of dummy."/>
-    </module>
-    <module name="RegexpSingleline"> 
-        <property name="format" value="grandfather"/>
-        <property name="message" value="To convey the same idea and be more inclusive, consider legacy instead of grandfather."/>
-    </module>
-    <module name="RegexpSingleline"> 
-        <property name="format" value="guys"/>
-        <property name="message" value="To convey the same idea and be more inclusive, consider folks instead of guys."/>
-    </module>
-    <module name="RegexpSingleline"> 
-        <property name="format" value="gypped"/>
-        <property name="message" value="To convey the same idea and be more inclusive, consider swindled instead of gypped."/>
-    </module>
-    <module name="RegexpSingleline"> 
-        <property name="format" value="handicap"/>
-        <property name="message" value="To convey the same idea and be more inclusive, consider disable instead of handicap."/>
-    </module>
-    <module name="RegexpSingleline"> 
-        <property name="format" value="housekeeping"/>
-        <property name="message" value="To convey the same idea and be more inclusive, consider maintenance instead of housekeeping."/>
-    </module>
-    <module name="RegexpSingleline"> 
-        <property name="format" value="ladies"/>
-        <property name="message" value="To convey the same idea and be more inclusive, consider women instead of ladies."/>
-    </module>
-    <module name="RegexpSingleline"> 
-        <property name="format" value="master"/>
-        <property name="message" value="To convey the same idea and be more inclusive, consider primary instead of master."/>
-    </module>
-    <module name="RegexpSingleline"> 
-        <property name="format" value="slave"/>
-        <property name="message" value="To convey the same idea and be more inclusive, consider standby instead of slave."/>
-    </module>
-    <module name="RegexpSingleline"> 
-        <property name="format" value="nittygritty"/>
-        <property name="message" value="To convey the same idea and be more inclusive, consider core instead of nittygritty."/>
-    </module>
-    <module name="RegexpSingleline"> 
-        <property name="format" value="sanity"/>
-        <property name="message" value="To convey the same idea and be more inclusive, consider sense instead of sanity."/>
-    </module>
-
     <module name="RegexpSingleline"> <!-- No reference needed as this is evident. -->
         <property name="format" value="&lt;&lt;&lt;&lt;&lt;&lt;&lt;"/>
         <property name="message" value="Found (&lt;&lt;&lt;&lt;&lt;&lt;&lt;), so it looks like you had a merge conflict that compiles. Please fix it."/>
