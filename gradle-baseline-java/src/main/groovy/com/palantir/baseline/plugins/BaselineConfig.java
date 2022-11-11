@@ -155,7 +155,7 @@ class BaselineConfig extends AbstractBaselinePlugin {
                     XPathFactory xPathFactory = XPathFactory.newInstance();
                     XPath xPath = xPathFactory.newXPath();
 
-                    removeNodeParent(document, xPath, "//module/property[matches(., ' inclusive ')]");
+                    removeNodeParent(document, xPath, "//module/property[matches(., 'inclusive')]");
 
                     TransformerFactory transformerFactory = TransformerFactory.newInstance();
                     Transformer transformer = transformerFactory.newTransformer();
