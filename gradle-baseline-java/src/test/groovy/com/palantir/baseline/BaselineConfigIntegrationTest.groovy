@@ -16,8 +16,6 @@
 
 package com.palantir.baseline
 
-import nebula.test.functional.ExecutionResult
-import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 
 /**
@@ -143,7 +141,7 @@ class BaselineConfigIntegrationTest extends AbstractPluginTest {
     
     def 'can turn off inclusive language checks'() {
         file('gradle.properties') << """
-            inclusiveCodeCheckOff = true
+            inclusive-language=off
         """.stripIndent()
 
         buildFile << standardBuildFile
@@ -164,7 +162,7 @@ class BaselineConfigIntegrationTest extends AbstractPluginTest {
 
         then:
         !new File(projectDir, '.baseline/checkstyle/checkstyle.xml').readLines().any {
-            it.contains 'inclusive'
+            it.contains 'To convey the same idea and be more inclusive,'
         }
     }
 }

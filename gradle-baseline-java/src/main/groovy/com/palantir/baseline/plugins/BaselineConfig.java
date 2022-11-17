@@ -39,6 +39,7 @@ import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.w3c.dom.Document;
 import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
 
 /** Extracts Baseline configuration into the configuration directory. */
@@ -77,7 +78,9 @@ class BaselineConfig extends AbstractBaselinePlugin {
         private final Configuration configuration;
         private final Project rootProject;
 
-        private final String inclusiveCodeCheckOff = "inclusiveCodeCheckOff";
+        private final String inclusiveCodeCheckOff = "inclusive-language";
+
+        private final String checkstylePathString = "checkstyle/checkstyle.xml";
 
         BaselineUpdateConfigAction(Configuration configuration, Project rootProject) {
             this.configuration = configuration;
@@ -104,81 +107,84 @@ class BaselineConfig extends AbstractBaselinePlugin {
                 }
             });
 
+            Path checkstylePath = configDir.resolve(checkstylePathString);
+
             // Disable some checkstyle rules that clash with PJF
             if (BaselineFormat.palantirJavaFormatterState(rootProject) != FormatterState.OFF
                     || project.getPluginManager().hasPlugin("com.palantir.java-format-provider")) {
-                Path checkstyleXml = configDir.resolve("checkstyle/checkstyle.xml");
 
                 try {
-                    DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
-                    DocumentBuilder builder = builderFactory.newDocumentBuilder();
-
-                    InputSource inputSource = new InputSource(new FileReader(checkstyleXml.toFile()));
-                    inputSource.setEncoding("UTF-8");
-                    Document document = builder.parse(inputSource);
-
-                    XPathFactory xPathFactory = XPathFactory.newInstance();
-                    XPath xPath = xPathFactory.newXPath();
+                    Document document = getDocument(checkstylePath);
+                    XPath xPath = XPathFactory.newInstance().newXPath();
 
                     removeNode(document, xPath, "//module[@name='Indentation']");
                     removeNode(document, xPath, "//module[@name='ParenPad']");
                     removeNode(document, xPath, "//module[@name='LeftCurly']");
                     removeNode(document, xPath, "//module[@name='WhitespaceAround']");
 
-                    TransformerFactory transformerFactory = TransformerFactory.newInstance();
-                    Transformer transformer = transformerFactory.newTransformer();
-                    transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-                    transformer.setOutputProperty(
-                            OutputKeys.DOCTYPE_PUBLIC, document.getDoctype().getPublicId());
-                    transformer.setOutputProperty(
-                            OutputKeys.DOCTYPE_SYSTEM, document.getDoctype().getSystemId());
-
-                    DOMSource source = new DOMSource(document);
-                    StreamResult result = new StreamResult(new FileWriter(checkstyleXml.toFile()));
-                    transformer.transform(source, result);
+                    writeEditedCheckstyle(document, checkstylePath);
                 } catch (Exception e) {
-                    throw new RuntimeException("Unable to patch " + checkstyleXml, e);
+                    throw new RuntimeException("Unable to patch " + checkstylePath, e);
                 }
             }
 
             if (project.hasProperty(inclusiveCodeCheckOff)) {
-                Path checkstyleXml = configDir.resolve("checkstyle/checkstyle.xml");
-
                 try {
-                    DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
-                    DocumentBuilder builder = builderFactory.newDocumentBuilder();
+                    Document document = getDocument(configDir.resolve(checkstylePathString));
+                    XPath xPath = XPathFactory.newInstance().newXPath();
 
-                    InputSource inputSource = new InputSource(new FileReader(checkstyleXml.toFile()));
-                    inputSource.setEncoding("UTF-8");
-                    Document document = builder.parse(inputSource);
+                    removeAllMatchingNodes(document, xPath, "//module/property[contains(@value, 'inclusive')]");
 
-                    XPathFactory xPathFactory = XPathFactory.newInstance();
-                    XPath xPath = xPathFactory.newXPath();
-
-                    removeNodeParent(document, xPath, "//module/property[matches(., 'inclusive')]");
-
-                    TransformerFactory transformerFactory = TransformerFactory.newInstance();
-                    Transformer transformer = transformerFactory.newTransformer();
-                    transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
-                    transformer.setOutputProperty(
-                            OutputKeys.DOCTYPE_PUBLIC, document.getDoctype().getPublicId());
-                    transformer.setOutputProperty(
-                            OutputKeys.DOCTYPE_SYSTEM, document.getDoctype().getSystemId());
-
-                    DOMSource source = new DOMSource(document);
-                    StreamResult result = new StreamResult(new FileWriter(checkstyleXml.toFile()));
-                    transformer.transform(source, result);
+                    writeEditedCheckstyle(document, checkstylePath);
                 } catch (Exception e) {
-                    throw new RuntimeException("Unable to patch " + checkstyleXml, e);
+                    throw new RuntimeException("Unable to patch " + checkstylePath, e);
                 }
             }
         }
 
-        private void removeNodeParent(Document document, XPath xPath, String expression)
+        private Document getDocument(Path checkstylePath) {
+            try {
+                DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
+                DocumentBuilder builder = builderFactory.newDocumentBuilder();
+
+                InputSource inputSource = new InputSource(new FileReader(checkstylePath.toFile()));
+                inputSource.setEncoding("UTF-8");
+                return builder.parse(inputSource);
+            } catch (Exception e) {
+                throw new RuntimeException("Unable to patch " + checkstylePath, e);
+            }
+        }
+
+        private void writeEditedCheckstyle(Document document, Path checkstylePath) {
+            try {
+                TransformerFactory transformerFactory = TransformerFactory.newInstance();
+                Transformer transformer = transformerFactory.newTransformer();
+                transformer.setOutputProperty(OutputKeys.ENCODING, "UTF-8");
+                transformer.setOutputProperty(
+                        OutputKeys.DOCTYPE_PUBLIC, document.getDoctype().getPublicId());
+                transformer.setOutputProperty(
+                        OutputKeys.DOCTYPE_SYSTEM, document.getDoctype().getSystemId());
+
+                DOMSource source = new DOMSource(document);
+                StreamResult result = new StreamResult(new FileWriter(checkstylePath.toFile()));
+                transformer.transform(source, result);
+            } catch (Exception e) {
+                throw new RuntimeException("Unable to patch " + checkstylePath, e);
+            }
+        }
+
+        private void removeAllMatchingNodes(Document document, XPath xPath, String expression)
                 throws XPathExpressionException {
-            xPath.reset();
-            Node node = (Node) xPath.compile(expression).evaluate(document, XPathConstants.NODE);
-            node.getParentNode().getParentNode().removeChild(node);
+            try {
+                xPath.reset();
+                NodeList nodeList = (NodeList) xPath.compile(expression).evaluate(document, XPathConstants.NODESET);
+                for (int i = 0; i < nodeList.getLength(); i++) {
+                    Node node = nodeList.item(i);
+                    node.getParentNode().removeChild(node);
+                }
+            } catch (XPathExpressionException e) {
+                throw new RuntimeException(e.getMessage());
+            }
         }
 
         private void removeNode(Document document, XPath xPath, String expression) throws XPathExpressionException {
