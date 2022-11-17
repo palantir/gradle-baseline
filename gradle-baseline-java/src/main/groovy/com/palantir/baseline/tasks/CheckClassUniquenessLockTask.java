@@ -36,7 +36,6 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.SetProperty;
@@ -58,8 +57,6 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
     @SuppressWarnings("VisibilityModifier")
     public final SetProperty<Configuration> configurations;
 
-    public final ConfigurationContainer configurations_new;
-
     @SuppressWarnings("VisibilityModifier")
     public final Property<JarClassHasher> jarClassHasher;
 
@@ -67,7 +64,6 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
 
     public CheckClassUniquenessLockTask() {
         this.configurations = getProject().getObjects().setProperty(Configuration.class);
-        this.configurations_new = getProject().getConfigurations();
         this.jarClassHasher = getProject().getObjects().property(JarClassHasher.class);
         this.lockFile = getProject().file("baseline-class-uniqueness.lock");
         onlyIf(new Spec<Task>() {

@@ -22,7 +22,6 @@ import java.io.IOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
-import java.util.Map;
 import org.gradle.api.Project;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.plugins.quality.CheckstyleExtension;
@@ -34,8 +33,6 @@ import org.gradle.plugins.ide.eclipse.model.EclipseProject;
 
 /** Configures the Gradle "checkstyle" task with Baseline settings. */
 public final class BaselineCheckstyle extends AbstractBaselinePlugin {
-
-    private static final String INCLUSIVE_LANGUAGE_DISABLED = "com.palantir.baseline-checkstyle.inclusive-language-off";
 
     @Override
     public void apply(Project project) {
@@ -70,15 +67,6 @@ public final class BaselineCheckstyle extends AbstractBaselinePlugin {
                     project.getExtensions().getByType(EclipseModel.class).getProject();
             eclipseProject.buildCommand("net.sf.eclipsecs.core.CheckstyleBuilder");
         });
-
-        String inclusiveCodeLintingFiles = "*.";
-        if (inclusiveLanguageDisabled(project)) {
-            inclusiveCodeLintingFiles = "DISABLED";
-        }
-        CheckstyleExtension checkstyleExtension = project.getExtensions().getByType(CheckstyleExtension.class);
-        Map<String, Object> configProperties = checkstyleExtension.getConfigProperties();
-        configProperties.put("inclusiveCodeLintingFiles", inclusiveCodeLintingFiles);
-        checkstyleExtension.setConfigProperties(configProperties);
     }
 
     // The idea is the checkstyle.version file can be more easily updated by excavator
@@ -90,9 +78,5 @@ public final class BaselineCheckstyle extends AbstractBaselinePlugin {
         } catch (IOException e) {
             throw new RuntimeException("Unable to lookup checkstyle version", e);
         }
-    }
-
-    static boolean inclusiveLanguageDisabled(Project project) {
-        return project.hasProperty(INCLUSIVE_LANGUAGE_DISABLED);
     }
 }
