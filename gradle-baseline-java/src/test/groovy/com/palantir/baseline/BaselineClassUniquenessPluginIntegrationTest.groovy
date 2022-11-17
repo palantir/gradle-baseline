@@ -176,26 +176,6 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         result.output.contains("baseline-class-uniqueness detected multiple jars containing identically named classes")
     }
 
-    def 'should NOT detect duplicates on different classpaths'() {
-        when:
-        multiProject.addSubproject('foo', """
-        dependencies {
-            api group: 'javax.el', name: 'javax.el-api', version: '3.0.0'
-        }
-        """)
-        multiProject.addSubproject('bar', """
-        dependencies {
-            api group: 'javax.servlet.jsp', name: 'jsp-api', version: '2.1'
-        }
-        """)
-
-        buildFile << standardBuildFile
-
-        then:
-        BuildResult result = with('checkClassUniqueness', '-s').build()
-        print(result.output)
-    }
-
     def 'currently skips duplicates from user-authored code'() {
         when:
         Stream.of(multiProject.addSubproject('foo'), multiProject.addSubproject('bar')).forEach({ subproject ->
