@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: Upgrade error-prone to 2.16, removing support for compilation with
+    a jdk-15 target
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2432

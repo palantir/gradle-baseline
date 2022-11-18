@@ -81,7 +81,7 @@ public final class ZeroWarmupRateLimiter extends BugChecker implements BugChecke
      */
     private static boolean isDurationZero(ExpressionTree expressionTree, VisitorState state) {
         Symbol symbol = ASTHelpers.getSymbol(expressionTree);
-        if (symbol != null && symbol.isStatic() && symbol instanceof VarSymbol) {
+        if (symbol != null && ASTHelpers.isStatic(symbol) && symbol instanceof VarSymbol) {
             VarSymbol varSymbol = (VarSymbol) symbol;
             return varSymbol.name.contentEquals("ZERO")
                     && state.getTypes()
