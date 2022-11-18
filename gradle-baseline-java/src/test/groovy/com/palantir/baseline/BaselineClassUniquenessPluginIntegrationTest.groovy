@@ -104,6 +104,21 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         with('checkClassUniqueness', '-s').build()
     }
 
+    def 'ignores duplicates based on module-info and UnusedStubClass'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << """
+        dependencies {
+            // depends on spark-network-common, which also contains UnusedStubClass. Also depends on versions of Jackson
+            // that use module-info.java.
+            api 'org.apache.spark:spark-network-shuffle_2.13:3.3.0'
+        }
+        """.stripIndent()
+
+        then:
+        with('checkClassUniqueness', '-s').build()
+    }
+
     def 'task should be up-to-date when classpath is unchanged'() {
         when:
         buildFile << standardBuildFile

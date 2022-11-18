@@ -74,9 +74,7 @@ public abstract class JarClassHasher implements BuildService<BuildServiceParamet
                         continue;
                     }
 
-                    if (entry.getName().contains("module-info.class")) {
-                        // Java 9 allows jars to have a module-info.class file in the root,
-                        // we shouldn't complain about these.
+                    if (isExcluded(entry.getName())) {
                         continue;
                     }
 
@@ -115,5 +113,14 @@ public abstract class JarClassHasher implements BuildService<BuildServiceParamet
         // Try to free up memory when this is no longer needed
         cache.invalidateAll();
         cache.cleanUp();
+    }
+
+    /**
+     * Java 9 allows jars to have a module-info.class, we shouldn't complain about these.
+     * Spark contains an 'UnusedStubClass' which generates many false positives, we shouldn't complain about this,
+     * either.
+     */
+    private static boolean isExcluded(String path) {
+        return path.endsWith("module-info.class") || path.equals("org/apache/spark/unused/UnusedStubClass.class");
     }
 }

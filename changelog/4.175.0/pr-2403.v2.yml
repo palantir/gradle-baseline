@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Fix GitHub issues navigation Idea config
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2403

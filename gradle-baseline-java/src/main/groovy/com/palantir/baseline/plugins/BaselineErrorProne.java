@@ -22,7 +22,6 @@ import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.MoreCollectors;
-import com.palantir.baseline.IntellijSupport;
 import com.palantir.baseline.extensions.BaselineErrorProneExtension;
 import com.palantir.baseline.tasks.CompileRefasterTask;
 import java.io.File;
@@ -349,7 +348,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
     private static boolean isDisabled(Project project) {
         Object disable = project.findProperty(DISABLE_PROPERTY);
         if (disable == null) {
-            return IntellijSupport.isRunningInIntellij();
+            return false;
         } else {
             return !disable.equals("false");
         }

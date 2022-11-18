@@ -57,6 +57,10 @@ public class BaselineJavaVersionExtension {
         target.set(ChosenJavaVersion.of(value));
     }
 
+    public final void setTarget(String value) {
+        target.set(ChosenJavaVersion.fromString(value));
+    }
+
     /** Runtime {@link ChosenJavaVersion} for testing and distributions. */
     public final Property<ChosenJavaVersion> runtime() {
         return runtime;
@@ -64,6 +68,10 @@ public class BaselineJavaVersionExtension {
 
     public final void setRuntime(int value) {
         runtime.set(ChosenJavaVersion.of(value));
+    }
+
+    public final void setRuntime(String value) {
+        runtime.set(ChosenJavaVersion.fromString(value));
     }
 
     /**

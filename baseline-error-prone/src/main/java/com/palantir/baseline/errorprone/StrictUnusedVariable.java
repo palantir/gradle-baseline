@@ -41,6 +41,7 @@ import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.errorprone.BugPattern.SeverityLevel.ERROR;
 import static com.google.errorprone.util.ASTHelpers.getSymbol;
 import static com.google.errorprone.util.ASTHelpers.getType;
+import static com.google.errorprone.util.ASTHelpers.isStatic;
 import static com.google.errorprone.util.ASTHelpers.isSubtype;
 import static com.google.errorprone.util.SideEffectAnalysis.hasSideEffect;
 import static com.sun.source.tree.Tree.Kind.POSTFIX_DECREMENT;
@@ -449,8 +450,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                 if (hasSideEffect(initializer) && TOP_LEVEL_EXPRESSIONS.contains(initializer.getKind())) {
                     if (varKind == ElementKind.FIELD) {
                         String newContent = String.format(
-                                "%s{ %s; }",
-                                varSymbol.isStatic() ? "static " : "", state.getSourceForNode(initializer));
+                                "%s{ %s; }", isStatic(varSymbol) ? "static " : "", state.getSourceForNode(initializer));
                         fix.merge(SuggestedFixes.replaceIncludingComments(usagePath, newContent, state));
                     } else {
                         fix.replace(statement, String.format("%s;", state.getSourceForNode(initializer)));
