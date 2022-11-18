@@ -1,0 +1,5 @@
+type: feature
+feature:
+  description: enforces our inclusive language standards using a checkstyle rule
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2425
