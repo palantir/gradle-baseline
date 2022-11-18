@@ -16,6 +16,7 @@
 
 package com.palantir.baseline
 
+import nebula.test.functional.ExecutionResult
 import org.apache.commons.io.FileUtils
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
@@ -46,6 +47,13 @@ class BaselineCheckstyleIntegrationTest extends AbstractPluginTest {
     }
     '''.stripIndent()
 
+    def uninclusiveJavaFile = '''
+    package badjava;
+    
+    public class Blacklist {
+    }
+    '''.stripIndent()
+    
     def 'checkstyleMain succeeds'() {
         when:
         buildFile << standardBuildFile
@@ -55,4 +63,15 @@ class BaselineCheckstyleIntegrationTest extends AbstractPluginTest {
         BuildResult result = with('checkstyleMain').build()
         result.task(":checkstyleMain").outcome == TaskOutcome.SUCCESS
     }
+
+    def 'inclusive code checks fail on bad file'() {
+        when:
+        buildFile << standardBuildFile
+        file('src/main/java/badjava/Blacklist.java') << uninclusiveJavaFile
+
+        then:
+        BuildResult result = with('checkstyleMain').buildAndFail()
+        result.task(":checkstyleMain").getOutcome() == TaskOutcome.FAILED
+    }
+    
 }
