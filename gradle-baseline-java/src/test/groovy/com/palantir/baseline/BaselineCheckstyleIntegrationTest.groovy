@@ -27,6 +27,9 @@ class BaselineCheckstyleIntegrationTest extends AbstractPluginTest {
         FileUtils.copyDirectory(
                 new File("../gradle-baseline-java-config/resources"),
                 new File(projectDir, ".baseline"))
+        file('gradle.properties') << """
+            inclusive-language=on
+        """.stripIndent()
     }
 
     def standardBuildFile = '''

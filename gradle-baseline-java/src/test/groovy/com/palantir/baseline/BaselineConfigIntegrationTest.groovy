@@ -139,11 +139,7 @@ class BaselineConfigIntegrationTest extends AbstractPluginTest {
         }
     }
     
-    def 'can turn off inclusive language checks'() {
-        file('gradle.properties') << """
-            inclusive-language=off
-        """.stripIndent()
-
+    def 'inclusive language checks off by default'() {
         buildFile << standardBuildFile
         buildFile << """
             repositories {
@@ -162,6 +158,32 @@ class BaselineConfigIntegrationTest extends AbstractPluginTest {
 
         then:
         !new File(projectDir, '.baseline/checkstyle/checkstyle.xml').readLines().any {
+            it.contains 'To convey the same idea and be more inclusive,'
+        }
+    }
+
+    def 'can turn on inclusive language checks'() {
+        file('gradle.properties') << """
+            inclusive-language=on
+        """.stripIndent()
+        buildFile << standardBuildFile
+        buildFile << """
+            repositories {
+                mavenCentral()
+                mavenLocal()
+            }
+            dependencies {
+                // NOTE: This only works on Git-clean repositories since it relies on the locally published config artifact,
+                // see ./gradle-baseline-java-config/build.gradle
+                baseline "com.palantir.baseline:gradle-baseline-java-config:${projectVersion}@zip"
+            }
+        """.stripIndent()
+
+        when:
+        with('baselineUpdateConfig').build()
+
+        then:
+        new File(projectDir, '.baseline/checkstyle/checkstyle.xml').readLines().any {
             it.contains 'To convey the same idea and be more inclusive,'
         }
     }

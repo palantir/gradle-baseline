@@ -78,7 +78,7 @@ class BaselineConfig extends AbstractBaselinePlugin {
         private final Configuration configuration;
         private final Project rootProject;
 
-        private final String inclusiveCodeCheckOff = "inclusive-language";
+        private final String inclusiveCodeCheckOn = "inclusive-language";
 
         private final String checkstylePathString = "checkstyle/checkstyle.xml";
 
@@ -128,7 +128,7 @@ class BaselineConfig extends AbstractBaselinePlugin {
                 }
             }
 
-            if (project.hasProperty(inclusiveCodeCheckOff)) {
+            if (!project.hasProperty(inclusiveCodeCheckOn)) {
                 try {
                     Document document = getDocument(configDir.resolve(checkstylePathString));
                     XPath xPath = XPathFactory.newInstance().newXPath();
