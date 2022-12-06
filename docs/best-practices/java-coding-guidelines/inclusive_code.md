@@ -4,8 +4,10 @@ The way we communicate can make the difference between forging positive connecti
 and professional lives. This includes verbal, written, and non-verbal communications, like body-language. We want our 
 code to be written with inclusivity in mind. In particular, we try to avoid phrases that can carry hidden meanings.
 
-The list of phrases contains two types of expressions: gendered or exclusive terms and everyday phrases with racist origins.
-This list was developed by our Diversity, Equity, and Inclusion team. 
+The list of phrases contains two types of expressions: gendered or exclusive terms and everyday phrases with racist 
+origins. This list was developed by our Diversity, Equity, and Inclusion team. This page is a work-in-progress and 
+therefore can continue to grow. We include these examples below to share guidance for writing inclusive documentation.
+
 
 | Term             | Suggested Replacements |
 |------------------| ---------------------- |
