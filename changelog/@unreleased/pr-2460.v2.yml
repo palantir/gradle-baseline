@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: Suppress the `JavaxInjectOnAbstractMethod` check for projects that
+    apply `java-gradle-plugin`.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2460
