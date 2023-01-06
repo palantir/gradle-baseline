@@ -128,4 +128,50 @@ class BaselineImmutablesTest extends IntegrationSpec {
         where:
         javaVersion << ImmutableList.of(11, 17)
     }
+
+    def 'handles an annotationProcesor source set extending from another one'() {
+        buildFile << """
+            apply plugin: 'com.palantir.baseline-immutables'
+            apply plugin: 'java-library'
+
+            repositories {
+                mavenCentral()
+            }
+
+            dependencies {
+                annotationProcessor '$IMMUTABLES'
+                compileOnly '$IMMUTABLES_ANNOTATIONS'
+            }
+            
+            configurations {
+                testAnnotationProcessor.extendsFrom annotationProcessor
+                testCompileOnly.extendsFrom compileOnly
+            } 
+            
+            tasks.withType(JavaCompile) { javaCompile ->
+                doFirst {
+                    logger.lifecycle "\${javaCompile.name}: \${javaCompile.options.allCompilerArgs}"
+                }
+            }
+        """.stripIndent(true)
+
+        def testJava = 'src/test/java'
+
+        // language=java
+        writeJavaSourceFile '''
+            package test;
+            import org.immutables.value.Value;
+            @Value.Immutable
+            public interface Test {
+                int item();
+            }
+        '''.stripIndent(true), testJava
+
+        when:
+        def stdout = runTasksSuccessfully('compileTestJava').standardOutput
+        println stdout
+
+        then:
+        stdout.contains('compileTestJava: [-Aimmutables.gradle.incremental]')
+    }
 }
