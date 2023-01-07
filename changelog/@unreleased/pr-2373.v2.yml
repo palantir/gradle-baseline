@@ -1,0 +1,7 @@
+type: improvement
+improvement:
+  description: |-
+    Create GradleTaskConfigurationAvoidance error prone check to prevent
+    eager task creation.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2373
