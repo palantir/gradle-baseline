@@ -78,8 +78,24 @@ class BaselineDeadCodeIntegrationTest extends IntegrationSpec {
 //        '''.stripIndent(true)
         file('src/main/java/Main.java') << mainClass
         file('src/main/java/RedundantClass.java') << redundantClass
+        !file("$projectDir/build/proguard").exists()
 
         then:
-        runTasksSuccessfully('proguard')
+        def result = runTasksSuccessfully('proguard')
+        result.wasExecuted(":jar")
+
+        file("$projectDir/build/proguard/printusage").exists()
+        file("$projectDir/build/proguard/printconfiguration").exists()
+        file("$projectDir/build/proguard/printseeds").exists()
+        file("$projectDir/build/proguard/out").isDirectory()
+
     }
+
+    // TODO(dfox): test re-runs with identical java code shouldn't re-run proguard
+    // TODO(dfox): multiproject build with `project(':foo')` dependencies, using conjure, GCV, sls-packaging, baseline-java-version
+    // TODO(dfox): project with build cache!
+    // TODO(dfox): project using immutables annotation processing.
+    // TODO(dfox): project using dagger annotation processing.
+    // TODO(dfox): project with lots of important 'resources'
+    // TODO(dfox): project with some classes which are identically named (but different packages?)
 }
