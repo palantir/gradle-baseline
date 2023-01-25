@@ -58,6 +58,8 @@ public final class BaselineDeadCode implements Plugin<Project> {
 
             // proguard has the concept of 'injars' which will be exhaustively analyzed looking for dead code, and
             // 'libraryjars' which must be present, but aren't exhaustively analuzed.
+            // TODO(dfox): seems like immutables annotation processor can upset proguard... do we want the
+            //  union of the compileOnly and runtimeClasspath configuration? Should this be user configurable?
             Configuration configuration = project.getConfigurations()
                     .named(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME)
                     .get();
@@ -97,15 +99,19 @@ public final class BaselineDeadCode implements Plugin<Project> {
                     "-keepattributes Exceptions,InnerClasses,Signature,Deprecated,SourceFile,LineNumberTable,LocalVariable*Table,*Annotation*,Synthetic,EnclosingMethod",
                     "-keepparameternames",
 
-                    // downside: this means we won't spot redundant _response_ objects... but it ensures
-                    // we keep config deserialization objects!
+                    // proguard doesn't magically understand reflection, and all our jackson deserialization is done
+                    // using reflection. Hence, I'm just blanket keeping anything with a @JsonDeserialize annotation.
+                    // The downside is that this *might* be keeping unnecessary classes around.
                     "-keep,includedescriptorclasses,includecode "
                             + "@com.fasterxml.jackson.databind.annotation.JsonDeserialize class **",
 
-                    // helpful for debugging to see the full listing of injars and libraryjars
+                    // helpful for debugging to see the full listing of injars and libraryjars.
+                    // note that this contains ABSOLUTE PATHS so probably isn't good for the build cache.
                     "-printconfiguration " + proguardDir.file("printconfiguration"),
-                    // 'usage' actually means everything that proguard has deemed unused.
+
+                    // 'usage' means every class/field/method that proguard has deemed unused.
                     "-printusage " + proguardDir.file("printusage"),
+
                     // 'seeds' are classes which are deemed to be entrypoints (i.e. what was matched by the various
                     // '-keep' options)
                     "-printseeds " + proguardDir.file("printseeds"));
