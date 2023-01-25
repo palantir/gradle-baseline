@@ -41,7 +41,7 @@ public final class BaselineDeadCode implements Plugin<Project> {
 
         // TODO(dfox): emit a warning that this should not be applied to all projects, just your final distribution?
 
-        project.getTasks().register("progrd", ProguardTask.class, task -> {
+        project.getTasks().register("proguard", ProguardTask.class, task -> {
             Directory proguardDir =
                     project.getLayout().getBuildDirectory().dir("proguard").get();
             Directory proguardOutDir = proguardDir.dir("out");
