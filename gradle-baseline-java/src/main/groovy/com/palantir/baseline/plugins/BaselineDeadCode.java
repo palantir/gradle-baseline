@@ -162,14 +162,11 @@ public final class BaselineDeadCode implements Plugin<Project> {
             };
 
             // TODO(dfox): output the raw 'deadClasses' lines to a file in the build dir somewhere!
-
-            List<String> actionableDeadClasses =
-                    deadClasses.stream().sorted().filter(actionable).collect(Collectors.toList());
             List<String> lines = Stream.of(
                             Stream.of(
                                     "# Run ./gradlew " + task.getName() + " to regenerate this file",
                                     "# Classes with no known usages (likely actionable)"),
-                            actionableDeadClasses.stream(),
+                            deadClasses.stream().sorted().filter(actionable),
                             Stream.of(
                                     "",
                                     "# Less actionable classes (likely generated): "
@@ -179,7 +176,7 @@ public final class BaselineDeadCode implements Plugin<Project> {
                     .flatMap(s -> s)
                     .collect(Collectors.toList());
 
-            DesiredLockfileState desiredLockfileState = actionableDeadClasses.isEmpty()
+            DesiredLockfileState desiredLockfileState = deadClasses.isEmpty()
                     ? new DesiredLockfileState() {
                         @Override
                         public boolean verify() {

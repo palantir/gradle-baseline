@@ -502,3 +502,4 @@ It is recommended to apply this plugin to the project which produces your final 
 It adds the following tasks:
 
 - **`./gradlew proguard`** - analyzes the `runtimeClasspath` configuration to find unused classes, outputting the pruned classes to $buildDir/proguard/out
+- **`./gradlew deadCode`** - saves the list of unused classes to the `baseline-dead-code.lock` file. This should be checked in, and will be verified (but not overwritten) on CI.
