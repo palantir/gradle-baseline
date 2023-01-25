@@ -16,10 +16,100 @@
 
 package com.palantir.baseline.plugins;
 
+import com.github.sgtsilvio.gradle.proguard.ProguardPlugin;
+import com.github.sgtsilvio.gradle.proguard.ProguardTask;
+import java.io.File;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
+import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.file.Directory;
+import org.gradle.api.plugins.JavaPlugin;
+import org.gradle.api.specs.Spec;
+import org.gradle.util.internal.GFileUtils;
 
 public final class BaselineDeadCode implements Plugin<Project> {
     @Override
-    public void apply(Project project) {}
+    public void apply(Project project) {
+        project.getPlugins().apply(JavaPlugin.class);
+        project.getPlugins().apply(ProguardPlugin.class);
+
+        // TODO(dfox): emit a warning that this should not be applied to all projects, just your final distribution?
+
+        project.getTasks().register("progrd", ProguardTask.class, task -> {
+            Directory proguardDir =
+                    project.getLayout().getBuildDirectory().dir("proguard").get();
+            Directory proguardOutDir = proguardDir.dir("out");
+            task.getOutputs().dir(proguardDir);
+            task.doFirst(__ -> {
+                GFileUtils.deleteDirectory(proguardDir.getAsFile());
+                try {
+                    Files.createDirectories(proguardDir.getAsFile().toPath());
+                    Files.createDirectories(proguardOutDir.getAsFile().toPath());
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
+                }
+            });
+
+            // proguard has the concept of 'injars' which will be exhaustively analyzed looking for dead code, and
+            // 'libraryjars' which must be present, but aren't exhaustively analuzed.
+            Configuration configuration = project.getConfigurations()
+                    .named(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME)
+                    .get();
+            Set<String> projectNames =
+                    project.getAllprojects().stream().map(Project::getName).collect(Collectors.toSet());
+            Spec<File> fileSpec = file -> {
+                return projectNames.stream()
+                                .anyMatch(someProjectName -> file.getName().contains(someProjectName))
+                        || file.isDirectory();
+            };
+            task.addInput(entry -> {
+                // we want proguard to run on the class files produced by this project
+                // TODO(dfox): could we grab these as .class files rather than by extracting a jar using variant
+                //  aware selection?
+                Task jarTask =
+                        project.getTasks().named(JavaPlugin.JAR_TASK_NAME).get();
+                entry.getClasspath().from(jarTask.getOutputs().getFiles());
+
+                // if we have any `project(':foo')` dependencies in the classpath, then proguard should also consider
+                // these as 'inputjars' and analyze them (as any unused classes will be actionable).
+                entry.getClasspath().from(configuration.filter(fileSpec));
+            });
+            task.addLibrary(entry -> {
+                entry.getClasspath().from(configuration.filter(file -> !fileSpec.isSatisfiedBy(file)));
+            });
+            task.getJdkModules().add("java.base");
+
+            // after proguard shrinks/optimizes the 'injars' it will write them to the configured output.
+            task.addOutput(entry -> {
+                entry.getDirectory().set(proguardOutDir);
+            });
+
+            List<String> rules = List.of(
+                    "-dontoptimize",
+                    "-dontobfuscate",
+                    "-keepclasseswithmembers public class * { public static void main(java.lang.String[]); }",
+                    "-keepattributes Exceptions,InnerClasses,Signature,Deprecated,SourceFile,LineNumberTable,LocalVariable*Table,*Annotation*,Synthetic,EnclosingMethod",
+                    "-keepparameternames",
+
+                    // downside: this means we won't spot redundant _response_ objects... but it ensures
+                    // we keep config deserialization objects!
+                    "-keep,includedescriptorclasses,includecode "
+                            + "@com.fasterxml.jackson.databind.annotation.JsonDeserialize class **",
+
+                    // helpful for debugging to see the full listing of injars and libraryjars
+                    "-printconfiguration " + proguardDir.file("printconfiguration"),
+                    // 'usage' actually means everything that proguard has deemed unused.
+                    "-printusage " + proguardDir.file("printusage"),
+                    // 'seeds' are classes which are deemed to be entrypoints (i.e. what was matched by the various
+                    // '-keep' options)
+                    "-printseeds " + proguardDir.file("printseeds"));
+            task.getRules().addAll(rules);
+        });
+    }
 }

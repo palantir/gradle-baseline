@@ -486,10 +486,19 @@ _Note, this plugin should be used with **caution** because preview features may 
 
 ## com.palantir.baseline-dead-code
 
-Codebases generally accumulate 'dead code' over time. This might include generated API classes, persistence classes or just regular Java classes. Dead code can slow down development by obscuring readability, or even just adding one extra caller to internal methods so that refactors take marginally longer.
+Codebases often accumulate 'dead code' over time. Dead code can slow down development by obscuring readability, or even just adding one extra caller to internal methods so that refactors take slightly longer. Error-prone and the StrictUnusedVariable check already ensure that classes do not contain unused codepaths (e.g. in private methods or fields), but these tools are not capable of detecting an entire public class which is never used.
 
-Error-prone and the StrictUnusedVariable check already ensure that classes do not contain unused codepaths (e.g. in private methods or fields), but these tools are not capable of detecting an entire public class which is never used.
-
-Luckily Android developers care about this problem (in order to stay under Android's hard limit on the number of classes, as well as to minimize bytes downloaded when installing an app). This 'baseline-dead-code' plugin relies on **ProGuard**, an "open-sourced Java class file shrinker, optimizer, obfuscator, and preverifier" maintained by [Guardsquare](https://www.guardsquare.com/manual/home).
+Luckily Android developers have built tooling to solve this problem in order to stay under Android's hard limit on the number of classes, as well as to minimize bytes downloaded when installing an app. The `baseline-dead-code` plugin relies on **ProGuard**, an "open-sourced Java class file shrinker, optimizer, obfuscator, and preverifier" maintained by [Guardsquare](https://www.guardsquare.com/manual/home).
 
 Relies on https://github.com/SgtSilvio/gradle-proguard.
+
+It is recommended to apply this plugin to the project which produces your final distribution _only_, for example:
+
+```diff
+ apply plugin: 'com.palantir.sls-java-service-distribution'
++apply plugin: 'com.palantir.baseline-dead-code`
+```
+
+It adds the following tasks:
+
+- **`./gradlew proguard`** - analyzes the `runtimeClasspath` configuration to find unused classes, outputting the pruned classes to $buildDir/proguard/out
