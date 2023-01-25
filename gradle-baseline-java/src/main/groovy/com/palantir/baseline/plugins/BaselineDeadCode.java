@@ -41,6 +41,7 @@ import org.gradle.api.file.Directory;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.plugins.JavaPlugin;
 import org.gradle.api.specs.Spec;
+import org.gradle.api.tasks.ClasspathNormalizer;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.util.internal.GFileUtils;
 
@@ -88,8 +89,9 @@ public final class BaselineDeadCode implements Plugin<Project> {
         Configuration configuration = project.getConfigurations()
                 .named(JavaPlugin.RUNTIME_CLASSPATH_CONFIGURATION_NAME)
                 .get();
-        Set<String> projectNames =
-                project.getAllprojects().stream().map(Project::getName).collect(Collectors.toSet());
+        Set<String> projectNames = project.getRootProject().getAllprojects().stream()
+                .map(Project::getName)
+                .collect(Collectors.toSet());
         Spec<File> fileSpec = file -> {
             return projectNames.stream()
                             .anyMatch(someProjectName -> file.getName().contains(someProjectName))
@@ -144,13 +146,22 @@ public final class BaselineDeadCode implements Plugin<Project> {
 
     private static void configureLockfileTask(TaskProvider<ProguardTask> proguardProvider, DefaultTask task) {
         Project project = task.getProject();
+        ProguardTask proguardTask = proguardProvider.get();
+
         task.dependsOn(proguardProvider);
 
         Path lockfilePath = project.getProjectDir().toPath().resolve(LOCKFILE);
-        task.getOutputs().file(lockfilePath);
+        task.getOutputs().file(lockfilePath).withPropertyName("lockfilePath");
+        task.getInputs()
+                .files(proguardTask.getInputClasspath())
+                .withPropertyName("proguardInputClasspath")
+                .withNormalizer(ClasspathNormalizer.class);
+        task.getInputs()
+                .files(proguardTask.getOutputClasspath())
+                .withPropertyName("proguardOutputClaspath")
+                .withNormalizer(ClasspathNormalizer.class);
 
         task.doLast(__ -> {
-            ProguardTask proguardTask = proguardProvider.get();
             Set<String> inputClasses = getClassNames(project, proguardTask.getInputClasspath());
             Set<String> outputClasses = getClassNames(project, proguardTask.getOutputClasspath());
             Set<String> deadClasses = inputClasses.stream()
