@@ -130,6 +130,13 @@ public final class BaselineDeadCode implements Plugin<Project> {
                 // The downside is that this *might* be keeping unnecessary classes around.
                 "-keep,includedescriptorclasses,includecode "
                         + "@com.fasterxml.jackson.databind.annotation.JsonDeserialize class **",
+                "-keepclasseswithmembers,includedescriptorclasses,includecode class **$Json",
+                "-keep class * { @com.fasterxml.jackson.annotation.JsonCreator <methods>; }",
+
+                // The java compiler inlines primitive constants and String constants (static final fields).
+                // ProGuard would therefore list such fields as not being used in the class files that it analyzes,
+                // even if they are used in the source files
+                "-keepclassmembers class * { static final % *; static final java.lang.String *; }",
 
                 // helpful for debugging to see the full listing of injars and libraryjars.
                 // note that this contains ABSOLUTE PATHS so probably isn't good for the build cache.
