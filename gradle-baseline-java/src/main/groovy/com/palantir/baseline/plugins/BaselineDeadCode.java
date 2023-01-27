@@ -128,15 +128,16 @@ public final class BaselineDeadCode implements Plugin<Project> {
                 // proguard doesn't magically understand reflection, and all our jackson deserialization is done
                 // using reflection. Hence, I'm just blanket keeping anything with a @JsonDeserialize annotation.
                 // The downside is that this *might* be keeping unnecessary classes around.
-                "-keep,includedescriptorclasses,includecode "
-                        + "@com.fasterxml.jackson.databind.annotation.JsonDeserialize class **",
-                "-keepclasseswithmembers,includedescriptorclasses,includecode class **$Json",
-                "-keep class * { @com.fasterxml.jackson.annotation.JsonCreator <methods>; }",
+                // "-keep,includedescriptorclasses,includecode "
+                //         + "@com.fasterxml.jackson.databind.annotation.JsonDeserialize class **",
+                // "-keep class **$Json",
+                // "-keep class * { @com.fasterxml.jackson.annotation.JsonCreator <methods>; }",
+                // "-keep class * { @com.fasterxml.jackson.annotation.JsonValue <methods>; }",
 
                 // The java compiler inlines primitive constants and String constants (static final fields).
                 // ProGuard would therefore list such fields as not being used in the class files that it analyzes,
                 // even if they are used in the source files
-                "-keepclassmembers class * { static final % *; static final java.lang.String *; }",
+                "-keepclasseswithmembers class * { public static final java.lang.String *; }",
 
                 // helpful for debugging to see the full listing of injars and libraryjars.
                 // note that this contains ABSOLUTE PATHS so probably isn't good for the build cache.
@@ -203,7 +204,7 @@ public final class BaselineDeadCode implements Plugin<Project> {
 
                         @Override
                         public void fix() throws IOException {
-                            Files.delete(lockfilePath);
+                            Files.deleteIfExists(lockfilePath);
                         }
                     }
                     : new DesiredLockfileState() {
