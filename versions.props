@@ -36,7 +36,7 @@ org.hamcrest:hamcrest-core = 2.2
 org.junit.jupiter:* = 5.9.2
 org.junit.vintage:* = 5.9.2
 org.junit.platform:* = 1.9.2
-org.mockito:* = 5.0.0
+org.mockito:* = 5.1.0
 
 # dependency-upgrader:OFF
 # Don't upgrade, we will remove this in a future release.
