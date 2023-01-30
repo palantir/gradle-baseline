@@ -426,4 +426,47 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
         ExecutionResult result = runTasksWithFailure('jar')
         result.standardError.contains('separated by a single slash')
     }
+
+    def 'Task not up-to-date when extension value changes'() {
+        when:
+        buildFile << '''
+        application {
+            mainClass = 'com.Example'
+        }
+
+        moduleJvmArgs {
+           exports = ['java.management/sun.management']
+        }
+        '''.stripIndent(true)
+        writeJavaSourceFile('''
+        package com;
+        public class Example {
+            public static void main(String[] args) {
+                System.out.println(String.join(
+                    " ",
+                    java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments()));
+            }
+        }
+        '''.stripIndent(true))
+
+        ExecutionResult resultBeforeChange = runTasksSuccessfully('jar')
+
+        buildFile.text = standardBuildFile + '''
+        application {
+            mainClass = 'com.Example\'
+        }
+
+        moduleJvmArgs {
+           exports = ['java.management/sun.management123']
+        }
+        '''.stripIndent(true)
+
+        ExecutionResult resultAfterChange = runTasksSuccessfully('jar')
+
+        then:
+        !resultBeforeChange.wasUpToDate('jar')
+        resultBeforeChange.wasExecuted('jar')
+        !resultAfterChange.wasUpToDate('jar')
+        resultAfterChange.wasExecuted('jar')
+    }
 }
