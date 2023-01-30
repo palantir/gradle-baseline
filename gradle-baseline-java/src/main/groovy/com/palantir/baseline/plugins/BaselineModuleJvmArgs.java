@@ -111,6 +111,8 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                                     return arguments;
                                 }
                             });
+
+                    setTaskInputsFromExtension(javaCompile, extension);
                 });
 
                 TaskProvider<Task> javadocTaskProvider = null;
@@ -175,6 +177,8 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                                 }
                             }
                         });
+
+                        setTaskInputsFromExtension(javadocTask, extension);
                     });
                 }
             });
@@ -198,6 +202,8 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                             return arguments;
                         }
                     });
+
+                    setTaskInputsFromExtension(test, extension);
                 }
             });
 
@@ -220,6 +226,8 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                             return arguments;
                         }
                     });
+
+                    setTaskInputsFromExtension(javaExec, extension);
                 }
             });
 
@@ -256,9 +264,20 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                             });
                         }
                     });
+
+                    setTaskInputsFromExtension(jar, extension);
                 }
             });
         });
+    }
+
+    private static void setTaskInputsFromExtension(Task task, BaselineModuleJvmArgsExtension extension) {
+        task.getInputs()
+                .property("baseline-module-jvm-args-extension-exports", extension.exports());
+        task.getInputs()
+                .property("baseline-module-jvm-args-extension-opens", extension.opens());
+        task.getInputs()
+                .property("baseline-module-jvm-args-extension-enablePreview", extension.getEnablePreview());
     }
 
     private static void addManifestAttribute(
