@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: add input properties for each task that uses moduleJvmArgs so that
+    when the extension value changes, the task will no longer be up-to-date.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2477
