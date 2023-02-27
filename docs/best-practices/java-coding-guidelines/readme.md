@@ -727,7 +727,7 @@ private void writeOutFile(TypedInput typedInputStream, int attempt) {
 ```
 
 **note**:
-Error handling in the above example as not ideal because the IllegalStateException
+Error handling in the above example is not ideal because the IllegalStateException
 contains no information about the root cause of the failure. The author
 should probably have chosen a non-recursive implementation to begin with.
 
@@ -1760,7 +1760,7 @@ public FooResource(String name) {
 }
 ```
 
-Acyclic dependency graphs are hard to understand, hard to setup for tests and mocks, and introduce subtle code ordering
+Cyclic dependency graphs are hard to understand, hard to setup for tests and mocks, and introduce subtle code ordering
 constraints. For example, switching the order of the constructor statements introduces a bug where the resource name is
 always "FooResource on port 0" since `Server#port` hasn't been initialized when the resource calls `Server#port()`:
 
