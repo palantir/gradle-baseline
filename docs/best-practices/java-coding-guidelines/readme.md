@@ -11,25 +11,26 @@ topics:
     - [Use ternary operators sparingly](#use-ternary-operators-sparingly)
     - [Comments](#comments)
     - [Check parameters for validity](#check-parameters-for-validity)
+    - [Prefer explicit `if` and `throw` or `Precondition` over `assert`](#prefer-explicit-if-and-throw-or-precondition-over-assert)
     - [Be aware of the performance of string concatenation](#be-aware-of-the-performance-of-string-concatenation)
     - [Reflection and classpath scanning](#reflection-and-classpath-scanning)
     - [Return values and errors](#return-values-and-errors)
     - [Import the canonical package](#import-the-canonical-package)
     - [Avoid nested blocks](#avoid-nested-blocks)
     - [Methods and functions: focused, crisp, concise](#methods-and-functions-focused-crisp-concise)
-    - [Never override Object\#finalize or Object\#clone](#never-override-objectfinalize-or-objectclone)
+    - [Never override Object#finalize or Object#clone](#never-override-objectfinalize-or-objectclone)
     - [Override `Object#equals` consistently](#override-objectequals-consistently)
     - [Static members: qualified using class](#static-members-qualified-using-class)
     - [Inner assignments: Not used](#inner-assignments-not-used)
     - [For-loop control variables: never modified](#for-loop-control-variables-never-modified)
-    - [String equality: use String\#equals](#string-equality-use-stringequals)
+    - [String equality: use String#equals](#string-equality-use-stringequals)
     - [Reduce Cyclomatic Complexity](#reduce-cyclomatic-complexity)
     - [Never instantiate primitive types](#never-instantiate-primitive-types)
     - [Deprecate per annotation and Javadoc](#deprecate-per-annotation-and-javadoc)
     - [Avoid Generics clutter where possible](#avoid-generics-clutter-where-possible)
     - [Keep Boolean expressions simple](#keep-boolean-expressions-simple)
     - [Durations: measured by longs or complex types, not by ints](#durations-measured-by-longs-or-complex-types-not-by-ints)
-    - [Avoid new HashMap(int), use Maps.newHashMapWithExpectedSize(int)](#avoid-new-HashMap(int))
+    - [Avoid new HashMap(int)](#avoid-new-hashmapint)
   - [APIs and Interfaces](#apis-and-interfaces)
     - [Indicate failure consistently](#indicate-failure-consistently)
     - [Return empty arrays and collections, not null](#return-empty-arrays-and-collections-not-null)
@@ -47,7 +48,7 @@ topics:
   - [Inheritance](#inheritance)
     - [Always use @Override](#always-use-override)
     - [Favor composition over inheritance](#favor-composition-over-inheritance)
-    - [Design for extension](#design-for-extension)
+    - [Design for extension or prohibit it](#design-for-extension-or-prohibit-it)
     - [Prefer interfaces over abstract classes](#prefer-interfaces-over-abstract-classes)
     - [Prefer class hierarchies to tagged classes](#prefer-class-hierarchies-to-tagged-classes)
     - [Bounded wildcards (PECS)](#bounded-wildcards-pecs)
@@ -72,7 +73,9 @@ topics:
     - [Use appropriate assertion methods](#use-appropriate-assertion-methods)
     - [Avoid assertNotNull](#avoid-assertnotnull)
   - [Dependency Injection](#dependency-injection)
-    - [Restrict constructor parameters](#restrict-constructor-parameters)
+    - [Make constructor parameters specific, avoid God-objects](#make-constructor-parameters-specific-avoid-god-objects)
+    - [Create service proxies from config in one place only](#create-service-proxies-from-config-in-one-place-only)
+    - [Prefer acyclic dependency graphs](#prefer-acyclic-dependency-graphs)
     - [Avoid doing work in constructors](#avoid-doing-work-in-constructors)
     - [Ensure objects are fully initialized after construction](#ensure-objects-are-fully-initialized-after-construction)
     - [Static fields should be immutable and final](#static-fields-should-be-immutable-and-final)
@@ -727,7 +730,7 @@ private void writeOutFile(TypedInput typedInputStream, int attempt) {
 ```
 
 **note**:
-Error handling in the above example as not ideal because the IllegalStateException
+Error handling in the above example is not ideal because the IllegalStateException
 contains no information about the root cause of the failure. The author
 should probably have chosen a non-recursive implementation to begin with.
 
@@ -1644,14 +1647,13 @@ different methods may assert the same fact -- e.g.,
 message produced if the assertion fails. Choose the method that produces
 the most useful error message, for example:
 
-  -------------------------------- ------------------------
-  **BAD. Don't do this.**          **Good.**
-  assertEquals(false, method());   assertFalse(method());
-  assertEquals(null, method());    assertNull(method());
-  assertEquals(true, method());    assertTrue(method());
-  assertTrue(a == b);              assertEquals(a, b);
-  assertFalse(a != b);             assertEquals(a, b);
-  -------------------------------- ------------------------
+ | **BAD. Don't do this.**        | **Good.**              |
+ | ------------------------------ | ---------------------- |
+ | assertEquals(false, method()); | assertFalse(method()); |
+ | assertEquals(null, method());  | assertNull(method());  |
+ | assertEquals(true, method());  | assertTrue(method());  |
+ | assertTrue(a == b);            | assertEquals(a, b);    |
+ | assertFalse(a != b);           | assertEquals(a, b);    |
 
 ### Avoid assertNotNull
 
@@ -1760,7 +1762,7 @@ public FooResource(String name) {
 }
 ```
 
-Acyclic dependency graphs are hard to understand, hard to setup for tests and mocks, and introduce subtle code ordering
+Cyclic dependency graphs are hard to understand, hard to setup for tests and mocks, and introduce subtle code ordering
 constraints. For example, switching the order of the constructor statements introduces a bug where the resource name is
 always "FooResource on port 0" since `Server#port` hasn't been initialized when the resource calls `Server#port()`:
 
