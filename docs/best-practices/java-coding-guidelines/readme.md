@@ -1644,14 +1644,13 @@ different methods may assert the same fact -- e.g.,
 message produced if the assertion fails. Choose the method that produces
 the most useful error message, for example:
 
-  -------------------------------- ------------------------
-  **BAD. Don't do this.**          **Good.**
-  assertEquals(false, method());   assertFalse(method());
-  assertEquals(null, method());    assertNull(method());
-  assertEquals(true, method());    assertTrue(method());
-  assertTrue(a == b);              assertEquals(a, b);
-  assertFalse(a != b);             assertEquals(a, b);
-  -------------------------------- ------------------------
+ | **BAD. Don't do this.**        | **Good.**              |
+ | ------------------------------ | ---------------------- |
+ | assertEquals(false, method()); | assertFalse(method()); |
+ | assertEquals(null, method());  | assertNull(method());  |
+ | assertEquals(true, method());  | assertTrue(method());  |
+ | assertTrue(a == b);            | assertEquals(a, b);    |
+ | assertFalse(a != b);           | assertEquals(a, b);    |
 
 ### Avoid assertNotNull
 
