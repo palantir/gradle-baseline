@@ -45,7 +45,7 @@ com.palantir.javaformat:gradle-palantir-java-format = 1.1.0
 # Newer spotless versions have issues resolving dependencies at configuration time
 com.diffplug.spotless:spotless-plugin-gradle = 6.6.0
 # Groovy versions must be compatible with gradle
-org.codehaus.groovy:* = 3.0.10
+org.codehaus.groovy:* = 3.0.13
 # error-prone isn't compatible with checkerframework 3.26.0 yet
 org.checkerframework:* = 3.25.0
 # Allow nullaway to specify its own checkerframework release
