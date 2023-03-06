@@ -52,9 +52,6 @@ allprojects {
                 check("PreferSafeLogger", CheckSeverity.OFF)
                 check("PreferSafeLoggingPreconditions", CheckSeverity.OFF)
                 check("PreconditionsConstantMessage", CheckSeverity.OFF)
-                // temporarily opt out of error-prone in order to upgrade checkerframework.
-                // This should be removed as soon as baseline is next upgraded within this repo.
-                enabled = false
             }
         }
     }
