@@ -34,6 +34,7 @@ import com.sun.source.tree.MethodInvocationTree;
 import com.sun.tools.javac.tree.JCTree;
 import java.util.List;
 import java.util.Set;
+import javax.inject.Inject;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -54,6 +55,7 @@ public final class LogsafeArgName extends BugChecker implements MethodInvocation
         this.unsafeParamNames = ImmutableSet.of();
     }
 
+    @Inject
     public LogsafeArgName(ErrorProneFlags flags) {
         this.unsafeParamNames =
                 flags.getList(UNSAFE_ARG_NAMES_FLAG).map(ImmutableSet::copyOf).orElseGet(ImmutableSet::of);

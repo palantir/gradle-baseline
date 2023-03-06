@@ -175,7 +175,9 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 "PreferImmutableStreamExCollections",
                 "UnusedVariable",
                 // See VarUsage: The var keyword results in illegible code in most cases and should not be used.
-                "Varifier");
+                "Varifier",
+                // Yoda style should not block baseline upgrades.
+                "YodaCondition");
         errorProneOptions.error(
                 "EqualsHashCode",
                 "EqualsIncompatibleType",
