@@ -922,11 +922,8 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     }
 
     private static boolean hasNonNullConstantValue(LocalVariableNode node) {
-        if (node.getElement() instanceof VariableElement) {
-            VariableElement element = (VariableElement) node.getElement();
-            return (element.getConstantValue() != null);
-        }
-        return false;
+        VariableElement element = node.getElement();
+        return element != null && element.getConstantValue() != null;
     }
 
     @Override
