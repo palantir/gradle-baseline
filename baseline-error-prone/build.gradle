@@ -37,7 +37,7 @@ dependencies {
     testRuntimeOnly 'com.fasterxml.jackson.module:jackson-module-afterburner'
     // for ForbidJavax
     testRuntimeOnly 'com.palantir.conjure.java.runtime:conjure-java-annotations'
-    // for PreferGuavaVisibleForTestingTest
+    // for PreferCommonAnnotations
     testRuntimeOnly 'org.jetbrains:annotations'
 
     annotationProcessor 'com.google.auto.service:auto-service'

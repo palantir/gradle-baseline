@@ -1,5 +1,5 @@
 type: feature
 feature:
-  description: Prefer Guava version of VisibleForTesting annotation
+  description: Prefer common versions of annotations over other copies
   links:
   - https://github.com/palantir/gradle-baseline/pull/2505

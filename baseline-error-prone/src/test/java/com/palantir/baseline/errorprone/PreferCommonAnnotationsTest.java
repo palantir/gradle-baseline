@@ -19,7 +19,7 @@ package com.palantir.baseline.errorprone;
 import com.google.errorprone.CompilationTestHelper;
 import org.junit.jupiter.api.Test;
 
-public final class PreferGuavaVisibleForTestingTest {
+public final class PreferCommonAnnotationsTest {
     @Test
     public void desired_import_remains_unchanged() {
         fix().addInputLines(
@@ -63,7 +63,7 @@ public final class PreferGuavaVisibleForTestingTest {
 
     @Test
     public void fully_qualified_annotations_are_not_currently_rewritten() {
-        CompilationTestHelper.newInstance(PreferGuavaVisibleForTesting.class, getClass())
+        CompilationTestHelper.newInstance(PreferCommonAnnotations.class, getClass())
                 .addSourceLines(
                         "Client.java",
                         "package com.google.frobber;",
@@ -79,7 +79,7 @@ public final class PreferGuavaVisibleForTestingTest {
 
     @Test
     public void wildcard_import_annotations_are_not_currently_rewritten() {
-        CompilationTestHelper.newInstance(PreferGuavaVisibleForTesting.class, getClass())
+        CompilationTestHelper.newInstance(PreferCommonAnnotations.class, getClass())
                 .addSourceLines(
                         "Client.java",
                         "package com.google.frobber;",
@@ -95,6 +95,6 @@ public final class PreferGuavaVisibleForTestingTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(PreferGuavaVisibleForTesting.class, getClass());
+        return RefactoringValidator.of(PreferCommonAnnotations.class, getClass());
     }
 }
