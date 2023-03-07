@@ -214,6 +214,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `FilterOutputStreamSlowMultibyteWrite`: Subclasses of FilterOutputStream should provide a more efficient implementation of `write(byte[], int, int)` to avoid slow writes.
 - `BugCheckerAutoService`: Concrete BugChecker implementations should be annotated `@AutoService(BugChecker.class)` for auto registration with error-prone.
 - `DangerousCollapseKeysUsage`: Disallow usage of `EntryStream#collapseKeys()`.
+- `JooqBatchWithoutBindArgs`: Disallow jOOQ batch methods that execute queries without bind args.
 
 ### Programmatic Application
 
