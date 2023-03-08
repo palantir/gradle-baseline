@@ -213,6 +213,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `ConsistentOverrides`: Ensure values are bound to the correct variables when overriding methods
 - `FilterOutputStreamSlowMultibyteWrite`: Subclasses of FilterOutputStream should provide a more efficient implementation of `write(byte[], int, int)` to avoid slow writes.
 - `BugCheckerAutoService`: Concrete BugChecker implementations should be annotated `@AutoService(BugChecker.class)` for auto registration with error-prone.
+- `DangerousCollapseKeysUsage`: Disallow usage of `EntryStream#collapseKeys()`.
 
 ### Programmatic Application
 
