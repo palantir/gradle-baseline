@@ -49,13 +49,16 @@ public final class PreferCommonAnnotations extends BugChecker implements ImportT
     @Override
     public Description matchImport(ImportTree tree, VisitorState state) {
         Type importType = ASTHelpers.getType(tree.getQualifiedIdentifier());
-        for (String affectedClassName : PREFERRED_IMPORTS.keySet()) {
-            String preferredType = PREFERRED_IMPORTS.get(affectedClassName);
-            if (importType != null
-                    && importType.toString().endsWith(affectedClassName)
-                    && !Objects.equals(importType.toString(), preferredType)) {
+        if (importType == null) {
+            return Description.NO_MATCH;
+        }
+        String importName = importType.toString();
+        for (Map.Entry<String, String> entry : PREFERRED_IMPORTS.entrySet()) {
+            String affectedClassName = entry.getKey();
+            String preferredType = entry.getValue();
+            if (importName.endsWith(affectedClassName) && !Objects.equals(importName, preferredType)) {
                 SuggestedFix fix = SuggestedFix.builder()
-                        .removeImport(importType.toString())
+                        .removeImport(importName)
                         .addImport(preferredType)
                         .build();
                 return describeMatch(tree, fix);
