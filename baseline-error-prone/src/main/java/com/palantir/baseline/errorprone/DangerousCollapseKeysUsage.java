@@ -54,7 +54,7 @@ public final class DangerousCollapseKeysUsage extends BugChecker implements BugC
             return Description.NO_MATCH;
         }
 
-        // Fail on any 'parallel(...)' implementation, regardless of how many parameters it takes
+        // Fail on any 'collapseKeys(...)' usage
         return buildDescription(tree).setMessage(ERROR_MESSAGE).build();
     }
 }
