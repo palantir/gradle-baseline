@@ -51,7 +51,7 @@ public final class JooqBatchWithoutBindArgsTest {
                         "  static final Queries QUERIES = DSL.queries(QUERY_LIST);",
                         "",
                         "  void f(DSLContext ctx, Table<? extends Record> table, Field<Integer> intField) {",
-                        fail ? "    // BUG: Diagnostic contains: Jooq batch methods that execute queries without" : "",
+                        fail ? "    // BUG: Diagnostic contains: jOOQ batch methods that execute without bind" : "",
                         "    ctx.batch(" + batchArgs + ").execute();",
                         "  }",
                         "}")

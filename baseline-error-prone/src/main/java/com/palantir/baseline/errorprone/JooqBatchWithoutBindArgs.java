@@ -39,17 +39,22 @@ import java.util.Collection;
 @BugPattern(
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        severity = SeverityLevel.ERROR,
+        severity = SeverityLevel.WARNING,
         tags = StandardTags.PERFORMANCE,
-        summary = "Disallow jOOQ batch methods that execute queries without bind args.")
+        summary = "jOOQ batch methods that execute without bind args can cause performance problems.",
+        explanation =
+                "When batch queries execute without bind args, each query is sent to the database as a string with all"
+                    + " variables inline. Inline variables cause each query in the batch to be unique, so the database"
+                    + " uses extra CPU and memory to parse and query plan each query. Instead use one of the other"
+                    + " jOOQ batch methods that is documented as executing queries with bind args, as this allows"
+                    + " parsing and query planning the query once and then executing any number of times with"
+                    + " different bind values.")
 public final class JooqBatchWithoutBindArgs extends BugChecker implements MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
 
     private static final String DSL_CONTEXT = "org.jooq.DSLContext";
     private static final String BATCH = "batch";
-    private static final String ERROR_MESSAGE =
-            "Jooq batch methods that execute queries without bind args cause performance problems.";
 
     private static final Supplier<Type> QUERY_TYPE =
             VisitorState.memoize(state -> state.getTypeFromString("org.jooq.Query"));
@@ -75,7 +80,7 @@ public final class JooqBatchWithoutBindArgs extends BugChecker implements Method
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
         if (BATCH_WITHOUT_BINDS_MATCHER.matches(tree, state)) {
-            return buildDescription(tree).setMessage(ERROR_MESSAGE).build();
+            return describeMatch(tree);
         }
         return Description.NO_MATCH;
     }
