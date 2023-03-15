@@ -218,10 +218,10 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 
 ### Programmatic Application
 
-There exist a number of programmatic code modifications available via [refaster](https://errorprone.info/docs/refaster). You can run these on your code to apply some refactorings automatically:
+There exist a number of programmatic code modifications available via [error-prone](https://errorprone.info). You can run these on your code to apply some refactorings automatically:
 
 ```bash
-./gradlew compileJava compileTestJava -PrefasterApply -PerrorProneApply
+./gradlew compileJava compileTestJava -PerrorProneApply
 ```
 
 You may apply specific error-prone refactors including those which are not enabled by default by providing a comma
