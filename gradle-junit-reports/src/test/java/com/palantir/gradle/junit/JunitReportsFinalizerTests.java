@@ -32,14 +32,13 @@ import org.gradle.api.Project;
 import org.gradle.api.plugins.quality.Checkstyle;
 import org.gradle.api.reporting.SingleFileReport;
 import org.gradle.testfixtures.ProjectBuilder;
-import org.junit.Rule;
-import org.junit.Test;
-import org.junit.rules.TemporaryFolder;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.io.TempDir;
 
 public class JunitReportsFinalizerTests {
 
-    @Rule
-    public final TemporaryFolder projectDir = new TemporaryFolder();
+    @TempDir
+    public File projectDir;
 
     @Test
     public void translatesCheckstyleReport() throws IOException, TransformerException {

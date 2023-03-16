@@ -22,7 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.StringWriter;
 import javax.xml.transform.TransformerException;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 import org.w3c.dom.Document;
 
 public final class JunitReportCreatorTests {
