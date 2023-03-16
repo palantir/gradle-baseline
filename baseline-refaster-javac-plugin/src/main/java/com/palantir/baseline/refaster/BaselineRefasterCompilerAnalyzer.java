@@ -19,6 +19,8 @@ package com.palantir.baseline.refaster;
 import com.google.errorprone.CodeTransformer;
 import com.google.errorprone.CompositeCodeTransformer;
 import com.google.errorprone.refaster.RefasterRuleBuilderScanner;
+import com.palantir.logsafe.logger.SafeLogger;
+import com.palantir.logsafe.logger.SafeLoggerFactory;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.util.TaskEvent;
 import com.sun.source.util.TaskListener;
@@ -32,8 +34,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * TaskListener that receives compilation of a Refaster rule class and outputs a combined serialized analyzer to the
@@ -43,7 +43,7 @@ import org.slf4j.LoggerFactory;
  */
 public final class BaselineRefasterCompilerAnalyzer implements TaskListener {
 
-    private static final Logger log = LoggerFactory.getLogger(BaselineRefasterCompilerAnalyzer.class);
+    private static final SafeLogger log = SafeLoggerFactory.get(BaselineRefasterCompilerAnalyzer.class);
     private final Context context;
     private final Path destinationPath;
 
