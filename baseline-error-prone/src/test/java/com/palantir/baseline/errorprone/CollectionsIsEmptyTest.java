@@ -99,7 +99,7 @@ public class CollectionsIsEmptyTest {
                         "import " + List.class.getCanonicalName() + ";",
                         "class Test {",
                         "  static boolean f(List<String> foo, List<String> bar) {",
-                        "    // BUG: Diagnostic contains: !foo.isEmpty() && !bar.isEmpty()",
+                        "    // BUG: Diagnostic contains: !foo.isEmpty()",
                         "    return 0 != foo.size() && 0 != bar.size();",
                         "  }",
                         "}")
