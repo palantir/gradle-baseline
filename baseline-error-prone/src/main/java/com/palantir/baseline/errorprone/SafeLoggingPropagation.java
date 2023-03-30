@@ -114,7 +114,7 @@ public final class SafeLoggingPropagation extends BugChecker
         if (classSymbol == null || classSymbol.isAnonymous()) {
             return Description.NO_MATCH;
         }
-        if (isRecord(classSymbol)) {
+        if (ASTHelpers.isRecord(classSymbol)) {
             return matchRecord(classTree, classSymbol, state);
         } else {
             return matchClassOrInterface(classTree, classSymbol, state);
@@ -163,11 +163,6 @@ public final class SafeLoggingPropagation extends BugChecker
         return MoreAnnotations.getValue(styleAnnotation, "defaultAsDefault")
                 .map(attr -> (boolean) attr.getValue())
                 .orElse(false);
-    }
-
-    private static boolean isRecord(ClassSymbol classSymbol) {
-        // Can use classSymbol.isRecord() in future versions
-        return (classSymbol.flags() & 1L << 61) != 0;
     }
 
     @SuppressWarnings("unchecked")
