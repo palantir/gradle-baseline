@@ -203,18 +203,7 @@ public class CardinalityEqualsZeroTest {
                         "    return size() == 0;",
                         "  }",
                         "}")
-                .addOutputLines(
-                        "TestCollection.java",
-                        "import " + ArrayList.class.getCanonicalName() + ";",
-                        "class TestCollection extends ArrayList<String> {",
-                        "  @Override",
-                        "  public boolean isEmpty() {",
-                        "    return size() == 0;",
-                        "  }",
-                        "  public boolean customIsEmpty() {",
-                        "    return isEmpty();",
-                        "  }",
-                        "}")
+                .expectUnchanged()
                 .doTest();
     }
 
