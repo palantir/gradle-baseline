@@ -22,7 +22,6 @@ import java.util.Set;
 import org.junit.jupiter.api.Test;
 
 public class CardinalityEqualsZeroTest {
-    // private static final boolean EM = MYLIST.size()
     @Test
     public void test_size_equals_zero() {
         fix().addInputLines(
@@ -280,18 +279,5 @@ public class CardinalityEqualsZeroTest {
 
     private RefactoringValidator fix() {
         return RefactoringValidator.of(CardinalityEqualsZero.class, getClass());
-    }
-
-    @SuppressWarnings("checkstyle:IllegalType")
-    static class MyList extends ArrayList<String> {
-
-        @Override
-        public boolean isEmpty() {
-            return size() == 0;
-        }
-
-        public boolean myIsNotEmpty() {
-            return size() != 0;
-        }
     }
 }
