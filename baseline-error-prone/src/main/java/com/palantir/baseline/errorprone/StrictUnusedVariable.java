@@ -67,7 +67,10 @@ import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.bugpatterns.UnusedVariable;
 import com.google.errorprone.fixes.SuggestedFix;
 import com.google.errorprone.fixes.SuggestedFixes;
+import com.google.errorprone.matchers.ChildMultiMatcher.MatchType;
 import com.google.errorprone.matchers.Description;
+import com.google.errorprone.matchers.Matcher;
+import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.suppliers.Suppliers;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.AnnotationTree;
@@ -92,6 +95,7 @@ import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.ReturnTree;
 import com.sun.source.tree.StatementTree;
 import com.sun.source.tree.Tree;
+import com.sun.source.tree.Tree.Kind;
 import com.sun.source.tree.TryTree;
 import com.sun.source.tree.UnaryTree;
 import com.sun.source.tree.VariableTree;
@@ -124,7 +128,7 @@ import javax.lang.model.element.Name;
  */
 @AutoService(BugChecker.class)
 @BugPattern(
-        altNames = {"unused", "UnusedVariable"},
+        altNames = "unused",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         summary = "Unused.",
@@ -159,6 +163,17 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             // TAG fields are used by convention in Android apps.
             "TAG");
     private static final String UNUSED = "unused";
+
+    private static final Matcher<Tree> ALTERNATIVE_SUPPRESSED = Matchers.allOf(
+            // Matchers.annotations will throw given a tree that doesn't support annotations, so we must enumerate
+            // supported types.
+            Matchers.kindAnyOf(Set.of(
+                    Kind.CLASS, Kind.VARIABLE, Kind.METHOD, Kind.ANNOTATED_TYPE, Kind.PACKAGE, Kind.COMPILATION_UNIT)),
+            Matchers.annotations(
+                    MatchType.AT_LEAST_ONE,
+                    Matchers.allOf(
+                            Matchers.isType("java.lang.SuppressWarnings"),
+                            Matchers.hasArgumentWithValue("value", Matchers.stringLiteral("UnusedVariable")))));
 
     @Override
     public Description matchCompilationUnit(CompilationUnitTree tree, VisitorState state) {
@@ -275,6 +290,11 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                     .addFix(constructUsedVariableSuggestedFix(usageSites, state))
                     .build());
         });
+    }
+
+    @Override
+    public boolean isSuppressed(Tree tree, VisitorState state) {
+        return super.isSuppressed(tree, state) || ALTERNATIVE_SUPPRESSED.matches(tree, state);
     }
 
     private static SuggestedFix constructUsedVariableSuggestedFix(List<TreePath> usagePaths, VisitorState state) {
