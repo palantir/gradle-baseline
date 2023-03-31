@@ -40,7 +40,7 @@ public final class InvocationTargetExceptionGetCause extends BugChecker
         implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final Matcher<ExpressionTree> ITE_GET_TARGET_EXCEPTION_MATCHER = Matchers.instanceMethod()
-            .onExactClass(InvocationTargetException.class.getName())
+            .onDescendantOf(InvocationTargetException.class.getName())
             .named("getTargetException")
             .withNoParameters();
 
