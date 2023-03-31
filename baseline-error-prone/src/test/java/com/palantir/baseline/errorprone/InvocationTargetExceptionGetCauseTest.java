@@ -26,7 +26,7 @@ public class InvocationTargetExceptionGetCauseTest {
                         "Test.java",
                         "import " + InvocationTargetException.class.getName() + ";",
                         "class Test {",
-                        "  static Throwable throwMyThing(InvocationTargetException foo) {",
+                        "  static Throwable f(InvocationTargetException foo) {",
                         "    return foo.getTargetException();",
                         "  }",
                         "}")
@@ -34,7 +34,7 @@ public class InvocationTargetExceptionGetCauseTest {
                         "Test.java",
                         "import " + InvocationTargetException.class.getName() + ";",
                         "class Test {",
-                        "  static Throwable throwMyThing(InvocationTargetException foo) {",
+                        "  static Throwable f(InvocationTargetException foo) {",
                         "    return foo.getCause();",
                         "  }",
                         "}")
@@ -63,10 +63,10 @@ public class InvocationTargetExceptionGetCauseTest {
                         "import " + InvocationTargetException.class.getName() + ";",
                         "class Outer extends InvocationTargetException {",
                         "  class Inner {",
-                        "    public Throwable getMyCause() {",
+                        "    public Throwable f() {",
                         "      return Outer.this.getTargetException();", // This should not be updated
                         "    }",
-                        "    public Throwable getMyOtherCause(InvocationTargetException foo) {",
+                        "    public Throwable g(InvocationTargetException foo) {",
                         "      return foo.getTargetException();", // This should be updated
                         "    }",
                         "  }",
@@ -76,10 +76,10 @@ public class InvocationTargetExceptionGetCauseTest {
                         "import " + InvocationTargetException.class.getName() + ";",
                         "class Outer extends InvocationTargetException {",
                         "  class Inner {",
-                        "    public Throwable getMyCause() {",
+                        "    public Throwable f() {",
                         "      return Outer.this.getTargetException();",
                         "    }",
-                        "    public Throwable getMyOtherCause(InvocationTargetException foo) {",
+                        "    public Throwable g(InvocationTargetException foo) {",
                         "      return foo.getCause();",
                         "    }",
                         "  }",
