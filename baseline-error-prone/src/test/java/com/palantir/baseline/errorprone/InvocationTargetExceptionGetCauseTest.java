@@ -96,11 +96,11 @@ public class InvocationTargetExceptionGetCauseTest {
                         "  class TestException extends InvocationTargetException {",
                         "    @Override",
                         "    public Throwable getCause() {",
-                        "      return this.getTargetException();", // This should not change
+                        "      return this.getTargetException();", // This should not be updated
                         "    }",
                         "  }",
                         "  public Throwable getCause(TestException foo) {",
-                        "    return foo.getTargetException();", // This should change
+                        "    return foo.getTargetException();", // This should be updated
                         "  }",
                         "}")
                 .addOutputLines(
