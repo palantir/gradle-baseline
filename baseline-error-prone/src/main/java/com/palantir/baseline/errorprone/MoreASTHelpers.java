@@ -32,6 +32,7 @@ import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
 import java.util.Comparator;
 import java.util.Optional;
+import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /** Utility functionality that does not exist in {@link com.google.errorprone.util.ASTHelpers}. */
@@ -126,7 +127,7 @@ public final class MoreASTHelpers {
     }
 
     /** Returns true if the expression is "this", or a qualified this. */
-    public static boolean isExpressionThis(ExpressionTree tree) {
+    public static boolean isExpressionThis(@Nonnull ExpressionTree tree) {
         switch (tree.getKind()) {
             case IDENTIFIER:
                 return ((IdentifierTree) tree).getName().contentEquals("this");
