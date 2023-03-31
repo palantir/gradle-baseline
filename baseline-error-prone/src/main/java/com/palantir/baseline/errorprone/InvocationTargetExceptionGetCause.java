@@ -25,7 +25,6 @@ import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
-import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import java.lang.reflect.InvocationTargetException;
@@ -46,13 +45,8 @@ public final class InvocationTargetExceptionGetCause extends BugChecker
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
-        ExpressionTree caller = ASTHelpers.getReceiver(tree.getMethodSelect());
-        if (caller == null) {
-            return Description.NO_MATCH;
-        }
-        if (ITE_GET_TARGET_EXCEPTION_MATCHER.matches(tree, state)) {
-            return describeMatch(tree, SuggestedFixes.renameMethodInvocation(tree, "getCause", state));
-        }
-        return Description.NO_MATCH;
+        return ITE_GET_TARGET_EXCEPTION_MATCHER.matches(tree, state)
+                ? describeMatch(tree, SuggestedFixes.renameMethodInvocation(tree, "getCause", state))
+                : Description.NO_MATCH;
     }
 }
