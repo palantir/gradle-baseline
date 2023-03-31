@@ -19,7 +19,7 @@ package com.palantir.baseline.errorprone;
 import java.lang.reflect.InvocationTargetException;
 import org.junit.jupiter.api.Test;
 
-public class InvocationTargetExceptionGetCauseTest {
+public class InvocationTargetExceptionGetTargetExceptionTest {
     @Test
     public void test_basic() {
         fix().addInputLines(
@@ -65,6 +65,6 @@ public class InvocationTargetExceptionGetCauseTest {
     }
 
     private RefactoringValidator fix() {
-        return RefactoringValidator.of(InvocationTargetExceptionGetCause.class, getClass());
+        return RefactoringValidator.of(InvocationTargetExceptionGetTargetException.class, getClass());
     }
 }
