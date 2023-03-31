@@ -23,8 +23,6 @@ import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.CatchTree;
 import com.sun.source.tree.ExpressionTree;
-import com.sun.source.tree.IdentifierTree;
-import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.TryTree;
 import com.sun.tools.javac.code.Symbol;
@@ -32,7 +30,6 @@ import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
 import java.util.Comparator;
 import java.util.Optional;
-import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 /** Utility functionality that does not exist in {@link com.google.errorprone.util.ASTHelpers}. */
@@ -124,18 +121,6 @@ public final class MoreASTHelpers {
         return tree instanceof ExpressionTree
                 ? ASTHelpers.getResultType((ExpressionTree) tree)
                 : ASTHelpers.getType(tree);
-    }
-
-    /** Returns true if the expression is "this", or a qualified this. */
-    public static boolean isExpressionThis(@Nonnull ExpressionTree tree) {
-        switch (tree.getKind()) {
-            case IDENTIFIER:
-                return ((IdentifierTree) tree).getName().contentEquals("this");
-            case MEMBER_SELECT:
-                return ((MemberSelectTree) tree).getIdentifier().contentEquals("this");
-            default:
-                return false;
-        }
     }
 
     private MoreASTHelpers() {}
