@@ -1,0 +1,6 @@
+type: feature
+feature:
+  description: 'Add check: Use InvoationTargetException.getCause instead of getTargetException.
+    Add `isExpressionThis` to MoreASTHelpers.'
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2541
