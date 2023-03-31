@@ -42,68 +42,8 @@ public class InvocationTargetExceptionGetCauseTest {
     }
 
     @Test
-    public void test_implementation_of_getCause() {
-        fix().addInputLines(
-                        "Test.java",
-                        "import " + InvocationTargetException.class.getName() + ";",
-                        "class Test extends InvocationTargetException {",
-                        "  @Override",
-                        "  public Throwable getCause() {",
-                        "    return this.getTargetException();",
-                        "  }",
-                        "}")
-                .expectUnchanged()
-                .doTest();
-    }
-
-    @Test
-    public void test_qualified_this() {
-        fix().addInputLines(
-                        "Outer.java",
-                        "import " + InvocationTargetException.class.getName() + ";",
-                        "class Outer extends InvocationTargetException {",
-                        "  class Inner {",
-                        "    public Throwable f() {",
-                        "      return Outer.this.getTargetException();", // This should not be updated
-                        "    }",
-                        "    public Throwable g(InvocationTargetException foo) {",
-                        "      return foo.getTargetException();", // This should be updated
-                        "    }",
-                        "  }",
-                        "}")
-                .addOutputLines(
-                        "Outer.java",
-                        "import " + InvocationTargetException.class.getName() + ";",
-                        "class Outer extends InvocationTargetException {",
-                        "  class Inner {",
-                        "    public Throwable f() {",
-                        "      return Outer.this.getTargetException();",
-                        "    }",
-                        "    public Throwable g(InvocationTargetException foo) {",
-                        "      return foo.getCause();",
-                        "    }",
-                        "  }",
-                        "}")
-                .doTest();
-    }
-
-    @Test
     public void test_subclass() {
         fix().addInputLines(
-                        "Test.java",
-                        "import " + InvocationTargetException.class.getName() + ";",
-                        "class Test {",
-                        "  class TestException extends InvocationTargetException {",
-                        "    @Override",
-                        "    public Throwable getCause() {",
-                        "      return this.getTargetException();", // This should not be updated
-                        "    }",
-                        "  }",
-                        "  public Throwable getCause(TestException foo) {",
-                        "    return foo.getTargetException();", // This should be updated
-                        "  }",
-                        "}")
-                .addOutputLines(
                         "Test.java",
                         "import " + InvocationTargetException.class.getName() + ";",
                         "class Test {",
@@ -114,9 +54,10 @@ public class InvocationTargetExceptionGetCauseTest {
                         "    }",
                         "  }",
                         "  public Throwable getCause(TestException foo) {",
-                        "    return foo.getCause();",
+                        "    return foo.getTargetException();",
                         "  }",
                         "}")
+                .expectUnchanged()
                 .doTest();
     }
 

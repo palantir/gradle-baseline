@@ -21,7 +21,7 @@ import com.google.errorprone.BugPattern;
 import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
-import com.google.errorprone.fixes.SuggestedFix;
+import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
@@ -40,23 +40,18 @@ public final class InvocationTargetExceptionGetCause extends BugChecker
         implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final Matcher<ExpressionTree> ITE_GET_TARGET_EXCEPTION_MATCHER = Matchers.instanceMethod()
-            .onDescendantOf(InvocationTargetException.class.getName())
+            .onExactClass(InvocationTargetException.class.getName())
             .named("getTargetException")
             .withNoParameters();
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
+        ExpressionTree caller = ASTHelpers.getReceiver(tree.getMethodSelect());
+        if (caller == null) {
+            return Description.NO_MATCH;
+        }
         if (ITE_GET_TARGET_EXCEPTION_MATCHER.matches(tree, state)) {
-            ExpressionTree caller = ASTHelpers.getReceiver(tree.getMethodSelect());
-            if (caller == null || MoreASTHelpers.isExpressionThis(caller)) {
-                return Description.NO_MATCH;
-            }
-
-            return describeMatch(
-                    tree,
-                    SuggestedFix.replace(
-                            tree,
-                            state.getSourceForNode(ASTHelpers.getReceiver(tree.getMethodSelect())) + ".getCause()"));
+            return describeMatch(tree, SuggestedFixes.renameMethodInvocation(tree, "getCause", state));
         }
         return Description.NO_MATCH;
     }
