@@ -30,6 +30,7 @@ import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.BinaryTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.IdentifierTree;
+import com.sun.source.tree.MemberSelectTree;
 import java.util.Collection;
 import java.util.Optional;
 import org.immutables.value.Value.Immutable;
@@ -80,6 +81,8 @@ public final class CardinalityEqualsZero extends BugChecker implements BugChecke
         switch (tree.getKind()) {
             case IDENTIFIER:
                 return ((IdentifierTree) tree).getName().contentEquals("this");
+            case MEMBER_SELECT:
+                return ((MemberSelectTree) tree).getIdentifier().contentEquals("this");
             default:
                 return false;
         }

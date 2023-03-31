@@ -266,6 +266,45 @@ public class CardinalityEqualsZeroTest {
                 .doTest();
     }
 
+    @Test
+    public void test_qualified_this() {
+        fix().addInputLines(
+                        "TestQualifiedThis.java",
+                        "import " + ArrayList.class.getCanonicalName() + ";",
+                        "import " + List.class.getCanonicalName() + ";",
+                        "class TestQualifiedThis extends ArrayList<String> {",
+                        "    boolean myIsEmpty() {",
+                        "        return this.size() == 0;",
+                        "    }",
+                        "    class Inner extends ArrayList<String> {",
+                        "        boolean myIsEmpty() {",
+                        "            return TestQualifiedThis.this.size() == 0;",
+                        "        }",
+                        "        boolean anotherIsEmpty() {",
+                        "            return List.of().size() == 0 && this.size() == 0;",
+                        "        }",
+                        "    }",
+                        "}")
+                .addOutputLines(
+                        "TestQualifiedThis.java",
+                        "import " + ArrayList.class.getCanonicalName() + ";",
+                        "import " + List.class.getCanonicalName() + ";",
+                        "class TestQualifiedThis extends ArrayList<String> {",
+                        "    boolean myIsEmpty() {",
+                        "        return this.size() == 0;",
+                        "    }",
+                        "    class Inner extends ArrayList<String> {",
+                        "        boolean myIsEmpty() {",
+                        "            return TestQualifiedThis.this.size() == 0;",
+                        "        }",
+                        "        boolean anotherIsEmpty() {",
+                        "            return List.of().isEmpty() && this.size() == 0;",
+                        "        }",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
     private RefactoringValidator fix() {
         return RefactoringValidator.of(CardinalityEqualsZero.class, getClass());
     }
