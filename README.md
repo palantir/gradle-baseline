@@ -215,6 +215,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `BugCheckerAutoService`: Concrete BugChecker implementations should be annotated `@AutoService(BugChecker.class)` for auto registration with error-prone.
 - `DangerousCollapseKeysUsage`: Disallow usage of `EntryStream#collapseKeys()`.
 - `JooqBatchWithoutBindArgs`: jOOQ batch methods that execute without bind args can cause performance problems.
+- `InvocationTargetExceptionGetTargetException`: InvocationTargetException.getTargetException() predates the general-purpose exception chaining facility. The Throwable.getCause() method is now the preferred means of obtaining this information. [(source)](https://docs.oracle.com/en/java/javase/17/docs/api//java.base/java/lang/reflect/InvocationTargetException.html#getTargetException())
 
 ### Programmatic Application
 
