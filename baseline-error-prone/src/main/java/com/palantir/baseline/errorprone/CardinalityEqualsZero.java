@@ -77,7 +77,7 @@ public final class CardinalityEqualsZero extends BugChecker implements BugChecke
         return Description.NO_MATCH;
     }
 
-    public static boolean isExpressionThis(ExpressionTree tree) {
+    private static boolean isExpressionThis(ExpressionTree tree) {
         switch (tree.getKind()) {
             case IDENTIFIER:
                 return ((IdentifierTree) tree).getName().contentEquals("this");
