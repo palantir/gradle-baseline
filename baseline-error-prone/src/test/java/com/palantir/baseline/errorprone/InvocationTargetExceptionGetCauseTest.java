@@ -47,17 +47,20 @@ public class InvocationTargetExceptionGetCauseTest {
                         "Test.java",
                         "import " + InvocationTargetException.class.getName() + ";",
                         "class Test {",
-                        "  class TestException extends InvocationTargetException {",
-                        "    @Override",
-                        "    public Throwable getCause() {",
-                        "      return this.getTargetException();",
-                        "    }",
-                        "  }",
+                        "  class TestException extends InvocationTargetException {}",
                         "  public Throwable getCause(TestException foo) {",
-                        "    return foo.getTargetException();",
+                        "    return foo.getTargetException();", // This should change
                         "  }",
                         "}")
-                .expectUnchanged()
+                .addOutputLines(
+                        "Test.java",
+                        "import " + InvocationTargetException.class.getName() + ";",
+                        "class Test {",
+                        "  class TestException extends InvocationTargetException {}",
+                        "  public Throwable getCause(TestException foo) {",
+                        "    return foo.getCause();",
+                        "  }",
+                        "}")
                 .doTest();
     }
 
