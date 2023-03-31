@@ -47,8 +47,8 @@ public final class InvocationTargetExceptionGetCause extends BugChecker
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
         if (ITE_GET_TARGET_EXCEPTION_MATCHER.matches(tree, state)) {
-            ExpressionTree receiver = ASTHelpers.getReceiver(tree.getMethodSelect());
-            if (receiver == null || MoreASTHelpers.isExpressionThis(receiver)) {
+            ExpressionTree caller = ASTHelpers.getReceiver(tree.getMethodSelect());
+            if (caller == null || MoreASTHelpers.isExpressionThis(caller)) {
                 return Description.NO_MATCH;
             }
 
