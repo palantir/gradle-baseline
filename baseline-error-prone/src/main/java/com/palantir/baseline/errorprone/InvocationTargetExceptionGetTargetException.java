@@ -34,7 +34,11 @@ import java.lang.reflect.InvocationTargetException;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.SUGGESTION,
-        summary = "Use InvocationTargetException.getCause instead of InvocationTargetException.getTargetException")
+        summary =
+                "InvocationTargetException.getTargetException predates the general-purpose exception chaining "
+                        + "facility. The Throwable.getCause() method is now the preferred means of obtaining this "
+                        + "information. Source: "
+                        + "https://docs.oracle.com/en/java/javase/17/docs/api//java.base/java/lang/reflect/InvocationTargetException.html#getTargetException()")
 public final class InvocationTargetExceptionGetTargetException extends BugChecker
         implements BugChecker.MethodInvocationTreeMatcher {
 
