@@ -29,8 +29,6 @@ import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.BinaryTree;
 import com.sun.source.tree.ExpressionTree;
-import com.sun.source.tree.IdentifierTree;
-import com.sun.source.tree.MemberSelectTree;
 import java.util.Collection;
 import java.util.Optional;
 import org.immutables.value.Value.Immutable;
@@ -60,7 +58,7 @@ public final class CardinalityEqualsZero extends BugChecker implements BugChecke
         ExpressionTree operand = equalsZeroExpression.operand();
         ExpressionTree collectionInstance = ASTHelpers.getReceiver(operand);
 
-        if (collectionInstance == null || isExpressionThis(collectionInstance)) {
+        if (collectionInstance == null || MoreASTHelpers.isExpressionThis(collectionInstance)) {
             return Description.NO_MATCH;
         }
 
@@ -75,17 +73,6 @@ public final class CardinalityEqualsZero extends BugChecker implements BugChecke
         }
 
         return Description.NO_MATCH;
-    }
-
-    private static boolean isExpressionThis(ExpressionTree tree) {
-        switch (tree.getKind()) {
-            case IDENTIFIER:
-                return ((IdentifierTree) tree).getName().contentEquals("this");
-            case MEMBER_SELECT:
-                return ((MemberSelectTree) tree).getIdentifier().contentEquals("this");
-            default:
-                return false;
-        }
     }
 
     private static Optional<EqualsZeroExpression> getEqualsZeroExpression(BinaryTree tree, VisitorState state) {
