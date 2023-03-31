@@ -87,6 +87,39 @@ public class InvocationTargetExceptionGetCauseTest {
                 .doTest();
     }
 
+    @Test
+    public void test_subclass() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import " + InvocationTargetException.class.getName() + ";",
+                        "class Test {",
+                        "  class TestException extends InvocationTargetException {",
+                        "    @Override",
+                        "    public Throwable getCause() {",
+                        "      return this.getTargetException();", // This should not change
+                        "    }",
+                        "  }",
+                        "  public Throwable getCause(TestException foo) {",
+                        "    return foo.getTargetException();", // This should change
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import " + InvocationTargetException.class.getName() + ";",
+                        "class Test {",
+                        "  class TestException extends InvocationTargetException {",
+                        "    @Override",
+                        "    public Throwable getCause() {",
+                        "      return this.getTargetException();",
+                        "    }",
+                        "  }",
+                        "  public Throwable getCause(TestException foo) {",
+                        "    return foo.getCause();",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
     private RefactoringValidator fix() {
         return RefactoringValidator.of(InvocationTargetExceptionGetCause.class, getClass());
     }
