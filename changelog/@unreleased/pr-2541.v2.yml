@@ -1,5 +1,5 @@
 type: feature
 feature:
-  description: 'Add check: Use InvocationTargetException.getCause instead of getTargetException'
+  description: 'Add check: Use InvocationTargetException.getCause instead of getTargetException.'
   links:
   - https://github.com/palantir/gradle-baseline/pull/2541
