@@ -31,7 +31,9 @@ import com.sun.source.tree.BinaryTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.MemberSelectTree;
+import com.sun.source.tree.Tree.Kind;
 import java.util.Collection;
+import java.util.Objects;
 import java.util.Optional;
 import org.immutables.value.Value.Immutable;
 
@@ -58,8 +60,11 @@ public final class CardinalityEqualsZero extends BugChecker implements BugChecke
 
         EqualsZeroExpression equalsZeroExpression = maybeEqualsZeroExpression.get();
         ExpressionTree operand = equalsZeroExpression.operand();
-        ExpressionTree collectionInstance = ASTHelpers.getReceiver(operand);
+        if (!Objects.equals(operand.getKind(), Kind.METHOD_INVOCATION)) {
+            return Description.NO_MATCH;
+        }
 
+        ExpressionTree collectionInstance = ASTHelpers.getReceiver(operand);
         if (collectionInstance == null || isExpressionThis(collectionInstance)) {
             return Description.NO_MATCH;
         }
