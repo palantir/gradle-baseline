@@ -267,6 +267,28 @@ public class CardinalityEqualsZeroTest {
     }
 
     @Test
+    public void test_equals_on_non_collection() {
+        fix().addInputLines(
+                        "TestNonCollection.java",
+                        "class TestNonCollection {",
+                        "  public int size() {",
+                        "    return 0;",
+                        "  }",
+                        "  public boolean foo(String key) {",
+                        "    String current = \"x\";",
+                        "    int comparisonResult = current.compareTo(key);",
+                        "    if (comparisonResult == 0) {",
+                        "         return true;",
+                        "    } else {",
+                        "         return false;",
+                        "    }",
+                        "  }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
     public void test_qualified_this() {
         fix().addInputLines(
                         "TestQualifiedThis.java",
