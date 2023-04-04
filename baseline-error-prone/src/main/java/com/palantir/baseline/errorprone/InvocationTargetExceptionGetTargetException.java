@@ -35,10 +35,10 @@ import java.lang.reflect.InvocationTargetException;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.SUGGESTION,
         summary =
-                "InvocationTargetException.getTargetException() predates the general-purpose exception chaining "
-                        + "facility. The Throwable.getCause() method is now the preferred means of obtaining this "
-                        + "information. Source: "
-                        + "https://docs.oracle.com/en/java/javase/17/docs/api//java.base/java/lang/reflect/InvocationTargetException.html#getTargetException()")
+                "InvocationTargetException.getTargetException() predates the general-purpose exception chaining"
+                    + " facility. The Throwable.getCause() method is now the preferred means of obtaining this"
+                    + " information. Source: "
+                    + "https://docs.oracle.com/en/java/javase/17/docs/api//java.base/java/lang/reflect/InvocationTargetException.html#getTargetException()")
 public final class InvocationTargetExceptionGetTargetException extends BugChecker
         implements BugChecker.MethodInvocationTreeMatcher {
 
