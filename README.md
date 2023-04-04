@@ -26,6 +26,7 @@ _Baseline is a family of Gradle plugins for configuring Java projects with sensi
 | `com.palantir.baseline-testing`                | Configures test tasks to dump heap dumps (hprof files) for convenient debugging
 | `com.palantir.baseline-immutables`             | Enables incremental compilation for the [Immutables](http://immutables.github.io/) annotation processor.
 | `com.palantir.baseline-java-versions`          | Configures JDK versions in a consistent way via Gradle Toolchains.
+| `com.palantir.baseline-module-jvm-args`        | Collects and configures `--add-exports` and `--add-opens` flags.
 | `com.palantir.baseline-prefer-project-modules` | Configures Gradle to prefer project modules over external modules on dependency resolution per default.
 
 See also the [Baseline Java Style Guide and Best Practices](./docs).
@@ -484,3 +485,17 @@ $ unzip -p /path/to/your-project-1.2.3.jar META-INF/MANIFEST.MF
 ```
 
 _Note, this plugin should be used with **caution** because preview features may change or be removed, which might make upgrading to a new Java version harder._
+
+## com.palantir.baseline-module-jvm-args
+
+This plugin reuses the `Add-Exports` and `Add-Opens` manifest entry to propagate and collect required exports from transitive dependencies, and applies them to compilation (for annotation processors) and execution (tests, javaExec, etc) for runtime dependencies.
+
+If your project requires additional `--add-exports` or `--add-opens` flags, you can declare those using:
+
+```gradle
+moduleJvmArgs {
+    opens 'java.base/java.lang.invoke'
+    exports 'jdk.compiler/com.sun.tools.javac.main',
+            'jdk.compiler/com.sun.tools.javac.parser'
+}
+```
