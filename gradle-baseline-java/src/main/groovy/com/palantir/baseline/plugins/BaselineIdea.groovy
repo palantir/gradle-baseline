@@ -47,9 +47,6 @@ import org.gradle.plugins.ide.idea.model.ModuleDependency
 // TODO(dfox): separate the xml manipulation (which really benefits from groovy syntax) from typed things
 //@CompileStatic
 class BaselineIdea extends AbstractBaselinePlugin {
-
-    static SAVE_ACTIONS_PLUGIN_MINIMUM_VERSION = '1.9.0'
-
     void apply(Project project) {
         this.project = project
 
@@ -110,18 +107,6 @@ class BaselineIdea extends AbstractBaselinePlugin {
                 setRunManagerWorkingDirectory(node)
                 addEditorSettings(node)
             }
-        }
-
-        // Suggest and configure the "save actions" plugin if Palantir Java Format is turned on.
-        // This plugin can only be applied to the root project, and it applied as a side-effect of applying
-        // 'com.palantir.java-format' to any subproject.
-        rootProject.getPluginManager().withPlugin("com.palantir.java-format-idea") {
-            ideaRootModel.project.ipr.withXml {XmlProvider provider ->
-                Node node = provider.asNode()
-                configureSaveActions(node)
-                configureExternalDependencies(node)
-            }
-            configureSaveActionsForIntellijImport(rootProject)
         }
     }
 
@@ -522,18 +507,6 @@ class BaselineIdea extends AbstractBaselinePlugin {
         '''.stripIndent()))
     }
 
-    private static void configureSaveActionsForIntellijImport(Project project) {
-        if (!IntellijSupport.isRunningInIntellij()) {
-            return
-        }
-        XmlUtils.createOrUpdateXmlFile(
-                project.file(".idea/externalDependencies.xml"),
-                BaselineIdea.&configureExternalDependencies)
-        XmlUtils.createOrUpdateXmlFile(
-                project.file(".idea/saveactions_settings.xml"),
-                BaselineIdea.&configureSaveActions)
-    }
-
     /**
      * Configure the default working directory of RunManager configurations to be the module directory.
      */
@@ -572,37 +545,5 @@ class BaselineIdea extends AbstractBaselinePlugin {
             module.dependencies.removeAll(projectRefs)
             module.dependencies.addAll(projectRefs)
         }
-    }
-
-    /**
-     * Configures some defaults on the save-actions plugin, but only if it hasn't been configured before.
-     */
-    private static void configureSaveActions(Node rootNode) {
-        GroovyXmlUtils.matchOrCreateChild(rootNode, 'component', [name: 'SaveActionSettings'], [:]) {
-            // Configure defaults if this plugin is configured for the first time only
-            appendNode('option', [name: 'actions']).appendNode('set').with {
-                appendNode('option', [value: 'activate'])
-                appendNode('option', [value: 'noActionIfCompileErrors'])
-                appendNode('option', [value: 'organizeImports'])
-                appendNode('option', [value: 'reformat'])
-            }
-            appendNode('option', [name: 'configurationPath', value: ''])
-            appendNode('option', [name: 'inclusions']).appendNode('set').with {
-                appendNode('option', [value: "src${File.separator}.*\\.java"])
-            }
-        }
-    }
-
-    private static void configureExternalDependencies(Node rootNode) {
-        def externalDependencies =
-                GroovyXmlUtils.matchOrCreateChild(rootNode, 'component', [name: 'ExternalDependencies'])
-        // I kid you not, this is the id for the save actions plugin:
-        // https://github.com/dubreuia/intellij-plugin-save-actions/blob/v1.9.0/src/main/resources/META-INF/plugin.xml#L5
-        // https://plugins.jetbrains.com/plugin/7642-save-actions/
-        GroovyXmlUtils.matchOrCreateChild(
-                externalDependencies,
-                'plugin',
-                [id: 'com.dubreuia'],
-                ['min-version': SAVE_ACTIONS_PLUGIN_MINIMUM_VERSION])
     }
 }
