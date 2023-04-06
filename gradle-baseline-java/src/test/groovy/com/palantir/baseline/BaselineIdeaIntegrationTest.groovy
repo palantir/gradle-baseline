@@ -313,56 +313,6 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         !otherSubprojectIml.exists()
     }
 
-    def "idea configures the save-action plugin when PJF is enabled on a subproject"() {
-        buildFile << standardBuildFile
-        multiProject.addSubproject('formatted-project', """
-            apply plugin: 'com.palantir.java-format'
-        """.stripIndent())
-
-        when:
-        with('idea').build()
-
-        then:
-        def iprFile = new File(projectDir, "${moduleName}.ipr")
-        def ipr = new XmlSlurper().parse(iprFile)
-        ipr.component.find { it.@name == "ExternalDependencies" }
-        ipr.component.find { it.@name == "SaveActionSettings" }
-    }
-
-    def "idea does not configure the save-action plugin when PJF is not enabled"() {
-        buildFile << standardBuildFile
-
-        when:
-        with('idea').build()
-
-        then:
-        def iprFile = new File(projectDir, "${moduleName}.ipr")
-        def ipr = new XmlSlurper().parse(iprFile)
-        !ipr.component.find { it.@name == "ExternalDependencies" }
-        !ipr.component.find { it.@name == "SaveActionSettings" }
-    }
-
-    @RestoreSystemProperties
-    def "idea configures the save-action plugin for IntelliJ import"() {
-        buildFile << standardBuildFile
-        multiProject.addSubproject('formatted-project', """
-            apply plugin: 'com.palantir.java-format'
-        """.stripIndent())
-
-        when:
-        System.setProperty("idea.active", "true")
-        with().build()
-
-        then:
-        def saveActionsSettingsFile = new File(projectDir, ".idea/saveactions_settings.xml")
-        def settings = new XmlSlurper().parse(saveActionsSettingsFile)
-        settings.component.find { it.@name == "SaveActionSettings" }
-
-        def externalDepsSettingsFile = new File(projectDir, ".idea/externalDependencies.xml")
-        def deps = new XmlSlurper().parse(externalDepsSettingsFile)
-        deps.component.find { it.@name == "ExternalDependencies" }
-    }
-
     def 'Idea files use versions derived from the baseline-java-versions plugin'() {
         when:
         buildFile << standardBuildFile
