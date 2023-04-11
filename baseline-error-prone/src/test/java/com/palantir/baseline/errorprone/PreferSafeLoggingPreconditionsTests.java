@@ -710,7 +710,7 @@ public final class PreferSafeLoggingPreconditionsTests {
                         "}")
                 .addOutputLines(
                         "Test.java",
-                        "import com.google.common.base.Preconditions;",
+                        "import org.apache.hadoop.util.Preconditions;",
                         "import com.palantir.logsafe.SafeArg;",
                         "class Test {",
                         "  void f(String param) {",
