@@ -335,4 +335,38 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         def rootIml = Files.asCharSource(new File(projectDir, projectDir.name + ".iml"), Charsets.UTF_8).read()
         rootIml.contains('LANGUAGE_LEVEL="JDK_15')
     }
+
+    @RestoreSystemProperties
+    def 'Removes the save-actions external dep if it exists'() {
+        buildFile << standardBuildFile
+
+        file('.idea/externalDependencies.xml') << /* language=xml */ '''
+            <project version="4">
+              <component name="ExternalDependencies">
+                <plugin id="CheckStyle-IDEA"/>
+                <plugin id="com.dubreuia" min-version="1.9.0"/>
+                <plugin id="palantir-java-format"/>
+              </component>
+            </project>
+        '''.stripIndent(true).trim()
+
+        when:
+        System.setProperty("idea.active", "true")
+        with().build()
+
+        then:
+        def newExternalDeps = file('.idea/externalDependencies.xml').text.trim()
+
+        // language=xml
+        def expected = '''
+            <project version="4">
+              <component name="ExternalDependencies">
+                <plugin id="CheckStyle-IDEA"/>
+                <plugin id="palantir-java-format"/>
+              </component>
+            </project>
+        '''.stripIndent(true).trim()
+
+        newExternalDeps == expected
+    }
 }
