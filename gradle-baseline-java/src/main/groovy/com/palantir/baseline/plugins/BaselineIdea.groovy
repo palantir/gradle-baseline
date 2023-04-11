@@ -108,6 +108,8 @@ class BaselineIdea extends AbstractBaselinePlugin {
                 addEditorSettings(node)
             }
         }
+
+        removeSaveActionsExternalDependency(rootProject)
     }
 
     @CompileStatic
@@ -544,6 +546,28 @@ class BaselineIdea extends AbstractBaselinePlugin {
             def projectRefs = module.dependencies.findAll {it instanceof ModuleDependency}
             module.dependencies.removeAll(projectRefs)
             module.dependencies.addAll(projectRefs)
+        }
+    }
+
+    /**
+     * We used to add the 'Save Actions' plugin as an external dependency to support Palantir Java Format,
+     * however this plugin is broken in IntelliJ 2023.1 and we no longer use it. However, without actually
+     * removing it from the persistent intellij config people will still get nagged. So this code removing
+     * needs to remain here a sufficiently long time until every extant repo checkout has had a version of
+     * baseline run on it that remove the config.
+     */
+    private static void removeSaveActionsExternalDependency(Project rootProject) {
+        if (!IntellijSupport.isRunningInIntellij()) {
+            return
+        }
+
+        XmlUtils.updateXmlFileIfExists(rootProject.file(".idea/externalDependencies.xml")) { rootNode ->
+            GroovyXmlUtils.matchChild(rootNode, 'component', [name: 'ExternalDependencies']).ifPresent { externalDeps ->
+                // No joke the Save Actions plugin's id is 'com.dubreuia'.
+                GroovyXmlUtils.matchChild(externalDeps, 'plugin', [id: 'com.dubreuia']).ifPresent { saveActionsPlugin ->
+                    externalDeps.remove(saveActionsPlugin)
+                }
+            }
         }
     }
 }
