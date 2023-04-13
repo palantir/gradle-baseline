@@ -63,11 +63,13 @@ public final class SortedStreamFirstElement extends BugChecker implements BugChe
 
         ExpressionTree sorted = ASTHelpers.getReceiver(tree);
         if (sorted == null) {
+            // Not expected.
             return Description.NO_MATCH;
         }
         MethodInvocationTree sortedTree = (MethodInvocationTree) sorted;
         ExpressionTree stream = ASTHelpers.getReceiver(sorted);
         if (stream == null) {
+            // Not expected.
             return Description.NO_MATCH;
         }
 
