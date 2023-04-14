@@ -37,7 +37,8 @@ import java.util.stream.Stream;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.SUGGESTION,
-        summary = "TODO")
+        summary = "Using Stream::min is more efficient than finding the first element of the sorted stream. "
+                + "Stream::min performs a linear scan through the stream to find the smallest element.")
 public final class SortedStreamFirstElement extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final Matcher<ExpressionTree> STREAM_SORTED_FIND_FIRST_MATCHER = MethodMatchers.instanceMethod()
