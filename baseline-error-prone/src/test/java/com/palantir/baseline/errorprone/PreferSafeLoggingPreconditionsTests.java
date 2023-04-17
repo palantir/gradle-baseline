@@ -174,6 +174,16 @@ public final class PreferSafeLoggingPreconditionsTests {
     }
 
     @Test
+    public void testHadoopRequireNonNullConstantString() {
+        failHadoop("Preconditions.checkNotNull(param, \"constant\");");
+    }
+
+    @Test
+    public void testHadoopRequireNonNullNonConstantString() {
+        passHadoop("Preconditions.checkNotNull(param, String.format(\"constant %s\", param));");
+    }
+
+    @Test
     public void testPreconditionsAutoFixShortNames() {
         RefactoringValidator.of(PreferSafeLoggingPreconditions.class, getClass())
                 .addInputLines(
@@ -684,6 +694,37 @@ public final class PreferSafeLoggingPreconditionsTests {
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
+    @Test
+    public void testAutoFixArgsPassedToHadoop() {
+        RefactoringValidator.of(PreferSafeLoggingPreconditions.class, getClass())
+                .addInputLines(
+                        "Test.java",
+                        "import org.apache.hadoop.util.Preconditions;",
+                        "import com.palantir.logsafe.SafeArg;",
+                        "class Test {",
+                        "  void f(String param) {",
+                        "    Preconditions.checkNotNull(param, \"constant\", SafeArg.of(\"name\", null));",
+                        "    Preconditions.checkArgument(true, \"constant\", SafeArg.of(\"name\", null));",
+                        "    Preconditions.checkState(true, \"constant\", SafeArg.of(\"name\", null));",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import org.apache.hadoop.util.Preconditions;",
+                        "import com.palantir.logsafe.SafeArg;",
+                        "class Test {",
+                        "  void f(String param) {",
+                        "    com.palantir.logsafe.Preconditions.checkNotNull(param, \"constant\", SafeArg.of(\"name\","
+                                + " null));",
+                        "    com.palantir.logsafe.Preconditions.checkArgument(true, \"constant\", SafeArg.of(\"name\","
+                                + " null));",
+                        "    com.palantir.logsafe.Preconditions.checkState(true, \"constant\", SafeArg.of(\"name\","
+                                + " null));",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
     private void passObjects(String precondition) {
         compilationHelper
                 .addSourceLines(
@@ -723,11 +764,38 @@ public final class PreferSafeLoggingPreconditionsTests {
                 .doTest();
     }
 
+    private void passHadoop(String precondition) {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import org.apache.hadoop.util.Preconditions;",
+                        "class Test {",
+                        "  void f(String param) {",
+                        "    " + precondition,
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
     private void failObjects(String precondition) {
         compilationHelper
                 .addSourceLines(
                         "Test.java",
                         "import java.util.Objects;",
+                        "class Test {",
+                        "  void f(String param) {",
+                        "    // BUG: Diagnostic contains: call can be replaced",
+                        "    " + precondition,
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    private void failHadoop(String precondition) {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import org.apache.hadoop.util.Preconditions;",
                         "class Test {",
                         "  void f(String param) {",
                         "    // BUG: Diagnostic contains: call can be replaced",

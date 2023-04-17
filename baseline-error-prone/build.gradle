@@ -24,6 +24,7 @@ dependencies {
     testImplementation 'org.slf4j:slf4j-api'
     testImplementation 'org.apache.commons:commons-lang3'
     testImplementation 'commons-lang:commons-lang'
+    testImplementation 'org.apache.hadoop:hadoop-client-api'
     testImplementation 'org.assertj:assertj-core'
     testImplementation 'org.immutables:value::annotations'
     testImplementation 'org.jooq:jooq'

@@ -56,8 +56,13 @@ public final class PreferSafeLoggingPreconditions extends BugChecker implements 
             .onClass("com.google.common.base.Preconditions")
             .withNameMatching(Pattern.compile("checkArgument|checkState|checkNotNull"));
 
+    private static final Matcher<ExpressionTree> HADOOP_PRECONDITIONS_MATCHER = MethodMatchers.staticMethod()
+            .onClass("org.apache.hadoop.util.Preconditions")
+            .withNameMatching(Pattern.compile("checkArgument|checkState|checkNotNull"));
+
     private static final Matcher<ExpressionTree> METHOD_MATCHER = Matchers.anyOf(
             PRECONDITIONS_MATCHER,
+            HADOOP_PRECONDITIONS_MATCHER,
             MethodMatchers.staticMethod().onClass("java.util.Objects").named("requireNonNull"),
             MethodMatchers.staticMethod()
                     .onClass("org.apache.commons.lang3.Validate")
