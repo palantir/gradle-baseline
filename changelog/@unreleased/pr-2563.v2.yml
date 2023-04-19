@@ -1,0 +1,8 @@
+type: improvement
+improvement:
+  description: |-
+    Fix eclipse classpath generation.
+
+    Generating eclipse classpath will merge new entries into the existing classpath. This will delete the existing classpath, which makes the classpath correct when it changes.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2563
