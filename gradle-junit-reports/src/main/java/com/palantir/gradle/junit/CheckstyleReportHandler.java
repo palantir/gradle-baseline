@@ -18,6 +18,7 @@ package com.palantir.gradle.junit;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import org.gradle.api.plugins.quality.Checkstyle;
 import org.xml.sax.Attributes;
 
@@ -43,7 +44,7 @@ public final class CheckstyleReportHandler extends ReportHandler<Checkstyle> {
             case "error":
                 failures.add(Failure.builder()
                         .source(attributes.getValue("source"))
-                        .severity(attributes.getValue("severity").toUpperCase())
+                        .severity(attributes.getValue("severity").toUpperCase(Locale.ROOT))
                         .file(file)
                         .line(Integer.parseInt(attributes.getValue("line")))
                         .message(attributes.getValue("message"))
