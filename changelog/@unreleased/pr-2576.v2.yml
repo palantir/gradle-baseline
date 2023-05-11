@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Upgrade Error Prone to 2.19.1 (from 2.18.0)
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2576
