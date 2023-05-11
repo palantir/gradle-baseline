@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.MoreCollectors;
 import com.palantir.baseline.extensions.BaselineErrorProneExtension;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -172,12 +173,23 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 @Override
                 public Iterable<String> asArguments() {
                     // Don't apply checks that have been explicitly disabled
-                    Stream<String> errorProneChecks = getSpecificErrorProneChecks(project)
-                            .orElseGet(() -> getNotDisabledErrorproneChecks(
-                                    project, errorProneExtension, javaCompile, maybeSourceSet, errorProneOptions));
-                    return ImmutableList.of(
-                            "-XepPatchChecks:" + Joiner.on(',').join(errorProneChecks.iterator()),
-                            "-XepPatchLocation:IN_PLACE");
+                    Optional<List<String>> specificChecks = getSpecificErrorProneChecks(project);
+                    if (specificChecks.isPresent()) {
+                        List<String> errorProneChecks = specificChecks.get();
+                        return Iterables.concat(
+                                errorProneChecks.stream()
+                                        .map(checkName -> "-Xep:" + checkName + ":ERROR")
+                                        .collect(Collectors.toList()),
+                                ImmutableList.of(
+                                        "-XepPatchChecks:" + Joiner.on(',').join(errorProneChecks),
+                                        "-XepPatchLocation:IN_PLACE"));
+                    } else {
+                        Stream<String> errorProneChecks = getNotDisabledErrorproneChecks(
+                                project, errorProneExtension, javaCompile, maybeSourceSet, errorProneOptions);
+                        return ImmutableList.of(
+                                "-XepPatchChecks:" + Joiner.on(',').join(errorProneChecks.iterator()),
+                                "-XepPatchLocation:IN_PLACE");
+                    }
                 }
             });
         }
@@ -190,12 +202,12 @@ public final class BaselineErrorProne implements Plugin<Project> {
         return ".*/(build|generated_.*[sS]rc|src/generated.*)/.*";
     }
 
-    private static Optional<Stream<String>> getSpecificErrorProneChecks(Project project) {
+    private static Optional<List<String>> getSpecificErrorProneChecks(Project project) {
         return Optional.ofNullable(project.findProperty(PROP_ERROR_PRONE_APPLY))
                 .map(Objects::toString)
                 .flatMap(value -> Optional.ofNullable(Strings.emptyToNull(value)))
                 .map(value -> Splitter.on(',').trimResults().omitEmptyStrings().splitToList(value))
-                .flatMap(list -> list.isEmpty() ? Optional.empty() : Optional.of(list.stream()));
+                .flatMap(list -> list.isEmpty() ? Optional.empty() : Optional.of(list));
     }
 
     private static Stream<String> getNotDisabledErrorproneChecks(
