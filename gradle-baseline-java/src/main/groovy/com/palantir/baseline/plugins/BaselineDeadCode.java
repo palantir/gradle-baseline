@@ -119,6 +119,7 @@ public final class BaselineDeadCode implements Plugin<Project> {
         });
 
         List<String> rules = List.of(
+                "-dontwarn",
                 "-dontoptimize",
                 "-dontobfuscate",
                 "-keepclasseswithmembers public class * { public static void main(java.lang.String[]); }",
