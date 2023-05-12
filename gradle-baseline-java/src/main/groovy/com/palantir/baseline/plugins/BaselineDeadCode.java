@@ -123,7 +123,8 @@ public final class BaselineDeadCode implements Plugin<Project> {
                 "-dontoptimize",
                 "-dontobfuscate",
                 "-keepclasseswithmembers public class * { public static void main(java.lang.String[]); }",
-                "-keepattributes Exceptions,InnerClasses,Signature,Deprecated,SourceFile,LineNumberTable,LocalVariable*Table,*Annotation*,Synthetic,EnclosingMethod",
+                "-keepattributes"
+                    + " Exceptions,InnerClasses,Signature,Deprecated,SourceFile,LineNumberTable,LocalVariable*Table,*Annotation*,Synthetic,EnclosingMethod",
                 "-keepparameternames",
 
                 // proguard doesn't magically understand reflection, and all our jackson deserialization is done
