@@ -101,7 +101,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
 
         project.getPluginManager().withPlugin("java-gradle-plugin", appliedPlugin -> {
             project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> ((ExtensionAware)
-                            javaCompile.getOptions())
+                    javaCompile.getOptions())
                     .getExtensions()
                     .configure(ErrorProneOptions.class, errorProneOptions -> {
                         errorProneOptions.check("Slf4jLogsafeArgs", CheckSeverity.OFF);
@@ -172,10 +172,12 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 // intentionally not using a lambda to reduce gradle warnings
                 @Override
                 public Iterable<String> asArguments() {
-                    // Don't apply checks that have been explicitly disabled
                     Optional<List<String>> specificChecks = getSpecificErrorProneChecks(project);
                     if (specificChecks.isPresent()) {
                         List<String> errorProneChecks = specificChecks.get();
+                        // Work around https://github.com/google/error-prone/issues/3908 by explicitly enabling any
+                        // check we want to use patch checks for (ensuring it is not disabled); if this is fixed, the
+                        // -Xep:*:ERROR arguments could be removed
                         return Iterables.concat(
                                 errorProneChecks.stream()
                                         .map(checkName -> "-Xep:" + checkName + ":ERROR")
@@ -184,6 +186,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
                                         "-XepPatchChecks:" + Joiner.on(',').join(errorProneChecks),
                                         "-XepPatchLocation:IN_PLACE"));
                     } else {
+                        // Don't apply checks that have been explicitly disabled
                         Stream<String> errorProneChecks = getNotDisabledErrorproneChecks(
                                 project, errorProneExtension, javaCompile, maybeSourceSet, errorProneOptions);
                         return ImmutableList.of(
