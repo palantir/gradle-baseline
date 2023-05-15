@@ -101,7 +101,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
 
         project.getPluginManager().withPlugin("java-gradle-plugin", appliedPlugin -> {
             project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> ((ExtensionAware)
-                    javaCompile.getOptions())
+                            javaCompile.getOptions())
                     .getExtensions()
                     .configure(ErrorProneOptions.class, errorProneOptions -> {
                         errorProneOptions.check("Slf4jLogsafeArgs", CheckSeverity.OFF);
