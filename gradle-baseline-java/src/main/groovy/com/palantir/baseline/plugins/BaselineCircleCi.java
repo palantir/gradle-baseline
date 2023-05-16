@@ -104,7 +104,8 @@ public final class BaselineCircleCi implements Plugin<Project> {
     }
 
     private static void createDirectories(Path directoryPath) throws IOException {
-        boolean isWindows = System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows");
+        boolean isWindows =
+                System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows");
         if (isWindows) {
             Files.createDirectories(directoryPath);
         } else {
