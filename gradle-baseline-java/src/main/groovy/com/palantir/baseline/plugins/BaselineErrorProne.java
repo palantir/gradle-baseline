@@ -186,7 +186,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
         // Error-prone normalizes filenames to use '/' path separator:
         // https://github.com/google/error-prone/blob/c601758e81723a8efc4671726b8363be7a306dce
         // /check_api/src/main/java/com/google/errorprone/util/ASTHelpers.java#L1277-L1285
-        return ".*/(build|generated_.*[sS]rc|src/generated.*)/.*";
+        return ".*/((build/.*)?generated_.*[sS]rc|src/generated.*)/.*";
     }
 
     private static Optional<Stream<String>> getSpecificErrorProneChecks(Project project) {
