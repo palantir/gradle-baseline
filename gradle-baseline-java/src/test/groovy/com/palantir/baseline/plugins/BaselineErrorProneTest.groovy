@@ -26,7 +26,10 @@ class BaselineErrorProneTest extends Specification {
         def predicate = Pattern.compile(excludedPaths).asPredicate()
 
         then:
-        predicate.test 'tritium-core/build/metricSchema/generated_src'
+        predicate.negate().test 'service/src/main/java/com/palantir/service/build/output/ServiceOutputManager.java'
+        predicate.negate().test 'service/src/main/java/com/palantir/service/build/output/generated/'
+        predicate.test 'tritium-core/build/generated/'
+        predicate.test 'tritium-core/build/metricSchema/generated_src/'
         predicate.test 'tritium-registry/generated_src/com/palantir/tritium/metrics/registry/ImmutableMetricName.java'
         predicate.test 'tritium-metrics/build/metricSchema/generated_src/com/palantir/tritium/metrics/TlsMetrics.java'
         predicate.test 'tritium-jmh/generated_testSrc/com/palantir/tritium/microbenchmarks/generated/ProxyBenchmark_jmhType.java'
