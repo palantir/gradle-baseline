@@ -27,6 +27,8 @@ class BaselineErrorProneTest extends Specification {
 
         then:
         predicate.negate().test 'service/src/main/java/com/palantir/service/build/output/ServiceOutputManager.java'
+        predicate.negate().test 'service/src/main/java/com/palantir/service/build/output/generated/'
+        predicate.test 'tritium-core/build/generated/'
         predicate.test 'tritium-core/build/metricSchema/generated_src/'
         predicate.test 'tritium-registry/generated_src/com/palantir/tritium/metrics/registry/ImmutableMetricName.java'
         predicate.test 'tritium-metrics/build/metricSchema/generated_src/com/palantir/tritium/metrics/TlsMetrics.java'
