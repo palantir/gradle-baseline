@@ -1,0 +1,6 @@
+type: fix
+improvement:
+  description: |-
+    Only pass posix file attributes if not on Windows
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2577
