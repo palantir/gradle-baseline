@@ -58,6 +58,7 @@ public final class SortedStreamFirstElement extends BugChecker implements BugChe
                     .onDescendantOf(Stream.class.getName())
                     .named("sorted")
                     .withParameters(Comparator.class.getName()));
+
     private static final Matcher<MethodInvocationTree> MATCHER = Matchers.allOf(
             STREAM_FIND_FIRST_MATCHER,
             Matchers.anyOf(
