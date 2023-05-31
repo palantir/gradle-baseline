@@ -29,6 +29,7 @@ import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
+import com.sun.tools.javac.tree.JCTree.JCMethodInvocation;
 import java.util.Comparator;
 import java.util.stream.Stream;
 
@@ -41,24 +42,30 @@ import java.util.stream.Stream;
                 + "Stream::min performs a linear scan through the stream to find the smallest element.")
 public final class SortedStreamFirstElement extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
-    private static final Matcher<ExpressionTree> STREAM_SORTED_FIND_FIRST_MATCHER = MethodMatchers.instanceMethod()
+    private static final Matcher<ExpressionTree> STREAM_FIND_FIRST_MATCHER = MethodMatchers.instanceMethod()
             .onDescendantOf(Stream.class.getName())
-            .namedAnyOf("findFirst")
+            .named("findFirst")
             .withNoParameters();
 
-    private static final Matcher<ExpressionTree> STREAM_SORTED_NO_PARAMS_MATCHER = MethodMatchers.instanceMethod()
-            .onDescendantOf(Stream.class.getName())
-            .named("sorted")
-            .withNoParameters();
+    private static final Matcher<MethodInvocationTree> RECEIVER_OF_STREAM_SORTED_NO_PARAMS_MATCHER =
+            Matchers.receiverOfInvocation(MethodMatchers.instanceMethod()
+                    .onDescendantOf(Stream.class.getName())
+                    .named("sorted")
+                    .withNoParameters());
 
-    private static final Matcher<ExpressionTree> STREAM_SORTED_WITH_COMPARATOR_MATCHER = MethodMatchers.instanceMethod()
-            .onDescendantOf(Stream.class.getName())
-            .named("sorted")
-            .withParameters(Comparator.class.getName());
+    private static final Matcher<MethodInvocationTree> RECEIVER_OF_STREAM_SORTED_WITH_COMPARATOR_MATCHER =
+            Matchers.receiverOfInvocation(MethodMatchers.instanceMethod()
+                    .onDescendantOf(Stream.class.getName())
+                    .named("sorted")
+                    .withParameters(Comparator.class.getName()));
+    private static final Matcher<MethodInvocationTree> MATCHER = Matchers.allOf(
+            STREAM_FIND_FIRST_MATCHER,
+            Matchers.anyOf(
+                    RECEIVER_OF_STREAM_SORTED_NO_PARAMS_MATCHER, RECEIVER_OF_STREAM_SORTED_WITH_COMPARATOR_MATCHER));
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
-        if (!STREAM_SORTED_FIND_FIRST_MATCHER.matches(tree, state)) {
+        if (!MATCHER.matches(tree, state)) {
             return Description.NO_MATCH;
         }
 
@@ -74,24 +81,26 @@ public final class SortedStreamFirstElement extends BugChecker implements BugChe
             return Description.NO_MATCH;
         }
 
-        if (Matchers.receiverOfInvocation(STREAM_SORTED_NO_PARAMS_MATCHER).matches(tree, state)) {
-            return describeMatch(
-                    tree,
-                    SuggestedFix.builder()
-                            .replace(tree, state.getSourceForNode(stream) + ".min(Comparator.naturalOrder())")
-                            .addImport(Comparator.class.getCanonicalName())
-                            .build());
-        } else if (Matchers.receiverOfInvocation(STREAM_SORTED_WITH_COMPARATOR_MATCHER)
-                .matches(tree, state)) {
+        if (RECEIVER_OF_STREAM_SORTED_NO_PARAMS_MATCHER.matches(tree, state)) {
             return describeMatch(
                     tree,
                     SuggestedFix.builder()
                             .replace(
-                                    tree,
+                                    ((JCMethodInvocation) tree).getStartPosition(),
+                                    state.getEndPosition(tree),
+                                    state.getSourceForNode(stream) + ".min(Comparator.naturalOrder())")
+                            .addImport(Comparator.class.getCanonicalName())
+                            .build());
+        } else if (RECEIVER_OF_STREAM_SORTED_WITH_COMPARATOR_MATCHER.matches(tree, state)) {
+            return describeMatch(
+                    tree,
+                    SuggestedFix.builder()
+                            .replace(
+                                    ((JCMethodInvocation) tree).getStartPosition(),
+                                    state.getEndPosition(tree),
                                     state.getSourceForNode(stream) + ".min("
                                             + state.getSourceForNode(
                                                     sortedTree.getArguments().get(0)) + ")")
-                            .addImport(Comparator.class.getCanonicalName())
                             .build());
         }
 
