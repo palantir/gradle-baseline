@@ -29,6 +29,7 @@ import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
+import com.sun.source.tree.Tree;
 import com.sun.tools.javac.tree.JCTree.JCMethodInvocation;
 import java.util.Comparator;
 import java.util.stream.Stream;
@@ -87,7 +88,7 @@ public final class SortedStreamFirstElement extends BugChecker implements BugChe
                     tree,
                     SuggestedFix.builder()
                             .replace(
-                                    ((JCMethodInvocation) tree).getStartPosition(),
+                                    getStartPosition(tree),
                                     state.getEndPosition(tree),
                                     state.getSourceForNode(stream) + ".min(Comparator.naturalOrder())")
                             .addImport(Comparator.class.getCanonicalName())
@@ -97,7 +98,7 @@ public final class SortedStreamFirstElement extends BugChecker implements BugChe
                     tree,
                     SuggestedFix.builder()
                             .replace(
-                                    ((JCMethodInvocation) tree).getStartPosition(),
+                                    getStartPosition(tree),
                                     state.getEndPosition(tree),
                                     state.getSourceForNode(stream) + ".min("
                                             + state.getSourceForNode(
@@ -106,5 +107,9 @@ public final class SortedStreamFirstElement extends BugChecker implements BugChe
         }
 
         return Description.NO_MATCH;
+    }
+
+    private static int getStartPosition(Tree tree) {
+        return ((JCMethodInvocation) tree).getStartPosition();
     }
 }
