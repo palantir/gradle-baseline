@@ -133,6 +133,9 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 "CanIgnoreReturnValueSuggester",
                 "InlineMeSuggester",
                 "PreferImmutableStreamExCollections",
+                // StringCaseLocaleUsage duplicates our existing DefaultLocale check which is already
+                // enforced in some places.
+                "StringCaseLocaleUsage",
                 "UnnecessaryTestMethodPrefix",
                 "UnusedVariable",
                 // See VarUsage: The var keyword results in illegible code in most cases and should not be used.
