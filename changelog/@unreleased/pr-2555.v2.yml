@@ -1,0 +1,5 @@
+type: feature
+feature:
+  description: Add check replacing `stream.sorted().findFirst()` with `stream.min()`
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2555
