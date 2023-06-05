@@ -134,6 +134,16 @@ tasks.withType(JavaCompile).configureEach(new Action<Task>() {
 })
 ```
 
+To turn all of error-prone's warnings into errors:
+
+```gradle
+allprojects {
+    tasks.withType(JavaCompile) {
+        options.compilerArgs += ['-Werror']
+    }
+}
+```
+
 More information on error-prone severity handling can be found at [errorprone.info/docs/flags](http://errorprone.info/docs/flags).
 
 #### Baseline error-prone checks
