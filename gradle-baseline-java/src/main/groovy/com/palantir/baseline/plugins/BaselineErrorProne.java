@@ -132,6 +132,8 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 "CatchSpecificity",
                 "CanIgnoreReturnValueSuggester",
                 "InlineMeSuggester",
+                // We often use javadoc comments without javadoc parameter information.
+                "NotJavadoc",
                 "PreferImmutableStreamExCollections",
                 // StringCaseLocaleUsage duplicates our existing DefaultLocale check which is already
                 // enforced in some places.
