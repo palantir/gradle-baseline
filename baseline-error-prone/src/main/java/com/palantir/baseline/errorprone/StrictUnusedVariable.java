@@ -34,7 +34,7 @@ package com.palantir.baseline.errorprone;
 
 import static com.google.common.base.Preconditions.checkArgument;
 import static com.google.common.collect.ImmutableList.toImmutableList;
-import static com.google.errorprone.BugPattern.SeverityLevel.WARNING;
+import static com.google.errorprone.BugPattern.SeverityLevel.SUGGESTION;
 import static com.google.errorprone.util.ASTHelpers.getSymbol;
 import static com.google.errorprone.util.ASTHelpers.getType;
 import static com.google.errorprone.util.ASTHelpers.isSubtype;
@@ -115,7 +115,7 @@ import javax.lang.model.element.Name;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         summary = "Unused .",
-        severity = WARNING,
+        severity = SUGGESTION,
         documentSuppression = false)
 public final class StrictUnusedVariable extends BugChecker implements BugChecker.CompilationUnitTreeMatcher {
     private static final ImmutableSet<String> EXEMPT_PREFIXES = ImmutableSet.of("_");
