@@ -80,6 +80,7 @@ public class BaselineErrorProneExtension {
             "UnsafeGaugeRegistration",
             "VarUsage",
             "ZeroWarmupRateLimiter",
+            "ZoneIdConstant",
 
             // Built-in checks
             "ArrayEquals",

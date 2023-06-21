@@ -215,6 +215,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `UnnecessarilyQualified`: Types should not be qualified if they are also imported.
 - `DeprecatedGuavaObjects`: `com.google.common.base.Objects` has been obviated by `java.util.Objects`.
 - `JavaTimeSystemDefaultTimeZone`: Avoid using the system default time zone.
+- `ZoneIdConstant`: Prefer `ZoneId` constants.
 - `IncubatingMethod`: Prevents calling Conjure incubating APIs unless you explicitly opt-out of the check on a per-use or per-project basis.
 - `CompileTimeConstantViolatesLiskovSubstitution`: Requires consistent application of the `@CompileTimeConstant` annotation to resolve inconsistent validation based on the reference type on which the met is invoked.
 - `ClassInitializationDeadlock`: Detect type structures which can cause deadlocks initializing classes.
