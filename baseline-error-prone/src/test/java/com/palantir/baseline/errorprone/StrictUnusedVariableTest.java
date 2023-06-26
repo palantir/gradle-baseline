@@ -70,11 +70,11 @@ public class StrictUnusedVariableTest {
                         "Test.java",
                         "import java.util.Optional;",
                         "class Test {",
-                        "  // BUG: Diagnostic contains: '_foo', for example",
+                        "  // BUG: Diagnostic contains: Unused",
                         "   Test(String foo) { }",
-                        "  // BUG: Diagnostic contains: '_buggy', for example",
+                        "  // BUG: Diagnostic contains: Unused",
                         "  private static void privateMethod(String buggy) { }",
-                        "  // BUG: Diagnostic contains: '_buggy', for example",
+                        "  // BUG: Diagnostic contains: Unused",
                         "  public static void publicMethod(String buggy) { }",
                         "}")
                 .doTest();
@@ -88,9 +88,9 @@ public class StrictUnusedVariableTest {
                         "import java.util.Optional;",
                         "enum Test {",
                         "  INSTANCE;",
-                        "  // BUG: Diagnostic contains: Unused",
+                        "  // BUG: Diagnostic contains: 'buggy' is never read",
                         "  private static void privateMethod(String buggy) { }",
-                        "  // BUG: Diagnostic contains: Unused",
+                        "  // BUG: Diagnostic contains: 'buggy' is never read",
                         "  public static void publicMethod(String buggy) { }",
                         "}")
                 .doTest();
@@ -105,9 +105,9 @@ public class StrictUnusedVariableTest {
                         "import java.util.Optional;",
                         "class Test {",
                         "  private static BiFunction<String, String, Integer> doStuff() {",
-                        "  // BUG: Diagnostic contains: Unused",
+                        "  // BUG: Diagnostic contains: 'value1' is never read",
                         "    BiFunction<String, String, Integer> first = (String value1, String value2) -> 1;",
-                        "  // BUG: Diagnostic contains: Unused",
+                        "  // BUG: Diagnostic contains: 'value3' is never read",
                         "    return first.andThen(value3 -> 2);",
                         "  }",
                         "}")
@@ -122,9 +122,9 @@ public class StrictUnusedVariableTest {
                         "import java.util.function.BiFunction;",
                         "class Test {",
                         "  static {",
-                        "  // BUG: Diagnostic contains: Unused",
+                        "  // BUG: Diagnostic contains: 'value1' is never read",
                         "    BiFunction<String, String, Integer> first = (String value1, String value2) -> 1;",
-                        "  // BUG: Diagnostic contains: Unused",
+                        "  // BUG: Diagnostic contains: 'value3' is never read",
                         "    first.andThen(value3 -> 2);",
                         "  }",
                         "}")
@@ -133,61 +133,47 @@ public class StrictUnusedVariableTest {
 
     @Test
     public void renames_previous_suppression() {
-        refactoringTestHelper
-                .addInputLines(
+        // if it is prefixed with 'unused' don't do anything.
+        compilationHelper
+                .addSourceLines(
                         "Test.java",
                         "class Test {",
+                        "  // BUG: Diagnostic contains: 'unusedValue' is never read",
                         "  public void publicMethod(String unusedValue, String unusedValue2) { }",
+                        "  // BUG: Diagnostic contains: 'unusedValue' is never read",
                         "  public void varArgs(String unusedValue, String... unusedValue2) { }",
                         "}")
-                .addOutputLines(
-                        "Test.java",
-                        "class Test {",
-                        "  public void publicMethod(String _value, String _value2) { }",
-                        "  public void varArgs(String _value, String... _value2) { }",
-                        "}")
-                .doTest(TestMode.TEXT_MATCH);
+                .doTest();
     }
 
     @Test
     public void renames_unused_param() {
-        refactoringTestHelper
-                .addInputLines(
+        compilationHelper
+                .addSourceLines(
                         "Test.java",
                         "class Test {",
+                        "  // BUG: Diagnostic contains: 'value' is never read",
                         "  private void privateMethod(String value) { }",
+                        "  // BUG: Diagnostic contains: 'value' is never read",
                         "  public void publicMethod(String value, String value2) { }",
+                        "  // BUG: Diagnostic contains: 'value' is never read",
                         "  public void varArgs(String value, String... value2) { }",
                         "}")
-                .addOutputLines(
-                        "Test.java",
-                        "class Test {",
-                        "  private void privateMethod() { }",
-                        "  public void publicMethod(String _value, String _value2) { }",
-                        "  public void varArgs(String _value, String... _value2) { }",
-                        "}")
-                .doTest(TestMode.TEXT_MATCH);
+                .doTest();
     }
 
     @Test
     void renames_unused_lambda_params() {
-        refactoringTestHelper
-                .addInputLines(
+        compilationHelper
+                .addSourceLines(
                         "Test.java",
                         "import java.util.function.BiFunction;",
                         "class Test {",
                         "  private static BiFunction<String, String, Integer> doStuff() {",
+                        "  // BUG: Diagnostic contains: 'value1' is never read.",
                         "    BiFunction<String, String, Integer> first = (String value1, String value2) -> 1;",
+                        "  // BUG: Diagnostic contains: 'value3' is never read.",
                         "    return first.andThen(value3 -> 2);",
-                        "  }",
-                        "}")
-                .addOutputLines(
-                        "Test.java",
-                        "import java.util.function.BiFunction;",
-                        "class Test {",
-                        "  private static BiFunction<String, String, Integer> doStuff() {",
-                        "    BiFunction<String, String, Integer> first = (String _value1, String _value2) -> 1;",
-                        "    return first.andThen(_value3 -> 2);",
                         "  }",
                         "}")
                 .doTest();
@@ -237,12 +223,12 @@ public class StrictUnusedVariableTest {
                 .addSourceLines(
                         "Test.java",
                         "class Test {",
-                        "  // BUG: Diagnostic contains: Unused",
+                        "  // BUG: Diagnostic contains: '_field' is read",
                         "  private static final String _field = \"\";",
-                        "  // BUG: Diagnostic contains: Unused",
+                        "  // BUG: Diagnostic contains: '_value' is read",
                         "  public static void privateMethod(String _value) {",
                         "    System.out.println(_value);",
-                        "  // BUG: Diagnostic contains: Unused",
+                        "  // BUG: Diagnostic contains: '_bar' is read",
                         "    String _bar = \"bar\";",
                         "    System.out.println(_bar);",
                         "    System.out.println(_field);",
@@ -253,26 +239,18 @@ public class StrictUnusedVariableTest {
 
     @Test
     public void side_effects_are_preserved() {
-        refactoringTestHelper
-                .addInputLines(
+        compilationHelper
+                .addSourceLines(
                         "Test.java",
                         "class Test {",
                         "  private static int _field = 1;",
                         "  public static void privateMethod() {",
+                        "  // BUG: Diagnostic contains: 'foo' is never read",
                         "    Object foo = someMethod();",
                         "  }",
                         "  private static Object someMethod() { return null; }",
                         "}")
-                .addOutputLines(
-                        "Test.java",
-                        "class Test {",
-                        "  private static int _field = 1;",
-                        "  public static void privateMethod() {",
-                        "    someMethod();",
-                        "  }",
-                        "  private static Object someMethod() { return null; }",
-                        "}")
-                .doTest(TestMode.TEXT_MATCH);
+                .doTest();
     }
 
     @Test
@@ -301,16 +279,6 @@ public class StrictUnusedVariableTest {
                         "  }",
                         "}")
                 .doTestExpectingFailure(TestMode.TEXT_MATCH);
-    }
-
-    @Test
-    public void fixes_previously_suppressed_variables() {
-        refactoringTestHelper
-                .addInputLines(
-                        "Test.java", "class Test {", "  public static void privateMethod(int unused) {", "  }", "}")
-                .addOutputLines(
-                        "Test.java", "class Test {", "  public static void privateMethod(int _value) {", "  }", "}")
-                .doTest(TestMode.TEXT_MATCH);
     }
 
     @Test
@@ -390,7 +358,7 @@ public class StrictUnusedVariableTest {
                         "class Test {",
                         "  private static final Logger slf4j = LoggerFactory.getLogger(Test.class);",
                         "  private static final SafeLogger logsafe = SafeLoggerFactory.get(Test.class);",
-                        "  // BUG: Diagnostic contains: Unused",
+                        "  // BUG: Diagnostic contains: 'str' is never read",
                         "  private static final String str = \"str\";",
                         "}")
                 .doTest();
