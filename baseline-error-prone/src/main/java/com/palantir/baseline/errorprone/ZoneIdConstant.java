@@ -1,5 +1,5 @@
 /*
- * (c) Copyright 2019 Palantir Technologies Inc. All rights reserved.
+ * (c) Copyright 2023 Palantir Technologies Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,8 @@ import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
+import com.google.errorprone.util.ASTHelpers;
+import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import java.time.ZoneId;
 import java.time.ZoneOffset;
@@ -37,19 +39,22 @@ import java.time.ZoneOffset;
         summary = "Prefer ZoneId constants.")
 public final class ZoneIdConstant extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
-    private static final Matcher<MethodInvocationTree> ZONE_ID_OF_UTC_MATCHER = Matchers.allOf(
-            Matchers.staticMethod().onClass(ZoneId.class.getName()).named("of").withParameters(String.class.getName()),
-            Matchers.argument(0, Matchers.stringLiteral("UTC")));
+    private static final Matcher<ExpressionTree> ZONE_ID_OF =
+            Matchers.staticMethod().onClass(ZoneId.class.getName()).named("of").withParameters(String.class.getName());
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
-        if (ZONE_ID_OF_UTC_MATCHER.matches(tree, state)) {
-            SuggestedFix.Builder fix = SuggestedFix.builder();
-            return buildDescription(tree)
-                    .addFix(fix.replace(
-                                    tree, SuggestedFixes.qualifyType(state, fix, ZoneOffset.class.getName()) + ".UTC")
-                            .build())
-                    .build();
+        if (ZONE_ID_OF.matches(tree, state)) {
+            String zone = ASTHelpers.constValue(tree.getArguments().get(0), String.class);
+            if (zone != null && (zone.equals("Z") || zone.equals("UTC"))) {
+                SuggestedFix.Builder fix = SuggestedFix.builder();
+                return buildDescription(tree)
+                        .addFix(fix.replace(
+                                        tree,
+                                        SuggestedFixes.qualifyType(state, fix, ZoneOffset.class.getName()) + ".UTC")
+                                .build())
+                        .build();
+            }
         }
 
         return Description.NO_MATCH;

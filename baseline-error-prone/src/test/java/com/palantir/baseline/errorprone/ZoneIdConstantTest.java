@@ -1,5 +1,5 @@
 /*
- * (c) Copyright 2020 Palantir Technologies Inc. All rights reserved.
+ * (c) Copyright 2023 Palantir Technologies Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,11 +13,34 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.palantir.baseline.errorprone;
 
 import org.junit.jupiter.api.Test;
 
 final class ZoneIdConstantTest {
+
+    @Test
+    void zoneIdZ() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import java.time.ZoneId;",
+                        "class Test {",
+                        "  static void f() {",
+                        "    ZoneId zoneId = ZoneId.of(\"Z\");",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import java.time.ZoneId;",
+                        "import java.time.ZoneOffset;",
+                        "class Test {",
+                        "  static void f() {",
+                        "    ZoneId zoneId = ZoneOffset.UTC;",
+                        "  }",
+                        "}")
+                .doTest();
+    }
 
     @Test
     void zoneIdUtc() {
@@ -34,6 +57,30 @@ final class ZoneIdConstantTest {
                         "import java.time.ZoneId;",
                         "import java.time.ZoneOffset;",
                         "class Test {",
+                        "  static void f() {",
+                        "    ZoneId zoneId = ZoneOffset.UTC;",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void zoneIdConstant() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import java.time.ZoneId;",
+                        "class Test {",
+                        "  static final String Z = \"Z\";",
+                        "  static void f() {",
+                        "    ZoneId zoneId = ZoneId.of(Z);",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import java.time.ZoneId;",
+                        "import java.time.ZoneOffset;",
+                        "class Test {",
+                        "  static final String Z = \"Z\";",
                         "  static void f() {",
                         "    ZoneId zoneId = ZoneOffset.UTC;",
                         "  }",
