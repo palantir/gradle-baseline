@@ -32,7 +32,6 @@ net.ltgt.gradle:gradle-errorprone-plugin = 3.1.0
 one.util:streamex = 0.8.1
 org.apache.commons:commons-lang3 = 3.12.0
 org.assertj:assertj-core = 3.24.2
-org.checkerframework:* = 3.35.0
 org.hamcrest:hamcrest-core = 2.2
 org.junit.jupiter:* = 5.9.3
 org.junit.vintage:* = 5.9.3
@@ -47,4 +46,7 @@ com.palantir.javaformat:gradle-palantir-java-format = 1.1.0
 com.diffplug.spotless:spotless-plugin-gradle = 6.6.0
 # Groovy versions must be compatible with gradle
 org.codehaus.groovy:* = 3.0.10
+# checkerframework dependencies should be limited to errorpropne and nullaway
+# requirements, upgrading prior to those often causes compilation failures.
+org.checkerframework:* = 3.33.0
 # dependency-upgrader:ON

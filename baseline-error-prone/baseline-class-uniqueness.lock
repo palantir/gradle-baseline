@@ -4,7 +4,6 @@
 ## runtimeClasspath
 [org.checkerframework:checker-qual, org.checkerframework:dataflow-errorprone]
   - org.checkerframework.dataflow.qual.Deterministic
-  - org.checkerframework.dataflow.qual.Impure
   - org.checkerframework.dataflow.qual.Pure
   - org.checkerframework.dataflow.qual.Pure$Kind
   - org.checkerframework.dataflow.qual.SideEffectFree
