@@ -1,0 +1,5 @@
+type: feature
+feature:
+  description: Add error-prone check to prefer ZoneId constants
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2596
