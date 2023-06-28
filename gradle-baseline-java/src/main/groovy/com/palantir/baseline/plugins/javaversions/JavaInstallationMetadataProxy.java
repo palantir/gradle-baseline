@@ -1,5 +1,5 @@
 /*
- * (c) Copyright 2022 Palantir Technologies Inc. All rights reserved.
+ * (c) Copyright 2023 Palantir Technologies Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,10 @@
 
 package com.palantir.baseline.plugins.javaversions;
 
-import org.gradle.api.file.Directory;
+import java.lang.reflect.InvocationHandler;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.lang.reflect.Proxy;
 import org.gradle.api.provider.Provider;
 import org.gradle.jvm.toolchain.JavaInstallationMetadata;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
@@ -27,38 +30,37 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion;
  * check if toolchains are enabled. That can cause a dependency cycle, which causes a StackOverflowException.
  * This class breaks that cycle by immediately providing the JavaLanguageVersion without possibly causing a resolution.
  */
-final class JavaInstallationMetadataWrapper implements JavaInstallationMetadata {
+final class JavaInstallationMetadataProxy implements InvocationHandler {
+
     private final JavaLanguageVersion javaLanguageVersion;
     private final Provider<JavaInstallationMetadata> delegate;
 
-    JavaInstallationMetadataWrapper(
+    private JavaInstallationMetadataProxy(
             JavaLanguageVersion javaLanguageVersion, Provider<JavaInstallationMetadata> delegate) {
         this.javaLanguageVersion = javaLanguageVersion;
         this.delegate = delegate;
     }
 
-    @Override
-    public JavaLanguageVersion getLanguageVersion() {
-        return javaLanguageVersion;
+    static JavaInstallationMetadata proxyForVersion(
+            JavaLanguageVersion javaLanguageVersion, Provider<JavaInstallationMetadata> delegate) {
+        return (JavaInstallationMetadata) Proxy.newProxyInstance(
+                JavaInstallationMetadata.class.getClassLoader(),
+                new Class[]{JavaInstallationMetadata.class},
+                new JavaInstallationMetadataProxy(javaLanguageVersion, delegate));
     }
 
     @Override
-    public String getJavaRuntimeVersion() {
-        return delegate.get().getJavaRuntimeVersion();
-    }
-
-    @Override
-    public String getJvmVersion() {
-        return delegate.get().getJvmVersion();
-    }
-
-    @Override
-    public String getVendor() {
-        return delegate.get().getVendor();
-    }
-
-    @Override
-    public Directory getInstallationPath() {
-        return delegate.get().getInstallationPath();
+    public Object invoke(Object proxy, Method method, Object[] args) throws Throwable {
+        try {
+            if ("getLanguageVersion".equals(method.getName())) {
+                return javaLanguageVersion;
+            } else {
+                return method.invoke(delegate.get(), args);
+            }
+        } catch (IllegalAccessException | IllegalArgumentException e) {
+            throw new RuntimeException(e);
+        } catch (InvocationTargetException e) {
+            throw e.getCause();
+        }
     }
 }
