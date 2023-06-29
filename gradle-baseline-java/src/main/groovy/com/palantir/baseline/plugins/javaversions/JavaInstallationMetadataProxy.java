@@ -45,7 +45,7 @@ final class JavaInstallationMetadataProxy implements InvocationHandler {
             JavaLanguageVersion javaLanguageVersion, Provider<JavaInstallationMetadata> delegate) {
         return (JavaInstallationMetadata) Proxy.newProxyInstance(
                 JavaInstallationMetadata.class.getClassLoader(),
-                new Class[]{JavaInstallationMetadata.class},
+                new Class[] {JavaInstallationMetadata.class},
                 new JavaInstallationMetadataProxy(javaLanguageVersion, delegate));
     }
 
