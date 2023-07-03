@@ -17,6 +17,7 @@
 package com.palantir.baseline.plugins.javaversions;
 
 import org.gradle.api.Project;
+import org.gradle.api.internal.project.ProjectInternal;
 import org.gradle.api.provider.Provider;
 import org.gradle.jvm.toolchain.JavaInstallationMetadata;
 import org.gradle.jvm.toolchain.JavaToolchainService;
@@ -43,8 +44,10 @@ public final class JavaToolchains {
                                     .get()
                                     .getMetadata()));
 
+            ProjectInternal internalProject = (ProjectInternal) project;
             return new ConfiguredJavaToolchain(
                     project.getObjects(),
+                    internalProject.getServices(),
                     project.provider(() -> JavaInstallationMetadataProxy.proxyForVersion(
                             chosenJavaVersion.javaLanguageVersion(), configuredJdkMetadata)));
         });

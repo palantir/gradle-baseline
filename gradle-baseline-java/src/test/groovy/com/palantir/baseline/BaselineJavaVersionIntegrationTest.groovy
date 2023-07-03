@@ -277,6 +277,25 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
     }
 
+    def 'works on gradle 8'() {
+        when:
+        gradleVersion = '8.1.1'
+        buildFile << '''
+        javaVersions {
+            libraryTarget = 11
+            runtime = 17
+        }
+        '''.stripIndent(true)
+
+        file('src/main/java/Main.java') << java11CompatibleCode
+        File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
+
+        then:
+        ExecutionResult result = runTasksSuccessfully('run')
+        result.standardOutput.contains 'jdk11 features on runtime 17'
+        assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
+    }
+
     def 'java 11 execution succeeds on java 17'() {
         when:
         buildFile << '''

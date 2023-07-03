@@ -18,6 +18,7 @@ package com.palantir.baseline.plugins.javaversions;
 
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Provider;
+import org.gradle.internal.service.ServiceRegistry;
 import org.gradle.jvm.toolchain.JavaCompiler;
 import org.gradle.jvm.toolchain.JavaInstallationMetadata;
 import org.gradle.jvm.toolchain.JavaLauncher;
@@ -25,16 +26,22 @@ import org.gradle.jvm.toolchain.JavadocTool;
 
 final class ConfiguredJavaToolchain implements BaselineJavaToolchain {
     private final ObjectFactory objectFactory;
+
+    private final ServiceRegistry serviceRegistry;
     private final Provider<JavaInstallationMetadata> javaInstallationMetadata;
 
-    ConfiguredJavaToolchain(ObjectFactory objectFactory, Provider<JavaInstallationMetadata> javaInstallationMetadata) {
+    ConfiguredJavaToolchain(
+            ObjectFactory objectFactory,
+            ServiceRegistry serviceRegistry,
+            Provider<JavaInstallationMetadata> javaInstallationMetadata) {
         this.objectFactory = objectFactory;
+        this.serviceRegistry = serviceRegistry;
         this.javaInstallationMetadata = javaInstallationMetadata;
     }
 
     @Override
     public Provider<JavaCompiler> javaCompiler() {
-        return javaInstallationMetadata.map(BaselineJavaCompiler::new);
+        return javaInstallationMetadata.map(metadata -> new BaselineJavaCompiler(metadata, serviceRegistry));
     }
 
     @Override
