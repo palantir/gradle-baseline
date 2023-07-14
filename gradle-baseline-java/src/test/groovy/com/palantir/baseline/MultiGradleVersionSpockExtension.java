@@ -17,6 +17,7 @@
 package com.palantir.baseline;
 
 import groovy.lang.GroovyObject;
+import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
@@ -24,6 +25,7 @@ import org.spockframework.runtime.extension.IAnnotationDrivenExtension;
 import org.spockframework.runtime.model.DataProviderInfo;
 import org.spockframework.runtime.model.FeatureInfo;
 import org.spockframework.runtime.model.Invoker;
+import org.spockframework.runtime.model.IterationInfo;
 import org.spockframework.runtime.model.MethodInfo;
 import org.spockframework.runtime.model.MethodKind;
 import org.spockframework.runtime.model.SpecInfo;
@@ -41,12 +43,30 @@ public final class MultiGradleVersionSpockExtension implements IAnnotationDriven
 
     private void addInterceptor(FeatureInfo feature) {
         feature.addIterationInterceptor(invocation -> {
+            IterationInfo iteration = invocation.getIteration();
+
             Object gradleVersion = Optional.ofNullable(
-                            invocation.getIteration().getDataVariables().get(GRADLE_VERSION))
+                            iteration.getDataVariables().get(GRADLE_VERSION))
                     .orElseThrow();
             Object testInstance = invocation.getInstance();
             setGradleVersion(testInstance, gradleVersion);
-            invocation.proceed();
+
+            Object[] originalDataValuesArray = iteration.getDataValues();
+
+            Field dataValues = IterationInfo.class.getDeclaredField("dataValues");
+            try {
+                dataValues.setAccessible(true);
+
+                dataValues.set(
+                        iteration,
+                        Arrays.stream(originalDataValuesArray)
+                                .limit(originalDataValuesArray.length - 1)
+                                .toArray());
+
+                invocation.proceed();
+            } finally {
+                dataValues.set(iteration, originalDataValuesArray);
+            }
         });
     }
 
@@ -54,13 +74,9 @@ public final class MultiGradleVersionSpockExtension implements IAnnotationDriven
         ((GroovyObject) testInstance).setProperty("gradleVersion", gradleVersion);
     }
 
-    public static List<String> lol() {
-        return List.of("7.6.2", "8.2.0");
-    }
-
     private void addDataSource(FeatureInfo feature) {
         // https://github.com/nskvortsov/gradle/blob/f98fb2a13ce7358ba2d88349d7048cd1a6f8ed4a/subprojects/internal-integ-testing/src/main/groovy/org/gradle/integtests/fixtures/extensions/AbstractMultiTestInterceptor.java#L236
-        List<String> blah = List.of("7.6.2", "8.2.0");
+        List<String> blah = List.of("7.6.2", "8.2.1");
         MethodInfo methodInfo = new MethodInfo((target, arguments) -> {
             return blah;
         });
@@ -83,15 +99,11 @@ public final class MultiGradleVersionSpockExtension implements IAnnotationDriven
         feature.addDataVariable(GRADLE_VERSION);
         //        feature.addParameterName(GRADLE_VERSION);
 
-        MethodInfo originalDataProcessor = feature.getDataProcessorMethod();
-
         MethodInfo dataProcessor = new MethodInfo(new Invoker() {
             @Override
             public Object invoke(Object target, Object... arguments) throws Throwable {
                 // setGradleVersion(target, "7.6.2");
-                return originalDataProcessor.invoke(
-                        target,
-                        Arrays.stream(arguments).limit(arguments.length - 1).toArray());
+                return arguments;
             }
         });
         dataProcessor.setKind(MethodKind.DATA_PROCESSOR);

@@ -29,10 +29,7 @@ public final class MultiGradleVersionTransform implements ASTTransformation {
     public void visit(ASTNode[] astNodes, SourceUnit sourceUnit) {
         System.out.println("========================== TRANSFORM BEGIN ==========================");
         System.out.println(astNodes[1].getText());
-        ASTNode testClass = astNodes[1];
-        ((ClassNode) testClass)
-                .getMethods()
-                .forEach(methodNode -> System.out.println("methodNode.getName() = " + methodNode.getName()
-                        + " params = " + methodNode.getParameters().length));
+        ClassNode testClass = (ClassNode) astNodes[1];
+        // testClass.getAnnotations().add(new AnnotationNode(new ClassNode(Unroll.class)));
     }
 }
