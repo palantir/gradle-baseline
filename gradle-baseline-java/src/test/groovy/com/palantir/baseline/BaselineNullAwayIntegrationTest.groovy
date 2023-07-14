@@ -18,7 +18,9 @@ package com.palantir.baseline
 
 import nebula.test.IntegrationSpec
 import nebula.test.functional.ExecutionResult
+import spock.lang.Unroll
 
+@MultiGradleVersions
 class BaselineNullAwayIntegrationTest extends IntegrationSpec {
 
     def standardBuildFile = '''
@@ -60,14 +62,20 @@ class BaselineNullAwayIntegrationTest extends IntegrationSpec {
         }
         '''.stripIndent()
 
+    @Unroll
     def 'Can apply plugin'() {
         when:
         buildFile << standardBuildFile
 
         then:
-        runTasksSuccessfully('compileJava', '--info')
+        println 'hi'
+        println runTasksSuccessfully('compileJava', '--info').standardOutput
+
+        where:
+        lol << ['hi', 'bye']
     }
 
+    @Unroll
     def 'compileJava fails when null-away finds errors'() {
         when:
         buildFile << standardBuildFile
