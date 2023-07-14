@@ -68,6 +68,9 @@ class BaselineNullAwayIntegrationTest extends IntegrationSpec {
         then:
         println 'hi'
         println runTasksSuccessfully('compileJava', '--info').standardOutput
+
+        where:
+        lol << ['hello', 'bye']
     }
 
     def 'compileJava fails when null-away finds errors'() {

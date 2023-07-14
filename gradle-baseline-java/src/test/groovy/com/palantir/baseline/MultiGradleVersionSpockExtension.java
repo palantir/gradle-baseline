@@ -21,13 +21,14 @@ import java.lang.reflect.Field;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import org.gradle.util.GradleVersion;
 import org.spockframework.runtime.extension.IAnnotationDrivenExtension;
 import org.spockframework.runtime.model.DataProviderInfo;
 import org.spockframework.runtime.model.FeatureInfo;
-import org.spockframework.runtime.model.Invoker;
 import org.spockframework.runtime.model.IterationInfo;
 import org.spockframework.runtime.model.MethodInfo;
 import org.spockframework.runtime.model.MethodKind;
+import org.spockframework.runtime.model.NameProvider;
 import org.spockframework.runtime.model.SpecInfo;
 
 public final class MultiGradleVersionSpockExtension implements IAnnotationDrivenExtension<MultiGradleVersions> {
@@ -74,20 +75,25 @@ public final class MultiGradleVersionSpockExtension implements IAnnotationDriven
         ((GroovyObject) testInstance).setProperty("gradleVersion", gradleVersion);
     }
 
+    public static Object justForwardArgs(Object... arguments) {
+        return arguments;
+    }
+
+    public static List<String> gradleVersions() {
+        return List.of(GradleVersion.current().getVersion(), "8.2.1");
+    }
+
     private void addDataSource(FeatureInfo feature) {
         // https://github.com/nskvortsov/gradle/blob/f98fb2a13ce7358ba2d88349d7048cd1a6f8ed4a/subprojects/internal-integ-testing/src/main/groovy/org/gradle/integtests/fixtures/extensions/AbstractMultiTestInterceptor.java#L236
-        List<String> blah = List.of("7.6.2", "8.2.1");
-        MethodInfo methodInfo = new MethodInfo((target, arguments) -> {
-            return blah;
-        });
+        MethodInfo methodInfo = new MethodInfo();
 
         methodInfo.setKind(MethodKind.DATA_PROVIDER);
         methodInfo.setFeature(feature);
-        //        try {
-        //            methodInfo.setReflection(MultiGradleVersionSpockExtension.class.getDeclaredMethod("lol"));
-        //        } catch (NoSuchMethodException e) {
-        //            throw new RuntimeException(e);
-        //        }
+        try {
+            methodInfo.setReflection(MultiGradleVersionSpockExtension.class.getDeclaredMethod("gradleVersions"));
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
 
         DataProviderInfo dataProviderInfo = new DataProviderInfo();
         dataProviderInfo.setParent(feature);
@@ -99,16 +105,26 @@ public final class MultiGradleVersionSpockExtension implements IAnnotationDriven
         feature.addDataVariable(GRADLE_VERSION);
         //        feature.addParameterName(GRADLE_VERSION);
 
-        MethodInfo dataProcessor = new MethodInfo(new Invoker() {
-            @Override
-            public Object invoke(Object target, Object... arguments) throws Throwable {
-                // setGradleVersion(target, "7.6.2");
-                return arguments;
-            }
-        });
+        MethodInfo dataProcessor = new MethodInfo((target, arguments) -> justForwardArgs(arguments));
+        dataProcessor.setName("just-foward-args");
         dataProcessor.setKind(MethodKind.DATA_PROCESSOR);
         dataProcessor.setFeature(feature);
+        try {
+            dataProcessor.setReflection(
+                    MultiGradleVersionSpockExtension.class.getDeclaredMethod("justForwardArgs", Object[].class));
+        } catch (NoSuchMethodException e) {
+            throw new RuntimeException(e);
+        }
 
         feature.setDataProcessorMethod(dataProcessor);
+
+        if (feature.getIterationNameProvider() == null) {
+            feature.setIterationNameProvider(new NameProvider<IterationInfo>() {
+                @Override
+                public String getName(IterationInfo iterationInfo) {
+                    return (String) iterationInfo.getDataVariables().get(GRADLE_VERSION);
+                }
+            });
+        }
     }
 }
