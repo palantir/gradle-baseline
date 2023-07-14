@@ -122,7 +122,8 @@ public final class MultiGradleVersionSpockExtension implements IAnnotationDriven
             feature.setIterationNameProvider(new NameProvider<IterationInfo>() {
                 @Override
                 public String getName(IterationInfo iterationInfo) {
-                    return (String) iterationInfo.getDataVariables().get(GRADLE_VERSION);
+                    return feature.getDisplayName() + " "
+                            + iterationInfo.getDataVariables().get(GRADLE_VERSION);
                 }
             });
         }
