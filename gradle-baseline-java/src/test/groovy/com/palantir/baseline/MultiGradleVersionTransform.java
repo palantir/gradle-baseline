@@ -16,15 +16,13 @@
 
 package com.palantir.baseline;
 
-import java.lang.annotation.ElementType;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-import java.lang.annotation.Target;
-import org.codehaus.groovy.transform.GroovyASTTransformationClass;
-import org.spockframework.runtime.extension.ExtensionAnnotation;
+import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.control.SourceUnit;
+import org.codehaus.groovy.transform.ASTTransformation;
+import org.codehaus.groovy.transform.GroovyASTTransformation;
 
-@Retention(RetentionPolicy.RUNTIME)
-@Target({ElementType.TYPE, ElementType.METHOD})
-@ExtensionAnnotation(MultiGradleVersionSpockExtension.class)
-@GroovyASTTransformationClass(classes = MultiGradleVersionTransform.class)
-@interface MultiGradleVersions {}
+@GroovyASTTransformation
+public final class MultiGradleVersionTransform implements ASTTransformation {
+    @Override
+    public void visit(ASTNode[] astNodes, SourceUnit sourceUnit) {}
+}

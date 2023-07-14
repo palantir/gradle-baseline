@@ -40,16 +40,17 @@ public final class MultiGradleVersionSpockExtension implements IAnnotationDriven
 
     private void addInterceptor(FeatureInfo feature) {
         feature.addIterationInterceptor(invocation -> {
-            ((GroovyObject) invocation.getInstance())
-                    .setProperty(
-                            "gradleVersion",
-                            Optional.ofNullable(invocation
-                                            .getIteration()
-                                            .getDataVariables()
-                                            .get(GRADLE_VERSION))
-                                    .orElseThrow());
+            Object gradleVersion = Optional.ofNullable(
+                            invocation.getIteration().getDataVariables().get(GRADLE_VERSION))
+                    .orElseThrow();
+            Object testInstance = invocation.getInstance();
+            setGradleVersion(testInstance, gradleVersion);
             invocation.proceed();
         });
+    }
+
+    private static void setGradleVersion(Object testInstance, Object gradleVersion) {
+        ((GroovyObject) testInstance).setProperty("gradleVersion", gradleVersion);
     }
 
     public static List<String> lol() {
@@ -58,14 +59,18 @@ public final class MultiGradleVersionSpockExtension implements IAnnotationDriven
 
     private void addDataSource(FeatureInfo feature) {
         // https://github.com/nskvortsov/gradle/blob/f98fb2a13ce7358ba2d88349d7048cd1a6f8ed4a/subprojects/internal-integ-testing/src/main/groovy/org/gradle/integtests/fixtures/extensions/AbstractMultiTestInterceptor.java#L236
-        MethodInfo methodInfo = new MethodInfo();
+        List<String> blah = List.of("7.6.2", "8.2.0");
+        MethodInfo methodInfo = new MethodInfo((target, arguments) -> {
+            return blah;
+        });
+
         methodInfo.setKind(MethodKind.DATA_PROVIDER);
         methodInfo.setFeature(feature);
-        try {
-            methodInfo.setReflection(MultiGradleVersionSpockExtension.class.getDeclaredMethod("lol"));
-        } catch (NoSuchMethodException e) {
-            throw new RuntimeException(e);
-        }
+        //        try {
+        //            methodInfo.setReflection(MultiGradleVersionSpockExtension.class.getDeclaredMethod("lol"));
+        //        } catch (NoSuchMethodException e) {
+        //            throw new RuntimeException(e);
+        //        }
 
         DataProviderInfo dataProviderInfo = new DataProviderInfo();
         dataProviderInfo.setParent(feature);
@@ -75,11 +80,12 @@ public final class MultiGradleVersionSpockExtension implements IAnnotationDriven
 
         feature.addDataProvider(dataProviderInfo);
         feature.addDataVariable(GRADLE_VERSION);
-        feature.addParameterName(GRADLE_VERSION);
+        //        feature.addParameterName(GRADLE_VERSION);
 
         MethodInfo dataProcessor = new MethodInfo(new Invoker() {
             @Override
             public Object invoke(Object target, Object... arguments) throws Throwable {
+                // setGradleVersion(target, "7.6.2");
                 return arguments;
             }
         });
@@ -87,5 +93,22 @@ public final class MultiGradleVersionSpockExtension implements IAnnotationDriven
         dataProcessor.setFeature(feature);
 
         feature.setDataProcessorMethod(dataProcessor);
+
+        MethodInfo originalMethod = feature.getFeatureMethod();
+        MethodInfo newMethod = new MethodInfo((target, arguments) -> {
+            return originalMethod.invoke(target, arguments);
+        });
+
+        newMethod.setKind(originalMethod.getKind());
+        newMethod.setFeature(originalMethod.getFeature());
+        newMethod.setIteration(originalMethod.getIteration());
+        newMethod.setName(originalMethod.getName());
+        newMethod.setLine(originalMethod.getLine());
+        newMethod.setParent(originalMethod.getParent());
+        newMethod.setMetadata(originalMethod.getMetadata());
+        originalMethod.getInterceptors().forEach(newMethod::addInterceptor);
+
+        feature.setFeatureMethod(newMethod);
+        feature.setReflection(newMethod.getReflection());
     }
 }
