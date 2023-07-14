@@ -17,6 +17,7 @@
 package com.palantir.baseline;
 
 import groovy.lang.GroovyObject;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 import org.spockframework.runtime.extension.IAnnotationDrivenExtension;
@@ -82,33 +83,20 @@ public final class MultiGradleVersionSpockExtension implements IAnnotationDriven
         feature.addDataVariable(GRADLE_VERSION);
         //        feature.addParameterName(GRADLE_VERSION);
 
+        MethodInfo originalDataProcessor = feature.getDataProcessorMethod();
+
         MethodInfo dataProcessor = new MethodInfo(new Invoker() {
             @Override
             public Object invoke(Object target, Object... arguments) throws Throwable {
                 // setGradleVersion(target, "7.6.2");
-                return arguments;
+                return originalDataProcessor.invoke(
+                        target,
+                        Arrays.stream(arguments).limit(arguments.length - 1).toArray());
             }
         });
         dataProcessor.setKind(MethodKind.DATA_PROCESSOR);
         dataProcessor.setFeature(feature);
 
         feature.setDataProcessorMethod(dataProcessor);
-
-        MethodInfo originalMethod = feature.getFeatureMethod();
-        MethodInfo newMethod = new MethodInfo((target, arguments) -> {
-            return originalMethod.invoke(target, arguments);
-        });
-
-        newMethod.setKind(originalMethod.getKind());
-        newMethod.setFeature(originalMethod.getFeature());
-        newMethod.setIteration(originalMethod.getIteration());
-        newMethod.setName(originalMethod.getName());
-        newMethod.setLine(originalMethod.getLine());
-        newMethod.setParent(originalMethod.getParent());
-        newMethod.setMetadata(originalMethod.getMetadata());
-        originalMethod.getInterceptors().forEach(newMethod::addInterceptor);
-
-        feature.setFeatureMethod(newMethod);
-        feature.setReflection(newMethod.getReflection());
     }
 }

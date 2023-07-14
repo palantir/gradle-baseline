@@ -17,12 +17,22 @@
 package com.palantir.baseline;
 
 import org.codehaus.groovy.ast.ASTNode;
+import org.codehaus.groovy.ast.ClassNode;
+import org.codehaus.groovy.control.CompilePhase;
 import org.codehaus.groovy.control.SourceUnit;
 import org.codehaus.groovy.transform.ASTTransformation;
 import org.codehaus.groovy.transform.GroovyASTTransformation;
 
-@GroovyASTTransformation
+@GroovyASTTransformation(phase = CompilePhase.SEMANTIC_ANALYSIS)
 public final class MultiGradleVersionTransform implements ASTTransformation {
     @Override
-    public void visit(ASTNode[] astNodes, SourceUnit sourceUnit) {}
+    public void visit(ASTNode[] astNodes, SourceUnit sourceUnit) {
+        System.out.println("========================== TRANSFORM BEGIN ==========================");
+        System.out.println(astNodes[1].getText());
+        ASTNode testClass = astNodes[1];
+        ((ClassNode) testClass)
+                .getMethods()
+                .forEach(methodNode -> System.out.println("methodNode.getName() = " + methodNode.getName()
+                        + " params = " + methodNode.getParameters().length));
+    }
 }

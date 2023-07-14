@@ -21,10 +21,9 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
 import org.codehaus.groovy.transform.GroovyASTTransformationClass;
-import org.spockframework.runtime.extension.ExtensionAnnotation;
 
 @Retention(RetentionPolicy.RUNTIME)
 @Target({ElementType.TYPE, ElementType.METHOD})
-@ExtensionAnnotation(MultiGradleVersionSpockExtension.class)
+// @ExtensionAnnotation(MultiGradleVersionSpockExtension.class)
 @GroovyASTTransformationClass(classes = MultiGradleVersionTransform.class)
 @interface MultiGradleVersions {}
