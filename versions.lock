@@ -31,7 +31,7 @@ com.palantir.gradle.utils:lazily-configured-mapping:0.1.0 (1 constraints: 0305ee
 com.palantir.javaformat:gradle-palantir-java-format:1.1.0 (1 constraints: 0405f335)
 com.palantir.javaformat:palantir-java-format-spi:1.1.0 (1 constraints: 711560be)
 com.uber.nullaway:nullaway:0.10.11 (1 constraints: 65058940)
-commons-io:commons-io:2.13.0 (1 constraints: be14ed98)
+commons-io:commons-io:2.13.0 (2 constraints: f519f007)
 commons-lang:commons-lang:2.6 (1 constraints: ac04232c)
 io.github.java-diff-utils:java-diff-utils:4.0 (1 constraints: 811205f6)
 javax.annotation:javax.annotation-api:1.3.2 (2 constraints: cd204f35)

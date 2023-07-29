@@ -1,0 +1,115 @@
+/*
+ * (c) Copyright 2019 Palantir Technologies Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.palantir.baseline.errorprone;
+
+import com.google.auto.service.AutoService;
+import com.google.errorprone.BugPattern;
+import com.google.errorprone.BugPattern.SeverityLevel;
+import com.google.errorprone.VisitorState;
+import com.google.errorprone.bugpatterns.BugChecker;
+import com.google.errorprone.fixes.SuggestedFix;
+import com.google.errorprone.matchers.Description;
+import com.google.errorprone.matchers.Matcher;
+import com.google.errorprone.matchers.Matchers;
+import com.google.errorprone.matchers.method.MethodMatchers;
+import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.MethodInvocationTree;
+import com.sun.source.tree.Tree;
+import java.util.List;
+
+/**
+ *  Allow for optimization when underlying input stream (such as `ByteArrayInputStream`, `ChannelInputStream`) overrides
+ *  `transferTo(OutputStream)` to avoid extra array allocations and copy larger chunks at a time (e.g. allowing 16KiB
+ *  chunks via `ApacheHttpClientBlockingChannel.ModulatingOutputStream` from #1790).
+ * <p>
+ *  When running on JDK 21+, this also enables 16KiB byte chunk copies via `InputStream.transferTo(OutputStream)`
+ *  per JDK-8299336, where as on JDK < 21 and when using Guava `ByteStreams.copy` 8KiB byte chunk copies are used.
+ * <p>
+ * References:
+ *  <ul>
+ *  <li><a href="https://github.com/palantir/hadoop-crypto/pull/586">https://github.com/palantir/hadoop-crypto/pull/586</a></li>
+ *  <li><a href="https://bugs.openjdk.org/browse/JDK-8299336">https://bugs.openjdk.org/browse/JDK-8299336</a></li>
+ *  <li><a href="https://bugs.openjdk.org/browse/JDK-8067661">https://bugs.openjdk.org/browse/JDK-8067661</a></li>
+ *  <li><a href="https://bugs.openjdk.org/browse/JDK-8265891">https://bugs.openjdk.org/browse/JDK-8265891</a></li>
+ *  <li><a href="https://bugs.openjdk.org/browse/JDK-8273038">https://bugs.openjdk.org/browse/JDK-8273038</a></li>
+ *  <li><a href="https://bugs.openjdk.org/browse/JDK-8279283">https://bugs.openjdk.org/browse/JDK-8279283</a></li>
+ *  <li><a href="https://bugs.openjdk.org/browse/JDK-8296431">https://bugs.openjdk.org/browse/JDK-8296431</a></li>
+ *  </ul>
+ */
+@AutoService(BugChecker.class)
+@BugPattern(
+        link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
+        linkType = BugPattern.LinkType.CUSTOM,
+        severity = SeverityLevel.WARNING,
+        summary = "Prefer JDK `InputStream.transferTo(OutputStream)` over utility methods such as "
+                + "`com.google.common.io.ByteStreams.copy(InputStream, OutputStream)`, "
+                + "`org.apache.commons.io.IOUtils.copy(InputStream, OutputStream)`, "
+                + "`org.apache.commons.io.IOUtils.copyLong(InputStream, OutputStream)`, "
+                + "cf. https://github.com/palantir/gradle-baseline/issues/2615")
+public final class PreferInputStreamTransferTo extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
+
+    private static final long serialVersionUID = 1L;
+
+    private static final String ERROR_MESSAGE = "Prefer InputStream.transferTo(OutputStream)";
+
+    public static final String INPUT_STREAM = "java.io.InputStream";
+    private static final Matcher<Tree> INPUT_STREAM_MATCHER = MoreMatchers.isSubtypeOf(INPUT_STREAM);
+    public static final String OUTPUT_STREAM = "java.io.OutputStream";
+    private static final Matcher<Tree> OUTPUT_STREAM_MATCHER = MoreMatchers.isSubtypeOf(OUTPUT_STREAM);
+
+    private static final Matcher<ExpressionTree> GUAVA_BYTE_STREAM_COPY_MATCHER = MethodMatchers.staticMethod()
+            .onDescendantOf("com.google.common.io.ByteStreams")
+            .namedAnyOf("copy")
+            .withParameters(INPUT_STREAM, OUTPUT_STREAM);
+    private static final Matcher<ExpressionTree> APACHE_COMMONS_BYTE_STREAM_COPY_MATCHER = MethodMatchers.staticMethod()
+            .onDescendantOf("org.apache.commons.io.IOUtils")
+            .namedAnyOf("copy", "copyLarge")
+            .withParameters(INPUT_STREAM, OUTPUT_STREAM);
+    private static final Matcher<ExpressionTree> AWS_BYTE_STREAM_COPY_MATCHER = MethodMatchers.staticMethod()
+            .onDescendantOf("com.amazonaws.util.IOUtils")
+            .namedAnyOf("copy")
+            .withParameters(INPUT_STREAM, OUTPUT_STREAM);
+
+    private static final Matcher<ExpressionTree> METHOD_MATCHER = Matchers.anyOf(
+            GUAVA_BYTE_STREAM_COPY_MATCHER, APACHE_COMMONS_BYTE_STREAM_COPY_MATCHER, AWS_BYTE_STREAM_COPY_MATCHER);
+
+    @Override
+    public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
+        if (METHOD_MATCHER.matches(tree, state)) {
+            List<? extends ExpressionTree> args = tree.getArguments();
+            if (args.size() != 2) {
+                return Description.NO_MATCH;
+            }
+
+            ExpressionTree maybeInputStreamArg = args.get(0);
+            ExpressionTree maybeOutputStreamArg = args.get(1);
+            if (INPUT_STREAM_MATCHER.matches(maybeInputStreamArg, state)
+                    && OUTPUT_STREAM_MATCHER.matches(maybeOutputStreamArg, state)) {
+                String replacement = state.getSourceForNode(maybeInputStreamArg) + ".transferTo("
+                        + state.getSourceForNode(maybeOutputStreamArg) + ")";
+                SuggestedFix fix =
+                        SuggestedFix.builder().replace(tree, replacement).build();
+                return buildDescription(tree)
+                        .setMessage(ERROR_MESSAGE)
+                        .addFix(fix)
+                        .build();
+            }
+        }
+
+        return Description.NO_MATCH;
+    }
+}

@@ -57,6 +57,7 @@ public class BaselineErrorProneExtension {
             "PreferBuiltInConcurrentKeySet",
             "PreferCollectionConstructors",
             "PreferCollectionTransform",
+            "PreferInputStreamTransferTo",
             "PreferListsPartition",
             "PreferSafeLoggableExceptions",
             "PreferSafeLogger",
