@@ -31,25 +31,6 @@ import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.Tree;
 import java.util.List;
 
-/**
- *  Allow for optimization when underlying input stream (such as `ByteArrayInputStream`, `ChannelInputStream`) overrides
- *  `transferTo(OutputStream)` to avoid extra array allocations and copy larger chunks at a time (e.g. allowing 16KiB
- *  chunks via `ApacheHttpClientBlockingChannel.ModulatingOutputStream` from #1790).
- * <p>
- *  When running on JDK 21+, this also enables 16KiB byte chunk copies via `InputStream.transferTo(OutputStream)`
- *  per JDK-8299336, where as on JDK < 21 and when using Guava `ByteStreams.copy` 8KiB byte chunk copies are used.
- * <p>
- * References:
- *  <ul>
- *  <li><a href="https://github.com/palantir/hadoop-crypto/pull/586">https://github.com/palantir/hadoop-crypto/pull/586</a></li>
- *  <li><a href="https://bugs.openjdk.org/browse/JDK-8299336">https://bugs.openjdk.org/browse/JDK-8299336</a></li>
- *  <li><a href="https://bugs.openjdk.org/browse/JDK-8067661">https://bugs.openjdk.org/browse/JDK-8067661</a></li>
- *  <li><a href="https://bugs.openjdk.org/browse/JDK-8265891">https://bugs.openjdk.org/browse/JDK-8265891</a></li>
- *  <li><a href="https://bugs.openjdk.org/browse/JDK-8273038">https://bugs.openjdk.org/browse/JDK-8273038</a></li>
- *  <li><a href="https://bugs.openjdk.org/browse/JDK-8279283">https://bugs.openjdk.org/browse/JDK-8279283</a></li>
- *  <li><a href="https://bugs.openjdk.org/browse/JDK-8296431">https://bugs.openjdk.org/browse/JDK-8296431</a></li>
- *  </ul>
- */
 @AutoService(BugChecker.class)
 @BugPattern(
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
@@ -58,8 +39,23 @@ import java.util.List;
         summary = "Prefer JDK `InputStream.transferTo(OutputStream)` over utility methods such as "
                 + "`com.google.common.io.ByteStreams.copy(InputStream, OutputStream)`, "
                 + "`org.apache.commons.io.IOUtils.copy(InputStream, OutputStream)`, "
-                + "`org.apache.commons.io.IOUtils.copyLong(InputStream, OutputStream)`, "
-                + "cf. https://github.com/palantir/gradle-baseline/issues/2615")
+                + "`org.apache.commons.io.IOUtils.copyLong(InputStream, OutputStream)` "
+                + "see: https://github.com/palantir/gradle-baseline/issues/2615 ",
+        explanation = "Allow for optimization when underlying input stream (such as `ByteArrayInputStream`, "
+                + "`ChannelInputStream`) overrides `long transferTo(OutputStream)` to avoid extra array allocations "
+                + "and copy larger chunks at a time (e.g. allowing 16KiB chunks via "
+                + "`ApacheHttpClientBlockingChannel.ModulatingOutputStream` from #1790).\n\n"
+                + "When running on JDK 21+, this also enables 16KiB byte chunk copies via "
+                + "`InputStream.transferTo(OutputStream)` per [JDK-8299336](https://bugs.openjdk.org/browse/JDK-8299336), "
+                + "where as on JDK < 21 and when using Guava `ByteStreams.copy` 8KiB byte chunk copies are used. "
+                + "\n\nReferences:\n\n"
+                + "  * https://github.com/palantir/hadoop-crypto/pull/586\n"
+                + "  * https://bugs.openjdk.org/browse/JDK-8299336\n"
+                + "  * https://bugs.openjdk.org/browse/JDK-8067661\n"
+                + "  * https://bugs.openjdk.org/browse/JDK-8265891\n"
+                + "  * https://bugs.openjdk.org/browse/JDK-8273038\n"
+                + "  * https://bugs.openjdk.org/browse/JDK-8279283\n"
+                + "  * https://bugs.openjdk.org/browse/JDK-8296431\n")
 public final class PreferInputStreamTransferTo extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
