@@ -42,20 +42,20 @@ import java.util.List;
                 + "`org.apache.commons.io.IOUtils.copyLong(InputStream, OutputStream)` "
                 + "see: https://github.com/palantir/gradle-baseline/issues/2615 ",
         explanation = "Allow for optimization when underlying input stream (such as `ByteArrayInputStream`, "
-                + "`ChannelInputStream`) overrides `long transferTo(OutputStream)` to avoid extra array allocations "
-                + "and copy larger chunks at a time (e.g. allowing 16KiB chunks via "
-                + "`ApacheHttpClientBlockingChannel.ModulatingOutputStream` from #1790).\n\n"
-                + "When running on JDK 21+, this also enables 16KiB byte chunk copies via "
-                + "`InputStream.transferTo(OutputStream)` per [JDK-8299336](https://bugs.openjdk.org/browse/JDK-8299336), "
-                + "where as on JDK < 21 and when using Guava `ByteStreams.copy` 8KiB byte chunk copies are used. "
-                + "\n\nReferences:\n\n"
-                + "  * https://github.com/palantir/hadoop-crypto/pull/586\n"
-                + "  * https://bugs.openjdk.org/browse/JDK-8299336\n"
-                + "  * https://bugs.openjdk.org/browse/JDK-8067661\n"
-                + "  * https://bugs.openjdk.org/browse/JDK-8265891\n"
-                + "  * https://bugs.openjdk.org/browse/JDK-8273038\n"
-                + "  * https://bugs.openjdk.org/browse/JDK-8279283\n"
-                + "  * https://bugs.openjdk.org/browse/JDK-8296431\n")
+            + "`ChannelInputStream`) overrides `long transferTo(OutputStream)` to avoid extra array allocations "
+            + "and copy larger chunks at a time (e.g. allowing 16KiB chunks via "
+            + "`ApacheHttpClientBlockingChannel.ModulatingOutputStream` from #1790).\n\n"
+            + "When running on JDK 21+, this also enables 16KiB byte chunk copies via "
+            + "`InputStream.transferTo(OutputStream)` per [JDK-8299336](https://bugs.openjdk.org/browse/JDK-8299336), "
+            + "where as on JDK < 21 and when using Guava `ByteStreams.copy` 8KiB byte chunk copies are used. "
+            + "\n\nReferences:\n\n"
+            + "  * https://github.com/palantir/hadoop-crypto/pull/586\n"
+            + "  * https://bugs.openjdk.org/browse/JDK-8299336\n"
+            + "  * https://bugs.openjdk.org/browse/JDK-8067661\n"
+            + "  * https://bugs.openjdk.org/browse/JDK-8265891\n"
+            + "  * https://bugs.openjdk.org/browse/JDK-8273038\n"
+            + "  * https://bugs.openjdk.org/browse/JDK-8279283\n"
+            + "  * https://bugs.openjdk.org/browse/JDK-8296431\n")
 public final class PreferInputStreamTransferTo extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
