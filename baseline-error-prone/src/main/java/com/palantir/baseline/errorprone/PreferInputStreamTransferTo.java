@@ -103,7 +103,7 @@ public final class PreferInputStreamTransferTo extends BugChecker implements Bug
 
                 if (inputStreamArg.contains("this")) {
                     // Avoid possible infinite recursion replacing with `this.transferTo(outputStream)`
-                    inputStreamArg = inputStreamArg.replace("this", "super");
+                    inputStreamArg = inputStreamArg.replaceAll("\\bthis\\b", "super");
                 }
 
                 String replacement = inputStreamArg + ".transferTo(" + outputStreamArg + ")";
