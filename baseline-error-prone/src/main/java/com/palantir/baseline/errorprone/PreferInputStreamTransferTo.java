@@ -41,14 +41,14 @@ import java.util.List;
                 + "`org.apache.commons.io.IOUtils.copy(InputStream, OutputStream)`, "
                 + "`org.apache.commons.io.IOUtils.copyLong(InputStream, OutputStream)` "
                 + "see: https://github.com/palantir/gradle-baseline/issues/2615 ",
-        explanation = "Allow for optimization when underlying input stream (such as `ByteArrayInputStream`, "
-            + "`ChannelInputStream`) overrides `long transferTo(OutputStream)` to avoid extra array allocations "
-            + "and copy larger chunks at a time (e.g. allowing 16KiB chunks via "
-            + "`ApacheHttpClientBlockingChannel.ModulatingOutputStream` from #1790).\n\n"
-            + "When running on JDK 21+, this also enables 16KiB byte chunk copies via "
-            + "`InputStream.transferTo(OutputStream)` per [JDK-8299336](https://bugs.openjdk.org/browse/JDK-8299336), "
-            + "where as on JDK < 21 and when using Guava `ByteStreams.copy` 8KiB byte chunk copies are used. "
-            + "\n\nReferences:\n\n"
+        explanation = "Allow for optimization when underlying input stream (such as `ByteArrayInputStream`,"
+            + " `ChannelInputStream`) overrides `long transferTo(OutputStream)` to avoid extra array allocations and"
+            + " copy larger chunks at a time (e.g. allowing 16KiB chunks via"
+            + " `ApacheHttpClientBlockingChannel.ModulatingOutputStream` from #1790).\n\n"
+            + "When running on JDK 21+, this also enables 16KiB byte chunk copies via"
+            + " `InputStream.transferTo(OutputStream)` per [JDK-8299336](https://bugs.openjdk.org/browse/JDK-8299336),"
+            + " where as on JDK < 21 and when using Guava `ByteStreams.copy` 8KiB byte chunk copies are used. \n\n"
+            + "References:\n\n"
             + "  * https://github.com/palantir/hadoop-crypto/pull/586\n"
             + "  * https://bugs.openjdk.org/browse/JDK-8299336\n"
             + "  * https://bugs.openjdk.org/browse/JDK-8067661\n"
@@ -68,15 +68,15 @@ public final class PreferInputStreamTransferTo extends BugChecker implements Bug
     private static final Matcher<Tree> OUTPUT_STREAM_MATCHER = MoreMatchers.isSubtypeOf(OUTPUT_STREAM);
 
     private static final Matcher<ExpressionTree> GUAVA_BYTE_STREAM_COPY_MATCHER = MethodMatchers.staticMethod()
-            .onDescendantOf("com.google.common.io.ByteStreams")
+            .onClass("com.google.common.io.ByteStreams")
             .namedAnyOf("copy")
             .withParameters(INPUT_STREAM, OUTPUT_STREAM);
     private static final Matcher<ExpressionTree> APACHE_COMMONS_BYTE_STREAM_COPY_MATCHER = MethodMatchers.staticMethod()
-            .onDescendantOf("org.apache.commons.io.IOUtils")
+            .onClass("org.apache.commons.io.IOUtils")
             .namedAnyOf("copy", "copyLarge")
             .withParameters(INPUT_STREAM, OUTPUT_STREAM);
     private static final Matcher<ExpressionTree> AWS_BYTE_STREAM_COPY_MATCHER = MethodMatchers.staticMethod()
-            .onDescendantOf("com.amazonaws.util.IOUtils")
+            .onClass("com.amazonaws.util.IOUtils")
             .namedAnyOf("copy")
             .withParameters(INPUT_STREAM, OUTPUT_STREAM);
 
@@ -95,8 +95,18 @@ public final class PreferInputStreamTransferTo extends BugChecker implements Bug
             ExpressionTree maybeOutputStreamArg = args.get(1);
             if (INPUT_STREAM_MATCHER.matches(maybeInputStreamArg, state)
                     && OUTPUT_STREAM_MATCHER.matches(maybeOutputStreamArg, state)) {
-                String replacement = state.getSourceForNode(maybeInputStreamArg) + ".transferTo("
-                        + state.getSourceForNode(maybeOutputStreamArg) + ")";
+                String inputStreamArg = state.getSourceForNode(maybeInputStreamArg);
+                String outputStreamArg = state.getSourceForNode(maybeOutputStreamArg);
+                if (inputStreamArg == null || outputStreamArg == null) {
+                    return Description.NO_MATCH;
+                }
+
+                if (inputStreamArg.contains("this")) {
+                    // Avoid possible infinite recursion replacing with `this.transferTo(outputStream)`
+                    inputStreamArg = inputStreamArg.replace("this", "super");
+                }
+
+                String replacement = inputStreamArg + ".transferTo(" + outputStreamArg + ")";
                 SuggestedFix fix =
                         SuggestedFix.builder().replace(tree, replacement).build();
                 return buildDescription(tree)
