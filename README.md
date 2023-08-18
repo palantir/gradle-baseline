@@ -228,6 +228,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `DangerousCollapseKeysUsage`: Disallow usage of `EntryStream#collapseKeys()`.
 - `JooqBatchWithoutBindArgs`: jOOQ batch methods that execute without bind args can cause performance problems.
 - `InvocationTargetExceptionGetTargetException`: InvocationTargetException.getTargetException() predates the general-purpose exception chaining facility. The Throwable.getCause() method is now the preferred means of obtaining this information. [(source)](https://docs.oracle.com/en/java/javase/17/docs/api//java.base/java/lang/reflect/InvocationTargetException.html#getTargetException())
+- `PreferInputStreamTransferTo`: Prefer JDK `InputStream.transferTo(OutputStream)` over utility methods such as `com.google.common.io.ByteStreams.copy(InputStream, OutputStream)`, `org.apache.commons.io.IOUtils.copy(InputStream, OutputStream)`, `org.apache.commons.io.IOUtils.copyLong(InputStream, OutputStream)`.
 
 ### Programmatic Application
 

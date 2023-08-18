@@ -23,6 +23,7 @@ dependencies {
     testImplementation 'com.palantir.safe-logging:logger'
     testImplementation 'org.slf4j:slf4j-api'
     testImplementation 'org.apache.commons:commons-lang3'
+    testImplementation 'commons-io:commons-io'
     testImplementation 'commons-lang:commons-lang'
     testImplementation 'org.assertj:assertj-core'
     testImplementation 'org.immutables:value::annotations'
