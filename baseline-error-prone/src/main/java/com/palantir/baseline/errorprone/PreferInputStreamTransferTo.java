@@ -27,6 +27,7 @@ import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.Tree;
 import java.util.List;
@@ -101,9 +102,10 @@ public final class PreferInputStreamTransferTo extends BugChecker implements Bug
                     return Description.NO_MATCH;
                 }
 
-                if (inputStreamArg.contains("this")) {
-                    // Avoid possible infinite recursion replacing with `this.transferTo(outputStream)`
-                    inputStreamArg = inputStreamArg.replaceAll("\\bthis\\b", "super");
+                // Avoid possible infinite recursion replacing with `this.transferTo(outputStream)`
+                if (maybeInputStreamArg instanceof IdentifierTree
+                        && ((IdentifierTree) maybeInputStreamArg).getName().contentEquals("this")) {
+                    inputStreamArg = "super";
                 }
 
                 String replacement = inputStreamArg + ".transferTo(" + outputStreamArg + ")";

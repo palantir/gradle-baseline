@@ -154,6 +154,80 @@ public final class PreferInputStreamTransferToTests {
                         "  }",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+
+        RefactoringValidator.of(PreferInputStreamTransferTo.class, getClass())
+                .addInputLines(
+                        "Test.java",
+                        "import java.io.InputStream;",
+                        "import java.io.OutputStream;",
+                        "class Test {",
+                        "  InputStream input() {",
+                        "    return InputStream.nullInputStream();",
+                        "  }",
+                        "  OutputStream output() {",
+                        "    return OutputStream.nullOutputStream();",
+                        "  }",
+                        "  long f() throws java.io.IOException {",
+                        "    return com.google.common.io.ByteStreams.copy(this.input(), this.output());",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import java.io.InputStream;",
+                        "import java.io.OutputStream;",
+                        "class Test {",
+                        "  InputStream input() {",
+                        "    return InputStream.nullInputStream();",
+                        "  }",
+                        "  OutputStream output() {",
+                        "    return OutputStream.nullOutputStream();",
+                        "  }",
+                        "  long f() throws java.io.IOException {",
+                        "    return this.input().transferTo(this.output());",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+
+        RefactoringValidator.of(PreferInputStreamTransferTo.class, getClass())
+                .addInputLines(
+                        "Test.java",
+                        "import java.io.InputStream;",
+                        "import java.io.OutputStream;",
+                        "class Test extends InputStream {",
+                        "  @Override",
+                        "  public long transferTo(OutputStream output) throws java.io.IOException {",
+                        "    return com.google.common.io.ByteStreams.copy(this.delegate(), output);",
+                        "  }",
+                        "",
+                        "  @Override",
+                        "  public int read() throws java.io.IOException {",
+                        "    return -1;",
+                        "  }",
+                        "",
+                        "  InputStream delegate() {",
+                        "    return InputStream.nullInputStream();",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import java.io.InputStream;",
+                        "import java.io.OutputStream;",
+                        "class Test extends InputStream {",
+                        "  @Override",
+                        "  public long transferTo(OutputStream output) throws java.io.IOException {",
+                        "    return this.delegate().transferTo(output);",
+                        "  }",
+                        "",
+                        "  @Override",
+                        "  public int read() throws java.io.IOException {",
+                        "    return -1;",
+                        "  }",
+                        "",
+                        "  InputStream delegate() {",
+                        "    return InputStream.nullInputStream();",
+                        "  }",
+                        "}")
+                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
     @Test
