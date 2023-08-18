@@ -74,7 +74,7 @@ public final class PreferInputStreamTransferToTests {
     }
 
     @Test
-    public void auto_fix_Guava_ByteStreams_copy() {
+    public void auto_fix_Guava_ByteStreams_copy_input_vars() {
         RefactoringValidator.of(PreferInputStreamTransferTo.class, getClass())
                 .addInputLines(
                         "Test.java",
@@ -99,7 +99,10 @@ public final class PreferInputStreamTransferToTests {
                         "  }",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
 
+    @Test
+    public void auto_fix_Guava_ByteStreams_copy_input_methods() {
         RefactoringValidator.of(PreferInputStreamTransferTo.class, getClass())
                 .addInputLines(
                         "Test.java",
@@ -121,7 +124,10 @@ public final class PreferInputStreamTransferToTests {
                         "  }",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
 
+    @Test
+    public void auto_fix_Guava_ByteStreams_copy_stream_implements_transferTo() {
         RefactoringValidator.of(PreferInputStreamTransferTo.class, getClass())
                 .addInputLines(
                         "Test.java",
@@ -154,40 +160,10 @@ public final class PreferInputStreamTransferToTests {
                         "  }",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
 
-        RefactoringValidator.of(PreferInputStreamTransferTo.class, getClass())
-                .addInputLines(
-                        "Test.java",
-                        "import java.io.InputStream;",
-                        "import java.io.OutputStream;",
-                        "class Test {",
-                        "  InputStream input() {",
-                        "    return InputStream.nullInputStream();",
-                        "  }",
-                        "  OutputStream output() {",
-                        "    return OutputStream.nullOutputStream();",
-                        "  }",
-                        "  long f() throws java.io.IOException {",
-                        "    return com.google.common.io.ByteStreams.copy(this.input(), this.output());",
-                        "  }",
-                        "}")
-                .addOutputLines(
-                        "Test.java",
-                        "import java.io.InputStream;",
-                        "import java.io.OutputStream;",
-                        "class Test {",
-                        "  InputStream input() {",
-                        "    return InputStream.nullInputStream();",
-                        "  }",
-                        "  OutputStream output() {",
-                        "    return OutputStream.nullOutputStream();",
-                        "  }",
-                        "  long f() throws java.io.IOException {",
-                        "    return this.input().transferTo(this.output());",
-                        "  }",
-                        "}")
-                .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
-
+    @Test
+    public void auto_fix_Guava_ByteStreams_copy_stream_transferTo_delegates() {
         RefactoringValidator.of(PreferInputStreamTransferTo.class, getClass())
                 .addInputLines(
                         "Test.java",
