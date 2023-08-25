@@ -45,6 +45,70 @@ class SafeLoggingPropagationTest {
     }
 
     @Test
+    void testAddsAnnotation_extendsDnlInterface() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "class Test {",
+                        "  @DoNotLog",
+                        "  interface DnlIface {",
+                        "      Object value();",
+                        "  }",
+                        "  @Value.Immutable",
+                        "  interface ImmutablesIface extends DnlIface {",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "class Test {",
+                        "  @DoNotLog",
+                        "  interface DnlIface {",
+                        "      Object value();",
+                        "  }",
+                        "  @DoNotLog",
+                        "  @Value.Immutable",
+                        "  interface ImmutablesIface extends DnlIface {",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testAddsAnnotation_extendsInterfaceWithDnlType() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.tokens.auth.*;",
+                        "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "class Test {",
+                        "  interface DnlIface {",
+                        "      BearerToken value();",
+                        "  }",
+                        "  @Value.Immutable",
+                        "  interface ImmutablesIface extends DnlIface {",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.tokens.auth.*;",
+                        "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "class Test {",
+                        "  interface DnlIface {",
+                        "      BearerToken value();",
+                        "  }",
+                        "  @DoNotLog",
+                        "  @Value.Immutable",
+                        "  interface ImmutablesIface extends DnlIface {",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     void testMixedSafety() {
         fix().addInputLines(
                         "Test.java",

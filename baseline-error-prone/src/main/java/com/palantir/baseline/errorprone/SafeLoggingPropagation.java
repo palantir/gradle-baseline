@@ -49,6 +49,7 @@ import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Symbol.TypeSymbol;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
+import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.util.Name;
 import java.util.List;
 import javax.lang.model.element.Modifier;
@@ -76,28 +77,6 @@ public final class SafeLoggingPropagation extends BugChecker
             Matchers.not(Matchers.isStatic()),
             Matchers.methodReturns(Matchers.isSameType(String.class)));
     private static final Matcher<MethodTree> METHOD_RETURNS_VOID = Matchers.methodReturns(Matchers.isVoidType());
-    private static final Matcher<MethodTree> NON_STATIC_NON_CTOR =
-            Matchers.not(Matchers.anyOf(Matchers.hasModifier(Modifier.STATIC), Matchers.methodIsConstructor()));
-
-    private static final Matcher<MethodTree> IS_IMMUTABLES_FIELD = Matchers.anyOf(
-            Matchers.hasModifier(Modifier.ABSTRACT),
-            Matchers.symbolHasAnnotation("org.immutables.value.Value.Default"),
-            Matchers.symbolHasAnnotation("org.immutables.value.Value.Derived"),
-            Matchers.symbolHasAnnotation("org.immutables.value.Value.Lazy"),
-            Matchers.allOf(Matchers.hasModifier(Modifier.DEFAULT), Matchers.enclosingClass((Matcher<ClassTree>)
-                    (classTree, state) -> {
-                        ClassSymbol classSymbol = ASTHelpers.getSymbol(classTree);
-                        return classSymbol != null && immutablesDefaultAsDefault(classSymbol, state);
-                    })),
-            (methodTree, state) -> hasJacksonAnnotation(ASTHelpers.getSymbol(methodTree), state));
-    private static final Matcher<MethodTree> GETTER_METHOD_MATCHER = Matchers.anyOf(
-            Matchers.allOf(
-                    NON_STATIC_NON_CTOR,
-                    Matchers.not(METHOD_RETURNS_VOID),
-                    Matchers.methodHasNoParameters(),
-                    IS_IMMUTABLES_FIELD),
-            // Always include toString safety
-            TO_STRING);
 
     private static final com.google.errorprone.suppliers.Supplier<Name> TO_STRING_NAME =
             VisitorState.memoize(state -> state.getName("toString"));
@@ -195,43 +174,87 @@ public final class SafeLoggingPropagation extends BugChecker
         return matchBasedOnToString(classTree, classSymbol, state);
     }
 
+    private static boolean isImmutablesField(
+            ClassSymbol enclosingClass, MethodSymbol methodSymbol, VisitorState state) {
+        return methodSymbol.getModifiers().contains(Modifier.ABSTRACT)
+                || ASTHelpers.hasAnnotation(methodSymbol, "org.immutables.value.Value.Default", state)
+                || ASTHelpers.hasAnnotation(methodSymbol, "org.immutables.value.Value.Derived", state)
+                || ASTHelpers.hasAnnotation(methodSymbol, "org.immutables.value.Value.Lazy", state)
+                || immutablesDefaultAsDefault(enclosingClass, state)
+                || hasJacksonAnnotation(methodSymbol, state);
+    }
+
+    private static boolean isToString(MethodSymbol methodSymbol, VisitorState state) {
+        return !methodSymbol.isConstructor()
+                && !methodSymbol.isStaticOrInstanceInit()
+                && state.getTypes().isSameType(methodSymbol.getReturnType(), state.getSymtab().stringType)
+                && methodSymbol.name.contentEquals("toString")
+                && methodSymbol.getParameters().isEmpty();
+    }
+
+    private static boolean isGetterMethod(ClassSymbol enclosingClass, MethodSymbol methodSymbol, VisitorState state) {
+        return !methodSymbol.isConstructor()
+                && !methodSymbol.isStaticOrInstanceInit()
+                && !state.getTypes().isSameType(methodSymbol.getReturnType(), state.getSymtab().voidType)
+                && methodSymbol.getParameters().isEmpty()
+                && (isImmutablesField(enclosingClass, methodSymbol, state) || isToString(methodSymbol, state));
+    }
+
     @SuppressWarnings("checkstyle:CyclomaticComplexity")
-    private Description matchImmutables(ClassTree classTree, ClassSymbol classSymbol, VisitorState state) {
-        Safety existingClassSafety = SafetyAnnotations.getSafety(classTree, state);
-        Safety safety = SafetyAnnotations.getTypeSafetyFromAncestors(classTree, state);
-        boolean hasKnownGetter = false;
-        boolean isJson = hasJacksonAnnotation(classSymbol, state);
-        for (Tree member : classTree.getMembers()) {
-            if (member instanceof MethodTree) {
-                MethodTree methodMember = (MethodTree) member;
-                if (GETTER_METHOD_MATCHER.matches(methodMember, state)) {
-                    MethodSymbol methodSymbol = ASTHelpers.getSymbol(methodMember);
+    private static Safety scanSymbolMethods(ClassSymbol begin, VisitorState state, boolean usesJackson) {
+        Safety safety = Safety.UNKNOWN;
+        for (Symbol enclosed : begin.getEnclosedElements()) {
+            if (enclosed instanceof MethodSymbol) {
+                MethodSymbol methodSymbol = (MethodSymbol) enclosed;
+                if (isGetterMethod(begin, methodSymbol, state)) {
                     boolean redacted =
                             ASTHelpers.hasAnnotation(methodSymbol, "org.immutables.value.Value.Redacted", state);
-                    if (redacted && !isJson && !hasJacksonAnnotation(methodSymbol, state)) {
+                    if (redacted && !usesJackson && !hasJacksonAnnotation(methodSymbol, state)) {
                         // Redacted fields can be ignored so long as the object is not json-serializable, in which
                         // case logging may occur using jackson rather than toString.
                         continue;
                     }
+                    Safety getterSafety =
+                            Safety.mergeAssumingUnknownIsSame(safety, SafetyAnnotations.getSafety(methodSymbol, state));
+                    getterSafety = Safety.mergeAssumingUnknownIsSame(
+                            getterSafety, SafetyAnnotations.getSafety(methodSymbol.getReturnType(), state));
+                    getterSafety = Safety.mergeAssumingUnknownIsSame(
+                            getterSafety, SafetyAnnotations.getSafety(methodSymbol.getReturnType().tsym, state));
                     // The redaction check allows us to add @DoNotLog to redacted fields in the same sweep as
                     // adding class-level safety annotations. Otherwise, we would have to run the automatic
                     // fixes twice.
-                    Safety getterSafety = SafetyAnnotations.getSafety(methodMember.getReturnType(), state);
                     if (redacted && (getterSafety == Safety.UNKNOWN || getterSafety == Safety.SAFE)) {
                         // unsafe data may be redacted, however we assume redaction means do-not-log by default
                         getterSafety = Safety.DO_NOT_LOG;
                     }
-                    if (getterSafety != Safety.UNKNOWN) {
-                        hasKnownGetter = true;
-                    }
-                    safety = safety.leastUpperBound(getterSafety);
+                    safety = Safety.mergeAssumingUnknownIsSame(getterSafety, safety);
                 }
             }
         }
-        // If no getter-style methods are detected, assume this is not a value type.
-        if (!hasKnownGetter) {
-            return Description.NO_MATCH;
+        Type superClassType = begin.getSuperclass();
+        if (superClassType != null && superClassType.tsym instanceof ClassSymbol) {
+            ClassSymbol superClassSym = (ClassSymbol) superClassType.tsym;
+            Safety superClassMethodSafety = scanSymbolMethods(superClassSym, state, usesJackson);
+            safety = Safety.mergeAssumingUnknownIsSame(safety, superClassMethodSafety);
         }
+        for (Type superIface : begin.getInterfaces()) {
+            if (superIface.tsym instanceof ClassSymbol) {
+                ClassSymbol superIfaceClassSymbol = (ClassSymbol) superIface.tsym;
+                Safety superClassMethodSafety = scanSymbolMethods(superIfaceClassSymbol, state, usesJackson);
+                safety = Safety.mergeAssumingUnknownIsSame(safety, superClassMethodSafety);
+            }
+        }
+        return safety;
+    }
+
+    @SuppressWarnings("checkstyle:CyclomaticComplexity")
+    private Description matchImmutables(ClassTree classTree, ClassSymbol classSymbol, VisitorState state) {
+        Safety existingClassSafety = SafetyAnnotations.getAnnotatedSafety(classTree, state);
+        Safety safety = SafetyAnnotations.getTypeSafetyFromAncestors(classTree, state);
+        boolean isJson = hasJacksonAnnotation(classSymbol, state);
+        ClassSymbol symbol = ASTHelpers.getSymbol(classTree);
+        Safety scanned = scanSymbolMethods(symbol, state, isJson);
+        safety = safety.leastUpperBound(scanned);
         return handleSafety(classTree, classTree.getModifiers(), state, existingClassSafety, safety);
     }
 
