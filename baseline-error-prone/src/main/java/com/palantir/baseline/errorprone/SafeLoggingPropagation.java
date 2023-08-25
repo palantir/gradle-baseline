@@ -227,7 +227,7 @@ public final class SafeLoggingPropagation extends BugChecker
                         // unsafe data may be redacted, however we assume redaction means do-not-log by default
                         getterSafety = Safety.DO_NOT_LOG;
                     }
-                    safety = Safety.mergeAssumingUnknownIsSame(getterSafety, safety);
+                    safety = safety.leastUpperBound(getterSafety);
                 }
             }
         }
