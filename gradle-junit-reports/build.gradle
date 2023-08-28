@@ -11,6 +11,8 @@ dependencies {
   compileOnly 'org.immutables:value::annotations'
   compileOnly 'org.inferred:freebuilder'
 
+  implementation 'com.palantir.safe-logging:safe-logging'
+
   testImplementation 'com.google.guava:guava'
   testImplementation 'com.netflix.nebula:nebula-test'
   testImplementation 'org.assertj:assertj-core'
