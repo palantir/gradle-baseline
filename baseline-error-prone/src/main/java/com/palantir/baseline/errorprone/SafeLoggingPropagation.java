@@ -247,7 +247,6 @@ public final class SafeLoggingPropagation extends BugChecker
         return safety;
     }
 
-    @SuppressWarnings("checkstyle:CyclomaticComplexity")
     private Description matchImmutables(ClassTree classTree, ClassSymbol classSymbol, VisitorState state) {
         Safety existingClassSafety = SafetyAnnotations.getAnnotatedSafety(classTree, state);
         Safety safety = SafetyAnnotations.getTypeSafetyFromAncestors(classTree, state);
