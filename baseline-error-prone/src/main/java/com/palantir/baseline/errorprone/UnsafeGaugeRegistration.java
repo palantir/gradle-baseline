@@ -26,6 +26,7 @@ import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.suppliers.Supplier;
+import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.tools.javac.code.Symbol;
@@ -79,7 +80,7 @@ public final class UnsafeGaugeRegistration extends AbstractReturnValueIgnored {
             return false;
         }
         Symbol.ClassSymbol classSymbol = (Symbol.ClassSymbol) symbol;
-        for (Symbol enclosed : classSymbol.getEnclosedElements()) {
+        for (Symbol enclosed : ASTHelpers.getEnclosedElements(classSymbol)) {
             if (enclosed instanceof Symbol.MethodSymbol) {
                 Symbol.MethodSymbol enclosedMethod = (Symbol.MethodSymbol) enclosed;
                 if (enclosedMethod.name.contentEquals(REGISTER_WITH_REPLACEMENT)) {

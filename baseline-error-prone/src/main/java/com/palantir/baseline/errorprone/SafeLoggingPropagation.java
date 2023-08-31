@@ -203,7 +203,7 @@ public final class SafeLoggingPropagation extends BugChecker
     @SuppressWarnings("checkstyle:CyclomaticComplexity")
     private static Safety scanSymbolMethods(ClassSymbol begin, VisitorState state, boolean usesJackson) {
         Safety safety = Safety.UNKNOWN;
-        for (Symbol enclosed : begin.getEnclosedElements()) {
+        for (Symbol enclosed : ASTHelpers.getEnclosedElements(begin)) {
             if (enclosed instanceof MethodSymbol) {
                 MethodSymbol methodSymbol = (MethodSymbol) enclosed;
                 if (isGetterMethod(begin, methodSymbol, state)) {
