@@ -36,9 +36,11 @@ import com.sun.source.tree.Tree;
 public final class IncubatingMethod extends BugChecker
         implements BugChecker.MethodInvocationTreeMatcher, BugChecker.MemberReferenceTreeMatcher {
 
-    /** Matcher for the Incubating annotation, using the full qualified path. */
-    private static final Matcher<Tree> INCUBATING_MATCHER =
-            Matchers.symbolHasAnnotation("com.palantir.conjure.java.lib.internal.Incubating");
+    private static final String INCUBATING = "com.palantir.conjure.java.lib.internal.Incubating";
+
+    private static final Matcher<Tree> INCUBATING_MATCHER = Matchers.symbolHasAnnotation(INCUBATING);
+    private static final Matcher<Tree> IN_INCUBATING_MATCHER =
+            Matchers.enclosingMethod(Matchers.symbolHasAnnotation(INCUBATING));
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
@@ -52,6 +54,10 @@ public final class IncubatingMethod extends BugChecker
 
     private Description checkTree(Tree tree, VisitorState state) {
         if (!INCUBATING_MATCHER.matches(tree, state)) {
+            return Description.NO_MATCH;
+        }
+
+        if (IN_INCUBATING_MATCHER.matches(tree, state)) {
             return Description.NO_MATCH;
         }
 
