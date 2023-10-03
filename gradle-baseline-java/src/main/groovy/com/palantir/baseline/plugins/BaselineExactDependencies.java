@@ -49,6 +49,7 @@ import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
+import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.LibraryElements;
 import org.gradle.api.attributes.Usage;
 import org.gradle.api.plugins.JavaPluginConvention;
@@ -115,20 +116,24 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                         }
                     });
 
-                    // Without this, the 'checkUnusedDependencies correctly picks up project dependency on java-library'
-                    // test fails, by not causing gradle run the jar task, but resolving the path to the jar (rather
-                    // than to the classes directory), which then doesn't exist.
-                    // Specifically, we need to pick up the LIBRARY_ELEMENTS_ATTRIBUTE, which is being configured on
-                    // compileClasspath in JavaBasePlugin.defineConfigurationsForSourceSet, but we can't reference it
-                    // directly because that would require us to depend on Gradle 5.6.
-                    // Instead, we just copy the attributes from compileClasspath.
-                    conf.getAttributes()
-                            .attributeProvider(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE, project.provider(() -> {
-                                return compileClasspath
-                                        .get()
-                                        .getAttributes()
-                                        .getAttribute(LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE);
-                            }));
+                    conf.getDependencies().addAllLater(project.provider(() -> {
+                        // Without this, the 'checkUnusedDependencies correctly picks up project dependency on
+                        // java-library'
+                        // test fails, by not causing gradle run the jar task, but resolving the path to the jar (rather
+                        // than to the classes directory), which then doesn't exist.
+                        // Specifically, we need to pick up the LIBRARY_ELEMENTS_ATTRIBUTE, which is being configured on
+                        // compileClasspath in JavaBasePlugin.defineConfigurationsForSourceSet, but we can't reference
+                        // it
+                        // directly because that would require us to depend on Gradle 5.6.
+                        // Instead, we just copy the attributes from compileClasspath.
+                        compileClasspath.get().getAttributes().keySet().forEach(attribute -> {
+                            Object value =
+                                    compileClasspath.get().getAttributes().getAttribute(attribute);
+                            conf.getAttributes().attribute((Attribute<Object>) attribute, value);
+                        });
+
+                        return Set.of();
+                    }));
 
                     conf.withDependencies(deps -> {
                         // Pick up GCV locks. We're making an internal assumption that this configuration exists,
