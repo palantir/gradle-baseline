@@ -148,12 +148,8 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
     }
 
     @Classpath
-    public final Provider<List<Configuration>> getDependenciesConfigurations() {
+    public final ListProperty<Configuration> getDependenciesConfigurations() {
         return dependenciesConfigurations;
-    }
-
-    public final void dependenciesConfiguration(Configuration dependenciesConfiguration) {
-        this.dependenciesConfigurations.add(Objects.requireNonNull(dependenciesConfiguration));
     }
 
     @Classpath
