@@ -61,6 +61,7 @@ tasks.test.dependsOn tasks.publishToMavenLocal
 test {
     environment 'CIRCLE_ARTIFACTS', "${buildDir}/artifacts"
     environment 'CIRCLE_TEST_REPORTS', "${buildDir}/circle-reports"
+    systemProperty 'ignoreDeprecations', 'true'
 }
 
 gradlePlugin {
