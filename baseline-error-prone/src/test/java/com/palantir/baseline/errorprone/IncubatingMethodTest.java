@@ -68,6 +68,26 @@ public class IncubatingMethodTest {
     }
 
     @Test
+    public void testIncubatingMethodInsideIncubatingMethod() {
+        CompilationTestHelper.newInstance(IncubatingMethod.class, getClass())
+                .addSourceLines("Service.java", SERVICE_DEFINITION)
+                .addSourceLines(
+                        "Main.java",
+                        "package com.palantir;",
+                        "import java.util.function.Supplier;",
+                        "import com.palantir.conjure.java.lib.internal.Incubating;",
+                        "public final class Main {",
+                        "@Incubating",
+                        "public static void main(String[] args) {",
+                        "Service service = null;",
+                        "int result = service.test();",
+                        "Supplier<Integer> supp = service::test;",
+                        "}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testNonIncubatingMethod() {
         CompilationTestHelper.newInstance(IncubatingMethod.class, getClass())
                 .addSourceLines("Service.java", SERVICE_DEFINITION)
