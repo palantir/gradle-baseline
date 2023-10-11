@@ -118,13 +118,11 @@ public final class BaselineExactDependencies implements Plugin<Project> {
 
                     project.afterEvaluate(_ignored -> {
                         // Without this, the 'checkUnusedDependencies correctly picks up project dependency on
-                        // java-library'
-                        // test fails, by not causing gradle run the jar task, but resolving the path to the jar (rather
-                        // than to the classes directory), which then doesn't exist.
+                        // java-library' test fails, by not causing gradle run the jar task, but resolving the path to
+                        // the jar (rather than to the classes directory), which then doesn't exist.
                         // Specifically, we need to pick up the LIBRARY_ELEMENTS_ATTRIBUTE, which is being configured on
                         // compileClasspath in JavaBasePlugin.defineConfigurationsForSourceSet, but we can't reference
-                        // it
-                        // directly because that would require us to depend on Gradle 5.6.
+                        // it directly because that would require us to depend on Gradle 5.6.
                         // Instead, we just copy the attributes from compileClasspath.
                         compileClasspath.get().getAttributes().keySet().forEach(attribute -> {
                             Object value =
@@ -157,8 +155,8 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                             Configuration compileCopy = compile.copy();
                             // Ensure it's not resolvable, otherwise plugins that resolve all configurations might have
                             // a bad time resolving this with GCV, if you have direct dependencies without corresponding
-                            // entries in
-                            // versions.props, but instead rely on getting a version for them from the lock file.
+                            // entries in versions.props, but instead rely on getting a version for them from the lock
+                            // file.
                             compileCopy.setCanBeResolved(false);
                             compileCopy.setCanBeConsumed(false);
 
@@ -182,8 +180,8 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                     });
 
                     // Since we are copying configurations before resolving 'explicitCompile', make double sure that
-                    // it's not
-                    // being resolved (or dependencies realized via `.getIncoming().getDependencies()`) too early.
+                    // it's not being resolved (or dependencies realized via `.getIncoming().getDependencies()`)
+                    // too early.
                     AtomicBoolean projectsEvaluated = new AtomicBoolean();
                     project.getGradle().projectsEvaluated(g -> projectsEvaluated.set(true));
 
