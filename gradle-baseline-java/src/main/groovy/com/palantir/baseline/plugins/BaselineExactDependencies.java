@@ -237,7 +237,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     }
 
     /**
-     * The SourceSet#getCompileConfigurationName() method got removed in Gradle 7. Because we want to stay
+     * The {@code SourceSet#getCompileConfigurationName()} method got removed in Gradle 7. Because we want to stay
      * compatible with Gradle 6 but can't compile this method, we reimplement it temporarily.
      * TODO(fwindheuser): Remove after dropping support for Gradle 6.
      */
