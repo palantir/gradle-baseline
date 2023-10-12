@@ -16,6 +16,7 @@
 
 package com.palantir.baseline.plugins.javaversions;
 
+// CHECKSTYLE:OFF
 import javax.inject.Inject;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.logging.Logger;
@@ -26,6 +27,7 @@ import org.gradle.jvm.toolchain.JavaInstallationMetadata;
 import org.gradle.jvm.toolchain.internal.DefaultToolchainJavaCompiler;
 import org.gradle.jvm.toolchain.internal.JavaCompilerFactory;
 import org.gradle.language.base.internal.compile.CompileSpec;
+// CHECKSTYLE:ON
 
 final class BaselineJavaCompiler extends DefaultToolchainJavaCompiler {
     private static final Logger log = Logging.getLogger(BaselineJavaCompiler.class);
