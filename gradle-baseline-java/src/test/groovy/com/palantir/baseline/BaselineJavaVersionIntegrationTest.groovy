@@ -16,6 +16,9 @@
 
 package com.palantir.baseline
 
+import org.gradle.util.GradleVersion
+import spock.lang.Unroll
+
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -27,7 +30,10 @@ import org.assertj.core.api.Assumptions
  * This test exercises both the root-plugin {@code BaselineJavaVersions} AND the subproject
  * specific plugin, {@code BaselineJavaVersion}.
  */
+@Unroll
 class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
+    private static final List<String> GRADLE_TEST_VERSIONS = ['8.4.0', GradleVersion.current().getVersion()]
+
     private static final int JAVA_8_BYTECODE = 52
     private static final int JAVA_11_BYTECODE = 55
     private static final int JAVA_17_BYTECODE = 61
@@ -101,8 +107,9 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         buildFile << standardBuildFile
     }
 
-    def 'java 11 compilation fails targeting java 8'() {
+    def '#gradleVersionNumber: java 11 compilation fails targeting java 8'() {
         when:
+        gradleVersion = gradleVersionNumber
         buildFile << '''
         javaVersions {
             libraryTarget = 8
@@ -113,9 +120,12 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
 
         then:
         runTasksWithFailure('compileJava')
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
     }
 
-    def 'distribution target is used when no artifacts are published'() {
+    def '#gradleVersionNumber: distribution target is used when no artifacts are published'() {
         when:
         buildFile << '''
         javaVersions {
@@ -129,9 +139,12 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         then:
         runTasksSuccessfully('compileJava')
         assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
     }
 
-    def 'java 17 preview compilation works'() {
+    def '#gradleVersionNumber: java 17 preview compilation works'() {
         when:
         buildFile << '''
         javaVersions {
@@ -145,9 +158,12 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         then:
         runTasksSuccessfully('compileJava', '-i')
         assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, ENABLE_PREVIEW_BYTECODE)
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
     }
 
-    def 'setting library target to preview version fails'() {
+    def '#gradleVersionNumber: setting library target to preview version fails'() {
         when:
         buildFile << '''
         javaVersions {
@@ -159,9 +175,12 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         then:
         ExecutionResult result = runTasksWithFailure('compileJava', '-i')
         result.standardError.contains 'cannot be run on newer JVMs'
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
     }
 
-    def 'java 17 preview on single project works'() {
+    def '#gradleVersionNumber: java 17 preview on single project works'() {
         when:
         buildFile << '''
         javaVersion {
@@ -175,9 +194,12 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         then:
         runTasksSuccessfully('compileJava', '-i')
         assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, ENABLE_PREVIEW_BYTECODE)
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
     }
 
-    def 'java 17 preview javadoc works'() {
+    def '#gradleVersionNumber: java 17 preview javadoc works'() {
         when:
         buildFile << '''
         javaVersions {
@@ -189,9 +211,12 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
 
         then:
         runTasksSuccessfully('javadoc', '-i')
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
     }
 
-    def 'library target is used when no artifacts are published but project is overridden as a library'() {
+    def '#gradleVersionNumber: library target is used when no artifacts are published but project is overridden as a library'() {
         when:
         buildFile << '''
         javaVersions {
@@ -208,9 +233,12 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         then:
         runTasksSuccessfully('compileJava')
         assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
     }
 
-    def 'library target is used when nebula maven publishing plugin is applied'() {
+    def '#gradleVersionNumber: library target is used when nebula maven publishing plugin is applied'() {
         when:
         buildFile << '''
         apply plugin: 'nebula.maven-publish'
@@ -225,9 +253,12 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         then:
         runTasksSuccessfully('compileJava')
         assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
     }
 
-    def 'library target is used when the palantir shadowjar plugin is applied'() {
+    def '#gradleVersionNumber: library target is used when the palantir shadowjar plugin is applied'() {
         when:
         buildFile << '''
         apply plugin: 'com.palantir.consistent-versions' // required by shadow-jar
@@ -244,9 +275,12 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         runTasksSuccessfully('--write-locks')
         runTasksSuccessfully('compileJava')
         assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
     }
 
-    def 'java 11 compilation succeeds targeting java 11'() {
+    def '#gradleVersionNumber: java 11 compilation succeeds targeting java 11'() {
         when:
         buildFile << '''
         javaVersions {
@@ -259,9 +293,12 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         then:
         runTasksSuccessfully('compileJava')
         assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
     }
 
-    def 'java 11 execution succeeds on java 11'() {
+    def '#gradleVersionNumber: java 11 execution succeeds on java 11'() {
         when:
         buildFile << '''
         javaVersions {
@@ -275,9 +312,12 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         ExecutionResult result = runTasksSuccessfully('run')
         result.standardOutput.contains 'jdk11 features on runtime 11'
         assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
     }
 
-    def 'java 11 execution succeeds on java 17'() {
+    def '#gradleVersionNumber: java 11 execution succeeds on java 17'() {
         when:
         buildFile << '''
         javaVersions {
@@ -292,9 +332,12 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         ExecutionResult result = runTasksSuccessfully('run')
         result.standardOutput.contains 'jdk11 features on runtime 17'
         assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
     }
 
-    def 'java 8 execution succeeds on java 8'() {
+    def '#gradleVersionNumber: java 8 execution succeeds on java 8'() {
         Assumptions.assumeThat(System.getProperty("os.arch")).describedAs(
                 "On an M1 mac, this test will fail to download https://api.adoptopenjdk.net/v3/binary/latest/8/ga/mac/aarch64/jdk/hotspot/normal/adoptopenjdk")
                 .isNotEqualTo("aarch64");
@@ -309,9 +352,12 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         then:
         ExecutionResult result = runTasksSuccessfully('run')
         result.standardOutput.contains 'jdk8 features on runtime 1.8'
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
     }
 
-    def 'java 8 execution succeeds on java 11'() {
+    def '#gradleVersionNumber: java 8 execution succeeds on java 11'() {
         Assumptions.assumeThat(System.getProperty("os.arch")).describedAs(
                 "On an M1 mac, this test will fail to download https://api.adoptopenjdk.net/v3/binary/latest/8/ga/mac/aarch64/jdk/hotspot/normal/adoptopenjdk")
                 .isNotEqualTo("aarch64");
@@ -330,9 +376,12 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         ExecutionResult result = runTasksSuccessfully('run')
         result.standardOutput.contains 'jdk8 features on runtime 11'
         assertBytecodeVersion(compiledClass, JAVA_8_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
     }
 
-    def 'JavaPluginConvention.getTargetCompatibility() produces the runtime java version'() {
+    def '#gradleVersionNumber: JavaPluginConvention.getTargetCompatibility() produces the runtime java version'() {
         when:
         buildFile << '''
         javaVersions {
@@ -351,9 +400,12 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         then:
         ExecutionResult result = runTasksSuccessfully('printTargetCompatibility')
         result.standardOutput.contains '[[[17]]]'
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
     }
 
-    def 'verification should fail when target exceeds the runtime version'() {
+    def '#gradleVersionNumber: verification should fail when target exceeds the runtime version'() {
         when:
         buildFile << '''
         javaVersions {
@@ -365,9 +417,12 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         then:
         ExecutionResult result = runTasksWithFailure('checkJavaVersions')
         result.standardError.contains 'The requested compilation target'
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
     }
 
-    def 'verification should fail when --enable-preview is on, but versions differ'() {
+    def '#gradleVersionNumber: verification should fail when --enable-preview is on, but versions differ'() {
         when:
         buildFile << '''
         javaVersions {
@@ -379,9 +434,12 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         then:
         ExecutionResult result = runTasksWithFailure('checkJavaVersions')
         result.standardError.contains 'Runtime Java version (15_PREVIEW) must be exactly the same as the compilation target (11_PREVIEW)'
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
     }
 
-    def 'verification should fail when runtime does not use --enable-preview but compilation does'() {
+    def '#gradleVersionNumber: verification should fail when runtime does not use --enable-preview but compilation does'() {
         when:
         buildFile << '''
         javaVersions {
@@ -393,9 +451,12 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         then:
         ExecutionResult result = runTasksWithFailure('checkJavaVersions')
         result.standardError.contains 'Runtime Java version (17) must be exactly the same as the compilation target (17_PREVIEW)'
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
     }
 
-    def 'verification should succeed when target and runtime versions match'() {
+    def '#gradleVersionNumber: verification should succeed when target and runtime versions match'() {
         when:
         buildFile << '''
         javaVersions {
@@ -406,9 +467,12 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
 
         then:
         runTasksSuccessfully('checkJavaVersions')
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
     }
 
-    def 'can configure a jdk path to be used'() {
+    def '#gradleVersionNumber: can configure a jdk path to be used'() {
         Assumptions.assumeThat(System.getenv("CI")).describedAs(
                 "This test deletes a directory locally, you don't want to run it on your mac").isNotNull();
 
@@ -453,6 +517,9 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
 
         then:
         stdout.contains(newJavaHome.toString())
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
     }
 
     private static final int BYTECODE_IDENTIFIER = (int) 0xCAFEBABE

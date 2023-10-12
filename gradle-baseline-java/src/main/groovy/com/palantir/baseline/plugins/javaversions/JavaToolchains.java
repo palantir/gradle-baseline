@@ -45,7 +45,7 @@ public final class JavaToolchains {
 
             return new ConfiguredJavaToolchain(
                     project.getObjects(),
-                    project.provider(() -> new JavaInstallationMetadataWrapper(
+                    project.provider(() -> JavaInstallationMetadataProxy.proxyForVersion(
                             chosenJavaVersion.javaLanguageVersion(), configuredJdkMetadata)));
         });
     }
