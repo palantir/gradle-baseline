@@ -32,7 +32,7 @@ import org.assertj.core.api.Assumptions
  */
 @Unroll
 class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
-    private static final List<String> GRADLE_TEST_VERSIONS = ['8.4.0', GradleVersion.current().getVersion()]
+    private static final List<String> GRADLE_TEST_VERSIONS = ['8.4', GradleVersion.current().getVersion()]
 
     private static final int JAVA_8_BYTECODE = 52
     private static final int JAVA_11_BYTECODE = 55
