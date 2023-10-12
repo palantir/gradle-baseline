@@ -39,6 +39,7 @@ import org.apache.maven.shared.dependency.analyzer.ClassAnalyzer;
 import org.apache.maven.shared.dependency.analyzer.DefaultClassAnalyzer;
 import org.apache.maven.shared.dependency.analyzer.DependencyAnalyzer;
 import org.apache.maven.shared.dependency.analyzer.asm.ASMDependencyAnalyzer;
+import org.gradle.api.NamedDomainObjectProvider;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
@@ -79,7 +80,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
             project.getConvention()
                     .getPlugin(JavaPluginConvention.class)
                     .getSourceSets()
-                    .all(sourceSet ->
+                    .configureEach(sourceSet ->
                             configureSourceSet(project, sourceSet, checkUnusedDependencies, checkImplicitDependencies));
         });
     }
@@ -89,19 +90,15 @@ public final class BaselineExactDependencies implements Plugin<Project> {
             SourceSet sourceSet,
             TaskProvider<CheckUnusedDependenciesParentTask> checkUnusedDependencies,
             TaskProvider<CheckImplicitDependenciesParentTask> checkImplicitDependencies) {
-        Configuration implementation =
-                project.getConfigurations().getByName(sourceSet.getImplementationConfigurationName());
-        Optional<Configuration> maybeCompile =
-                Optional.ofNullable(project.getConfigurations().findByName(getCompileConfigurationName(sourceSet)));
-        Configuration compileClasspath =
-                project.getConfigurations().getByName(sourceSet.getCompileClasspathConfigurationName());
 
-        Configuration explicitCompile = project.getConfigurations()
-                .create("baseline-exact-dependencies-" + sourceSet.getName(), conf -> {
-                    conf.setDescription(String.format(
-                            "Tracks the explicit (not inherited) dependencies added to either %s "
-                                    + "or compile (deprecated)",
-                            implementation));
+        NamedDomainObjectProvider<Configuration> compileClasspath =
+                project.getConfigurations().named(sourceSet.getCompileClasspathConfigurationName());
+
+        NamedDomainObjectProvider<Configuration> explicitCompile = project.getConfigurations()
+                .register("baseline-exact-dependencies-" + sourceSet.getName(), conf -> {
+                    conf.setDescription(
+                            "Tracks the explicit (not inherited) dependencies added to either implementation "
+                                    + "or compile (deprecated)");
                     conf.setVisible(false);
                     conf.setCanBeConsumed(false);
 
@@ -119,80 +116,93 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                         }
                     });
 
-                    // Without this, the 'checkUnusedDependencies correctly picks up project dependency on java-library'
-                    // test fails, by not causing gradle run the jar task, but resolving the path to the jar (rather
-                    // than to the classes directory), which then doesn't exist.
+                    project.afterEvaluate(_ignored -> {
+                        // Without this, the 'checkUnusedDependencies correctly picks up project dependency on
+                        // java-library' test fails, by not causing gradle run the jar task, but resolving the path to
+                        // the jar (rather than to the classes directory), which then doesn't exist.
+                        // Specifically, we need to pick up the LIBRARY_ELEMENTS_ATTRIBUTE, which is being configured on
+                        // compileClasspath in JavaBasePlugin.defineConfigurationsForSourceSet, but we can't reference
+                        // it directly because that would require us to depend on Gradle 5.6.
+                        // Instead, we just copy the attributes from compileClasspath.
+                        compileClasspath.get().getAttributes().keySet().forEach(attribute -> {
+                            Object value =
+                                    compileClasspath.get().getAttributes().getAttribute(attribute);
+                            conf.getAttributes().attribute((Attribute<Object>) attribute, value);
+                        });
 
-                    // Specifically, we need to pick up the LIBRARY_ELEMENTS_ATTRIBUTE, which is being configured on
-                    // compileClasspath in JavaBasePlugin.defineConfigurationsForSourceSet, but we can't reference it
-                    // directly because that would require us to depend on Gradle 5.6.
-                    // Instead, we just copy the attributes from compileClasspath.
-                    compileClasspath.getAttributes().keySet().forEach(attribute -> {
-                        Object value = compileClasspath.getAttributes().getAttribute(attribute);
-                        conf.getAttributes().attribute((Attribute<Object>) attribute, value);
+                        // Figure out what our compile dependencies are while ignoring dependencies we've inherited from
+                        // other source sets. For example, if we are `test`, some of our configurations extend from the
+                        // `main` source set:
+                        // testImplementation     extendsFrom(implementation)
+                        //  \-- testCompile       extendsFrom(compile)
+                        // We therefore want to look at only the dependencies _directly_ declared in the implementation
+                        // and compile configurations (belonging to our source set)
+                        Configuration implCopy = project.getConfigurations()
+                                .getByName(sourceSet.getImplementationConfigurationName())
+                                .copy();
+
+                        // Without these, explicitCompile will successfully resolve 0 files and you'll waste 1 hour
+                        // trying to figure out why.
+                        project.getConfigurations().add(implCopy);
+
+                        conf.extendsFrom(implCopy);
+
+                        Optional<Configuration> maybeCompile = Optional.ofNullable(
+                                project.getConfigurations().findByName(getCompileConfigurationName(sourceSet)));
+
+                        // For Gradle 6 and below, the compile configuration might still be used.
+                        maybeCompile.ifPresent(compile -> {
+                            Configuration compileCopy = compile.copy();
+                            // Ensure it's not resolvable, otherwise plugins that resolve all configurations might have
+                            // a bad time resolving this with GCV, if you have direct dependencies without corresponding
+                            // entries in versions.props, but instead rely on getting a version for them from the lock
+                            // file.
+                            compileCopy.setCanBeResolved(false);
+                            compileCopy.setCanBeConsumed(false);
+
+                            project.getConfigurations().add(compileCopy);
+
+                            conf.extendsFrom(compileCopy);
+                        });
+                    });
+
+                    conf.withDependencies(deps -> {
+                        // Pick up GCV locks. We're making an internal assumption that this configuration exists,
+                        // but we can rely on this since we control GCV.
+                        // Alternatively, we could tell GCV to lock this configuration, at the cost of a slightly more
+                        // expensive 'unifiedClasspath' resolution during lock computation.
+                        if (project.getRootProject().getPluginManager().hasPlugin("com.palantir.versions-lock")) {
+                            conf.extendsFrom(project.getConfigurations().getByName("lockConstraints"));
+                        }
+                        // Inherit the excludes from compileClasspath too (that get aggregated from all its
+                        // super-configurations).
+                        compileClasspath.get().getExcludeRules().forEach(rule -> conf.exclude(excludeRuleAsMap(rule)));
+                    });
+
+                    // Since we are copying configurations before resolving 'explicitCompile', make double sure that
+                    // it's not being resolved (or dependencies realized via `.getIncoming().getDependencies()`)
+                    // too early.
+                    AtomicBoolean projectsEvaluated = new AtomicBoolean();
+                    project.getGradle().projectsEvaluated(g -> projectsEvaluated.set(true));
+
+                    conf.getIncoming().beforeResolve(_ignored -> {
+                        Preconditions.checkState(
+                                projectsEvaluated.get()
+                                        || (project.getGradle()
+                                                        .getStartParameter()
+                                                        .isConfigureOnDemand()
+                                                && project.getState().getExecuted()),
+                                "Tried to resolve %s too early.",
+                                conf);
                     });
                 });
-
-        // Figure out what our compile dependencies are while ignoring dependencies we've inherited from other source
-        // sets. For example, if we are `test`, some of our configurations extend from the `main` source set:
-        // testImplementation     extendsFrom(implementation)
-        //  \-- testCompile       extendsFrom(compile)
-        // We therefore want to look at only the dependencies _directly_ declared in the implementation and compile
-        // configurations (belonging to our source set)
-        project.afterEvaluate(p -> {
-            Configuration implCopy = implementation.copy();
-            // Without these, explicitCompile will successfully resolve 0 files and you'll waste 1 hour trying
-            // to figure out why.
-            project.getConfigurations().add(implCopy);
-
-            explicitCompile.extendsFrom(implCopy);
-
-            // For Gradle 6 and below, the compile configuration might still be used.
-            maybeCompile.ifPresent(compile -> {
-                Configuration compileCopy = compile.copy();
-                // Ensure it's not resolvable, otherwise plugins that resolve all configurations might have
-                // a bad time resolving this with GCV, if you have direct dependencies without corresponding entries in
-                // versions.props, but instead rely on getting a version for them from the lock file.
-                compileCopy.setCanBeResolved(false);
-                compileCopy.setCanBeConsumed(false);
-
-                project.getConfigurations().add(compileCopy);
-
-                explicitCompile.extendsFrom(compileCopy);
-            });
-        });
-
-        explicitCompile.withDependencies(deps -> {
-            // Pick up GCV locks. We're making an internal assumption that this configuration exists,
-            // but we can rely on this since we control GCV.
-            // Alternatively, we could tell GCV to lock this configuration, at the cost of a slightly more
-            // expensive 'unifiedClasspath' resolution during lock computation.
-            if (project.getRootProject().getPluginManager().hasPlugin("com.palantir.versions-lock")) {
-                explicitCompile.extendsFrom(project.getConfigurations().getByName("lockConstraints"));
-            }
-            // Inherit the excludes from compileClasspath too (that get aggregated from all its super-configurations).
-            compileClasspath.getExcludeRules().forEach(rule -> explicitCompile.exclude(excludeRuleAsMap(rule)));
-        });
-
-        // Since we are copying configurations before resolving 'explicitCompile', make double sure that it's not
-        // being resolved (or dependencies realized via `.getIncoming().getDependencies()`) too early.
-        AtomicBoolean projectsEvaluated = new AtomicBoolean();
-        project.getGradle().projectsEvaluated(g -> projectsEvaluated.set(true));
-        explicitCompile
-                .getIncoming()
-                .beforeResolve(ir -> Preconditions.checkState(
-                        projectsEvaluated.get()
-                                || (project.getGradle().getStartParameter().isConfigureOnDemand()
-                                        && project.getState().getExecuted()),
-                        "Tried to resolve %s too early.",
-                        explicitCompile));
 
         TaskProvider<CheckUnusedDependenciesTask> sourceSetUnusedDependencies = project.getTasks()
                 .register(
                         checkUnusedDependenciesNameForSourceSet(sourceSet), CheckUnusedDependenciesTask.class, task -> {
                             task.dependsOn(sourceSet.getClassesTaskName());
                             task.setSourceClasses(sourceSet.getOutput().getClassesDirs());
-                            task.dependenciesConfiguration(explicitCompile);
+                            task.getDependenciesConfigurations().add(explicitCompile);
 
                             // this is liberally applied to ease the Java8 -> 11 transition
                             task.ignore("javax.annotation", "javax.annotation-api");
@@ -211,7 +221,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                         task -> {
                             task.dependsOn(sourceSet.getClassesTaskName());
                             task.setSourceClasses(sourceSet.getOutput().getClassesDirs());
-                            task.dependenciesConfiguration(compileClasspath);
+                            task.getDependenciesConfigurations().add(compileClasspath);
                             task.suggestionConfigurationName(sourceSet.getImplementationConfigurationName());
 
                             task.ignore("org.slf4j", "slf4j-api");
@@ -227,7 +237,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     }
 
     /**
-     * The {@link SourceSet#getCompileConfigurationName()} method got removed in Gradle 7. Because we want to stay
+     * The {@code SourceSet#getCompileConfigurationName()} method got removed in Gradle 7. Because we want to stay
      * compatible with Gradle 6 but can't compile this method, we reimplement it temporarily.
      * TODO(fwindheuser): Remove after dropping support for Gradle 6.
      */
