@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Revert "Lazy exact dependencies"
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2642
