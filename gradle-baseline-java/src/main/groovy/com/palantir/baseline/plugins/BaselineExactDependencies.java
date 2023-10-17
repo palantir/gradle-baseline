@@ -55,7 +55,6 @@ import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.util.GUtil;
-import org.gradle.util.GradleVersion;
 
 /** Validates that java projects declare exactly the dependencies they rely on, no more and no less. */
 public final class BaselineExactDependencies implements Plugin<Project> {
@@ -109,12 +108,10 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                         attributes.attribute(
                                 Usage.USAGE_ATTRIBUTE, project.getObjects().named(Usage.class, Usage.JAVA_API));
                         // Ensure we resolve the classes directory for local projects where possible, rather than the
-                        // 'jar' file. We can only do this on Gradle 5.6+, otherwise do nothing.
-                        if (GradleVersion.current().compareTo(GradleVersion.version("5.6")) >= 0) {
-                            attributes.attribute(
-                                    LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE,
-                                    project.getObjects().named(LibraryElements.class, LibraryElements.CLASSES));
-                        }
+                        // 'jar' file.
+                        attributes.attribute(
+                                LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE,
+                                project.getObjects().named(LibraryElements.class, LibraryElements.CLASSES));
                     });
 
                     conf.withDependencies(deps -> {
