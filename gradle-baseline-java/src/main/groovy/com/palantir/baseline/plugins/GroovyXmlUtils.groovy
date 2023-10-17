@@ -23,6 +23,7 @@ final class GroovyXmlUtils {
             Map attributes = [:],
             Map defaults = [:],
             @DelegatesTo(value = Node, strategy = Closure.DELEGATE_FIRST) Closure ifCreated = {}) {
+
         def child = base[name].find { it.attributes().entrySet().containsAll(attributes.entrySet()) }
         if (child) {
             return child
@@ -32,5 +33,10 @@ final class GroovyXmlUtils {
         ifCreated.delegate = created
         ifCreated(created)
         return created
+    }
+
+    static Optional<Node> matchChild(Node base, String name, Map attributes = [:]) {
+        Node child = base[name].find { it.attributes().entrySet().containsAll(attributes.entrySet()) }
+        return Optional.ofNullable(child)
     }
 }

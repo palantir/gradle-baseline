@@ -325,7 +325,7 @@ public class StrictUnusedVariableTest {
     }
 
     @Test
-    public void testSuppression() {
+    public void testParameterSuppression() {
         refactoringTestHelper
                 .addInputLines(
                         "Test.java",
@@ -334,6 +334,47 @@ public class StrictUnusedVariableTest {
                         "  public static void b(@SuppressWarnings(\"UnusedVariable\") int val) {}",
                         "  public static void c(@SuppressWarnings(\"unused\") int val) {}",
                         "  public static void d(int _val) {}",
+                        "}")
+                .expectUnchanged()
+                .doTest(TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    public void testMethodSuppression() {
+        refactoringTestHelper
+                .addInputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  @SuppressWarnings(\"StrictUnusedVariable\")",
+                        "  public static void a(int val) {}",
+                        "  @SuppressWarnings(\"UnusedVariable\")",
+                        "  public static void b(int val) {}",
+                        "  @SuppressWarnings(\"unused\")",
+                        "  public static void c(int val) {}",
+                        "  public static void d(int _val) {}",
+                        "}")
+                .expectUnchanged()
+                .doTest(TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    public void testClassSuppression() {
+        refactoringTestHelper
+                .addInputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  @SuppressWarnings(\"StrictUnusedVariable\")",
+                        "  class Test1 {",
+                        "    public static void a(int val) {}",
+                        "  }",
+                        "  @SuppressWarnings(\"UnusedVariable\")",
+                        "  class Test2 {",
+                        "    public static void a(int val) {}",
+                        "  }",
+                        "  @SuppressWarnings(\"unused\")",
+                        "  class Test3 {",
+                        "    public static void a(int val) {}",
+                        "  }",
                         "}")
                 .expectUnchanged()
                 .doTest(TestMode.TEXT_MATCH);

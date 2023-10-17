@@ -134,6 +134,16 @@ tasks.withType(JavaCompile).configureEach(new Action<Task>() {
 })
 ```
 
+To turn all of error-prone's warnings into errors:
+
+```gradle
+allprojects {
+    tasks.withType(JavaCompile) {
+        options.compilerArgs += ['-Werror']
+    }
+}
+```
+
 More information on error-prone severity handling can be found at [errorprone.info/docs/flags](http://errorprone.info/docs/flags).
 
 #### Baseline error-prone checks
@@ -166,6 +176,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `DangerousStringInternUsage`: Disallow String.intern() invocations in favor of more predictable, scalable alternatives.
 - `OptionalOrElseThrowThrows`: Optional.orElseThrow argument must return an exception, not throw one.
 - `OptionalOrElseGetValue`: Prefer `Optional.orElse(value)` over `Optional.orElseGet(() -> value)` for trivial expressions.
+- `OptionalOrElseMethodInvocation`: Prefer `Optional.orElseGet(() -> methodInvocation())` over `Optional.orElse(methodInvocation())`.
 - `LambdaMethodReference`: Lambda should use a method reference.
 - `SafeLoggingExceptionMessageFormat`: SafeLoggable exceptions do not interpolate parameters.
 - `StrictUnusedVariable`: Functions shouldn't have unused parameters.
@@ -204,6 +215,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `UnnecessarilyQualified`: Types should not be qualified if they are also imported.
 - `DeprecatedGuavaObjects`: `com.google.common.base.Objects` has been obviated by `java.util.Objects`.
 - `JavaTimeSystemDefaultTimeZone`: Avoid using the system default time zone.
+- `ZoneIdConstant`: Prefer `ZoneId` constants.
 - `IncubatingMethod`: Prevents calling Conjure incubating APIs unless you explicitly opt-out of the check on a per-use or per-project basis.
 - `CompileTimeConstantViolatesLiskovSubstitution`: Requires consistent application of the `@CompileTimeConstant` annotation to resolve inconsistent validation based on the reference type on which the met is invoked.
 - `ClassInitializationDeadlock`: Detect type structures which can cause deadlocks initializing classes.
@@ -215,6 +227,8 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `BugCheckerAutoService`: Concrete BugChecker implementations should be annotated `@AutoService(BugChecker.class)` for auto registration with error-prone.
 - `DangerousCollapseKeysUsage`: Disallow usage of `EntryStream#collapseKeys()`.
 - `JooqBatchWithoutBindArgs`: jOOQ batch methods that execute without bind args can cause performance problems.
+- `InvocationTargetExceptionGetTargetException`: InvocationTargetException.getTargetException() predates the general-purpose exception chaining facility. The Throwable.getCause() method is now the preferred means of obtaining this information. [(source)](https://docs.oracle.com/en/java/javase/17/docs/api//java.base/java/lang/reflect/InvocationTargetException.html#getTargetException())
+- `PreferInputStreamTransferTo`: Prefer JDK `InputStream.transferTo(OutputStream)` over utility methods such as `com.google.common.io.ByteStreams.copy(InputStream, OutputStream)`, `org.apache.commons.io.IOUtils.copy(InputStream, OutputStream)`, `org.apache.commons.io.IOUtils.copyLong(InputStream, OutputStream)`.
 
 ### Programmatic Application
 

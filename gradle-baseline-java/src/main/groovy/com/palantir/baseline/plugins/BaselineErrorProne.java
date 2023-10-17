@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.MoreCollectors;
 import com.palantir.baseline.extensions.BaselineErrorProneExtension;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -131,7 +132,13 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 "CatchSpecificity",
                 "CanIgnoreReturnValueSuggester",
                 "InlineMeSuggester",
+                // We often use javadoc comments without javadoc parameter information.
+                "NotJavadoc",
                 "PreferImmutableStreamExCollections",
+                // StringCaseLocaleUsage duplicates our existing DefaultLocale check which is already
+                // enforced in some places.
+                "StringCaseLocaleUsage",
+                "UnnecessaryTestMethodPrefix",
                 "UnusedVariable",
                 // See VarUsage: The var keyword results in illegible code in most cases and should not be used.
                 "Varifier",
@@ -170,13 +177,27 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 // intentionally not using a lambda to reduce gradle warnings
                 @Override
                 public Iterable<String> asArguments() {
-                    // Don't apply checks that have been explicitly disabled
-                    Stream<String> errorProneChecks = getSpecificErrorProneChecks(project)
-                            .orElseGet(() -> getNotDisabledErrorproneChecks(
-                                    project, errorProneExtension, javaCompile, maybeSourceSet, errorProneOptions));
-                    return ImmutableList.of(
-                            "-XepPatchChecks:" + Joiner.on(',').join(errorProneChecks.iterator()),
-                            "-XepPatchLocation:IN_PLACE");
+                    Optional<List<String>> specificChecks = getSpecificErrorProneChecks(project);
+                    if (specificChecks.isPresent()) {
+                        List<String> errorProneChecks = specificChecks.get();
+                        // Work around https://github.com/google/error-prone/issues/3908 by explicitly enabling any
+                        // check we want to use patch checks for (ensuring it is not disabled); if this is fixed, the
+                        // -Xep:*:ERROR arguments could be removed
+                        return Iterables.concat(
+                                errorProneChecks.stream()
+                                        .map(checkName -> "-Xep:" + checkName + ":ERROR")
+                                        .collect(Collectors.toList()),
+                                ImmutableList.of(
+                                        "-XepPatchChecks:" + Joiner.on(',').join(errorProneChecks),
+                                        "-XepPatchLocation:IN_PLACE"));
+                    } else {
+                        // Don't apply checks that have been explicitly disabled
+                        Stream<String> errorProneChecks = getNotDisabledErrorproneChecks(
+                                project, errorProneExtension, javaCompile, maybeSourceSet, errorProneOptions);
+                        return ImmutableList.of(
+                                "-XepPatchChecks:" + Joiner.on(',').join(errorProneChecks.iterator()),
+                                "-XepPatchLocation:IN_PLACE");
+                    }
                 }
             });
         }
@@ -189,12 +210,12 @@ public final class BaselineErrorProne implements Plugin<Project> {
         return ".*/(build|generated_.*[sS]rc|src/generated.*)/.*";
     }
 
-    private static Optional<Stream<String>> getSpecificErrorProneChecks(Project project) {
+    private static Optional<List<String>> getSpecificErrorProneChecks(Project project) {
         return Optional.ofNullable(project.findProperty(PROP_ERROR_PRONE_APPLY))
                 .map(Objects::toString)
                 .flatMap(value -> Optional.ofNullable(Strings.emptyToNull(value)))
                 .map(value -> Splitter.on(',').trimResults().omitEmptyStrings().splitToList(value))
-                .flatMap(list -> list.isEmpty() ? Optional.empty() : Optional.of(list.stream()));
+                .flatMap(list -> list.isEmpty() ? Optional.empty() : Optional.of(list));
     }
 
     private static Stream<String> getNotDisabledErrorproneChecks(

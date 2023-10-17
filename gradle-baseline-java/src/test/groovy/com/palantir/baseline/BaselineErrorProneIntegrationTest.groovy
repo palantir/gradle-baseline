@@ -96,6 +96,24 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         result.output.contains("[ArrayEquals] Reference equality used to compare arrays")
     }
 
+    def 'compileJava fails when StrictUnusedVariable finds errors'() {
+        when:
+        buildFile << standardBuildFile
+        file('src/main/java/test/Test.java') << '''
+        package test;
+        public class Test {
+            void test() {
+                int a = 5;
+            }
+        }
+        '''.stripIndent()
+
+        then:
+        BuildResult result = with('compileJava').buildAndFail()
+        result.task(":compileJava").outcome == TaskOutcome.FAILED
+        result.output.contains("[StrictUnusedVariable]")
+    }
+
     def 'error-prone can be disabled using property'() {
         when:
         buildFile << standardBuildFile

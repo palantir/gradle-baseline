@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: |-
+    Fix eclipse classpath generation by deleting the existing classpath, which makes the classpath correct when it changes.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2563
