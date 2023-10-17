@@ -34,7 +34,7 @@ final class ConfiguredJavaToolchain implements BaselineJavaToolchain {
 
     @Override
     public Provider<JavaCompiler> javaCompiler() {
-        return javaInstallationMetadata.map(BaselineJavaCompiler::new);
+        return javaInstallationMetadata.map(metadata -> BaselineJavaCompiler.create(objectFactory, metadata));
     }
 
     @Override
