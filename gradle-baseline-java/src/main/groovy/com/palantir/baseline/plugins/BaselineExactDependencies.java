@@ -49,14 +49,12 @@ import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
-import org.gradle.api.attributes.Attribute;
 import org.gradle.api.attributes.LibraryElements;
 import org.gradle.api.attributes.Usage;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.util.GUtil;
-import org.gradle.util.GradleVersion;
 
 /** Validates that java projects declare exactly the dependencies they rely on, no more and no less. */
 public final class BaselineExactDependencies implements Plugin<Project> {
@@ -92,8 +90,6 @@ public final class BaselineExactDependencies implements Plugin<Project> {
             TaskProvider<CheckImplicitDependenciesParentTask> checkImplicitDependencies) {
         NamedDomainObjectProvider<Configuration> implementation =
                 project.getConfigurations().named(sourceSet.getImplementationConfigurationName());
-        Optional<Configuration> maybeCompile =
-                Optional.ofNullable(project.getConfigurations().findByName(getCompileConfigurationName(sourceSet)));
         NamedDomainObjectProvider<Configuration> compileClasspath =
                 project.getConfigurations().named(sourceSet.getCompileClasspathConfigurationName());
 
@@ -102,7 +98,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                     conf.setDescription(String.format(
                             "Tracks the explicit (not inherited) dependencies added to either %s "
                                     + "or compile (deprecated)",
-                            implementation));
+                            sourceSet.getImplementationConfigurationName()));
                     conf.setVisible(false);
                     conf.setCanBeConsumed(false);
 
@@ -112,25 +108,10 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                         attributes.attribute(
                                 Usage.USAGE_ATTRIBUTE, project.getObjects().named(Usage.class, Usage.JAVA_API));
                         // Ensure we resolve the classes directory for local projects where possible, rather than the
-                        // 'jar' file. We can only do this on Gradle 5.6+, otherwise do nothing.
-                        if (GradleVersion.current().compareTo(GradleVersion.version("5.6")) >= 0) {
-                            attributes.attribute(
-                                    LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE,
-                                    project.getObjects().named(LibraryElements.class, LibraryElements.CLASSES));
-                        }
-                    });
-
-                    // Without this, the 'checkUnusedDependencies correctly picks up project dependency on java-library'
-                    // test fails, by not causing gradle run the jar task, but resolving the path to the jar (rather
-                    // than to the classes directory), which then doesn't exist.
-
-                    // Specifically, we need to pick up the LIBRARY_ELEMENTS_ATTRIBUTE, which is being configured on
-                    // compileClasspath in JavaBasePlugin.defineConfigurationsForSourceSet, but we can't reference it
-                    // directly because that would require us to depend on Gradle 5.6.
-                    // Instead, we just copy the attributes from compileClasspath.
-                    compileClasspath.get().getAttributes().keySet().forEach(attribute -> {
-                        Object value = compileClasspath.get().getAttributes().getAttribute(attribute);
-                        conf.getAttributes().attribute((Attribute<Object>) attribute, value);
+                        // 'jar' file.
+                        attributes.attribute(
+                                LibraryElements.LIBRARY_ELEMENTS_ATTRIBUTE,
+                                project.getObjects().named(LibraryElements.class, LibraryElements.CLASSES));
                     });
 
                     conf.withDependencies(deps -> {
@@ -175,6 +156,9 @@ public final class BaselineExactDependencies implements Plugin<Project> {
             project.getConfigurations().add(implCopy);
 
             explicitCompile.get().extendsFrom(implCopy);
+
+            Optional<Configuration> maybeCompile =
+                    Optional.ofNullable(project.getConfigurations().findByName(getCompileConfigurationName(sourceSet)));
 
             // For Gradle 6 and below, the compile configuration might still be used.
             maybeCompile.ifPresent(compile -> {
