@@ -11,6 +11,9 @@
 .java-version
 .project
 .settings
+.factorypath
+.apt_generated_tests/
+bin/
 build
 out/
 docs/node_modules/

@@ -1,0 +1,25 @@
+type: improvement
+improvement:
+  description: |-
+    Prefer `InputStream.transferTo(OutputStream)`
+
+    Add error-prone check to automate migration to prefer `InputStream.transferTo(OutputStream)` instead of utility methods such as Guava's `com.google.common.io.ByteStreams.copy(InputStream, OutputStream)`.
+
+    Allow for optimization when underlying input stream (such as `ByteArrayInputStream`, `ChannelInputStream`) overrides `transferTo(OutputStream)` to avoid extra array allocations and copy larger chunks at a time (e.g. allowing 16KiB chunks via `ApacheHttpClientBlockingChannel.ModulatingOutputStream` from #1790).
+
+    When running on JDK 21+, this also enables 16KiB byte chunk copies via `InputStream.transferTo(OutputStream)` per
+    [JDK-8299336](https://bugs.openjdk.org/browse/JDK-8299336), where as on JDK < 21 and when using Guava `ByteStreams.copy` 8KiB byte chunk copies are used.
+
+    References:
+    * https://github.com/palantir/hadoop-crypto/pull/586
+    * https://bugs.openjdk.org/browse/JDK-8299336
+    * https://bugs.openjdk.org/browse/JDK-8067661
+    * https://bugs.openjdk.org/browse/JDK-8265891
+    * https://bugs.openjdk.org/browse/JDK-8273038
+    * https://bugs.openjdk.org/browse/JDK-8279283
+    * https://bugs.openjdk.org/browse/JDK-8296431
+
+    Closes https://github.com/palantir/gradle-baseline/issues/2615
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2615
+  - https://github.com/palantir/gradle-baseline/pull/2616

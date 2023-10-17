@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Opt out of the 'NotJavadoc' errorprone check
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2591
