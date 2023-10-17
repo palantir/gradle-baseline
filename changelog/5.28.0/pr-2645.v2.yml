@@ -1,0 +1,7 @@
+type: fix
+fix:
+  description: Ensure that the baseline-exact-dependencies plugin does not eagerly
+    force the creation of the `compileClasspath` configuration, which causes "'languageVersion'
+    is final and cannot be changed any further." errors in Gradle >=8.3.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2645

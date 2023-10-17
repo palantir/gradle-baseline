@@ -100,6 +100,7 @@ import org.checkerframework.errorprone.dataflow.cfg.node.ConditionalOrNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.DoubleLiteralNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.EqualToNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.ExplicitThisNode;
+import org.checkerframework.errorprone.dataflow.cfg.node.ExpressionStatementNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.FieldAccessNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.FloatLiteralNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.FloatingDivisionNode;
@@ -716,7 +717,12 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
         return binary(node, input);
     }
 
+    /**
+     * Method should no longer be called, leaving in place until deletion for broader compatibility.
+     * @deprecated StringConcatenateAssignmentNode is generated as separate concatenation and assignment operations
+     */
     @Override
+    @Deprecated
     public TransferResult<Safety, AccessPathStore<Safety>> visitStringConcatenateAssignment(
             StringConcatenateAssignmentNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
         Safety safety = getValueOfSubNode(input, node.getLeftOperand())
@@ -922,11 +928,8 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     }
 
     private static boolean hasNonNullConstantValue(LocalVariableNode node) {
-        if (node.getElement() instanceof VariableElement) {
-            VariableElement element = (VariableElement) node.getElement();
-            return (element.getConstantValue() != null);
-        }
-        return false;
+        VariableElement element = node.getElement();
+        return element != null && element.getConstantValue() != null;
     }
 
     @Override
@@ -1296,6 +1299,12 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitClassDeclaration(
             ClassDeclarationNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
+        return unknown(input);
+    }
+
+    @Override
+    public TransferResult<Safety, AccessPathStore<Safety>> visitExpressionStatement(
+            ExpressionStatementNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
         return unknown(input);
     }
 

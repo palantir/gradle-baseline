@@ -65,6 +65,7 @@ public final class BuildFailureListener implements TaskExecutionListener {
         return testCases;
     }
 
+    @SuppressWarnings("SafeLoggingPropagation")
     private static String getMessage(Throwable throwable) {
         if (throwable.getMessage() == null) {
             return throwable.getClass().getSimpleName();

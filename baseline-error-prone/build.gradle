@@ -11,7 +11,7 @@ javaVersion {
 dependencies {
     implementation 'com.google.errorprone:error_prone_core'
     // Ensure a new enough version of dataflow-errorprone is available
-    implementation 'org.checkerframework:dataflow-errorprone'
+    implementation 'io.github.eisop:dataflow-errorprone'
 
     testImplementation gradleApi()
     testImplementation 'com.palantir.tokens:auth-tokens'
@@ -23,6 +23,7 @@ dependencies {
     testImplementation 'com.palantir.safe-logging:logger'
     testImplementation 'org.slf4j:slf4j-api'
     testImplementation 'org.apache.commons:commons-lang3'
+    testImplementation 'commons-io:commons-io'
     testImplementation 'commons-lang:commons-lang'
     testImplementation 'org.assertj:assertj-core'
     testImplementation 'org.immutables:value::annotations'
@@ -37,6 +38,8 @@ dependencies {
     testRuntimeOnly 'com.fasterxml.jackson.module:jackson-module-afterburner'
     // for ForbidJavax
     testRuntimeOnly 'com.palantir.conjure.java.runtime:conjure-java-annotations'
+    // for PreferCommonAnnotations
+    testRuntimeOnly 'org.jetbrains:annotations'
 
     annotationProcessor 'com.google.auto.service:auto-service'
     compileOnly 'org.immutables:value::annotations'

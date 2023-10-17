@@ -1,0 +1,5 @@
+type: break
+break:
+  description: Remove support for refaster
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2521

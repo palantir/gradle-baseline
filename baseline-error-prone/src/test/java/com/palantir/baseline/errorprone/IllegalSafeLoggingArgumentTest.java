@@ -222,6 +222,69 @@ class IllegalSafeLoggingArgumentTest {
     }
 
     @Test
+    public void testDoNotLogReturnTypeAnnotation() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  static @DoNotLog Object doNotLogMethod() { return null; }",
+                        "  static @Safe Object safeMethod() { return null; }",
+                        "  static @Unsafe Object unsafeMethod() { return null; }",
+                        "  void f() {",
+                        "    fun(doNotLogMethod());",
+                        "    fun(safeMethod());",
+                        "    fun(unsafeMethod());",
+                        "  }",
+                        "  private static void fun(@DoNotLog Object obj) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testUnsafeReturnTypeAnnotation() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  static @DoNotLog Object doNotLogMethod() { return null; }",
+                        "  static @Safe Object safeMethod() { return null; }",
+                        "  static @Unsafe Object unsafeMethod() { return null; }",
+                        "  void f() {",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'DO_NOT_LOG' "
+                                + "but the parameter requires 'UNSAFE'.",
+                        "    fun(doNotLogMethod());",
+                        "    fun(safeMethod());",
+                        "    fun(unsafeMethod());",
+                        "  }",
+                        "  private static void fun(@Unsafe Object obj) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testSafeReturnTypeAnnotation() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  static @DoNotLog Object doNotLogMethod() { return null; }",
+                        "  static @Safe Object safeMethod() { return null; }",
+                        "  static @Unsafe Object unsafeMethod() { return null; }",
+                        "  void f() {",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'DO_NOT_LOG' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(doNotLogMethod());",
+                        "    fun(safeMethod());",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
+                                + "but the parameter requires 'SAFE'.",
+                        "    fun(unsafeMethod());",
+                        "  }",
+                        "  private static void fun(@Safe Object obj) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testUnsafeTypeParameterProvidesSafety() {
         helper().addSourceLines(
                         "Test.java",

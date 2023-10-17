@@ -173,7 +173,7 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
     }
 
     @Classpath
-    public final Provider<List<Configuration>> getDependenciesConfigurations() {
+    public final ListProperty<Configuration> getDependenciesConfigurations() {
         return dependenciesConfigurations;
     }
 

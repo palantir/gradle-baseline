@@ -97,7 +97,7 @@ public final class MoreASTHelpers {
     /** Returns an optional of the {@link AutoCloseable#close()} method on the provided symbol. */
     private static Optional<Symbol.MethodSymbol> getCloseMethod(Symbol.ClassSymbol symbol, VisitorState state) {
         Types types = state.getTypes();
-        return symbol.getEnclosedElements().stream()
+        return ASTHelpers.getEnclosedElements(symbol).stream()
                 .filter(sym -> types.isAssignable(symbol.type, state.getTypeFromString(AutoCloseable.class.getName()))
                         && sym.getSimpleName().contentEquals("close")
                         && sym.getTypeParameters().isEmpty())
