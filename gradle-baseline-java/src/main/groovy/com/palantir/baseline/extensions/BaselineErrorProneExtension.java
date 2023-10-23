@@ -93,7 +93,6 @@ public class BaselineErrorProneExtension {
             "MissingOverride",
             "NarrowCalculation",
             "ObjectsHashCodePrimitive",
-            "PreferJavaTimeOverload",
             "ProtectedMembersInFinalClass",
             "UnnecessaryParentheses",
             "ZoneIdOfZ");
