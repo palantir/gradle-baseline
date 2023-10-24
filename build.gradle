@@ -47,6 +47,9 @@ allprojects {
         tasks.withType(JavaCompile) {
             options.compilerArgs += ['-Werror', '-Xlint:deprecation']
             options.errorprone {
+                // errorprone must be temporarily disabled in order to bump the errorprone dependency
+                // to a version without `ErrorProneFlags.getList(String)`.
+                enabled = false
                 check("Slf4jLogsafeArgs", CheckSeverity.OFF)
                 check("PreferSafeLoggableExceptions", CheckSeverity.OFF)
                 check("PreferSafeLogger", CheckSeverity.OFF)

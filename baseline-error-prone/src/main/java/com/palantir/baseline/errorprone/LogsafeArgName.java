@@ -57,8 +57,7 @@ public final class LogsafeArgName extends BugChecker implements MethodInvocation
 
     @Inject
     public LogsafeArgName(ErrorProneFlags flags) {
-        this.unsafeParamNames =
-                flags.getList(UNSAFE_ARG_NAMES_FLAG).map(ImmutableSet::copyOf).orElseGet(ImmutableSet::of);
+        this.unsafeParamNames = ImmutableSet.copyOf(flags.getListOrEmpty(UNSAFE_ARG_NAMES_FLAG));
     }
 
     @Override
