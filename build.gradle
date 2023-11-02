@@ -66,6 +66,6 @@ allprojects {
 }
 
 javaVersions {
-    libraryTarget = 11
-    runtime = 15
+    libraryTarget = 17
+    runtime = 17
 }
