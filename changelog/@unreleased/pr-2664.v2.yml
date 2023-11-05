@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: Variables annotated with `@RegisterExtension` are now exempt from the
+    `StrictUnusedVariable` check.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2664
