@@ -34,9 +34,9 @@ one.util:streamex = 0.8.2
 org.apache.commons:commons-lang3 = 3.13.0
 org.assertj:assertj-core = 3.24.2
 org.hamcrest:hamcrest-core = 2.2
-org.junit.jupiter:* = 5.10.0
-org.junit.vintage:* = 5.10.0
-org.junit.platform:* = 1.10.0
+org.junit.jupiter:* = 5.10.1
+org.junit.vintage:* = 5.10.1
+org.junit.platform:* = 1.10.1
 org.mockito:* = 5.7.0
 
 # dependency-upgrader:OFF
