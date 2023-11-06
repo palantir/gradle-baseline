@@ -33,7 +33,10 @@ import java.util.stream.Stream;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.WARNING,
-        summary = "Calling iterator on stream buffers the stream into memory.")
+        summary =
+                "Avoid calling iterator on stream, as it buffers the stream into memory and may cause unexpected OOMs."
+                        + "For small streams, consider collecting the stream first to make it clear to readers that"
+                        + " the stream will be loaded into memory.")
 public final class StreamToIterator extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
     private static final Matcher<ExpressionTree> MATCHER = MethodMatchers.instanceMethod()
             .onDescendantOf(Stream.class.getName())

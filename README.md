@@ -229,6 +229,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `JooqBatchWithoutBindArgs`: jOOQ batch methods that execute without bind args can cause performance problems.
 - `InvocationTargetExceptionGetTargetException`: InvocationTargetException.getTargetException() predates the general-purpose exception chaining facility. The Throwable.getCause() method is now the preferred means of obtaining this information. [(source)](https://docs.oracle.com/en/java/javase/17/docs/api//java.base/java/lang/reflect/InvocationTargetException.html#getTargetException())
 - `PreferInputStreamTransferTo`: Prefer JDK `InputStream.transferTo(OutputStream)` over utility methods such as `com.google.common.io.ByteStreams.copy(InputStream, OutputStream)`, `org.apache.commons.io.IOUtils.copy(InputStream, OutputStream)`, `org.apache.commons.io.IOUtils.copyLong(InputStream, OutputStream)`.
+- `StreamToIterator`: Avoid calling iterator on stream, as it buffers the stream into memory and may cause unexpected OOMs. For small streams, consider collecting the stream first to make it clear to readers that the stream will be loaded into memory. See [(JDK-8202307)|(https://bugs.openjdk.org/browse/JDK-8202307)] for more details.
 
 ### Programmatic Application
 
