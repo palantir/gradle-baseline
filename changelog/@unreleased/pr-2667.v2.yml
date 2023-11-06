@@ -1,0 +1,6 @@
+type: feature
+feature:
+  description: Adds an error prone warning for calling Stream.iterator, which loads
+    the entire stream into memory and may cause OOMs.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2667
