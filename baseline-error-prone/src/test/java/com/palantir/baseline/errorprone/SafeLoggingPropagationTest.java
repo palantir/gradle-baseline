@@ -857,6 +857,49 @@ class SafeLoggingPropagationTest {
     }
 
     @Test
+    void testUnsafeInterfaceMethodAndSafeImplementation() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  interface MyInterface {",
+                        "    @Unsafe",
+                        "    String unsafeMethod();",
+                        "  }",
+                        "  class MyClass implements MyInterface {",
+                        "    @Safe",
+                        "    public String unsafeMethod() {",
+                        "      return \"unsafe\";",
+                        "    }",
+                        "  }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    // TODO(#2668): the @Safe annotation should propagate to the class
+    @Test
+    void testSafeInterfaceMethodAndUnsafeImplementation() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  interface MyInterface {",
+                        "    @Safe",
+                        "    String safeMethod();",
+                        "  }",
+                        "  class MyClass implements MyInterface {",
+                        "    @Unsafe",
+                        "    public String safeMethod() {",
+                        "      return \"unsafe\";",
+                        "    }",
+                        "  }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
     void testIgnoresThrowable() {
         // exceptions are unsafe-by-default, it's unnecessary to annotate every exception as unsafe.
         fix().addInputLines(

@@ -862,6 +862,47 @@ class IllegalSafeLoggingArgumentTest {
     }
 
     @Test
+    void testUnsafeInterfaceMethodAndSafeImplementation() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  interface MyInterface {",
+                        "    @Unsafe",
+                        "    String unsafeMethod();",
+                        "  }",
+                        "  class MyClass implements MyInterface {",
+                        "    @Safe",
+                        "    public String unsafeMethod() {",
+                        "      return \"unsafe\";",
+                        "    }",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    // TODO(#2668): the @Safe interface method should conflict with the @Unsafe class method
+    @Test
+    void testSafeInterfaceMethodAndUnsafeImplementation() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  interface MyInterface {",
+                        "    @Safe",
+                        "    String safeMethod();",
+                        "  }",
+                        "  class MyClass implements MyInterface {",
+                        "    @Unsafe",
+                        "    public String safeMethod() {",
+                        "      return \"unsafe\";",
+                        "    }",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testThrowableMessageIsUnsafe() {
         helper().addSourceLines(
                         "Test.java",

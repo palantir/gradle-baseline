@@ -71,11 +71,6 @@ public final class SafeLoggingPropagation extends BugChecker
             Matchers.isSameType(SafetyAnnotations.UNSAFE),
             Matchers.isSameType(SafetyAnnotations.DO_NOT_LOG));
 
-    private static final Matcher<MethodTree> TO_STRING = Matchers.allOf(
-            Matchers.methodIsNamed("toString"),
-            Matchers.methodHasNoParameters(),
-            Matchers.not(Matchers.isStatic()),
-            Matchers.methodReturns(Matchers.isSameType(String.class)));
     private static final Matcher<MethodTree> METHOD_RETURNS_VOID = Matchers.methodReturns(Matchers.isVoidType());
 
     private static final com.google.errorprone.suppliers.Supplier<Name> TO_STRING_NAME =
