@@ -37,8 +37,8 @@ import com.sun.tools.javac.code.Symbol.ClassSymbol;
 @AutoService(BugChecker.class)
 @BugPattern(
         summary = "Record type has an array field and hasn't overridden equals/hashcode. By default array equality"
-                + " performs reference equality only. Consider using a List, using Immutables, or overriding"
-                + " equals/hashCode.",
+                + " performs reference equality only. Consider using an immutable Collection for the field, using"
+                + " Immutables instead of the record, or overriding equals/hashCode in the record.",
         severity = SeverityLevel.WARNING)
 public final class DangerousRecordArrayField extends BugChecker implements BugChecker.ClassTreeMatcher {
 
