@@ -65,7 +65,7 @@ public final class DangerousRecordArrayFieldTest {
                         "import java.util.regex.Pattern;",
                         "class Test {",
                         "    // BUG: Diagnostic contains: Record type has an array field and",
-                        "    private record MyRecordE(String name, byte[] payload) {",
+                        "    private record MyRecord(String name, byte[] payload) {",
                         "        public boolean equals(Object other) { return false; }",
                         "    }",
                         "}")
@@ -81,7 +81,7 @@ public final class DangerousRecordArrayFieldTest {
                         "import java.util.regex.Pattern;",
                         "class Test {",
                         "    // BUG: Diagnostic contains: Record type has an array field and",
-                        "    private record MyRecordH(String name, byte[] payload) {",
+                        "    private record MyRecord(String name, byte[] payload) {",
                         "        public int hashCode() { return 0; }",
                         "    }",
                         "}")
@@ -96,7 +96,7 @@ public final class DangerousRecordArrayFieldTest {
                         "import java.util.*;",
                         "import java.util.regex.Pattern;",
                         "class Test {",
-                        "    private record MyRecordEH(String name, byte[] payload) {",
+                        "    private record MyRecord(String name, byte[] payload) {",
                         "        public boolean equals(Object other) { return false; }",
                         "        public int hashCode() { return 0; }",
                         "    }",
