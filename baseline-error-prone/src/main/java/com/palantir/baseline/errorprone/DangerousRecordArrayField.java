@@ -16,14 +16,6 @@
 
 package com.palantir.baseline.errorprone;
 
-import static com.google.errorprone.matchers.Matchers.allOf;
-import static com.google.errorprone.matchers.Matchers.equalsMethodDeclaration;
-import static com.google.errorprone.matchers.Matchers.hashCodeMethodDeclaration;
-import static com.google.errorprone.matchers.Matchers.instanceEqualsInvocation;
-import static com.google.errorprone.matchers.Matchers.instanceHashCodeInvocation;
-import static com.google.errorprone.matchers.Matchers.not;
-import static com.google.errorprone.matchers.Matchers.singleStatementReturnMatcher;
-
 import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.BugPattern.SeverityLevel;
@@ -51,10 +43,12 @@ import com.sun.tools.javac.code.Symbol.ClassSymbol;
 public final class DangerousRecordArrayField extends BugChecker implements BugChecker.ClassTreeMatcher {
 
     private static final Matcher<VariableTree> IS_ARRAY_VARIABLE = Matchers.isArrayType();
-    private static final Matcher<MethodTree> NON_TRIVIAL_EQUALS =
-            allOf(equalsMethodDeclaration(), not(singleStatementReturnMatcher(instanceEqualsInvocation())));
-    private static final Matcher<MethodTree> NON_TRIVIAL_HASHCODE =
-            allOf(hashCodeMethodDeclaration(), not(singleStatementReturnMatcher(instanceHashCodeInvocation())));
+    private static final Matcher<MethodTree> NON_TRIVIAL_EQUALS = Matchers.allOf(
+            Matchers.equalsMethodDeclaration(),
+            Matchers.not(Matchers.singleStatementReturnMatcher(Matchers.instanceEqualsInvocation())));
+    private static final Matcher<MethodTree> NON_TRIVIAL_HASHCODE = Matchers.allOf(
+            Matchers.hashCodeMethodDeclaration(),
+            Matchers.not(Matchers.singleStatementReturnMatcher(Matchers.instanceHashCodeInvocation())));
 
     @Override
     public Description matchClass(ClassTree classTree, VisitorState state) {
@@ -62,15 +56,35 @@ public final class DangerousRecordArrayField extends BugChecker implements BugCh
         if (!ASTHelpers.isRecord(classSymbol)) {
             return Description.NO_MATCH;
         }
-        boolean hasArrayField = false;
-        boolean hasEquals = false;
-        boolean hasHashCode = false;
+        if (!hasArrayField(classTree, state)) {
+            return Description.NO_MATCH;
+        }
+        if (hasNonTrivialEqualsAndHashCode(classTree, state)) {
+            return Description.NO_MATCH;
+        }
+
+        return buildDescription(classTree).build();
+    }
+
+    private static boolean hasArrayField(ClassTree classTree, VisitorState state) {
         for (Tree member : classTree.getMembers()) {
             if (member instanceof VariableTree) {
                 VariableTree variableTree = (VariableTree) member;
 
-                hasArrayField = hasArrayField || IS_ARRAY_VARIABLE.matches(variableTree, state);
-            } else if (member instanceof MethodTree) {
+                if (IS_ARRAY_VARIABLE.matches(variableTree, state)) {
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static boolean hasNonTrivialEqualsAndHashCode(ClassTree classTree, VisitorState state) {
+        boolean hasEquals = false;
+        boolean hasHashCode = false;
+        for (Tree member : classTree.getMembers()) {
+            if (member instanceof MethodTree) {
                 MethodTree methodTree = (MethodTree) member;
 
                 // We want to check if the equals & hashCode methods have actually been overridden (i.e. don't just
@@ -80,10 +94,6 @@ public final class DangerousRecordArrayField extends BugChecker implements BugCh
             }
         }
 
-        if (!hasArrayField || (hasEquals && hasHashCode)) {
-            return Description.NO_MATCH;
-        }
-
-        return buildDescription(classTree).build();
+        return hasEquals && hasHashCode;
     }
 }
