@@ -29,6 +29,7 @@ import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.VariableTree;
+import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
 
 /**
@@ -43,12 +44,8 @@ import com.sun.tools.javac.code.Symbol.ClassSymbol;
 public final class DangerousRecordArrayField extends BugChecker implements BugChecker.ClassTreeMatcher {
 
     private static final Matcher<VariableTree> IS_ARRAY_VARIABLE = Matchers.isArrayType();
-    private static final Matcher<MethodTree> NON_TRIVIAL_EQUALS = Matchers.allOf(
-            Matchers.equalsMethodDeclaration(),
-            Matchers.not(Matchers.singleStatementReturnMatcher(Matchers.instanceEqualsInvocation())));
-    private static final Matcher<MethodTree> NON_TRIVIAL_HASHCODE = Matchers.allOf(
-            Matchers.hashCodeMethodDeclaration(),
-            Matchers.not(Matchers.singleStatementReturnMatcher(Matchers.instanceHashCodeInvocation())));
+    private static final Matcher<MethodTree> EQUALS_MATCHER = Matchers.equalsMethodDeclaration();
+    private static final Matcher<MethodTree> HASHCODE_MATCHER = Matchers.hashCodeMethodDeclaration();
 
     @Override
     public Description matchClass(ClassTree classTree, VisitorState state) {
@@ -89,8 +86,8 @@ public final class DangerousRecordArrayField extends BugChecker implements BugCh
 
                 // We want to check if the equals & hashCode methods have actually been overridden (i.e. don't just
                 // call Object.equals)
-                hasEquals = hasEquals || NON_TRIVIAL_EQUALS.matches(methodTree, state);
-                hasHashCode = hasHashCode || NON_TRIVIAL_HASHCODE.matches(methodTree, state);
+                hasEquals = hasEquals || EQUALS_MATCHER.matches(methodTree, state);
+                hasHashCode = hasHashCode || HASHCODE_MATCHER.matches(methodTree, state);
             }
         }
 
