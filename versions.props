@@ -13,7 +13,7 @@ org.immutables:* = 2.10.0
 org.ow2.asm:asm = 9.6
 com.google.errorprone:error_prone_* = 2.23.0
 com.googlecode.java-diff-utils:diffutils = 1.3.0
-com.puppycrawl.tools:checkstyle = 10.12.4
+com.puppycrawl.tools:checkstyle = 10.12.5
 com.palantir.gradle.utils:* = 0.1.0
 com.uber.nullaway:nullaway = 0.10.16
 
