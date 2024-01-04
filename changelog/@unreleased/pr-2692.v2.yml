@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Add missing space to message in BaselineCircleCi.java
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2692

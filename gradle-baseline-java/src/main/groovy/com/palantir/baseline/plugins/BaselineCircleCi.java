@@ -44,7 +44,7 @@ public final class BaselineCircleCi implements Plugin<Project> {
         Preconditions.checkState(
                 !project.getName().equals("project"),
                 "Please specify rootProject.name in your settings.gradle, otherwise CircleCI's"
-                        + "checkout dir ('project') will be used instead.");
+                        + " checkout dir ('project') will be used instead.");
     }
 
     private void configurePluginsForArtifacts(Project project) {
