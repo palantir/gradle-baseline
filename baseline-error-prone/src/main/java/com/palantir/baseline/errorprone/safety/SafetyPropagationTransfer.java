@@ -97,6 +97,7 @@ import org.checkerframework.errorprone.dataflow.cfg.node.ClassNameNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.ConditionalAndNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.ConditionalNotNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.ConditionalOrNode;
+import org.checkerframework.errorprone.dataflow.cfg.node.DeconstructorPatternNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.DoubleLiteralNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.EqualToNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.ExplicitThisNode;
@@ -139,7 +140,6 @@ import org.checkerframework.errorprone.dataflow.cfg.node.PrimitiveTypeNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.ReturnNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.ShortLiteralNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.SignedRightShiftNode;
-import org.checkerframework.errorprone.dataflow.cfg.node.StringConcatenateAssignmentNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.StringConcatenateNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.StringConversionNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.StringLiteralNode;
@@ -717,21 +717,6 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
         return binary(node, input);
     }
 
-    /**
-     * Method should no longer be called, leaving in place until deletion for broader compatibility.
-     * @deprecated StringConcatenateAssignmentNode is generated as separate concatenation and assignment operations
-     */
-    @Override
-    @Deprecated
-    public TransferResult<Safety, AccessPathStore<Safety>> visitStringConcatenateAssignment(
-            StringConcatenateAssignmentNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        Safety safety = getValueOfSubNode(input, node.getLeftOperand())
-                .leastUpperBound(getValueOfSubNode(input, node.getRightOperand()));
-        ReadableUpdates updates = new ReadableUpdates();
-        updates.trySet(node.getLeftOperand(), safety);
-        return updateRegularStore(safety, input, updates);
-    }
-
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitLessThan(
             LessThanNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
@@ -1135,11 +1120,13 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitInstanceOf(
             InstanceOfNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        LocalVariableNode bindingVariable = node.getBindingVariable();
-        if (bindingVariable != null) {
-            Safety safety = getTypeConversionSafety(node.getTree().getType(), node.getOperand(), input);
+        List<LocalVariableNode> bindingVariables = node.getBindingVariables();
+        if (!bindingVariables.isEmpty()) {
             ReadableUpdates updates = new ReadableUpdates();
-            updates.set(bindingVariable, safety);
+            for (LocalVariableNode bindingVariable : bindingVariables) {
+                Safety safety = getTypeConversionSafety(node.getTree().getType(), node.getOperand(), input);
+                updates.set(bindingVariable, safety);
+            }
             return updateRegularStore(Safety.SAFE, input, updates);
         }
         // Otherwise types themselves are generally safe, boolean results of type checks are always safe.
@@ -1305,6 +1292,12 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitExpressionStatement(
             ExpressionStatementNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
+        return unknown(input);
+    }
+
+    @Override
+    public TransferResult<Safety, AccessPathStore<Safety>> visitDeconstructorPattern(
+            DeconstructorPatternNode _node, TransferInput<Safety, AccessPathStore<Safety>> input) {
         return unknown(input);
     }
 
