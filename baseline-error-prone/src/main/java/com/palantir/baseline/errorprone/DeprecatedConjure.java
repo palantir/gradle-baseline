@@ -24,11 +24,9 @@ import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.util.ASTHelpers;
-import com.sun.source.tree.AnnotationTree;
 import com.sun.source.tree.MemberReferenceTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.Tree;
-import java.util.List;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -49,15 +47,6 @@ public final class DeprecatedConjure extends BugChecker
             Matchers.symbolHasAnnotation(CONJURE_CLIENT_ENDPOINT)
     );
 
-    private static final Matcher<Tree> IN_DEPRECATED_MATCHER = Matchers.enclosingMethod(Matchers.allOf(
-            Matchers.symbolHasAnnotation(Deprecated.class),
-            Matchers.symbolHasAnnotation(CONJURE_CLIENT_ENDPOINT)
-    ));
-
-    private static final Matcher<AnnotationTree> isDeprecatedForRemovalMatcher = Matchers.allOf(
-            Matchers.isType("java.lang.Deprecated"),
-            Matchers.hasArgumentWithValue("forRemoval", Matchers.booleanLiteral(true)));
-
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
         return checkTree(tree, state);
@@ -73,12 +62,7 @@ public final class DeprecatedConjure extends BugChecker
             return Description.NO_MATCH;
         }
 
-        if (IN_DEPRECATED_MATCHER.matches(tree, state)) {
-            return Description.NO_MATCH;
-        }
-
         // Further refine check to see if annotation has the forRemoval flag
-        // TODO: do we need to do this on enclosing method as well?
         if (!ASTHelpers.getSymbol(tree).isDeprecatedForRemoval()) {
             return Description.NO_MATCH;
         }
@@ -90,13 +74,4 @@ public final class DeprecatedConjure extends BugChecker
 
         return describeMatch(tree);
     }
-/*
-
-    public static <T extends Tree> Matcher<T> symbolHasAnnotation(String annotationClass) {
-        return Matchers.symbolMatcher(
-                (symbol, state) -> {
-                    return ASTHelpers.hasAnnotation(symbol, annotationClass, state);
-                });
-    }
-*/
 }
