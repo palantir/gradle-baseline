@@ -143,18 +143,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 // See VarUsage: The var keyword results in illegible code in most cases and should not be used.
                 "Varifier",
                 // Yoda style should not block baseline upgrades.
-                "YodaCondition",
-
-                // Disable new error-prone checks added in 2.24.0
-                // See https://github.com/google/error-prone/releases/tag/v2.24.0
-                "MultipleNullnessAnnotations",
-                "NullableTypeParameter",
-                "NullableWildcard",
-                // This check is a generalization of the old 'SuperEqualsIsObjectEquals', so by disabling
-                // it we lose a bit of protection for the time being, but it's a small price to pay for
-                // seamless rollout.
-                "SuperCallToObjectMethod");
-
+                "YodaCondition");
         errorProneOptions.error(
                 "EqualsHashCode",
                 "EqualsIncompatibleType",
