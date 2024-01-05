@@ -17,6 +17,8 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.errorprone.CompilationTestHelper;
+import java.util.ArrayList;
+import java.util.List;
 import org.junit.jupiter.api.Test;
 
 public class DeprecatedConjureTest {
@@ -49,139 +51,109 @@ public class DeprecatedConjureTest {
 
     @Test
     public void testDeprecatedForRemovalConjure() {
-        CompilationTestHelper.newInstance(DeprecatedConjure.class, getClass())
-                .addSourceLines("Service.java", SERVICE_DEFINITION)
-                .addSourceLines(
-                        "Main.java",
-                        "package com.palantir;",
-                        "public final class Main {",
-                        "public static void main(String[] args) {",
-                        "Service service = null;",
-                        "// BUG: Diagnostic contains: You should not use Conjure endpoints that are marked for removal as that may block",
-                        "service.deprecatedForRemovalConjureEndpoint();",
-                        "}",
-                        "}")
-                .doTest();
+        buildStandardTestHelper(
+                "// BUG: Diagnostic contains: You should not use Conjure endpoints that are marked for removal as that may block",
+                "service.deprecatedForRemovalConjureEndpoint();"
+        ).doTest();
     }
 
     @Test
     public void testDeprecatedForRemovalNotConjure() {
-        CompilationTestHelper.newInstance(DeprecatedConjure.class, getClass())
-                .addSourceLines("Service.java", SERVICE_DEFINITION)
-                .addSourceLines(
-                        "Main.java",
-                        "package com.palantir;",
-                        "public final class Main {",
-                        "public static void main(String[] args) {",
-                        "Service service = null;",
-                        "service.deprecatedForRemovalNotConjure();",
-                        "}",
-                        "}")
-                .doTest();
+        buildStandardTestHelper(
+                "service.deprecatedForRemovalNotConjure();",
+                "Supplier<Integer> supp = service::deprecatedForRemovalNotConjure;"
+        ).doTest();
     }
 
     @Test
     public void testPlainDeprecatedConjure() {
-        CompilationTestHelper.newInstance(DeprecatedConjure.class, getClass())
-                .addSourceLines("Service.java", SERVICE_DEFINITION)
-                .addSourceLines(
-                        "Main.java",
-                        "package com.palantir;",
-                        "public final class Main {",
-                        "public static void main(String[] args) {",
-                        "Service service = null;",
-                        "service.deprecatedConjureEndpoint();",
-                        "}",
-                        "}")
-                .doTest();
+        buildStandardTestHelper(
+                "service.deprecatedConjureEndpoint();",
+                "Supplier<Integer> supp = service::deprecatedConjureEndpoint;"
+        ).doTest();
     }
 
     @Test
     public void testPlainMethod() {
-        CompilationTestHelper.newInstance(DeprecatedConjure.class, getClass())
-                .addSourceLines("Service.java", SERVICE_DEFINITION)
-                .addSourceLines(
-                        "Main.java",
-                        "package com.palantir;",
-                        "public final class Main {",
-                        "public static void main(String[] args) {",
-                        "Service service = null;",
-                        "service.unannotatedMethod();",
-                        "}",
-                        "}")
-                .doTest();
+        buildStandardTestHelper(
+                "service.unannotatedMethod();",
+                "Supplier<Integer> supp = service::unannotatedMethod;"
+        ).doTest();
     }
 
     @Test
-    public void testDeprecatedConjureReference() {
-        CompilationTestHelper.newInstance(DeprecatedConjure.class, getClass())
-                .addSourceLines("Service.java", SERVICE_DEFINITION)
-                .addSourceLines(
-                        "Main.java",
-                        "package com.palantir;",
-                        "import java.util.function.Supplier;",
-                        "public final class Main {",
-                        "public static void main(String[] args) {",
-                        "Service service = null;",
-                        "// BUG: Diagnostic contains: You should not use Conjure endpoints that are marked for removal as that may block",
-                        "Supplier<Integer> supp = service::deprecatedForRemovalConjureEndpoint;",
-                        "}",
-                        "}")
-                .doTest();
-    }
-
-    @Test
-    public void testDeprecatedForRemovalConjureInsideMethod() {
-        CompilationTestHelper.newInstance(DeprecatedConjure.class, getClass())
-                .addSourceLines("Service.java", SERVICE_DEFINITION)
-                .addSourceLines(
-                        "Main.java",
-                        "package com.palantir;",
-                        "import java.util.function.Supplier;",
-                        "import com.palantir.conjure.java.lib.internal.Incubating;",
-                        "public final class Main {",
-                        "@Incubating",
-                        "public static void main(String[] args) {",
-                        "Service service = null;",
-                        "int result = service.deprecatedForRemovalConjureEndpoint();",
-                        "Supplier<Integer> supp = service::deprecatedForRemovalConjureEndpoint;",
-                        "}",
-                        "}")
-                .doTest();
+    public void testDeprecatedForRemovalConjureReference() {
+        buildStandardTestHelper(
+                "// BUG: Diagnostic contains: You should not use Conjure endpoints that are marked for removal as that may block",
+                "Supplier<Integer> supp = service::deprecatedForRemovalConjureEndpoint;"
+        ).doTest();
     }
 
     @Test
     public void testNonDeprecatedConjure() {
-        CompilationTestHelper.newInstance(DeprecatedConjure.class, getClass())
-                .addSourceLines("Service.java", SERVICE_DEFINITION)
-                .addSourceLines(
-                        "Main.java",
-                        "package com.palantir;",
-                        "import java.util.function.Supplier;",
-                        "public final class Main {",
-                        "public static void main(String[] args) {",
-                        "Service service = null;",
-                        "int result = service.nonDeprecatedConjure();",
-                        "Supplier<Integer> supp = service::nonDeprecatedConjure;",
-                        "}",
-                        "}")
-                .doTest();
+        buildStandardTestHelper(
+                "int result = service.nonDeprecatedConjure();",
+                "Supplier<Integer> supp = service::nonDeprecatedConjure;"
+        ).doTest();
     }
 
     @Test
     public void testSuppressedDeprecatedConjure() {
-        CompilationTestHelper.newInstance(DeprecatedConjure.class, getClass())
+        buildTestHelper(buildMain(
+                "public final class Main {",
+                "@SuppressWarnings(\"DeprecatedConjure\")",
+                "public static void main(String[] args) {",
+                "Service service = null;",
+                "service.deprecatedForRemovalConjureEndpoint();"
+        )).doTest();
+    }
+
+    private CompilationTestHelper buildStandardTestHelper(String... testLines) {
+        return buildTestHelper(buildStandardMain(testLines));
+    }
+
+    private CompilationTestHelper buildTestHelper(String... mainContents) {
+        return CompilationTestHelper.newInstance(DeprecatedConjure.class, getClass())
+                // do not issue warning for the deprecated for removal annotation because it messes up other checks
+                .setArgs("-Xlint:-removal")
                 .addSourceLines("Service.java", SERVICE_DEFINITION)
-                .addSourceLines(
-                        "Main.java",
-                        "package com.palantir;",
-                        "public final class Main {",
-                        "@SuppressWarnings(\"DeprecatedConjure\")",
-                        "public static void main(String[] args) {",
-                        "Service service = null;",
-                        "service.deprecatedForRemovalConjureEndpoint();",
-                        "}",
-                        "}")
-                .doTest();
+                .addSourceLines("Main.java", mainContents);
+    }
+
+    /**
+     * Creates contents of the Main.java class, inserting the given test lines at the end of the main method.
+     */
+    private String[] buildStandardMain(String... testLines) {
+        List<String> result = new ArrayList<>();
+
+        result.add("package com.palantir;");
+        result.add("import java.util.function.Supplier;");
+        result.add("public final class Main {");
+        result.add("public static void main(String[] args) {");
+        result.add("Service service = null;");
+        for (String line : testLines) {
+            result.add(line);
+        }
+        result.add("}");
+        result.add("}");
+        return result.toArray(new String[]{});
+    }
+
+    /**
+     * Creates contents of the Main.java class, putting it in the com.palantir package and closing off the main method
+     * and class definition.
+     */
+    private String[] buildMain(String... testLines) {
+        List<String> result = new ArrayList<>();
+
+        result.add("package com.palantir;");
+        for (String line : testLines) {
+            result.add(line);
+        }
+        //closing lines
+        result.add("}");
+        result.add("}");
+
+        return result.toArray(new String[]{});
     }
 }
