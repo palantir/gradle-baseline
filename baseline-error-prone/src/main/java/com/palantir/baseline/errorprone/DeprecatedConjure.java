@@ -31,7 +31,7 @@ import com.sun.source.tree.Tree;
 @AutoService(BugChecker.class)
 @BugPattern(
         severity = BugPattern.SeverityLevel.ERROR,
-        summary = "You should not use Conjure endpoints that are marked for removal as that may block "
+        summary = "You should not use Conjure endpoints that are marked for removal as that may block"
                 + " upgrades in the near future. You can explicitly disable this check on a case-by-case basis using"
                 + " @SuppressWarnings(\"DeprecatedConjure\").")
 public final class DeprecatedConjure extends BugChecker
@@ -39,12 +39,11 @@ public final class DeprecatedConjure extends BugChecker
 
     private static final String CONJURE_CLIENT_ENDPOINT = "com.palantir.conjure.java.lib.internal.ClientEndpoint";
 
-    //TODO: do we want to do for @Generated("com.palantir.conjure.java.types.BeanGenerator") as well?  That would get
-    // messy because the same objects are used on the server-side and we can't tell which is which.
-
-    private static final Matcher<Tree> DEPRECATED_CONJURE_ENDPOINT_MATCHER = Matchers.allOf(
-            Matchers.symbolHasAnnotation(Deprecated.class),
-            Matchers.symbolHasAnnotation(CONJURE_CLIENT_ENDPOINT)
+    private static final Matcher<Tree> FULL_DEPRECATED_CONJURE_ENDPOINT_MATCHER = Matchers.symbolMatcher(
+            (symbol, state) -> {
+                return ASTHelpers.hasAnnotation(symbol, CONJURE_CLIENT_ENDPOINT, state) &&
+                        symbol.isDeprecatedForRemoval();
+            }
     );
 
     @Override
@@ -58,12 +57,7 @@ public final class DeprecatedConjure extends BugChecker
     }
 
     private Description checkTree(Tree tree, VisitorState state) {
-        if (!DEPRECATED_CONJURE_ENDPOINT_MATCHER.matches(tree, state)) {
-            return Description.NO_MATCH;
-        }
-
-        // Further refine check to see if annotation has the forRemoval flag
-        if (!ASTHelpers.getSymbol(tree).isDeprecatedForRemoval()) {
+        if (!FULL_DEPRECATED_CONJURE_ENDPOINT_MATCHER.matches(tree, state)) {
             return Description.NO_MATCH;
         }
 
