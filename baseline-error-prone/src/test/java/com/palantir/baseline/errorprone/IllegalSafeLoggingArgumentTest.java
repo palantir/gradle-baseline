@@ -1910,6 +1910,24 @@ class IllegalSafeLoggingArgumentTest {
                 .doTest();
     }
 
+    @Test
+    public void testRecordDeconstruction() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  record MyRecord(@Unsafe String value) {}",
+                        "  @Safe Object f(Object value) {",
+                        "    if (value instanceof MyRecord(String str)) {",
+                        "        // BUG: Diagnostic contains: Dangerous return value: result is 'UNSAFE'",
+                        "        return str;",
+                        "    }",
+                        "    return null;",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(IllegalSafeLoggingArgument.class, getClass());
     }
