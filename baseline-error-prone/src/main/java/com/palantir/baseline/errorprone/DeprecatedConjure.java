@@ -39,12 +39,11 @@ public final class DeprecatedConjure extends BugChecker
 
     private static final String CONJURE_CLIENT_ENDPOINT = "com.palantir.conjure.java.lib.internal.ClientEndpoint";
 
-    private static final Matcher<Tree> FULL_DEPRECATED_CONJURE_ENDPOINT_MATCHER = Matchers.symbolMatcher(
-            (symbol, state) -> {
-                return ASTHelpers.hasAnnotation(symbol, CONJURE_CLIENT_ENDPOINT, state) &&
-                        symbol.isDeprecatedForRemoval();
-            }
-    );
+    private static final Matcher<Tree> FULL_DEPRECATED_CONJURE_ENDPOINT_MATCHER =
+            Matchers.symbolMatcher((symbol, state) -> {
+                return ASTHelpers.hasAnnotation(symbol, CONJURE_CLIENT_ENDPOINT, state)
+                        && symbol.isDeprecatedForRemoval();
+            });
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
