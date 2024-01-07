@@ -34,6 +34,7 @@ import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
 import com.palantir.baseline.errorprone.MoreASTHelpers;
+import com.palantir.baseline.errorprone.Records;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.LambdaExpressionTree;
@@ -46,8 +47,10 @@ import com.sun.source.util.TreePath;
 import com.sun.source.util.Trees;
 import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
+import com.sun.tools.javac.code.Type.ClassType;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import java.io.Closeable;
 import java.util.Arrays;
@@ -69,6 +72,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
 import javax.lang.model.element.VariableElement;
+import javax.lang.model.type.TypeMirror;
 import org.checkerframework.errorprone.dataflow.analysis.Analysis;
 import org.checkerframework.errorprone.dataflow.analysis.ForwardAnalysisImpl;
 import org.checkerframework.errorprone.dataflow.analysis.ForwardTransferFunction;
@@ -97,6 +101,7 @@ import org.checkerframework.errorprone.dataflow.cfg.node.ClassNameNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.ConditionalAndNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.ConditionalNotNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.ConditionalOrNode;
+import org.checkerframework.errorprone.dataflow.cfg.node.DeconstructorPatternNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.DoubleLiteralNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.EqualToNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.ExplicitThisNode;
@@ -139,7 +144,6 @@ import org.checkerframework.errorprone.dataflow.cfg.node.PrimitiveTypeNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.ReturnNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.ShortLiteralNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.SignedRightShiftNode;
-import org.checkerframework.errorprone.dataflow.cfg.node.StringConcatenateAssignmentNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.StringConcatenateNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.StringConversionNode;
 import org.checkerframework.errorprone.dataflow.cfg.node.StringLiteralNode;
@@ -717,21 +721,6 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
         return binary(node, input);
     }
 
-    /**
-     * Method should no longer be called, leaving in place until deletion for broader compatibility.
-     * @deprecated StringConcatenateAssignmentNode is generated as separate concatenation and assignment operations
-     */
-    @Override
-    @Deprecated
-    public TransferResult<Safety, AccessPathStore<Safety>> visitStringConcatenateAssignment(
-            StringConcatenateAssignmentNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        Safety safety = getValueOfSubNode(input, node.getLeftOperand())
-                .leastUpperBound(getValueOfSubNode(input, node.getRightOperand()));
-        ReadableUpdates updates = new ReadableUpdates();
-        updates.trySet(node.getLeftOperand(), safety);
-        return updateRegularStore(safety, input, updates);
-    }
-
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitLessThan(
             LessThanNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
@@ -1135,11 +1124,13 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitInstanceOf(
             InstanceOfNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        LocalVariableNode bindingVariable = node.getBindingVariable();
-        if (bindingVariable != null) {
+        List<LocalVariableNode> bindingVariables = node.getBindingVariables();
+        Node patternNode = node.getPatternNode();
+        if (patternNode instanceof LocalVariableNode && bindingVariables.size() == 1) {
+            // matches 'value instanceof Type varName', we don't match DeconstructorPatternNode here.
             Safety safety = getTypeConversionSafety(node.getTree().getType(), node.getOperand(), input);
             ReadableUpdates updates = new ReadableUpdates();
-            updates.set(bindingVariable, safety);
+            updates.set(bindingVariables.get(0), safety);
             return updateRegularStore(Safety.SAFE, input, updates);
         }
         // Otherwise types themselves are generally safe, boolean results of type checks are always safe.
@@ -1305,6 +1296,35 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitExpressionStatement(
             ExpressionStatementNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
+        return unknown(input);
+    }
+
+    @Override
+    public TransferResult<Safety, AccessPathStore<Safety>> visitDeconstructorPattern(
+            DeconstructorPatternNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
+        TypeMirror type = node.getType();
+        if (type instanceof ClassType) {
+            ClassType classType = (ClassType) type;
+            ClassSymbol symbol = (ClassSymbol) classType.tsym;
+            if (ASTHelpers.isRecord(symbol)) {
+                List<VarSymbol> recordComponents = Records.getRecordComponents(symbol);
+                List<Node> nestedPatterns = node.getNestedPatterns();
+                if (recordComponents.size() == nestedPatterns.size() && !recordComponents.isEmpty()) {
+                    ReadableUpdates updates = new ReadableUpdates();
+                    for (int i = 0; i < recordComponents.size(); i++) {
+                        VarSymbol recordComponent = recordComponents.get(i);
+                        Node pattern = nestedPatterns.get(i);
+                        Safety existing = getValueOfSubNode(input, pattern);
+                        Safety recordComponentSafety = Safety.mergeAssumingUnknownIsSame(
+                                SafetyAnnotations.getSafety(recordComponent, state),
+                                SafetyAnnotations.getSafety(recordComponent.type, state),
+                                SafetyAnnotations.getSafety(recordComponent.type, state));
+                        updates.trySet(pattern, Safety.mergeAssumingUnknownIsSame(existing, recordComponentSafety));
+                    }
+                    return updateRegularStore(Safety.UNKNOWN, input, updates);
+                }
+            }
+        }
         return unknown(input);
     }
 
