@@ -1928,6 +1928,75 @@ class IllegalSafeLoggingArgumentTest {
                 .doTest();
     }
 
+    @Test
+    void testUnsafeInterfaceMethodAndSafeImplementation() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  interface MyInterface {",
+                        "    @Unsafe",
+                        "    String unsafeMethod();",
+                        "  }",
+                        "  class MyClass implements MyInterface {",
+                        "    @Safe",
+                        "    public String unsafeMethod() {",
+                        "      return \"unsafe\";",
+                        "    }",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testSafeInterfaceMethodAndUnsafeImplementation() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  interface MyInterface {",
+                        "    @Safe",
+                        "    String safeMethod();",
+                        "  }",
+                        "  class MyClass implements MyInterface {",
+                        "    @Override",
+                        "    @Unsafe",
+                        "    // BUG: Diagnostic contains: Dangerous method override: supertype Test.MyInterface "
+                                + "declares 'SAFE' but the method is annotated 'UNSAFE'",
+                        "    public String safeMethod() {",
+                        "      return \"unsafe\";",
+                        "    }",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testDiamondMethodSafetyInheritance() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  interface SafeFunc {",
+                        "    @Safe",
+                        "    String func();",
+                        "  }",
+                        "  interface UnsafeFunc {",
+                        "    @Unsafe",
+                        "    String func();",
+                        "  }",
+                        "  class MyClass implements SafeFunc, UnsafeFunc {",
+                        "    @Override",
+                        "    // BUG: Diagnostic contains: Dangerous method override: supertype Test.SafeFunc "
+                                + "declares 'SAFE' but the method inherits safety 'UNSAFE'",
+                        "    public String func() {",
+                        "      return \"unsafe\";",
+                        "    }",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(IllegalSafeLoggingArgument.class, getClass());
     }
