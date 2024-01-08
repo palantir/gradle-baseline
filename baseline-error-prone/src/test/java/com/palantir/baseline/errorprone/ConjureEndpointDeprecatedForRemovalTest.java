@@ -23,47 +23,47 @@ import org.junit.jupiter.api.Test;
 
 public class ConjureEndpointDeprecatedForRemovalTest {
 
-    private static final String[] SERVICE_DEFINITION = new String[]{
-            "package com.palantir;",
-            "import com.palantir.conjure.java.lib.internal.ClientEndpoint;",
-            "public interface Service {",
-            "int unannotatedMethod();",
-            "@Deprecated(forRemoval = true)",
-            "@ClientEndpoint(method = \"GET\", path = \"/deprecatedForRemovalConjureEndpoint\")",
-            "int deprecatedForRemovalConjureEndpoint();",
-            "@Deprecated",
-            "@ClientEndpoint(method = \"GET\", path = \"/deprecatedConjureEndpoint\")",
-            "int deprecatedConjureEndpoint();",
-            "@ClientEndpoint(method = \"GET\", path = \"/nonDeprecatedConjure\")",
-            "int nonDeprecatedConjure();",
-            "@Deprecated(forRemoval = true)",
-            "int deprecatedForRemovalNotConjure();",
-            "@Deprecated",
-            "int deprecatedNotConjure();",
-            "}"
+    private static final String[] SERVICE_DEFINITION = new String[] {
+        "package com.palantir;",
+        "import com.palantir.conjure.java.lib.internal.ClientEndpoint;",
+        "public interface Service {",
+        "int unannotatedMethod();",
+        "@Deprecated(forRemoval = true)",
+        "@ClientEndpoint(method = \"GET\", path = \"/deprecatedForRemovalConjureEndpoint\")",
+        "int deprecatedForRemovalConjureEndpoint();",
+        "@Deprecated",
+        "@ClientEndpoint(method = \"GET\", path = \"/deprecatedConjureEndpoint\")",
+        "int deprecatedConjureEndpoint();",
+        "@ClientEndpoint(method = \"GET\", path = \"/nonDeprecatedConjure\")",
+        "int nonDeprecatedConjure();",
+        "@Deprecated(forRemoval = true)",
+        "int deprecatedForRemovalNotConjure();",
+        "@Deprecated",
+        "int deprecatedNotConjure();",
+        "}"
     };
 
     @Test
     public void testDeprecatedForRemovalConjure() {
         buildStandardTestHelper(
-                "// BUG: Diagnostic contains: You should not use Conjure endpoints that are marked for removal",
-                "service.deprecatedForRemovalConjureEndpoint();")
+                        "// BUG: Diagnostic contains: You should not use Conjure endpoints that are marked for removal",
+                        "service.deprecatedForRemovalConjureEndpoint();")
                 .doTest();
     }
 
     @Test
     public void testDeprecatedForRemovalNotConjure() {
         buildStandardTestHelper(
-                "service.deprecatedForRemovalNotConjure();",
-                "Supplier<Integer> supp = service::deprecatedForRemovalNotConjure;")
+                        "service.deprecatedForRemovalNotConjure();",
+                        "Supplier<Integer> supp = service::deprecatedForRemovalNotConjure;")
                 .doTest();
     }
 
     @Test
     public void testPlainDeprecatedConjure() {
         buildStandardTestHelper(
-                "service.deprecatedConjureEndpoint();",
-                "Supplier<Integer> supp = service::deprecatedConjureEndpoint;")
+                        "service.deprecatedConjureEndpoint();",
+                        "Supplier<Integer> supp = service::deprecatedConjureEndpoint;")
                 .doTest();
     }
 
@@ -76,27 +76,27 @@ public class ConjureEndpointDeprecatedForRemovalTest {
     @Test
     public void testDeprecatedForRemovalConjureReference() {
         buildStandardTestHelper(
-                "// BUG: Diagnostic contains: You should not use Conjure endpoints that are marked for removal",
-                "Supplier<Integer> supp = service::deprecatedForRemovalConjureEndpoint;")
+                        "// BUG: Diagnostic contains: You should not use Conjure endpoints that are marked for removal",
+                        "Supplier<Integer> supp = service::deprecatedForRemovalConjureEndpoint;")
                 .doTest();
     }
 
     @Test
     public void testNonDeprecatedConjure() {
         buildStandardTestHelper(
-                "int result = service.nonDeprecatedConjure();",
-                "Supplier<Integer> supp = service::nonDeprecatedConjure;")
+                        "int result = service.nonDeprecatedConjure();",
+                        "Supplier<Integer> supp = service::nonDeprecatedConjure;")
                 .doTest();
     }
 
     @Test
     public void testSuppressedDeprecatedConjure() {
         buildTestHelper(buildMain(
-                "public final class Main {",
-                "@SuppressWarnings(\"ConjureEndpointDeprecatedForRemoval\")",
-                "public static void main(String[] args) {",
-                "Service service = null;",
-                "service.deprecatedForRemovalConjureEndpoint();"))
+                        "public final class Main {",
+                        "@SuppressWarnings(\"ConjureEndpointDeprecatedForRemoval\")",
+                        "public static void main(String[] args) {",
+                        "Service service = null;",
+                        "service.deprecatedForRemovalConjureEndpoint();"))
                 .doTest();
     }
 
@@ -128,7 +128,7 @@ public class ConjureEndpointDeprecatedForRemovalTest {
         }
         result.add("}");
         result.add("}");
-        return result.toArray(new String[]{});
+        return result.toArray(new String[] {});
     }
 
     /**
@@ -146,6 +146,6 @@ public class ConjureEndpointDeprecatedForRemovalTest {
         result.add("}");
         result.add("}");
 
-        return result.toArray(new String[]{});
+        return result.toArray(new String[] {});
     }
 }
