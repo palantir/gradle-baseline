@@ -86,6 +86,93 @@ class IllegalSafeLoggingLambdaTest {
                 .doTest();
     }
 
+    @Test
+    void testOptionalMap() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.*;",
+                        "class Test {",
+                        "  void f(@Unsafe String value) {",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
+                        "    fun(Optional.ofNullable(value).map(in -> in + in));",
+                        "  }",
+                        "  void fun(@Safe Object in) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testStreamMap() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.stream.*;",
+                        "class Test {",
+                        "  void f(@Unsafe Stream<String> value) {",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
+                        "    fun(value.map(in -> in + in));",
+                        "  }",
+                        "  void fun(@Safe Object in) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testFunctionSafeType() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.function.*;",
+                        "class Test {",
+                        "  // BUG: Diagnostic contains: Dangerous",
+                        "  Function<@Unsafe String, @Safe String> func = in -> in;",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testFunctionConsumesSafetyAnnotatedType_expression() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.function.*;",
+                        "class Test {",
+                        "  // BUG: Diagnostic contains: Dangerous",
+                        "  Consumer<@Unsafe String> func = in -> fun(in);",
+                        "  void fun(@Safe Object ob) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testFunctionConsumesSafetyAnnotatedType_statement() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.function.*;",
+                        "class Test {",
+                        "  // BUG: Diagnostic contains: Dangerous",
+                        "  Consumer<@Unsafe String> func = in -> { fun(in); };",
+                        "  void fun(@Safe Object ob) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testFunctionConsumesSafetyAnnotatedType_reference() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.function.*;",
+                        "class Test {",
+                        "  // BUG: Diagnostic contains: Dangerous",
+                        "  Consumer<@Unsafe String> func = Test::fun;",
+                        "  void fun(@Safe Object ob) {}",
+                        "}")
+                .doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(IllegalSafeLoggingArgument.class, getClass());
     }
