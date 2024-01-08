@@ -275,8 +275,7 @@ class SafeLoggingPropagationTest {
 
     @Test
     void testRecordWithUnsafeTypes() {
-        fix("--release", "17")
-                .addInputLines(
+        fix().addInputLines(
                         "Test.java",
                         "import com.palantir.tokens.auth.*;",
                         "import com.palantir.logsafe.*;",
@@ -287,6 +286,36 @@ class SafeLoggingPropagationTest {
                         "import com.palantir.logsafe.*;",
                         "@DoNotLog",
                         "record Test(BearerToken token) {}")
+                .doTest();
+    }
+
+    @Test
+    void testWrappedRecordComponents() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.*;",
+                        "class Test {",
+                        "  @Unsafe",
+                        "  class UnsafeType {}",
+                        "  record Rec1(UnsafeType val) {}",
+                        "  record Rec2(List<UnsafeType> val) {}",
+                        "  record Rec3(Optional<UnsafeType> val) {}",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.*;",
+                        "class Test {",
+                        "  @Unsafe",
+                        "  class UnsafeType {}",
+                        "  @Unsafe",
+                        "  record Rec1(UnsafeType val) {}",
+                        "  @Unsafe",
+                        "  record Rec2(List<UnsafeType> val) {}",
+                        "  @Unsafe",
+                        "  record Rec3(Optional<UnsafeType> val) {}",
+                        "}")
                 .doTest();
     }
 

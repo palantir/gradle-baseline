@@ -148,8 +148,9 @@ public final class SafeLoggingPropagation extends BugChecker
         Safety safety = SafetyAnnotations.getTypeSafetyFromAncestors(classTree, state);
         for (VarSymbol recordComponent : Records.getRecordComponents(classSymbol)) {
             Safety symbolSafety = SafetyAnnotations.getSafety(recordComponent, state);
+            Safety typeSafety = SafetyAnnotations.getSafety(recordComponent.type, state);
             Safety typeSymSafety = SafetyAnnotations.getSafety(recordComponent.type.tsym, state);
-            Safety recordComponentSafety = Safety.mergeAssumingUnknownIsSame(symbolSafety, typeSymSafety);
+            Safety recordComponentSafety = Safety.mergeAssumingUnknownIsSame(symbolSafety, typeSafety, typeSymSafety);
             safety = safety.leastUpperBound(recordComponentSafety);
         }
         return handleSafety(classTree, classTree.getModifiers(), state, existingClassSafety, safety);
