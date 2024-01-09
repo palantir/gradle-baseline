@@ -1769,7 +1769,10 @@ class IllegalSafeLoggingArgumentTest {
                         "  @Unsafe interface UnsafeIface {}",
                         "  @Safe interface SafeIface {}",
                         "  @DoNotLog interface DnlIface {}",
+                        "  // BUG: Diagnostic contains: Dangerous subtype: supertype Test.SafeIface declares 'SAFE' "
+                                + "but the type inherits safety 'UNSAFE'",
                         "  static class One implements SafeIface, UnsafeIface {}",
+                        "  // BUG: Diagnostic contains: Dangerous subtype",
                         "  static class Two implements SafeIface, DnlIface, UnsafeIface {}",
                         "  void f(One one, Two two) {",
                         "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
@@ -1790,6 +1793,8 @@ class IllegalSafeLoggingArgumentTest {
                         "class Test {",
                         "  @DoNotLog interface DnlIface {}",
                         "  @Safe static class Sup {}",
+                        "  // BUG: Diagnostic contains: Dangerous subtype: supertype Test.Sup declares 'SAFE' "
+                                + "but the type inherits safety 'DO_NOT_LOG'",
                         "  static class Impl extends Sup implements DnlIface {}",
                         "  void f(Impl value) {",
                         "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'DO_NOT_LOG'",
@@ -1992,6 +1997,44 @@ class IllegalSafeLoggingArgumentTest {
                         "    public String func() {",
                         "      return \"unsafe\";",
                         "    }",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testSafeInterfaceAndUnsafeInterface() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  @Safe",
+                        "  interface MyInterface {",
+                        "    String safeMethod();",
+                        "  }",
+                        "  @Unsafe",
+                        "  // BUG: Diagnostic contains: Dangerous",
+                        "  class MyClass implements MyInterface {",
+                        "    @Override",
+                        "    public String safeMethod() {",
+                        "      return \"unsafe\";",
+                        "    }",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testDiamondTypeSafetyInheritance() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  @Safe interface SafeType {}",
+                        "  @Unsafe interface UnsafeType {}",
+                        "  // BUG: Diagnostic contains: Dangerous subtype: supertype Test.SafeType "
+                                + "declares 'SAFE' but the type inherits safety 'UNSAFE'",
+                        "  class MyClass implements SafeType, UnsafeType {",
                         "  }",
                         "}")
                 .doTest();

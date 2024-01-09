@@ -42,6 +42,7 @@ import com.sun.source.tree.Tree;
 import com.sun.source.tree.VariableTree;
 import com.sun.source.util.TreePath;
 import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Symbol.TypeVariableSymbol;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
@@ -49,6 +50,9 @@ import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Type.TypeVar;
 import java.util.List;
 import java.util.Objects;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * Ensures that safe-logging annotated elements are handled correctly by annotated method parameters.
@@ -375,7 +379,42 @@ public final class IllegalSafeLoggingArgument extends BugChecker
 
     @Override
     public Description matchClass(ClassTree tree, VisitorState state) {
-        Safety directSafety = SafetyAnnotations.getDirectSafety(ASTHelpers.getSymbol(tree), state);
+        ClassSymbol classSymbol = ASTHelpers.getSymbol(tree);
+        Safety directSafety = SafetyAnnotations.getDirectSafety(classSymbol, state);
+        Safety combinedSafety = SafetyAnnotations.getSafety(classSymbol, state);
+
+        if (combinedSafety == Safety.UNKNOWN) {
+            return Description.NO_MATCH;
+        }
+        Set<Type> superTypes = Stream.concat(
+                        Stream.of(classSymbol.getSuperclass()), classSymbol.getInterfaces().stream())
+                .collect(Collectors.toUnmodifiableSet());
+        for (Type superType : superTypes) {
+            Safety superTypeSafety = Safety.mergeAssumingUnknownIsSame(
+                    SafetyAnnotations.getSafety(superType, state), SafetyAnnotations.getSafety(superType.tsym, state));
+            if (superTypeSafety.allowsAll()) {
+                continue;
+            }
+            if (!superTypeSafety.allowsValueWith(directSafety)) {
+                return buildDescription(tree)
+                        .setMessage(String.format(
+                                "Dangerous subtype: supertype %s declares '%s' but the type is annotated "
+                                        + "'%s'. When this object is cast to the supertype, safety annotations will "
+                                        + "not be correct, violating Liskov substitution.",
+                                superType, superTypeSafety, directSafety))
+                        .build();
+            }
+            if (!superTypeSafety.allowsValueWith(combinedSafety)) {
+                return buildDescription(tree)
+                        .setMessage(String.format(
+                                "Dangerous subtype: supertype %s declares '%s' but the type inherits safety "
+                                        + "'%s'. When this object is cast to the supertype, safety annotations will "
+                                        + "not be correct, violating Liskov substitution.",
+                                superType, superTypeSafety, combinedSafety))
+                        .build();
+            }
+        }
+
         if (directSafety.allowsAll()) {
             return Description.NO_MATCH;
         }
