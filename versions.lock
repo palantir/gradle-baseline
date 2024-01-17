@@ -123,7 +123,7 @@ com.palantir.gradle.jdks:gradle-jdks-setup-common:0.68.0 (3 constraints: 293b384
 com.palantir.gradle.jdkslatest:gradle-jdks-latest:0.21.0 (1 constraints: 35052a3b)
 com.palantir.gradle.plugintesting:configuration-cache-spec:0.11.0 (1 constraints: 3405263b)
 com.palantir.gradle.plugintesting:plugin-testing-core:0.11.0 (1 constraints: 3405263b)
-com.palantir.ri:resource-identifier:2.11.0 (1 constraints: 1c108da9)
+com.palantir.ri:resource-identifier:2.11.0 (2 constraints: 511589d9)
 com.palantir.safe-logging:logger:3.9.0 (4 constraints: fc318375)
 com.palantir.safe-logging:logger-slf4j:3.9.0 (1 constraints: 070e6e42)
 com.palantir.safe-logging:logger-spi:3.9.0 (2 constraints: 1d1e0c7c)
