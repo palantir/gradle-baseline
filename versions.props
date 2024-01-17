@@ -24,6 +24,7 @@ com.netflix.nebula:nebula-test = 10.2.0
 com.palantir.conjure.java:* = 6.77.0
 com.palantir.conjure.java.api:* = 2.43.0
 com.palantir.conjure.java.runtime:* = 8.2.0
+com.palantir.ri:* = 2.6.0
 com.palantir.tokens:auth-tokens = 3.18.0
 com.palantir.tritium:* = 0.81.0
 commons-io:* = 2.15.1
