@@ -18,8 +18,12 @@ package com.palantir.baseline.errorprone.safety;
 
 import com.google.common.collect.Multimap;
 import com.google.errorprone.VisitorState;
+import com.google.errorprone.matchers.AnnotationMatcherUtils;
+import com.google.errorprone.matchers.AnnotationType;
+import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.suppliers.Suppliers;
 import com.google.errorprone.util.ASTHelpers;
+import com.palantir.baseline.errorprone.MoreASTHelpers;
 import com.sun.source.tree.AnnotationTree;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.ExpressionTree;
@@ -60,6 +64,11 @@ public final class SafetyAnnotations {
 
     private static final com.google.errorprone.suppliers.Supplier<Type> throwableSupplier =
             Suppliers.typeFromClass(Throwable.class);
+
+    private static final Matcher<AnnotationTree> JSON_TYPE_INFO_MATCHER =
+            new AnnotationType("com.fasterxml.jackson.annotation.JsonTypeInfo");
+    private static final Matcher<AnnotationTree> JSON_SUBTYPES_MATCHER =
+            new AnnotationType("com.fasterxml.jackson.annotation.JsonSubTypes");
 
     private static final TypeArgumentHandlers SAFETY_IS_COMBINATION_OF_TYPE_ARGUMENTS = new TypeArgumentHandlers(
             new TypeArgumentHandler(Iterable.class),
@@ -149,6 +158,41 @@ public final class SafetyAnnotations {
         for (Tree implemented : classTree.getImplementsClause()) {
             safety = Safety.mergeAssumingUnknownIsSame(safety, SafetyAnnotations.getSafety(implemented, state));
         }
+        return safety;
+    }
+
+    public static Safety getTypeSafetyFromKnownSubtypes(ClassTree classTree, VisitorState state) {
+        Safety safety = Safety.UNKNOWN;
+        ClassSymbol symbol = ASTHelpers.getSymbol(classTree);
+        if (MoreASTHelpers.isSealed(symbol)) {
+            for (ExpressionTree permitted : MoreASTHelpers.getPermitsClause(classTree)) {
+                safety = Safety.mergeAssumingUnknownIsSame(safety, SafetyAnnotations.getSafety(permitted, state));
+            }
+        }
+        for (AnnotationTree annotationTree : classTree.getModifiers().getAnnotations()) {
+            if (JSON_TYPE_INFO_MATCHER.matches(annotationTree, state)) {
+                ExpressionTree expressionTree = AnnotationMatcherUtils.getArgument(annotationTree, "defaultImpl");
+                if (expressionTree != null) {
+                    Safety defaultImplSafety =
+                            SafetyAnnotations.getSafety(ASTHelpers.getReceiver(expressionTree), state);
+                    safety = Safety.mergeAssumingUnknownIsSame(safety, defaultImplSafety);
+                }
+            } else if (JSON_SUBTYPES_MATCHER.matches(annotationTree, state)) {
+                ExpressionTree tree = AnnotationMatcherUtils.getArgument(annotationTree, "value");
+                for (ExpressionTree subtype : MoreASTHelpers.unwrapArray(tree)) {
+                    if (subtype instanceof AnnotationTree) {
+                        ExpressionTree value = AnnotationMatcherUtils.getArgument((AnnotationTree) subtype, "value");
+                        if (value != null) {
+                            Safety subtypeSafety = SafetyAnnotations.getSafety(ASTHelpers.getReceiver(value), state);
+                            safety = Safety.mergeAssumingUnknownIsSame(safety, subtypeSafety);
+                        }
+                    }
+                }
+
+                safety = Safety.mergeAssumingUnknownIsSame(safety, safety);
+            }
+        }
+
         return safety;
     }
 
