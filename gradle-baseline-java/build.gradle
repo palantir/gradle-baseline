@@ -81,6 +81,11 @@ gradlePlugin {
             displayName = 'Palantir Baseline Configuration Plugin'
             implementationClass = 'com.palantir.baseline.plugins.BaselineConfig'
         }
+        baselineErrorPronePlugin {
+            id = 'com.palantir.baseline-error-prone'
+            displayName = 'Palantir Baseline Error Prone Plugin'
+            implementationClass = 'com.palantir.baseline.plugins.BaselineErrorProne'
+        }
         baselineExactDependenciesPlugin {
             id = 'com.palantir.baseline-exact-dependencies'
             displayName = 'Palantir Baseline Exact Dependencies Plugin'
