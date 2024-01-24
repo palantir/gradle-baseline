@@ -223,6 +223,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `ConsistentLoggerName`: Ensure Loggers are named consistently.
 - `PreferImmutableStreamExCollections`: It's common to use toMap/toSet/toList() as the terminal operation on a stream, but would be extremely surprising to rely on the mutability of these collections. Prefer `toImmutableMap`, `toImmutableSet` and `toImmutableList`. (If the performance overhead of a stream is already acceptable, then the `UnmodifiableFoo` wrapper is likely tolerable).
 - `DangerousIdentityKey`: Key type does not override equals() and hashCode, so comparisons will be done on reference equality only.
+- `DangerousRecordArrayField`: Array fields in records perform reference equality when comparing records.
 - `ConsistentOverrides`: Ensure values are bound to the correct variables when overriding methods
 - `FilterOutputStreamSlowMultibyteWrite`: Subclasses of FilterOutputStream should provide a more efficient implementation of `write(byte[], int, int)` to avoid slow writes.
 - `BugCheckerAutoService`: Concrete BugChecker implementations should be annotated `@AutoService(BugChecker.class)` for auto registration with error-prone.
@@ -230,6 +231,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `JooqBatchWithoutBindArgs`: jOOQ batch methods that execute without bind args can cause performance problems.
 - `InvocationTargetExceptionGetTargetException`: InvocationTargetException.getTargetException() predates the general-purpose exception chaining facility. The Throwable.getCause() method is now the preferred means of obtaining this information. [(source)](https://docs.oracle.com/en/java/javase/17/docs/api//java.base/java/lang/reflect/InvocationTargetException.html#getTargetException())
 - `PreferInputStreamTransferTo`: Prefer JDK `InputStream.transferTo(OutputStream)` over utility methods such as `com.google.common.io.ByteStreams.copy(InputStream, OutputStream)`, `org.apache.commons.io.IOUtils.copy(InputStream, OutputStream)`, `org.apache.commons.io.IOUtils.copyLong(InputStream, OutputStream)`.
+- `ConjureEndpointDeprecatedForRemoval`: Conjure endpoints marked with Deprecated and `forRemoval = true` should not be used as they are scheduled to be removed.
 
 ### Programmatic Application
 

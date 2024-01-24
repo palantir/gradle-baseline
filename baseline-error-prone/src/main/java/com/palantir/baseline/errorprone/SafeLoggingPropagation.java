@@ -51,7 +51,6 @@ import com.sun.tools.javac.code.Symbol.TypeSymbol;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.util.Name;
-import java.util.List;
 import javax.lang.model.element.Modifier;
 import org.checkerframework.errorprone.javacutil.TreePathUtil;
 
@@ -144,24 +143,14 @@ public final class SafeLoggingPropagation extends BugChecker
                 .orElse(false);
     }
 
-    @SuppressWarnings("unchecked")
-    private static List<VarSymbol> getRecordComponents(ClassSymbol classSymbol) {
-        // Can use classSymbol.getRecordComponents() in future versions
-        try {
-            return (List<VarSymbol>)
-                    ClassSymbol.class.getMethod("getRecordComponents").invoke(classSymbol);
-        } catch (ReflectiveOperationException e) {
-            throw new RuntimeException("Failed to get record components", e);
-        }
-    }
-
     private Description matchRecord(ClassTree classTree, ClassSymbol classSymbol, VisitorState state) {
         Safety existingClassSafety = SafetyAnnotations.getSafety(classTree, state);
         Safety safety = SafetyAnnotations.getTypeSafetyFromAncestors(classTree, state);
-        for (VarSymbol recordComponent : getRecordComponents(classSymbol)) {
+        for (VarSymbol recordComponent : Records.getRecordComponents(classSymbol)) {
             Safety symbolSafety = SafetyAnnotations.getSafety(recordComponent, state);
+            Safety typeSafety = SafetyAnnotations.getSafety(recordComponent.type, state);
             Safety typeSymSafety = SafetyAnnotations.getSafety(recordComponent.type.tsym, state);
-            Safety recordComponentSafety = Safety.mergeAssumingUnknownIsSame(symbolSafety, typeSymSafety);
+            Safety recordComponentSafety = Safety.mergeAssumingUnknownIsSame(symbolSafety, typeSafety, typeSymSafety);
             safety = safety.leastUpperBound(recordComponentSafety);
         }
         return handleSafety(classTree, classTree.getModifiers(), state, existingClassSafety, safety);

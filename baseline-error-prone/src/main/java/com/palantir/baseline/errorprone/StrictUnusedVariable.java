@@ -144,6 +144,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             "javax.persistence.Version",
             "javax.xml.bind.annotation.XmlElement",
             "org.junit.Rule",
+            "org.junit.jupiter.api.extension.RegisterExtension",
             "org.mockito.Mock",
             "org.openqa.selenium.support.FindBy",
             "org.openqa.selenium.support.FindBys");
