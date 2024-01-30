@@ -1037,6 +1037,49 @@ class SafeLoggingPropagationTest {
                 .doTest();
     }
 
+    @Test
+    void testSafetyAnnotatedReturnTypeDoesNotAnnotateMethod() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "public final class Test {",
+                        "  @Unsafe",
+                        "  private static class UnsafeType {}",
+                        "  public UnsafeType getType() { return new UnsafeType(); }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void testSafetyAnnotatedArrayTypeDoesNotAnnotateMethod() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "public final class Test {",
+                        "  @Unsafe",
+                        "  private static class UnsafeType {}",
+                        "  public UnsafeType[] getType() { return new UnsafeType[]{ new UnsafeType() }; }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void testSafetyAnnotatedCollectionTypeDoesNotAnnotateMethod() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.*;",
+                        "public final class Test {",
+                        "  @Unsafe",
+                        "  private static class UnsafeType {}",
+                        "  public List<UnsafeType> getType() { return new ArrayList<UnsafeType>(); }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
     private RefactoringValidator fix(String... args) {
         return RefactoringValidator.of(SafeLoggingPropagation.class, getClass(), args);
     }

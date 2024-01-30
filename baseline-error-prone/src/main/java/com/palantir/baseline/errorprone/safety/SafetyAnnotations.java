@@ -33,6 +33,7 @@ import com.sun.tools.javac.code.Symbol.VarSymbol;
 import com.sun.tools.javac.code.SymbolMetadata;
 import com.sun.tools.javac.code.TargetType;
 import com.sun.tools.javac.code.Type;
+import com.sun.tools.javac.code.Type.ArrayType;
 import com.sun.tools.javac.code.Type.WildcardType;
 import com.sun.tools.javac.util.List;
 import java.util.HashSet;
@@ -95,9 +96,7 @@ public final class SafetyAnnotations {
         Type treeType = tree instanceof ExpressionTree
                 ? ASTHelpers.getResultType((ExpressionTree) tree)
                 : ASTHelpers.getType(tree);
-        Safety treeTypeSafety = treeType == null
-                ? Safety.UNKNOWN
-                : Safety.mergeAssumingUnknownIsSame(getSafety(treeType, state), getSafety(treeType.tsym, state));
+        Safety treeTypeSafety = getTypeSafety(treeType, state);
         Type symbolType = treeSymbol == null ? null : treeSymbol.type;
         // If the type extracted from the symbol matches the type extracted from the tree, avoid duplicate work.
         // However, in some cases type parameter information is excluded from one, but not the other.
@@ -106,6 +105,20 @@ public final class SafetyAnnotations {
                 ? Safety.UNKNOWN
                 : Safety.mergeAssumingUnknownIsSame(getSafety(symbolType, state), getSafety(symbolType.tsym, state));
         return Safety.mergeAssumingUnknownIsSame(symbolSafety, treeTypeSafety, symbolTypeSafety);
+    }
+
+    private static Safety getTypeSafety(Type treeType, VisitorState state) {
+        if (treeType == null) {
+            return Safety.UNKNOWN;
+        }
+
+        // The type of an array is not stored as a tree, but rather an adjacent type
+        if (treeType instanceof Type.ArrayType) {
+            return Safety.mergeAssumingUnknownIsSame(
+                    getSafety(treeType, state), getSafety(((ArrayType) treeType).elemtype.tsym, state));
+        } else {
+            return Safety.mergeAssumingUnknownIsSame(getSafety(treeType, state), getSafety(treeType.tsym, state));
+        }
     }
 
     public static Safety getSafety(@Nullable Symbol symbol, VisitorState state) {
