@@ -24,6 +24,9 @@ import com.palantir.baseline.plugins.javaversions.ChosenJavaVersion
 import com.palantir.baseline.util.GitUtils
 import groovy.transform.CompileStatic
 import groovy.xml.XmlUtil
+import org.gradle.api.logging.Logger
+import org.gradle.api.logging.Logging
+
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
@@ -47,6 +50,9 @@ import org.gradle.plugins.ide.idea.model.ModuleDependency
 // TODO(dfox): separate the xml manipulation (which really benefits from groovy syntax) from typed things
 //@CompileStatic
 class BaselineIdea extends AbstractBaselinePlugin {
+
+    private static final Logger log = Logging.getLogger(BaselineIdea.class);
+
     void apply(Project project) {
         this.project = project
 
@@ -80,7 +86,11 @@ class BaselineIdea extends AbstractBaselinePlugin {
             }
         }
 
-        project.getTasks().named("idea").configure(idea -> idea.doLast(cleanup))
+        project.getTasks().named("idea").configure(idea -> {
+            idea.doFirst(t -> log.warn("DEPRECATED`./gradlew idea` usage, some functionality might not work properly. " +
+                    "Please open the project directly in IntelliJ or run `idea .` instead. (if the utility is installed)"))
+            idea.doLast(cleanup)
+        })
     }
 
     void applyToRootProject(Project rootProject) {
