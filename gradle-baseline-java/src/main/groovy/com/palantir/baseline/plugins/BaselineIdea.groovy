@@ -47,7 +47,6 @@ import org.gradle.plugins.ide.idea.model.ModuleDependency
 // TODO(dfox): separate the xml manipulation (which really benefits from groovy syntax) from typed things
 //@CompileStatic
 class BaselineIdea extends AbstractBaselinePlugin {
-
     void apply(Project project) {
         this.project = project
 
