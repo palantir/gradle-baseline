@@ -87,8 +87,9 @@ class BaselineIdea extends AbstractBaselinePlugin {
         }
 
         project.getTasks().named("idea").configure(idea -> {
-            idea.doFirst(t -> log.warn("DEPRECATED`./gradlew idea` usage, some functionality might not work properly. " +
-                    "Please open the project directly in IntelliJ or run `idea .` instead. (if the utility is installed)"))
+            idea.doFirst(_t -> log.warn("DEPRECATED: Using `./gradlew idea` is no longer recommended, some " +
+                    "functionality may not function as expected. Instead, we suggest opening the project directly in " +
+                    "IntelliJ or running `idea .` (if the JetBrains utility is installed) for a smoother experience."))
             idea.doLast(cleanup)
         })
     }
