@@ -81,9 +81,16 @@ class BaselineIdea extends AbstractBaselinePlugin {
         }
 
         project.getTasks().named("idea").configure(idea -> {
-            idea.doFirst(_t -> project.getLogger().warn("DEPRECATED: Using `./gradlew idea` is no longer recommended, some " +
-                    "functionality may not function as expected. Instead, we suggest opening the project directly in " +
-                    "IntelliJ or running `idea .` (if the JetBrains utility is installed) for a smoother experience."))
+            idea.doFirst(_t -> project.getLogger().warn("""
+                DEPRECATED: Using `./gradlew idea` is no longer recommended, some functionality may not function as expected. 
+                Instead, we suggest opening the project directly in IntelliJ or running `idea .`.
+                Follow the instructions below to start using the native Gradle integration:
+                    1. Close the IntelliJ project
+                    2. Run `./gradlew cleanIdea`
+                    3. Run `rm -rf .idea || true`
+                    4. Open the  project in IntelliJ or use `idea .` if installed by Jetbrains Toolbox.
+                Note: For new projects only step 4. is required.
+                """.stripIndent()))
             idea.doLast(cleanup)
         })
     }
