@@ -21,9 +21,9 @@ import java.util.Collections;
 import java.util.Objects;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
-import org.gradle.api.artifacts.result.ResolvedComponentResult;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -76,15 +76,14 @@ public final class BaselineImmutables implements Plugin<Project> {
         return project
                 .getConfigurations()
                 .getByName(sourceSet.getAnnotationProcessorConfigurationName())
-                .getIncoming()
-                .getResolutionResult()
-                .getAllComponents()
+                .getResolvedConfiguration()
+                .getResolvedArtifacts()
                 .stream()
                 .anyMatch(BaselineImmutables::isImmutablesValue);
     }
 
-    private static boolean isImmutablesValue(ResolvedComponentResult component) {
-        ComponentIdentifier id = component.getId();
+    private static boolean isImmutablesValue(ResolvedArtifact resolvedArtifact) {
+        ComponentIdentifier id = resolvedArtifact.getId().getComponentIdentifier();
 
         if (!(id instanceof ModuleComponentIdentifier)) {
             return false;
@@ -92,6 +91,12 @@ public final class BaselineImmutables implements Plugin<Project> {
 
         ModuleComponentIdentifier moduleId = (ModuleComponentIdentifier) id;
 
-        return Objects.equals(moduleId.getGroup(), "org.immutables") && Objects.equals(moduleId.getModule(), "value");
+        // The actual annotation processor jar has no classifier, we must make sure not to match on the
+        // `annotations` jar which has the `annotations` classifier
+        boolean noClassifier = resolvedArtifact.getClassifier() == null;
+
+        return Objects.equals(moduleId.getGroup(), "org.immutables")
+                && Objects.equals(moduleId.getModule(), "value")
+                && noClassifier;
     }
 }

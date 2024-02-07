@@ -41,6 +41,7 @@ class BaselineImmutablesTest extends IntegrationSpec {
                 hasImmutables
                 doesNotHaveImmutables
                 hasImmutablesAddedInAfterEvaluate
+                onlyHasImmutablesAnnotations
             }
             
             afterEvaluate {
@@ -53,6 +54,8 @@ class BaselineImmutablesTest extends IntegrationSpec {
                 annotationProcessor '$IMMUTABLES'
                 
                 hasImmutablesAnnotationProcessor '$IMMUTABLES'
+
+                onlyHasImmutablesAnnotationsAnnotationProcessor '$IMMUTABLES_ANNOTATIONS'
             }
             
             task compileAll
@@ -66,7 +69,7 @@ class BaselineImmutablesTest extends IntegrationSpec {
             }
         """.stripIndent()
 
-        ['main', 'hasImmutables', 'doesNotHaveImmutables', 'hasImmutablesAddedInAfterEvaluate'].each {
+        ['main', 'hasImmutables', 'doesNotHaveImmutables', 'hasImmutablesAddedInAfterEvaluate', 'onlyHasImmutablesAnnotations'].each {
             writeJavaSourceFile '''
                 public class Foo {}
             '''.stripIndent(), "src/$it/java"
@@ -81,6 +84,7 @@ class BaselineImmutablesTest extends IntegrationSpec {
         stdout.contains 'compileHasImmutablesJava: [-Aimmutables.gradle.incremental]'
         stdout.contains 'compileDoesNotHaveImmutablesJava: []'
         stdout.contains 'compileHasImmutablesAddedInAfterEvaluateJava: [-Aimmutables.gradle.incremental]'
+        stdout.contains 'compileOnlyHasImmutablesAnnotationsJava: []'
     }
 
     def 'Compatible with java #javaVersion'() {
