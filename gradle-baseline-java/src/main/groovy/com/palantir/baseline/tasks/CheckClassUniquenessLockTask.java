@@ -162,10 +162,9 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
 
         if (!lockFile.exists()) {
             throw new ExceptionWithSuggestion(
-                    "baseline-class-uniqueness detected multiple jars containing identically named "
-                            + "classes. Please resolve these problems, or run `./gradlew checkClassUniqueness "
-                            + "--write-locks` to accept them:\n\n"
-                            + expected,
+                    "baseline-class-uniqueness detected multiple jars containing identically named classes."
+                            + " Please resolve these problems, or run `./gradlew checkClassUniqueness --write-locks`"
+                            + "to accept them:\n\n " + expected,
                     "./gradlew checkClassUniqueness --write-locks");
         }
 
