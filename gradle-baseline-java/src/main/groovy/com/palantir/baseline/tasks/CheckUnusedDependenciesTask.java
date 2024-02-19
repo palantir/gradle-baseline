@@ -20,6 +20,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.collect.Sets;
 import com.google.common.collect.Streams;
 import com.palantir.baseline.plugins.BaselineExactDependencies;
+import com.palantir.gradle.failurereports.exceptions.ExceptionWithSuggestion;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Comparator;
@@ -130,7 +131,7 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
                                     .append("\n"));
                 }
             }
-            throw new GradleException(builder.toString());
+            throw new ExceptionWithSuggestion(builder.toString(), buildFile().toString());
         }
     }
 
