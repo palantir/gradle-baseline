@@ -14,7 +14,6 @@ dependencies {
     implementation 'com.github.ben-manes.caffeine:caffeine'
     implementation 'com.google.guava:guava'
     implementation 'net.ltgt.gradle:gradle-errorprone-plugin'
-    implementation 'com.palantir.gradle.failure-reports:gradle-failure-reports-exceptions'
     implementation 'org.apache.maven.shared:maven-dependency-analyzer', {
         // Use maven-core rather than the legacy maven-project component
         exclude group: 'org.apache.maven', module: 'maven-project'
@@ -27,6 +26,7 @@ dependencies {
     implementation 'org.ow2.asm:asm'
     implementation 'com.googlecode.java-diff-utils:diffutils'
     implementation 'com.palantir.gradle.utils:lazily-configured-mapping'
+    implementation 'com.palantir.gradle.failure-reports:gradle-failure-reports-exceptions'
 
     runtimeOnly 'com.palantir.javaformat:gradle-palantir-java-format'
 
