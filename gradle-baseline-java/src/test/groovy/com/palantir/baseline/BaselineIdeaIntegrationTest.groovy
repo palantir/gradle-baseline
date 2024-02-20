@@ -50,6 +50,7 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         then:
         BuildResult result = with('idea').build()
         assert result.task(':idea').outcome == TaskOutcome.SUCCESS ?: result.output
+        result.output.contains("DEPRECATED: Using `./gradlew idea`")
     }
 
     def 'Works with checkstyle and IntelliJ import'() {
