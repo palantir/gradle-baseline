@@ -17,6 +17,7 @@
 package com.palantir.baseline.tasks;
 
 import com.palantir.baseline.plugins.javaversions.BaselineJavaVersion;
+import com.palantir.gradle.failurereports.exceptions.ExceptionWithSuggestion;
 import java.io.IOException;
 import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
@@ -25,7 +26,6 @@ import java.nio.file.StandardOpenOption;
 import java.util.Collections;
 import javax.inject.Inject;
 import org.gradle.api.DefaultTask;
-import org.gradle.api.GradleException;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Task;
 import org.gradle.api.model.ObjectFactory;
@@ -130,20 +130,18 @@ public class CheckExplicitSourceCompatibilityTask extends DefaultTask {
                     StandardOpenOption.CREATE);
             return;
         }
-
-        throw new GradleException(String.format(
-                "%s must set sourceCompatibility explicitly in '%s', "
-                        + "otherwise compilation will not be reproducible but instead depends on the Java version "
-                        + "that Gradle is currently running with (%s). To auto-fix, run%n"
-                        + "%n"
-                        + "     ./gradlew %s --fix%n"
-                        + "%n"
-                        + "This will automatically add a suggested line "
-                        + "(you may need to adjust the number, e.g. to '1.8' for maximum compatibility).",
-                getProject(),
-                getProject().getRootProject().relativePath(getProject().getBuildFile()),
-                JavaVersion.current(),
-                getPath()));
+        String suggestion = String.format("./gradlew %s --fix", getPath());
+        throw new ExceptionWithSuggestion(
+                String.format(
+                        "%s must set sourceCompatibility explicitly in '%s', otherwise compilation will not be"
+                            + " reproducible but instead depends on the Java version that Gradle is currently running"
+                            + " with (%s). To auto-fix, run%n%n     %s%n%nThis will automatically add a suggested line"
+                            + " (you may need to adjust the number, e.g. to '1.8' for maximum compatibility).",
+                        getProject(),
+                        getProject().getRootProject().relativePath(getProject().getBuildFile()),
+                        JavaVersion.current(),
+                        suggestion),
+                suggestion);
     }
 
     private JavaVersion getRawSourceCompat() {

@@ -18,6 +18,7 @@ package com.palantir.baseline.tasks;
 
 import com.google.common.collect.Streams;
 import com.palantir.baseline.plugins.BaselineExactDependencies;
+import com.palantir.gradle.failurereports.exceptions.ExceptionWithSuggestion;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Comparator;
@@ -26,7 +27,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
-import org.gradle.api.GradleException;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedDependency;
@@ -90,11 +90,12 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
                     .map(artifact -> getSuggestionString(artifact))
                     .sorted()
                     .collect(Collectors.joining("\n", "    dependencies {\n", "\n    }"));
-
-            throw new GradleException(String.format(
-                    "Found %d implicit dependencies - consider adding the following explicit "
-                            + "dependencies to '%s', or avoid using classes from these jars:\n%s",
-                    usedButUndeclared.size(), buildFile(), suggestion));
+            throw new ExceptionWithSuggestion(
+                    String.format(
+                            "Found %d implicit dependencies - consider adding the following explicit "
+                                    + "dependencies to '%s', or avoid using classes from these jars:\n%s",
+                            usedButUndeclared.size(), buildFile(), suggestion),
+                    buildFile().toString());
         }
     }
 
