@@ -18,7 +18,7 @@ package com.palantir.gradle.junit;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.io.File;
-import org.junit.Test;
+import org.junit.jupiter.api.Test;
 
 public final class JavacFailuresSupplierTest {
 
