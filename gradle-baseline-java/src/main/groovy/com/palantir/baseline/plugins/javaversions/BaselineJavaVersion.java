@@ -84,6 +84,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                         public void execute(CheckJavaVersionsTask task) {
                             task.getTargetVersion().set(extension.target());
                             task.getRuntimeVersion().set(extension.runtime());
+                            task.getProjectDisplayName().set(project.getDisplayName());
                         }
                     });
             project.getTasks().named("check").configure(check -> check.dependsOn(checkJavaVersions));
@@ -218,6 +219,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
 
         private final Property<ChosenJavaVersion> targetVersion;
         private final Property<ChosenJavaVersion> runtimeVersion;
+        private final Property<String> projectDisplayName;
 
         @Inject
         public CheckJavaVersionsTask() {
@@ -226,6 +228,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                     + "The runtime version must be greater than or equal to the target version.");
             targetVersion = getProject().getObjects().property(ChosenJavaVersion.class);
             runtimeVersion = getProject().getObjects().property(ChosenJavaVersion.class);
+            projectDisplayName = getProject().getObjects().property(String.class);
         }
 
         @Input
@@ -238,6 +241,11 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             return runtimeVersion;
         }
 
+        @Input
+        Property<String> getProjectDisplayName() {
+            return projectDisplayName;
+        }
+
         @TaskAction
         public final void checkJavaVersions() {
             ChosenJavaVersion target = getTargetVersion().get();
@@ -245,7 +253,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             getLogger()
                     .debug(
                             "BaselineJavaVersion configured project {} with target version {} and runtime version {}",
-                            getProject(),
+                            projectDisplayName,
                             target,
                             runtime);
 
