@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Methods must take into account supertypes
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2699
