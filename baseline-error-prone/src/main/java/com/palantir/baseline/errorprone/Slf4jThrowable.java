@@ -40,7 +40,7 @@ import java.util.regex.Pattern;
         severity = SeverityLevel.WARNING,
         summary = "Slf4j loggers require throwables to be the last parameter otherwise a stack trace is not produced. "
                 + "Documentation is available here: http://www.slf4j.org/faq.html#paramException")
-public final class Slf4jThrowable extends BugChecker implements MethodInvocationTreeMatcher {
+public final class Slf4jThrowable extends BaselineBugChecker implements MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
 

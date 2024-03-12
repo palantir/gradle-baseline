@@ -37,7 +37,7 @@ import com.sun.source.tree.MethodInvocationTree;
         severity = SeverityLevel.WARNING,
         summary = "java.util.Objects.hash(non-varargs) should be replaced with java.util.Objects.hashCode(value) "
                 + "to avoid unnecessary varargs array allocations.")
-public final class ObjectsHashCodeUnnecessaryVarargs extends BugChecker
+public final class ObjectsHashCodeUnnecessaryVarargs extends BaselineBugChecker
         implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final Matcher<ExpressionTree> HASH_MATCHER =

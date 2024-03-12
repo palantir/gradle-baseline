@@ -35,7 +35,7 @@ import com.sun.source.tree.LambdaExpressionTree;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
         summary = "Forbid gradle task actions (doFirst, doLast) to be implemented by lambdas.")
-public final class GradleCacheableTaskAction extends BugChecker implements LambdaExpressionTreeMatcher {
+public final class GradleCacheableTaskAction extends BaselineBugChecker implements LambdaExpressionTreeMatcher {
 
     private static final long serialVersionUID = 1L;
     private static final Matcher<ExpressionTree> IS_ACTION = MoreMatchers.isSubtypeOf("org.gradle.api.Action");

@@ -47,7 +47,7 @@ import java.util.regex.Pattern;
         severity = SeverityLevel.WARNING,
         summary = "Allow only com.palantir.logsafe.Arg types, or vararg arrays, as parameter inputs to slf4j log "
                 + "messages.")
-public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocationTreeMatcher {
+public final class Slf4jLogsafeArgs extends BaselineBugChecker implements MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
 

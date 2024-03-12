@@ -34,7 +34,7 @@ import com.sun.tools.javac.code.Symbol;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.ERROR,
         summary = "Using Rule/ClassRules in Junit5 tests results in the rules silently not executing")
-public final class JUnit5RuleUsage extends BugChecker implements BugChecker.ClassTreeMatcher {
+public final class JUnit5RuleUsage extends BaselineBugChecker implements BugChecker.ClassTreeMatcher {
     private static final String JUNIT4_RULE = "org.junit.Rule";
     private static final String JUNIT4_CLASS_RULE = "org.junit.ClassRule";
     private static final String JUNIT5_TEST_ANNOTATION = "org.junit.jupiter.api.Test";

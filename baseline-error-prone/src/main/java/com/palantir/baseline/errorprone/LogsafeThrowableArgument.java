@@ -35,7 +35,7 @@ import java.util.List;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.WARNING,
         summary = "Args with type Throwable are not allowed.")
-public final class LogsafeThrowableArgument extends BugChecker implements MethodInvocationTreeMatcher {
+public final class LogsafeThrowableArgument extends BaselineBugChecker implements MethodInvocationTreeMatcher {
 
     private static final Matcher<ExpressionTree> MATCHER = Matchers.staticMethod()
             .onClassAny("com.palantir.logsafe.SafeArg", "com.palantir.logsafe.UnsafeArg")

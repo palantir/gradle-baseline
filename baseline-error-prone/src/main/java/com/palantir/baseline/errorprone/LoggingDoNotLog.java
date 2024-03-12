@@ -46,7 +46,7 @@ import java.util.Objects;
         summary = "@DoNotLog types must not be passed to any logger directly or indirectly, for example respectively: "
                 + "log.info(doNotLog) or throw new RuntimeException(doNotLog.toString()). Exceptions are almost "
                 + "always passed to a logger in some form, and must not include data that cannot be logged.")
-public final class LoggingDoNotLog extends BugChecker
+public final class LoggingDoNotLog extends BaselineBugChecker
         implements BugChecker.MethodInvocationTreeMatcher, BugChecker.NewClassTreeMatcher {
 
     private static final Matcher<ExpressionTree> THROWABLE_CTOR = MethodMatchers.constructor()

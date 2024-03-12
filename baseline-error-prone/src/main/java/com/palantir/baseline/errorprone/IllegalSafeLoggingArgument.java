@@ -66,7 +66,7 @@ import java.util.Objects;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.ERROR,
         summary = "safe-logging annotations must agree between args and method parameters")
-public final class IllegalSafeLoggingArgument extends BugChecker
+public final class IllegalSafeLoggingArgument extends BaselineBugChecker
         implements BugChecker.MethodInvocationTreeMatcher,
                 BugChecker.ReturnTreeMatcher,
                 BugChecker.AssignmentTreeMatcher,

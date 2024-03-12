@@ -34,7 +34,7 @@ import com.sun.source.tree.Tree;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
         summary = "Forbid gradle argument providers to be implemented by lambdas.")
-public final class GradleCacheableArgumentProvider extends BugChecker implements LambdaExpressionTreeMatcher {
+public final class GradleCacheableArgumentProvider extends BaselineBugChecker implements LambdaExpressionTreeMatcher {
 
     private static final long serialVersionUID = 1L;
 

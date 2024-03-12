@@ -34,7 +34,8 @@ import java.util.concurrent.ThreadPoolExecutor;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
         summary = "Disallow direct ThreadPoolExecutor usages.")
-public final class DangerousThreadPoolExecutorUsage extends BugChecker implements BugChecker.NewClassTreeMatcher {
+public final class DangerousThreadPoolExecutorUsage extends BaselineBugChecker
+        implements BugChecker.NewClassTreeMatcher {
     private static final String ERROR_MESSAGE = "Should not normally use ThreadPoolExecutor directly. "
             + "ThreadPoolExecutor is a nuanced class. In our experience, when executors are configured "
             + "in non-default ways (i.e. the ones in Executors), we usually see bad behaviour. This check "

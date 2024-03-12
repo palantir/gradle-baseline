@@ -59,7 +59,8 @@ import java.util.stream.Collectors;
         severity = BugPattern.SeverityLevel.WARNING,
         summary = "Since Java 7 the standard collection constructors should be used instead of the static factory "
                 + "methods provided by Guava.")
-public final class PreferCollectionConstructors extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
+public final class PreferCollectionConstructors extends BaselineBugChecker
+        implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
 
@@ -266,8 +267,8 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
         String replacement = "new " + collectionType + "<" + typeArgs + ">(" + arg + ")";
         return buildDescription(tree)
                 .setMessage("The factory method call should be replaced with a constructor call. See"
-                                + " https://github.com/palantir/gradle-baseline/blob/develop/docs/best-practices/java-coding-guidelines/readme.md#avoid-generics-clutter-where-possible"
-                                + " for more information.")
+                        + " https://github.com/palantir/gradle-baseline/blob/develop/docs/best-practices/java-coding-guidelines/readme.md#avoid-generics-clutter-where-possible"
+                        + " for more information.")
                 .addFix(fixBuilder.replace(tree, replacement).build())
                 .build();
     }

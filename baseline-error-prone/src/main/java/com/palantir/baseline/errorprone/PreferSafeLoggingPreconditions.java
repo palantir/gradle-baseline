@@ -45,7 +45,8 @@ import java.util.regex.Pattern;
         summary = "Precondition and similar checks with a constant message and no parameters should use equivalent"
                 + " checks from com.palantir.logsafe.Preconditions for standardization as functionality is the"
                 + " same.")
-public final class PreferSafeLoggingPreconditions extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
+public final class PreferSafeLoggingPreconditions extends BaselineBugChecker
+        implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
 

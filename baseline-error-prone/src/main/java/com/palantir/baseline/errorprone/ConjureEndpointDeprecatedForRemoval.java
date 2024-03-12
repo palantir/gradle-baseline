@@ -34,7 +34,7 @@ import com.sun.source.tree.Tree;
         summary = "You should not use Conjure endpoints that are marked for removal as that may block"
                 + " upgrades in the near future. You can explicitly disable this check on a case-by-case basis using"
                 + " @SuppressWarnings(\"ConjureEndpointDeprecatedForRemoval\").")
-public final class ConjureEndpointDeprecatedForRemoval extends BugChecker
+public final class ConjureEndpointDeprecatedForRemoval extends BaselineBugChecker
         implements BugChecker.MethodInvocationTreeMatcher, BugChecker.MemberReferenceTreeMatcher {
 
     private static final String CONJURE_CLIENT_ENDPOINT = "com.palantir.conjure.java.lib.internal.ClientEndpoint";

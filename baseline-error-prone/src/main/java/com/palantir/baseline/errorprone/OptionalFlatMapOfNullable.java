@@ -42,7 +42,8 @@ import java.util.function.Function;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,
         summary = "Optional.map functions may return null to safely produce an empty result.")
-public final class OptionalFlatMapOfNullable extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
+public final class OptionalFlatMapOfNullable extends BaselineBugChecker
+        implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final Matcher<ExpressionTree> flatMap = MethodMatchers.instanceMethod()
             .onDescendantOf(Optional.class.getName())

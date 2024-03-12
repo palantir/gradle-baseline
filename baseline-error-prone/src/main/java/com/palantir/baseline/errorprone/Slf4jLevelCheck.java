@@ -45,7 +45,7 @@ import java.util.Optional;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
         summary = "Slf4j log.is[Level]Enabled level must match the most severe log statement")
-public final class Slf4jLevelCheck extends BugChecker implements IfTreeMatcher {
+public final class Slf4jLevelCheck extends BaselineBugChecker implements IfTreeMatcher {
 
     private static final long serialVersionUID = 1L;
 

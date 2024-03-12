@@ -62,7 +62,7 @@ import com.sun.tools.javac.code.Type;
                         + "a constant variable (§4.12.4).\n"
                         + "> • T is a top level class (§7.6) and an assert statement (§14.10) lexically nested within T"
                         + " (§8.1.3) is executed.")
-public final class ClassInitializationDeadlock extends BugChecker implements BugChecker.ClassTreeMatcher {
+public final class ClassInitializationDeadlock extends BaselineBugChecker implements BugChecker.ClassTreeMatcher {
 
     @Override
     public Description matchClass(ClassTree tree, VisitorState state) {

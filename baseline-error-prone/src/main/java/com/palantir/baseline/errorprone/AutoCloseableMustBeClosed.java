@@ -39,7 +39,7 @@ import java.util.stream.BaseStream;
         severity = SeverityLevel.SUGGESTION,
         summary = "If a constructor or method returns an AutoCloseable, it should be annotated "
                 + "@MustBeClosed to ensure callers appropriately close resources")
-public final class AutoCloseableMustBeClosed extends BugChecker implements MethodTreeMatcher {
+public final class AutoCloseableMustBeClosed extends BaselineBugChecker implements MethodTreeMatcher {
 
     private static final String MUST_BE_CLOSED_TYPE = "com.google.errorprone.annotations.MustBeClosed";
     private static final String CAN_IGNORE_RETURN_VALUE_TYPE = "com.google.errorprone.annotations.CanIgnoreReturnValue";

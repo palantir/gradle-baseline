@@ -39,7 +39,8 @@ import java.util.List;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
         summary = "Allow only constant messages to Validate.X() methods")
-public final class ValidateConstantMessage extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
+public final class ValidateConstantMessage extends BaselineBugChecker
+        implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
 

@@ -50,7 +50,7 @@ import java.util.stream.Stream;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.WARNING,
         summary = "StringBuilder with a constant number of parameters should be replaced by simple concatenation")
-public final class StringBuilderConstantParameters extends BugChecker
+public final class StringBuilderConstantParameters extends BaselineBugChecker
         implements BugChecker.MethodInvocationTreeMatcher {
     private static final String MESSAGE =
             "StringBuilder with a constant number of parameters should be replaced by simple concatenation.\nThe Java "
