@@ -50,7 +50,7 @@ import javax.annotation.Nullable;
                 + "retention forces consumers to add a Immutables annotations to their compile classpath."
                 + "Instead use a meta-annotation with SOURCE retention."
                 + "See https://github.com/immutables/immutables/issues/291.")
-public final class ImmutablesStyle extends BugChecker implements BugChecker.ClassTreeMatcher {
+public final class ImmutablesStyle extends BaselineBugChecker implements BugChecker.ClassTreeMatcher {
 
     private static final Matcher<ClassTree> STYLE_ANNOTATION =
             Matchers.hasAnnotation("org.immutables.value.Value$Style");

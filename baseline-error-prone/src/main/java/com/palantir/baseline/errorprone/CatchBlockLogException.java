@@ -47,7 +47,7 @@ import javax.annotation.Nullable;
         linkType = LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
         summary = "log statement in catch block does not log the caught exception.")
-public final class CatchBlockLogException extends BugChecker implements BugChecker.CatchTreeMatcher {
+public final class CatchBlockLogException extends BaselineBugChecker implements BugChecker.CatchTreeMatcher {
 
     private static final long serialVersionUID = 1L;
 

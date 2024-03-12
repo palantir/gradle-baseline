@@ -41,7 +41,7 @@ import java.util.Set;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.ERROR,
         summary = "Referencing JUnit5 tests from JUnit4 Suites will silently not work")
-public final class JUnit5SuiteMisuse extends BugChecker
+public final class JUnit5SuiteMisuse extends BaselineBugChecker
         implements BugChecker.ClassTreeMatcher, BugChecker.AnnotationTreeMatcher {
 
     private static final long serialVersionUID = 1L;

@@ -34,7 +34,7 @@ import com.sun.source.tree.NewClassTree;
         summary = "The AfterburnerModule is not compatible with jdk16+ and will cause failures at runtime. "
                 + "Either remove AfterburnerModule, or replace it with 'conjure-java-jackson-optimizations' "
                 + "ObjectMapperOptimizations.createModules() to take the runtime into account.")
-public final class AfterburnerJavaIncompatibility extends BugChecker implements BugChecker.NewClassTreeMatcher {
+public final class AfterburnerJavaIncompatibility extends BaselineBugChecker implements BugChecker.NewClassTreeMatcher {
 
     private static final Matcher<ExpressionTree> MATCHER =
             MethodMatchers.constructor().forClass("com.fasterxml.jackson.module.afterburner.AfterburnerModule");

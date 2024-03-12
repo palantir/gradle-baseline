@@ -53,7 +53,7 @@ import javax.annotation.Nullable;
         severity = BugPattern.SeverityLevel.WARNING,
         summary = "Likely programming error due to using incompatible types as "
                 + "arguments for a collection method that accepts Object.")
-public final class StrictCollectionIncompatibleType extends BugChecker
+public final class StrictCollectionIncompatibleType extends BaselineBugChecker
         implements BugChecker.MethodInvocationTreeMatcher, BugChecker.MemberReferenceTreeMatcher {
 
     // Collection Types

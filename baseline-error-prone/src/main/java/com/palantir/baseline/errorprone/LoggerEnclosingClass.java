@@ -39,7 +39,7 @@ import com.sun.tools.javac.code.Symbol;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,
         summary = "Loggers created using getLogger(Class<?>) must reference their enclosing class.")
-public final class LoggerEnclosingClass extends BugChecker implements BugChecker.VariableTreeMatcher {
+public final class LoggerEnclosingClass extends BaselineBugChecker implements BugChecker.VariableTreeMatcher {
 
     private static final Matcher<VariableTree> matcher = Matchers.anyOf(
             Matchers.allOf(

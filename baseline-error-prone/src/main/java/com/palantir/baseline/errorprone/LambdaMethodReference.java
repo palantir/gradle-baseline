@@ -55,7 +55,7 @@ import javax.annotation.Nullable;
         severity = SeverityLevel.WARNING,
         summary = "Lambda should be a method reference")
 @SuppressWarnings("checkstyle:CyclomaticComplexity")
-public final class LambdaMethodReference extends BugChecker implements BugChecker.LambdaExpressionTreeMatcher {
+public final class LambdaMethodReference extends BaselineBugChecker implements BugChecker.LambdaExpressionTreeMatcher {
 
     @Override
     public Description matchLambdaExpression(LambdaExpressionTree tree, VisitorState state) {

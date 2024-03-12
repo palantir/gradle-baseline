@@ -36,7 +36,8 @@ import java.util.regex.Pattern;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
         summary = "Allow only constant messages to Preconditions.checkX() methods")
-public final class PreconditionsConstantMessage extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
+public final class PreconditionsConstantMessage extends BaselineBugChecker
+        implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
 

@@ -44,7 +44,7 @@ import javax.lang.model.element.Modifier;
         severity = BugPattern.SeverityLevel.WARNING,
         summary = "A Builder with a static factory method on the encapsulating class must have a private constructor. "
                 + "Minimizing unnecessary public API prevents future API breaks from impacting consumers. ")
-public final class ImplicitPublicBuilderConstructor extends BugChecker implements BugChecker.ClassTreeMatcher {
+public final class ImplicitPublicBuilderConstructor extends BaselineBugChecker implements BugChecker.ClassTreeMatcher {
     private static final Supplier<Name> BUILDER = VisitorState.memoize(state -> state.getName("builder"));
 
     @Override

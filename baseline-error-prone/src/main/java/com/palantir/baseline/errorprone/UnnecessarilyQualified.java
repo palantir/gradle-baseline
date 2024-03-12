@@ -36,7 +36,7 @@ import com.sun.source.tree.MemberSelectTree;
         linkType = LinkType.CUSTOM,
         severity = SeverityLevel.WARNING,
         summary = "Types should not be qualified if they are also imported")
-public final class UnnecessarilyQualified extends BugChecker implements BugChecker.MemberSelectTreeMatcher {
+public final class UnnecessarilyQualified extends BaselineBugChecker implements BugChecker.MemberSelectTreeMatcher {
 
     @Override
     public Description matchMemberSelect(MemberSelectTree tree, VisitorState state) {

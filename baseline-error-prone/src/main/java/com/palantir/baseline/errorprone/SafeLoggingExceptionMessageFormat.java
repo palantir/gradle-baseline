@@ -35,7 +35,8 @@ import java.util.List;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.ERROR,
         summary = "SafeLoggable exceptions do not interpolate parameters")
-public final class SafeLoggingExceptionMessageFormat extends BugChecker implements BugChecker.NewClassTreeMatcher {
+public final class SafeLoggingExceptionMessageFormat extends BaselineBugChecker
+        implements BugChecker.NewClassTreeMatcher {
 
     private static final long serialVersionUID = 1L;
 

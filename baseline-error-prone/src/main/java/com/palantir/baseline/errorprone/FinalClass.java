@@ -46,7 +46,7 @@ import javax.lang.model.element.Modifier;
                 + "zero-argument constructor.\n"
                 + "https://github.com/palantir/gradle-baseline/tree/develop/docs/best-practices/"
                 + "java-coding-guidelines#private-constructors")
-public final class FinalClass extends BugChecker implements BugChecker.ClassTreeMatcher {
+public final class FinalClass extends BaselineBugChecker implements BugChecker.ClassTreeMatcher {
 
     private static final Matcher<MethodTree> SIMPLIFIABLE_INSTANCE_METHOD = Matchers.allOf(
             Matchers.hasModifier(Modifier.FINAL),
