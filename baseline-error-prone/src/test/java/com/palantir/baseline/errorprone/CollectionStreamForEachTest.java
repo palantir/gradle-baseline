@@ -25,6 +25,7 @@ class CollectionStreamForEachTest {
                         "Test.java",
                         "import java.util.List;",
                         "public class Test {",
+                        "  @SuppressWarnings(\"Cat\")",
                         "  void f(List<String> in) {",
                         "    in.stream().forEach(System.out::println);",
                         "    in.stream().forEachOrdered(System.out::println);",
