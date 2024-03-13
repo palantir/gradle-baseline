@@ -40,7 +40,7 @@ import java.util.stream.Stream;
         severity = BugPattern.SeverityLevel.WARNING,
         summary = "Collection.forEach is more efficient than Collection.stream().forEach")
 public final class CollectionStreamForEach extends BaselineBugChecker
-        implements BugChecker.MethodInvocationTreeMatcher {
+        implements BaselineBugChecker.BaselineMethodInvocationTreeMatcher<CollectionStreamForEach> {
     private static final long serialVersionUID = 1L;
 
     private static final Matcher<ExpressionTree> STREAM_FOR_EACH = MethodMatchers.instanceMethod()
@@ -57,7 +57,7 @@ public final class CollectionStreamForEach extends BaselineBugChecker
             Matchers.allOf(STREAM_FOR_EACH, Matchers.receiverOfInvocation(COLLECTION_STREAM));
 
     @Override
-    public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
+    public Description matchMethodInvocationBaseline(MethodInvocationTree tree, VisitorState state) {
         if (matcher.matches(tree, state)) {
             ExpressionTree stream = ASTHelpers.getReceiver(tree);
             if (stream == null) {
