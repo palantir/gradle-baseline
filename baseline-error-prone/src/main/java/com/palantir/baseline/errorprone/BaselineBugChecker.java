@@ -21,9 +21,6 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MoreCollectors;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
-import com.google.errorprone.fixes.Fix;
-import com.google.errorprone.fixes.Replacement;
-import com.google.errorprone.fixes.Replacements.CoalescePolicy;
 import com.google.errorprone.fixes.SuggestedFix;
 import com.google.errorprone.matchers.Description;
 import com.sun.source.tree.AnnotationTree;
@@ -32,17 +29,11 @@ import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.TreePath;
-import com.sun.tools.javac.tree.EndPosTable;
-import com.sun.tools.javac.tree.JCTree.JCCompilationUnit;
-import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 abstract class BaselineBugChecker extends BugChecker {
-    private static final ConcurrentMap<Tree, OurSuppressWarningsFix> SUPPRESSED_WARNINGS = new ConcurrentHashMap<>();
     private static final String AUTOMATICALLY_ADDED_PREFIX = "auto-added-on-upgrade:";
 
     private final Supplier<Set<String>> allNames = Suppliers.memoize(() -> {
@@ -55,71 +46,6 @@ abstract class BaselineBugChecker extends BugChecker {
     @Override
     public Set<String> allNames() {
         return allNames.get();
-    }
-
-    static Fix fix(Tree suppressWarnings, String checkName) {
-        OurSuppressWarningsFix ourSuppressWarningsFix =
-                SUPPRESSED_WARNINGS.computeIfAbsent(suppressWarnings, _ignored -> {
-                    return new OurSuppressWarningsFix(suppressWarnings);
-                });
-
-        ourSuppressWarningsFix.addSuppressedWarning(checkName);
-
-        return ourSuppressWarningsFix;
-    }
-
-    private static final class OurSuppressWarningsFix implements Fix {
-        private final Set<String> warningsToSuppress = new HashSet<>();
-
-        private final Supplier<SuggestedFix> suggestedFix;
-
-        private OurSuppressWarningsFix(Tree suppressWarnings) {
-            this.suggestedFix = Suppliers.memoize(() -> {
-                return SuggestedFix.builder()
-                        .replace(
-                                suppressWarnings, "@SuppressWarnings(\"" + String.join(",", warningsToSuppress) + "\")")
-                        .build();
-            });
-        }
-
-        public void addSuppressedWarning(String checkName) {
-            warningsToSuppress.add(checkName);
-        }
-
-        @Override
-        public String toString(JCCompilationUnit compilationUnit) {
-            return suggestedFix.get().toString(compilationUnit);
-        }
-
-        @Override
-        public String getShortDescription() {
-            return "Combine suppressions";
-        }
-
-        @Override
-        public CoalescePolicy getCoalescePolicy() {
-            return CoalescePolicy.KEEP_ONLY_IDENTICAL_INSERTS;
-        }
-
-        @Override
-        public ImmutableSet<Replacement> getReplacements(EndPosTable endPositions) {
-            return suggestedFix.get().getReplacements(endPositions);
-        }
-
-        @Override
-        public ImmutableSet<String> getImportsToAdd() {
-            return ImmutableSet.of();
-        }
-
-        @Override
-        public ImmutableSet<String> getImportsToRemove() {
-            return ImmutableSet.of();
-        }
-
-        @Override
-        public boolean isEmpty() {
-            return false;
-        }
     }
 
     interface BaselineMethodInvocationTreeMatcher<T extends BugChecker & BaselineMethodInvocationTreeMatcher<T>>
@@ -158,7 +84,10 @@ abstract class BaselineBugChecker extends BugChecker {
                     .buildDescription(tree)
                     .setMessage(description.getRawMessage())
                     .setLinkUrl(description.getLink())
-                    .addFix(fix(suppressWarnings, AUTOMATICALLY_ADDED_PREFIX + canonicalName() + Math.random()))
+                    .addFix(SuggestedFix.prefixWith(
+                            suppressWarnings,
+                            "// SuppressWarning(" + AUTOMATICALLY_ADDED_PREFIX + canonicalName() + Math.random()
+                                    + ")\n"))
                     .build();
         }
 
