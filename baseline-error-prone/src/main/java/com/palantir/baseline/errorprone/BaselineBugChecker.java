@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 
 abstract class BaselineBugChecker extends BugChecker {
-    private static final String AUTOMATICALLY_ADDED_PREFIX = "automatically-added-for-baseline-upgrade:";
+    private static final String AUTOMATICALLY_ADDED_PREFIX = "auto-added-on-upgrade:";
 
     private final Supplier<Set<String>> allNames = Suppliers.memoize(() -> {
         return ImmutableSet.<String>builder()
