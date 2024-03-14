@@ -84,10 +84,10 @@ abstract class BaselineBugChecker extends BugChecker {
                     .buildDescription(tree)
                     .setMessage(description.getRawMessage())
                     .setLinkUrl(description.getLink())
-                    .addFix(SuggestedFix.prefixWith(
+                    .addFix(SuggestedFix.postfixWith(
                             suppressWarnings,
-                            "// SuppressWarning(" + AUTOMATICALLY_ADDED_PREFIX + canonicalName() + Math.random()
-                                    + ")\n"))
+                            "\n// SuppressWarning(" + AUTOMATICALLY_ADDED_PREFIX + canonicalName() + Math.random()
+                                    + ")"))
                     .build();
         }
 
