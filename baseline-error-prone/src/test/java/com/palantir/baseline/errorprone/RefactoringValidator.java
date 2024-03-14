@@ -27,7 +27,7 @@ import com.google.errorprone.bugpatterns.BugChecker;
  * {@link RefactoringValidator} delegates to a {@link BugCheckerRefactoringTestHelper}, but also validates the output
  * passes validation.
  */
-final class RefactoringValidator {
+public final class RefactoringValidator {
 
     private final BugCheckerRefactoringTestHelper delegate;
     private final CompilationTestHelper compilationHelper;
@@ -42,19 +42,19 @@ final class RefactoringValidator {
     }
 
     @CheckReturnValue
-    static RefactoringValidator of(Class<? extends BugChecker> checkerClass, Class<?> clazz, String... args) {
+    public static RefactoringValidator of(Class<? extends BugChecker> checkerClass, Class<?> clazz, String... args) {
         return new RefactoringValidator(checkerClass, clazz, args);
     }
 
     @CheckReturnValue
-    OutputStage addInputLines(String path, String... input) {
+    public OutputStage addInputLines(String path, String... input) {
         // If expectUnchanged is unused, the input is used as output
         this.outputPath = path;
         this.outputLines = input;
         return new OutputStage(this, delegate.addInputLines(path, input));
     }
 
-    static final class OutputStage {
+    public static final class OutputStage {
         private final RefactoringValidator helper;
         private final BugCheckerRefactoringTestHelper.ExpectOutput delegate;
 
@@ -64,19 +64,19 @@ final class RefactoringValidator {
         }
 
         @CheckReturnValue
-        TestStage addOutputLines(String path, String... output) {
+        public TestStage addOutputLines(String path, String... output) {
             helper.outputPath = path;
             helper.outputLines = output;
             return new TestStage(helper, delegate.addOutputLines(path, output));
         }
 
         @CheckReturnValue
-        TestStage expectUnchanged() {
+        public TestStage expectUnchanged() {
             return new TestStage(helper, delegate.expectUnchanged());
         }
     }
 
-    static final class TestStage {
+    public static final class TestStage {
 
         private final RefactoringValidator helper;
         private final BugCheckerRefactoringTestHelper delegate;
@@ -86,7 +86,7 @@ final class RefactoringValidator {
             this.delegate = delegate;
         }
 
-        void doTest() {
+        public void doTest() {
             delegate.doTest();
             helper.compilationHelper
                     .addSourceLines(helper.outputPath, helper.outputLines)
@@ -94,7 +94,7 @@ final class RefactoringValidator {
                     .doTest();
         }
 
-        void doTest(BugCheckerRefactoringTestHelper.TestMode testMode) {
+        public void doTest(BugCheckerRefactoringTestHelper.TestMode testMode) {
             delegate.doTest(testMode);
             helper.compilationHelper
                     .addSourceLines(helper.outputPath, helper.outputLines)
@@ -102,7 +102,7 @@ final class RefactoringValidator {
                     .doTest();
         }
 
-        void doTestExpectingFailure(BugCheckerRefactoringTestHelper.TestMode testMode) {
+        public void doTestExpectingFailure(BugCheckerRefactoringTestHelper.TestMode testMode) {
             delegate.doTest(testMode);
             assertThatThrownBy(() -> helper.compilationHelper
                             .addSourceLines(helper.outputPath, helper.outputLines)
