@@ -29,26 +29,11 @@ import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.TreePath;
-import com.sun.tools.javac.util.Name;
-import java.lang.annotation.Repeatable;
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
 import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 abstract class BaselineBugChecker extends BugChecker {
-    @Repeatable(AutoSuppressedOnBaselineUpgrades.class)
-    @Retention(RetentionPolicy.SOURCE)
-    @interface AutoSuppressedOnUpgrade {
-        String value();
-    }
-
-    @interface AutoSuppressedOnBaselineUpgrades {
-        AutoSuppressedOnUpgrade[] value();
-    }
-
-    @AutoSuppressedOnUpgrade("SafeLoggingPropagation")
     private static final String AUTOMATICALLY_ADDED_PREFIX = "auto-added-on-upgrade:";
 
     private final Supplier<Set<String>> allNames = Suppliers.memoize(() -> {
@@ -61,11 +46,6 @@ abstract class BaselineBugChecker extends BugChecker {
     @Override
     public Set<String> allNames() {
         return allNames.get();
-    }
-
-    @Override
-    public boolean suppressedByAnyOf(Set<Name> annotations, VisitorState s) {
-        return super.suppressedByAnyOf(annotations, s);
     }
 
     interface BaselineMethodInvocationTreeMatcher<T extends BugChecker & BaselineMethodInvocationTreeMatcher<T>>
