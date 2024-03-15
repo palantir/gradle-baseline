@@ -448,7 +448,18 @@ The configurable fields of the `javaVersions` extension are:
 * `distributionTarget`: (optional) The Java version used for compilation of code used within distributions, but not published externally. Defaults to the `libraryTarget` version.
 * `runtime`: (optional) Runtime Java version for testing and packaging distributions. Defaults to the `distributionTarget` version.
 
-The configured Java versions are used as defaults for all projects. Optionally, you can override the defaults in a sub-project, but it is recommended to avoid doing so:
+The configured Java versions are used as defaults for all projects.
+
+If a sub-project should use `libraryTarget` but is not considered a library (for example, because it is not published), you can explicitly indicate that it is a library:
+
+```gradle
+// In a sub-project's build.gradle
+javaVersion {
+    library()
+}
+```
+
+A sub-project can also explicitly override the default Java versions, but doing so is discouraged:
 
 ```gradle
 // In a sub-project's build.gradle
@@ -458,7 +469,9 @@ javaVersion {
 }
 ```
 
-The optionally configurable fields of the `javaVersion` extension are `target`, for setting the target version used for compilation and `runtime`, for setting the runtime version used for testing and distributions.
+The optionally configurable fields of the `javaVersion` extension are:
+* `target`: The target version used for compilation.
+* `runtime`: The runtime version used for testing and distributions.
 
 ### Opting in to `--enable-preview` flag
 
