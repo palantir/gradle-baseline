@@ -17,6 +17,7 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
+import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.AbstractInvocationHandler;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
@@ -62,17 +63,25 @@ public final class InvocationHandlerDelegation extends BugChecker implements Bug
     private static final Matcher<MethodTree> INVOCATION_HANDLER = Matchers.anyOf(
             Matchers.allOf(
                     Matchers.not(Matchers.isStatic()),
-                    MoreMatchers.hasSignature("invoke(java.lang.Object,java.lang.reflect.Method,java.lang.Object[])"),
-                    Matchers.enclosingClass(Matchers.isSubtypeOf(InvocationHandler.class.getName()))),
+                    Matchers.enclosingClass(Matchers.isSubtypeOf(InvocationHandler.class.getName())),
+                    Matchers.methodIsNamed("invoke"),
+                    Matchers.methodHasParameters(
+                            Matchers.isSameType(Object.class),
+                            Matchers.isSameType(Method.class),
+                            Matchers.isSameType(Suppliers.arrayOf(Suppliers.OBJECT_TYPE)))),
             Matchers.allOf(
                     Matchers.not(Matchers.isStatic()),
-                    MoreMatchers.hasSignature(
-                            "handleInvocation(java.lang.Object,java.lang.reflect.Method,java.lang.Object[])"),
-                    Matchers.enclosingClass(Matchers.isSubtypeOf(AbstractInvocationHandler.class.getName()))));
+                    Matchers.enclosingClass(Matchers.isSubtypeOf(AbstractInvocationHandler.class.getName())),
+                    Matchers.methodIsNamed("handleInvocation"),
+                    Matchers.methodHasParameters(
+                            Matchers.isSameType(Object.class),
+                            Matchers.isSameType(Method.class),
+                            Matchers.isSameType(Suppliers.arrayOf(Suppliers.OBJECT_TYPE)))));
 
     private static final Matcher<ExpressionTree> METHOD_INVOKE = MethodMatchers.instanceMethod()
             .onExactClass(Method.class.getName())
-            .withSignature("invoke(java.lang.Object,java.lang.Object...)");
+            .named("invoke")
+            .withParametersOfType(ImmutableList.of(Suppliers.OBJECT_TYPE, Suppliers.arrayOf(Suppliers.OBJECT_TYPE)));
 
     private static final Matcher<ExpressionTree> METHOD_INVOKE_ENCLOSED_BY_INVOCATION_HANDLER =
             Matchers.allOf(METHOD_INVOKE, Matchers.enclosingMethod(INVOCATION_HANDLER));

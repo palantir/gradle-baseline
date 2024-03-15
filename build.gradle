@@ -47,11 +47,13 @@ allprojects {
         tasks.withType(JavaCompile) {
             options.compilerArgs += ['-Werror', '-Xlint:deprecation']
             options.errorprone {
-                check("Slf4jLogsafeArgs", CheckSeverity.OFF)
-                check("PreferSafeLoggableExceptions", CheckSeverity.OFF)
-                check("PreferSafeLogger", CheckSeverity.OFF)
-                check("PreferSafeLoggingPreconditions", CheckSeverity.OFF)
-                check("PreconditionsConstantMessage", CheckSeverity.OFF)
+                disable("Slf4jLogsafeArgs")
+                disable("PreferSafeLoggableExceptions")
+                disable("PreferSafeLogger")
+                disable("PreferSafeLoggingPreconditions")
+                disable("PreconditionsConstantMessage")
+                // TODO(pkoenig): Remove after upgrading baseline
+                disable("GradleProviderToString")
             }
         }
     }
