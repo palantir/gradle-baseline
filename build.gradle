@@ -52,8 +52,6 @@ allprojects {
                 disable("PreferSafeLogger")
                 disable("PreferSafeLoggingPreconditions")
                 disable("PreconditionsConstantMessage")
-                // TODO(pkoenig): Remove after upgrading baseline
-                disable("GradleProviderToString")
             }
         }
     }
