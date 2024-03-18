@@ -47,6 +47,7 @@ public abstract class CheckClasspathCompatible extends DefaultTask {
     @TaskAction
     public final void action() {
         String exampleBadClassesPerJar = getClasspath().getFiles().stream()
+                .filter(file -> file.getName().endsWith(".jar"))
                 .flatMap(file ->
                         tooHighBytecodeMajorVersionInJar(file)
                                 .map(exampleClassInJar -> file.getAbsolutePath() + ": " + exampleClassInJar)
@@ -90,12 +91,15 @@ public abstract class CheckClasspathCompatible extends DefaultTask {
                                             entry.getName() + " has bytecode major version " + bytecodeMajorVersion)
                                     .stream();
                         } catch (IOException e) {
-                            throw new RuntimeException(e);
+                            throw new RuntimeException(
+                                    "Failed when checking classpath compatibility of " + file + ", class "
+                                            + entry.getName(),
+                                    e);
                         }
                     })
                     .findFirst();
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException("Failed when checking classpath compatibility of: " + file, e);
         }
     }
 
