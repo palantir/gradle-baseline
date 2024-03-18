@@ -545,10 +545,12 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         '''.stripIndent(true)
 
         when:
-        def rootCause = Throwables.getRootCause(runTasksWithFailure('checkRuntimeClasspathCompatible').failure)
+        def rootCause = Throwables.getRootCause(runTasksWithFailure('checkRuntimeClasspathCompatible').failure).message
 
         then:
-        rootCause.message.contains('halp')
+        rootCause.contains('spring-core-6.1.5.jar')
+        rootCause.contains('spring-jcl-6.1.5.jar')
+        rootCause.contains('bytecode major version 61')
 
         where:
         gradleVersionNumber << GRADLE_TEST_VERSIONS
