@@ -37,10 +37,10 @@ import java.util.stream.Stream;
 @BugPattern(
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        severity = BugPattern.SeverityLevel.WARNING,
+        severity = BugPattern.SeverityLevel.ERROR,
         summary = "Collection.forEach is more efficient than Collection.stream().forEach")
 public final class CollectionStreamForEach extends BaselineBugChecker
-        implements BaselineBugChecker.BaselineMethodInvocationTreeMatcher<CollectionStreamForEach> {
+        implements BugChecker.MethodInvocationTreeMatcher {
     private static final long serialVersionUID = 1L;
 
     private static final Matcher<ExpressionTree> STREAM_FOR_EACH = MethodMatchers.instanceMethod()
@@ -57,7 +57,7 @@ public final class CollectionStreamForEach extends BaselineBugChecker
             Matchers.allOf(STREAM_FOR_EACH, Matchers.receiverOfInvocation(COLLECTION_STREAM));
 
     @Override
-    public Description matchMethodInvocationBaseline(MethodInvocationTree tree, VisitorState state) {
+    public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
         if (matcher.matches(tree, state)) {
             ExpressionTree stream = ASTHelpers.getReceiver(tree);
             if (stream == null) {

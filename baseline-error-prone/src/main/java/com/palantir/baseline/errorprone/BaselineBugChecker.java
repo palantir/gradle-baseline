@@ -19,6 +19,7 @@ package com.palantir.baseline.errorprone;
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.MoreCollectors;
+import com.google.common.collect.Range;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.fixes.SuggestedFix;
@@ -29,11 +30,16 @@ import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.TreePath;
+import java.util.HashSet;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 abstract class BaselineBugChecker extends BugChecker {
+    private static final ConcurrentMap<Range<Integer>, Set<String>> SUPPRESSIONS = new ConcurrentHashMap<>();
+
     private static final String AUTOMATICALLY_ADDED_PREFIX = "auto-added-on-upgrade:";
 
     private final Supplier<Set<String>> allNames = Suppliers.memoize(() -> {
@@ -46,6 +52,22 @@ abstract class BaselineBugChecker extends BugChecker {
     @Override
     public Set<String> allNames() {
         return allNames.get();
+    }
+
+    static void add(Tree tree, VisitorState state, String suppressionName) {
+        Range<Integer> range = Range.openClosed(
+                state.getEndPosition(tree) - state.getSourceForNode(tree).length(), state.getEndPosition(tree));
+
+        Set<String> suppressions = SUPPRESSIONS.computeIfAbsent(range, _ignored -> ConcurrentHashMap.newKeySet());
+        suppressions.add(suppressionName);
+    }
+
+    static void onExit() {
+        SUPPRESSIONS.forEach((replacementRange, suppressions) -> {});
+    }
+
+    static final class Blah {
+        private final Set<String> suppressionNames = new HashSet<>();
     }
 
     interface BaselineMethodInvocationTreeMatcher<T extends BugChecker & BaselineMethodInvocationTreeMatcher<T>>
@@ -86,8 +108,8 @@ abstract class BaselineBugChecker extends BugChecker {
                     .setLinkUrl(description.getLink())
                     .addFix(SuggestedFix.postfixWith(
                             suppressWarnings,
-                            "\n// SuppressWarning(" + AUTOMATICALLY_ADDED_PREFIX + canonicalName() + Math.random()
-                                    + ")"))
+                            "\n" + "@SuppressWarnings(\"" + AUTOMATICALLY_ADDED_PREFIX + canonicalName() + Math.random()
+                                    + "\")"))
                     .build();
         }
 
