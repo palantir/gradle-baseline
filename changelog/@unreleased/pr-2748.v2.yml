@@ -1,0 +1,7 @@
+type: improvement
+improvement:
+  description: Ignore intra-project dependencies in `checkUnusedDependencies`. This
+    allows `checkUnusedDependencies` to be used with Gradle test fixtures even when
+    the test fixtures are not used by the tests.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2748
