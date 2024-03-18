@@ -182,6 +182,10 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                             task.setSourceClasses(sourceSet.getOutput().getClassesDirs());
                             task.getDependenciesConfigurations().add(explicitCompile);
 
+                            // ignore intra-project dependencies, which are typically added automatically for things
+                            // like test fixtures
+                            task.ignore(project.getGroup().toString(), project.getName());
+
                             // this is liberally applied to ease the Java8 -> 11 transition
                             task.ignore("javax.annotation", "javax.annotation-api");
 
@@ -278,7 +282,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                     .append(projectComponentId.getProjectPath())
                     .append("')");
             if (withName) {
-                builder.append(" (").append(artifact.getId().getDisplayName()).append(")");
+                builder.append(" <-- ").append(artifact.getName());
             }
             return builder.toString();
         }
