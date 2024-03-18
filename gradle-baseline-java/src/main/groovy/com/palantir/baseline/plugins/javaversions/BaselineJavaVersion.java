@@ -86,7 +86,17 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                             task.getRuntimeVersion().set(extension.runtime());
                         }
                     });
-            project.getTasks().named("check").configure(check -> check.dependsOn(checkJavaVersions));
+
+            TaskProvider<CheckClasspathCompatible> checkRuntimeClasspathCompatible = project.getTasks()
+                    .register("checkRuntimeClasspathCompatible", CheckClasspathCompatible.class, task -> {
+                        task.getClasspathName().set("runtime");
+                        task.getJavaVersion().set(extension.runtime());
+                        task.getClasspath().setFrom(project.getConfigurations().getByName("runtimeClasspath"));
+                    });
+
+            project.getTasks().named("check").configure(check -> {
+                check.dependsOn(checkJavaVersions, checkRuntimeClasspathCompatible);
+            });
         });
     }
 

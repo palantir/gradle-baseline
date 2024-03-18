@@ -16,6 +16,7 @@
 
 package com.palantir.baseline
 
+import com.google.common.base.Throwables
 import org.gradle.util.GradleVersion
 import spock.lang.Unroll
 
@@ -517,6 +518,74 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
 
         then:
         stdout.contains(newJavaHome.toString())
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
+    }
+
+    def '#gradleVersionNumber: checkRuntimeClasspathCompatible fails when there is a 17 jar on the runtimeClasspath but runtime is 11'() {
+        fork = false
+
+        // language=gradle
+        buildFile << '''
+            javaVersions {
+                libraryTarget = 11
+                runtime = 11
+            }
+            
+            configurations {
+                java17jar
+            }
+            
+            dependencies {
+                // This has java 17 class files and is a multi-release jar with java 21 class files 
+                java17jar 'org.springframework:spring-core:6.1.5'
+                implementation files(configurations.java17jar)
+            }
+        '''.stripIndent(true)
+
+        when:
+        def rootCause = Throwables.getRootCause(runTasksWithFailure('checkRuntimeClasspathCompatible').failure)
+
+        then:
+        rootCause.message.contains('halp')
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
+    }
+
+    def '#gradleVersionNumber: checkRuntimeClasspathCompatible succeeds when there is only jars of the compatible java runtime versions on the runtimeClasspath'() {
+        fork = false
+
+        when:
+        // language=gradle
+        buildFile << '''
+            javaVersions {
+                libraryTarget = 8
+                runtime = 8
+            }
+            
+            dependencies {
+                // Only has java 8 jars but is a multi-release jar with 11, 17, 21
+                implementation 'com.fasterxml.jackson.core:jackson-core:2.16.1'
+            }
+        '''.stripIndent(true)
+
+        then:
+        runTasksSuccessfully('checkRuntimeClasspathCompatible')
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
+    }
+
+    def '#gradleVersionNumber: checkRuntimeClasspathCompatible is a dependency of check'() {
+        fork = false
+
+        when:
+        def stdout = runTasksSuccessfully('check', '--dry-run').standardOutput
+
+        then:
+        stdout.contains(':checkRuntimeClasspathCompatible')
 
         where:
         gradleVersionNumber << GRADLE_TEST_VERSIONS

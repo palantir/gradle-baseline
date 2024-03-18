@@ -18,6 +18,7 @@ com.puppycrawl.tools:checkstyle = 10.14.2
 com.palantir.gradle.utils:* = 0.1.0
 com.uber.nullaway:nullaway = 0.10.24
 com.palantir.gradle.failure-reports:* = 1.2.0
+com.palantir.gradle.auto-parallelizable:* = 1.4.0
 
 # test deps
 com.fasterxml.jackson.*:* = 2.15.3

@@ -60,6 +60,12 @@ public final class ChosenJavaVersion implements Serializable {
         return "JDK_" + javaLanguageVersion.toString() + (enablePreview ? "_PREVIEW" : "");
     }
 
+    public int asBytecodeMajorVersion() {
+        // 52 was the major version for Java 8, after that each java major version increments the bytecode major
+        // version by 1. This doesn't work for Java 1.4 and below.
+        return javaLanguageVersion.asInt() + (52 - 8);
+    }
+
     @Override
     public String toString() {
         return javaLanguageVersion.toString() + (enablePreview ? "_PREVIEW" : "");
