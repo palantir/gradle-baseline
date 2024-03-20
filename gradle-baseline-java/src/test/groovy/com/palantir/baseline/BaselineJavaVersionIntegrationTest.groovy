@@ -57,8 +57,6 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         
         apply plugin: 'com.palantir.baseline-java-versions'
         
-        }
-        
         application {
             mainClass = 'Main'
         }
