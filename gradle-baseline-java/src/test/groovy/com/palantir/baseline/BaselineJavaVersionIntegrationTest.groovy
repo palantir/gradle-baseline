@@ -41,6 +41,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
     private static final int ENABLE_PREVIEW_BYTECODE = 65535
     private static final int NOT_ENABLE_PREVIEW_BYTECODE = 0
 
+    // language=Gradle
     def standardBuildFile = '''
         buildscript {
             repositories { mavenCentral() }
@@ -53,6 +54,12 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         plugins {
             id 'java-library'
             id 'application'
+        }
+        
+        allprojects {
+            repositories {
+                mavenCentral()
+            }
         }
         
         apply plugin: 'com.palantir.baseline-java-versions'
