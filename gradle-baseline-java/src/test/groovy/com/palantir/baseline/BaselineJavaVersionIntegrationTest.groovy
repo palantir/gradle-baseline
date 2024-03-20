@@ -41,6 +41,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
     private static final int ENABLE_PREVIEW_BYTECODE = 65535
     private static final int NOT_ENABLE_PREVIEW_BYTECODE = 0
 
+    // language=Gradle
     def standardBuildFile = '''
         buildscript {
             repositories { mavenCentral() }
@@ -55,11 +56,13 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             id 'application'
         }
         
-        apply plugin: 'com.palantir.baseline-java-versions'
-        
-        repositories {
-            mavenCentral()
+        allprojects {
+            repositories {
+                mavenCentral()
+            }
         }
+        
+        apply plugin: 'com.palantir.baseline-java-versions'
         
         application {
             mainClass = 'Main'
@@ -568,13 +571,38 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             }
             
             dependencies {
-                // Only has java 8 jars but is a multi-release jar with 11, 17, 21
                 implementation 'com.fasterxml.jackson.core:jackson-core:2.16.1'
             }
         '''.stripIndent(true)
 
         then:
         runTasksSuccessfully('checkRuntimeClasspathCompatible')
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
+    }
+
+    def '#gradleVersionNumber: checkRuntimeClasspathCompatible handles gradleApi'() {
+        fork = false
+
+        when:
+        // language=gradle
+        buildFile << '''
+            javaVersions {
+                libraryTarget = 8
+                runtime = 8
+            }
+            
+            dependencies {
+                // this has relocated multi-version jar classes that have not been put in the right place (at least
+                // for the versions of gradle used when tested). eg:
+                // gradle-api-7.5.1.jar: org/gradle/internal/impldep/META-INF/versions/9/module-info.class has bytecode major version 53
+                implementation gradleApi()
+            }
+        '''.stripIndent(true)
+
+        then:
+        runTasksSuccessfully('checkRuntimeClasspathCompatible', '--write-locks')
 
         where:
         gradleVersionNumber << GRADLE_TEST_VERSIONS

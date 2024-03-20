@@ -76,7 +76,7 @@ public abstract class CheckClasspathCompatible extends DefaultTask {
                     .flatMap(entry -> {
                         // We don't care about higher versions of classes in multi-release jars as JVMs will only
                         // load classes from here that match or are higher than their current version
-                        boolean isMultiReleaseClass = entry.getName().startsWith("META-INF/versions");
+                        boolean isMultiReleaseClass = entry.getName().contains("META-INF/versions");
                         boolean isntClassFile = !entry.getName().endsWith(".class");
 
                         if (isMultiReleaseClass || isntClassFile) {
