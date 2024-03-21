@@ -163,7 +163,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         task << ['checkUnusedDependencies', 'checkImplicitDependencies']
     }
 
-    def 'checkUnusedDependenciesTest passes if dependency from main source set is not referenced in test'() {
+    def 'checkUnusedDependenciesTest passes if main source set is not referenced in test'() {
         when:
         buildFile << standardBuildFile
         buildFile << """
@@ -182,6 +182,20 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
             }
         }
         '''.stripIndent()
+
+        then:
+        def result = with('checkUnusedDependencies', '--stacktrace').build()
+        result.task(':checkUnusedDependenciesTest').getOutcome() == TaskOutcome.SUCCESS
+    }
+
+    def 'checkUnusedDependenciesTest passes if test fixture source set is not referenced in test'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << """
+        plugins {
+            id 'java-test-fixtures'
+        }
+        """
 
         then:
         def result = with('checkUnusedDependencies', '--stacktrace').build()
@@ -263,7 +277,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
 
         then:
         BuildResult result = with(':checkUnusedDependencies', '--stacktrace').withDebug(true).buildAndFail()
-        result.output.contains "project(':sub-project-with-deps') (main (project :sub-project-with-deps))"
+        result.output.contains "project(':sub-project-with-deps') <-- main"
         result.output.contains "project(':sub-project-no-deps')"
     }
 
