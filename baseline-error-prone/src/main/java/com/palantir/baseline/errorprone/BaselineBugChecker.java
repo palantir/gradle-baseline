@@ -85,10 +85,6 @@ abstract class BaselineBugChecker extends BugChecker {
                 return Description.NO_MATCH;
             }
 
-            if (description.fixes.isEmpty()) {
-                return description;
-            }
-
             Tree firstSuppressibleParent = Stream.iterate(state.getPath(), TreePath::getParentPath)
                     .dropWhile(path -> !suppressibleKind(path.getLeaf().getKind()))
                     .findFirst()
@@ -108,8 +104,8 @@ abstract class BaselineBugChecker extends BugChecker {
                     .setLinkUrl(description.getLink())
                     .addFix(SuggestedFix.postfixWith(
                             suppressWarnings,
-                            "\n" + "@SuppressWarnings(\"" + AUTOMATICALLY_ADDED_PREFIX + canonicalName() + Math.random()
-                                    + "\")"))
+                            "\n" + "// @SuppressWarnings(\"" + AUTOMATICALLY_ADDED_PREFIX + canonicalName()
+                                    + Math.random() + "\")"))
                     .build();
         }
 
