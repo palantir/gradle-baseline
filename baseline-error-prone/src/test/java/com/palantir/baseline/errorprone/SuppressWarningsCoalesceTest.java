@@ -40,6 +40,26 @@ class SuppressWarningsCoalesceTest {
     }
 
     @Test
+    void multiple_suppress_warnings_single_repeatable() {
+        fix().addInputLines(
+                        "Test.java",
+                        "public class Test {",
+                        "  @SuppressWarnings({\"A\", \"B\"})",
+                        "  @com.palantir.suppressibleerrorprone.RepeatableSuppressWarnings(\"C\")",
+                        "  void f() {",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "public class Test {",
+                        "  @SuppressWarnings({\"A\", \"B\", \"C\"})",
+                        "  void f() {",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     void single_suppress_warnings_multiple_repeatable_warnings() {
         fix().addInputLines(
                         "Test.java",
@@ -54,6 +74,27 @@ class SuppressWarningsCoalesceTest {
                         "Test.java",
                         "public class Test {",
                         "  @SuppressWarnings({\"A\", \"B\", \"C\"})",
+                        "  void f() {",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void multiple_suppress_warnings_multiple_repeatable_warnings() {
+        fix().addInputLines(
+                        "Test.java",
+                        "public class Test {",
+                        "  @SuppressWarnings({\"A\", \"B\"})",
+                        "  @com.palantir.suppressibleerrorprone.RepeatableSuppressWarnings(\"C\")",
+                        "  @com.palantir.suppressibleerrorprone.RepeatableSuppressWarnings(\"D\")",
+                        "  void f() {",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "public class Test {",
+                        "  @SuppressWarnings({\"A\", \"B\", \"C\", \"D\"})",
                         "  void f() {",
                         "  }",
                         "}")

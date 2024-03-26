@@ -28,10 +28,12 @@ import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.MultiMatcher;
 import com.sun.source.tree.AnnotationTree;
 import com.sun.source.tree.AssignmentTree;
+import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.LiteralTree;
 import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.MethodTree;
+import com.sun.source.tree.NewArrayTree;
 import com.sun.source.tree.Tree;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -47,7 +49,7 @@ import javax.lang.model.element.Name;
 public final class SuppressWarningsCoalesce extends BugChecker implements BugChecker.MethodTreeMatcher {
 
     private static final MultiMatcher<Tree, AnnotationTree> HAS_REPEATABLE_SUPPRESSION = Matchers.annotations(
-            MatchType.ALL, Matchers.isType("com.palantir.suppressibleerrorprone.RepeatableSuppressWarnings"));
+            MatchType.AT_LEAST_ONE, Matchers.isType("com.palantir.suppressibleerrorprone.RepeatableSuppressWarnings"));
 
     private static Name annotationName(Tree annotationType) {
         if (annotationType instanceof IdentifierTree) {
@@ -100,7 +102,22 @@ public final class SuppressWarningsCoalesce extends BugChecker implements BugChe
                     return annotation.getArguments().stream().flatMap(arg -> {
                         if (arg instanceof AssignmentTree) {
                             AssignmentTree assignment = (AssignmentTree) arg;
-                            return Stream.of((String) ((LiteralTree) assignment.getExpression()).getValue());
+                            ExpressionTree expression = assignment.getExpression();
+
+                            if (expression instanceof LiteralTree) {
+                                return Stream.of((String) ((LiteralTree) expression).getValue());
+                            }
+
+                            if (expression instanceof NewArrayTree) {
+                                NewArrayTree newArray = (NewArrayTree) expression;
+                                return newArray.getInitializers().stream()
+                                        .map(LiteralTree.class::cast)
+                                        .map(LiteralTree::getValue)
+                                        .map(String.class::cast);
+                            }
+
+                            throw new UnsupportedOperationException("Unsupported assignment expression: "
+                                    + expression.getClass().getCanonicalName());
                         }
 
                         return Stream.empty();
