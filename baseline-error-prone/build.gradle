@@ -39,6 +39,7 @@ dependencies {
     testRuntimeOnly 'com.palantir.conjure.java.runtime:conjure-java-annotations'
     // for PreferCommonAnnotations
     testRuntimeOnly 'org.jetbrains:annotations'
+    testRuntimeOnly project(':suppressible-errorprone-annotations')
 
     annotationProcessor 'com.google.auto.service:auto-service'
     compileOnly 'org.immutables:value::annotations'

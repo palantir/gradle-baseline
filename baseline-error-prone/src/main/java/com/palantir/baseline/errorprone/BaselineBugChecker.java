@@ -18,28 +18,19 @@ package com.palantir.baseline.errorprone;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.MoreCollectors;
-import com.google.common.collect.Range;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.fixes.SuggestedFix;
 import com.google.errorprone.matchers.Description;
-import com.sun.source.tree.AnnotationTree;
-import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.TreePath;
-import java.util.HashSet;
 import java.util.Set;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.ConcurrentMap;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 abstract class BaselineBugChecker extends BugChecker {
-    private static final ConcurrentMap<Range<Integer>, Set<String>> SUPPRESSIONS = new ConcurrentHashMap<>();
-
     private static final String AUTOMATICALLY_ADDED_PREFIX = "auto-added-on-upgrade:";
 
     private final Supplier<Set<String>> allNames = Suppliers.memoize(() -> {
@@ -54,59 +45,42 @@ abstract class BaselineBugChecker extends BugChecker {
         return allNames.get();
     }
 
-    static void add(Tree tree, VisitorState state, String suppressionName) {
-        Range<Integer> range = Range.openClosed(
-                state.getEndPosition(tree) - state.getSourceForNode(tree).length(), state.getEndPosition(tree));
+    private static Description lol(Object bugChecker, Tree tree, VisitorState state, Description description) {
+        Tree firstSuppressibleParent = Stream.iterate(state.getPath(), TreePath::getParentPath)
+                .dropWhile(path -> !suppressibleKind(path.getLeaf().getKind()))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Can't find anything we can suppress"))
+                .getLeaf();
 
-        Set<String> suppressions = SUPPRESSIONS.computeIfAbsent(range, _ignored -> ConcurrentHashMap.newKeySet());
-        suppressions.add(suppressionName);
+        BugChecker bugChecker1 = (BugChecker) bugChecker;
+
+        return bugChecker1
+                .buildDescription(tree)
+                .setMessage(description.getRawMessage())
+                .setLinkUrl(description.getLink())
+                .addFix(SuggestedFix.builder()
+                        .prefixWith(
+                                firstSuppressibleParent,
+                                "@com.palantir.suppressibleerrorprone.RepeatableSuppressWarnings(\""
+                                        + AUTOMATICALLY_ADDED_PREFIX + bugChecker1.canonicalName() + "\")\n")
+                        .build())
+                .build();
     }
 
-    static void onExit() {
-        SUPPRESSIONS.forEach((replacementRange, suppressions) -> {});
-    }
-
-    static final class Blah {
-        private final Set<String> suppressionNames = new HashSet<>();
-    }
-
-    interface BaselineMethodInvocationTreeMatcher<T extends BugChecker & BaselineMethodInvocationTreeMatcher<T>>
-            extends BugChecker.MethodInvocationTreeMatcher {
-
-        default BugChecker bugChecker() {
-            return (BugChecker) this;
+    interface BaselineMethodTreeMatcher extends BugChecker.MethodTreeMatcher {
+        @Override
+        default Description matchMethod(MethodTree tree, VisitorState state) {
+            return lol(this, tree, state, matchMethodBaseline(tree, state));
         }
 
+        Description matchMethodBaseline(MethodTree tree, VisitorState state);
+    }
+
+    interface BaselineMethodInvocationTreeMatcher extends BugChecker.MethodInvocationTreeMatcher {
         @Override
+        @Deprecated
         default Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
-            Description description = matchMethodInvocationBaseline(tree, state);
-
-            if (description == Description.NO_MATCH) {
-                return Description.NO_MATCH;
-            }
-
-            Tree firstSuppressibleParent = Stream.iterate(state.getPath(), TreePath::getParentPath)
-                    .dropWhile(path -> !suppressibleKind(path.getLeaf().getKind()))
-                    .findFirst()
-                    .orElseThrow(() -> new RuntimeException("Can't find anything we can suppress"))
-                    .getLeaf();
-
-            MethodTree methodTree = (MethodTree) firstSuppressibleParent;
-            AnnotationTree suppressWarnings = methodTree.getModifiers().getAnnotations().stream()
-                    .filter(annotationTree -> ((IdentifierTree) annotationTree.getAnnotationType())
-                            .getName()
-                            .contentEquals("SuppressWarnings"))
-                    .collect(MoreCollectors.onlyElement());
-
-            return bugChecker()
-                    .buildDescription(tree)
-                    .setMessage(description.getRawMessage())
-                    .setLinkUrl(description.getLink())
-                    .addFix(SuggestedFix.postfixWith(
-                            suppressWarnings,
-                            "\n" + "// @SuppressWarnings(\"" + AUTOMATICALLY_ADDED_PREFIX + canonicalName()
-                                    + Math.random() + "\")"))
-                    .build();
+            return lol(this, tree, state, matchMethodInvocationBaseline(tree, state));
         }
 
         Description matchMethodInvocationBaseline(MethodInvocationTree tree, VisitorState state);
