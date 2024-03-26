@@ -21,8 +21,22 @@ import com.google.errorprone.BugPattern;
 import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
+import com.google.errorprone.fixes.SuggestedFix;
+import com.google.errorprone.matchers.ChildMultiMatcher.MatchType;
 import com.google.errorprone.matchers.Description;
+import com.google.errorprone.matchers.Matchers;
+import com.google.errorprone.matchers.MultiMatcher;
+import com.sun.source.tree.AnnotationTree;
+import com.sun.source.tree.AssignmentTree;
+import com.sun.source.tree.IdentifierTree;
+import com.sun.source.tree.LiteralTree;
+import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.MethodTree;
+import com.sun.source.tree.Tree;
+import java.util.List;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import javax.lang.model.element.Name;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -31,24 +45,81 @@ import com.sun.source.tree.MethodTree;
         severity = SeverityLevel.SUGGESTION,
         summary = "blah")
 public final class SuppressWarningsCoalesce extends BugChecker implements BugChecker.MethodTreeMatcher {
+
+    private static final MultiMatcher<Tree, AnnotationTree> SUPPRESSIONS = Matchers.annotations(
+            MatchType.ALL,
+            Matchers.anyOf(
+                    Matchers.isType("java.lang.SuppressWarnings"),
+                    Matchers.anyOf(Matchers.isType("com.palantir.suppressibleerrorprone.RepeatableSuppressWarnings"))));
+
+    private static Name annotationName(Tree annotationType) {
+        if (annotationType instanceof IdentifierTree) {
+            return ((IdentifierTree) annotationType).getName();
+        }
+
+        if (annotationType instanceof MemberSelectTree) {
+            return ((MemberSelectTree) annotationType).getIdentifier();
+        }
+
+        throw new UnsupportedOperationException(
+                "Unsupported annotation type: " + annotationType.getClass().getCanonicalName());
+    }
+
     @Override
     public Description matchMethod(MethodTree tree, VisitorState state) {
-        return Description.NO_MATCH;
 
-        //        List<AnnotationTree> suppressWarnings = tree.getModifiers().getAnnotations().stream()
-        //                .filter(annotation -> ((IdentifierTree) annotation.getAnnotationType())
-        //                        .getName()
-        //                        .contentEquals("SuppressWarnings"))
-        //                .collect(Collectors.toList());
-        //
-        //        if (suppressWarnings.size() <= 1) {
-        //            return Description.NO_MATCH;
-        //        }
-        //
-        //        List<? extends ExpressionTree> collect = suppressWarnings.stream()
-        //                .flatMap(annotationTree -> annotationTree.getArguments().stream())
-        //                .collect(Collectors.toList());
-        //
-        //        return Description.NO_MATCH;
+        List<? extends AnnotationTree> suppressWarnings = tree.getModifiers().getAnnotations().stream()
+                .filter(annotation -> {
+                    Tree annotationType = annotation.getAnnotationType();
+                    Name annotationName = annotationName(annotationType);
+                    if (annotationName.contentEquals("SuppressWarnings")
+                            || annotationName.contentEquals("RepeatableSuppressWarnings")) {
+                        return true;
+                    }
+
+                    if (annotationType instanceof IdentifierTree) {
+                        return ((IdentifierTree) annotationType).getName().contentEquals("SuppressWarnings");
+                    }
+
+                    if (annotationType instanceof MemberSelectTree) {
+                        return ((MemberSelectTree) annotationType)
+                                .getIdentifier()
+                                .contentEquals("RepeatableSuppressWarnings");
+                    }
+
+                    return false;
+                })
+                .collect(Collectors.toList());
+
+        if (suppressWarnings.isEmpty()) {
+            return Description.NO_MATCH;
+        }
+
+        String warningsToSuppress = suppressWarnings.stream()
+                .flatMap(annotation -> {
+                    return annotation.getArguments().stream().flatMap(arg -> {
+                        if (arg instanceof AssignmentTree) {
+                            AssignmentTree assignment = (AssignmentTree) arg;
+                            return Stream.of((String) ((LiteralTree) assignment.getExpression()).getValue());
+                        }
+
+                        return Stream.empty();
+                    });
+                })
+                .collect(Collectors.joining("\",\""));
+
+        if (warningsToSuppress.isEmpty()) {
+            return Description.NO_MATCH;
+        }
+        SuggestedFix.Builder fixBuilder = SuggestedFix.builder();
+
+        suppressWarnings.forEach(fixBuilder::delete);
+
+        fixBuilder.prefixWith(tree, "@SuppressWarnings({\"" + warningsToSuppress + "\"})");
+
+        return buildDescription(tree)
+                .setMessage("blah")
+                .addFix(fixBuilder.build())
+                .build();
     }
 }

@@ -24,10 +24,9 @@ class SuppressWarningsCoalesceTest {
         fix().addInputLines(
                         "Test.java",
                         "public class Test {",
-                        "  // comment",
                         "  @SuppressWarnings(\"A\")",
-                        "  // @SuppressWarnings(\"B\")",
-                        "  // @SuppressWarnings(\"C\")",
+                        "  @com.palantir.suppressibleerrorprone.RepeatableSuppressWarnings(\"B\")",
+                        "  @com.palantir.suppressibleerrorprone.RepeatableSuppressWarnings(\"C\")",
                         "  void f() {",
                         "  }",
                         "}")
