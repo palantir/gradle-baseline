@@ -51,6 +51,49 @@ public final class SuppressWarningsCoalesce extends BugChecker implements BugChe
     private static final MultiMatcher<Tree, AnnotationTree> HAS_REPEATABLE_SUPPRESSION = Matchers.annotations(
             MatchType.AT_LEAST_ONE, Matchers.isType("com.palantir.suppressibleerrorprone.RepeatableSuppressWarnings"));
 
+    @Override
+    public Description matchMethod(MethodTree tree, VisitorState state) {
+        if (!HAS_REPEATABLE_SUPPRESSION.matches(tree, state)) {
+            return Description.NO_MATCH;
+        }
+
+        List<? extends AnnotationTree> suppressWarnings = tree.getModifiers().getAnnotations().stream()
+                .filter(annotation -> {
+                    Name annotationName = annotationName(annotation.getAnnotationType());
+                    return annotationName.contentEquals("SuppressWarnings")
+                            || annotationName.contentEquals("RepeatableSuppressWarnings");
+                })
+                .collect(Collectors.toList());
+
+        if (suppressWarnings.isEmpty()) {
+            return Description.NO_MATCH;
+        }
+
+        List<String> warningsToSuppress = suppressWarnings.stream()
+                .flatMap(SuppressWarningsCoalesce::annotationStringValues)
+                .collect(Collectors.toList());
+
+        if (warningsToSuppress.isEmpty()) {
+            return Description.NO_MATCH;
+        }
+
+        SuggestedFix.Builder fixBuilder = SuggestedFix.builder();
+        suppressWarnings.forEach(fixBuilder::delete);
+
+        String suppressWarningsString = '"' + String.join("\", \"", warningsToSuppress) + '"';
+
+        if (warningsToSuppress.size() > 1) {
+            suppressWarningsString = "{" + suppressWarningsString + "}";
+        }
+
+        fixBuilder.prefixWith(tree, "@SuppressWarnings(" + suppressWarningsString + ")");
+
+        return buildDescription(tree)
+                .setMessage("blah")
+                .addFix(fixBuilder.build())
+                .build();
+    }
+
     private static Name annotationName(Tree annotationType) {
         if (annotationType instanceof IdentifierTree) {
             return ((IdentifierTree) annotationType).getName();
@@ -62,43 +105,6 @@ public final class SuppressWarningsCoalesce extends BugChecker implements BugChe
 
         throw new UnsupportedOperationException(
                 "Unsupported annotation type: " + annotationType.getClass().getCanonicalName());
-    }
-
-    @Override
-    public Description matchMethod(MethodTree tree, VisitorState state) {
-        if (!HAS_REPEATABLE_SUPPRESSION.matches(tree, state)) {
-            return Description.NO_MATCH;
-        }
-
-        List<? extends AnnotationTree> suppressWarnings = tree.getModifiers().getAnnotations().stream()
-                .filter(annotation -> {
-                    Tree annotationType = annotation.getAnnotationType();
-                    Name annotationName = annotationName(annotationType);
-                    return annotationName.contentEquals("SuppressWarnings")
-                            || annotationName.contentEquals("RepeatableSuppressWarnings");
-                })
-                .collect(Collectors.toList());
-
-        if (suppressWarnings.isEmpty()) {
-            return Description.NO_MATCH;
-        }
-
-        String warningsToSuppress = suppressWarnings.stream()
-                .flatMap(SuppressWarningsCoalesce::annotationStringValues)
-                .collect(Collectors.joining("\",\""));
-
-        if (warningsToSuppress.isEmpty()) {
-            return Description.NO_MATCH;
-        }
-
-        SuggestedFix.Builder fixBuilder = SuggestedFix.builder();
-        suppressWarnings.forEach(fixBuilder::delete);
-        fixBuilder.prefixWith(tree, "@SuppressWarnings({\"" + warningsToSuppress + "\"})");
-
-        return buildDescription(tree)
-                .setMessage("blah")
-                .addFix(fixBuilder.build())
-                .build();
     }
 
     private static Stream<String> annotationStringValues(AnnotationTree annotation) {

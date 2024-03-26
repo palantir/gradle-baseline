@@ -81,6 +81,20 @@ class SuppressWarningsCoalesceTest {
     }
 
     @Test
+    void no_suppressible_warnings_single_repeatable_warnings() {
+        fix().addInputLines(
+                        "Test.java",
+                        "public class Test {",
+                        "  @com.palantir.suppressibleerrorprone.RepeatableSuppressWarnings(\"A\")",
+                        "  void f() {",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java", "public class Test {", "  @SuppressWarnings(\"A\")", "  void f() {", "  }", "}")
+                .doTest();
+    }
+
+    @Test
     void multiple_suppress_warnings_multiple_repeatable_warnings() {
         fix().addInputLines(
                         "Test.java",
