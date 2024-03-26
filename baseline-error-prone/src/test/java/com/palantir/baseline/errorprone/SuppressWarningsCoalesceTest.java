@@ -20,7 +20,27 @@ import org.junit.jupiter.api.Test;
 
 class SuppressWarningsCoalesceTest {
     @Test
-    void test() {
+    void no_suppress_warnings_no_repeatable() {
+        fix().addInputLines("Test.java", "public class Test {", "  void f() {", "  }", "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void single_suppress_warnings_no_repeatable() {
+        fix().addInputLines(
+                        "Test.java",
+                        "public class Test {",
+                        "  @SuppressWarnings(\"Something\")",
+                        "  void f() {",
+                        "  }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void single_suppress_warnings_multiple_repeatable_warnings() {
         fix().addInputLines(
                         "Test.java",
                         "public class Test {",
