@@ -46,11 +46,8 @@ import javax.lang.model.element.Name;
         summary = "blah")
 public final class SuppressWarningsCoalesce extends BugChecker implements BugChecker.MethodTreeMatcher {
 
-    private static final MultiMatcher<Tree, AnnotationTree> SUPPRESSIONS = Matchers.annotations(
-            MatchType.ALL,
-            Matchers.anyOf(
-                    Matchers.isType("java.lang.SuppressWarnings"),
-                    Matchers.anyOf(Matchers.isType("com.palantir.suppressibleerrorprone.RepeatableSuppressWarnings"))));
+    private static final MultiMatcher<Tree, AnnotationTree> HAS_REPEATABLE_SUPPRESSION = Matchers.annotations(
+            MatchType.ALL, Matchers.isType("com.palantir.suppressibleerrorprone.RepeatableSuppressWarnings"));
 
     private static Name annotationName(Tree annotationType) {
         if (annotationType instanceof IdentifierTree) {
@@ -67,6 +64,9 @@ public final class SuppressWarningsCoalesce extends BugChecker implements BugChe
 
     @Override
     public Description matchMethod(MethodTree tree, VisitorState state) {
+        if (!HAS_REPEATABLE_SUPPRESSION.matches(tree, state)) {
+            return Description.NO_MATCH;
+        }
 
         List<? extends AnnotationTree> suppressWarnings = tree.getModifiers().getAnnotations().stream()
                 .filter(annotation -> {
