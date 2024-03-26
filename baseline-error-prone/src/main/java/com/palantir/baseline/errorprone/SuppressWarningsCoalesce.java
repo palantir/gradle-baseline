@@ -28,13 +28,16 @@ import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.MultiMatcher;
 import com.sun.source.tree.AnnotationTree;
 import com.sun.source.tree.AssignmentTree;
+import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.LiteralTree;
 import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.MethodTree;
+import com.sun.source.tree.ModifiersTree;
 import com.sun.source.tree.NewArrayTree;
 import com.sun.source.tree.Tree;
+import com.sun.source.tree.VariableTree;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -46,18 +49,33 @@ import javax.lang.model.element.Name;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.SUGGESTION,
         summary = "blah")
-public final class SuppressWarningsCoalesce extends BugChecker implements BugChecker.MethodTreeMatcher {
+public final class SuppressWarningsCoalesce extends BugChecker
+        implements BugChecker.MethodTreeMatcher, BugChecker.VariableTreeMatcher, BugChecker.ClassTreeMatcher {
 
     private static final MultiMatcher<Tree, AnnotationTree> HAS_REPEATABLE_SUPPRESSION = Matchers.annotations(
             MatchType.AT_LEAST_ONE, Matchers.isType("com.palantir.suppressibleerrorprone.RepeatableSuppressWarnings"));
 
     @Override
     public Description matchMethod(MethodTree tree, VisitorState state) {
+        return blah(state, tree, tree.getModifiers());
+    }
+
+    @Override
+    public Description matchVariable(VariableTree tree, VisitorState state) {
+        return blah(state, tree, tree.getModifiers());
+    }
+
+    @Override
+    public Description matchClass(ClassTree tree, VisitorState state) {
+        return blah(state, tree, tree.getModifiers());
+    }
+
+    private Description blah(VisitorState state, Tree tree, ModifiersTree modifiersTree) {
         if (!HAS_REPEATABLE_SUPPRESSION.matches(tree, state)) {
             return Description.NO_MATCH;
         }
 
-        List<? extends AnnotationTree> suppressWarnings = tree.getModifiers().getAnnotations().stream()
+        List<? extends AnnotationTree> suppressWarnings = modifiersTree.getAnnotations().stream()
                 .filter(annotation -> {
                     Name annotationName = annotationName(annotation.getAnnotationType());
                     return annotationName.contentEquals("SuppressWarnings")

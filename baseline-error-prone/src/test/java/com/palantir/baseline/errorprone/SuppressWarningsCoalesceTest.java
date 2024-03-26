@@ -115,6 +115,37 @@ class SuppressWarningsCoalesceTest {
                 .doTest();
     }
 
+    @Test
+    void field() {
+        fix().addInputLines(
+                        "Test.java",
+                        "public class Test {",
+                        "  @SuppressWarnings({\"A\", \"B\"})",
+                        "  @com.palantir.suppressibleerrorprone.RepeatableSuppressWarnings(\"C\")",
+                        "  @com.palantir.suppressibleerrorprone.RepeatableSuppressWarnings(\"D\")",
+                        "  String field;",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "public class Test {",
+                        "  @SuppressWarnings({\"A\", \"B\", \"C\", \"D\"})",
+                        "  String field;",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void klass() {
+        fix().addInputLines(
+                        "Test.java",
+                        "@SuppressWarnings({\"A\", \"B\"})",
+                        "@com.palantir.suppressibleerrorprone.RepeatableSuppressWarnings(\"C\")",
+                        "@com.palantir.suppressibleerrorprone.RepeatableSuppressWarnings(\"D\")",
+                        "public class Test {}")
+                .addOutputLines("Test.java", "@SuppressWarnings({\"A\", \"B\", \"C\", \"D\"})", "public class Test {}")
+                .doTest();
+    }
+
     private RefactoringValidator fix() {
         return RefactoringValidator.of(SuppressWarningsCoalesce.class, getClass());
     }
