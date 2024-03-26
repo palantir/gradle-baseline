@@ -74,22 +74,8 @@ public final class SuppressWarningsCoalesce extends BugChecker implements BugChe
                 .filter(annotation -> {
                     Tree annotationType = annotation.getAnnotationType();
                     Name annotationName = annotationName(annotationType);
-                    if (annotationName.contentEquals("SuppressWarnings")
-                            || annotationName.contentEquals("RepeatableSuppressWarnings")) {
-                        return true;
-                    }
-
-                    if (annotationType instanceof IdentifierTree) {
-                        return ((IdentifierTree) annotationType).getName().contentEquals("SuppressWarnings");
-                    }
-
-                    if (annotationType instanceof MemberSelectTree) {
-                        return ((MemberSelectTree) annotationType)
-                                .getIdentifier()
-                                .contentEquals("RepeatableSuppressWarnings");
-                    }
-
-                    return false;
+                    return annotationName.contentEquals("SuppressWarnings")
+                            || annotationName.contentEquals("RepeatableSuppressWarnings");
                 })
                 .collect(Collectors.toList());
 
@@ -98,45 +84,46 @@ public final class SuppressWarningsCoalesce extends BugChecker implements BugChe
         }
 
         String warningsToSuppress = suppressWarnings.stream()
-                .flatMap(annotation -> {
-                    return annotation.getArguments().stream().flatMap(arg -> {
-                        if (arg instanceof AssignmentTree) {
-                            AssignmentTree assignment = (AssignmentTree) arg;
-                            ExpressionTree expression = assignment.getExpression();
-
-                            if (expression instanceof LiteralTree) {
-                                return Stream.of((String) ((LiteralTree) expression).getValue());
-                            }
-
-                            if (expression instanceof NewArrayTree) {
-                                NewArrayTree newArray = (NewArrayTree) expression;
-                                return newArray.getInitializers().stream()
-                                        .map(LiteralTree.class::cast)
-                                        .map(LiteralTree::getValue)
-                                        .map(String.class::cast);
-                            }
-
-                            throw new UnsupportedOperationException("Unsupported assignment expression: "
-                                    + expression.getClass().getCanonicalName());
-                        }
-
-                        return Stream.empty();
-                    });
-                })
+                .flatMap(SuppressWarningsCoalesce::annotationStringValues)
                 .collect(Collectors.joining("\",\""));
 
         if (warningsToSuppress.isEmpty()) {
             return Description.NO_MATCH;
         }
+
         SuggestedFix.Builder fixBuilder = SuggestedFix.builder();
-
         suppressWarnings.forEach(fixBuilder::delete);
-
         fixBuilder.prefixWith(tree, "@SuppressWarnings({\"" + warningsToSuppress + "\"})");
 
         return buildDescription(tree)
                 .setMessage("blah")
                 .addFix(fixBuilder.build())
                 .build();
+    }
+
+    private static Stream<String> annotationStringValues(AnnotationTree annotation) {
+        return annotation.getArguments().stream().flatMap(arg -> {
+            if (arg instanceof AssignmentTree) {
+                AssignmentTree assignment = (AssignmentTree) arg;
+                ExpressionTree expression = assignment.getExpression();
+
+                if (expression instanceof LiteralTree) {
+                    return Stream.of((String) ((LiteralTree) expression).getValue());
+                }
+
+                if (expression instanceof NewArrayTree) {
+                    NewArrayTree newArray = (NewArrayTree) expression;
+                    return newArray.getInitializers().stream()
+                            .map(LiteralTree.class::cast)
+                            .map(LiteralTree::getValue)
+                            .map(String.class::cast);
+                }
+
+                throw new UnsupportedOperationException("Unsupported assignment expression: "
+                        + expression.getClass().getCanonicalName());
+            }
+
+            return Stream.empty();
+        });
     }
 }
