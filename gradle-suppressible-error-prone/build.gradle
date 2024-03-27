@@ -1,0 +1,23 @@
+apply plugin: 'java-gradle-plugin'
+apply plugin: 'groovy'
+apply plugin: 'com.palantir.external-publish-jar'
+
+dependencies {
+    implementation gradleApi()
+    implementation 'net.ltgt.gradle:gradle-errorprone-plugin'
+
+    testImplementation gradleTestKit()
+    testImplementation 'com.netflix.nebula:nebula-test'
+    testImplementation 'org.assertj:assertj-core'
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+}
+
+gradlePlugin {
+    plugins {
+        suppressibleErrorProne {
+            id = 'com.palantir.suppressible-error-prone'
+            displayName = 'Palantir Suppressible Error Prone Plugin'
+            implementationClass = 'com.palantir.suppressibleerrorprone.SuppressibleErrorPronePlugin'
+        }
+    }
+}
