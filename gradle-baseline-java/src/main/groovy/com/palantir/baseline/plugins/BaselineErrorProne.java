@@ -173,6 +173,14 @@ public final class BaselineErrorProne implements Plugin<Project> {
             errorProneOptions.disable("UnnecessaryLambda");
         }
 
+        Optional<SourceSet> maybeSourceSet = project
+                .getConvention()
+                .getPlugin(JavaPluginConvention.class)
+                .getSourceSets()
+                .matching(ss -> javaCompile.getName().equals(ss.getCompileJavaTaskName()))
+                .stream()
+                .collect(MoreCollectors.toOptional());
+
         if (isErrorProneRefactoring(project)
                 || project.hasProperty(SUPPRESS_STAGE_ONE)
                 || project.hasProperty(SUPPRESS_STAGE_TWO)) {
@@ -187,6 +195,14 @@ public final class BaselineErrorProne implements Plugin<Project> {
                     return List.of("-XepPatchLocation:IN_PLACE", "-XepPatchChecks:SuppressWarningsCoalesce");
                 }
             });
+
+            maybeSourceSet.ifPresent(sourceSet -> {
+                project.getDependencies()
+                        .add(
+                                sourceSet.getCompileOnlyConfigurationName(),
+                                "com.palantir.baseline:suppressible-errorprone-annotations:"
+                                        + BaselineErrorProne.class.getPackage().getImplementationVersion());
+            });
         }
 
         if (project.hasProperty(SUPPRESS_STAGE_ONE)) {
@@ -199,14 +215,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
         }
 
         if (isErrorProneRefactoring(project) || project.hasProperty(SUPPRESS_STAGE_ONE)) {
-            Optional<SourceSet> maybeSourceSet = project
-                    .getConvention()
-                    .getPlugin(JavaPluginConvention.class)
-                    .getSourceSets()
-                    .matching(ss -> javaCompile.getName().equals(ss.getCompileJavaTaskName()))
-                    .stream()
-                    .collect(MoreCollectors.toOptional());
-
             // TODO(gatesn): Is there a way to discover error-prone checks?
             // Maybe service-load from a ClassLoader configured with annotation processor path?
             // https://github.com/google/error-prone/pull/947
