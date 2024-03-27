@@ -47,7 +47,7 @@ import javax.lang.model.element.Name;
 @BugPattern(
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        severity = SeverityLevel.SUGGESTION,
+        severity = SeverityLevel.ERROR,
         summary = "blah")
 public final class SuppressWarningsCoalesce extends BugChecker
         implements BugChecker.MethodTreeMatcher, BugChecker.VariableTreeMatcher, BugChecker.ClassTreeMatcher {

@@ -50,6 +50,8 @@ public final class BaselineErrorProne implements Plugin<Project> {
     private static final Logger log = Logging.getLogger(BaselineErrorProne.class);
     public static final String EXTENSION_NAME = "baselineErrorProne";
     private static final String PROP_ERROR_PRONE_APPLY = "errorProneApply";
+    private static final String SUPPRESS_STAGE_ONE = "errorProneSuppressStage1";
+    private static final String SUPPRESS_STAGE_TWO = "errorProneSuppressStage2";
     private static final String DISABLE_PROPERTY = "com.palantir.baseline-error-prone.disable";
 
     @Override
@@ -86,7 +88,9 @@ public final class BaselineErrorProne implements Plugin<Project> {
         // these compiler flags after all configuration has happened.
         project.afterEvaluate(
                 unused -> project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
-                    if (isErrorProneRefactoring(project)) {
+                    if (isErrorProneRefactoring(project)
+                            || project.hasProperty(SUPPRESS_STAGE_ONE)
+                            || project.hasProperty(SUPPRESS_STAGE_TWO)) {
                         javaCompile.getOptions().setWarnings(false);
                         javaCompile.getOptions().setDeprecation(false);
                         javaCompile
@@ -171,10 +175,32 @@ public final class BaselineErrorProne implements Plugin<Project> {
             errorProneOptions.disable("UnnecessaryLambda");
         }
 
-        if (isErrorProneRefactoring(project)) {
+        if (isErrorProneRefactoring(project)
+                || project.hasProperty(SUPPRESS_STAGE_ONE)
+                || project.hasProperty(SUPPRESS_STAGE_TWO)) {
             // Don't attempt to cache since it won't capture the source files that might be modified
             javaCompile.getOutputs().cacheIf(t -> false);
+        }
 
+        if (project.hasProperty(SUPPRESS_STAGE_TWO)) {
+            errorProneOptions.getErrorproneArgumentProviders().add(new CommandLineArgumentProvider() {
+                @Override
+                public Iterable<String> asArguments() {
+                    return List.of("-XepPatchLocation:IN_PLACE", "-XepPatchChecks:SuppressWarningsCoalesce");
+                }
+            });
+        }
+
+        if (project.hasProperty(SUPPRESS_STAGE_ONE)) {
+            javaCompile.getOptions().getForkOptions().getJvmArgumentProviders().add(new CommandLineArgumentProvider() {
+                @Override
+                public Iterable<String> asArguments() {
+                    return List.of("-DerrorProneSuppressStage1=true");
+                }
+            });
+        }
+
+        if (isErrorProneRefactoring(project) || project.hasProperty(SUPPRESS_STAGE_ONE)) {
             Optional<SourceSet> maybeSourceSet = project
                     .getConvention()
                     .getPlugin(JavaPluginConvention.class)
