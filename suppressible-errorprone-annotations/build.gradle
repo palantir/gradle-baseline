@@ -1,2 +1,2 @@
 apply plugin: 'java-library'
-
+apply plugin: 'com.palantir.external-publish-jar'
