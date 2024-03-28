@@ -4,5 +4,4 @@ include "baseline-error-prone"
 include "baseline-null-away"
 include "gradle-baseline-java"
 include "gradle-baseline-java-config"
-include 'gradle-suppressible-error-prone'
-include 'suppressible-error-prone-annotations'
+include 'suppressible-errorprone-annotations'
