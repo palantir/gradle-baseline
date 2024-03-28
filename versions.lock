@@ -32,7 +32,7 @@ com.palantir.gradle.utils:lazily-configured-mapping:0.1.0 (1 constraints: 0305ee
 com.palantir.javaformat:gradle-palantir-java-format:1.1.0 (1 constraints: 0405f335)
 com.palantir.javaformat:palantir-java-format-spi:1.1.0 (1 constraints: 711560be)
 com.uber.nullaway:nullaway:0.10.24 (1 constraints: 69058e40)
-commons-io:commons-io:2.15.1 (2 constraints: f819a808)
+commons-io:commons-io:2.16.0 (2 constraints: f819aa08)
 commons-lang:commons-lang:2.6 (1 constraints: ac04232c)
 io.github.eisop:dataflow-errorprone:3.41.0-eisop1 (3 constraints: 3e40ddde)
 io.github.java-diff-utils:java-diff-utils:4.12 (1 constraints: b412c908)
