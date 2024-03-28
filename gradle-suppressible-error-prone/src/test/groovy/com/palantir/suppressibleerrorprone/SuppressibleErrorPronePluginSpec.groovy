@@ -55,6 +55,16 @@ class SuppressibleErrorPronePluginSpec extends IntegrationSpec {
     }
 
     def 'errors out when java code that fails an errorprone is applied'() {
+        writeErrorProneContainingJavaFile()
+
+        when:
+        def stderr = runTasksWithFailure('compileJava').standardError
+
+        then:
+        stderr.contains('error: [ArrayEquals]')
+    }
+
+    private void writeErrorProneContainingJavaFile() {
         // language=java
         writeJavaSourceFile '''
             package test;
@@ -66,11 +76,5 @@ class SuppressibleErrorPronePluginSpec extends IntegrationSpec {
                 }
             }
         '''.stripIndent(true)
-
-        when:
-        def stderr = runTasksWithFailure('compileJava').standardError
-
-        then:
-        stderr.contains('error: [ArrayEquals]')
     }
 }
