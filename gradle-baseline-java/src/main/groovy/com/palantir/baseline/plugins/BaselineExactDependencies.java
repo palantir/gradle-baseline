@@ -184,7 +184,8 @@ public final class BaselineExactDependencies implements Plugin<Project> {
 
                             // ignore intra-project dependencies, which are typically added automatically for things
                             // like test fixtures
-                            task.ignore(project.getGroup().toString(), project.getName());
+                            task.ignore(project.provider(() ->
+                                    Set.of(ignoreCoordinate(project.getGroup().toString(), project.getName()))));
 
                             // this is liberally applied to ease the Java8 -> 11 transition
                             task.ignore("javax.annotation", "javax.annotation-api");
