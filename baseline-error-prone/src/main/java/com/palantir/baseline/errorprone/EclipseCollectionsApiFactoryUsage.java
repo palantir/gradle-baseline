@@ -28,7 +28,8 @@ import com.sun.tools.javac.code.Type;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        summary = "Import of type uses non-canonical name",
+        summary = "Import eclipse-collections uses api factory instead of impl factory. This could result in"
+                + "classloading deadlocks as explained here: https://github.com/palantir/atlasdb/pull/7073",
         severity = BugPattern.SeverityLevel.ERROR,
         documentSuppression = false)
 public final class EclipseCollectionsApiFactoryUsage extends BugChecker implements BugChecker.ImportTreeMatcher {
