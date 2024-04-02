@@ -43,6 +43,7 @@ import org.gradle.api.plugins.ExtensionAware;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.process.CommandLineArgumentProvider;
 
@@ -66,15 +67,22 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 project.getExtensions().create(EXTENSION_NAME, BaselineErrorProneExtension.class, project);
         project.getPluginManager().apply(ErrorPronePlugin.class);
 
-        String version = Optional.ofNullable(
-                        BaselineErrorProne.class.getPackage().getImplementationVersion())
-                .orElseGet(() -> {
-                    log.warn("Baseline is using 'latest.release' - beware this compromises build reproducibility");
-                    return "latest.release";
-                });
+        String version = Optional.ofNullable((String) project.findProperty("baselineErrorProneVersion"))
+                .or(() -> Optional.ofNullable(
+                        BaselineErrorProne.class.getPackage().getImplementationVersion()))
+                .orElseThrow(() -> new RuntimeException("BaselineErrorProne implementation version not found"));
 
         project.getDependencies()
                 .add(ErrorPronePlugin.CONFIGURATION_NAME, "com.palantir.baseline:baseline-error-prone:" + version);
+
+        if (project.hasProperty(SUPPRESS_STAGE_TWO)) {
+            project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
+                project.getDependencies()
+                        .add(
+                                sourceSet.getCompileOnlyConfigurationName(),
+                                "com.palantir.baseline:suppressible-errorprone-annotations:" + version);
+            });
+        }
 
         project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
             ((ExtensionAware) javaCompile.getOptions())
@@ -175,14 +183,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
             errorProneOptions.disable("UnnecessaryLambda");
         }
 
-        Optional<SourceSet> maybeSourceSet = project
-                .getConvention()
-                .getPlugin(JavaPluginConvention.class)
-                .getSourceSets()
-                .matching(ss -> javaCompile.getName().equals(ss.getCompileJavaTaskName()))
-                .stream()
-                .collect(MoreCollectors.toOptional());
-
         if (isErrorProneRefactoring(project)
                 || project.hasProperty(SUPPRESS_STAGE_ONE)
                 || project.hasProperty(SUPPRESS_STAGE_TWO)) {
@@ -190,28 +190,20 @@ public final class BaselineErrorProne implements Plugin<Project> {
             javaCompile.getOutputs().cacheIf(t -> false);
         }
 
+        if (project.hasProperty(SUPPRESS_STAGE_ONE)) {
+            errorProneOptions.getErrorproneArgumentProviders().add(new CommandLineArgumentProvider() {
+                @Override
+                public Iterable<String> asArguments() {
+                    return List.of("-XepOpt:baselineErrorProneStage1=true");
+                }
+            });
+        }
+
         if (project.hasProperty(SUPPRESS_STAGE_TWO)) {
             errorProneOptions.getErrorproneArgumentProviders().add(new CommandLineArgumentProvider() {
                 @Override
                 public Iterable<String> asArguments() {
                     return List.of("-XepPatchLocation:IN_PLACE", "-XepPatchChecks:SuppressWarningsCoalesce");
-                }
-            });
-
-            maybeSourceSet.ifPresent(sourceSet -> {
-                project.getDependencies()
-                        .add(
-                                sourceSet.getCompileOnlyConfigurationName(),
-                                "com.palantir.baseline:suppressible-errorprone-annotations:"
-                                        + BaselineErrorProne.class.getPackage().getImplementationVersion());
-            });
-        }
-
-        if (project.hasProperty(SUPPRESS_STAGE_ONE)) {
-            javaCompile.getOptions().getForkOptions().getJvmArgumentProviders().add(new CommandLineArgumentProvider() {
-                @Override
-                public Iterable<String> asArguments() {
-                    return List.of("-DerrorProneSuppressStage1=true");
                 }
             });
         }
@@ -238,6 +230,14 @@ public final class BaselineErrorProne implements Plugin<Project> {
                                         "-XepPatchChecks:" + Joiner.on(',').join(errorProneChecks),
                                         "-XepPatchLocation:IN_PLACE"));
                     } else {
+                        Optional<SourceSet> maybeSourceSet = project
+                                .getConvention()
+                                .getPlugin(JavaPluginConvention.class)
+                                .getSourceSets()
+                                .matching(ss -> javaCompile.getName().equals(ss.getCompileJavaTaskName()))
+                                .stream()
+                                .collect(MoreCollectors.toOptional());
+
                         // Don't apply checks that have been explicitly disabled
                         Stream<String> errorProneChecks = getNotDisabledErrorproneChecks(
                                 project, errorProneExtension, javaCompile, maybeSourceSet, errorProneOptions);

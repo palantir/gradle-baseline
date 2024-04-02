@@ -18,6 +18,7 @@ package com.palantir.baseline
 
 
 import org.gradle.testkit.runner.BuildResult
+import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import spock.lang.Unroll
 
@@ -281,5 +282,35 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
 
         where:
         checkConfigurationMethod << CheckConfigurationMethod.values()
+    }
+
+    def 'can suppress existing code that fails errorprone checks'() {
+        buildFile << standardBuildFile
+        def testJava = file('src/main/java/test/Test.java')
+
+        // language=java
+        testJava << '''
+            package test;
+            import java.util.List;
+            public class Test {
+                @SuppressWarnings("something")
+                void test() {
+                    List.of().stream().forEach(System.out::println);
+                }
+            }
+        '''.stripIndent(true)
+
+        when:
+        println with('compileJava', '-PerrorProneSuppressStage1').withDebug(true).build().output
+        println with('compileJava', '-PerrorProneSuppressStage2').build().output
+
+        then:
+        testJava.text.contains('@SuppressWarnings({"something", "CollectionStreamForEach"}')
+    }
+
+    GradleRunner with(String... tasks) {
+        def projectVersion = Optional.ofNullable(System.getProperty('projectVersion')).orElseThrow()
+        String[] strings = tasks + ["-PbaselineErrorProneVersion=${projectVersion}".toString()]
+        return super.with(strings)
     }
 }

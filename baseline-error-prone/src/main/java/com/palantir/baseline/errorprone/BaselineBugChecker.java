@@ -31,8 +31,6 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 abstract class BaselineBugChecker extends BugChecker {
-    private static final boolean ERROR_PRONE_SUPPRESS_STAGE_1 = Boolean.getBoolean("errorProneSuppressStage1");
-
     private static final String AUTOMATICALLY_ADDED_PREFIX = "auto-added-on-upgrade:";
 
     private final Supplier<Set<String>> allNames = Suppliers.memoize(() -> {
@@ -48,8 +46,16 @@ abstract class BaselineBugChecker extends BugChecker {
     }
 
     private static Description lol(Object bugChecker, Tree tree, VisitorState state, Description description) {
-        System.out.println("ERROR_PRONE_SUPPRESS_STAGE_1 = " + ERROR_PRONE_SUPPRESS_STAGE_1);
-        if (!ERROR_PRONE_SUPPRESS_STAGE_1 || description == Description.NO_MATCH) {
+        if (description == Description.NO_MATCH) {
+            return description;
+        }
+
+        boolean errorProneSuppressStage1 = state.errorProneOptions()
+                .getFlags()
+                .getBoolean("baselineErrorProneStage1")
+                .orElse(false);
+
+        if (!errorProneSuppressStage1) {
             return description;
         }
 

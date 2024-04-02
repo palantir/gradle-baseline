@@ -36,6 +36,7 @@ dependencies {
     testImplementation 'net.lingala.zip4j:zip4j'
     testImplementation 'org.assertj:assertj-core'
     testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation project(':baseline-error-prone')
     testRuntimeOnly 'org.junit.vintage:junit-vintage-engine', {
         because 'allows JUnit 3 and JUnit 4 tests to run'
     }
@@ -56,12 +57,14 @@ dependencies {
 tasks.test.dependsOn tasks.findByPath(':gradle-baseline-java-config:publishToMavenLocal')
 tasks.test.dependsOn tasks.findByPath(':baseline-error-prone:publishToMavenLocal')
 tasks.test.dependsOn tasks.findByPath(':baseline-null-away:publishToMavenLocal')
+tasks.test.dependsOn tasks.findByPath(':suppressible-errorprone-annotations:publishToMavenLocal')
 tasks.test.dependsOn tasks.publishToMavenLocal
 
 test {
     environment 'CIRCLE_ARTIFACTS', "${buildDir}/artifacts"
     environment 'CIRCLE_TEST_REPORTS', "${buildDir}/circle-reports"
     systemProperty 'ignoreDeprecations', 'true'
+    systemProperty 'projectVersion', project.version
 }
 
 gradlePlugin {
