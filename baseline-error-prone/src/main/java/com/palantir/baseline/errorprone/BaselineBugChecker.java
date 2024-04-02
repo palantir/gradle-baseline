@@ -52,7 +52,7 @@ abstract class BaselineBugChecker extends BugChecker {
 
         boolean errorProneSuppressStage1 = state.errorProneOptions()
                 .getFlags()
-                .getBoolean("baselineErrorProneStage1")
+                .getBoolean("errorProneSuppressStage1")
                 .orElse(false);
 
         if (!errorProneSuppressStage1) {

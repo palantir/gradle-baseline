@@ -194,7 +194,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
             errorProneOptions.getErrorproneArgumentProviders().add(new CommandLineArgumentProvider() {
                 @Override
                 public Iterable<String> asArguments() {
-                    return List.of("-XepOpt:baselineErrorProneStage1=true");
+                    return List.of("-XepOpt:" + SUPPRESS_STAGE_ONE + "=true");
                 }
             });
         }
