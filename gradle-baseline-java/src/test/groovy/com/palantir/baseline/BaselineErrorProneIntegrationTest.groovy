@@ -305,7 +305,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         println with('compileJava', '-PerrorProneSuppressStage2').build().output
 
         then:
-        testJava.text.contains('@SuppressWarnings({"something", "CollectionStreamForEach"}')
+        testJava.text.contains('@SuppressWarnings({"something", "suppressed-for-rollout:CollectionStreamForEach"}')
     }
 
     GradleRunner with(String... tasks) {

@@ -31,7 +31,7 @@ import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 abstract class BaselineBugChecker extends BugChecker {
-    private static final String AUTOMATICALLY_ADDED_PREFIX = "auto-added-on-upgrade:";
+    private static final String AUTOMATICALLY_ADDED_PREFIX = "suppressed-for-rollout:";
 
     private final Supplier<Set<String>> allNames = Suppliers.memoize(() -> {
         return ImmutableSet.<String>builder()
