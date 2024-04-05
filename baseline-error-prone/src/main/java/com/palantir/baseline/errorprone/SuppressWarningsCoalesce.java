@@ -38,6 +38,7 @@ import com.sun.source.tree.ModifiersTree;
 import com.sun.source.tree.NewArrayTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.VariableTree;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -57,20 +58,20 @@ public final class SuppressWarningsCoalesce extends BugChecker
 
     @Override
     public Description matchMethod(MethodTree tree, VisitorState state) {
-        return blah(state, tree, tree.getModifiers());
+        return coalesceSuppressWarnings(state, tree, tree.getModifiers());
     }
 
     @Override
     public Description matchVariable(VariableTree tree, VisitorState state) {
-        return blah(state, tree, tree.getModifiers());
+        return coalesceSuppressWarnings(state, tree, tree.getModifiers());
     }
 
     @Override
     public Description matchClass(ClassTree tree, VisitorState state) {
-        return blah(state, tree, tree.getModifiers());
+        return coalesceSuppressWarnings(state, tree, tree.getModifiers());
     }
 
-    private Description blah(VisitorState state, Tree tree, ModifiersTree modifiersTree) {
+    private Description coalesceSuppressWarnings(VisitorState state, Tree tree, ModifiersTree modifiersTree) {
         if (!HAS_REPEATABLE_SUPPRESSION.matches(tree, state)) {
             return Description.NO_MATCH;
         }
@@ -88,6 +89,7 @@ public final class SuppressWarningsCoalesce extends BugChecker
         }
 
         List<String> warningsToSuppress = suppressWarnings.stream()
+                .sorted(suppressWarningsBeforeRepeatableSuppressedWarnings())
                 .flatMap(SuppressWarningsCoalesce::annotationStringValues)
                 .collect(Collectors.toList());
 
@@ -149,5 +151,10 @@ public final class SuppressWarningsCoalesce extends BugChecker
 
             return Stream.empty();
         });
+    }
+
+    private static Comparator<? super AnnotationTree> suppressWarningsBeforeRepeatableSuppressedWarnings() {
+        return Comparator.comparing(annotationTree ->
+                annotationName(annotationTree.getAnnotationType()).contentEquals("SuppressWarnings") ? 0 : 1);
     }
 }

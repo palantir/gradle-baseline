@@ -64,9 +64,9 @@ class SuppressWarningsCoalesceTest {
         fix().addInputLines(
                         "Test.java",
                         "public class Test {",
-                        "  @SuppressWarnings(\"A\")",
                         "  @com.palantir.suppressibleerrorprone.RepeatableSuppressWarnings(\"B\")",
                         "  @com.palantir.suppressibleerrorprone.RepeatableSuppressWarnings(\"C\")",
+                        "  @SuppressWarnings(\"A\")",
                         "  void f() {",
                         "  }",
                         "}")
@@ -99,9 +99,9 @@ class SuppressWarningsCoalesceTest {
         fix().addInputLines(
                         "Test.java",
                         "public class Test {",
-                        "  @SuppressWarnings({\"A\", \"B\"})",
                         "  @com.palantir.suppressibleerrorprone.RepeatableSuppressWarnings(\"C\")",
                         "  @com.palantir.suppressibleerrorprone.RepeatableSuppressWarnings(\"D\")",
+                        "  @SuppressWarnings({\"A\", \"B\"})",
                         "  void f() {",
                         "  }",
                         "}")
@@ -120,9 +120,9 @@ class SuppressWarningsCoalesceTest {
         fix().addInputLines(
                         "Test.java",
                         "public class Test {",
-                        "  @SuppressWarnings({\"A\", \"B\"})",
                         "  @com.palantir.suppressibleerrorprone.RepeatableSuppressWarnings(\"C\")",
                         "  @com.palantir.suppressibleerrorprone.RepeatableSuppressWarnings(\"D\")",
+                        "  @SuppressWarnings({\"A\", \"B\"})",
                         "  String field;",
                         "}")
                 .addOutputLines(
@@ -138,9 +138,9 @@ class SuppressWarningsCoalesceTest {
     void klass() {
         fix().addInputLines(
                         "Test.java",
-                        "@SuppressWarnings({\"A\", \"B\"})",
                         "@com.palantir.suppressibleerrorprone.RepeatableSuppressWarnings(\"C\")",
                         "@com.palantir.suppressibleerrorprone.RepeatableSuppressWarnings(\"D\")",
+                        "@SuppressWarnings({\"A\", \"B\"})",
                         "public class Test {}")
                 .addOutputLines("Test.java", "@SuppressWarnings({\"A\", \"B\", \"C\", \"D\"})", "public class Test {}")
                 .doTest();
