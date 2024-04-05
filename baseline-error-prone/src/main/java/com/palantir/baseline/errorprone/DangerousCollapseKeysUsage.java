@@ -33,7 +33,7 @@ import com.sun.source.tree.MethodInvocationTree;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
         summary = "Disallow usage of .collapseKeys() in EntryStream(s).")
-public final class DangerousCollapseKeysUsage extends BaselineBugChecker
+public final class DangerousCollapseKeysUsage extends SuppressibleBugChecker
         implements BugChecker.MethodInvocationTreeMatcher {
     private static final long serialVersionUID = 1L;
     private static final String ERROR_MESSAGE = "The collapseKeys API of EntryStream must be avoided. The "

@@ -52,7 +52,7 @@ import com.sun.source.tree.MethodInvocationTree;
                         + "> or optionally replacing it with a handrolled deduplicator, was the very profitable"
                         + " performance\n"
                         + "> optimization. Do not use String.intern() without thinking very hard about it, okay?")
-public final class DangerousStringInternUsage extends BaselineBugChecker
+public final class DangerousStringInternUsage extends SuppressibleBugChecker
         implements BugChecker.MethodInvocationTreeMatcher {
     private static final long serialVersionUID = 1L;
 

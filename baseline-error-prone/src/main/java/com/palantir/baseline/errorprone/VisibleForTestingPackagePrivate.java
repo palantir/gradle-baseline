@@ -38,7 +38,7 @@ import javax.lang.model.element.Modifier;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,
         summary = "@VisibleForTesting members should be package-private.")
-public final class VisibleForTestingPackagePrivate extends BaselineBugChecker
+public final class VisibleForTestingPackagePrivate extends SuppressibleBugChecker
         implements BugChecker.ClassTreeMatcher, BugChecker.MethodTreeMatcher, BugChecker.VariableTreeMatcher {
 
     private static final Matcher<Tree> matcher = Matchers.allOf(

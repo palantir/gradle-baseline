@@ -40,7 +40,7 @@ import java.net.InetSocketAddress;
                 + "depending on the environment.\n"
                 + "This check is intended to be advisory - it's fine to @SuppressWarnings(\"DnsLookup\") in"
                 + " certain cases, but is usually not recommended.")
-public final class DnsLookup extends BaselineBugChecker implements BugChecker.NewClassTreeMatcher {
+public final class DnsLookup extends SuppressibleBugChecker implements BugChecker.NewClassTreeMatcher {
 
     private static final Matcher<ExpressionTree> INET_SOCKET_ADDRESS_MATCHER = MethodMatchers.constructor()
             .forClass(InetSocketAddress.class.getName())

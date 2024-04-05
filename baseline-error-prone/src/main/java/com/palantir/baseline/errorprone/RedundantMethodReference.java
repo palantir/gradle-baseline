@@ -37,7 +37,7 @@ import javax.lang.model.element.Modifier;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.WARNING,
         summary = "Redundant method reference to the same type")
-public final class RedundantMethodReference extends BaselineBugChecker
+public final class RedundantMethodReference extends SuppressibleBugChecker
         implements BugChecker.MemberReferenceTreeMatcher {
 
     @Override

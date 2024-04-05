@@ -44,7 +44,7 @@ import org.immutables.value.Value.Immutable;
         severity = SeverityLevel.ERROR,
         summary = "Method overrides should have variable names consistent with the super-method when there "
                 + "are multiple parameters with the same type to avoid incorrectly binding values to variables.")
-public final class ConsistentOverrides extends BaselineBugChecker implements MethodTreeMatcher {
+public final class ConsistentOverrides extends SuppressibleBugChecker implements MethodTreeMatcher {
 
     @Override
     public Description matchMethod(MethodTree tree, VisitorState state) {

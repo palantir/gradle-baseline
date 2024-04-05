@@ -40,7 +40,7 @@ import java.util.Objects;
 @BugPattern(
         summary = "Prefer the common version of annotations over other copies.",
         severity = SeverityLevel.SUGGESTION)
-public final class PreferCommonAnnotations extends BaselineBugChecker implements ImportTreeMatcher {
+public final class PreferCommonAnnotations extends SuppressibleBugChecker implements ImportTreeMatcher {
 
     /** ClassName -> preferred import. */
     private static final Map<String, String> PREFERRED_IMPORTS =

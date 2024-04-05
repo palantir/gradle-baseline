@@ -38,7 +38,7 @@ import java.util.List;
         severity = SeverityLevel.ERROR,
         summary = "Logger call interpolation markers should not be used for the throwable parameter because they "
                 + "prevent stack traces from being logged in favor of the string value of the Throwable.")
-public final class LoggerInterpolationConsumesThrowable extends BaselineBugChecker
+public final class LoggerInterpolationConsumesThrowable extends SuppressibleBugChecker
         implements MethodInvocationTreeMatcher {
 
     private static final Matcher<ExpressionTree> LOG_METHOD = MethodMatchers.instanceMethod()

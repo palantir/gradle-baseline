@@ -37,7 +37,7 @@ import java.io.ObjectInput;
         severity = SeverityLevel.ERROR,
         summary = "Disallow usage of Java's serialization features for security reasons, "
                 + "cf. https://cwe.mitre.org/data/definitions/502.html")
-public final class DangerousJavaDeserialization extends BaselineBugChecker
+public final class DangerousJavaDeserialization extends SuppressibleBugChecker
         implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;

@@ -53,7 +53,7 @@ import javax.lang.model.element.Modifier;
                 + " suppressing this check using @SuppressWarnings(\"ThrowSpecificity\") and a comment describing"
                 + " the reason. Remaining instances can be automatically fixed using ./gradlew compileJava"
                 + " -PerrorProneApply=ThrowSpecificity")
-public final class ThrowSpecificity extends BaselineBugChecker implements BugChecker.MethodTreeMatcher {
+public final class ThrowSpecificity extends SuppressibleBugChecker implements BugChecker.MethodTreeMatcher {
 
     // Maximum of three checked exception types to avoid unreadable long catch statements.
     private static final int MAX_CHECKED_EXCEPTIONS = 3;

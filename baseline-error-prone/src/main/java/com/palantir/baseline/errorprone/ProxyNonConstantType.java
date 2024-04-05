@@ -47,7 +47,8 @@ import java.lang.reflect.Proxy;
                 + "The proxy annotation processor can make this process much easier: "
                 + "https://github.com/palantir/proxy-processor\n"
                 + "See https://www.graalvm.org/reference-manual/native-image/DynamicProxy/#automatic-detection")
-public final class ProxyNonConstantType extends BaselineBugChecker implements BugChecker.MethodInvocationTreeMatcher {
+public final class ProxyNonConstantType extends SuppressibleBugChecker
+        implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final Matcher<ExpressionTree> NEW_PROXY_INSTANCE_MATCHER =
             MethodMatchers.staticMethod().onClass(Proxy.class.getName()).named("newProxyInstance");

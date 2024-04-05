@@ -35,7 +35,7 @@ import java.util.List;
         linkType = LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
         summary = "It is unsafe to create a SafeArg of Throwable.getMessage, SafeLoggable.getLogMessage may be used.")
-public final class DangerousThrowableMessageSafeArg extends BaselineBugChecker
+public final class DangerousThrowableMessageSafeArg extends SuppressibleBugChecker
         implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;

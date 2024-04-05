@@ -43,7 +43,7 @@ import java.util.stream.Collectors;
         severity = BugPattern.SeverityLevel.WARNING,
         summary = "Throw SafeLoggable exceptions to ensure the exception message will not be redacted")
 @SuppressWarnings("PreferSafeLoggableExceptions")
-public final class PreferSafeLoggableExceptions extends BaselineBugChecker implements BugChecker.NewClassTreeMatcher {
+public final class PreferSafeLoggableExceptions extends SuppressibleBugChecker implements BugChecker.NewClassTreeMatcher {
 
     private static final long serialVersionUID = 1L;
 

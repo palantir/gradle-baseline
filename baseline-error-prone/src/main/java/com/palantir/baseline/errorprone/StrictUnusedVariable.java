@@ -133,7 +133,8 @@ import javax.lang.model.element.Name;
         summary = "Unused.",
         severity = ERROR,
         documentSuppression = false)
-public final class StrictUnusedVariable extends BaselineBugChecker implements BugChecker.CompilationUnitTreeMatcher {
+public final class StrictUnusedVariable extends SuppressibleBugChecker
+        implements BugChecker.CompilationUnitTreeMatcher {
     private static final ImmutableSet<String> EXEMPT_PREFIXES = ImmutableSet.of("_");
 
     /** The set of annotation full names which exempt annotated element from being reported as unused. */

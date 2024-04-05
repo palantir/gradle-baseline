@@ -70,7 +70,7 @@ import java.util.stream.Stream;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.ERROR,
         summary = "safe-logging annotations must agree between args and method parameters")
-public final class IllegalSafeLoggingArgument extends BaselineBugChecker
+public final class IllegalSafeLoggingArgument extends SuppressibleBugChecker
         implements BugChecker.MethodInvocationTreeMatcher,
                 BugChecker.ReturnTreeMatcher,
                 BugChecker.AssignmentTreeMatcher,

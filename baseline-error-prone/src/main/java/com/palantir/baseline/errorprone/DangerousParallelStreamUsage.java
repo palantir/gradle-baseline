@@ -38,7 +38,7 @@ import java.util.stream.StreamSupport;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.WARNING,
         summary = "Discourage usage of .parallel() in Java streams.")
-public final class DangerousParallelStreamUsage extends BaselineBugChecker
+public final class DangerousParallelStreamUsage extends SuppressibleBugChecker
         implements BugChecker.MethodInvocationTreeMatcher {
     private static final long serialVersionUID = 1L;
     private static final String MORE_STREAMS_URL = "https://github.com/palantir/streams/"

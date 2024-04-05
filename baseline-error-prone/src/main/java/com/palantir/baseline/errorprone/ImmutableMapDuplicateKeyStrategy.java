@@ -35,7 +35,7 @@ import com.sun.source.tree.MethodInvocationTree;
         severity = BugPattern.SeverityLevel.WARNING,
         summary = "ImmutableMap.Builder.build() has non-obvious behavior, throwing on duplicate keys."
                 + " Please use 'buildKeepingLast()' or 'buildOrThrow()' for more obvious behavior.")
-public final class ImmutableMapDuplicateKeyStrategy extends BaselineBugChecker
+public final class ImmutableMapDuplicateKeyStrategy extends SuppressibleBugChecker
         implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final Matcher<ExpressionTree> MATCHER = MethodMatchers.instanceMethod()

@@ -45,7 +45,7 @@ import java.util.function.Predicate;
                 + "method which requires newer jakarta types is a runtime error. This check ensures\n"
                 + "that you only supply proper types to these methods which generally just take an\n"
                 + "untyped Object. There is no auto-fix for this check, you must fix it manually")
-public final class ForbidJavaxParameterType extends BaselineBugChecker
+public final class ForbidJavaxParameterType extends SuppressibleBugChecker
         implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final String FORBID_JAVAX_TYPE = "com.palantir.errorprone.ForbidJavax";

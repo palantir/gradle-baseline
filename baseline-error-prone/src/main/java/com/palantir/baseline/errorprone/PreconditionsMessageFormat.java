@@ -26,7 +26,8 @@ import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.Tree;
 import java.util.List;
 
-abstract class PreconditionsMessageFormat extends BaselineBugChecker implements BugChecker.MethodInvocationTreeMatcher {
+abstract class PreconditionsMessageFormat extends SuppressibleBugChecker
+        implements BugChecker.MethodInvocationTreeMatcher {
 
     private final Matcher<ExpressionTree> methodMatcher;
 

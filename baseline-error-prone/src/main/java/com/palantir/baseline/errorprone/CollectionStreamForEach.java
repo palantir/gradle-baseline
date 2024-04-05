@@ -27,6 +27,7 @@ import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
+import com.palantir.baseline.errorprone.SuppressibleBugChecker.SuppressibleMethodInvocationTreeMatcher;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import java.util.Collection;
@@ -39,8 +40,8 @@ import java.util.stream.Stream;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.ERROR,
         summary = "Collection.forEach is more efficient than Collection.stream().forEach")
-public final class CollectionStreamForEach extends BaselineBugChecker
-        implements BaselineBugChecker.BaselineMethodInvocationTreeMatcher {
+public final class CollectionStreamForEach extends SuppressibleBugChecker
+        implements SuppressibleMethodInvocationTreeMatcher {
     private static final long serialVersionUID = 1L;
 
     private static final Matcher<ExpressionTree> STREAM_FOR_EACH = MethodMatchers.instanceMethod()
@@ -57,7 +58,7 @@ public final class CollectionStreamForEach extends BaselineBugChecker
             Matchers.allOf(STREAM_FOR_EACH, Matchers.receiverOfInvocation(COLLECTION_STREAM));
 
     @Override
-    public Description matchMethodInvocationBaseline(MethodInvocationTree tree, VisitorState state) {
+    public Description matchMethodInvocationSuppressible(MethodInvocationTree tree, VisitorState state) {
         if (matcher.matches(tree, state)) {
             ExpressionTree stream = ASTHelpers.getReceiver(tree);
             if (stream == null) {

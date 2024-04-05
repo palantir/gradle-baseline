@@ -58,7 +58,7 @@ import java.lang.reflect.Method;
                 + "This check is intended to be advisory. It's fine to "
                 + "@SuppressWarnings(\"InvocationHandlerDelegation\") in certain cases, "
                 + "but is usually not recommended.")
-public final class InvocationHandlerDelegation extends BaselineBugChecker
+public final class InvocationHandlerDelegation extends SuppressibleBugChecker
         implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final Matcher<MethodTree> INVOCATION_HANDLER = Matchers.anyOf(

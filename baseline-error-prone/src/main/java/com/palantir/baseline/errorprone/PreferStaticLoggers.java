@@ -43,7 +43,7 @@ import javax.lang.model.element.Modifier;
         summary = "Prefer static logger instances over instances to reduce object initialization costs and heap "
                 + "overhead. Some logger frameworks may run expensive classloader lookups when loggers are requested "
                 + "based on configuration.")
-public final class PreferStaticLoggers extends BaselineBugChecker implements BugChecker.VariableTreeMatcher {
+public final class PreferStaticLoggers extends SuppressibleBugChecker implements BugChecker.VariableTreeMatcher {
 
     private static final Matcher<Tree> IS_LOGGER = Matchers.isSubtypeOf("org.slf4j.Logger");
     private static final Matcher<ExpressionTree> LOGGER_FACTORY = MethodMatchers.staticMethod()

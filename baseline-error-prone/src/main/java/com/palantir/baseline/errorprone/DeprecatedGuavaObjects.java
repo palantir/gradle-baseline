@@ -36,7 +36,7 @@ import com.sun.source.tree.MethodInvocationTree;
         severity = SeverityLevel.WARNING,
         summary = "The standard library java.util.Objects utilities replace Guava "
                 + "com.google.common.base.Objects in java 1.7 and beyond.")
-public final class DeprecatedGuavaObjects extends BaselineBugChecker implements BugChecker.MethodInvocationTreeMatcher {
+public final class DeprecatedGuavaObjects extends SuppressibleBugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final String GUAVA_OBJECTS_NAME = "com.google.common.base.Objects";
     private static final String GUAVA_OBJECTS_EQUAL = GUAVA_OBJECTS_NAME + ".equal";

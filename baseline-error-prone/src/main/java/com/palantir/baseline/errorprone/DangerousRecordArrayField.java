@@ -40,7 +40,7 @@ import com.sun.tools.javac.code.Symbol.ClassSymbol;
                 + " performs reference equality only. Consider using an immutable Collection for the field, using"
                 + " Immutables instead of the record, or overriding equals/hashCode in the record.",
         severity = SeverityLevel.WARNING)
-public final class DangerousRecordArrayField extends BaselineBugChecker implements BugChecker.ClassTreeMatcher {
+public final class DangerousRecordArrayField extends SuppressibleBugChecker implements BugChecker.ClassTreeMatcher {
 
     private static final Matcher<VariableTree> IS_ARRAY_VARIABLE = Matchers.isArrayType();
     private static final Matcher<MethodTree> EQUALS_MATCHER = Matchers.equalsMethodDeclaration();

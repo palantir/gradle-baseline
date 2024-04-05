@@ -38,7 +38,7 @@ import java.util.stream.Stream;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.WARNING,
         summary = "Stream.sorted() should only be called on streams of Comparable types.")
-public final class NonComparableStreamSort extends BaselineBugChecker
+public final class NonComparableStreamSort extends SuppressibleBugChecker
         implements BugChecker.MethodInvocationTreeMatcher {
     private static final long serialVersionUID = 1L;
 

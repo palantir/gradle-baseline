@@ -36,7 +36,7 @@ import com.sun.tools.javac.code.Symbol;
         linkType = LinkType.CUSTOM,
         severity = SeverityLevel.WARNING,
         summary = "Prefer Interface that take few arguments rather than many.")
-public final class TooManyArguments extends BaselineBugChecker implements BugChecker.MethodTreeMatcher {
+public final class TooManyArguments extends SuppressibleBugChecker implements BugChecker.MethodTreeMatcher {
     private static final int MAX_NUM_ARGS = 10;
     private static final Matcher<Tree> IS_OVERRIDE = Matchers.hasAnnotation(Override.class);
 

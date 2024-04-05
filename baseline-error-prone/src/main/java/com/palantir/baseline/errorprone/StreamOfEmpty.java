@@ -37,7 +37,7 @@ import java.util.stream.Stream;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
         summary = "Stream.of() should be replaced with Stream.empty() to avoid unnecessary varargs allocation.")
-public final class StreamOfEmpty extends BaselineBugChecker implements BugChecker.MethodInvocationTreeMatcher {
+public final class StreamOfEmpty extends SuppressibleBugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final Matcher<ExpressionTree> MATCHER = MethodMatchers.staticMethod()
             .onClass(Stream.class.getName())

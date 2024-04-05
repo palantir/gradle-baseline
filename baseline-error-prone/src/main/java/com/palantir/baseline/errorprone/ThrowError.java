@@ -47,7 +47,7 @@ import java.util.List;
                 + "This check  is intended to be advisory - it's fine to @SuppressWarnings(\"ThrowError\") in"
                 + " certain cases, but is usually not recommended unless you are writing a testing library that"
                 + " throws AssertionError.")
-public final class ThrowError extends BaselineBugChecker implements BugChecker.ThrowTreeMatcher {
+public final class ThrowError extends SuppressibleBugChecker implements BugChecker.ThrowTreeMatcher {
 
     private static final Matcher<ExpressionTree> compileTimeConstExpressionMatcher =
             new CompileTimeConstantExpressionMatcher();

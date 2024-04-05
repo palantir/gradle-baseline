@@ -36,7 +36,7 @@ import java.time.ZoneOffset;
         severity = BugPattern.SeverityLevel.ERROR,
         summary = "The system default time zone should not be used, since the behavior is system dependent. "
                 + "Instead, UTC should always be used.")
-public final class JavaTimeSystemDefaultTimeZone extends BaselineBugChecker
+public final class JavaTimeSystemDefaultTimeZone extends SuppressibleBugChecker
         implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final Matcher<ExpressionTree> CLOCK_SYSTEM_DEFAULT_ZONE_MATCHER = Matchers.staticMethod()

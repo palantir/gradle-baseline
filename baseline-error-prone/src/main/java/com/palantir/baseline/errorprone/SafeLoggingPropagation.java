@@ -63,7 +63,7 @@ import org.checkerframework.errorprone.javacutil.TreePathUtil;
         summary = "Safe logging annotations should be propagated to encapsulating elements to allow static analysis "
                 + "tooling to work with as much information as possible. This check can be auto-fixed using "
                 + "`./gradlew classes testClasses -PerrorProneApply=SafeLoggingPropagation`")
-public final class SafeLoggingPropagation extends BaselineBugChecker
+public final class SafeLoggingPropagation extends SuppressibleBugChecker
         implements BugChecker.ClassTreeMatcher, BugChecker.MethodTreeMatcher {
     private static final Matcher<Tree> SAFETY_ANNOTATION_MATCHER = Matchers.anyOf(
             Matchers.isSameType(SafetyAnnotations.SAFE),

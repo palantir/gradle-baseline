@@ -43,7 +43,7 @@ import javax.lang.model.element.Modifier;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.WARNING,
         summary = "Avoid using redundant modifiers")
-public final class RedundantModifier extends BaselineBugChecker
+public final class RedundantModifier extends SuppressibleBugChecker
         implements BugChecker.ClassTreeMatcher, BugChecker.MethodTreeMatcher, BugChecker.VariableTreeMatcher {
 
     private static final Matcher<ClassTree> STATIC_ENUM_OR_INTERFACE = Matchers.allOf(
