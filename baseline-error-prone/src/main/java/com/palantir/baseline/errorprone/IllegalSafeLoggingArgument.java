@@ -349,7 +349,7 @@ public final class IllegalSafeLoggingArgument extends BugChecker
             return Description.NO_MATCH;
         }
         Safety ancestorSafety = SafetyAnnotations.getTypeSafetyFromAncestors(tree, state);
-        if (directSafety.allowsValueWith(ancestorSafety)) {
+        if (ancestorSafety.allowsValueWith(directSafety)) {
             return Description.NO_MATCH;
         }
         return buildDescription(tree)

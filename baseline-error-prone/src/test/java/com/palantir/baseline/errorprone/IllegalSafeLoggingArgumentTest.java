@@ -1826,14 +1826,26 @@ class IllegalSafeLoggingArgumentTest {
     }
 
     @Test
-    public void testSubclassWithLenientSafety() {
+    public void testUnsafeExtendsSafe() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  @Safe interface SafeClass {}",
+                        "  // BUG: Diagnostic contains: "
+                                + "Dangerous type: annotated 'UNSAFE' but ancestors declare 'SAFE'.",
+                        "  @Unsafe interface UnsafeSubclass extends SafeClass {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testSafeExtendsUnsafe() {
         helper().addSourceLines(
                         "Test.java",
                         "import com.palantir.logsafe.*;",
                         "class Test {",
                         "  @Unsafe interface UnsafeClass {}",
-                        "  // BUG: Diagnostic contains: "
-                                + "Dangerous type: annotated 'SAFE' but ancestors declare 'UNSAFE'.",
                         "  @Safe interface SafeSubclass extends UnsafeClass {}",
                         "}")
                 .doTest();

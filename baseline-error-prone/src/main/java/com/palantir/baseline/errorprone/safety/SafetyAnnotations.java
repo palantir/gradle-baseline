@@ -147,7 +147,7 @@ public final class SafetyAnnotations {
     public static Safety getTypeSafetyFromAncestors(ClassTree classTree, VisitorState state) {
         Safety safety = SafetyAnnotations.getSafety(classTree.getExtendsClause(), state);
         for (Tree implemented : classTree.getImplementsClause()) {
-            safety = safety.leastUpperBound(SafetyAnnotations.getSafety(implemented, state));
+            safety = Safety.mergeAssumingUnknownIsSame(safety, SafetyAnnotations.getSafety(implemented, state));
         }
         return safety;
     }
