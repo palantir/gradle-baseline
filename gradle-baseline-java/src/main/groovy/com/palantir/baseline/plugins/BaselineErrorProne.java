@@ -68,6 +68,7 @@ import org.gradle.process.CommandLineArgumentProvider;
 import org.objectweb.asm.ClassReader;
 import org.objectweb.asm.ClassVisitor;
 import org.objectweb.asm.ClassWriter;
+import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 public final class BaselineErrorProne implements Plugin<Project> {
@@ -115,6 +116,8 @@ public final class BaselineErrorProne implements Plugin<Project> {
     public abstract static class Suppressiblify implements TransformAction<SParams> {
         private static final Logger logger = Logging.getLogger(Suppressiblify.class);
         private static final String BUG_CHECKER = "com/google/errorprone/bugpatterns/BugChecker";
+        private static final String SUPPRESSIBLE_BUG_CHECKER =
+                "com/palantir/baseline/errorprone/SuppressibleBugChecker";
 
         @InputArtifact
         protected abstract Provider<FileSystemLocation> getInputArtifact();
@@ -128,8 +131,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
             };
 
             if (visitClassFiles(hasBugChecker)) {
-                logger.lifecycle(
-                        "does not have BugChecker: {}", getInputArtifact().get().getAsFile());
                 try {
                     Files.copy(getInputArtifact().get().getAsFile().toPath(), output.toPath());
                 } catch (IOException e) {
@@ -208,6 +209,8 @@ public final class BaselineErrorProne implements Plugin<Project> {
         }
 
         private static final class SuppressifyingClassVisitor extends ClassVisitor {
+            private boolean isBugCheckerWeWantToChange = false;
+
             protected SuppressifyingClassVisitor(int api, ClassVisitor classVisitor) {
                 super(api, classVisitor);
             }
@@ -215,7 +218,43 @@ public final class BaselineErrorProne implements Plugin<Project> {
             @Override
             public void visit(
                     int version, int access, String name, String signature, String superName, String[] interfaces) {
-                super.visit(version, access, name, signature, "com/palantir/Blah", interfaces);
+                isBugCheckerWeWantToChange = !name.equals(SUPPRESSIBLE_BUG_CHECKER) && superName.equals(BUG_CHECKER);
+
+                super.visit(
+                        version,
+                        access,
+                        name,
+                        signature,
+                        isBugCheckerWeWantToChange ? SUPPRESSIBLE_BUG_CHECKER : superName,
+                        interfaces);
+            }
+
+            @Override
+            public MethodVisitor visitMethod(
+                    int access, String name, String descriptor, String signature, String[] exceptions) {
+                MethodVisitor methodVisitor = super.visitMethod(access, name, descriptor, signature, exceptions);
+
+                if (isBugCheckerWeWantToChange && "<init>".equals(name)) {
+                    return new SuppressifyingMethodVisitor(Opcodes.ASM9, methodVisitor);
+                }
+
+                return methodVisitor;
+            }
+        }
+
+        private static final class SuppressifyingMethodVisitor extends MethodVisitor {
+            protected SuppressifyingMethodVisitor(int api, MethodVisitor methodVisitor) {
+                super(api, methodVisitor);
+            }
+
+            @Override
+            public void visitMethodInsn(int opcode, String owner, String name, String descriptor, boolean isInterface) {
+                // Modify the BugChecker superclass constructor call to call the new superclass constructor
+                if (opcode == Opcodes.INVOKESPECIAL && "<init>".equals(name) && owner.equals(BUG_CHECKER)) {
+                    super.visitMethodInsn(opcode, SUPPRESSIBLE_BUG_CHECKER, name, descriptor, isInterface);
+                } else {
+                    super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
+                }
             }
         }
     }

@@ -301,7 +301,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         '''.stripIndent(true)
 
         when:
-        println with('compileJava', '-PerrorProneSuppressStage1').withDebug(true).build().output
+        println with('compileJava', '-PerrorProneSuppressStage1', '--stacktrace').withDebug(true).build().output
         println with('compileJava', '-PerrorProneSuppressStage2').build().output
 
         then:
