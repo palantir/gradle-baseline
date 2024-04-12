@@ -635,8 +635,8 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             int minorBytecodeVersion = 0xFFFF & dis.readShort()
             int majorBytecodeVersion = 0xFFFF & dis.readShort()
 
-            majorBytecodeVersion == expectedMajorBytecodeVersion
-            minorBytecodeVersion == expectedMinorBytecodeVersion
+            assert majorBytecodeVersion == expectedMajorBytecodeVersion
+            assert minorBytecodeVersion == expectedMinorBytecodeVersion
         }
     }
 }

@@ -31,11 +31,15 @@ public class BaselineJavaVersionExtension {
 
     private final Property<Boolean> overrideLibraryAutoDetection;
 
+    private final Property<Boolean> jdkToolchainsConfigured;
+
     @Inject
     public BaselineJavaVersionExtension(Project project) {
         target = project.getObjects().property(ChosenJavaVersion.class);
         runtime = project.getObjects().property(ChosenJavaVersion.class);
         overrideLibraryAutoDetection = project.getObjects().property(Boolean.class);
+        jdkToolchainsConfigured = project.getObjects().property(Boolean.class);
+        jdkToolchainsConfigured.set(false);
 
         target.finalizeValueOnRead();
         runtime.finalizeValueOnRead();
@@ -44,7 +48,6 @@ public class BaselineJavaVersionExtension {
 
     /**
      * Target {@link ChosenJavaVersion} for compilation.
-     *
      * Also determines whether the `--enable-preview` flag should be used for compilation, producing bytecode with a
      * minor version of '65535'. Unlike normal bytecode, this bytecode cannot be run by a higher version of Java that
      * it was compiled by.
@@ -84,5 +87,12 @@ public class BaselineJavaVersionExtension {
 
     public final void library() {
         overrideLibraryAutoDetection.set(true);
+    }
+
+    /**
+     * Overrides toolchain detection using the new gradle-jdks workflow.
+     */
+    public final Property<Boolean> jdkToolchainsConfigured() {
+        return jdkToolchainsConfigured;
     }
 }
