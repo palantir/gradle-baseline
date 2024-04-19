@@ -41,6 +41,8 @@ public class BaselineClassUniquenessPlugin extends AbstractBaselinePlugin {
         TaskProvider<CheckClassUniquenessLockTask> checkClassUniqueness = project.getTasks()
                 .register("checkClassUniqueness", CheckClassUniquenessLockTask.class, task -> {
                     task.jarClassHasher.set(jarClassHasher);
+                    task.shouldFix.convention(
+                            project.getGradle().getStartParameter().isWriteDependencyLocks());
                     task.usesService(jarClassHasher);
                 });
         project.getPlugins().apply(LifecycleBasePlugin.class);

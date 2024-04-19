@@ -45,6 +45,7 @@ import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.OutputFile;
 import org.gradle.api.tasks.TaskAction;
+import org.gradle.api.tasks.options.Option;
 import org.gradle.util.GFileUtils;
 
 @CacheableTask
@@ -52,7 +53,7 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
 
     private static final String HEADER = "# Danger! Multiple jars contain identically named classes. This may "
             + "cause different behaviour depending on classpath ordering.\n"
-            + "# Run ./gradlew checkClassUniqueness --write-locks to update this file\n\n";
+            + "# Run ./gradlew checkClassUniqueness --fix to update this file\n\n";
 
     // not marking this as an Input, because we want to re-run if the *contents* of a configuration changes
     @SuppressWarnings("VisibilityModifier")
@@ -61,11 +62,15 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
     @SuppressWarnings("VisibilityModifier")
     public final Property<JarClassHasher> jarClassHasher;
 
+    @SuppressWarnings("VisibilityModifier")
+    public final Property<Boolean> shouldFix;
+
     private final File lockFile;
 
     public CheckClassUniquenessLockTask() {
         this.configurations = getProject().getObjects().setProperty(Configuration.class);
         this.jarClassHasher = getProject().getObjects().property(JarClassHasher.class);
+        this.shouldFix = getProject().getObjects().property(Boolean.class);
         this.lockFile = getProject().file("baseline-class-uniqueness.lock");
         onlyIf(new Spec<Task>() {
             @Override
@@ -91,6 +96,11 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
     @OutputFile
     public final File getLockFile() {
         return lockFile;
+    }
+
+    @Option(option = "fix", description = "Whether to apply the suggested fix to baseline-class-uniqueness.lock")
+    public final void setShouldFix(boolean shouldFix) {
+        this.shouldFix.set(shouldFix);
     }
 
     @TaskAction
@@ -153,7 +163,7 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
     }
 
     private void ensureLockfileContains(String expected) {
-        if (getProject().getGradle().getStartParameter().isWriteDependencyLocks()) {
+        if (shouldFix.get()) {
             GFileUtils.writeFile(expected, lockFile);
             getLogger()
                     .lifecycle("Updated {}", getProject().getRootDir().toPath().relativize(lockFile.toPath()));
@@ -163,9 +173,9 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
         if (!lockFile.exists()) {
             throw new ExceptionWithSuggestion(
                     "baseline-class-uniqueness detected multiple jars containing identically named classes."
-                            + " Please resolve these problems, or run `./gradlew checkClassUniqueness --write-locks`"
+                            + " Please resolve these problems, or run `./gradlew checkClassUniqueness --fix`"
                             + "to accept them:\n\n " + expected,
-                    "./gradlew checkClassUniqueness --write-locks");
+                    "./gradlew checkClassUniqueness --fix");
         }
 
         String onDisk = GFileUtils.readFile(lockFile);
@@ -177,7 +187,9 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
                     String.join(
                             "\n",
                             String.format(
-                                    "%s is out of date, please run ` " + "to update this file. The diff is:", lockFile),
+                                    "%s is out of date, please run `./gradlew checkClassUniqueness --fix` to"
+                                            + " update this file. The diff is:",
+                                    lockFile),
                             "",
                             String.join(
                                     "\n",
@@ -190,13 +202,13 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
                             "",
                             "Expected was:",
                             expected),
-                    "./gradlew checkClassUniqueness --write-locks");
+                    "./gradlew checkClassUniqueness --fix");
         }
     }
 
     private void ensureLockfileDoesNotExist() {
         if (lockFile.exists()) {
-            if (getProject().getGradle().getStartParameter().isWriteDependencyLocks()) {
+            if (shouldFix.get()) {
                 GFileUtils.deleteQuietly(lockFile);
                 getLogger()
                         .lifecycle(
