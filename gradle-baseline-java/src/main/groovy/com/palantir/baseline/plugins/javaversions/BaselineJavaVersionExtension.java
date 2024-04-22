@@ -44,6 +44,7 @@ public class BaselineJavaVersionExtension {
 
     /**
      * Target {@link ChosenJavaVersion} for compilation.
+     *
      * Also determines whether the `--enable-preview` flag should be used for compilation, producing bytecode with a
      * minor version of '65535'. Unlike normal bytecode, this bytecode cannot be run by a higher version of Java that
      * it was compiled by.

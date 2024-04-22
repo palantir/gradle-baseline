@@ -26,6 +26,8 @@ import java.nio.file.Paths
 import nebula.test.IntegrationSpec
 import nebula.test.functional.ExecutionResult
 import org.assertj.core.api.Assumptions
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 
 /**
  * This test exercises both the root-plugin {@code BaselineJavaVersions} AND the subproject
@@ -336,6 +338,51 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         ExecutionResult result = runTasksSuccessfully('run')
         result.standardOutput.contains 'jdk11 features on runtime 17'
         assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
+    }
+
+    def '#gradleVersionNumber: jdkToolchainsAutoManagement only sets the language versions'() {
+        when:
+        // language=gradle
+        buildFile << '''
+        javaVersions {
+            libraryTarget = 11
+            runtime = 21
+            jdkToolchainsAutoManagement = true
+        }
+        java {
+            toolchain {
+                languageVersion = JavaLanguageVersion.of(11)
+                vendor = JvmVendorSpec.ADOPTIUM
+            }
+            toolchain {
+                languageVersion = JavaLanguageVersion.of(21)
+                vendor = JvmVendorSpec.ADOPTIUM
+            }
+        }
+        '''.stripIndent(true)
+        file('src/main/java/Main.java') << java11CompatibleCode
+        File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
+
+        then:
+        ExecutionResult compileJavaResult = runTasksSuccessfully('compileJava')
+        compileJavaResult.standardOutput.contains 'Compiling with toolchain'
+        Matcher compileMatcher = Pattern.compile("^Compiling with toolchain '([^']*)'", Pattern.MULTILINE).matcher(compileJavaResult.standardOutput)
+        compileMatcher.find()
+        String compileToolchain = compileMatcher.group(1)
+        compileToolchain.contains("jdk-11")
+        compileToolchain.contains("adoptium")
+        assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
+
+        then:
+        ExecutionResult result = runTasksSuccessfully('run')
+        Matcher matcher =  Pattern.compile("^Successfully started process 'command '([^']*)/bin/java''", Pattern.MULTILINE).matcher(result.standardOutput)
+        matcher.find()
+        String toolchain = matcher.group(1)
+        toolchain.contains("jdk-21")
+        toolchain.contains("adoptium")
 
         where:
         gradleVersionNumber << GRADLE_TEST_VERSIONS

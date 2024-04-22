@@ -36,7 +36,6 @@ public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtens
     private final Property<ChosenJavaVersion> runtime;
     private final LazilyConfiguredMapping<JavaLanguageVersion, AtomicReference<JavaInstallationMetadata>, Project>
             jdks = new LazilyConfiguredMapping<>(AtomicReference::new);
-
     private final Property<Boolean> jdkToolchainsAutoManagement;
 
     @Inject
@@ -44,8 +43,8 @@ public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtens
         this.libraryTarget = project.getObjects().property(JavaLanguageVersion.class);
         this.distributionTarget = project.getObjects().property(ChosenJavaVersion.class);
         this.runtime = project.getObjects().property(ChosenJavaVersion.class);
-        jdkToolchainsAutoManagement = project.getObjects().property(Boolean.class);
-        jdkToolchainsAutoManagement.set(false);
+        this.jdkToolchainsAutoManagement = project.getObjects().property(Boolean.class);
+        this.jdkToolchainsAutoManagement.set(false);
 
         // distribution defaults to the library value
         distributionTarget.convention(libraryTarget.map(ChosenJavaVersion::of));
@@ -140,5 +139,9 @@ public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtens
      */
     public final Property<Boolean> jdkToolchainsAutoManagement() {
         return jdkToolchainsAutoManagement;
+    }
+
+    public final void setJdkToolchainsAutoManagement(boolean value) {
+        jdkToolchainsAutoManagement.set(value);
     }
 }
