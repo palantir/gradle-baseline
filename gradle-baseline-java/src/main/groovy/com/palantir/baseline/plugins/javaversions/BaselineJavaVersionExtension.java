@@ -31,15 +31,11 @@ public class BaselineJavaVersionExtension {
 
     private final Property<Boolean> overrideLibraryAutoDetection;
 
-    private final Property<Boolean> jdkToolchainsConfigured;
-
     @Inject
     public BaselineJavaVersionExtension(Project project) {
         target = project.getObjects().property(ChosenJavaVersion.class);
         runtime = project.getObjects().property(ChosenJavaVersion.class);
         overrideLibraryAutoDetection = project.getObjects().property(Boolean.class);
-        jdkToolchainsConfigured = project.getObjects().property(Boolean.class);
-        jdkToolchainsConfigured.set(false);
 
         target.finalizeValueOnRead();
         runtime.finalizeValueOnRead();
@@ -87,12 +83,5 @@ public class BaselineJavaVersionExtension {
 
     public final void library() {
         overrideLibraryAutoDetection.set(true);
-    }
-
-    /**
-     * Overrides toolchain detection using the new gradle-jdks workflow.
-     */
-    public final Property<Boolean> jdkToolchainsConfigured() {
-        return jdkToolchainsConfigured;
     }
 }

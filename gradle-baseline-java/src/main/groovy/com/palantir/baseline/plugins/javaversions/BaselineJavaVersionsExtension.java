@@ -37,11 +37,15 @@ public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtens
     private final LazilyConfiguredMapping<JavaLanguageVersion, AtomicReference<JavaInstallationMetadata>, Project>
             jdks = new LazilyConfiguredMapping<>(AtomicReference::new);
 
+    private final Property<Boolean> jdkToolchainsAutoManagement;
+
     @Inject
     public BaselineJavaVersionsExtension(Project project) {
         this.libraryTarget = project.getObjects().property(JavaLanguageVersion.class);
         this.distributionTarget = project.getObjects().property(ChosenJavaVersion.class);
         this.runtime = project.getObjects().property(ChosenJavaVersion.class);
+        jdkToolchainsAutoManagement = project.getObjects().property(Boolean.class);
+        jdkToolchainsAutoManagement.set(false);
 
         // distribution defaults to the library value
         distributionTarget.convention(libraryTarget.map(ChosenJavaVersion::of));
@@ -125,5 +129,16 @@ public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtens
 
     public interface LazyJdks {
         Optional<JavaInstallationMetadata> jdkFor(JavaLanguageVersion javaLanguageVersion, Project project);
+    }
+
+    /**
+     * Overrides toolchain configuration using the new gradle-jdks workflow.
+     * If the property is set to true, then the plugin will not attempt to configure toolchains. The toolchains were
+     * already configured using the new gradle-jdks workflow by setting the following properties:
+     * "org.gradle.java.installations.paths", "org.gradle.java.installations.auto-download" and
+     * "org.gradle.java.installations.auto-detect".
+     */
+    public final Property<Boolean> jdkToolchainsAutoManagement() {
+        return jdkToolchainsAutoManagement;
     }
 }
