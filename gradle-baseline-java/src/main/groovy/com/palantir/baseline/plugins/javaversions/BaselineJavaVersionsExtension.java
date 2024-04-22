@@ -36,15 +36,15 @@ public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtens
     private final Property<ChosenJavaVersion> runtime;
     private final LazilyConfiguredMapping<JavaLanguageVersion, AtomicReference<JavaInstallationMetadata>, Project>
             jdks = new LazilyConfiguredMapping<>(AtomicReference::new);
-    private final Property<Boolean> jdkToolchainsAutoManagement;
+    private final Property<Boolean> setupJdkToolchains;
 
     @Inject
     public BaselineJavaVersionsExtension(Project project) {
         this.libraryTarget = project.getObjects().property(JavaLanguageVersion.class);
         this.distributionTarget = project.getObjects().property(ChosenJavaVersion.class);
         this.runtime = project.getObjects().property(ChosenJavaVersion.class);
-        this.jdkToolchainsAutoManagement = project.getObjects().property(Boolean.class);
-        this.jdkToolchainsAutoManagement.set(false);
+        this.setupJdkToolchains = project.getObjects().property(Boolean.class);
+        this.setupJdkToolchains.set(true);
 
         // distribution defaults to the library value
         distributionTarget.convention(libraryTarget.map(ChosenJavaVersion::of));
@@ -131,17 +131,9 @@ public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtens
     }
 
     /**
-     * Overrides toolchain configuration using the new gradle-jdks workflow.
-     * If the property is set to true, then the plugin will not attempt to configure toolchains. The toolchains were
-     * already configured using the new gradle-jdks workflow by setting the following properties:
-     * "org.gradle.java.installations.paths", "org.gradle.java.installations.auto-download" and
-     * "org.gradle.java.installations.auto-detect".
+     * Enables the setup of JDK toolchains for all subprojects.
      */
-    public final Property<Boolean> jdkToolchainsAutoManagement() {
-        return jdkToolchainsAutoManagement;
-    }
-
-    public final void setJdkToolchainsAutoManagement(boolean value) {
-        jdkToolchainsAutoManagement.set(value);
+    public final Property<Boolean> getSetupJdkToolchains() {
+        return setupJdkToolchains;
     }
 }

@@ -343,14 +343,14 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         gradleVersionNumber << GRADLE_TEST_VERSIONS
     }
 
-    def '#gradleVersionNumber: jdkToolchainsAutoManagement only sets the language versions'() {
+    def '#gradleVersionNumber: when setupJdkToolchains=false no toolchains are configured by gradle-baseline'() {
         when:
         // language=gradle
         buildFile << '''
         javaVersions {
             libraryTarget = 11
             runtime = 21
-            jdkToolchainsAutoManagement = true
+            setupJdkToolchains = true
         }
         java {
             toolchain {
