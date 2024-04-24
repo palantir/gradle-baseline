@@ -350,7 +350,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         javaVersions {
             libraryTarget = 11
             runtime = 21
-            setupJdkToolchains = true
+            setupJdkToolchains = false
         }
         java {
             toolchain {

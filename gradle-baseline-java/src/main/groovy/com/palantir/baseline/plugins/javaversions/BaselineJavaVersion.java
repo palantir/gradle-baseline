@@ -17,7 +17,6 @@
 package com.palantir.baseline.plugins.javaversions;
 
 import java.util.Collections;
-import java.util.Optional;
 import javax.inject.Inject;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
@@ -41,9 +40,15 @@ import org.gradle.api.tasks.scala.ScalaCompile;
 import org.gradle.api.tasks.scala.ScalaDoc;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.external.javadoc.CoreJavadocOptions;
+import org.gradle.jvm.toolchain.JavaCompiler;
+import org.gradle.jvm.toolchain.JavaLauncher;
+import org.gradle.jvm.toolchain.JavaToolchainService;
 import org.gradle.jvm.toolchain.JavaToolchainSpec;
+import org.gradle.jvm.toolchain.JavadocTool;
 import org.gradle.process.CommandLineArgumentProvider;
 import org.gradle.util.GradleVersion;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 public final class BaselineJavaVersion implements Plugin<Project> {
 
@@ -56,6 +61,8 @@ public final class BaselineJavaVersion implements Plugin<Project> {
 
         project.getPluginManager().withPlugin("java", unused -> {
             JavaPluginExtension javaPluginExtension = project.getExtensions().getByType(JavaPluginExtension.class);
+
+            JavaToolchainService toolchainService = project.getExtensions().getByType(JavaToolchainService.class);
 
             // Set the default project toolchain to the runtime target version, this indirectly
             // sets the value returned by 'getTargetCompatibility', which is used by sls-packaging
@@ -72,16 +79,15 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             BaselineJavaVersionsExtension rootExtension =
                     project.getRootProject().getExtensions().getByType(BaselineJavaVersionsExtension.class);
 
-            Optional<JavaToolchains> maybeJavaToolchains =
-                    rootExtension.getSetupJdkToolchains().get()
-                            ? Optional.of(new JavaToolchains(project, rootExtension))
-                            : Optional.empty();
+            JavaToolchains baselineConfiguredJavaToolchains = new JavaToolchains(project, rootExtension);
 
             // Compilation tasks (using target version)
-            configureCompilationTasks(project, extension.target(), maybeJavaToolchains);
+            configureCompilationTasks(
+                    project, extension.target(), baselineConfiguredJavaToolchains, rootExtension, toolchainService);
 
             // Execution tasks (using the runtime version)
-            configureExecutionTasks(project, extension.runtime(), maybeJavaToolchains);
+            configureExecutionTasks(
+                    project, extension.runtime(), baselineConfiguredJavaToolchains, rootExtension, toolchainService);
 
             // Validation
             TaskProvider<CheckJavaVersionsTask> checkJavaVersions = project.getTasks()
@@ -107,21 +113,23 @@ public final class BaselineJavaVersion implements Plugin<Project> {
     }
 
     private static void configureCompilationTasks(
-            Project project, Property<ChosenJavaVersion> target, Optional<JavaToolchains> javaToolchains) {
+            Project project,
+            Property<ChosenJavaVersion> target,
+            JavaToolchains baselineConfiguredJavaToolchains,
+            BaselineJavaVersionsExtension rootExtension,
+            JavaToolchainService javaToolchainService) {
 
-        Optional<Provider<BaselineJavaToolchain>> maybeJavaToolchain =
-                javaToolchains.map(toolchains -> toolchains.forVersion(target));
         project.getTasks().withType(JavaCompile.class).configureEach(new Action<JavaCompile>() {
             @Override
             public void execute(JavaCompile javaCompileTask) {
-                maybeJavaToolchain.ifPresent(javaToolchain -> javaCompileTask
+                javaCompileTask
                         .getJavaCompiler()
-                        .set(javaToolchain.flatMap(BaselineJavaToolchain::javaCompiler)));
+                        .set(getJavaCompiler(
+                                rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, target));
                 javaCompileTask
                         .getOptions()
                         .getCompilerArgumentProviders()
                         .add(new EnablePreviewArgumentProvider(target));
-
                 // Set sourceCompatibility to opt out of '-release', allowing opens/exports to be used.
                 javaCompileTask.doFirst(new Action<Task>() {
                     @Override
@@ -137,8 +145,10 @@ public final class BaselineJavaVersion implements Plugin<Project> {
         project.getTasks().withType(Javadoc.class).configureEach(new Action<Javadoc>() {
             @Override
             public void execute(Javadoc javadocTask) {
-                maybeJavaToolchain.ifPresent(javaToolchain ->
-                        javadocTask.getJavadocTool().set(javaToolchain.flatMap(BaselineJavaToolchain::javadocTool)));
+                javadocTask
+                        .getJavadocTool()
+                        .set(getJavaDocTool(
+                                rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, target));
 
                 // javadocTask doesn't allow us to add a CommandLineArgumentProvider, so we do it just in time
                 javadocTask.doFirst(new Action<Task>() {
@@ -160,9 +170,10 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             project.getTasks().withType(Checkstyle.class).configureEach(new Action<Checkstyle>() {
                 @Override
                 public void execute(Checkstyle checkstyle) {
-                    maybeJavaToolchain.ifPresent(javaToolchain -> checkstyle
+                    checkstyle
                             .getJavaLauncher()
-                            .set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher)));
+                            .set(getJavaLauncher(
+                                    rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, target));
                 }
             });
         }
@@ -170,9 +181,10 @@ public final class BaselineJavaVersion implements Plugin<Project> {
         project.getTasks().withType(GroovyCompile.class).configureEach(new Action<GroovyCompile>() {
             @Override
             public void execute(GroovyCompile groovyCompileTask) {
-                maybeJavaToolchain.ifPresent(javaToolchain -> groovyCompileTask
+                groovyCompileTask
                         .getJavaLauncher()
-                        .set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher)));
+                        .set(getJavaLauncher(
+                                rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, target));
                 groovyCompileTask
                         .getOptions()
                         .getCompilerArgumentProviders()
@@ -193,9 +205,10 @@ public final class BaselineJavaVersion implements Plugin<Project> {
         project.getTasks().withType(ScalaCompile.class).configureEach(new Action<ScalaCompile>() {
             @Override
             public void execute(ScalaCompile scalaCompileTask) {
-                maybeJavaToolchain.ifPresent(javaToolchain -> scalaCompileTask
+                scalaCompileTask
                         .getJavaLauncher()
-                        .set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher)));
+                        .set(getJavaLauncher(
+                                rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, target));
                 scalaCompileTask
                         .getOptions()
                         .getCompilerArgumentProviders()
@@ -216,22 +229,26 @@ public final class BaselineJavaVersion implements Plugin<Project> {
         project.getTasks().withType(ScalaDoc.class).configureEach(new Action<ScalaDoc>() {
             @Override
             public void execute(ScalaDoc scalaDoc) {
-                maybeJavaToolchain.ifPresent(javaToolchain ->
-                        scalaDoc.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher)));
+                scalaDoc.getJavaLauncher()
+                        .set(getJavaLauncher(
+                                rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, target));
             }
         });
     }
 
     private static void configureExecutionTasks(
-            Project project, Provider<ChosenJavaVersion> runtime, Optional<JavaToolchains> javaToolchains) {
+            Project project,
+            Property<ChosenJavaVersion> runtime,
+            JavaToolchains baselineConfiguredJavaToolchains,
+            BaselineJavaVersionsExtension rootExtension,
+            JavaToolchainService javaToolchainService) {
 
-        Optional<Provider<BaselineJavaToolchain>> maybeJavaToolchain =
-                javaToolchains.map(toolchains -> toolchains.forVersion(runtime));
         project.getTasks().withType(JavaExec.class).configureEach(new Action<JavaExec>() {
             @Override
             public void execute(JavaExec javaExec) {
-                maybeJavaToolchain.ifPresent(javaToolchain ->
-                        javaExec.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher)));
+                javaExec.getJavaLauncher()
+                        .set(getJavaLauncher(
+                                rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, runtime));
                 javaExec.getJvmArgumentProviders().add(new EnablePreviewArgumentProvider(runtime));
             }
         });
@@ -239,11 +256,48 @@ public final class BaselineJavaVersion implements Plugin<Project> {
         project.getTasks().withType(Test.class).configureEach(new Action<Test>() {
             @Override
             public void execute(Test test) {
-                maybeJavaToolchain.ifPresent(javaToolchain ->
-                        test.getJavaLauncher().set(javaToolchain.flatMap(BaselineJavaToolchain::javaLauncher)));
+                test.getJavaLauncher()
+                        .set(getJavaLauncher(
+                                rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, runtime));
                 test.getJvmArgumentProviders().add(new EnablePreviewArgumentProvider(runtime));
             }
         });
+    }
+
+    private static Provider<JavaCompiler> getJavaCompiler(
+            BaselineJavaVersionsExtension rootExtension,
+            JavaToolchains baselineConfiguredJavaToolchains,
+            JavaToolchainService javaToolchainService,
+            Property<ChosenJavaVersion> version) {
+        if (rootExtension.getSetupJdkToolchains().get()) {
+            return baselineConfiguredJavaToolchains.forVersion(version).flatMap(BaselineJavaToolchain::javaCompiler);
+        }
+        return javaToolchainService.compilerFor(javaToolchainSpec ->
+                javaToolchainSpec.getLanguageVersion().set(version.get().javaLanguageVersion()));
+    }
+
+    private static Provider<JavadocTool> getJavaDocTool(
+            BaselineJavaVersionsExtension rootExtension,
+            JavaToolchains baselineConfiguredJavaToolchains,
+            JavaToolchainService javaToolchainService,
+            Property<ChosenJavaVersion> version) {
+        if (rootExtension.getSetupJdkToolchains().get()) {
+            return baselineConfiguredJavaToolchains.forVersion(version).flatMap(BaselineJavaToolchain::javadocTool);
+        }
+        return javaToolchainService.javadocToolFor(javaToolchainSpec ->
+                javaToolchainSpec.getLanguageVersion().set(version.get().javaLanguageVersion()));
+    }
+
+    private static Provider<JavaLauncher> getJavaLauncher(
+            BaselineJavaVersionsExtension rootExtension,
+            JavaToolchains baselineConfiguredJavaToolchains,
+            JavaToolchainService javaToolchainService,
+            Property<ChosenJavaVersion> version) {
+        if (rootExtension.getSetupJdkToolchains().get()) {
+            return baselineConfiguredJavaToolchains.forVersion(version).flatMap(BaselineJavaToolchain::javaLauncher);
+        }
+        return javaToolchainService.launcherFor(javaToolchainSpec ->
+                javaToolchainSpec.getLanguageVersion().set(version.get().javaLanguageVersion()));
     }
 
     @CacheableTask
