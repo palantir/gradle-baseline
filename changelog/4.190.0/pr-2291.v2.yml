@@ -1,0 +1,6 @@
+type: feature
+feature:
+  description: Added `DangerousCollapseKeysUsage` error prone check to disallow usage
+    of `collapseKeys()` API of `EntryStream`.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2291

@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Add `Visitor` to the list of `DO_NOT_IMPORT_INNER`
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2677

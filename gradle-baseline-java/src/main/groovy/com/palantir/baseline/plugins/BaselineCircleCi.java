@@ -18,7 +18,6 @@ package com.palantir.baseline.plugins;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
-import com.palantir.gradle.junit.JunitReportsExtension;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -27,24 +26,24 @@ import java.nio.file.Paths;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.PosixFilePermission;
 import java.nio.file.attribute.PosixFilePermissions;
+import java.util.Locale;
 import java.util.Set;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.tasks.testing.Test;
 
 public final class BaselineCircleCi implements Plugin<Project> {
-    private static final FileAttribute<Set<PosixFilePermission>> PERMS_ATTRIBUTE =
+    private static final FileAttribute<Set<PosixFilePermission>> POSIX_PERMS_ATTRIBUTE =
             PosixFilePermissions.asFileAttribute(PosixFilePermissions.fromString("rwxr-xr-x"));
 
     @Override
     public void apply(Project project) {
         configurePluginsForReports(project);
         configurePluginsForArtifacts(project);
-
         Preconditions.checkState(
                 !project.getName().equals("project"),
                 "Please specify rootProject.name in your settings.gradle, otherwise CircleCI's"
-                        + "checkout dir ('project') will be used instead.");
+                        + " checkout dir ('project') will be used instead.");
     }
 
     private void configurePluginsForArtifacts(Project project) {
@@ -55,7 +54,7 @@ public final class BaselineCircleCi implements Plugin<Project> {
         }
 
         try {
-            Files.createDirectories(Paths.get(circleArtifactsDir), PERMS_ATTRIBUTE);
+            createDirectories(Paths.get(circleArtifactsDir));
         } catch (IOException e) {
             throw new RuntimeException("failed to create CIRCLE_ARTIFACTS directory", e);
         }
@@ -74,7 +73,7 @@ public final class BaselineCircleCi implements Plugin<Project> {
         }
 
         try {
-            Files.createDirectories(Paths.get(circleReportsDir), PERMS_ATTRIBUTE);
+            createDirectories(Paths.get(circleReportsDir));
         } catch (IOException e) {
             throw new RuntimeException("failed to create CIRCLE_TEST_REPORTS directory", e);
         }
@@ -87,12 +86,6 @@ public final class BaselineCircleCi implements Plugin<Project> {
                             .getOutputLocation()
                             .set(junitPath(circleReportsDir, test.getPath()));
                 }));
-
-        project.getPluginManager().withPlugin("com.palantir.junit-reports", unused -> {
-            project.getExtensions().configure(JunitReportsExtension.class, junitReports -> junitReports
-                    .getReportsDirectory()
-                    .set(new File(circleReportsDir)));
-        });
     }
 
     private static File junitPath(String basePath, String testPath) {
@@ -101,5 +94,15 @@ public final class BaselineCircleCi implements Plugin<Project> {
             junitReportsDir = junitReportsDir.resolve(component);
         }
         return junitReportsDir.toFile();
+    }
+
+    private static void createDirectories(Path directoryPath) throws IOException {
+        boolean isWindows =
+                System.getProperty("os.name").toLowerCase(Locale.ROOT).contains("windows");
+        if (isWindows) {
+            Files.createDirectories(directoryPath);
+        } else {
+            Files.createDirectories(directoryPath, POSIX_PERMS_ATTRIBUTE);
+        }
     }
 }

@@ -20,6 +20,7 @@ import com.google.common.collect.Multimap;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.suppliers.Suppliers;
 import com.google.errorprone.util.ASTHelpers;
+import com.sun.source.tree.AnnotationTree;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.Tree;
@@ -68,6 +69,24 @@ public final class SafetyAnnotations {
             new TypeArgumentHandler(Multimap.class),
             new TypeArgumentHandler(Stream.class),
             new TypeArgumentHandler(Optional.class));
+
+    public static Safety getAnnotatedSafety(Tree tree, VisitorState state) {
+        Safety safety = Safety.UNKNOWN;
+        for (AnnotationTree annotationTree : ASTHelpers.getAnnotations(tree)) {
+            Tree annotationType = annotationTree.getAnnotationType();
+            Type type = ASTHelpers.getType(annotationType);
+            if (type != null) {
+                if (type.tsym.getQualifiedName().equals(doNotLogName.get(state))) {
+                    safety = Safety.mergeAssumingUnknownIsSame(safety, Safety.DO_NOT_LOG);
+                } else if (type.tsym.getQualifiedName().equals(unsafeName.get(state))) {
+                    safety = Safety.mergeAssumingUnknownIsSame(safety, Safety.UNSAFE);
+                } else if (type.tsym.getQualifiedName().equals(safeName.get(state))) {
+                    safety = Safety.mergeAssumingUnknownIsSame(safety, Safety.SAFE);
+                }
+            }
+        }
+        return safety;
+    }
 
     public static Safety getSafety(Tree tree, VisitorState state) {
         // Check the symbol itself:
@@ -128,7 +147,7 @@ public final class SafetyAnnotations {
     public static Safety getTypeSafetyFromAncestors(ClassTree classTree, VisitorState state) {
         Safety safety = SafetyAnnotations.getSafety(classTree.getExtendsClause(), state);
         for (Tree implemented : classTree.getImplementsClause()) {
-            safety = safety.leastUpperBound(SafetyAnnotations.getSafety(implemented, state));
+            safety = Safety.mergeAssumingUnknownIsSame(safety, SafetyAnnotations.getSafety(implemented, state));
         }
         return safety;
     }
@@ -186,6 +205,12 @@ public final class SafetyAnnotations {
             }
         }
         Safety typeArgumentCombination = SAFETY_IS_COMBINATION_OF_TYPE_ARGUMENTS.getSafety(type, state, dejaVu);
+        // Arrays are difficult to pipe through the above combiner without a large refactor, since the AST
+        // is not quite a tree it stores its type information adjacent to the node.
+        if (type instanceof Type.ArrayType) {
+            typeArgumentCombination = Safety.mergeAssumingUnknownIsSame(
+                    typeArgumentCombination, getSafety(((Type.ArrayType) type).elemtype.tsym, state));
+        }
         return ASTHelpers.isSubtype(type, throwableSupplier.get(state), state)
                 ? Safety.UNSAFE.leastUpperBound(typeArgumentCombination)
                 : typeArgumentCombination;

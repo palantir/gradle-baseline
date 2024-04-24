@@ -7,7 +7,6 @@ import org.gradle.api.internal.classpath.ModuleRegistry
 import org.gradle.api.internal.project.ProjectInternal
 
 dependencies {
-    implementation project(':gradle-junit-reports')
     implementation gradleApi()
     implementation 'org.apache.commons:commons-lang3'
     implementation 'com.diffplug.spotless:spotless-plugin-gradle'
@@ -26,6 +25,7 @@ dependencies {
     implementation 'org.ow2.asm:asm'
     implementation 'com.googlecode.java-diff-utils:diffutils'
     implementation 'com.palantir.gradle.utils:lazily-configured-mapping'
+    implementation 'com.palantir.gradle.failure-reports:gradle-failure-reports-exceptions'
 
     runtimeOnly 'com.palantir.javaformat:gradle-palantir-java-format'
 
@@ -56,13 +56,12 @@ dependencies {
 tasks.test.dependsOn tasks.findByPath(':gradle-baseline-java-config:publishToMavenLocal')
 tasks.test.dependsOn tasks.findByPath(':baseline-error-prone:publishToMavenLocal')
 tasks.test.dependsOn tasks.findByPath(':baseline-null-away:publishToMavenLocal')
-tasks.test.dependsOn tasks.findByPath(':baseline-refaster-javac-plugin:publishToMavenLocal')
-tasks.test.dependsOn tasks.findByPath(':baseline-refaster-rules:publishToMavenLocal')
 tasks.test.dependsOn tasks.publishToMavenLocal
 
 test {
     environment 'CIRCLE_ARTIFACTS', "${buildDir}/artifacts"
     environment 'CIRCLE_TEST_REPORTS', "${buildDir}/circle-reports"
+    systemProperty 'ignoreDeprecations', 'true'
 }
 
 gradlePlugin {
@@ -81,6 +80,11 @@ gradlePlugin {
             id = 'com.palantir.baseline-config'
             displayName = 'Palantir Baseline Configuration Plugin'
             implementationClass = 'com.palantir.baseline.plugins.BaselineConfig'
+        }
+        baselineErrorPronePlugin {
+            id = 'com.palantir.baseline-error-prone'
+            displayName = 'Palantir Baseline Error Prone Plugin'
+            implementationClass = 'com.palantir.baseline.plugins.BaselineErrorProne'
         }
         baselineExactDependenciesPlugin {
             id = 'com.palantir.baseline-exact-dependencies'

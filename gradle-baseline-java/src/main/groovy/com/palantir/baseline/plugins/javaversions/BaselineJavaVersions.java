@@ -42,7 +42,7 @@ public final class BaselineJavaVersions implements Plugin<Project> {
     // 'nebula.maven-publish' and 'com.palantir.shadow-jar' create publications lazily which cause inconsistencies
     // based on ordering.
     private static final ImmutableSet<String> LIBRARY_PLUGINS =
-            ImmutableSet.of("nebula.maven-publish", "com.palantir.shadow-jar");
+            ImmutableSet.of("nebula.maven-publish", "com.palantir.shadow-jar", "com.palantir.external-publish-jar");
 
     @Override
     public void apply(Project project) {

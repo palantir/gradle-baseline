@@ -45,6 +45,70 @@ class SafeLoggingPropagationTest {
     }
 
     @Test
+    void testAddsAnnotation_extendsDnlInterface() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "class Test {",
+                        "  @DoNotLog",
+                        "  interface DnlIface {",
+                        "      Object value();",
+                        "  }",
+                        "  @Value.Immutable",
+                        "  interface ImmutablesIface extends DnlIface {",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "class Test {",
+                        "  @DoNotLog",
+                        "  interface DnlIface {",
+                        "      Object value();",
+                        "  }",
+                        "  @DoNotLog",
+                        "  @Value.Immutable",
+                        "  interface ImmutablesIface extends DnlIface {",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testAddsAnnotation_extendsInterfaceWithDnlType() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.tokens.auth.*;",
+                        "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "class Test {",
+                        "  interface DnlIface {",
+                        "      BearerToken value();",
+                        "  }",
+                        "  @Value.Immutable",
+                        "  interface ImmutablesIface extends DnlIface {",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.tokens.auth.*;",
+                        "import com.palantir.logsafe.*;",
+                        "import org.immutables.value.Value;",
+                        "class Test {",
+                        "  interface DnlIface {",
+                        "      BearerToken value();",
+                        "  }",
+                        "  @DoNotLog",
+                        "  @Value.Immutable",
+                        "  interface ImmutablesIface extends DnlIface {",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     void testMixedSafety() {
         fix().addInputLines(
                         "Test.java",
@@ -211,8 +275,7 @@ class SafeLoggingPropagationTest {
 
     @Test
     void testRecordWithUnsafeTypes() {
-        fix("--release", "17")
-                .addInputLines(
+        fix().addInputLines(
                         "Test.java",
                         "import com.palantir.tokens.auth.*;",
                         "import com.palantir.logsafe.*;",
@@ -223,6 +286,36 @@ class SafeLoggingPropagationTest {
                         "import com.palantir.logsafe.*;",
                         "@DoNotLog",
                         "record Test(BearerToken token) {}")
+                .doTest();
+    }
+
+    @Test
+    void testWrappedRecordComponents() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.*;",
+                        "class Test {",
+                        "  @Unsafe",
+                        "  class UnsafeType {}",
+                        "  record Rec1(UnsafeType val) {}",
+                        "  record Rec2(List<UnsafeType> val) {}",
+                        "  record Rec3(Optional<UnsafeType> val) {}",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.*;",
+                        "class Test {",
+                        "  @Unsafe",
+                        "  class UnsafeType {}",
+                        "  @Unsafe",
+                        "  record Rec1(UnsafeType val) {}",
+                        "  @Unsafe",
+                        "  record Rec2(List<UnsafeType> val) {}",
+                        "  @Unsafe",
+                        "  record Rec3(Optional<UnsafeType> val) {}",
+                        "}")
                 .doTest();
     }
 
@@ -941,6 +1034,49 @@ class SafeLoggingPropagationTest {
                         "    return unsafe;",
                         "  }",
                         "}")
+                .doTest();
+    }
+
+    @Test
+    void testSafetyAnnotatedReturnTypeDoesNotAnnotateMethod() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "public final class Test {",
+                        "  @Unsafe",
+                        "  private static class UnsafeType {}",
+                        "  public UnsafeType getType() { return new UnsafeType(); }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void testSafetyAnnotatedArrayTypeDoesNotAnnotateMethod() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "public final class Test {",
+                        "  @Unsafe",
+                        "  private static class UnsafeType {}",
+                        "  public UnsafeType[] getType() { return new UnsafeType[]{ new UnsafeType() }; }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void testSafetyAnnotatedCollectionTypeDoesNotAnnotateMethod() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.*;",
+                        "public final class Test {",
+                        "  @Unsafe",
+                        "  private static class UnsafeType {}",
+                        "  public List<UnsafeType> getType() { return new ArrayList<UnsafeType>(); }",
+                        "}")
+                .expectUnchanged()
                 .doTest();
     }
 

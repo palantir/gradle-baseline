@@ -30,7 +30,6 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         plugins {
             id 'java'
             id 'com.palantir.baseline-error-prone'
-            id 'org.inferred.processors' version '3.1.0'
         }
         repositories {
             mavenLocal()
@@ -94,6 +93,24 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         BuildResult result = with('compileJava').buildAndFail()
         result.task(":compileJava").outcome == TaskOutcome.FAILED
         result.output.contains("[ArrayEquals] Reference equality used to compare arrays")
+    }
+
+    def 'compileJava fails when StrictUnusedVariable finds errors'() {
+        when:
+        buildFile << standardBuildFile
+        file('src/main/java/test/Test.java') << '''
+        package test;
+        public class Test {
+            void test() {
+                int a = 5;
+            }
+        }
+        '''.stripIndent()
+
+        then:
+        BuildResult result = with('compileJava').buildAndFail()
+        result.task(":compileJava").outcome == TaskOutcome.FAILED
+        result.output.contains("[StrictUnusedVariable]")
     }
 
     def 'error-prone can be disabled using property'() {

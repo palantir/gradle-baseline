@@ -167,6 +167,7 @@ public final class StrictCollectionIncompatibleType extends BugChecker
     private IncompatibleTypeMatcher compatibleArgType(
             String baseType, String signature, int typeArgumentIndex, int argumentIndex) {
         // Eagerly create the matcher to avoid allocation for each check
+        @SuppressWarnings("deprecation")
         Matcher<ExpressionTree> methodMatcher =
                 MethodMatchers.instanceMethod().onDescendantOf(baseType).withSignature(signature);
         return new IncompatibleTypeMatcher() {

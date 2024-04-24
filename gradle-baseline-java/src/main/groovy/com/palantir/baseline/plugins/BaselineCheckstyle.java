@@ -67,6 +67,16 @@ public final class BaselineCheckstyle extends AbstractBaselinePlugin {
                     project.getExtensions().getByType(EclipseModel.class).getProject();
             eclipseProject.buildCommand("net.sf.eclipsecs.core.CheckstyleBuilder");
         });
+
+        // See https://github.com/gradle/gradle/issues/27035
+        project.getConfigurations().getByName("checkstyle", configuration -> {
+            configuration
+                    .getResolutionStrategy()
+                    .getCapabilitiesResolution()
+                    .withCapability("com.google.collections:google-collections", details -> {
+                        details.select("com.google.guava:guava:0");
+                    });
+        });
     }
 
     // The idea is the checkstyle.version file can be more easily updated by excavator

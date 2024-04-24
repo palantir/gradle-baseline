@@ -23,6 +23,7 @@ import spock.lang.Unroll
 
 class BaselineExactDependenciesTest extends AbstractPluginTest {
 
+    // language=Gradle
     def standardBuildFile = '''
         plugins {
             id 'java'
@@ -30,7 +31,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
             id 'com.palantir.baseline' apply false
             id 'com.palantir.consistent-versions' version '2.0.0' apply false
         }
-    '''.stripIndent()
+    '''.stripIndent(true)
 
     def minimalJavaFile = '''
     package pkg;
@@ -162,7 +163,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         task << ['checkUnusedDependencies', 'checkImplicitDependencies']
     }
 
-    def 'checkUnusedDependenciesTest passes if dependency from main source set is not referenced in test'() {
+    def 'checkUnusedDependenciesTest passes if main source set is not referenced in test'() {
         when:
         buildFile << standardBuildFile
         buildFile << """
@@ -181,6 +182,20 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
             }
         }
         '''.stripIndent()
+
+        then:
+        def result = with('checkUnusedDependencies', '--stacktrace').build()
+        result.task(':checkUnusedDependenciesTest').getOutcome() == TaskOutcome.SUCCESS
+    }
+
+    def 'checkUnusedDependenciesTest passes if test fixture source set is not referenced in test'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << """
+        plugins {
+            id 'java-test-fixtures'
+        }
+        """
 
         then:
         def result = with('checkUnusedDependencies', '--stacktrace').build()
@@ -262,7 +277,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
 
         then:
         BuildResult result = with(':checkUnusedDependencies', '--stacktrace').withDebug(true).buildAndFail()
-        result.output.contains "project(':sub-project-with-deps') (main (project :sub-project-with-deps))"
+        result.output.contains "project(':sub-project-with-deps') <-- main"
         result.output.contains "project(':sub-project-no-deps')"
     }
 
@@ -275,6 +290,26 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
 
         expect:
         with(':checkUnusedConstraints', '--stacktrace', '--write-locks').withDebug(true).build()
+    }
+
+    def 'in Gradle >=8.3 you can set the toolchain language version without it being finalised'() {
+        when:
+        buildFile << standardBuildFile
+        // language=Gradle
+        buildFile << '''
+            pluginManager.withPlugin('java') {
+                java {
+                    toolchain {
+                        languageVersion.set(JavaLanguageVersion.of(16))
+                    }
+                }
+            }
+        '''.stripIndent(true)
+
+        then:
+        with('tasks', '--stacktrace')
+                .withGradleVersion('8.4')
+                .build()
     }
 
     /**

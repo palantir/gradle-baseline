@@ -57,6 +57,7 @@ public class BaselineErrorProneExtension {
             "PreferBuiltInConcurrentKeySet",
             "PreferCollectionConstructors",
             "PreferCollectionTransform",
+            "PreferInputStreamTransferTo",
             "PreferListsPartition",
             "PreferSafeLoggableExceptions",
             "PreferSafeLogger",
@@ -66,6 +67,7 @@ public class BaselineErrorProneExtension {
             "ReadReturnValueIgnored",
             "RedundantMethodReference",
             "RedundantModifier",
+            "SafeLoggingPropagation",
             "Slf4jLevelCheck",
             "Slf4jLogsafeArgs",
             "Slf4jThrowable",
@@ -80,6 +82,7 @@ public class BaselineErrorProneExtension {
             "UnsafeGaugeRegistration",
             "VarUsage",
             "ZeroWarmupRateLimiter",
+            "ZoneIdConstant",
 
             // Built-in checks
             "ArrayEquals",
@@ -90,7 +93,6 @@ public class BaselineErrorProneExtension {
             "MissingOverride",
             "NarrowCalculation",
             "ObjectsHashCodePrimitive",
-            "PreferJavaTimeOverload",
             "ProtectedMembersInFinalClass",
             "UnnecessaryParentheses",
             "ZoneIdOfZ");

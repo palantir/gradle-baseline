@@ -17,6 +17,7 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
+import com.google.common.collect.ImmutableList;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
@@ -25,6 +26,7 @@ import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
+import com.google.errorprone.suppliers.Suppliers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import java.util.stream.Stream;
@@ -37,8 +39,11 @@ import java.util.stream.Stream;
         summary = "Stream.of() should be replaced with Stream.empty() to avoid unnecessary varargs allocation.")
 public final class StreamOfEmpty extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
-    private static final Matcher<ExpressionTree> MATCHER =
-            MethodMatchers.staticMethod().onClass(Stream.class.getName()).withSignature("<T>of(T...)");
+    private static final Matcher<ExpressionTree> MATCHER = MethodMatchers.staticMethod()
+            .onClass(Stream.class.getName())
+            .named("of")
+            .withParametersOfType(ImmutableList.of(
+                    Suppliers.arrayOf(Suppliers.genericTypeOfType(Suppliers.typeFromClass(Stream.class), 0))));
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {

@@ -16,14 +16,28 @@
 
 package com.palantir.baseline.plugins.javaversions;
 
+// CHECKSTYLE:OFF
+import javax.inject.Inject;
 import org.gradle.api.file.RegularFile;
-import org.gradle.jvm.toolchain.JavaCompiler;
+import org.gradle.api.logging.Logger;
+import org.gradle.api.logging.Logging;
+import org.gradle.api.model.ObjectFactory;
+import org.gradle.api.tasks.WorkResult;
 import org.gradle.jvm.toolchain.JavaInstallationMetadata;
+import org.gradle.jvm.toolchain.internal.DefaultToolchainJavaCompiler;
+import org.gradle.jvm.toolchain.internal.JavaCompilerFactory;
+import org.gradle.language.base.internal.compile.CompileSpec;
+// CHECKSTYLE:ON
 
-final class BaselineJavaCompiler implements JavaCompiler {
+final class BaselineJavaCompiler extends DefaultToolchainJavaCompiler {
+    private static final Logger log = Logging.getLogger(BaselineJavaCompiler.class);
+
+    private final JavaCompilerFactory compilerFactory;
     private final JavaInstallationMetadata javaInstallationMetadata;
 
-    BaselineJavaCompiler(JavaInstallationMetadata javaInstallationMetadata) {
+    BaselineJavaCompiler(JavaCompilerFactory compilerFactory, JavaInstallationMetadata javaInstallationMetadata) {
+        super(null, compilerFactory);
+        this.compilerFactory = compilerFactory;
         this.javaInstallationMetadata = javaInstallationMetadata;
     }
 
@@ -35,5 +49,27 @@ final class BaselineJavaCompiler implements JavaCompiler {
     @Override
     public RegularFile getExecutablePath() {
         return JavaInstallationMetadataUtils.findExecutable(javaInstallationMetadata, "javac");
+    }
+
+    @Override
+    public <T extends CompileSpec> WorkResult execute(T spec) {
+        // Copied from superclass, but avoiding using javaToolchain so we can make it null
+        log.info(
+                "Compiling with toolchain '{}'.",
+                javaInstallationMetadata.getInstallationPath().getAsFile());
+        final Class<T> specType = (Class<T>) spec.getClass();
+        return compilerFactory.create(specType).execute(spec);
+    }
+
+    public static BaselineJavaCompiler create(
+            ObjectFactory objectFactory, JavaInstallationMetadata javaInstallationMetadata) {
+        return new BaselineJavaCompiler(
+                objectFactory.newInstance(JavaCompilerFactoryGrabber.class).getJavaCompilerFactory(),
+                javaInstallationMetadata);
+    }
+
+    interface JavaCompilerFactoryGrabber {
+        @Inject
+        JavaCompilerFactory getJavaCompilerFactory();
     }
 }

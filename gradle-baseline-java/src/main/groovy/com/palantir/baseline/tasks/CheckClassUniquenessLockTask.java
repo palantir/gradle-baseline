@@ -20,6 +20,7 @@ import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
 import com.palantir.baseline.services.JarClassHasher;
+import com.palantir.gradle.failurereports.exceptions.ExceptionWithSuggestion;
 import difflib.DiffUtils;
 import difflib.Patch;
 import java.io.File;
@@ -160,10 +161,11 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
         }
 
         if (!lockFile.exists()) {
-            throw new GradleException("baseline-class-uniqueness detected multiple jars containing identically named "
-                    + "classes. Please resolve these problems, or run `./gradlew checkClassUniqueness "
-                    + "--write-locks` to accept them:\n\n"
-                    + expected);
+            throw new ExceptionWithSuggestion(
+                    "baseline-class-uniqueness detected multiple jars containing identically named classes."
+                            + " Please resolve these problems, or run `./gradlew checkClassUniqueness --write-locks`"
+                            + "to accept them:\n\n " + expected,
+                    "./gradlew checkClassUniqueness --write-locks");
         }
 
         String onDisk = GFileUtils.readFile(lockFile);
@@ -171,23 +173,24 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
             List<String> onDiskLines = Splitter.on('\n').splitToList(onDisk);
             Patch<String> diff = DiffUtils.diff(onDiskLines, Splitter.on('\n').splitToList(expected));
 
-            throw new GradleException(String.join(
-                    "\n",
-                    String.format(
-                            "%s is out of date, please run `./gradlew checkClassUniqueness --write-locks` "
-                                    + "to update this file. The diff is:",
-                            lockFile),
-                    "",
+            throw new ExceptionWithSuggestion(
                     String.join(
                             "\n",
-                            DiffUtils.generateUnifiedDiff("on disk", "expected", onDiskLines, diff, Integer.MAX_VALUE)),
-                    "",
-                    "On disk was:",
-                    "",
-                    onDisk,
-                    "",
-                    "Expected was:",
-                    expected));
+                            String.format(
+                                    "%s is out of date, please run ` " + "to update this file. The diff is:", lockFile),
+                            "",
+                            String.join(
+                                    "\n",
+                                    DiffUtils.generateUnifiedDiff(
+                                            "on disk", "expected", onDiskLines, diff, Integer.MAX_VALUE)),
+                            "",
+                            "On disk was:",
+                            "",
+                            onDisk,
+                            "",
+                            "Expected was:",
+                            expected),
+                    "./gradlew checkClassUniqueness --write-locks");
         }
     }
 

@@ -140,6 +140,8 @@ class BaselineEclipse extends AbstractBaselinePlugin {
                             containers.add(eclipseClassPath)
                         }
                     }
+                    // Delete classpath instead of merging with existing classpath
+                    dependsOn "cleanEclipseClasspath"
                 }
             }
         })

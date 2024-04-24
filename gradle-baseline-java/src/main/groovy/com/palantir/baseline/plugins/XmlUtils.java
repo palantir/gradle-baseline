@@ -34,6 +34,14 @@ import org.xml.sax.SAXException;
 final class XmlUtils {
     private XmlUtils() {}
 
+    static void updateXmlFileIfExists(File configurationFile, Consumer<Node> configure) {
+        if (!configurationFile.exists()) {
+            return;
+        }
+
+        createOrUpdateXmlFile(configurationFile, configure);
+    }
+
     static void createOrUpdateXmlFile(File configurationFile, Consumer<Node> configure) {
         createOrUpdateXmlFile(
                 configurationFile, configure, () -> new Node(null, "project", ImmutableMap.of("version", "4")));

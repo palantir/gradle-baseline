@@ -18,6 +18,7 @@ package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
+import com.google.errorprone.ErrorProneFlags;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.AbstractToString;
 import com.google.errorprone.bugpatterns.BugChecker;
@@ -28,6 +29,7 @@ import com.google.errorprone.predicates.TypePredicates;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.Tree;
 import java.util.Optional;
+import javax.inject.Inject;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -36,6 +38,16 @@ import java.util.Optional;
 public final class GradleProviderToString extends AbstractToString {
 
     private static final TypePredicate IS_PROVIDER = TypePredicates.isDescendantOf("org.gradle.api.provider.Provider");
+
+    // Must have default constructor for service loading to work correctly
+    public GradleProviderToString() {
+        this(ErrorProneFlags.empty());
+    }
+
+    @Inject
+    GradleProviderToString(ErrorProneFlags flags) {
+        super(flags);
+    }
 
     @Override
     protected TypePredicate typePredicate() {

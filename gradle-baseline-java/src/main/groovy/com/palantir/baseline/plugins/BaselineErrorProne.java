@@ -23,9 +23,7 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.MoreCollectors;
 import com.palantir.baseline.extensions.BaselineErrorProneExtension;
-import com.palantir.baseline.tasks.CompileRefasterTask;
-import java.io.File;
-import java.util.Collections;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
@@ -39,15 +37,12 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
-import org.gradle.api.file.RegularFile;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.ExtensionAware;
 import org.gradle.api.plugins.JavaPluginConvention;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.SourceSet;
-import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.process.CommandLineArgumentProvider;
 
@@ -55,7 +50,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
     private static final Logger log = Logging.getLogger(BaselineErrorProne.class);
     public static final String EXTENSION_NAME = "baselineErrorProne";
     private static final String PROP_ERROR_PRONE_APPLY = "errorProneApply";
-    private static final String PROP_REFASTER_APPLY = "refasterApply";
     private static final String DISABLE_PROPERTY = "com.palantir.baseline-error-prone.disable";
 
     @Override
@@ -76,44 +70,15 @@ public final class BaselineErrorProne implements Plugin<Project> {
                     log.warn("Baseline is using 'latest.release' - beware this compromises build reproducibility");
                     return "latest.release";
                 });
-        Configuration refasterConfiguration = project.getConfigurations().create("refaster", conf -> {
-            conf.defaultDependencies(deps -> {
-                deps.add(project.getDependencies()
-                        .create("com.palantir.baseline:baseline-refaster-rules:" + version + ":sources"));
-            });
-        });
-        Configuration refasterCompilerConfiguration = project.getConfigurations()
-                .create("refasterCompiler", configuration -> configuration.extendsFrom(refasterConfiguration));
 
         project.getDependencies()
                 .add(ErrorPronePlugin.CONFIGURATION_NAME, "com.palantir.baseline:baseline-error-prone:" + version);
-        project.getDependencies()
-                .add("refasterCompiler", "com.palantir.baseline:baseline-refaster-javac-plugin:" + version);
-
-        Provider<File> refasterRulesFile = project.getLayout()
-                .getBuildDirectory()
-                .file("refaster/rules.refaster")
-                .map(RegularFile::getAsFile);
-
-        TaskProvider<CompileRefasterTask> compileRefaster = project.getTasks()
-                .register("compileRefaster", CompileRefasterTask.class, task -> {
-                    task.setSource(refasterConfiguration);
-                    task.getRefasterSources().set(refasterConfiguration);
-                    task.setClasspath(refasterCompilerConfiguration);
-                    task.getRefasterRulesFile().set(refasterRulesFile);
-                });
 
         project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
             ((ExtensionAware) javaCompile.getOptions())
                     .getExtensions()
                     .configure(ErrorProneOptions.class, errorProneOptions -> {
-                        configureErrorProneOptions(
-                                project,
-                                refasterRulesFile,
-                                compileRefaster,
-                                errorProneExtension,
-                                javaCompile,
-                                errorProneOptions);
+                        configureErrorProneOptions(project, errorProneExtension, javaCompile, errorProneOptions);
                     });
         });
 
@@ -121,10 +86,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
         // these compiler flags after all configuration has happened.
         project.afterEvaluate(
                 unused -> project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
-                    if (javaCompile.getName().equals(compileRefaster.getName())) {
-                        return;
-                    }
-                    if (isRefactoring(project)) {
+                    if (isErrorProneRefactoring(project)) {
                         javaCompile.getOptions().setWarnings(false);
                         javaCompile.getOptions().setDeprecation(false);
                         javaCompile
@@ -142,12 +104,14 @@ public final class BaselineErrorProne implements Plugin<Project> {
                             javaCompile.getOptions())
                     .getExtensions()
                     .configure(ErrorProneOptions.class, errorProneOptions -> {
-                        errorProneOptions.check("Slf4jLogsafeArgs", CheckSeverity.OFF);
-                        errorProneOptions.check("PreferSafeLoggableExceptions", CheckSeverity.OFF);
-                        errorProneOptions.check("PreferSafeLogger", CheckSeverity.OFF);
-                        errorProneOptions.check("PreferSafeLoggingPreconditions", CheckSeverity.OFF);
-                        errorProneOptions.check("PreconditionsConstantMessage", CheckSeverity.OFF);
-                        errorProneOptions.check("JavaxInjectOnAbstractMethod", CheckSeverity.OFF);
+                        errorProneOptions.disable("CatchBlockLogException");
+                        errorProneOptions.disable("JavaxInjectOnAbstractMethod");
+                        errorProneOptions.disable("PreconditionsConstantMessage");
+                        errorProneOptions.disable("PreferSafeLoggableExceptions");
+                        errorProneOptions.disable("PreferSafeLogger");
+                        errorProneOptions.disable("PreferSafeLoggingPreconditions");
+                        errorProneOptions.disable("Slf4jConstantLogMessage");
+                        errorProneOptions.disable("Slf4jLogsafeArgs");
                     }));
         });
     }
@@ -155,8 +119,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
     @SuppressWarnings("UnstableApiUsage")
     private static void configureErrorProneOptions(
             Project project,
-            Provider<File> refasterRulesFile,
-            TaskProvider<CompileRefasterTask> compileRefaster,
             BaselineErrorProneExtension errorProneExtension,
             JavaCompile javaCompile,
             ErrorProneOptions errorProneOptions) {
@@ -172,10 +134,29 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 "CatchSpecificity",
                 "CanIgnoreReturnValueSuggester",
                 "InlineMeSuggester",
+                // We often use javadoc comments without javadoc parameter information.
+                "NotJavadoc",
                 "PreferImmutableStreamExCollections",
+                // StringCaseLocaleUsage duplicates our existing DefaultLocale check which is already
+                // enforced in some places.
+                "StringCaseLocaleUsage",
+                "UnnecessaryTestMethodPrefix",
                 "UnusedVariable",
                 // See VarUsage: The var keyword results in illegible code in most cases and should not be used.
-                "Varifier");
+                "Varifier",
+                // Yoda style should not block baseline upgrades.
+                "YodaCondition",
+
+                // Disable new error-prone checks added in 2.24.0
+                // See https://github.com/google/error-prone/releases/tag/v2.24.0
+                "MultipleNullnessAnnotations",
+                "NullableTypeParameter",
+                "NullableWildcard",
+                // This check is a generalization of the old 'SuperEqualsIsObjectEquals', so by disabling
+                // it we lose a bit of protection for the time being, but it's a small price to pay for
+                // seamless rollout.
+                "SuperCallToObjectMethod");
+
         errorProneOptions.error(
                 "EqualsHashCode",
                 "EqualsIncompatibleType",
@@ -190,55 +171,48 @@ public final class BaselineErrorProne implements Plugin<Project> {
             errorProneOptions.disable("UnnecessaryLambda");
         }
 
-        if (javaCompile.getName().equals(compileRefaster.getName())) {
-            // Don't apply refaster to itself...
-            return;
-        }
-
-        if (isRefactoring(project)) {
+        if (isErrorProneRefactoring(project)) {
             // Don't attempt to cache since it won't capture the source files that might be modified
             javaCompile.getOutputs().cacheIf(t -> false);
 
-            if (isRefasterRefactoring(project)) {
-                javaCompile.dependsOn(compileRefaster);
-                errorProneOptions.getErrorproneArgumentProviders().add(new CommandLineArgumentProvider() {
-                    // intentionally not using a lambda to reduce gradle warnings
-                    @Override
-                    public Iterable<String> asArguments() {
-                        String file = refasterRulesFile.get().getAbsolutePath();
-                        return new File(file).exists()
-                                ? ImmutableList.of("-XepPatchChecks:refaster:" + file, "-XepPatchLocation:IN_PLACE")
-                                : Collections.emptyList();
-                    }
-                });
-            }
+            Optional<SourceSet> maybeSourceSet = project
+                    .getConvention()
+                    .getPlugin(JavaPluginConvention.class)
+                    .getSourceSets()
+                    .matching(ss -> javaCompile.getName().equals(ss.getCompileJavaTaskName()))
+                    .stream()
+                    .collect(MoreCollectors.toOptional());
 
-            if (isErrorProneRefactoring(project)) {
-                Optional<SourceSet> maybeSourceSet = project
-                        .getConvention()
-                        .getPlugin(JavaPluginConvention.class)
-                        .getSourceSets()
-                        .matching(ss -> javaCompile.getName().equals(ss.getCompileJavaTaskName()))
-                        .stream()
-                        .collect(MoreCollectors.toOptional());
-
-                // TODO(gatesn): Is there a way to discover error-prone checks?
-                // Maybe service-load from a ClassLoader configured with annotation processor path?
-                // https://github.com/google/error-prone/pull/947
-                errorProneOptions.getErrorproneArgumentProviders().add(new CommandLineArgumentProvider() {
-                    // intentionally not using a lambda to reduce gradle warnings
-                    @Override
-                    public Iterable<String> asArguments() {
+            // TODO(gatesn): Is there a way to discover error-prone checks?
+            // Maybe service-load from a ClassLoader configured with annotation processor path?
+            // https://github.com/google/error-prone/pull/947
+            errorProneOptions.getErrorproneArgumentProviders().add(new CommandLineArgumentProvider() {
+                // intentionally not using a lambda to reduce gradle warnings
+                @Override
+                public Iterable<String> asArguments() {
+                    Optional<List<String>> specificChecks = getSpecificErrorProneChecks(project);
+                    if (specificChecks.isPresent()) {
+                        List<String> errorProneChecks = specificChecks.get();
+                        // Work around https://github.com/google/error-prone/issues/3908 by explicitly enabling any
+                        // check we want to use patch checks for (ensuring it is not disabled); if this is fixed, the
+                        // -Xep:*:ERROR arguments could be removed
+                        return Iterables.concat(
+                                errorProneChecks.stream()
+                                        .map(checkName -> "-Xep:" + checkName + ":ERROR")
+                                        .collect(Collectors.toList()),
+                                ImmutableList.of(
+                                        "-XepPatchChecks:" + Joiner.on(',').join(errorProneChecks),
+                                        "-XepPatchLocation:IN_PLACE"));
+                    } else {
                         // Don't apply checks that have been explicitly disabled
-                        Stream<String> errorProneChecks = getSpecificErrorProneChecks(project)
-                                .orElseGet(() -> getNotDisabledErrorproneChecks(
-                                        project, errorProneExtension, javaCompile, maybeSourceSet, errorProneOptions));
+                        Stream<String> errorProneChecks = getNotDisabledErrorproneChecks(
+                                project, errorProneExtension, javaCompile, maybeSourceSet, errorProneOptions);
                         return ImmutableList.of(
                                 "-XepPatchChecks:" + Joiner.on(',').join(errorProneChecks.iterator()),
                                 "-XepPatchLocation:IN_PLACE");
                     }
-                });
-            }
+                }
+            });
         }
     }
 
@@ -249,12 +223,12 @@ public final class BaselineErrorProne implements Plugin<Project> {
         return ".*/(build|generated_.*[sS]rc|src/generated.*)/.*";
     }
 
-    private static Optional<Stream<String>> getSpecificErrorProneChecks(Project project) {
+    private static Optional<List<String>> getSpecificErrorProneChecks(Project project) {
         return Optional.ofNullable(project.findProperty(PROP_ERROR_PRONE_APPLY))
                 .map(Objects::toString)
                 .flatMap(value -> Optional.ofNullable(Strings.emptyToNull(value)))
                 .map(value -> Splitter.on(',').trimResults().omitEmptyStrings().splitToList(value))
-                .flatMap(list -> list.isEmpty() ? Optional.empty() : Optional.of(list.stream()));
+                .flatMap(list -> list.isEmpty() ? Optional.empty() : Optional.of(list));
     }
 
     private static Stream<String> getNotDisabledErrorproneChecks(
@@ -332,14 +306,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
             }
             return true;
         };
-    }
-
-    private static boolean isRefactoring(Project project) {
-        return isRefasterRefactoring(project) || isErrorProneRefactoring(project);
-    }
-
-    private static boolean isRefasterRefactoring(Project project) {
-        return project.hasProperty(PROP_REFASTER_APPLY);
     }
 
     private static boolean isErrorProneRefactoring(Project project) {

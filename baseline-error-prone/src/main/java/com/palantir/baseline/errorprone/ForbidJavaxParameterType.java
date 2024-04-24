@@ -120,7 +120,7 @@ public final class ForbidJavaxParameterType extends BugChecker implements BugChe
                     .addAll(classType.getInterfaces())
                     .build();
             for (Type t : thisAndParents) {
-                for (Symbol sym : t.tsym.getEnclosedElements()) {
+                for (Symbol sym : ASTHelpers.getEnclosedElements(t.tsym)) {
                     if (HAS_JAXRS_ANNOTATION.test(sym)) {
                         return true;
                     }

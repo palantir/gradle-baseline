@@ -54,7 +54,6 @@ repositories {
 }
 
 apply plugin: 'java'
-apply plugin: 'org.inferred.processors'  // installs the "processor" configuration needed for baseline-error-prone
 apply plugin: 'com.palantir.baseline'
 ```
 
@@ -105,16 +104,9 @@ The Eclipse plugin is compatible with the following versions: Checkstyle 7.5+, J
 
 
 ## com.palantir.baseline-error-prone
-The `com.palantir.baseline-error-prone` plugin brings in the `net.ltgt.errorprone-javacplugin` plugin. We recommend applying the `org.inferred.processors` plugin 1.3.0+ in order to avoid `error: plug-in not found: ErrorProne`. The minimal setup is as follows:
+The `com.palantir.baseline-error-prone` plugin brings in the `net.ltgt.errorprone-javacplugin` plugin. The minimal setup is as follows:
 
 ```groovy
-buildscript {
-    dependencies {
-        classpath 'gradle.plugin.org.inferred:gradle-processors:1.2.18'
-    }
-}
-
-apply plugin: 'org.inferred.processors'
 apply plugin: 'com.palantir.baseline-error-prone'
 ```
 
@@ -132,6 +124,16 @@ tasks.withType(JavaCompile).configureEach(new Action<Task>() {
         task.options.errorprone.disable 'Slf4jLogsafeArgs'
     }
 })
+```
+
+To turn all of error-prone's warnings into errors:
+
+```gradle
+allprojects {
+    tasks.withType(JavaCompile) {
+        options.compilerArgs += ['-Werror']
+    }
+}
 ```
 
 More information on error-prone severity handling can be found at [errorprone.info/docs/flags](http://errorprone.info/docs/flags).
@@ -166,6 +168,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `DangerousStringInternUsage`: Disallow String.intern() invocations in favor of more predictable, scalable alternatives.
 - `OptionalOrElseThrowThrows`: Optional.orElseThrow argument must return an exception, not throw one.
 - `OptionalOrElseGetValue`: Prefer `Optional.orElse(value)` over `Optional.orElseGet(() -> value)` for trivial expressions.
+- `OptionalOrElseMethodInvocation`: Prefer `Optional.orElseGet(() -> methodInvocation())` over `Optional.orElse(methodInvocation())`.
 - `LambdaMethodReference`: Lambda should use a method reference.
 - `SafeLoggingExceptionMessageFormat`: SafeLoggable exceptions do not interpolate parameters.
 - `StrictUnusedVariable`: Functions shouldn't have unused parameters.
@@ -204,22 +207,29 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `UnnecessarilyQualified`: Types should not be qualified if they are also imported.
 - `DeprecatedGuavaObjects`: `com.google.common.base.Objects` has been obviated by `java.util.Objects`.
 - `JavaTimeSystemDefaultTimeZone`: Avoid using the system default time zone.
+- `ZoneIdConstant`: Prefer `ZoneId` constants.
 - `IncubatingMethod`: Prevents calling Conjure incubating APIs unless you explicitly opt-out of the check on a per-use or per-project basis.
 - `CompileTimeConstantViolatesLiskovSubstitution`: Requires consistent application of the `@CompileTimeConstant` annotation to resolve inconsistent validation based on the reference type on which the met is invoked.
 - `ClassInitializationDeadlock`: Detect type structures which can cause deadlocks initializing classes.
 - `ConsistentLoggerName`: Ensure Loggers are named consistently.
 - `PreferImmutableStreamExCollections`: It's common to use toMap/toSet/toList() as the terminal operation on a stream, but would be extremely surprising to rely on the mutability of these collections. Prefer `toImmutableMap`, `toImmutableSet` and `toImmutableList`. (If the performance overhead of a stream is already acceptable, then the `UnmodifiableFoo` wrapper is likely tolerable).
 - `DangerousIdentityKey`: Key type does not override equals() and hashCode, so comparisons will be done on reference equality only.
+- `DangerousRecordArrayField`: Array fields in records perform reference equality when comparing records.
 - `ConsistentOverrides`: Ensure values are bound to the correct variables when overriding methods
 - `FilterOutputStreamSlowMultibyteWrite`: Subclasses of FilterOutputStream should provide a more efficient implementation of `write(byte[], int, int)` to avoid slow writes.
 - `BugCheckerAutoService`: Concrete BugChecker implementations should be annotated `@AutoService(BugChecker.class)` for auto registration with error-prone.
+- `DangerousCollapseKeysUsage`: Disallow usage of `EntryStream#collapseKeys()`.
+- `JooqBatchWithoutBindArgs`: jOOQ batch methods that execute without bind args can cause performance problems.
+- `InvocationTargetExceptionGetTargetException`: InvocationTargetException.getTargetException() predates the general-purpose exception chaining facility. The Throwable.getCause() method is now the preferred means of obtaining this information. [(source)](https://docs.oracle.com/en/java/javase/17/docs/api//java.base/java/lang/reflect/InvocationTargetException.html#getTargetException())
+- `PreferInputStreamTransferTo`: Prefer JDK `InputStream.transferTo(OutputStream)` over utility methods such as `com.google.common.io.ByteStreams.copy(InputStream, OutputStream)`, `org.apache.commons.io.IOUtils.copy(InputStream, OutputStream)`, `org.apache.commons.io.IOUtils.copyLong(InputStream, OutputStream)`.
+- `ConjureEndpointDeprecatedForRemoval`: Conjure endpoints marked with Deprecated and `forRemoval = true` should not be used as they are scheduled to be removed.
 
 ### Programmatic Application
 
-There exist a number of programmatic code modifications available via [refaster](https://errorprone.info/docs/refaster). You can run these on your code to apply some refactorings automatically:
+There exist a number of programmatic code modifications available via [error-prone](https://errorprone.info). You can run these on your code to apply some refactorings automatically:
 
 ```bash
-./gradlew compileJava compileTestJava -PrefasterApply -PerrorProneApply
+./gradlew compileJava compileTestJava -PerrorProneApply
 ```
 
 You may apply specific error-prone refactors including those which are not enabled by default by providing a comma
@@ -438,7 +448,18 @@ The configurable fields of the `javaVersions` extension are:
 * `distributionTarget`: (optional) The Java version used for compilation of code used within distributions, but not published externally. Defaults to the `libraryTarget` version.
 * `runtime`: (optional) Runtime Java version for testing and packaging distributions. Defaults to the `distributionTarget` version.
 
-The configured Java versions are used as defaults for all projects. Optionally, you can override the defaults in a sub-project, but it is recommended to avoid doing so:
+The configured Java versions are used as defaults for all projects.
+
+If a sub-project should use `libraryTarget` but is not considered a library (for example, because it is not published), you can explicitly indicate that it is a library:
+
+```gradle
+// In a sub-project's build.gradle
+javaVersion {
+    library()
+}
+```
+
+A sub-project can also explicitly override the default Java versions, but doing so is discouraged:
 
 ```gradle
 // In a sub-project's build.gradle
@@ -448,7 +469,9 @@ javaVersion {
 }
 ```
 
-The optionally configurable fields of the `javaVersion` extension are `target`, for setting the target version used for compilation and `runtime`, for setting the runtime version used for testing and distributions.
+The optionally configurable fields of the `javaVersion` extension are:
+* `target`: The target version used for compilation.
+* `runtime`: The runtime version used for testing and distributions.
 
 ### Opting in to `--enable-preview` flag
 
