@@ -51,6 +51,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
                 classpath 'com.netflix.nebula:nebula-publishing-plugin:17.0.0'
                 classpath 'com.palantir.gradle.shadow-jar:gradle-shadow-jar:2.5.0'
                 classpath 'com.palantir.gradle.consistentversions:gradle-consistent-versions:2.8.0'
+                classpath 'com.palantir.gradle.jdkslatest:gradle-jdks-latest:0.13.0'
             }
         }
         plugins {
@@ -343,10 +344,50 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         gradleVersionNumber << GRADLE_TEST_VERSIONS
     }
 
+    def '#gradleVersionNumber: when setupJdkToolchains=true toolchains are configured by jdks-latest'() {
+        when:
+        // language=gradle
+        buildFile << '''
+        apply plugin: 'com.palantir.jdks.latest'
+
+        javaVersions {
+            libraryTarget = 11
+            runtime = 21
+            setupJdkToolchains = true
+        }
+        java {
+            toolchain {
+                languageVersion = JavaLanguageVersion.of(11)
+                vendor = JvmVendorSpec.ADOPTIUM
+            }
+            toolchain {
+                languageVersion = JavaLanguageVersion.of(21)
+                vendor = JvmVendorSpec.ADOPTIUM
+            }
+        }
+        '''.stripIndent(true)
+        file('src/main/java/Main.java') << java11CompatibleCode
+        File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
+
+        then:
+        ExecutionResult result = runTasksSuccessfully('compileJava', 'run')
+        extractCompileToolchain(result.standardOutput).contains("gradle-jdks/amazon-corretto-11.")
+        extractRunJavaCommand(result.standardOutput).contains("gradle-jdks/amazon-corretto-21.")
+        assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
+
+        then:
+        runTasksSuccessfully('compileJava', 'run', '-Porg.gradle.java.installations.auto-detect=false', '-Porg.gradle.java.installations.auto-download=false')
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
+    }
+
     def '#gradleVersionNumber: when setupJdkToolchains=false no toolchains are configured by gradle-baseline'() {
         when:
         // language=gradle
         buildFile << '''
+        apply plugin: 'com.palantir.jdks.latest'
+
         javaVersions {
             libraryTarget = 11
             runtime = 21
@@ -367,22 +408,17 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
 
         then:
-        ExecutionResult compileJavaResult = runTasksSuccessfully('compileJava')
-        compileJavaResult.standardOutput.contains 'Compiling with toolchain'
-        Matcher compileMatcher = Pattern.compile("^Compiling with toolchain '([^']*)'", Pattern.MULTILINE).matcher(compileJavaResult.standardOutput)
-        compileMatcher.find()
-        String compileToolchain = compileMatcher.group(1)
+        ExecutionResult result = runTasksSuccessfully('compileJava', 'run')
+        String compileToolchain = extractCompileToolchain(result.standardOutput)
         compileToolchain.contains("jdk-11")
         compileToolchain.contains("adoptium")
         assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
-
-        then:
-        ExecutionResult result = runTasksSuccessfully('run')
-        Matcher matcher =  Pattern.compile("^Successfully started process 'command '([^']*)/bin/java''", Pattern.MULTILINE).matcher(result.standardOutput)
-        matcher.find()
-        String toolchain = matcher.group(1)
+        String toolchain = extractRunJavaCommand(result.standardOutput)
         toolchain.contains("jdk-21")
         toolchain.contains("adoptium")
+
+        then:
+        runTasksWithFailure('compileJava', 'run', '-Porg.gradle.java.installations.auto-detect=false', '-Porg.gradle.java.installations.auto-download=false')
 
         where:
         gradleVersionNumber << GRADLE_TEST_VERSIONS
@@ -685,5 +721,17 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             assert majorBytecodeVersion == expectedMajorBytecodeVersion
             assert minorBytecodeVersion == expectedMinorBytecodeVersion
         }
+    }
+
+    private static String extractCompileToolchain(String output) {
+        Matcher compileMatcher = Pattern.compile("^Compiling with toolchain '([^']*)'", Pattern.MULTILINE).matcher(output)
+        compileMatcher.find()
+        return compileMatcher.group(1)
+    }
+
+    private static String extractRunJavaCommand(String output) {
+        Matcher matcher =  Pattern.compile("^Successfully started process 'command '([^']*)/bin/java''", Pattern.MULTILINE).matcher(output)
+        matcher.find()
+        return matcher.group(1)
     }
 }
