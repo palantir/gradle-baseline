@@ -39,7 +39,6 @@ public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtens
     private final Property<Boolean> setupJdkToolchains;
 
     @Inject
-
     public BaselineJavaVersionsExtension(Project project) {
         this.libraryTarget = project.getObjects().property(JavaLanguageVersion.class);
         this.distributionTarget = project.getObjects().property(ChosenJavaVersion.class);

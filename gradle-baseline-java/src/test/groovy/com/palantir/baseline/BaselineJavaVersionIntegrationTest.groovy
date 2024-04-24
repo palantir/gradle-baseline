@@ -35,7 +35,7 @@ import java.util.regex.Pattern
  */
 @Unroll
 class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
-    private static final List<String> GRADLE_TEST_VERSIONS = ['8.4', GradleVersion.current().getVersion()]
+    private static final List<String> GRADLE_TEST_VERSIONS = ['8.6', '8.4', GradleVersion.current().getVersion()]
 
     private static final int JAVA_8_BYTECODE = 52
     private static final int JAVA_11_BYTECODE = 55
@@ -371,8 +371,8 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
 
         then:
         ExecutionResult result = runTasksSuccessfully('compileJava', 'run')
-        extractCompileToolchain(result.standardOutput).contains("gradle-jdks/amazon-corretto-11.")
-        extractRunJavaCommand(result.standardOutput).contains("gradle-jdks/amazon-corretto-21.")
+        extractCompileToolchain(result.standardOutput).contains("amazon-corretto-11")
+        extractRunJavaCommand(result.standardOutput).contains("amazon-corretto-21.")
         assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
 
         then:
