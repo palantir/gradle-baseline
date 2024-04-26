@@ -43,6 +43,7 @@ public class BaselineErrorProneExtension {
             "ExtendsErrorOrThrowable",
             "FinalClass",
             "IllegalSafeLoggingArgument",
+            "ImmutableDefaultShouldHaveAnnotations",
             "ImmutableMapDuplicateKeyStrategy",
             "ImmutablesStyle",
             "ImplicitPublicBuilderConstructor",
