@@ -223,6 +223,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `InvocationTargetExceptionGetTargetException`: InvocationTargetException.getTargetException() predates the general-purpose exception chaining facility. The Throwable.getCause() method is now the preferred means of obtaining this information. [(source)](https://docs.oracle.com/en/java/javase/17/docs/api//java.base/java/lang/reflect/InvocationTargetException.html#getTargetException())
 - `PreferInputStreamTransferTo`: Prefer JDK `InputStream.transferTo(OutputStream)` over utility methods such as `com.google.common.io.ByteStreams.copy(InputStream, OutputStream)`, `org.apache.commons.io.IOUtils.copy(InputStream, OutputStream)`, `org.apache.commons.io.IOUtils.copyLong(InputStream, OutputStream)`.
 - `ConjureEndpointDeprecatedForRemoval`: Conjure endpoints marked with Deprecated and `forRemoval = true` should not be used as they are scheduled to be removed.
+- `ImmutableDefaultShouldHaveAnnotations`: Immutable class methods with default implementation should be tagged with @Value.Default.
 
 ### Programmatic Application
 
