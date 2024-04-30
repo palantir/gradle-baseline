@@ -41,7 +41,6 @@ import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradle.api.tasks.scala.ScalaCompile;
 import org.gradle.api.tasks.scala.ScalaDoc;
 import org.gradle.api.tasks.testing.Test;
-import org.gradle.external.javadoc.CoreJavadocOptions;
 import org.gradle.jvm.toolchain.JavaLauncher;
 import org.gradle.jvm.toolchain.JavaToolchainService;
 import org.gradle.jvm.toolchain.JavaToolchainSpec;
@@ -90,17 +89,27 @@ public final class BaselineJavaVersion implements Plugin<Project> {
 
             // Validation
             TaskProvider<CheckJavaVersionsTask> checkJavaVersions = project.getTasks()
-                    .register("checkJavaVersions", CheckJavaVersionsTask.class, task -> {
-                        task.getTargetVersion().set(extension.target());
-                        task.getRuntimeVersion().set(extension.runtime());
+                    .register("checkJavaVersions", CheckJavaVersionsTask.class, new Action<CheckJavaVersionsTask>() {
+                        @Override
+                        public void execute(CheckJavaVersionsTask task) {
+                            task.getTargetVersion().set(extension.target());
+                            task.getRuntimeVersion().set(extension.runtime());
+                        }
                     });
 
             TaskProvider<CheckClasspathCompatible> checkRuntimeClasspathCompatible = project.getTasks()
-                    .register("checkRuntimeClasspathCompatible", CheckClasspathCompatible.class, task -> {
-                        task.getClasspathName().set("runtime");
-                        task.getJavaVersion().set(extension.runtime());
-                        task.getClasspath().setFrom(project.getConfigurations().getByName("runtimeClasspath"));
-                    });
+                    .register(
+                            "checkRuntimeClasspathCompatible",
+                            CheckClasspathCompatible.class,
+                            new Action<CheckClasspathCompatible>() {
+                                @Override
+                                public void execute(CheckClasspathCompatible task) {
+                                    task.getClasspathName().set("runtime");
+                                    task.getJavaVersion().set(extension.runtime());
+                                    task.getClasspath()
+                                            .setFrom(project.getConfigurations().getByName("runtimeClasspath"));
+                                }
+                            });
 
             project.getTasks().named("check").configure(check -> {
                 check.dependsOn(checkJavaVersions, checkRuntimeClasspathCompatible);
