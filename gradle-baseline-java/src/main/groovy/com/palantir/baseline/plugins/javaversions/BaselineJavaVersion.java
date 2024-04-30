@@ -41,6 +41,7 @@ import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradle.api.tasks.scala.ScalaCompile;
 import org.gradle.api.tasks.scala.ScalaDoc;
 import org.gradle.api.tasks.testing.Test;
+import org.gradle.external.javadoc.CoreJavadocOptions;
 import org.gradle.jvm.toolchain.JavaLauncher;
 import org.gradle.jvm.toolchain.JavaToolchainService;
 import org.gradle.jvm.toolchain.JavaToolchainSpec;
@@ -146,12 +147,11 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             javadocTask.doFirst(new Action<Task>() {
                 @Override
                 public void execute(Task task) {
+                    CoreJavadocOptions options = (CoreJavadocOptions) ((Javadoc) task).getOptions();
                     if (target.get().enablePreview()) {
                         // yes, javadoc truly takes a single-dash where everyone else takes a double dash
-                        ((Javadoc) task).getOptions().addBooleanOption("-enable-preview", true);
-                        ((Javadoc) task)
-                                .getOptions()
-                                .setSource(target.get().javaLanguageVersion().toString());
+                        options.addBooleanOption("-enable-preview", true);
+                        options.setSource(target.get().javaLanguageVersion().toString());
                     }
                 }
             });
