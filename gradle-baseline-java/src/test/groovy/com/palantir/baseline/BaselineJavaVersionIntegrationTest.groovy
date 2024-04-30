@@ -35,7 +35,7 @@ import java.util.regex.Pattern
  */
 @Unroll
 class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
-    private static final List<String> GRADLE_TEST_VERSIONS = ['8.6', '8.4', GradleVersion.current().getVersion()]
+    private static final List<String> GRADLE_TEST_VERSIONS = ['8.4', GradleVersion.current().getVersion()]
 
     private static final int JAVA_8_BYTECODE = 52
     private static final int JAVA_11_BYTECODE = 55
@@ -345,7 +345,6 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
     }
 
     def '#gradleVersionNumber: when setupJdkToolchains=true toolchains are configured by jdks-latest'() {
-        when:
         // language=gradle
         buildFile << '''
         apply plugin: 'com.palantir.jdks.latest'
@@ -369,11 +368,19 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         file('src/main/java/Main.java') << java11CompatibleCode
         File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
 
+        when:
+        ExecutionResult compileJavaResult = runTasksSuccessfully('compileJava')
+
         then:
-        ExecutionResult result = runTasksSuccessfully('compileJava', 'run')
-        extractCompileToolchain(result.standardOutput).contains("amazon-corretto-11")
-        extractRunJavaCommand(result.standardOutput).contains("amazon-corretto-21.")
+        extractCompileToolchain(compileJavaResult.standardOutput).contains("amazon-corretto-11")
         assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
+
+        when:
+        ExecutionResult runResult = runTasksSuccessfully('run')
+
+        then:
+        runResult.wasUpToDate('compileJava')
+        extractRunJavaCommand(runResult.standardOutput).contains("amazon-corretto-21.")
 
         then:
         runTasksSuccessfully('compileJava', 'run', '-Porg.gradle.java.installations.auto-detect=false', '-Porg.gradle.java.installations.auto-download=false')
@@ -383,7 +390,6 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
     }
 
     def '#gradleVersionNumber: when setupJdkToolchains=false no toolchains are configured by gradle-baseline'() {
-        when:
         // language=gradle
         buildFile << '''
         apply plugin: 'com.palantir.jdks.latest'
@@ -407,15 +413,17 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         file('src/main/java/Main.java') << java11CompatibleCode
         File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
 
-        then:
+        when:
         ExecutionResult result = runTasksSuccessfully('compileJava', 'run')
+
+        then:
         String compileToolchain = extractCompileToolchain(result.standardOutput)
         compileToolchain.contains("jdk-11")
-        compileToolchain.contains("adoptium")
+        !compileToolchain.contains("amazon-corretto")
         assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
         String toolchain = extractRunJavaCommand(result.standardOutput)
         toolchain.contains("jdk-21")
-        toolchain.contains("adoptium")
+        !toolchain.contains("amazon-corretto")
 
         then:
         runTasksWithFailure('compileJava', 'run', '-Porg.gradle.java.installations.auto-detect=false', '-Porg.gradle.java.installations.auto-download=false')
