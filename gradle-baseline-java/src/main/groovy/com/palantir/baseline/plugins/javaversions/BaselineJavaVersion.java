@@ -177,16 +177,10 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             // Set sourceCompatibility to opt out of '-release', allowing opens/exports to be used.
             groovyCompileTask.doFirst(new Action<Task>() {
                 @Override
-                public void execute(Task groovyCompileTask) {
-                    // Set sourceCompatibility to opt out of '-release', allowing opens/exports to be used.
-                    groovyCompileTask.doFirst(new Action<Task>() {
-                        @Override
-                        public void execute(Task task) {
-                            ((GroovyCompile) task)
-                                    .setSourceCompatibility(
-                                            target.get().javaLanguageVersion().toString());
-                        }
-                    });
+                public void execute(Task task) {
+                    ((GroovyCompile) task)
+                            .setSourceCompatibility(
+                                    target.get().javaLanguageVersion().toString());
                 }
             });
         });
