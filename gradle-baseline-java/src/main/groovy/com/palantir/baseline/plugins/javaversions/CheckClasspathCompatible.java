@@ -28,7 +28,6 @@ import java.util.Optional;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 import java.util.stream.Collectors;
-import org.apache.commons.io.input.BoundedInputStream;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.provider.Property;
@@ -89,8 +88,7 @@ public abstract class CheckClasspathCompatible extends DefaultTask {
                     continue;
                 }
 
-                InputStream classInputStream = new BoundedInputStream(jarInputStream, entry.getSize());
-                Optional<String> bytecodeMajorVersionTooHigh = bytecodeMajorVersionForClassFile(classInputStream)
+                Optional<String> bytecodeMajorVersionTooHigh = bytecodeMajorVersionForClassFile(jarInputStream)
                         .filter(bytecodeMajorVersion ->
                                 bytecodeMajorVersion > getJavaVersion().get().asBytecodeMajorVersion())
                         .map(bytecodeMajorVersion -> entryName + " has bytecode major version " + bytecodeMajorVersion);
