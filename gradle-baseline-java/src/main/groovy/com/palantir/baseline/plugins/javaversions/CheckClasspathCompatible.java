@@ -16,14 +16,17 @@
 
 package com.palantir.baseline.plugins.javaversions;
 
+import java.io.BufferedInputStream;
 import java.io.DataInputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.util.Optional;
-import java.util.jar.JarFile;
+import java.util.jar.JarEntry;
+import java.util.jar.JarInputStream;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+import org.apache.commons.io.input.BoundedInputStream;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.provider.Property;
@@ -71,36 +74,34 @@ public abstract class CheckClasspathCompatible extends DefaultTask {
     }
 
     private Optional<String> tooHighBytecodeMajorVersionInJar(File file) {
-        try (JarFile jarFile = new JarFile(file)) {
-            return jarFile.stream()
-                    .flatMap(entry -> {
-                        // We don't care about higher versions of classes in multi-release jars as JVMs will only
-                        // load classes from here that match or are higher than their current version
-                        boolean isMultiReleaseClass = entry.getName().contains("META-INF/versions");
-                        boolean isntClassFile = !entry.getName().endsWith(".class");
+        try (JarInputStream jarInputStream = new JarInputStream(new BufferedInputStream(new FileInputStream(file)))) {
+            JarEntry entry;
+            while ((entry = jarInputStream.getNextJarEntry()) != null) {
+                String entryName = entry.getName();
+                // We don't care about higher versions of classes in multi-release jars as JVMs will only
+                // load classes from here that match or are higher than their current version
+                boolean isMultiReleaseClass = entryName.contains("META-INF/versions");
+                boolean isntClassFile = !entryName.endsWith(".class");
 
-                        if (isMultiReleaseClass || isntClassFile) {
-                            return Stream.empty();
-                        }
+                if (isMultiReleaseClass || isntClassFile) {
+                    continue;
+                }
 
-                        try (InputStream inputStream = jarFile.getInputStream(entry)) {
-                            return bytecodeMajorVersionForClassFile(inputStream)
-                                    .filter(bytecodeMajorVersion -> bytecodeMajorVersion
-                                            > getJavaVersion().get().asBytecodeMajorVersion())
-                                    .map(bytecodeMajorVersion ->
-                                            entry.getName() + " has bytecode major version " + bytecodeMajorVersion)
-                                    .stream();
-                        } catch (IOException e) {
-                            throw new RuntimeException(
-                                    "Failed when checking classpath compatibility of " + file + ", class "
-                                            + entry.getName(),
-                                    e);
-                        }
-                    })
-                    .findFirst();
+                InputStream classInputStream = new BoundedInputStream(jarInputStream, entry.getSize());
+                Optional<String> bytecodeMajorVersionTooHigh = bytecodeMajorVersionForClassFile(classInputStream)
+                        .filter(bytecodeMajorVersion ->
+                                bytecodeMajorVersion > getJavaVersion().get().asBytecodeMajorVersion())
+                        .map(bytecodeMajorVersion -> entryName + " has bytecode major version " + bytecodeMajorVersion);
+
+                if (bytecodeMajorVersionTooHigh.isPresent()) {
+                    return bytecodeMajorVersionTooHigh;
+                }
+            }
         } catch (IOException e) {
             throw new RuntimeException("Failed when checking classpath compatibility of: " + file, e);
         }
+
+        return Optional.empty();
     }
 
     private static Optional<Integer> bytecodeMajorVersionForClassFile(InputStream classFile) throws IOException {
