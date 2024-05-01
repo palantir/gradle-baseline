@@ -56,9 +56,11 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         result.getOutput().contains("javax.el.ArrayELResolver");
         !lockfile.exists()
 
+        when:
         with("checkClassUniqueness", "--fix").build()
-        lockfile.exists()
 
+        then:
+        lockfile.exists()
         File expected = new File("src/test/resources/com/palantir/baseline/baseline-class-uniqueness.expected.lock")
         if (Boolean.getBoolean("recreate")) {
             GFileUtils.writeFile(lockfile.text, expected)
@@ -85,9 +87,11 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         result.getOutput().contains("javax.el.ArrayELResolver");
         !lockfile.exists()
 
+        when:
         with("checkClassUniqueness", "--write-locks").build()
-        lockfile.exists()
 
+        then:
+        lockfile.exists()
         File expected = new File("src/test/resources/com/palantir/baseline/baseline-class-uniqueness.expected.lock")
         if (Boolean.getBoolean("recreate")) {
             GFileUtils.writeFile(lockfile.text, expected)
