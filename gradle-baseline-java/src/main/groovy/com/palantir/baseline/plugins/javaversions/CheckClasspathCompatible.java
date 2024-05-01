@@ -16,8 +16,10 @@
 
 package com.palantir.baseline.plugins.javaversions;
 
+import com.google.common.io.ByteStreams;
+import com.google.common.primitives.Ints;
+import com.google.common.primitives.Shorts;
 import java.io.BufferedInputStream;
-import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -105,14 +107,21 @@ public abstract class CheckClasspathCompatible extends DefaultTask {
     }
 
     private static Optional<Integer> bytecodeMajorVersionForClassFile(InputStream classFile) throws IOException {
-        DataInputStream dataInputStream = new DataInputStream(classFile);
-        int magic = dataInputStream.readInt();
+        // Avoid DataInputStream as it allocates 240+ bytes on construction
+        byte[] buf = new byte[4];
+        ByteStreams.readFully(classFile, buf);
+        int magic = Ints.fromByteArray(buf);
+
         if (magic != BYTECODE_IDENTIFIER) {
             // Skip as it's not a class file
             return Optional.empty();
         }
-        int minorBytecodeVersion = 0xFFFF & dataInputStream.readShort();
-        int majorBytecodeVersion = 0xFFFF & dataInputStream.readShort();
+
+        // Read the minor and major version (both u16s)
+        ByteStreams.readFully(classFile, buf);
+
+        // The first two bytes make up the minor version, so take the second
+        int majorBytecodeVersion = 0xFFFF & Shorts.fromBytes(buf[2], buf[3]);
 
         return Optional.of(majorBytecodeVersion);
     }
