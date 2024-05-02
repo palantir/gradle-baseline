@@ -26,6 +26,8 @@ import java.nio.file.Paths
 import nebula.test.IntegrationSpec
 import nebula.test.functional.ExecutionResult
 import org.assertj.core.api.Assumptions
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 
 /**
  * This test exercises both the root-plugin {@code BaselineJavaVersions} AND the subproject
@@ -49,6 +51,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
                 classpath 'com.netflix.nebula:nebula-publishing-plugin:17.0.0'
                 classpath 'com.palantir.gradle.shadow-jar:gradle-shadow-jar:2.5.0'
                 classpath 'com.palantir.gradle.consistentversions:gradle-consistent-versions:2.8.0'
+                classpath 'com.palantir.gradle.jdkslatest:gradle-jdks-latest:0.13.0'
             }
         }
         plugins {
@@ -336,6 +339,94 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         ExecutionResult result = runTasksSuccessfully('run')
         result.standardOutput.contains 'jdk11 features on runtime 17'
         assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
+    }
+
+    def '#gradleVersionNumber: when setupJdkToolchains=true toolchains are configured by jdks-latest'() {
+        // language=gradle
+        buildFile << '''
+        apply plugin: 'com.palantir.jdks.latest'
+
+        javaVersions {
+            libraryTarget = 11
+            runtime = 21
+            setupJdkToolchains = true
+        }
+        java {
+            toolchain {
+                languageVersion = JavaLanguageVersion.of(11)
+                vendor = JvmVendorSpec.ADOPTIUM
+            }
+            toolchain {
+                languageVersion = JavaLanguageVersion.of(21)
+                vendor = JvmVendorSpec.ADOPTIUM
+            }
+        }
+        '''.stripIndent(true)
+        file('src/main/java/Main.java') << java11CompatibleCode
+        File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
+
+        when:
+        ExecutionResult compileJavaResult = runTasksSuccessfully('compileJava')
+
+        then:
+        extractCompileToolchain(compileJavaResult.standardOutput).contains("amazon-corretto-11")
+        assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
+
+        when:
+        ExecutionResult runResult = runTasksSuccessfully('run')
+
+        then:
+        runResult.wasUpToDate('compileJava')
+        extractRunJavaCommand(runResult.standardOutput).contains("amazon-corretto-21.")
+
+        then:
+        runTasksSuccessfully('compileJava', 'run', '-Porg.gradle.java.installations.auto-detect=false', '-Porg.gradle.java.installations.auto-download=false')
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
+    }
+
+    def '#gradleVersionNumber: when setupJdkToolchains=false no toolchains are configured by gradle-baseline'() {
+        // language=gradle
+        buildFile << '''
+        apply plugin: 'com.palantir.jdks.latest'
+
+        javaVersions {
+            libraryTarget = 11
+            runtime = 21
+            setupJdkToolchains = false
+        }
+        java {
+            toolchain {
+                languageVersion = JavaLanguageVersion.of(11)
+                vendor = JvmVendorSpec.ADOPTIUM
+            }
+            toolchain {
+                languageVersion = JavaLanguageVersion.of(21)
+                vendor = JvmVendorSpec.ADOPTIUM
+            }
+        }
+        '''.stripIndent(true)
+        file('src/main/java/Main.java') << java11CompatibleCode
+        File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
+
+        when:
+        ExecutionResult result = runTasksSuccessfully('compileJava', 'run')
+
+        then:
+        String compileToolchain = extractCompileToolchain(result.standardOutput)
+        compileToolchain.contains("jdk-11")
+        !compileToolchain.contains("amazon-corretto")
+        assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
+        String toolchain = extractRunJavaCommand(result.standardOutput)
+        toolchain.contains("jdk-21")
+        !toolchain.contains("amazon-corretto")
+
+        then:
+        runTasksWithFailure('compileJava', 'run', '-Porg.gradle.java.installations.auto-detect=false', '-Porg.gradle.java.installations.auto-download=false')
 
         where:
         gradleVersionNumber << GRADLE_TEST_VERSIONS
@@ -635,8 +726,20 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             int minorBytecodeVersion = 0xFFFF & dis.readShort()
             int majorBytecodeVersion = 0xFFFF & dis.readShort()
 
-            majorBytecodeVersion == expectedMajorBytecodeVersion
-            minorBytecodeVersion == expectedMinorBytecodeVersion
+            assert majorBytecodeVersion == expectedMajorBytecodeVersion
+            assert minorBytecodeVersion == expectedMinorBytecodeVersion
         }
+    }
+
+    private static String extractCompileToolchain(String output) {
+        Matcher compileMatcher = Pattern.compile("^Compiling with toolchain '([^']*)'", Pattern.MULTILINE).matcher(output)
+        compileMatcher.find()
+        return compileMatcher.group(1)
+    }
+
+    private static String extractRunJavaCommand(String output) {
+        Matcher matcher =  Pattern.compile("^Successfully started process 'command '([^']*)/bin/java''", Pattern.MULTILINE).matcher(output)
+        matcher.find()
+        return matcher.group(1)
     }
 }
