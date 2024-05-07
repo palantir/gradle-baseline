@@ -23,6 +23,7 @@ import javax.inject.Inject;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Property;
+import org.gradle.internal.impldep.com.fasterxml.jackson.databind.annotation.JsonAppend.Prop;
 import org.gradle.jvm.toolchain.JavaInstallationMetadata;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 
@@ -34,6 +35,7 @@ public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtens
     private final Property<JavaLanguageVersion> libraryTarget;
     private final Property<ChosenJavaVersion> distributionTarget;
     private final Property<ChosenJavaVersion> runtime;
+    private final Property<JavaLanguageVersion> daemonTarget;
     private final LazilyConfiguredMapping<JavaLanguageVersion, AtomicReference<JavaInstallationMetadata>, Project>
             jdks = new LazilyConfiguredMapping<>(AtomicReference::new);
     private final Property<Boolean> setupJdkToolchains;
@@ -43,6 +45,7 @@ public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtens
         this.libraryTarget = project.getObjects().property(JavaLanguageVersion.class);
         this.distributionTarget = project.getObjects().property(ChosenJavaVersion.class);
         this.runtime = project.getObjects().property(ChosenJavaVersion.class);
+        this.daemonTarget = project.getObjects().property(JavaLanguageVersion.class);
         this.setupJdkToolchains = project.getObjects().property(Boolean.class);
         this.setupJdkToolchains.convention(true);
 
@@ -50,6 +53,7 @@ public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtens
         distributionTarget.convention(libraryTarget.map(ChosenJavaVersion::of));
         // runtime defaults to the distribution value
         runtime.convention(distributionTarget);
+        daemonTarget.convention((JavaLanguageVersion) null);
 
         libraryTarget.finalizeValueOnRead();
         distributionTarget.finalizeValueOnRead();
@@ -75,6 +79,10 @@ public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtens
                     + " are published as libraries.");
         }
         libraryTarget.set(version.javaLanguageVersion());
+    }
+
+    public final Property<JavaLanguageVersion> getDaemonTarget() {
+        return daemonTarget;
     }
 
     /**
