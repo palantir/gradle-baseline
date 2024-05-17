@@ -51,13 +51,15 @@ public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtens
 
         // distribution defaults to the library value
         distributionTarget.convention(libraryTarget.map(ChosenJavaVersion::of));
+        // daemon defaults to the library value
+        daemonTarget.convention(libraryTarget);
         // runtime defaults to the distribution value
         runtime.convention(distributionTarget);
-        daemonTarget.convention((JavaLanguageVersion) null);
 
         libraryTarget.finalizeValueOnRead();
         distributionTarget.finalizeValueOnRead();
         runtime.finalizeValueOnRead();
+        daemonTarget.finalizeValueOnRead();
     }
 
     /** Target {@link JavaLanguageVersion} for compilation of libraries that are published. */
@@ -83,6 +85,10 @@ public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtens
 
     public final Property<JavaLanguageVersion> getDaemonTarget() {
         return daemonTarget;
+    }
+
+    public final void setDaemonTarget(String value) {
+        daemonTarget.set(ChosenJavaVersion.fromString(value).javaLanguageVersion());
     }
 
     /**
