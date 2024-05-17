@@ -23,7 +23,6 @@ import javax.inject.Inject;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Property;
-import org.gradle.internal.impldep.com.fasterxml.jackson.databind.annotation.JsonAppend.Prop;
 import org.gradle.jvm.toolchain.JavaInstallationMetadata;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 
