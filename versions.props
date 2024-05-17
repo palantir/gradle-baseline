@@ -23,9 +23,9 @@ com.palantir.gradle.failure-reports:* = 1.2.0
 com.fasterxml.jackson.*:* = 2.16.1
 com.github.stefanbirkner:system-rules = 1.19.0
 com.netflix.nebula:nebula-test = 10.2.0
-com.palantir.conjure.java:* = 8.21.0
-com.palantir.conjure.java.api:* = 2.52.0
-com.palantir.conjure.java.runtime:* = 8.8.0
+com.palantir.conjure.java:* = 8.22.0
+com.palantir.conjure.java.api:* = 2.53.0
+com.palantir.conjure.java.runtime:* = 8.11.0
 com.palantir.tokens:auth-tokens = 3.18.0
 com.palantir.tritium:* = 0.88.0
 commons-io:* = 2.16.1
@@ -39,7 +39,7 @@ org.hamcrest:hamcrest-core = 2.2
 org.junit.jupiter:* = 5.10.2
 org.junit.vintage:* = 5.10.2
 org.junit.platform:* = 1.10.2
-org.mockito:* = 5.11.0
+org.mockito:* = 5.12.0
 
 # dependency-upgrader:OFF
 # Don't upgrade, we will remove this in a future release.
