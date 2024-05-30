@@ -117,7 +117,7 @@ public final class FinalClass extends BugChecker implements BugChecker.ClassTree
                                             ASTHelpers.getType(tree), ASTHelpers.getType(extendsClause), state)) {
                                 return true;
                             }
-                            return super.visitClass(classTree, attachment);
+                            return super.visitClass(classTree, null);
                         }
 
                         @Override
@@ -129,7 +129,7 @@ public final class FinalClass extends BugChecker implements BugChecker.ClassTree
                                             state)) {
                                 return true;
                             }
-                            return super.visitNewClass(newClassTree, attachment);
+                            return super.visitNewClass(newClassTree, null);
                         }
                     },
                     null);
