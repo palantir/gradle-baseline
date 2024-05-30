@@ -213,7 +213,7 @@ public final class CatchSpecificity extends BugChecker implements BugChecker.Try
 
                                 @Override
                                 public Void visitParenthesized(ParenthesizedTree node, Void ignored) {
-                                    return node.getExpression().accept(this, ignored);
+                                    return node.getExpression().accept(this, null);
                                 }
                             },
                             null);
@@ -286,7 +286,7 @@ public final class CatchSpecificity extends BugChecker implements BugChecker.Try
                     && ((IdentifierTree) expression).getName().contentEquals(exceptionName)) {
                 variableWasAssigned = true;
             }
-            return super.visitAssignment(node, state);
+            return super.visitAssignment(node, null);
         }
 
         // Avoid searching outside the current scope
