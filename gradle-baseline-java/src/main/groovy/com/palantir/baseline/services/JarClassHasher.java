@@ -18,6 +18,7 @@ package com.palantir.baseline.services;
 
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.hash.HashCode;
@@ -36,11 +37,19 @@ import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.services.BuildService;
 import org.gradle.api.services.BuildServiceParameters;
+import org.immutables.value.Value;
 import org.slf4j.Logger;
 
 public abstract class JarClassHasher implements BuildService<BuildServiceParameters.None>, AutoCloseable {
-    private final Cache<ModuleVersionIdentifier, Result> cache =
-            Caffeine.newBuilder().build();
+
+    @Value.Immutable
+    interface CacheKey {
+        ModuleVersionIdentifier moduleVersionIdentifier();
+
+        String classifier();
+    }
+
+    private final Cache<CacheKey, Result> cache = Caffeine.newBuilder().build();
 
     public static final class Result {
         private final ImmutableSetMultimap<String, HashCode> hashesByClassName;
@@ -59,7 +68,11 @@ public abstract class JarClassHasher implements BuildService<BuildServiceParamet
     }
 
     public final Result hashClasses(ResolvedArtifact resolvedArtifact, Logger logger) {
-        return cache.get(resolvedArtifact.getModuleVersion().getId(), _moduleId -> {
+        CacheKey key = ImmutableCacheKey.builder()
+                .moduleVersionIdentifier(resolvedArtifact.getModuleVersion().getId())
+                .classifier(Strings.nullToEmpty(resolvedArtifact.getClassifier()))
+                .build();
+        return cache.get(key, _moduleId -> {
             File file = resolvedArtifact.getFile();
             if (!file.exists()) {
                 return Result.empty();
