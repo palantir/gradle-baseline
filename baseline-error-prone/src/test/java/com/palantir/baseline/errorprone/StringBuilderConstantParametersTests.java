@@ -312,6 +312,30 @@ public class StringBuilderConstantParametersTests {
     }
 
     @Test
+    public void suggestedFixHandlesMethodCalledOnBuilt() {
+        RefactoringValidator.of(StringBuilderConstantParameters.class, getClass())
+                .addInputLines(
+                        "Test.java",
+                        "class Test {",
+                        "   String f() {",
+                        "       return new StringBuilder()",
+                        "           .append(\"foo\")",
+                        "           .append(\"bar\")",
+                        "           .toString()",
+                        "           .toLowerCase();",
+                        "   }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "class Test {",
+                        "   String f() {",
+                        "       return (\"foo\"  + \"bar\").toLowerCase();",
+                        "   }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void negativeDynamicStringBuilder() {
         compilationHelper
                 .addSourceLines(
