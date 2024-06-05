@@ -95,6 +95,8 @@ public final class StringBuilderConstantParameters extends BugChecker
         return buildDescription(tree)
                 .setMessage(MESSAGE)
                 .addFix(SuggestedFix.builder()
+                        .prefixWith(tree, "(")
+                        .postfixWith(tree, ")")
                         .replace(
                                 tree,
                                 Streams.concat(
