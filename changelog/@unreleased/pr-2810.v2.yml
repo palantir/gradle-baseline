@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: Adding [TestFactory](https://junit.org/junit5/docs/5.4.1/api/org/junit/jupiter/api/TestFactory.html)
+    (for DynamicTests) as part of the methods that ignore this annotation.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2810
