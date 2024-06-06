@@ -33,11 +33,13 @@ import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
+import com.google.errorprone.util.ErrorProneToken;
 import com.palantir.baseline.errorprone.MoreASTHelpers;
 import com.palantir.baseline.errorprone.Records;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.LambdaExpressionTree;
+import com.sun.source.tree.LineMap;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.Tree.Kind;
@@ -67,6 +69,9 @@ import java.util.OptionalDouble;
 import java.util.OptionalInt;
 import java.util.OptionalLong;
 import java.util.Set;
+import java.util.concurrent.atomic.AtomicInteger;
+import java.util.concurrent.atomic.AtomicLong;
+import java.util.concurrent.atomic.AtomicReference;
 import java.util.stream.BaseStream;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -164,6 +169,8 @@ import org.checkerframework.errorprone.javacutil.TreePathUtil;
  * @see <a href="https://github.com/google/error-prone/blob/v2.11.0/check_api/src/main/java/com/google/errorprone/dataflow/nullnesspropagation/NullnessPropagationTransfer.java">NullnessPropagationTransfer</a>
  */
 public final class SafetyPropagationTransfer implements ForwardTransferFunction<Safety, AccessPathStore<Safety>> {
+
+    private static final AtomicInteger DEPTH = new AtomicInteger();
 
     private static final Matcher<Tree> THROWABLE_SUBTYPE = Matchers.isSubtypeOf(Throwable.class);
     private static final Matcher<ExpressionTree> TO_STRING =
@@ -430,7 +437,12 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
             Safety declared = SafetyAnnotations.getSafety(param.getTree(), state);
             result.setInformation(AccessPath.fromLocalVariable(param), declared);
         }
-        return result.build();
+
+        AccessPathStore<Safety> store = result.build();
+
+        System.out.printf("Create:\n  Store: %s (%s)\n", store, System.identityHashCode(store));
+
+        return store;
     }
 
     public ClearVisitorState setVisitorState(VisitorState value) {
@@ -464,6 +476,15 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
         AccessPathStore.Builder<Safety> builder = oldStore.toBuilder();
         update.values.forEach(builder::setInformation);
         AccessPathStore<Safety> newStore = builder.build();
+
+        System.out.printf(
+                "Update:\n  Old store: %s (%s)\n  New store: %s (%s)\n  Updates: %s\n",
+                oldStore,
+                System.identityHashCode(oldStore),
+                newStore,
+                System.identityHashCode(newStore),
+                update.values);
+
         return new ResultingStore(newStore, !newStore.equals(oldStore));
     }
 
@@ -819,6 +840,7 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
             throw new UnsupportedOperationException(
                     "Safety analysis bug, unknown target type: " + target.getClass() + " with value: " + target);
         }
+        log("ASSIGN", info(node.getTree()));
         return updateRegularStore(safety, input, updates);
     }
 
@@ -830,6 +852,9 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
         }
         AccessPath accessPath = AccessPath.fromLocalVariable(node);
         Safety safety = input.getRegularStore().valueOfAccessPath(accessPath, null);
+
+        String info = info(node.getTree());
+
         if (safety == null) {
             // This may occur in one of several ways:
             // 1. catch (SomeThrowable t)
@@ -839,15 +864,34 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
 
             // Cast a wide net for all throwables (covers catch statements)
             if (THROWABLE_SUBTYPE.matches(node.getTree(), state)) {
+                log("THROWABLE", info);
                 safety = Safety.UNSAFE.leastUpperBound(SafetyAnnotations.getSafety(node.getTree(), state));
             } else if (isPatternBinding(node, state)) {
+                log("PATTERN", info);
                 safety = SafetyAnnotations.getSafety(node.getTree(), state);
             } else {
+                log("CAPTURED", info);
+                logRead(accessPath, input.getRegularStore());
+                new RuntimeException().printStackTrace();
+                DEPTH.incrementAndGet();
                 // No safety information found, likely a captured reference used within a lambda or anonymous class.
                 safety = getCapturedLocalVariableSafety(node);
+                DEPTH.decrementAndGet();
             }
+
+        } else {
+            log("FOUND", info);
+
+            logRead(accessPath, input.getRegularStore());
         }
+
         return noStoreChanges(safety, input);
+    }
+
+    private void logRead(AccessPath path, AccessPathStore<Safety> store) {
+        System.out.printf(
+                "Read:\n  Path: %s\n  Store: %s (%s)\n  Contains: %s\n",
+                path, store, System.identityHashCode(store), store.heap().containsKey(path));
     }
 
     private static boolean isPatternBinding(LocalVariableNode node, VisitorState state) {
@@ -895,12 +939,34 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
             ControlFlowGraph cfg = CFGBuilder.build(state.getPath().getCompilationUnit(), ast, false, false, javacEnv);
             Analysis<Safety, AccessPathStore<Safety>, SafetyPropagationTransfer> analysis =
                     new ForwardAnalysisImpl<>(this);
+
+            System.out.println("ANALYZE");
+
             analysis.performAnalysis(cfg);
+
+            log("LOOKUP", info(variableDefinition.getLeaf()));
+
             Safety maybeResult = analysis.getValue(variableDefinition.getLeaf());
+
             return maybeResult == null ? Safety.UNKNOWN : maybeResult;
         } finally {
             traversed.remove(variableSymbol);
         }
+    }
+
+    private void log(String name, String info) {
+        System.out.printf("%-10s | %s %s\n", name, "  ".repeat(DEPTH.get()), info);
+    }
+
+    private String info(Tree tree) {
+        LineMap lineMap = state.getPath().getCompilationUnit().getLineMap();
+
+        String fileName = ASTHelpers.getFileName(state.getPath().getCompilationUnit());
+        fileName = fileName.substring(fileName.lastIndexOf("/") + 1);
+        long lineNumber = lineMap.getLineNumber(ASTHelpers.getStartPosition(tree));
+        long columnNumber = lineMap.getColumnNumber(ASTHelpers.getStartPosition(tree));
+
+        return fileName + ":" + lineNumber + ":" + columnNumber + ": " + state.getSourceForNode(tree);
     }
 
     private static UnderlyingAST createAst(TreePath path) {
@@ -1131,6 +1197,7 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
             Safety safety = getTypeConversionSafety(node.getTree().getType(), node.getOperand(), input);
             ReadableUpdates updates = new ReadableUpdates();
             updates.set(bindingVariables.get(0), safety);
+            log("INSTANCEOF", info(node.getTree()));
             return updateRegularStore(Safety.SAFE, input, updates);
         }
         // Otherwise types themselves are generally safe, boolean results of type checks are always safe.
@@ -1179,6 +1246,7 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
                 }
             }
             updates.trySet(current, result);
+            log("METHOD", info(node.getTree()));
             return updateRegularStore(result, input, updates);
         } else {
             return noStoreChanges(result, input);
@@ -1321,6 +1389,7 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
                                 SafetyAnnotations.getSafety(recordComponent.type, state));
                         updates.trySet(pattern, Safety.mergeAssumingUnknownIsSame(existing, recordComponentSafety));
                     }
+                    log("DECONST", info(node.getTree()));
                     return updateRegularStore(Safety.UNKNOWN, input, updates);
                 }
             }

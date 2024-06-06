@@ -51,5 +51,6 @@ com.diffplug.spotless:spotless-plugin-gradle = 6.6.0
 org.codehaus.groovy:* = 3.0.13
 # checkerframework dependencies should be limited to errorpropne and nullaway
 # requirements, upgrading prior to those often causes compilation failures.
-org.checkerframework:* = 3.42.0
+org.checkerframework:* = 3.44.0
+io.github.eisop:* = 3.42.0-eisop3
 # dependency-upgrader:ON
