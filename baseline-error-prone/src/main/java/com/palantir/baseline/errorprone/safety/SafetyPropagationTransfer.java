@@ -33,11 +33,13 @@ import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
+import com.google.errorprone.util.ErrorProneToken;
 import com.palantir.baseline.errorprone.MoreASTHelpers;
 import com.palantir.baseline.errorprone.Records;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.LambdaExpressionTree;
+import com.sun.source.tree.LineMap;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.Tree.Kind;
@@ -851,7 +853,17 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     }
 
     private static boolean isPatternBinding(LocalVariableNode node, VisitorState state) {
-        TreePath varPath = TreePath.getPath(state.getPath().getCompilationUnit(), node.getTree());
+        Tree tree = node.getTree();
+        LineMap lineMap = state.getPath().getCompilationUnit().getLineMap();
+
+        String fileName = ASTHelpers.getFileName(state.getPath().getCompilationUnit());
+        long lineNumber = lineMap.getLineNumber(ASTHelpers.getStartPosition(tree));
+        long columnNumber = lineMap.getColumnNumber(ASTHelpers.getStartPosition(tree));
+
+        System.out.println(
+                fileName + ":" + lineNumber + ":" + columnNumber + ": " + state.getSourceForNode(node.getTree()));
+
+        TreePath varPath = TreePath.getPath(state.getPath().getCompilationUnit(), tree);
         if (varPath == null) {
             // Synthetic expression
             return false;
