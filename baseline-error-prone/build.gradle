@@ -39,6 +39,8 @@ dependencies {
     testRuntimeOnly 'com.palantir.conjure.java.runtime:conjure-java-annotations'
     // for PreferCommonAnnotations
     testRuntimeOnly 'org.jetbrains:annotations'
+    // for eclipse-collections classloading bug
+    testRuntimeOnly 'org.eclipse.collections:eclipse-collections'
 
     annotationProcessor 'com.google.auto.service:auto-service'
     compileOnly 'org.immutables:value::annotations'
