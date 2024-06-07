@@ -1,0 +1,40 @@
+digraph {
+    2 -> 3 [label="EACH_TO_EACH"];
+    3 -> 4 [label="EACH_TO_EACH"];
+    4 -> 8 [label="THEN_TO_BOTH"];
+    4 -> 11 [label="ELSE_TO_ELSE"];
+    8 -> 9 [label="EACH_TO_EACH"];
+    11 -> 12 [label="EACH_TO_EACH"];
+    9 -> 10 [label="EACH_TO_EACH"];
+    9 -> 1 [label="NullPointerException"];
+    12 -> 16 [label="THEN_TO_BOTH"];
+    12 -> 19 [label="ELSE_TO_ELSE"];
+    10 -> 11 [label="EACH_TO_EACH"];
+    16 -> 17 [label="EACH_TO_EACH"];
+    19 -> 20 [label="EACH_TO_EACH"];
+    17 -> 18 [label="EACH_TO_EACH"];
+    17 -> 1 [label="NullPointerException"];
+    20 -> 24 [label="THEN_TO_BOTH"];
+    20 -> 27 [label="ELSE_TO_BOTH"];
+    18 -> 19 [label="EACH_TO_EACH"];
+    24 -> 0 [label="EACH_TO_EACH"];
+    27 -> 0 [label="EACH_TO_EACH"];
+
+    2 [shape=oval label="Process order: 1\l<entry>"];
+    3 [shape=rectangle label="Process order: 2\lnode   [ LocalVariable ]\lparent1   [ VariableDeclaration ]\lparent1   [ LocalVariable ]\l(node instanceof Parent parent1)   [ InstanceOf ]"];
+    4 [shape=polygon sides=8 label="Process order: 3\l"];
+    8 [shape=rectangle label="Process order: 4\lparent1   [ LocalVariable ]"];
+    11 [shape=rectangle label="Process order: 7\l((node instanceof Parent parent1) && (parent1.child instanceof Parent parent2))   [ ConditionalAnd ]"];
+    9 [shape=rectangle label="Process order: 5\lparent1.child   [ FieldAccess ]"];
+    12 [shape=polygon sides=8 label="Process order: 8\l"];
+    10 [shape=rectangle label="Process order: 6\lparent2   [ VariableDeclaration ]\lparent2   [ LocalVariable ]\l(parent1.child instanceof Parent parent2)   [ InstanceOf ]"];
+    1 [shape=oval label="Process order: 12\l<exceptional-exit>"];
+    16 [shape=rectangle label="Process order: 9\lparent2   [ LocalVariable ]"];
+    19 [shape=rectangle label="Process order: 13\l(((node instanceof Parent parent1) && (parent1.child instanceof Parent parent2)) && (parent2.child instanceof Leaf leaf))   [ ConditionalAnd ]"];
+    17 [shape=rectangle label="Process order: 10\lparent2.child   [ FieldAccess ]"];
+    20 [shape=polygon sides=8 label="Process order: 14\l"];
+    18 [shape=rectangle label="Process order: 11\lleaf   [ VariableDeclaration ]\lleaf   [ LocalVariable ]\l(parent2.child instanceof Leaf leaf)   [ InstanceOf ]"];
+    24 [shape=rectangle label="Process order: 15\lleaf   [ LocalVariable ]\lreturn leaf   [ Return ]"];
+    27 [shape=rectangle label="Process order: 16\lnull   [ NullLiteral ]\lreturn null   [ Return ]"];
+    0 [shape=oval label="Process order: 17\l<exit>"];
+}
