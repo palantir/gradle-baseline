@@ -42,14 +42,8 @@ import org.slf4j.Logger;
 
 public abstract class JarClassHasher implements BuildService<BuildServiceParameters.None>, AutoCloseable {
 
-    @Value.Immutable
-    interface CacheKey {
-        ModuleVersionIdentifier moduleVersionIdentifier();
-
-        String classifier();
-    }
-
-    private final Cache<CacheKey, Result> cache = Caffeine.newBuilder().build();
+    private final Cache<ClassUniquenessArtifactIdentifier, Result> cache =
+            Caffeine.newBuilder().build();
 
     public static final class Result {
         private final ImmutableSetMultimap<String, HashCode> hashesByClassName;
@@ -68,7 +62,7 @@ public abstract class JarClassHasher implements BuildService<BuildServiceParamet
     }
 
     public final Result hashClasses(ResolvedArtifact resolvedArtifact, Logger logger) {
-        CacheKey key = ImmutableCacheKey.builder()
+        ClassUniquenessArtifactIdentifier key = ImmutableClassUniquenessArtifactIdentifier.builder()
                 .moduleVersionIdentifier(resolvedArtifact.getModuleVersion().getId())
                 .classifier(Strings.nullToEmpty(resolvedArtifact.getClassifier()))
                 .build();
