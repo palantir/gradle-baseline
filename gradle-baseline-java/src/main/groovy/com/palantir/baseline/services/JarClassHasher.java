@@ -33,11 +33,9 @@ import java.util.Map;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
 import java.util.stream.Collectors;
-import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.services.BuildService;
 import org.gradle.api.services.BuildServiceParameters;
-import org.immutables.value.Value;
 import org.slf4j.Logger;
 
 public abstract class JarClassHasher implements BuildService<BuildServiceParameters.None>, AutoCloseable {
