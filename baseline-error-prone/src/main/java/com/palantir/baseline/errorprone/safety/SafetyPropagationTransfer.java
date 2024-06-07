@@ -74,6 +74,7 @@ import javax.annotation.Nullable;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import org.checkerframework.errorprone.dataflow.analysis.Analysis;
+import org.checkerframework.errorprone.dataflow.analysis.ConditionalTransferResult;
 import org.checkerframework.errorprone.dataflow.analysis.ForwardAnalysisImpl;
 import org.checkerframework.errorprone.dataflow.analysis.ForwardTransferFunction;
 import org.checkerframework.errorprone.dataflow.analysis.RegularTransferResult;
@@ -447,6 +448,7 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
         }
     }
 
+    @CheckReturnValue
     private static TransferResult<Safety, AccessPathStore<Safety>> noStoreChanges(
             Safety value, TransferInput<?, AccessPathStore<Safety>> input) {
         return new RegularTransferResult<>(value, input.getRegularStore());
@@ -457,6 +459,12 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
             Safety value, TransferInput<?, AccessPathStore<Safety>> input, ReadableUpdates updates) {
         ResultingStore newStore = updateStore(input.getRegularStore(), updates);
         return new RegularTransferResult<>(value, newStore.store, newStore.storeChanged);
+    }
+
+    @CheckReturnValue
+    private static TransferResult<Safety, AccessPathStore<Safety>> conditionalResult(
+            Safety value, AccessPathStore<Safety> thenStore, AccessPathStore<Safety> elseStore, boolean storeChanged) {
+        return new ConditionalTransferResult<>(value, thenStore, elseStore, storeChanged);
     }
 
     @CheckReturnValue
@@ -746,41 +754,50 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     public TransferResult<Safety, AccessPathStore<Safety>> visitGreaterThanOrEqual(
             GreaterThanOrEqualNode _node, TransferInput<Safety, AccessPathStore<Safety>> input) {
         // 'a >= b' in source is safe, regardless of 'a' and 'b'.
-        return noStoreChanges(Safety.SAFE, input);
+        return conditionalResult(Safety.SAFE, input.getThenStore(), input.getElseStore(), false);
     }
 
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitEqualTo(
             EqualToNode _node, TransferInput<Safety, AccessPathStore<Safety>> input) {
         // 'a == b' in source is safe, regardless of 'a' and 'b'.
-        return noStoreChanges(Safety.SAFE, input);
+        return conditionalResult(Safety.SAFE, input.getThenStore(), input.getElseStore(), false);
     }
 
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitNotEqual(
             NotEqualNode _node, TransferInput<Safety, AccessPathStore<Safety>> input) {
         // 'a != b' in source is safe, regardless of 'a' and 'b'.
-        return noStoreChanges(Safety.SAFE, input);
+        return conditionalResult(Safety.SAFE, input.getThenStore(), input.getElseStore(), false);
     }
 
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitConditionalAnd(
             ConditionalAndNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
         // 'a && b' in source is safe, regardless of 'a' and 'b'.
-        return noStoreChanges(Safety.SAFE, input);
+        return conditionalResult(Safety.SAFE, input.getThenStore(), input.getElseStore(), false);
     }
 
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitConditionalOr(
             ConditionalOrNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
         // 'a || b' in source is safe, regardless of 'a' and 'b'.
-        return noStoreChanges(Safety.SAFE, input);
+        return conditionalResult(Safety.SAFE, input.getThenStore(), input.getElseStore(), false);
     }
 
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitConditionalNot(
             ConditionalNotNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        return unary(node, input);
+        // '!a' in source is safe, regardless of 'a'.
+        return conditionalResult(
+                Safety.SAFE,
+                /* thenStore= */ input.getElseStore(),
+                /* elseStore= */ input.getThenStore(),
+                /*
+                 * Weird case: We swap the contents of the THEN and ELSE stores without otherwise modifying
+                 * them. Presumably that can still count as a change?
+                 */
+                !input.getThenStore().equals(input.getElseStore()));
     }
 
     @Override
@@ -1124,17 +1141,20 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitInstanceOf(
             InstanceOfNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
+        ReadableUpdates thenUpdates = new ReadableUpdates();
+
         List<LocalVariableNode> bindingVariables = node.getBindingVariables();
         Node patternNode = node.getPatternNode();
         if (patternNode instanceof LocalVariableNode && bindingVariables.size() == 1) {
             // matches 'value instanceof Type varName', we don't match DeconstructorPatternNode here.
             Safety safety = getTypeConversionSafety(node.getTree().getType(), node.getOperand(), input);
-            ReadableUpdates updates = new ReadableUpdates();
-            updates.set(bindingVariables.get(0), safety);
-            return updateRegularStore(Safety.SAFE, input, updates);
+            thenUpdates.set(bindingVariables.get(0), safety);
         }
-        // Otherwise types themselves are generally safe, boolean results of type checks are always safe.
-        return noStoreChanges(Safety.SAFE, input);
+
+        ResultingStore thenStore = updateStore(input.getThenStore(), thenUpdates);
+
+        return new ConditionalTransferResult<>(
+                Safety.SAFE, thenStore.store, input.getElseStore(), thenStore.storeChanged);
     }
 
     @Override
