@@ -21,6 +21,42 @@ import org.junit.jupiter.api.Test;
 class SafeLoggingPropagationTest {
 
     @Test
+    void repro() {
+        fix().addInputLines(
+                        "Repro.java",
+                        "public enum Repro {",
+                        "    ;",
+                        "    interface Node {",
+                        "        class Parent implements Node {",
+                        "            private Node child;",
+                        "        }",
+                        "        class Leaf implements Node {}",
+                        "    }",
+                        "    public static Node.Leaf getLeaf(Node node) {",
+                        "        if (node instanceof Node.Parent parent1",
+                        "                && parent1.child instanceof Node.Parent parent2",
+                        "                && parent2.child instanceof Node.Leaf leaf) {",
+                        "            return leaf;",
+                        "        }",
+                        "        if (node instanceof Node.Parent parent1",
+                        "                && parent1.child instanceof Node.Parent parent2",
+                        "                && parent2.child instanceof Node.Leaf leaf) {",
+                        "            return leaf;",
+                        "        }",
+                        // Uncomment this block to make the build take a very long time
+                        //                        "        if (node instanceof Node.Parent parent1",
+                        //                        "                && parent1.child instanceof Node.Parent parent2",
+                        //                        "                && parent2.child instanceof Node.Leaf leaf) {",
+                        //                        "            return leaf;",
+                        //                        "        }",
+                        "        return null;",
+                        "    }",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
     void testAddsAnnotation_dnlType() {
         fix().addInputLines(
                         "Test.java",
