@@ -21,7 +21,7 @@ buildscript {
 }
 
 plugins {
-id 'com.palantir.git-version' version '3.0.0'
+id 'com.palantir.git-version' version '3.1.0'
 id 'org.inferred.processors' version '3.7.0'
 }
 
