@@ -43,20 +43,19 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
     private static final int ENABLE_PREVIEW_BYTECODE = 65535
     private static final int NOT_ENABLE_PREVIEW_BYTECODE = 0
 
+    File mainJava
+
     // language=Gradle
     def standardBuildFile = '''
         buildscript {
             repositories { mavenCentral() }
             dependencies {
-                classpath 'com.netflix.nebula:nebula-publishing-plugin:17.0.0'
-                classpath 'com.palantir.gradle.shadow-jar:gradle-shadow-jar:2.5.0'
-                classpath 'com.palantir.gradle.consistentversions:gradle-consistent-versions:2.8.0'
+                classpath 'com.palantir.sls-packaging:gradle-sls-packaging:7.56.0'
                 classpath 'com.palantir.gradle.jdkslatest:gradle-jdks-latest:0.13.0'
             }
         }
         plugins {
-            id 'java-library'
-            id 'application'
+            id 'java'
         }
         
         allprojects {
@@ -67,8 +66,9 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         
         apply plugin: 'com.palantir.baseline-java-versions'
         
-        application {
+        task runMainClass(type: JavaExec) {
             mainClass = 'Main'
+            classpath = sourceSets.main.runtimeClasspath
         }
     '''.stripIndent(true)
 
@@ -109,9 +109,11 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
     def setup() {
         // Fork needed or build fails on circleci with "SystemInfo is not supported on this operating system."
         // Comment out locally in order to get debugging to work
-        setFork(true)
+        // setFork(true)
 
         buildFile << standardBuildFile
+
+        mainJava = file("src/main/java/Main.java")
     }
 
     def '#gradleVersionNumber: java 11 compilation fails targeting java 8'() {
@@ -123,7 +125,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             runtime = 11
         }
         '''.stripIndent(true)
-        file('src/main/java/Main.java') << java11CompatibleCode
+        mainJava << java11CompatibleCode
 
         then:
         runTasksWithFailure('compileJava')
@@ -140,7 +142,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             distributionTarget = 17
         }
         '''.stripIndent(true)
-        file('src/main/java/Main.java') << java11CompatibleCode
+        mainJava << java11CompatibleCode
         File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
 
         then:
@@ -159,7 +161,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             distributionTarget = '17_PREVIEW'
         }
         '''.stripIndent(true)
-        file('src/main/java/Main.java') << java17PreviewCode
+        mainJava << java17PreviewCode
         File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
 
         then:
@@ -177,7 +179,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             libraryTarget = '17_PREVIEW'
         }
         '''.stripIndent(true)
-        file('src/main/java/Main.java') << java17PreviewCode
+        mainJava << java17PreviewCode
 
         then:
         ExecutionResult result = runTasksWithFailure('compileJava', '-i')
@@ -195,7 +197,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             target = '17_PREVIEW'
         }
         '''.stripIndent(true)
-        file('src/main/java/Main.java') << java17PreviewCode
+        mainJava << java17PreviewCode
         File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
 
         then:
@@ -214,7 +216,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             distributionTarget = '17_PREVIEW'
         }
         '''.stripIndent(true)
-        file('src/main/java/Main.java') << java17PreviewCode
+        mainJava << java17PreviewCode
 
         then:
         runTasksSuccessfully('javadoc', '-i')
@@ -234,7 +236,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             library()
         }
         '''.stripIndent(true)
-        file('src/main/java/Main.java') << java11CompatibleCode
+        mainJava << java11CompatibleCode
         File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
 
         then:
@@ -245,43 +247,22 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         gradleVersionNumber << GRADLE_TEST_VERSIONS
     }
 
-    def '#gradleVersionNumber: library target is used when nebula maven publishing plugin is applied'() {
+    def '#gradleVersionNumber: distribution target is used when sls-packaging is used'() {
         when:
+        // language=Gradle
         buildFile << '''
-        apply plugin: 'nebula.maven-publish'
-        javaVersions {
-            libraryTarget = 11
-            distributionTarget = 17
-        }
+            apply plugin: 'com.palantir.sls-java-service-distribution'
+            javaVersions {
+                libraryTarget = 11
+                distributionTarget = 17
+            }
         '''.stripIndent(true)
-        file('src/main/java/Main.java') << java11CompatibleCode
+        mainJava << java11CompatibleCode
         File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
 
         then:
         runTasksSuccessfully('compileJava')
-        assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
-
-        where:
-        gradleVersionNumber << GRADLE_TEST_VERSIONS
-    }
-
-    def '#gradleVersionNumber: library target is used when the palantir shadowjar plugin is applied'() {
-        when:
-        buildFile << '''
-        apply plugin: 'com.palantir.consistent-versions' // required by shadow-jar
-        apply plugin: 'com.palantir.shadow-jar'
-        javaVersions {
-            libraryTarget = 11
-            distributionTarget = 17
-        }
-        '''.stripIndent(true)
-        file('src/main/java/Main.java') << java11CompatibleCode
-        File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
-
-        then:
-        runTasksSuccessfully('--write-locks')
-        runTasksSuccessfully('compileJava')
-        assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
+        assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
 
         where:
         gradleVersionNumber << GRADLE_TEST_VERSIONS
@@ -294,7 +275,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             libraryTarget = '11'
         }
         '''.stripIndent(true)
-        file('src/main/java/Main.java') << java11CompatibleCode
+        mainJava << java11CompatibleCode
         File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
 
         then:
@@ -307,16 +288,17 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
 
     def '#gradleVersionNumber: java 11 execution succeeds on java 11'() {
         when:
+        // language=gradle
         buildFile << '''
-        javaVersions {
-            libraryTarget = 11
-        }
+            javaVersions {
+                libraryTarget = 11
+            }
         '''.stripIndent(true)
-        file('src/main/java/Main.java') << java11CompatibleCode
+        mainJava << java11CompatibleCode
         File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
 
         then:
-        ExecutionResult result = runTasksSuccessfully('run')
+        ExecutionResult result = runTasksSuccessfully('runMainClass')
         result.standardOutput.contains 'jdk11 features on runtime 11'
         assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
 
@@ -332,11 +314,11 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             runtime = 17
         }
         '''.stripIndent(true)
-        file('src/main/java/Main.java') << java11CompatibleCode
+        mainJava << java11CompatibleCode
         File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
 
         then:
-        ExecutionResult result = runTasksSuccessfully('run')
+        ExecutionResult result = runTasksSuccessfully('runMainClass')
         result.standardOutput.contains 'jdk11 features on runtime 17'
         assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
 
@@ -365,7 +347,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             }
         }
         '''.stripIndent(true)
-        file('src/main/java/Main.java') << java11CompatibleCode
+        mainJava << java11CompatibleCode
         File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
 
         when:
@@ -376,7 +358,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
 
         when:
-        ExecutionResult runResult = runTasksSuccessfully('run')
+        ExecutionResult runResult = runTasksSuccessfully('runMainClass')
 
         then:
         runResult.wasUpToDate('compileJava')
@@ -410,7 +392,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             }
         }
         '''.stripIndent(true)
-        file('src/main/java/Main.java') << java11CompatibleCode
+        mainJava << java11CompatibleCode
         File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
 
         when:
@@ -442,10 +424,10 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             libraryTarget = 8
         }
         '''.stripIndent(true)
-        file('src/main/java/Main.java') << java8CompatibleCode
+        mainJava << java8CompatibleCode
 
         then:
-        ExecutionResult result = runTasksSuccessfully('run')
+        ExecutionResult result = runTasksSuccessfully('runMainClass')
         result.standardOutput.contains 'jdk8 features on runtime 1.8'
 
         where:
@@ -464,11 +446,11 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             runtime = 11
         }
         '''.stripIndent(true)
-        file('src/main/java/Main.java') << java8CompatibleCode
+        mainJava << java8CompatibleCode
         File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
 
         then:
-        ExecutionResult result = runTasksSuccessfully('run')
+        ExecutionResult result = runTasksSuccessfully('runMainClass')
         result.standardOutput.contains 'jdk8 features on runtime 11'
         assertBytecodeVersion(compiledClass, JAVA_8_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
 
