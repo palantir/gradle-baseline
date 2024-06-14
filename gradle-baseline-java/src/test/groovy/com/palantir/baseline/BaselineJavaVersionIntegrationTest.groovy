@@ -109,7 +109,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
     def setup() {
         // Fork needed or build fails on circleci with "SystemInfo is not supported on this operating system."
         // Comment out locally in order to get debugging to work
-        // setFork(true)
+        setFork(true)
 
         buildFile << standardBuildFile
 
