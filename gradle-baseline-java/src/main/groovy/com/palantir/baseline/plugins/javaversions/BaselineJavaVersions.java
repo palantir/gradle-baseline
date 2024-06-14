@@ -39,10 +39,14 @@ public final class BaselineJavaVersions implements Plugin<Project> {
     public static final String EXTENSION_NAME = "javaVersions";
 
     public static final GradleVersion MIN_GRADLE_VERSION = GradleVersion.version("7.0");
-    // 'nebula.maven-publish' and 'com.palantir.shadow-jar' create publications lazily which cause inconsistencies
-    // based on ordering.
+
     private static final ImmutableSet<String> LIBRARY_PLUGINS =
-            ImmutableSet.of("nebula.maven-publish", "com.palantir.shadow-jar", "com.palantir.external-publish-jar");
+            ImmutableSet.of("com.palantir.external-publish-jar", "com.palantir.publish-jar");
+
+    private static final ImmutableSet<String> DISTRIBUTION_PLUGINS = ImmutableSet.of(
+            "com.palantir.external-publish-dist",
+            "com.palantir.publish-dist",
+            "com.palantir.sls-java-service-distribution");
 
     @Override
     public void apply(Project project) {
@@ -74,6 +78,14 @@ public final class BaselineJavaVersions implements Plugin<Project> {
     }
 
     private static boolean isLibrary(Project project, BaselineJavaVersionExtension projectVersions) {
+        if (GradleVersion.current().compareTo(GradleVersion.version("8.6")) >= 0) {
+            return newIsLibrary(project, projectVersions);
+        } else {
+            return oldIsLibrary(project, projectVersions);
+        }
+    }
+
+    private static boolean newIsLibrary(Project project, BaselineJavaVersionExtension projectVersions) {
         Property<Boolean> libraryOverride = projectVersions.overrideLibraryAutoDetection();
         if (libraryOverride.isPresent()) {
             log.debug(
@@ -81,7 +93,55 @@ public final class BaselineJavaVersions implements Plugin<Project> {
                     project.getDisplayName());
             return libraryOverride.get();
         }
+
         for (String plugin : LIBRARY_PLUGINS) {
+            if (project.getPluginManager().hasPlugin(plugin)) {
+                log.debug(
+                        "Project '{}' is considered a library because the '{}' plugin is applied",
+                        project.getDisplayName(),
+                        plugin);
+                return true;
+            }
+        }
+
+        for (String plugin : DISTRIBUTION_PLUGINS) {
+            if (project.getPluginManager().hasPlugin(plugin)) {
+                log.debug(
+                        "Project '{}' is considered a distribution because the '{}' plugin is applied",
+                        project.getDisplayName(),
+                        plugin);
+                return false;
+            }
+        }
+
+        PublishingExtension publishing = project.getExtensions().findByType(PublishingExtension.class);
+        if (publishing == null) {
+            log.debug(
+                    "Project '{}' is considered a distribution, not a library, because "
+                            + "it doesn't define any publishing extensions",
+                    project.getDisplayName());
+            return false;
+        }
+
+        // Better to be conservative with the java version rather than release something that is too high to be used.
+        log.debug("Project '{}' is considered a library as no other conditions matched", project.getDisplayName());
+        return true;
+    }
+
+    /**
+     * This only exists for rollout of the new Gradle 8.6+ behaviour. It should be deleted shortly once we have upgraded
+     * repos past 8.6 and verified that the new behaviour is correct.
+     */
+    private static boolean oldIsLibrary(Project project, BaselineJavaVersionExtension projectVersions) {
+        Property<Boolean> libraryOverride = projectVersions.overrideLibraryAutoDetection();
+        if (libraryOverride.isPresent()) {
+            log.debug(
+                    "Project '{}' is considered a library because it has been overridden with library = true",
+                    project.getDisplayName());
+            return libraryOverride.get();
+        }
+        for (String plugin :
+                new String[] {"nebula.maven-publish", "com.palantir.shadow-jar", "com.palantir.external-publish-jar"}) {
             if (project.getPluginManager().hasPlugin(plugin)) {
                 log.debug(
                         "Project '{}' is considered a library because the '{}' plugin is applied",
