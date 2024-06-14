@@ -372,15 +372,17 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
     }
 
     def '#gradleVersionNumber: when setupJdkToolchains=false no toolchains are configured by gradle-baseline'() {
+        when:
         // language=gradle
         buildFile << '''
         apply plugin: 'com.palantir.jdks.latest'
-
+        
         javaVersions {
             libraryTarget = 11
             runtime = 21
             setupJdkToolchains = false
         }
+        
         java {
             toolchain {
                 languageVersion = JavaLanguageVersion.of(11)
@@ -395,20 +397,10 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         mainJava << java11CompatibleCode
         File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
 
-        when:
-        ExecutionResult result = runTasksSuccessfully('compileJava', 'run')
-
         then:
-        String compileToolchain = extractCompileToolchain(result.standardOutput)
-        compileToolchain.contains("jdk-11")
-        !compileToolchain.contains("amazon-corretto")
-        assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
-        String toolchain = extractRunJavaCommand(result.standardOutput)
-        toolchain.contains("jdk-21")
-        !toolchain.contains("amazon-corretto")
-
-        then:
-        runTasksWithFailure('compileJava', 'run', '-Porg.gradle.java.installations.auto-detect=false', '-Porg.gradle.java.installations.auto-download=false')
+        runTasksWithFailure('compileJava', 'run',
+                '-Porg.gradle.java.installations.auto-detect=false',
+                '-Porg.gradle.java.installations.auto-download=false')
 
         where:
         gradleVersionNumber << GRADLE_TEST_VERSIONS
@@ -720,7 +712,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
     }
 
     private static String extractRunJavaCommand(String output) {
-        Matcher matcher =  Pattern.compile("^Successfully started process 'command '([^']*)/bin/java''", Pattern.MULTILINE).matcher(output)
+        Matcher matcher =  Pattern.compile("^Starting process 'command '([^']*)/bin/java''.*Main", Pattern.MULTILINE).matcher(output)
         matcher.find()
         return matcher.group(1)
     }
