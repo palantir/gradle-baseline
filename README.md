@@ -385,6 +385,16 @@ checkImplicitDependencies {
 }
 ```
 
+These tasks are created by default, but are not configured to run as part of `check`.  To do that, add to the root `/build.gradle`:
+
+```gradle
+allprojects {
+    apply plugin: 'java-library'
+
+    tasks.check.dependsOn checkUnusedDependencies, checkImplicitDependencies
+}
+```
+
 ## com.palantir.baseline-encoding
 
 This plugin sets the encoding for JavaCompile tasks to `UTF-8`.
