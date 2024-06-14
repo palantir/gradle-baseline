@@ -16,14 +16,19 @@
 
 package com.palantir.baseline.plugins.javaversions;
 
+import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Objects;
 import org.gradle.api.GradleException;
+import org.gradle.api.Named;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.publish.Publication;
 import org.gradle.api.publish.PublishingExtension;
+import org.gradle.api.publish.ivy.IvyPublication;
+import org.gradle.api.publish.maven.MavenPublication;
 import org.gradle.util.GradleVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -73,6 +78,14 @@ public final class BaselineJavaVersions implements Plugin<Project> {
     }
 
     private static boolean isLibrary(Project project, BaselineJavaVersionExtension projectVersions) {
+        if (GradleVersion.current().compareTo(GradleVersion.version("8.6")) >= 0) {
+            return newIsLibrary(project, projectVersions);
+        } else {
+            return oldIsLibrary(project, projectVersions);
+        }
+    }
+
+    private static boolean newIsLibrary(Project project, BaselineJavaVersionExtension projectVersions) {
         Property<Boolean> libraryOverride = projectVersions.overrideLibraryAutoDetection();
         if (libraryOverride.isPresent()) {
             log.debug(
@@ -112,6 +125,71 @@ public final class BaselineJavaVersions implements Plugin<Project> {
 
         // Better to be conservative with the java version rather than release something that is too high to be used.
         log.debug("Project '{}' is considered a library as no other conditions matched", project.getDisplayName());
+        return true;
+    }
+
+    /**
+     * This only exists for rollout of the new Gradle 8.6+ behaviour. It should be deleted shortly once we have upgraded
+     * repos past 8.6 and verified that the new behaviour is correct.
+     */
+    private static boolean oldIsLibrary(Project project, BaselineJavaVersionExtension projectVersions) {
+        Property<Boolean> libraryOverride = projectVersions.overrideLibraryAutoDetection();
+        if (libraryOverride.isPresent()) {
+            log.debug(
+                    "Project '{}' is considered a library because it has been overridden with library = true",
+                    project.getDisplayName());
+            return libraryOverride.get();
+        }
+        for (String plugin :
+                new String[] {"nebula.maven-publish", "com.palantir.shadow-jar", "com.palantir.external-publish-jar"}) {
+            if (project.getPluginManager().hasPlugin(plugin)) {
+                log.debug(
+                        "Project '{}' is considered a library because the '{}' plugin is applied",
+                        project.getDisplayName(),
+                        plugin);
+                return true;
+            }
+        }
+        PublishingExtension publishing = project.getExtensions().findByType(PublishingExtension.class);
+        if (publishing == null) {
+            log.debug(
+                    "Project '{}' is considered a distribution, not a library, because "
+                            + "it doesn't define any publishing extensions",
+                    project.getDisplayName());
+            return false;
+        }
+        ImmutableList<String> jarPublications = publishing.getPublications().stream()
+                .filter(pub -> isLibraryPublication(project, pub))
+                .map(Named::getName)
+                .collect(ImmutableList.toImmutableList());
+        if (jarPublications.isEmpty()) {
+            log.debug(
+                    "Project '{}' is considered a distribution because it does not publish jars",
+                    project.getDisplayName());
+            return false;
+        }
+        log.debug(
+                "Project '{}' is considered a library because it publishes jars: {}",
+                project.getDisplayName(),
+                jarPublications);
+        return true;
+    }
+
+    private static boolean isLibraryPublication(Project project, Publication publication) {
+        if (publication instanceof MavenPublication) {
+            MavenPublication mavenPublication = (MavenPublication) publication;
+            return mavenPublication.getArtifacts().stream().anyMatch(artifact -> "jar".equals(artifact.getExtension()));
+        }
+        if (publication instanceof IvyPublication) {
+            IvyPublication ivyPublication = (IvyPublication) publication;
+            return ivyPublication.getArtifacts().stream().anyMatch(artifact -> "jar".equals(artifact.getExtension()));
+        }
+        // Default to true for unknown publication types to avoid setting higher jvm targets than necessary
+        log.warn(
+                "Unknown publication '{}' of type '{}'. Assuming project {} is a library",
+                publication,
+                publication.getClass().getName(),
+                project.getName());
         return true;
     }
 }
