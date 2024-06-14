@@ -17,7 +17,6 @@
 package com.palantir.baseline.plugins.javaversions;
 
 import com.google.common.collect.ImmutableSet;
-import com.google.common.collect.Iterables;
 import java.util.Objects;
 import org.gradle.api.GradleException;
 import org.gradle.api.Plugin;
@@ -39,8 +38,10 @@ public final class BaselineJavaVersions implements Plugin<Project> {
     private static final ImmutableSet<String> LIBRARY_PLUGINS =
             ImmutableSet.of("com.palantir.external-publish-jar", "com.palantir.publish-jar");
 
-    private static final ImmutableSet<String> DISTRIBUTION_PLUGINS =
-            ImmutableSet.of("com.palantir.external-publish-dist", "com.palantir.publish-dist");
+    private static final ImmutableSet<String> DISTRIBUTION_PLUGINS = ImmutableSet.of(
+            "com.palantir.external-publish-dist",
+            "com.palantir.publish-dist",
+            "com.palantir.sls-java-service-distribution");
 
     @Override
     public void apply(Project project) {
@@ -100,14 +101,6 @@ public final class BaselineJavaVersions implements Plugin<Project> {
             }
         }
 
-        if (anySlsPackagingVariantsExtensionsExist(project)) {
-            log.debug(
-                    "Project '{}' is considered a distribution, not a library, because "
-                            + "it applies an sls-packaging plugin",
-                    project.getDisplayName());
-            return false;
-        }
-
         PublishingExtension publishing = project.getExtensions().findByType(PublishingExtension.class);
         if (publishing == null) {
             log.debug(
@@ -120,26 +113,5 @@ public final class BaselineJavaVersions implements Plugin<Project> {
         // Better to be conservative with the java version rather than release something that is too high to be used.
         log.debug("Project '{}' is considered a library as no other conditions matched", project.getDisplayName());
         return true;
-    }
-
-    private static boolean anySlsPackagingVariantsExtensionsExist(Project project) {
-        // Doing this avoids having to list every sls-packaging plugin as there is no base plugin
-        // Avoids bringing in a dependency on sls-packaging too by using strings rather than the actual class
-        return Iterables.any(
-                project.getExtensions().getExtensionsSchema().getElements(),
-                extensionSchema -> anySuperClassHasCanonicalName(
-                        extensionSchema.getPublicType().getConcreteClass(),
-                        "com.palantir.gradle.dist.BaseDistributionExtension"));
-    }
-
-    private static boolean anySuperClassHasCanonicalName(Class<?> clazz, String canonicalName) {
-        Class<?> currentSuperClass = clazz.getSuperclass();
-        while (currentSuperClass != null) {
-            if (currentSuperClass.getCanonicalName().equals(canonicalName)) {
-                return true;
-            }
-            currentSuperClass = currentSuperClass.getSuperclass();
-        }
-        return false;
     }
 }
