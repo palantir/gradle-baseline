@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Remove pre-Gradle 8.6 baseline-java-versions behaviour.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2822
