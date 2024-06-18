@@ -19,6 +19,7 @@ package com.palantir.baseline.tasks;
 import com.google.common.base.Splitter;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSortedMap;
+import com.palantir.baseline.services.ClassUniquenessArtifactIdentifier;
 import com.palantir.baseline.services.JarClassHasher;
 import com.palantir.gradle.failurereports.exceptions.ExceptionWithSuggestion;
 import difflib.DiffUtils;
@@ -37,7 +38,6 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.specs.Spec;
@@ -111,7 +111,8 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
                             ClassUniquenessAnalyzer analyzer = new ClassUniquenessAnalyzer(
                                     jarClassHasher.get(), getProject().getLogger());
                             analyzer.analyzeConfiguration(configuration);
-                            Collection<Set<ModuleVersionIdentifier>> problemJars = analyzer.getDifferingProblemJars();
+                            Collection<Set<ClassUniquenessArtifactIdentifier>> problemJars =
+                                    analyzer.getDifferingProblemJars();
 
                             if (problemJars.isEmpty()) {
                                 return Optional.empty();
@@ -148,16 +149,23 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
         }
     }
 
-    private String clashingClasses(ClassUniquenessAnalyzer analyzer, Set<ModuleVersionIdentifier> clashingJars) {
+    private String clashingClasses(
+            ClassUniquenessAnalyzer analyzer, Set<ClassUniquenessArtifactIdentifier> clashingJars) {
         return analyzer.getDifferingSharedClassesInProblemJars(clashingJars).stream()
                 .sorted()
                 .map(className -> String.format("  - %s", className))
                 .collect(Collectors.joining("\n"));
     }
 
-    private String clashingJarHeader(Set<ModuleVersionIdentifier> clashingJars) {
+    private String clashingJarHeader(Set<ClassUniquenessArtifactIdentifier> clashingJars) {
         return clashingJars.stream()
-                .map(mvi -> mvi.getGroup() + ":" + mvi.getName())
+                .map(ident -> {
+                    String mvi = ident.moduleVersionIdentifier().getGroup() + ":"
+                            + ident.moduleVersionIdentifier().getName();
+                    return ident.classifier().isEmpty()
+                            ? mvi
+                            : mvi + " (classifier=" + ident.classifier().get() + ")";
+                })
                 .sorted()
                 .collect(Collectors.joining(", ", "[", "]"));
     }

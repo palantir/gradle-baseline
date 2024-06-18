@@ -1,0 +1,54 @@
+# Danger! Multiple jars contain identically named classes. This may cause different behaviour depending on classpath ordering.
+# Run ./gradlew checkClassUniqueness --fix to update this file
+
+## runtimeClasspath
+[com.google.cloud.bigdataoss:gcs-connector (classifier=shaded), com.google.cloud.bigdataoss:gcsio]
+  - com.google.cloud.hadoop.gcsio.authorization.AuthorizationHandler
+[com.google.cloud.bigdataoss:gcs-connector (classifier=shaded), com.google.cloud.bigdataoss:util-hadoop]
+  - com.google.cloud.hadoop.util.AccessTokenProvider
+  - com.google.cloud.hadoop.util.AccessTokenProvider$AccessToken
+  - com.google.cloud.hadoop.util.AccessTokenProvider$AccessTokenType
+[com.google.cloud.bigdataoss:gcs-connector (classifier=shaded), com.google.cloud.bigdataoss:util]
+  - com.google.cloud.hadoop.util.AccessBoundary
+  - com.google.cloud.hadoop.util.AccessBoundary$Action
+  - com.google.cloud.hadoop.util.AutoValue_AccessBoundary
+[com.google.cloud.bigdataoss:gcs-connector, com.google.cloud.bigdataoss:gcs-connector (classifier=shaded)]
+  - com.google.cloud.hadoop.fs.gcs.AutoValue_SyncableOutputStreamOptions
+  - com.google.cloud.hadoop.fs.gcs.AutoValue_SyncableOutputStreamOptions$1
+  - com.google.cloud.hadoop.fs.gcs.AutoValue_SyncableOutputStreamOptions$Builder
+  - com.google.cloud.hadoop.fs.gcs.CoopLockFsck
+  - com.google.cloud.hadoop.fs.gcs.CoopLockFsckRunner
+  - com.google.cloud.hadoop.fs.gcs.CoopLockFsckRunner$1
+  - com.google.cloud.hadoop.fs.gcs.CoopLockFsckRunner$2
+  - com.google.cloud.hadoop.fs.gcs.FileSystemDescriptor
+  - com.google.cloud.hadoop.fs.gcs.FsBenchmark
+  - com.google.cloud.hadoop.fs.gcs.GhfsStatistic
+  - com.google.cloud.hadoop.fs.gcs.GhfsStatisticTypeEnum
+  - com.google.cloud.hadoop.fs.gcs.GhfsStorageStatistics
+  - com.google.cloud.hadoop.fs.gcs.GhfsStorageStatistics$1
+  - com.google.cloud.hadoop.fs.gcs.GhfsStorageStatistics$LongIterator
+  - com.google.cloud.hadoop.fs.gcs.GhfsStorageStatistics$MeanStatistic
+  - com.google.cloud.hadoop.fs.gcs.GhfsStreamStats
+  - com.google.cloud.hadoop.fs.gcs.GoogleHadoopFS
+  - com.google.cloud.hadoop.fs.gcs.GoogleHadoopFSInputStream
+  - com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystem
+  - com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystemBase
+  - com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystemBase$1
+  - com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystemBase$GcsFileChecksum
+  - com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystemBase$GcsFileChecksumType
+  - com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystemBase$GlobAlgorithm
+  - com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystemBase$InvocationRaisingIOE
+  - com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystemBase$OutputStreamType
+  - com.google.cloud.hadoop.fs.gcs.GoogleHadoopFileSystemConfiguration
+  - com.google.cloud.hadoop.fs.gcs.GoogleHadoopOutputStream
+  - com.google.cloud.hadoop.fs.gcs.GoogleHadoopSyncableOutputStream
+  - com.google.cloud.hadoop.fs.gcs.HadoopConfigurationProperty
+  - com.google.cloud.hadoop.fs.gcs.HadoopCredentialConfiguration
+  - com.google.cloud.hadoop.fs.gcs.InMemoryGlobberFileSystem
+  - com.google.cloud.hadoop.fs.gcs.SyncableOutputStreamOptions
+  - com.google.cloud.hadoop.fs.gcs.SyncableOutputStreamOptions$Builder
+  - com.google.cloud.hadoop.fs.gcs.auth.AbstractDelegationTokenBinding
+  - com.google.cloud.hadoop.fs.gcs.auth.AbstractDelegationTokenBinding$TokenSecretManager
+  - com.google.cloud.hadoop.fs.gcs.auth.DelegationTokenIOException
+  - com.google.cloud.hadoop.fs.gcs.auth.GcsDelegationTokens
+  - com.google.cloud.hadoop.fs.gcs.auth.GcsDtFetcher

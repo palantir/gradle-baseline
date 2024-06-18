@@ -23,6 +23,8 @@ import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.SetMultimap;
 import com.google.common.hash.HashCode;
+import com.palantir.baseline.services.ClassUniquenessArtifactIdentifier;
+import com.palantir.baseline.services.ImmutableClassUniquenessArtifactIdentifier;
 import com.palantir.baseline.services.JarClassHasher;
 import java.io.File;
 import java.time.Duration;
@@ -32,13 +34,12 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.slf4j.Logger;
 
 public final class ClassUniquenessAnalyzer {
     private final JarClassHasher jarHasher;
-    private final SetMultimap<Set<ModuleVersionIdentifier>, String> jarsToClasses = HashMultimap.create();
+    private final SetMultimap<Set<ClassUniquenessArtifactIdentifier>, String> jarsToClasses = HashMultimap.create();
     private final SetMultimap<String, HashCode> classToHashCodes = HashMultimap.create();
     private final Logger log;
 
@@ -54,7 +55,7 @@ public final class ClassUniquenessAnalyzer {
 
         // we use these temporary maps to accumulate information as we process each jar,
         // so they may include singletons which we filter out later
-        SetMultimap<String, ModuleVersionIdentifier> classToJars = HashMultimap.create();
+        SetMultimap<String, ClassUniquenessArtifactIdentifier> classToJars = HashMultimap.create();
         SetMultimap<String, HashCode> tempClassToHashCodes = HashMultimap.create();
 
         for (ResolvedArtifact resolvedArtifact : dependencies) {
@@ -70,7 +71,13 @@ public final class ClassUniquenessAnalyzer {
             for (Map.Entry<String, HashCode> entry : hashes.entries()) {
                 String className = entry.getKey();
                 HashCode hashValue = entry.getValue();
-                classToJars.put(className, resolvedArtifact.getModuleVersion().getId());
+                classToJars.put(
+                        className,
+                        ImmutableClassUniquenessArtifactIdentifier.builder()
+                                .moduleVersionIdentifier(
+                                        resolvedArtifact.getModuleVersion().getId())
+                                .classifier(resolvedArtifact.getClassifier())
+                                .build());
                 tempClassToHashCodes.put(className, hashValue);
             }
         }
@@ -97,24 +104,24 @@ public final class ClassUniquenessAnalyzer {
      * Any groups jars that all contain some identically named classes. Note: may contain non-scary duplicates - class
      * files which are 100% identical, so their clashing name doesn't have any effect.
      */
-    private Collection<Set<ModuleVersionIdentifier>> getProblemJars() {
+    private Collection<Set<ClassUniquenessArtifactIdentifier>> getProblemJars() {
         return jarsToClasses.keySet();
     }
 
     /** Class names that appear in all of the given jars. */
-    public Set<String> getSharedClassesInProblemJars(Set<ModuleVersionIdentifier> problemJars) {
+    public Set<String> getSharedClassesInProblemJars(Set<ClassUniquenessArtifactIdentifier> problemJars) {
         return jarsToClasses.get(problemJars);
     }
 
     /** Jars which contain identically named classes with non-identical implementations. */
-    public Collection<Set<ModuleVersionIdentifier>> getDifferingProblemJars() {
+    public Collection<Set<ClassUniquenessArtifactIdentifier>> getDifferingProblemJars() {
         return getProblemJars().stream()
                 .filter(jars -> getDifferingSharedClassesInProblemJars(jars).size() > 0)
                 .collect(Collectors.toSet());
     }
 
     /** Class names which appear in all of the given jars and also have non-identical implementations. */
-    public Set<String> getDifferingSharedClassesInProblemJars(Set<ModuleVersionIdentifier> problemJars) {
+    public Set<String> getDifferingSharedClassesInProblemJars(Set<ClassUniquenessArtifactIdentifier> problemJars) {
         return getSharedClassesInProblemJars(problemJars).stream()
                 .filter(classToHashCodes::containsKey)
                 .collect(toSet());
