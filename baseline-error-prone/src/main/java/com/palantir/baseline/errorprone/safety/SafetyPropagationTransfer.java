@@ -178,6 +178,12 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     private static final Matcher<ExpressionTree> STRING_FORMAT =
             MethodMatchers.staticMethod().onClass(String.class.getName()).named("format");
 
+    private static final Matcher<ExpressionTree> STRING_VALUE_OF =
+            MethodMatchers.staticMethod().onClass(String.class.getName()).named("valueOf");
+
+    private static final Matcher<ExpressionTree> STRING_COPY_VALUE_OF =
+            MethodMatchers.staticMethod().onClass(String.class.getName()).named("copyValueOf");
+
     private static final Matcher<ExpressionTree> OBJECTS_TO_STRING =
             MethodMatchers.staticMethod().onClass(Objects.class.getName()).named("toString");
 
@@ -288,6 +294,8 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     // These methods do not take the receiver (generally a static class) into account, only the inputs.
     private static final Matcher<ExpressionTree> RETURNS_SAFETY_COMBINATION_OF_ARGS = Matchers.anyOf(
             STRING_FORMAT,
+            STRING_VALUE_OF,
+            STRING_COPY_VALUE_OF,
             OBJECTS_TO_STRING,
             IMMUTABLE_COLLECTION_FACTORY,
             OPTIONAL_FACTORIES,
