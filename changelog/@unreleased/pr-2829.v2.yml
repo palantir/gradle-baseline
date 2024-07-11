@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Update spotless java to 6.24.0 from 6.6.0
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2829
