@@ -46,7 +46,7 @@ org.mockito:* = 5.12.0
 # Users should depend on this plugin directly such that it will get updated by excavator.
 com.palantir.javaformat:gradle-palantir-java-format = 1.1.0
 # Newer spotless versions have issues resolving dependencies at configuration time
-com.diffplug.spotless:spotless-plugin-gradle = 6.6.0
+com.diffplug.spotless:spotless-plugin-gradle = 6.24.0
 # Groovy versions must be compatible with gradle
 org.codehaus.groovy:* = 3.0.13
 # checkerframework dependencies should be limited to errorpropne and nullaway
