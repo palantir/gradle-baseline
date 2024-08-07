@@ -54,7 +54,7 @@ public class StringBuilderConstantParametersTests {
                         "   }",
                         "}")
                 .addOutputLines(
-                        "Test.java", "class Test {", "   String f() {", "       return \"foo\" + 1;", "   }", "}")
+                        "Test.java", "class Test {", "   String f() {", "       return (\"foo\" + 1);", "   }", "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
@@ -86,7 +86,7 @@ public class StringBuilderConstantParametersTests {
                         "Test.java",
                         "class Test {",
                         "   String f() {",
-                        "       return \"ctor\" + \"foo\" + 1;",
+                        "       return (\"ctor\" + \"foo\" + 1);",
                         "   }",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
@@ -120,7 +120,7 @@ public class StringBuilderConstantParametersTests {
                         "Test.java",
                         "class Test {",
                         "   String f(CharSequence charSequence) {",
-                        "       return \"\" + charSequence + \"foo\" + 1;",
+                        "       return (\"\" + charSequence + \"foo\" + 1);",
                         "   }",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
@@ -154,7 +154,7 @@ public class StringBuilderConstantParametersTests {
                         "Test.java",
                         "class Test {",
                         "   String f(long param0, double param1) {",
-                        "       return \"\" + param0 + param1;",
+                        "       return (\"\" + param0 + param1);",
                         "   }",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
@@ -174,7 +174,7 @@ public class StringBuilderConstantParametersTests {
                         "Test.java",
                         "class Test {",
                         "   String f(String param0, double param1) {",
-                        "       return param0 + param1;",
+                        "       return (param0 + param1);",
                         "   }",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
@@ -239,7 +239,7 @@ public class StringBuilderConstantParametersTests {
                         "       return new StringBuilder().toString();",
                         "   }",
                         "}")
-                .addOutputLines("Test.java", "class Test {", "   String f() {", "       return \"\";", "   }", "}")
+                .addOutputLines("Test.java", "class Test {", "   String f() {", "       return (\"\");", "   }", "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
     }
 
@@ -257,7 +257,7 @@ public class StringBuilderConstantParametersTests {
                         "Test.java",
                         "class Test {",
                         "   String f(Object obj) {",
-                        "       return (String) obj + 1;",
+                        "       return ((String) obj + 1);",
                         "   }",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
@@ -281,7 +281,7 @@ public class StringBuilderConstantParametersTests {
                         "Test.java",
                         "class Test {",
                         "   String f(Object obj) {",
-                        "       return \"a\" + (obj == null ? \"nil\" : obj) + \"b\";",
+                        "       return (\"a\" + (obj == null ? \"nil\" : obj) + \"b\");",
                         "   }",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
@@ -305,10 +305,34 @@ public class StringBuilderConstantParametersTests {
                         "Test.java",
                         "class Test {",
                         "   String f(int param0, int param1) {",
-                        "       return \"a\" + (param0 + param1) + \"b\";",
+                        "       return (\"a\" + (param0 + param1) + \"b\");",
                         "   }",
                         "}")
                 .doTest(BugCheckerRefactoringTestHelper.TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    public void suggestedFixHandlesMethodCalledOnBuilt() {
+        RefactoringValidator.of(StringBuilderConstantParameters.class, getClass())
+                .addInputLines(
+                        "Test.java",
+                        "class Test {",
+                        "   String f() {",
+                        "       return new StringBuilder()",
+                        "           .append(\"foo\")",
+                        "           .append(\"bar\")",
+                        "           .toString()",
+                        "           .toLowerCase();",
+                        "   }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "class Test {",
+                        "   String f() {",
+                        "       return (\"foo\"  + \"bar\").toLowerCase();",
+                        "   }",
+                        "}")
+                .doTest();
     }
 
     @Test
