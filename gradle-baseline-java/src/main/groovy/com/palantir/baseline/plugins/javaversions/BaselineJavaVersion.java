@@ -71,7 +71,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                 public void execute(JavaToolchainSpec javaToolchainSpec) {
                     javaToolchainSpec
                             .getLanguageVersion()
-                            .set(extension.runtime().map(ChosenJavaVersion::javaLanguageVersion));
+                            .set(extension.getRuntime().map(ChosenJavaVersion::javaLanguageVersion));
                 }
             });
 
@@ -86,19 +86,19 @@ public final class BaselineJavaVersion implements Plugin<Project> {
 
             // Execution tasks (using the runtime version)
             configureExecutionTasks(
-                    project, extension.runtime(), baselineConfiguredJavaToolchains, rootExtension, toolchainService);
+                    project, extension.getRuntime(), baselineConfiguredJavaToolchains, rootExtension, toolchainService);
 
             // Validation
             TaskProvider<CheckJavaVersionsTask> checkJavaVersions = project.getTasks()
                     .register("checkJavaVersions", CheckJavaVersionsTask.class, task -> {
                         task.getTargetVersion().set(extension.target());
-                        task.getRuntimeVersion().set(extension.runtime());
+                        task.getRuntimeVersion().set(extension.getRuntime());
                     });
 
             TaskProvider<CheckClasspathCompatible> checkRuntimeClasspathCompatible = project.getTasks()
                     .register("checkRuntimeClasspathCompatible", CheckClasspathCompatible.class, task -> {
                         task.getClasspathName().set("runtime");
-                        task.getJavaVersion().set(extension.runtime());
+                        task.getJavaVersion().set(extension.getRuntime());
                         task.getClasspath().setFrom(project.getConfigurations().getByName("runtimeClasspath"));
                     });
 

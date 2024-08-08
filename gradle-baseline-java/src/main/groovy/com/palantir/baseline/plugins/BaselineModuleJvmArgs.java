@@ -235,7 +235,7 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
             project.getPlugins().withType(BaselineJavaVersion.class, _unused -> {
                 BaselineJavaVersionExtension javaVersionsExtension =
                         project.getExtensions().getByType(BaselineJavaVersionExtension.class);
-                extension.setEnablePreview(javaVersionsExtension.runtime().map(chosenJavaVersion -> {
+                extension.setEnablePreview(javaVersionsExtension.getRuntime().map(chosenJavaVersion -> {
                     return chosenJavaVersion.enablePreview()
                             ? Optional.of(chosenJavaVersion.javaLanguageVersion())
                             : Optional.empty();

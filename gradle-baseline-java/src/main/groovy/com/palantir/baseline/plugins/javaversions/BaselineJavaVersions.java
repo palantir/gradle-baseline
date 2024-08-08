@@ -64,16 +64,16 @@ public final class BaselineJavaVersions implements Plugin<Project> {
                     proj.getExtensions().getByType(BaselineJavaVersionExtension.class);
 
             Provider<ChosenJavaVersion> suggestedTarget = proj.provider(() -> isLibrary(proj, projectVersions)
-                    ? ChosenJavaVersion.of(rootExtension.libraryTarget().get())
-                    : rootExtension.distributionTarget().get());
+                    ? ChosenJavaVersion.of(rootExtension.getLibraryTarget().get())
+                    : rootExtension.getDistributionTarget().get());
 
             projectVersions.target().convention(suggestedTarget);
-            projectVersions.runtime().convention(rootExtension.runtime());
+            projectVersions.getRuntime().convention(rootExtension.getRuntime());
         }));
     }
 
     private static boolean isLibrary(Project project, BaselineJavaVersionExtension projectVersions) {
-        Property<Boolean> libraryOverride = projectVersions.overrideLibraryAutoDetection();
+        Property<Boolean> libraryOverride = projectVersions.getOverrideLibraryAutoDetection();
         if (libraryOverride.isPresent()) {
             log.debug(
                     "Project '{}' is considered a library because it has been overridden with library = true",

@@ -105,6 +105,12 @@ public abstract class BaselineJavaVersionsExtension implements BaselineJavaVersi
         getDistributionTarget().set(ChosenJavaVersion.fromString(value));
     }
 
+    /** @deprecated Use {@link #getRuntime()} instead. */
+    @Deprecated
+    public final Property<ChosenJavaVersion> runtime() {
+        return getRuntime();
+    }
+
     @Override
     public final void setRuntime(int value) {
         getRuntime().set(ChosenJavaVersion.of(value));

@@ -203,21 +203,21 @@ class BaselineIdea extends AbstractBaselinePlugin {
     private void updateCompilerConfiguration(Node node, BaselineJavaVersionsExtension versions) {
         Node compilerConfiguration = node.component.find { it.'@name' == 'CompilerConfiguration' }
         Node bytecodeTargetLevel = GroovyXmlUtils.matchOrCreateChild(compilerConfiguration, "bytecodeTargetLevel")
-        JavaLanguageVersion defaultBytecodeVersion = versions.libraryTarget().get()
+        JavaLanguageVersion defaultBytecodeVersion = versions.libraryTarget.get()
         bytecodeTargetLevel.attributes().put("target", defaultBytecodeVersion.toString())
         project.allprojects.forEach({ project ->
             BaselineJavaVersionExtension version = project.getExtensions().findByType(BaselineJavaVersionExtension.class)
-            if (version != null && version.target().get().javaLanguageVersion().asInt() != defaultBytecodeVersion.asInt()) {
+            if (version != null && version.target.get().javaLanguageVersion().asInt() != defaultBytecodeVersion.asInt()) {
                 bytecodeTargetLevel.appendNode("module", ImmutableMap.of(
                         "name", project.getName(),
-                        "target", version.target().get().toString()))
+                        "target", version.target.get().toString()))
             }
         })
     }
 
     private void updateProjectRootManager(Node node, BaselineJavaVersionsExtension versions) {
         Node projectRootManager = node.component.find { it.'@name' == 'ProjectRootManager' }
-        ChosenJavaVersion chosenJavaVersion = versions.distributionTarget().get()
+        ChosenJavaVersion chosenJavaVersion = versions.distributionTarget.get()
         int featureRelease = chosenJavaVersion.javaLanguageVersion().asInt()
         projectRootManager.attributes().put("project-jdk-name", featureRelease)
         projectRootManager.attributes().put("languageLevel", chosenJavaVersion.asIdeaLanguageLevel())
@@ -228,7 +228,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
             // Extension must be checked lazily within the transformer
             BaselineJavaVersionExtension versionExtension = currentProject.extensions.findByType(BaselineJavaVersionExtension.class)
             if (versionExtension != null) {
-                ChosenJavaVersion chosenJavaVersion = versionExtension.target().get()
+                ChosenJavaVersion chosenJavaVersion = versionExtension.target.get()
                 Node node = provider.asNode()
                 Node newModuleRootManager = node.component.find { it.'@name' == 'NewModuleRootManager' }
                 newModuleRootManager.attributes().put("LANGUAGE_LEVEL", chosenJavaVersion.asIdeaLanguageLevel())
