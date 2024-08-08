@@ -51,7 +51,7 @@ public abstract class BaselineJavaVersionExtension {
         getOverrideLibraryAutoDetection().finalizeValueOnRead();
     }
 
-    /** @deprecated Use {@link #getTarget} instead. */
+    /** @deprecated Use {@link #getTarget()} instead. */
     @Deprecated
     public final Property<ChosenJavaVersion> target() {
         return getTarget();
@@ -65,7 +65,7 @@ public abstract class BaselineJavaVersionExtension {
         getTarget().set(ChosenJavaVersion.fromString(value));
     }
 
-    /** @deprecated Use {@link #getRuntime} instead. */
+    /** @deprecated Use {@link #getRuntime()} instead. */
     @Deprecated
     public final Property<ChosenJavaVersion> runtime() {
         return getRuntime();

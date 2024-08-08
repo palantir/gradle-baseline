@@ -30,40 +30,51 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion;
  * Extension named {@code javaVersions} on the root project used to configure all java modules
  * with consistent java toolchains.
  */
-public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtensionSetters {
-    private final Property<JavaLanguageVersion> libraryTarget;
-    private final Property<ChosenJavaVersion> distributionTarget;
-    private final Property<ChosenJavaVersion> runtime;
+@SuppressWarnings("SummaryJavadoc")
+public abstract class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtensionSetters {
+    /** Target {@link JavaLanguageVersion} for compilation of libraries that are published. */
+    public abstract Property<JavaLanguageVersion> getLibraryTarget();
+
+    /**
+     * Target {@link ChosenJavaVersion} for compilation of code used within distributions,
+     * but not published externally.
+     */
+    public abstract Property<ChosenJavaVersion> getDistributionTarget();
+
+    /** Runtime {@link ChosenJavaVersion} for testing and packaging distributions. */
+    public abstract Property<ChosenJavaVersion> getRuntime();
+
     private final LazilyConfiguredMapping<JavaLanguageVersion, AtomicReference<JavaInstallationMetadata>, Project>
             jdks = new LazilyConfiguredMapping<>(AtomicReference::new);
-    private final Property<Boolean> setupJdkToolchains;
+
+    /**
+     * Enables the setup of JDK toolchains for all subprojects.
+     */
+    public abstract Property<Boolean> getSetupJdkToolchains();
 
     @Inject
     public BaselineJavaVersionsExtension(Project project) {
-        this.libraryTarget = project.getObjects().property(JavaLanguageVersion.class);
-        this.distributionTarget = project.getObjects().property(ChosenJavaVersion.class);
-        this.runtime = project.getObjects().property(ChosenJavaVersion.class);
-        this.setupJdkToolchains = project.getObjects().property(Boolean.class);
-        this.setupJdkToolchains.convention(true);
+        getSetupJdkToolchains().convention(true);
 
         // distribution defaults to the library value
-        distributionTarget.convention(libraryTarget.map(ChosenJavaVersion::of));
+        getDistributionTarget().convention(getLibraryTarget().map(ChosenJavaVersion::of));
         // runtime defaults to the distribution value
-        runtime.convention(distributionTarget);
+        getRuntime().convention(getDistributionTarget());
 
-        libraryTarget.finalizeValueOnRead();
-        distributionTarget.finalizeValueOnRead();
-        runtime.finalizeValueOnRead();
+        getLibraryTarget().finalizeValueOnRead();
+        getDistributionTarget().finalizeValueOnRead();
+        getRuntime().finalizeValueOnRead();
     }
 
-    /** Target {@link JavaLanguageVersion} for compilation of libraries that are published. */
+    /** @deprecated Use {@link #getLibraryTarget()} instead. */
+    @Deprecated
     public final Property<JavaLanguageVersion> libraryTarget() {
-        return libraryTarget;
+        return getLibraryTarget();
     }
 
     @Override
     public final void setLibraryTarget(int value) {
-        libraryTarget.set(JavaLanguageVersion.of(value));
+        getLibraryTarget().set(JavaLanguageVersion.of(value));
     }
 
     @Override
@@ -74,42 +85,35 @@ public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtens
                     + "(Java 15 preview cannot be run on Java 17, e.g.) it is unsuitable for use on projects that"
                     + " are published as libraries.");
         }
-        libraryTarget.set(version.javaLanguageVersion());
+        getLibraryTarget().set(version.javaLanguageVersion());
     }
 
-    /**
-     * Target {@link ChosenJavaVersion} for compilation of code used within distributions,
-     * but not published externally.
-     */
+    /** @deprecated Use {@link #getDistributionTarget()} instead. */
+    @Deprecated
     public final Property<ChosenJavaVersion> distributionTarget() {
-        return distributionTarget;
+        return getDistributionTarget();
     }
 
     @Override
     public final void setDistributionTarget(int value) {
-        distributionTarget.set(ChosenJavaVersion.of(value));
+        getDistributionTarget().set(ChosenJavaVersion.of(value));
     }
 
     /** Accepts inputs such as '17_PREVIEW'. */
     @Override
     public final void setDistributionTarget(String value) {
-        distributionTarget.set(ChosenJavaVersion.fromString(value));
-    }
-
-    /** Runtime {@link ChosenJavaVersion} for testing and packaging distributions. */
-    public final Property<ChosenJavaVersion> runtime() {
-        return runtime;
+        getDistributionTarget().set(ChosenJavaVersion.fromString(value));
     }
 
     @Override
     public final void setRuntime(int value) {
-        runtime.set(ChosenJavaVersion.of(value));
+        getRuntime().set(ChosenJavaVersion.of(value));
     }
 
     /** Accepts inputs such as '17_PREVIEW'. */
     @Override
     public final void setRuntime(String value) {
-        runtime.set(ChosenJavaVersion.fromString(value));
+        getRuntime().set(ChosenJavaVersion.fromString(value));
     }
 
     public final Optional<JavaInstallationMetadata> jdkMetadataFor(
@@ -128,12 +132,5 @@ public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtens
 
     public interface LazyJdks {
         Optional<JavaInstallationMetadata> jdkFor(JavaLanguageVersion javaLanguageVersion, Project project);
-    }
-
-    /**
-     * Enables the setup of JDK toolchains for all subprojects.
-     */
-    public final Property<Boolean> getSetupJdkToolchains() {
-        return setupJdkToolchains;
     }
 }
