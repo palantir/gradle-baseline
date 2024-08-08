@@ -24,24 +24,8 @@ import org.gradle.api.provider.Property;
  * Extension named {@code javaVersion} used to set the
  * target and runtime java versions used for a single project.
  */
-public class BaselineJavaVersionExtension {
-
-    private final Property<ChosenJavaVersion> target;
-    private final Property<ChosenJavaVersion> runtime;
-
-    private final Property<Boolean> overrideLibraryAutoDetection;
-
-    @Inject
-    public BaselineJavaVersionExtension(Project project) {
-        target = project.getObjects().property(ChosenJavaVersion.class);
-        runtime = project.getObjects().property(ChosenJavaVersion.class);
-        overrideLibraryAutoDetection = project.getObjects().property(Boolean.class);
-
-        target.finalizeValueOnRead();
-        runtime.finalizeValueOnRead();
-        overrideLibraryAutoDetection.finalizeValueOnRead();
-    }
-
+@SuppressWarnings("SummaryJavadoc")
+public abstract class BaselineJavaVersionExtension {
     /**
      * Target {@link ChosenJavaVersion} for compilation.
      *
@@ -49,40 +33,59 @@ public class BaselineJavaVersionExtension {
      * minor version of '65535'. Unlike normal bytecode, this bytecode cannot be run by a higher version of Java that
      * it was compiled by.
      */
-    public final Property<ChosenJavaVersion> target() {
-        return target;
-    }
-
-    public final void setTarget(int value) {
-        target.set(ChosenJavaVersion.of(value));
-    }
-
-    public final void setTarget(String value) {
-        target.set(ChosenJavaVersion.fromString(value));
-    }
+    public abstract Property<ChosenJavaVersion> getTarget();
 
     /** Runtime {@link ChosenJavaVersion} for testing and distributions. */
-    public final Property<ChosenJavaVersion> runtime() {
-        return runtime;
-    }
-
-    public final void setRuntime(int value) {
-        runtime.set(ChosenJavaVersion.of(value));
-    }
-
-    public final void setRuntime(String value) {
-        runtime.set(ChosenJavaVersion.fromString(value));
-    }
+    public abstract Property<ChosenJavaVersion> getRuntime();
 
     /**
      * Overrides auto-detection if a value is present to force this module to be a
      * library ({@code true}) or a distribution {@code false}).
      */
+    public abstract Property<Boolean> getOverrideLibraryAutoDetection();
+
+    @Inject
+    public BaselineJavaVersionExtension(Project project) {
+        getTarget().finalizeValueOnRead();
+        getRuntime().finalizeValueOnRead();
+        getOverrideLibraryAutoDetection().finalizeValueOnRead();
+    }
+
+    /** @deprecated Use {@link #getTarget} instead. */
+    @Deprecated
+    public final Property<ChosenJavaVersion> target() {
+        return getTarget();
+    }
+
+    public final void setTarget(int value) {
+        getTarget().set(ChosenJavaVersion.of(value));
+    }
+
+    public final void setTarget(String value) {
+        getTarget().set(ChosenJavaVersion.fromString(value));
+    }
+
+    /** @deprecated Use {@link #getRuntime} instead. */
+    @Deprecated
+    public final Property<ChosenJavaVersion> runtime() {
+        return getRuntime();
+    }
+
+    public final void setRuntime(int value) {
+        getRuntime().set(ChosenJavaVersion.of(value));
+    }
+
+    public final void setRuntime(String value) {
+        getRuntime().set(ChosenJavaVersion.fromString(value));
+    }
+
+    /** @deprecated Use {@link #getOverrideLibraryAutoDetection()} instead. */
+    @Deprecated
     public final Property<Boolean> overrideLibraryAutoDetection() {
-        return overrideLibraryAutoDetection;
+        return getOverrideLibraryAutoDetection();
     }
 
     public final void library() {
-        overrideLibraryAutoDetection.set(true);
+        getOverrideLibraryAutoDetection().set(true);
     }
 }
