@@ -58,4 +58,18 @@ public class OptionalToStringUsageTest {
                         "}")
                 .doTest();
     }
+
+    @Test
+    public void should_not_throw_error_if_to_string_is_invoked_on_optional_get() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import com.google.common.base.Optional;",
+                        "class Test {",
+                        "   String f() {",
+                        "       return Optional.of(\"This is an optional value\").get().toString();",
+                        "   }",
+                        "}")
+                .doTest();
+    }
 }
