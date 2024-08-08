@@ -32,9 +32,8 @@ import java.util.Optional;
 @BugPattern(
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        severity = SeverityLevel.ERROR,
-        summary = "Optional.toString() does not stringifies the value contained by the Optional"
-                + " object. Did you mean Optional.get().toString() instead?")
+        severity = SeverityLevel.WARNING,
+        summary = "Optional.toString() does not stringifies the value contained by the Optional object.")
 public final class OptionalToString extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final Matcher<ExpressionTree> OPTIONAL_TO_STRING_METHOD = MethodMatchers.instanceMethod()
