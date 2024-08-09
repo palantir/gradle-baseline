@@ -686,6 +686,34 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         gradleVersionNumber << GRADLE_TEST_VERSIONS
     }
 
+    def '#gradleVersionNumber: can skip configuring certain tasks'() {
+        fork = false
+
+        // language=Gradle
+        buildFile << '''
+            javaVersion {
+                target = 17
+                runtime = 17
+                skipTasks.add('runMainTask')
+            }
+            
+            task printJavaLauncherInfo {
+                doLast {
+                    println "Java launcher: ${tasks.runMainClass.javaLauncher.getOrNull()}"
+                }
+            }
+        '''.stripIndent(true)
+
+        when:
+        def stdout = runTasksSuccessfully('printJavaLauncherInfo').standardOutput
+
+        then:
+        stdout.contains('Java launcher: null')
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
+    }
+
     private static final int BYTECODE_IDENTIFIER = (int) 0xCAFEBABE
 
     // See http://illegalargumentexception.blogspot.com/2009/07/java-finding-class-versions.html
