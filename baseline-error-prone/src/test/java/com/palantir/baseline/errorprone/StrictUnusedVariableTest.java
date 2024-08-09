@@ -232,6 +232,20 @@ public class StrictUnusedVariableTest {
     }
 
     @Test
+    public void handles_unused_assigned_field() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "class Test {",
+                        "  private String field;",
+                        "  Test(String value) {",
+                        "    this.field = value;",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void handles_unused_variables() {
         compilationHelper
                 .addSourceLines(
