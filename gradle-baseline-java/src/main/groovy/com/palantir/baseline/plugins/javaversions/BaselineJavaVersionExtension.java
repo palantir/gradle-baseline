@@ -19,17 +19,20 @@ package com.palantir.baseline.plugins.javaversions;
 import javax.inject.Inject;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.SetProperty;
 
 /**
  * Extension named {@code javaVersion} used to set the
  * target and runtime java versions used for a single project.
  */
-public class BaselineJavaVersionExtension {
+public abstract class BaselineJavaVersionExtension {
 
     private final Property<ChosenJavaVersion> target;
     private final Property<ChosenJavaVersion> runtime;
 
     private final Property<Boolean> overrideLibraryAutoDetection;
+
+    public abstract SetProperty<String> getSkipTasks();
 
     @Inject
     public BaselineJavaVersionExtension(Project project) {
