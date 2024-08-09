@@ -237,12 +237,74 @@ public class StrictUnusedVariableTest {
                 .addSourceLines(
                         "Test.java",
                         "class Test {",
-                        "  private String field;",
-                        "  Test(String value) {",
-                        "    this.field = value;",
+                        "  // BUG: Diagnostic contains: Unused",
+                        "  private final String field1;",
+                        "  // BUG: Diagnostic contains: Unused",
+                        "  private String field2;",
+                        "  Test(String value1) {",
+                        "    this.field1 = value1;",
+                        "  }",
+                        "  private void setField2(String value2) {",
+                        "    this.field2 = value2;",
                         "  }",
                         "}")
                 .doTest();
+    }
+
+    @Test
+    public void fixes_unused_assigned_field() {
+        refactoringTestHelper
+                .addInputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  private final String field1;",
+                        "  private String field2;",
+                        "  Test(String value1) {",
+                        "    this.field1 = value1;",
+                        "  }",
+                        "  private void setField2(String value2) {",
+                        "    this.field2 = value2;",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "class Test {",
+                        "",
+                        "  Test(String value1) {",
+                        "    this.field1 = value1;",
+                        "  }",
+                        "  private void setField2() {}",
+                        "}")
+                .doTest(TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    public void fixes_unused_fields_assigned_to_used_parameters() {
+        refactoringTestHelper
+                .addInputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  private final String field1;",
+                        "  private String field2;",
+                        "  Test(String value1) {",
+                        "    this.field1 = value1;",
+                        "    System.out.println(value1);",
+                        "  }",
+                        "  private void setField2(String value2) {",
+                        "    this.field2 = value2;",
+                        "    System.out.println(value2);",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "class Test {",
+                        "",
+                        "  Test(String value1) {",
+                        "    this.field1 = value1;",
+                        "  }",
+                        "  private void setField2() {}",
+                        "}")
+                .doTest(TestMode.TEXT_MATCH);
     }
 
     @Test
