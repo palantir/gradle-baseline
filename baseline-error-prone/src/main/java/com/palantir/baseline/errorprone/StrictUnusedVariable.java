@@ -260,14 +260,13 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             } else {
                 fixes = buildUnusedVarFixes(symbol, allUsageSites, state);
             }
+            String assignmentDescriptor = unused instanceof VariableTree ? "" : "assignment to this ";
+            String descriptor = assignmentDescriptor + describeVariable(symbol);
             state.reportMatch(buildDescription(unused)
                     .setMessage(String.format(
-                            "%s %s '%s' is never read. Intentional occurrences are acknowledged by renaming "
-                                    + "the unused variable with a leading underscore. '_%s', for example.",
-                            unused instanceof VariableTree ? "The" : "The assignment to this",
-                            describeVariable(symbol),
-                            symbol.name,
-                            symbol.name))
+                            "The %s '%s' is never read. Remove the %s or acknowledge an intentional occurrence "
+                                    + "by renaming the unused variable with a leading underscore.",
+                            descriptor, symbol.name, descriptor))
                     .addAllFixes(fixes.stream()
                             .map(f -> SuggestedFix.builder()
                                     .merge(makeFirstAssignmentDeclaration)
@@ -528,7 +527,8 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
 
     private static ImmutableList<SuggestedFix> buildUnusedLambdaParameterFix(
             Symbol.VarSymbol _symbol, Collection<UnusedSpec> values, VisitorState state) {
-        SuggestedFix.Builder fix = SuggestedFix.builder();
+        SuggestedFix.Builder fix =
+                SuggestedFix.builder().setShortDescription("acknowledge intentionally unused variable");
 
         for (UnusedSpec unusedSpec : values) {
             Tree leaf = unusedSpec.variableTree().getLeaf();
@@ -562,6 +562,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
         // Remove parameter if the method is private since we can automatically fix all invocation sites
         // Otherwise add `_` prefix to the variable name
         if (isPrivateMethod) {
+            fix.setShortDescription("remove unused parameter");
             new TreePathScanner<Void, Void>() {
                 @Override
                 public Void visitMethodInvocation(MethodInvocationTree tree, Void unused) {
@@ -613,6 +614,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                 }
             }.scan(state.getPath().getCompilationUnit(), null);
         } else {
+            fix.setShortDescription("acknowledge intentionally unused parameter");
             new TreePathScanner<Void, Void>() {
                 @Override
                 public Void visitMethod(MethodTree methodTree, Void unused) {

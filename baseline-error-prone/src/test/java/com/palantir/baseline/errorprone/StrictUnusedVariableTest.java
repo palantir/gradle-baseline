@@ -70,11 +70,11 @@ public class StrictUnusedVariableTest {
                         "Test.java",
                         "import java.util.Optional;",
                         "class Test {",
-                        "  // BUG: Diagnostic contains: '_foo', for example",
+                        "  // BUG: Diagnostic contains: Unused",
                         "   Test(String foo) { }",
-                        "  // BUG: Diagnostic contains: '_buggy', for example",
+                        "  // BUG: Diagnostic contains: Unused",
                         "  private static void privateMethod(String buggy) { }",
-                        "  // BUG: Diagnostic contains: '_buggy', for example",
+                        "  // BUG: Diagnostic contains: Unused",
                         "  public static void publicMethod(String buggy) { }",
                         "}")
                 .doTest();
@@ -232,22 +232,34 @@ public class StrictUnusedVariableTest {
     }
 
     @Test
-    public void fails_suppressed_but_used_variables() {
+    public void handles_unused_variables() {
         compilationHelper
                 .addSourceLines(
                         "Test.java",
                         "class Test {",
                         "  // BUG: Diagnostic contains: Unused",
-                        "  private static final String _field = \"\";",
+                        "  private static final String field = \"\";",
                         "  // BUG: Diagnostic contains: Unused",
-                        "  public static void privateMethod(String _value) {",
-                        "    System.out.println(_value);",
-                        "  // BUG: Diagnostic contains: Unused",
-                        "    String _bar = \"bar\";",
-                        "    System.out.println(_bar);",
-                        "    System.out.println(_field);",
+                        "  private void privateMethod(String value) {",
+                        "    // BUG: Diagnostic contains: Unused",
+                        "    String bar = \"bar\";",
                         "  }",
                         "}")
+                .doTest();
+    }
+
+    @Test
+    public void fixes_unused_variables() {
+        refactoringTestHelper
+                .addInputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  private static final String field = \"\";",
+                        "  private void privateMethod(String value) {",
+                        "    String bar = \"bar\";",
+                        "  }",
+                        "}")
+                .addOutputLines("Test.java", "class Test {", "  private void privateMethod() {", "  }", "}")
                 .doTest();
     }
 
@@ -273,6 +285,26 @@ public class StrictUnusedVariableTest {
                         "  private static Object someMethod() { return null; }",
                         "}")
                 .doTest(TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    public void fails_suppressed_but_used_variables() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "class Test {",
+                        "  // BUG: Diagnostic contains: Unused",
+                        "  private static final String _field = \"\";",
+                        "  // BUG: Diagnostic contains: Unused",
+                        "  public static void privateMethod(String _value) {",
+                        "    System.out.println(_value);",
+                        "  // BUG: Diagnostic contains: Unused",
+                        "    String _bar = \"bar\";",
+                        "    System.out.println(_bar);",
+                        "    System.out.println(_field);",
+                        "  }",
+                        "}")
+                .doTest();
     }
 
     @Test
