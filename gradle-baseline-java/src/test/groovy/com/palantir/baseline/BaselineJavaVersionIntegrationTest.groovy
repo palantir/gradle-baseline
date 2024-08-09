@@ -686,7 +686,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         gradleVersionNumber << GRADLE_TEST_VERSIONS
     }
 
-    def '#gradleVersionNumber: can skip configuring certain tasks'() {
+    def '#gradleVersionNumber: can ignore configuring certain tasks'() {
         fork = false
 
         // language=Gradle
@@ -694,7 +694,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             javaVersion {
                 target = 17
                 runtime = 17
-                skipTasks.add('runMainTask')
+                ignoredTasks.add('runMainTask')
             }
             
             task printJavaLauncherInfo {

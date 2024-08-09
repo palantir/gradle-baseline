@@ -32,7 +32,7 @@ public abstract class BaselineJavaVersionExtension {
 
     private final Property<Boolean> overrideLibraryAutoDetection;
 
-    public abstract SetProperty<String> getSkipTasks();
+    public abstract SetProperty<String> getIgnoredTasks();
 
     @Inject
     public BaselineJavaVersionExtension(Project project) {

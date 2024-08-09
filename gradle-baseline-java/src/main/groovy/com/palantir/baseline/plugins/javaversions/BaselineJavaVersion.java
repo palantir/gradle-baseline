@@ -35,7 +35,6 @@ import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.TaskAction;
-import org.gradle.api.tasks.TaskCollection;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.GroovyCompile;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -82,10 +81,11 @@ public final class BaselineJavaVersion implements Plugin<Project> {
 
             JavaToolchains baselineConfiguredJavaToolchains = new JavaToolchains(project, rootExtension);
 
+            TaskConfigurer taskConfigurer = new TaskConfigurer(project, extension.getIgnoredTasks());
+
             // Compilation tasks (using target version)
             configureCompilationTasks(
-                    project,
-                    extension.getSkipTasks(),
+                    taskConfigurer,
                     extension.target(),
                     baselineConfiguredJavaToolchains,
                     rootExtension,
@@ -93,8 +93,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
 
             // Execution tasks (using the runtime version)
             configureExecutionTasks(
-                    project,
-                    extension.getSkipTasks(),
+                    taskConfigurer,
                     extension.runtime(),
                     baselineConfiguredJavaToolchains,
                     rootExtension,
@@ -121,14 +120,13 @@ public final class BaselineJavaVersion implements Plugin<Project> {
     }
 
     private static void configureCompilationTasks(
-            Project project,
-            Provider<Set<String>> skippedTasks,
+            TaskConfigurer taskConfigurer,
             Provider<ChosenJavaVersion> target,
             JavaToolchains baselineConfiguredJavaToolchains,
             BaselineJavaVersionsExtension rootExtension,
             JavaToolchainService javaToolchainService) {
 
-        unskippedTasksOfType(project, skippedTasks, JavaCompile.class).configureEach(javaCompileTask -> {
+        taskConfigurer.configureEach(JavaCompile.class, javaCompileTask -> {
             setJavaCompiler(
                     javaCompileTask, rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, target);
             javaCompileTask.getOptions().getCompilerArgumentProviders().add(new EnablePreviewArgumentProvider(target));
@@ -143,7 +141,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             });
         });
 
-        unskippedTasksOfType(project, skippedTasks, Javadoc.class).configureEach(javadocTask -> {
+        taskConfigurer.configureEach(Javadoc.class, javadocTask -> {
             setJavaDocTool(javadocTask, rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, target);
 
             // javadocTask doesn't allow us to add a CommandLineArgumentProvider, so we do it just in time
@@ -161,13 +159,13 @@ public final class BaselineJavaVersion implements Plugin<Project> {
         });
         // checkstyle.getJavaLauncher() was added in Gradle 7.5
         if (GradleVersion.current().compareTo(GradleVersion.version("7.5")) >= 0) {
-            unskippedTasksOfType(project, skippedTasks, Checkstyle.class).configureEach(checkstyle -> checkstyle
+            taskConfigurer.configureEach(Checkstyle.class, checkstyle -> checkstyle
                     .getJavaLauncher()
                     .set(getJavaLauncher(
                             rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, target)));
         }
 
-        unskippedTasksOfType(project, skippedTasks, GroovyCompile.class).configureEach(groovyCompileTask -> {
+        taskConfigurer.configureEach(GroovyCompile.class, groovyCompileTask -> {
             groovyCompileTask
                     .getJavaLauncher()
                     .set(getJavaLauncher(
@@ -188,7 +186,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             });
         });
 
-        unskippedTasksOfType(project, skippedTasks, ScalaCompile.class).configureEach(scalaCompileTask -> {
+        taskConfigurer.configureEach(ScalaCompile.class, scalaCompileTask -> {
             scalaCompileTask
                     .getJavaLauncher()
                     .set(getJavaLauncher(
@@ -206,26 +204,25 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             });
         });
 
-        unskippedTasksOfType(project, skippedTasks, ScalaDoc.class).configureEach(scalaDoc -> scalaDoc.getJavaLauncher()
+        taskConfigurer.configureEach(ScalaDoc.class, scalaDoc -> scalaDoc.getJavaLauncher()
                 .set(getJavaLauncher(rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, target)));
     }
 
     private static void configureExecutionTasks(
-            Project project,
-            Provider<Set<String>> skippedTasks,
+            TaskConfigurer taskConfigurer,
             Provider<ChosenJavaVersion> runtime,
             JavaToolchains baselineConfiguredJavaToolchains,
             BaselineJavaVersionsExtension rootExtension,
             JavaToolchainService javaToolchainService) {
 
-        unskippedTasksOfType(project, skippedTasks, JavaExec.class).configureEach(javaExec -> {
+        taskConfigurer.configureEach(JavaExec.class, javaExec -> {
             javaExec.getJavaLauncher()
                     .set(getJavaLauncher(
                             rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, runtime));
             javaExec.getJvmArgumentProviders().add(new EnablePreviewArgumentProvider(runtime));
         });
 
-        unskippedTasksOfType(project, skippedTasks, Test.class).configureEach(test -> {
+        taskConfigurer.configureEach(Test.class, test -> {
             test.getJavaLauncher()
                     .set(getJavaLauncher(
                             rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, runtime));
@@ -233,11 +230,14 @@ public final class BaselineJavaVersion implements Plugin<Project> {
         });
     }
 
-    private static <T extends Task> TaskCollection<T> unskippedTasksOfType(
-            Project project, Provider<Set<String>> skippedTasks, Class<T> clazz) {
-        return project.getTasks()
-                .withType(clazz)
-                .matching(task -> skippedTasks.get().contains(task.getName()));
+    private static <T extends Task> void configureUnignoredTasksOfType(
+            Project project, Provider<Set<String>> ignoredTasks, Class<T> clazz, Action<T> action) {
+        project.getTasks().withType(clazz).configureEach(task -> {
+            if (ignoredTasks.get().contains(task.getName())) {
+                return;
+            }
+            action.execute(task);
+        });
     }
 
     private static void setJavaCompiler(
@@ -292,6 +292,25 @@ public final class BaselineJavaVersion implements Plugin<Project> {
         log.debug("Using detected javaToolchains to configure JavaLauncher");
         return javaToolchainService.launcherFor(
                 spec -> spec.getLanguageVersion().set(version.map(ChosenJavaVersion::javaLanguageVersion)));
+    }
+
+    private static class TaskConfigurer {
+        private final Project project;
+        private final Provider<Set<String>> ignoredTasks;
+
+        private TaskConfigurer(Project project, Provider<Set<String>> ignoredTasks) {
+            this.project = project;
+            this.ignoredTasks = ignoredTasks;
+        }
+
+        public <T extends Task> void configureEach(Class<T> clazz, Action<T> action) {
+            project.getTasks().withType(clazz).configureEach(task -> {
+                if (ignoredTasks.get().contains(task.getName())) {
+                    return;
+                }
+                action.execute(task);
+            });
+        }
     }
 
     @CacheableTask
