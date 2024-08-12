@@ -105,7 +105,6 @@ import com.sun.source.util.TreePath;
 import com.sun.source.util.TreePathScanner;
 import com.sun.source.util.TreeScanner;
 import com.sun.tools.javac.code.Symbol;
-import com.sun.tools.javac.code.Symbol.VarSymbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.tree.JCTree;
 import com.sun.tools.javac.util.Position;
@@ -115,11 +114,9 @@ import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 import javax.annotation.Nullable;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
@@ -198,15 +195,6 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
         // Map of symbols to variable declarations. Initially this is a map of all of the local variable
         // and fields. As we go we remove those variables which are used.
         Map<Symbol, TreePath> unusedElements = variableFinder.unusedElements;
-        Map<Symbol, TreePath> allElements = ImmutableMap.copyOf(unusedElements);
-
-        System.out.println("unused elements "
-                + unusedElements.entrySet().stream()
-                        .map(entry -> "symbol " + entry.getKey() + "kind "
-                                + entry.getValue().getLeaf().getKind() + " "
-                                + entry.getValue().getParentPath().getLeaf().getKind() + " "
-                                + getSymbol(entry.getValue().getParentPath().getLeaf()).name)
-                        .collect(Collectors.toUnmodifiableSet()));
 
         // Whether a symbol should only be checked for reassignments (e.g. public methods' parameters).
         Set<Symbol> onlyCheckForReassignments = variableFinder.onlyCheckForReassignments;
@@ -234,23 +222,6 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
         ImmutableListMultimap<Symbol, UnusedSpec> unusedSpecsBySymbol =
                 Multimaps.index(unusedSpecs, UnusedSpec::symbol);
 
-        System.out.println("iseverused " + isEverUsed + " unusedspecs "
-                + unusedSpecsBySymbol.asMap().entrySet().stream()
-                        .flatMap(entry -> entry.getValue().stream()
-                                .flatMap(unusedSpec -> unusedSpec.usageSites().stream())
-                                .map(tp -> "symbol: " + entry.getKey().name + " usage kind: "
-                                        + tp.getLeaf().getKind()))
-                        .collect(Collectors.toUnmodifiableSet())
-                + " unusedElememnts "
-                + unusedElements + " checkreassigmnet " + onlyCheckForReassignments + " usagesites "
-                + usageSites.asMap().entrySet().stream()
-                        .flatMap(entry -> {
-                            return entry.getValue().stream()
-                                    .map(tp -> "symbol " + entry.getKey() + "kind "
-                                            + tp.getLeaf().getKind());
-                        })
-                        .collect(Collectors.toUnmodifiableSet()));
-
         for (Map.Entry<Symbol, Collection<UnusedSpec>> entry :
                 unusedSpecsBySymbol.asMap().entrySet()) {
             Symbol unusedSymbol = entry.getKey();
@@ -271,9 +242,23 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             Symbol.VarSymbol symbol = (Symbol.VarSymbol) unusedSymbol;
             ImmutableList<SuggestedFix> fixes;
             if (symbol.getKind() == ElementKind.PARAMETER && !isEverUsed.contains(unusedSymbol)) {
-                fixes = buildUnusedParameterFixes(symbol, specs, allUsageSites, state);
+                Symbol.MethodSymbol methodSymbol = (Symbol.MethodSymbol) symbol.owner;
+                int index;
+                if (methodSymbol.params == null) {
+                    // if the parameter is for a lambda is defined in a static initializer, params is null
+                    index = -1;
+                } else {
+                    index = methodSymbol.params.indexOf(symbol);
+                }
+                // If we can not find the parameter in the owning method, then it must be a parameter to a lambda
+                // defined within the method
+                if (index == -1) {
+                    fixes = buildUnusedLambdaParameterFix(symbol, entry.getValue(), state);
+                } else {
+                    fixes = buildUnusedParameterFixes(symbol, methodSymbol, allUsageSites, state);
+                }
             } else {
-                fixes = buildUnusedVarFixes(symbol, allUsageSites, allElements, state);
+                fixes = buildUnusedVarFixes(symbol, allUsageSites, state);
             }
             String assignmentDescriptor = unused instanceof VariableTree ? "" : "assignment to this ";
             String descriptor = assignmentDescriptor + describeVariable(symbol);
@@ -469,7 +454,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
     }
 
     private static ImmutableList<SuggestedFix> buildUnusedVarFixes(
-            Symbol varSymbol, List<TreePath> usagePaths, Map<Symbol, TreePath> allUsagePaths, VisitorState state) {
+            Symbol varSymbol, List<TreePath> usagePaths, VisitorState state) {
         // Don't suggest a fix for fields annotated @Inject: we can warn on them, but they *could* be
         // used outside the class.
         if (ASTHelpers.hasDirectAnnotationWithSimpleName(varSymbol, "Inject")) {
@@ -525,35 +510,6 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                         continue;
                     }
                 } else if (tree instanceof AssignmentTree) {
-                    ExpressionTree expression = ((AssignmentTree) tree).getExpression();
-                    Symbol expressionSymbol = getSymbol(expression);
-                    allUsagePaths.get(expressionSymbol).getLeaf().List < TreePath > expressionUsageSites = List.of();
-                    //                    List<TreePath> expressionUsageSites =
-                    // unusedSpecsBySymbol.get(expressionSymbol).stream()
-                    //                            .flatMap(u -> u.usageSites().stream())
-                    //                            .collect(toImmutableList());
-                    //                    System.out.println("expressionsymbol " + expressionSymbol.name + " "
-                    //                            + "expressionUsageSites "
-                    //                            + expressionUsageSites.stream()
-                    //                                    .map(TreePath::getLeaf)
-                    //                                    .map(leaf -> {
-                    //                                        Symbol sym = getSymbol(leaf);
-                    //                                        if (Objects.isNull(sym)) {
-                    //                                            return "null";
-                    //                                        }
-                    //                                        return "kind: " + sym.getKind() + " name: " + sym.name;
-                    //                                    })
-                    //                                    .collect(Collectors.toUnmodifiableSet()));
-                    // need to figure out how
-
-                    if (expressionSymbol.getKind() == ElementKind.PARAMETER) {
-                        Symbol.MethodSymbol expressionMethodSymbol = (Symbol.MethodSymbol) expressionSymbol.owner;
-                        System.out.println("what's on the other end of the assignment? " + expressionMethodSymbol.name);
-
-                        buildUnusedParameterFixes(expressionSymbol, expressionMethodSymbol, expressionUsageSites, state)
-                                .forEach(fix::merge);
-                    }
-
                     if (hasSideEffect(((AssignmentTree) tree).getExpression())) {
                         fix.replace(
                                 tree.getStartPosition(),
@@ -566,32 +522,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             String replacement = needsBlock(usagePath) ? "{}" : "";
             fix.replace(statement, replacement);
         }
-
         return ImmutableList.of(fix.build());
-    }
-
-    private static ImmutableList<SuggestedFix> buildUnusedParameterFixes(
-            VarSymbol symbol,
-            Collection<UnusedSpec> unusedSpecs,
-            ImmutableList<TreePath> allUsageSites,
-            VisitorState state) {
-        ImmutableList<SuggestedFix> fixes;
-        Symbol.MethodSymbol methodSymbol = (Symbol.MethodSymbol) symbol.owner;
-        int index;
-        if (methodSymbol.params == null) {
-            // if the parameter is for a lambda is defined in a static initializer, params is null
-            index = -1;
-        } else {
-            index = methodSymbol.params.indexOf(symbol);
-        }
-        // If we can not find the parameter in the owning method, then it must be a parameter to a lambda
-        // defined within the method
-        if (index == -1) {
-            fixes = buildUnusedLambdaParameterFix(symbol, unusedSpecs, state);
-        } else {
-            fixes = buildUnusedParameterFixes(symbol, methodSymbol, allUsageSites, state);
-        }
-        return fixes;
     }
 
     private static ImmutableList<SuggestedFix> buildUnusedLambdaParameterFix(
@@ -687,9 +618,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             new TreePathScanner<Void, Void>() {
                 @Override
                 public Void visitMethod(MethodTree methodTree, Void unused) {
-                    System.out.println("we are here");
                     if (getSymbol(methodTree).equals(methodSymbol)) {
-                        System.out.println("we are here2");
                         renameByIndex(methodTree.getParameters());
                     }
                     return super.visitMethod(methodTree, null);
@@ -700,8 +629,6 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                         // possible when removing a varargs parameter with no corresponding formal parameters
                         return;
                     }
-
-                    System.out.println("we are here3");
 
                     VariableTree tree = trees.get(index);
                     int startPos = state.getEndPosition(tree.getType()) + 1;
@@ -725,7 +652,6 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                                                         CaseFormat.LOWER_CAMEL, name.substring(UNUSED.length()))));
                     } else {
                         fix.replace(startPos, endPos, "_" + tree.getName());
-                        System.out.println("we are here4 " + tree.getName());
                     }
                 }
             }.scan(state.getPath().getCompilationUnit(), null);
@@ -897,6 +823,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
         private TreePath currentExpressionStatement = null;
 
         private final Map<Symbol, TreePath> unusedElements;
+
         private final ListMultimap<Symbol, TreePath> usageSites;
 
         // Keeps track of whether a symbol was _ever_ used (between reassignments).
@@ -918,23 +845,6 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
         }
 
         private boolean isUsed(@Nullable Symbol symbol) {
-            if (symbol.name.toString().equals("value1")
-                    || symbol.name.toString().equals("value2")) {
-                System.out.println("name: " + symbol.name + " kind: " + symbol.getKind()
-                        + " enclosing: " + symbol.getEnclosingElement()
-                        + " owner: " + symbol.owner
-                        + " righthandsideassignment: " + !leftHandSideAssignment
-                        + " inreturnstatement: " + inReturnStatement
-                        + " inarrayaccess: " + (inArrayAccess > 0) + " inmethodcall: "
-                        + (inMethodCall > 0)
-                        + " unused: " + unusedElements.containsKey(symbol) + " result: "
-                        + (symbol != null
-                                && (!leftHandSideAssignment
-                                        || inReturnStatement
-                                        || inArrayAccess > 0
-                                        || inMethodCall > 0)
-                                && unusedElements.containsKey(symbol)));
-            }
             return symbol != null
                     && (!leftHandSideAssignment || inReturnStatement || inArrayAccess > 0 || inMethodCall > 0)
                     && unusedElements.containsKey(symbol);
