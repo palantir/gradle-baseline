@@ -55,9 +55,11 @@ public class StrictUnusedVariableTest {
                         "import java.util.Optional;",
                         "abstract class Test {",
                         "  abstract void method(String param);",
-                        "  // BUG: Diagnostic contains: Unused",
+                        "  // BUG: Diagnostic contains: The public method parameter 'param' is never read. Acknowledge"
+                            + " an intentional occurrence by renaming the unused variable with a leading underscore,"
+                            + " or remove the parameter.\t",
                         "  void defaultMethod(String param) { }",
-                        "  // BUG: Diagnostic contains: Unused",
+                        "  // BUG: Diagnostic contains: The parameter 'param' is never read.\t",
                         "  private void privateMethod(String param) { }",
                         "}")
                 .doTest();
@@ -70,11 +72,15 @@ public class StrictUnusedVariableTest {
                         "Test.java",
                         "import java.util.Optional;",
                         "class Test {",
-                        "  // BUG: Diagnostic contains: Unused",
+                        "  // BUG: Diagnostic contains: The public method parameter 'foo' is never read. Acknowledge"
+                            + " an intentional occurrence by renaming the unused variable with a leading underscore,"
+                            + " or remove the parameter.\t",
                         "   Test(String foo) { }",
-                        "  // BUG: Diagnostic contains: Unused",
+                        "  // BUG: Diagnostic contains: The parameter 'buggy' is never read.\t",
                         "  private static void privateMethod(String buggy) { }",
-                        "  // BUG: Diagnostic contains: Unused",
+                        "  // BUG: Diagnostic contains: The public method parameter 'buggy' is never read. Acknowledge"
+                            + " an intentional occurrence by renaming the unused variable with a leading underscore,"
+                            + " or remove the parameter.\t",
                         "  public static void publicMethod(String buggy) { }",
                         "}")
                 .doTest();
@@ -88,9 +94,11 @@ public class StrictUnusedVariableTest {
                         "import java.util.Optional;",
                         "enum Test {",
                         "  INSTANCE;",
-                        "  // BUG: Diagnostic contains: Unused",
+                        "  // BUG: Diagnostic contains: The parameter 'buggy' is never read.\t",
                         "  private static void privateMethod(String buggy) { }",
-                        "  // BUG: Diagnostic contains: Unused",
+                        "  // BUG: Diagnostic contains: The public method parameter 'buggy' is never read. Acknowledge"
+                            + " an intentional occurrence by renaming the unused variable with a leading underscore,"
+                            + " or remove the parameter.\t",
                         "  public static void publicMethod(String buggy) { }",
                         "}")
                 .doTest();
@@ -105,9 +113,12 @@ public class StrictUnusedVariableTest {
                         "import java.util.Optional;",
                         "class Test {",
                         "  private static BiFunction<String, String, Integer> doStuff() {",
-                        "  // BUG: Diagnostic contains: Unused",
+                        "    // BUG: Diagnostic contains: Acknowledge an intentional occurrence by renaming the unused"
+                                + " parameter with a leading underscore, or remove the parameter.\t",
                         "    BiFunction<String, String, Integer> first = (String value1, String value2) -> 1;",
-                        "  // BUG: Diagnostic contains: Unused",
+                        "    // BUG: Diagnostic contains: The lambda parameter 'value3' is never read. Acknowledge an"
+                            + " intentional occurrence by renaming the unused parameter with a leading underscore, or"
+                            + " remove the parameter.\t",
                         "    return first.andThen(value3 -> 2);",
                         "  }",
                         "}")
@@ -122,9 +133,12 @@ public class StrictUnusedVariableTest {
                         "import java.util.function.BiFunction;",
                         "class Test {",
                         "  static {",
-                        "  // BUG: Diagnostic contains: Unused",
+                        "    // BUG: Diagnostic contains: Acknowledge an intentional occurrence by renaming the unused"
+                                + " parameter with a leading underscore, or remove the parameter.\t",
                         "    BiFunction<String, String, Integer> first = (String value1, String value2) -> 1;",
-                        "  // BUG: Diagnostic contains: Unused",
+                        "    // BUG: Diagnostic contains: The lambda parameter 'value3' is never read. Acknowledge an"
+                            + " intentional occurrence by renaming the unused parameter with a leading underscore, or"
+                            + " remove the parameter.\t",
                         "    first.andThen(value3 -> 2);",
                         "  }",
                         "}")
@@ -237,11 +251,11 @@ public class StrictUnusedVariableTest {
                 .addSourceLines(
                         "Test.java",
                         "class Test {",
-                        "  // BUG: Diagnostic contains: Unused",
+                        "  // BUG: Diagnostic contains: The field 'field' is never read.\t",
                         "  private static final String field = \"\";",
-                        "  // BUG: Diagnostic contains: Unused",
+                        "  // BUG: Diagnostic contains: The parameter 'value' is never read.\t",
                         "  private void privateMethod(String value) {",
-                        "    // BUG: Diagnostic contains: Unused",
+                        "    // BUG: Diagnostic contains: The local variable 'bar' is never read.\t",
                         "    String bar = \"bar\";",
                         "  }",
                         "}")
@@ -261,6 +275,46 @@ public class StrictUnusedVariableTest {
                         "}")
                 .addOutputLines("Test.java", "class Test {", "  private void privateMethod() {", "  }", "}")
                 .doTest();
+    }
+
+    @Test
+    public void handles_unused_local_variable_assignment() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "class Test {",
+                        "  private void privateMethod() {",
+                        "    // BUG: Diagnostic contains: The assignment to the local variable 'bar' is never read.\t",
+                        "    String bar = \"bar\";",
+                        "    bar = \"foo\";",
+                        "    System.out.println(bar);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void fixes_unused_local_variable_assignment() {
+        refactoringTestHelper
+                .addInputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  private void privateMethod() {",
+                        "    String bar = \"bar\";",
+                        "    bar = \"foo\";",
+                        "    System.out.println(bar);",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  private void privateMethod() {",
+                        "",
+                        "    String bar = \"foo\";",
+                        "    System.out.println(bar);",
+                        "  }",
+                        "}")
+                .doTest(TestMode.TEXT_MATCH);
     }
 
     @Test
@@ -293,12 +347,15 @@ public class StrictUnusedVariableTest {
                 .addSourceLines(
                         "Test.java",
                         "class Test {",
-                        "  // BUG: Diagnostic contains: Unused",
+                        "  // BUG: Diagnostic contains: The field '_field' is read but has 'StrictUnusedVariable'"
+                                + " suppressed because of its name.\t",
                         "  private static final String _field = \"\";",
-                        "  // BUG: Diagnostic contains: Unused",
+                        "  // BUG: Diagnostic contains: The parameter '_value' is read but has 'StrictUnusedVariable'"
+                                + " suppressed because of its name.\t",
                         "  public static void privateMethod(String _value) {",
                         "    System.out.println(_value);",
-                        "  // BUG: Diagnostic contains: Unused",
+                        "  // BUG: Diagnostic contains: The local variable '_bar' is read but has"
+                                + " 'StrictUnusedVariable' suppressed because of its name.\t",
                         "    String _bar = \"bar\";",
                         "    System.out.println(_bar);",
                         "    System.out.println(_field);",
@@ -422,7 +479,7 @@ public class StrictUnusedVariableTest {
                         "class Test {",
                         "  private static final Logger slf4j = LoggerFactory.getLogger(Test.class);",
                         "  private static final SafeLogger logsafe = SafeLoggerFactory.get(Test.class);",
-                        "  // BUG: Diagnostic contains: Unused",
+                        "  // BUG: Diagnostic contains: The field 'str' is never read.\t",
                         "  private static final String str = \"str\";",
                         "}")
                 .doTest();
