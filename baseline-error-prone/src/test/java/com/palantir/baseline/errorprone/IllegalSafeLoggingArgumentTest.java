@@ -717,6 +717,120 @@ class IllegalSafeLoggingArgumentTest {
     }
 
     @Test
+    public void testStringFormatSafety() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  void f(",
+                        "      @Safe String safeParam,",
+                        "      @Unsafe String unsafeParam,",
+                        "      @DoNotLog String doNotLogParam) {",
+                        "    String foo = String.format(\"%s\", safeParam);",
+                        "    fun(foo);",
+                        "    foo = String.format(\"%s\", unsafeParam);",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
+                        "    fun(foo);",
+                        "    foo = String.format(\"%s\", doNotLogParam);",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'DO_NOT_LOG'",
+                        "    fun(foo);",
+                        "  }",
+                        "  private static void fun(@Safe Object obj) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testStringFormatWithImplicitToStringSafety() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  class SafeToStringClass {",
+                        "    @Safe",
+                        "    @Override",
+                        "    public String toString() {",
+                        "      return \"safe\";",
+                        "    }",
+                        "  }",
+                        "  class UnsafeToStringClass {",
+                        "    @Unsafe",
+                        "    @Override",
+                        "    public String toString() {",
+                        "      return \"unsafe\";",
+                        "    }",
+                        "  }",
+                        "  class DoNotLogToStringClass {",
+                        "    @DoNotLog",
+                        "    @Override",
+                        "    public String toString() {",
+                        "      return \"do-not-log\";",
+                        "    }",
+                        "  }",
+                        "  void f(",
+                        "      SafeToStringClass safeParam,",
+                        "      UnsafeToStringClass unsafeParam,",
+                        "      DoNotLogToStringClass doNotLogParam) {",
+                        "    String foo = String.format(\"%s\", safeParam);",
+                        "    fun(foo);",
+                        "    foo = String.format(\"%s\", unsafeParam);",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
+                        "    fun(foo);",
+                        "    foo = String.format(\"%s\", doNotLogParam);",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'DO_NOT_LOG'",
+                        "    fun(foo);",
+                        "  }",
+                        "  private static void fun(@Safe Object obj) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testImplicitToStringSafety() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  class SafeToStringClass {",
+                        "    @Safe",
+                        "    @Override",
+                        "    public String toString() {",
+                        "      return \"safe\";",
+                        "    }",
+                        "  }",
+                        "  class UnsafeToStringClass {",
+                        "    @Unsafe",
+                        "    @Override",
+                        "    public String toString() {",
+                        "      return \"unsafe\";",
+                        "    }",
+                        "  }",
+                        "  class DoNotLogToStringClass {",
+                        "    @DoNotLog",
+                        "    @Override",
+                        "    public String toString() {",
+                        "      return \"do-not-log\";",
+                        "    }",
+                        "  }",
+                        "  void f(",
+                        "      SafeToStringClass safeParam,",
+                        "      UnsafeToStringClass unsafeParam,",
+                        "      DoNotLogToStringClass doNotLogParam) {",
+                        "    String foo = \"\" + safeParam;",
+                        "    fun(foo);",
+                        "    foo = \"\" + unsafeParam;",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
+                        "    fun(foo);",
+                        "    foo = \"\" + doNotLogParam;",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'DO_NOT_LOG'",
+                        "    fun(foo);",
+                        "  }",
+                        "  private static void fun(@Safe Object obj) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testIntegerCompound() {
         helper().addSourceLines(
                         "Test.java",
