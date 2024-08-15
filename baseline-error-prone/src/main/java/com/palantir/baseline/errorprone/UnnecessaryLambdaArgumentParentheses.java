@@ -40,7 +40,7 @@ import java.util.List;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,
         summary = "Lambdas with a single parameter do not require argument parentheses.")
-public final class UnnecessaryLambdaArgumentParentheses extends SuppressibleBugChecker
+public final class UnnecessaryLambdaArgumentParentheses extends BugChecker
         implements BugChecker.LambdaExpressionTreeMatcher {
 
     @Override

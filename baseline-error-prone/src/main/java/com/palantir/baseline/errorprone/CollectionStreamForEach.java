@@ -40,8 +40,7 @@ import java.util.stream.Stream;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.ERROR,
         summary = "Collection.forEach is more efficient than Collection.stream().forEach")
-public final class CollectionStreamForEach extends SuppressibleBugChecker
-        implements SuppressibleMethodInvocationTreeMatcher {
+public final class CollectionStreamForEach extends BugChecker implements SuppressibleMethodInvocationTreeMatcher {
     private static final long serialVersionUID = 1L;
 
     private static final Matcher<ExpressionTree> STREAM_FOR_EACH = MethodMatchers.instanceMethod()

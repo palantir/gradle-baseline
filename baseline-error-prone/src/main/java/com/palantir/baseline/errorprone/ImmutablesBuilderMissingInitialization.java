@@ -69,8 +69,7 @@ import java.util.stream.Stream;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         severity = BugPattern.SeverityLevel.ERROR,
         summary = "All required fields of an Immutables builder must be initialized")
-public final class ImmutablesBuilderMissingInitialization extends SuppressibleBugChecker
-        implements MethodInvocationTreeMatcher {
+public final class ImmutablesBuilderMissingInitialization extends BugChecker implements MethodInvocationTreeMatcher {
 
     private static final String FIELD_INIT_BITS_PREFIX = "INIT_BIT_";
 

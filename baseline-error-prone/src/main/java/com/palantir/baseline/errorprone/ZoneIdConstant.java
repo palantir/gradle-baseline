@@ -37,7 +37,7 @@ import java.time.ZoneOffset;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,
         summary = "Prefer ZoneId constants.")
-public final class ZoneIdConstant extends SuppressibleBugChecker implements BugChecker.MethodInvocationTreeMatcher {
+public final class ZoneIdConstant extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final Matcher<ExpressionTree> ZONE_ID_OF =
             Matchers.staticMethod().onClass(ZoneId.class.getName()).named("of").withParameters(String.class.getName());

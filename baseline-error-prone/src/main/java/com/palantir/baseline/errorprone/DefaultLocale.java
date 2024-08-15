@@ -36,7 +36,7 @@ import com.sun.source.tree.MethodInvocationTree;
         summary = "Implicit use of the platform default locale, which can result in differing behaviour between JVM"
                 + " executions.",
         severity = SeverityLevel.SUGGESTION)
-public final class DefaultLocale extends SuppressibleBugChecker implements BugChecker.MethodInvocationTreeMatcher {
+public final class DefaultLocale extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
 

@@ -41,7 +41,7 @@ import com.sun.tools.javac.code.Type;
                 + "production, which means code can execute in production that is impossible to test.\n"
                 + "If you're confident that an 'assert' is required, this check may be suppressed using "
                 + "@SuppressWarnings(\"BadAssert\")")
-public final class BadAssert extends SuppressibleBugChecker implements BugChecker.AssertTreeMatcher {
+public final class BadAssert extends BugChecker implements BugChecker.AssertTreeMatcher {
 
     private static final String LOGSAFE_PRECONDITIONS = "com.palantir.logsafe.Preconditions";
     private final Matcher<ExpressionTree> compileTimeConstExpressionMatcher =

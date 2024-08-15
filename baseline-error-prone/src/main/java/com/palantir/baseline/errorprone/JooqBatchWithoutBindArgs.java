@@ -49,7 +49,7 @@ import java.util.Collection;
                         + " jOOQ batch methods that is documented as executing queries with bind args, as this allows"
                         + " parsing and query planning the query once and then executing any number of times with"
                         + " different bind values.")
-public final class JooqBatchWithoutBindArgs extends SuppressibleBugChecker implements MethodInvocationTreeMatcher {
+public final class JooqBatchWithoutBindArgs extends BugChecker implements MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
 

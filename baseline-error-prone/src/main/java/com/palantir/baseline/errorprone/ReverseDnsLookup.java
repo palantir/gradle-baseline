@@ -39,7 +39,7 @@ import java.net.InetSocketAddress;
                         + " invocation significantly more expensive than expected depending on the environment.\n"
                         + "This check is intended to be advisory - it's fine to @SuppressWarnings(\"ReverseDnsLookup\") in"
                         + " certain cases, but is usually not recommended.")
-public final class ReverseDnsLookup extends SuppressibleBugChecker implements BugChecker.MethodInvocationTreeMatcher {
+public final class ReverseDnsLookup extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final Matcher<ExpressionTree> INET_SOCKET_ADDRESS_MATCHER = MethodMatchers.instanceMethod()
             .onDescendantOf(InetSocketAddress.class.getName())

@@ -42,7 +42,7 @@ import javax.inject.Inject;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
         summary = "Prevent certain argument names from being logged as safe.")
-public final class LogsafeArgName extends SuppressibleBugChecker implements MethodInvocationTreeMatcher {
+public final class LogsafeArgName extends BugChecker implements MethodInvocationTreeMatcher {
     static final String UNSAFE_ARG_NAMES_FLAG = "LogsafeArgName:UnsafeArgNames";
 
     private static final Matcher<ExpressionTree> SAFE_ARG_OF =

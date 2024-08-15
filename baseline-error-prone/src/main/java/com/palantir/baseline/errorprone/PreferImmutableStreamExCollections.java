@@ -38,7 +38,7 @@ import java.util.Collections;
         summary = "Prefer immutable/unmodifable collections wherever possible because they are inherently threadsafe "
                 + "and easier to reason about when passed between different functions."
                 + " If you really want a mutable output then explicitly suppress this check.")
-public final class PreferImmutableStreamExCollections extends SuppressibleBugChecker
+public final class PreferImmutableStreamExCollections extends BugChecker
         implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;

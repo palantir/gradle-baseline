@@ -39,7 +39,7 @@ import com.sun.tools.javac.parser.Tokens.TokenKind;
         linkType = LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
         summary = "The `var` keyword results in illegible code in most cases and should not be used.")
-public final class VarUsage extends SuppressibleBugChecker implements BugChecker.VariableTreeMatcher {
+public final class VarUsage extends BugChecker implements BugChecker.VariableTreeMatcher {
 
     @Override
     public Description matchVariable(VariableTree tree, VisitorState state) {

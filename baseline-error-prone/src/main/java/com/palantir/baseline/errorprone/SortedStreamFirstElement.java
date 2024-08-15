@@ -41,8 +41,7 @@ import java.util.stream.Stream;
         severity = SeverityLevel.SUGGESTION,
         summary = "Using Stream::min is more efficient than finding the first element of the sorted stream. "
                 + "Stream::min performs a linear scan through the stream to find the smallest element.")
-public final class SortedStreamFirstElement extends SuppressibleBugChecker
-        implements BugChecker.MethodInvocationTreeMatcher {
+public final class SortedStreamFirstElement extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final Matcher<ExpressionTree> STREAM_FIND_FIRST_MATCHER = MethodMatchers.instanceMethod()
             .onDescendantOf(Stream.class.getName())

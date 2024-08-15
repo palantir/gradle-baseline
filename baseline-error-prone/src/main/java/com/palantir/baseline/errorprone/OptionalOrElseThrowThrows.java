@@ -46,8 +46,7 @@ import java.util.function.Supplier;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,
         summary = "orElseThrow argument must return an exception, not throw one")
-public final class OptionalOrElseThrowThrows extends SuppressibleBugChecker
-        implements BugChecker.MethodInvocationTreeMatcher {
+public final class OptionalOrElseThrowThrows extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final Matcher<ExpressionTree> OR_ELSE_THROW_METHOD = MethodMatchers.instanceMethod()
             .onClass(TypePredicates.isExactTypeAny(ImmutableList.of(

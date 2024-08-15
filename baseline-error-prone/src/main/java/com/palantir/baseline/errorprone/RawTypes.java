@@ -42,7 +42,7 @@ import com.sun.tools.javac.code.Type;
         summary = "Avoid raw types; add appropriate type parameters if possible.\n"
                 + "This can be suppressed with @SuppressWarnings(\"rawtypes\") where necessary, such as when "
                 + "interacting with older library code.")
-public final class RawTypes extends SuppressibleBugChecker
+public final class RawTypes extends BugChecker
         implements BugChecker.ClassTreeMatcher,
                 BugChecker.MethodTreeMatcher,
                 BugChecker.NewClassTreeMatcher,

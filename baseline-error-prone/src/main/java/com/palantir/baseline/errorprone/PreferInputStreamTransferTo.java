@@ -57,8 +57,7 @@ import java.util.List;
                 + "  * https://bugs.openjdk.org/browse/JDK-8273038\n"
                 + "  * https://bugs.openjdk.org/browse/JDK-8279283\n"
                 + "  * https://bugs.openjdk.org/browse/JDK-8296431\n")
-public final class PreferInputStreamTransferTo extends SuppressibleBugChecker
-        implements BugChecker.MethodInvocationTreeMatcher {
+public final class PreferInputStreamTransferTo extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
 

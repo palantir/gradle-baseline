@@ -34,7 +34,7 @@ import javax.lang.model.element.Modifier;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,
         summary = "Loggers created using getLogger(Class<?>) must be named 'log'.")
-public final class ConsistentLoggerName extends SuppressibleBugChecker implements BugChecker.VariableTreeMatcher {
+public final class ConsistentLoggerName extends BugChecker implements BugChecker.VariableTreeMatcher {
 
     private static final Matcher<VariableTree> matcher = Matchers.allOf(
             Matchers.isField(),

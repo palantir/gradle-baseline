@@ -37,7 +37,7 @@ import com.sun.tools.javac.code.Type;
         severity = BugPattern.SeverityLevel.ERROR,
         summary = "Class should not extend Error or Throwable directly. While allowed by java "
                 + "it can lead to surprising behaviour if users end up catching Error or Throwable.")
-public final class ExtendsErrorOrThrowable extends SuppressibleBugChecker implements BugChecker.ClassTreeMatcher {
+public final class ExtendsErrorOrThrowable extends BugChecker implements BugChecker.ClassTreeMatcher {
     private static final Matcher<ClassTree> IS_ERROR_SUBCLASS = Matchers.isSubtypeOf(Error.class);
     private static final Matcher<Tree> IS_THROWABLE = Matchers.isSameType(Throwable.class);
     private static final Matcher<Tree> IS_ERROR_OR_THROWABLE =

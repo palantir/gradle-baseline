@@ -39,7 +39,7 @@ import java.lang.reflect.InvocationTargetException;
                         + " facility. The Throwable.getCause() method is now the preferred means of obtaining this"
                         + " information. Source: "
                         + "https://docs.oracle.com/en/java/javase/17/docs/api//java.base/java/lang/reflect/InvocationTargetException.html#getTargetException()")
-public final class InvocationTargetExceptionGetTargetException extends SuppressibleBugChecker
+public final class InvocationTargetExceptionGetTargetException extends BugChecker
         implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final Matcher<ExpressionTree> ITE_GET_TARGET_EXCEPTION_MATCHER = Matchers.instanceMethod()

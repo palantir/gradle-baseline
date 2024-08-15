@@ -41,7 +41,7 @@ import com.sun.source.tree.Tree;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.WARNING,
         summary = "If lambda passed to Optional#orElseGet returns a simple expression, use Optional#orElse instead")
-public final class OptionalOrElseGetValue extends SuppressibleBugChecker implements MethodInvocationTreeMatcher {
+public final class OptionalOrElseGetValue extends BugChecker implements MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
     private static final Matcher<ExpressionTree> OR_ELSE_GET_METHOD =

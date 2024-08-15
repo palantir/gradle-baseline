@@ -37,8 +37,7 @@ import com.sun.source.tree.Tree.Kind;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
         summary = "Expression passed to Optional#orElse invokes a method, use Optional#orElseGet instead")
-public final class OptionalOrElseMethodInvocation extends SuppressibleBugChecker
-        implements MethodInvocationTreeMatcher {
+public final class OptionalOrElseMethodInvocation extends BugChecker implements MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
 

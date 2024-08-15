@@ -33,7 +33,7 @@ import com.sun.source.tree.Tree;
         summary = "You should avoid using incubating methods where possible, since they have very weak stability"
                 + " guarantees. You can explicitly disable this check on a case-by-case basis using"
                 + " @SuppressWarnings(\"IncubatingMethod\").")
-public final class IncubatingMethod extends SuppressibleBugChecker
+public final class IncubatingMethod extends BugChecker
         implements BugChecker.MethodInvocationTreeMatcher, BugChecker.MemberReferenceTreeMatcher {
 
     private static final String INCUBATING = "com.palantir.conjure.java.lib.internal.Incubating";

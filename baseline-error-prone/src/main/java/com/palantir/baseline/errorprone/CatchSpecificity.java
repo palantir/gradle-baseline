@@ -67,7 +67,7 @@ import javax.lang.model.element.Name;
                 + " suppressing this check using @SuppressWarnings(\"CatchSpecificity\") and a comment describing"
                 + " the reason. Remaining instances can be automatically fixed using ./gradlew compileJava"
                 + " -PerrorProneApply=CatchSpecificity")
-public final class CatchSpecificity extends SuppressibleBugChecker implements BugChecker.TryTreeMatcher {
+public final class CatchSpecificity extends BugChecker implements BugChecker.TryTreeMatcher {
 
     // Maximum of three checked exception types to avoid unreadable long catch statements.
     private static final int MAX_CHECKED_EXCEPTIONS = 3;

@@ -43,7 +43,7 @@ import javax.lang.model.element.ElementKind;
                 + "`@AutoService(BugChecker.class)` for auto registration with error-prone.",
         severity = SeverityLevel.ERROR,
         tags = StandardTags.LIKELY_ERROR)
-public final class BugCheckerAutoService extends SuppressibleBugChecker implements ClassTreeMatcher {
+public final class BugCheckerAutoService extends BugChecker implements ClassTreeMatcher {
 
     private static final String AUTO_SERVICE = "com.google.auto.service.AutoService";
     private static final Matcher<ClassTree> isBugChecker =

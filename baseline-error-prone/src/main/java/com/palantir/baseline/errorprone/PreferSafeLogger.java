@@ -47,7 +47,7 @@ import java.util.concurrent.atomic.AtomicBoolean;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,
         summary = "Prefer using type-safe safe-logging loggers rather than safety-oblivious implementations.")
-public final class PreferSafeLogger extends SuppressibleBugChecker implements BugChecker.VariableTreeMatcher {
+public final class PreferSafeLogger extends BugChecker implements BugChecker.VariableTreeMatcher {
 
     private static final int MAX_SUPPORTED_ARGS = 10;
     private static final Matcher<ExpressionTree> SLF4J_METHOD =

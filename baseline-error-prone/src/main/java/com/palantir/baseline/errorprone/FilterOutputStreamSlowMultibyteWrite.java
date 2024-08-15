@@ -51,7 +51,7 @@ import javax.lang.model.element.ElementKind;
                 + "otherwise multi-byte writes to this output stream are likely to be slow.",
         severity = SeverityLevel.WARNING,
         tags = StandardTags.PERFORMANCE)
-public final class FilterOutputStreamSlowMultibyteWrite extends SuppressibleBugChecker implements ClassTreeMatcher {
+public final class FilterOutputStreamSlowMultibyteWrite extends BugChecker implements ClassTreeMatcher {
 
     private static final Matcher<ClassTree> IS_FILTER_OUTPUT_STREAM = Matchers.isSubtypeOf(FilterOutputStream.class);
 

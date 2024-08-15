@@ -37,7 +37,7 @@ import java.util.regex.Pattern;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
         summary = "Allow only compile-time constant slf4j log message strings.")
-public final class Slf4jConstantLogMessage extends SuppressibleBugChecker implements MethodInvocationTreeMatcher {
+public final class Slf4jConstantLogMessage extends BugChecker implements MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
 

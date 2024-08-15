@@ -45,8 +45,7 @@ import java.util.concurrent.TimeUnit;
         severity = SeverityLevel.ERROR,
         summary = "RateLimiters with zero warmup duration do not rate limit. "
                 + "Tracked at https://github.com/google/guava/issues/2730")
-public final class ZeroWarmupRateLimiter extends SuppressibleBugChecker
-        implements BugChecker.MethodInvocationTreeMatcher {
+public final class ZeroWarmupRateLimiter extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final Matcher<ExpressionTree> DURATION_ZERO_MATCHER = Matchers.methodInvocation(
             MethodMatchers.staticMethod()

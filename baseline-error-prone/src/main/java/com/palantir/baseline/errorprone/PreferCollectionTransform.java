@@ -40,8 +40,7 @@ import java.util.List;
                 "Prefer Guava's Lists.transform or Collections2.transform instead of Iterables.transform when first"
                         + " argument's declared type is a List or Collection type for performance reasons, cf."
                         + " https://google.github.io/guava/releases/23.0/api/docs/com/google/common/collect/Iterables.html#transform-java.lang.Iterable-com.google.common.base.Function-")
-public final class PreferCollectionTransform extends SuppressibleBugChecker
-        implements BugChecker.MethodInvocationTreeMatcher {
+public final class PreferCollectionTransform extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
 

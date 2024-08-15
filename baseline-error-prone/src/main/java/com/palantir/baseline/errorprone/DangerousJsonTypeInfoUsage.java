@@ -39,7 +39,7 @@ import com.sun.tools.javac.code.Symbol;
         severity = SeverityLevel.ERROR,
         summary = "Disallow usage of Jackson's Type Information features for security reasons, "
                 + "cf. https://github.com/FasterXML/jackson-databind/issues/1599")
-public final class DangerousJsonTypeInfoUsage extends SuppressibleBugChecker
+public final class DangerousJsonTypeInfoUsage extends BugChecker
         implements BugChecker.AnnotationTreeMatcher, BugChecker.MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;

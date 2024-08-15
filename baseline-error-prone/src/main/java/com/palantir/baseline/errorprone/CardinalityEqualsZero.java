@@ -43,7 +43,7 @@ import org.immutables.value.Value.Immutable;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.SUGGESTION,
         summary = "Use the isEmpty method instead of checking collection size")
-public final class CardinalityEqualsZero extends SuppressibleBugChecker implements BugChecker.BinaryTreeMatcher {
+public final class CardinalityEqualsZero extends BugChecker implements BugChecker.BinaryTreeMatcher {
     private static final Matcher<ExpressionTree> COLLECTION_SIZE_METHOD_MATCHER = MethodMatchers.instanceMethod()
             .onDescendantOf(Collection.class.getName())
             .named("size")

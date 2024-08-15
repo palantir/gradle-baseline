@@ -33,7 +33,7 @@ import com.sun.source.tree.MethodInvocationTree;
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,
         summary = "Prefer hasNoArgs when asserting that an exception has no args.")
-public final class AssertNoArgs extends SuppressibleBugChecker implements BugChecker.MethodInvocationTreeMatcher {
+public final class AssertNoArgs extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final Matcher<ExpressionTree> MATCHER = Matchers.instanceMethod()
             .onExactClassAny(
