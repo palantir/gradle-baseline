@@ -24,9 +24,13 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
 import java.util.Arrays;
+import java.util.Set;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import java.util.zip.ZipOutputStream;
 import org.gradle.api.artifacts.transform.InputArtifact;
 import org.gradle.api.artifacts.transform.TransformAction;
@@ -47,7 +51,7 @@ public abstract class Suppressiblify implements TransformAction<SParams> {
     private static final String SUPPRESSIBLE_BUG_CHECKER = "com/palantir/baseline/errorprone/SuppressibleBugChecker";
 
     private static final Pattern BUG_CHECKER_MATCHER_PATTERN =
-            Pattern.compile("com/google/errorprone/bugpatterns/BugChecker\\$\\w+Matcher");
+            Pattern.compile("com/google/errorprone/bugpatterns/BugChecker\\$(?<className>\\w+)TreeMatcher");
 
     @InputArtifact
     protected abstract Provider<FileSystemLocation> getInputArtifact();
@@ -139,7 +143,9 @@ public abstract class Suppressiblify implements TransformAction<SParams> {
     }
 
     private static final class SuppressifyingClassVisitor extends ClassVisitor {
+        private String className;
         private boolean isBugCheckerWeWantToChange = false;
+        private Set<String> matchMethodNames;
 
         protected SuppressifyingClassVisitor(int api, ClassVisitor classVisitor) {
             super(api, classVisitor);
@@ -148,7 +154,20 @@ public abstract class Suppressiblify implements TransformAction<SParams> {
         @Override
         public void visit(
                 int version, int access, String name, String signature, String superName, String[] interfaces) {
+            className = name;
             isBugCheckerWeWantToChange = !name.equals(SUPPRESSIBLE_BUG_CHECKER) && superName.equals(BUG_CHECKER);
+
+            if (isBugCheckerWeWantToChange) {
+                matchMethodNames = Arrays.stream(interfaces)
+                        .flatMap(iface -> {
+                            Matcher matcher = BUG_CHECKER_MATCHER_PATTERN.matcher(iface);
+                            if (!matcher.matches()) {
+                                return Stream.empty();
+                            }
+                            return Stream.of("match" + matcher.group("className"));
+                        })
+                        .collect(Collectors.toSet());
+            }
 
             super.visit(
                     version,
@@ -156,32 +175,70 @@ public abstract class Suppressiblify implements TransformAction<SParams> {
                     name,
                     signature,
                     isBugCheckerWeWantToChange ? SUPPRESSIBLE_BUG_CHECKER : superName,
-                    isBugCheckerWeWantToChange ? replaceInterfaces(interfaces) : interfaces);
-        }
-
-        private static String[] replaceInterfaces(String[] interfaces) {
-            return Arrays.stream(interfaces)
-                    .map(iface -> BUG_CHECKER_MATCHER_PATTERN.matcher(iface).matches()
-                            ? iface.replace(BUG_CHECKER, SUPPRESSIBLE_BUG_CHECKER)
-                            : iface)
-                    .toArray(String[]::new);
+                    interfaces);
         }
 
         @Override
         public MethodVisitor visitMethod(
                 int access, String name, String descriptor, String signature, String[] exceptions) {
+            boolean matchMethodToChange = isBugCheckerWeWantToChange && matchMethodNames.contains(name);
+
+            if (matchMethodToChange) {
+                String originalImplNewName = name + "SuppressibleImpl";
+
+                MethodVisitor newMatchMethod =
+                        super.visitMethod(Opcodes.ACC_PUBLIC, name, descriptor, signature, exceptions);
+                newMatchMethod.visitCode();
+                // BugChecker matchMethods look like: Description matchMethod(MethodTree tree, VisitorState state)
+                // We want to call:
+                //     SuppressibleBugChecker.match(this, matchMethodSuppressibleImpl(tree, state), tree, state)
+                // So first we load `this`, `tree` and `state`, then call matchMethodSuppressibleImpl
+                int thisIndex = 0;
+                int treeIndex = 1;
+                int stateIndex = 2;
+
+                newMatchMethod.visitVarInsn(Opcodes.ALOAD, thisIndex);
+                newMatchMethod.visitVarInsn(Opcodes.ALOAD, treeIndex);
+                newMatchMethod.visitVarInsn(Opcodes.ALOAD, stateIndex);
+                newMatchMethod.visitMethodInsn(
+                        Opcodes.INVOKEVIRTUAL, className, originalImplNewName, descriptor, false);
+
+                // The Description resolve from matchMethodSuppressibleImpl is on the stack, we need to add
+                // `this`, `tree` and `state` again then invoke SuppressibleBugChecker.match
+                newMatchMethod.visitVarInsn(Opcodes.ALOAD, thisIndex);
+                newMatchMethod.visitVarInsn(Opcodes.ALOAD, treeIndex);
+                newMatchMethod.visitVarInsn(Opcodes.ALOAD, stateIndex);
+                newMatchMethod.visitMethodInsn(
+                        Opcodes.INVOKESTATIC,
+                        SUPPRESSIBLE_BUG_CHECKER,
+                        "match",
+                        "(Lcom/google/errorprone/matchers/Description;"
+                                + "Lcom/google/errorprone/bugpatterns/BugChecker;"
+                                + "Lcom/sun/source/tree/Tree;"
+                                + "Lcom/google/errorprone/VisitorState;)"
+                                + "Lcom/google/errorprone/matchers/Description;",
+                        false);
+
+                newMatchMethod.visitInsn(Opcodes.ARETURN);
+
+                newMatchMethod.visitMaxs(4, 3);
+                newMatchMethod.visitEnd();
+
+                return super.visitMethod(access, originalImplNewName, descriptor, signature, exceptions);
+            }
+
             MethodVisitor methodVisitor = super.visitMethod(access, name, descriptor, signature, exceptions);
 
             if (isBugCheckerWeWantToChange && "<init>".equals(name)) {
-                return new SuppressifyingMethodVisitor(Opcodes.ASM9, methodVisitor);
+                return new InitMethodVisitor(Opcodes.ASM9, methodVisitor);
             }
 
             return methodVisitor;
         }
     }
 
-    private static final class SuppressifyingMethodVisitor extends MethodVisitor {
-        protected SuppressifyingMethodVisitor(int api, MethodVisitor methodVisitor) {
+    private static final class InitMethodVisitor extends MethodVisitor {
+        protected InitMethodVisitor(int api, MethodVisitor methodVisitor) {
             super(api, methodVisitor);
         }
 

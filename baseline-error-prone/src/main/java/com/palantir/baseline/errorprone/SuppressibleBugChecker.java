@@ -58,7 +58,7 @@ public abstract class SuppressibleBugChecker extends BugChecker {
         }
     }
 
-    private static Description match(Object bugChecker, Tree tree, VisitorState state, Description description) {
+    public static Description match(Description description, BugChecker bugChecker, Tree tree, VisitorState state) {
         if (description == Description.NO_MATCH) {
             return description;
         }
@@ -78,7 +78,7 @@ public abstract class SuppressibleBugChecker extends BugChecker {
                 .orElseThrow(() -> new RuntimeException("Can't find anything we can suppress"))
                 .getLeaf();
 
-        BugChecker bugChecker1 = (BugChecker) bugChecker;
+        BugChecker bugChecker1 = bugChecker;
 
         return bugChecker1
                 .buildDescription(tree)
@@ -97,7 +97,7 @@ public abstract class SuppressibleBugChecker extends BugChecker {
     interface MethodTreeMatcher extends BugChecker.MethodTreeMatcher {
         @Override
         default Description matchMethod(MethodTree tree, VisitorState state) {
-            return match(this, tree, state, matchMethodSuppressible(tree, state));
+            return match(matchMethodSuppressible(tree, state), (BugChecker) this, tree, state);
         }
 
         Description matchMethodSuppressible(MethodTree tree, VisitorState state);
@@ -108,7 +108,7 @@ public abstract class SuppressibleBugChecker extends BugChecker {
         @Override
         @Deprecated
         default Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
-            return match(this, tree, state, matchMethodInvocationSuppressible(tree, state));
+            return match(matchMethodInvocationSuppressible(tree, state), (BugChecker) this, tree, state);
         }
 
         Description matchMethodInvocationSuppressible(MethodInvocationTree tree, VisitorState state);
