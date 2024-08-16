@@ -16,12 +16,24 @@
 
 package com.palantir.baseline.plugins.suppressible;
 
+import com.palantir.baseline.plugins.BaselineErrorProne;
+import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import net.ltgt.gradle.errorprone.ErrorProneOptions;
+import net.ltgt.gradle.errorprone.ErrorPronePlugin;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.attributes.Attribute;
+import org.gradle.api.plugins.ExtensionAware;
+import org.gradle.api.tasks.SourceSetContainer;
+import org.gradle.api.tasks.compile.JavaCompile;
+import org.gradle.process.CommandLineArgumentProvider;
 
 public final class SuppressibleErrorProne implements Plugin<Project> {
+    public static final String SUPPRESS_STAGE_ONE = "errorProneSuppressStage1";
+    public static final String SUPPRESS_STAGE_TWO = "errorProneSuppressStage2";
+
     @Override
     public void apply(Project project) {
         project.getPluginManager().withPlugin("java", unused -> {
@@ -30,7 +42,32 @@ public final class SuppressibleErrorProne implements Plugin<Project> {
     }
 
     private void applyToJavaProject(Project project) {
+        project.getPluginManager().apply(ErrorPronePlugin.class);
+
         setupTransform(project);
+
+        // TODO(callumr): Change this when separating out
+        String version = Optional.ofNullable((String) project.findProperty("baselineErrorProneVersion"))
+                .or(() -> Optional.ofNullable(
+                        BaselineErrorProne.class.getPackage().getImplementationVersion()))
+                .orElseThrow(() -> new RuntimeException("BaselineErrorProne implementation version not found"));
+
+        if (project.hasProperty(SuppressibleErrorProne.SUPPRESS_STAGE_TWO)) {
+            project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
+                project.getDependencies()
+                        .add(
+                                sourceSet.getCompileOnlyConfigurationName(),
+                                "com.palantir.baseline:suppressible-errorprone-annotations:" + version);
+            });
+        }
+
+        project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
+            ((ExtensionAware) javaCompile.getOptions())
+                    .getExtensions()
+                    .configure(ErrorProneOptions.class, errorProneOptions -> {
+                        configureErrorProneOptions(project, errorProneOptions);
+                    });
+        });
     }
 
     private static void setupTransform(Project project) {
@@ -53,5 +90,25 @@ public final class SuppressibleErrorProne implements Plugin<Project> {
             spec.getFrom().attribute(suppressiblified, false).attribute(artifactType, "jar");
             spec.getTo().attribute(suppressiblified, true).attribute(artifactType, "jar");
         });
+    }
+
+    private void configureErrorProneOptions(Project project, ErrorProneOptions errorProneOptions) {
+        if (project.hasProperty(SuppressibleErrorProne.SUPPRESS_STAGE_ONE)) {
+            errorProneOptions.getErrorproneArgumentProviders().add(new CommandLineArgumentProvider() {
+                @Override
+                public Iterable<String> asArguments() {
+                    return List.of("-XepOpt:" + SuppressibleErrorProne.SUPPRESS_STAGE_ONE + "=true");
+                }
+            });
+        }
+
+        if (project.hasProperty(SuppressibleErrorProne.SUPPRESS_STAGE_TWO)) {
+            errorProneOptions.getErrorproneArgumentProviders().add(new CommandLineArgumentProvider() {
+                @Override
+                public Iterable<String> asArguments() {
+                    return List.of("-XepPatchLocation:IN_PLACE", "-XepPatchChecks:SuppressWarningsCoalesce");
+                }
+            });
+        }
     }
 }

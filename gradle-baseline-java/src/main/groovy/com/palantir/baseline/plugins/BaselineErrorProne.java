@@ -44,7 +44,6 @@ import org.gradle.api.plugins.ExtensionAware;
 import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.SourceSet;
-import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.process.CommandLineArgumentProvider;
 
@@ -52,8 +51,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
     private static final Logger log = Logging.getLogger(BaselineErrorProne.class);
     public static final String EXTENSION_NAME = "baselineErrorProne";
     private static final String PROP_ERROR_PRONE_APPLY = "errorProneApply";
-    private static final String SUPPRESS_STAGE_ONE = "errorProneSuppressStage1";
-    private static final String SUPPRESS_STAGE_TWO = "errorProneSuppressStage2";
     private static final String DISABLE_PROPERTY = "com.palantir.baseline-error-prone.disable";
 
     @Override
@@ -78,15 +75,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
         project.getDependencies()
                 .add(ErrorPronePlugin.CONFIGURATION_NAME, "com.palantir.baseline:baseline-error-prone:" + version);
 
-        if (project.hasProperty(SUPPRESS_STAGE_TWO)) {
-            project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
-                project.getDependencies()
-                        .add(
-                                sourceSet.getCompileOnlyConfigurationName(),
-                                "com.palantir.baseline:suppressible-errorprone-annotations:" + version);
-            });
-        }
-
         project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
             ((ExtensionAware) javaCompile.getOptions())
                     .getExtensions()
@@ -100,8 +88,8 @@ public final class BaselineErrorProne implements Plugin<Project> {
         project.afterEvaluate(
                 unused -> project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
                     if (isErrorProneRefactoring(project)
-                            || project.hasProperty(SUPPRESS_STAGE_ONE)
-                            || project.hasProperty(SUPPRESS_STAGE_TWO)) {
+                            || project.hasProperty(SuppressibleErrorProne.SUPPRESS_STAGE_ONE)
+                            || project.hasProperty(SuppressibleErrorProne.SUPPRESS_STAGE_TWO)) {
                         javaCompile.getOptions().setWarnings(false);
                         javaCompile.getOptions().setDeprecation(false);
                         javaCompile
@@ -187,31 +175,13 @@ public final class BaselineErrorProne implements Plugin<Project> {
         }
 
         if (isErrorProneRefactoring(project)
-                || project.hasProperty(SUPPRESS_STAGE_ONE)
-                || project.hasProperty(SUPPRESS_STAGE_TWO)) {
+                || project.hasProperty(SuppressibleErrorProne.SUPPRESS_STAGE_ONE)
+                || project.hasProperty(SuppressibleErrorProne.SUPPRESS_STAGE_TWO)) {
             // Don't attempt to cache since it won't capture the source files that might be modified
             javaCompile.getOutputs().cacheIf(t -> false);
         }
 
-        if (project.hasProperty(SUPPRESS_STAGE_ONE)) {
-            errorProneOptions.getErrorproneArgumentProviders().add(new CommandLineArgumentProvider() {
-                @Override
-                public Iterable<String> asArguments() {
-                    return List.of("-XepOpt:" + SUPPRESS_STAGE_ONE + "=true");
-                }
-            });
-        }
-
-        if (project.hasProperty(SUPPRESS_STAGE_TWO)) {
-            errorProneOptions.getErrorproneArgumentProviders().add(new CommandLineArgumentProvider() {
-                @Override
-                public Iterable<String> asArguments() {
-                    return List.of("-XepPatchLocation:IN_PLACE", "-XepPatchChecks:SuppressWarningsCoalesce");
-                }
-            });
-        }
-
-        if (isErrorProneRefactoring(project) || project.hasProperty(SUPPRESS_STAGE_ONE)) {
+        if (isErrorProneRefactoring(project) || project.hasProperty(SuppressibleErrorProne.SUPPRESS_STAGE_ONE)) {
             // TODO(gatesn): Is there a way to discover error-prone checks?
             // Maybe service-load from a ClassLoader configured with annotation processor path?
             // https://github.com/google/error-prone/pull/947
