@@ -22,8 +22,6 @@ import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.fixes.SuggestedFix;
 import com.google.errorprone.matchers.Description;
-import com.sun.source.tree.MethodInvocationTree;
-import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.TreePath;
 import java.util.Set;
@@ -92,26 +90,4 @@ public abstract class SuppressibleBugChecker extends BugChecker {
                         .build())
                 .build();
     }
-
-    // START GENERATED CODE
-    interface MethodTreeMatcher extends BugChecker.MethodTreeMatcher {
-        @Override
-        default Description matchMethod(MethodTree tree, VisitorState state) {
-            return match(matchMethodSuppressible(tree, state), (BugChecker) this, tree, state);
-        }
-
-        Description matchMethodSuppressible(MethodTree tree, VisitorState state);
-    }
-
-    interface MethodInvocationTreeMatcher extends BugChecker.MethodInvocationTreeMatcher {
-        /** @deprecated use {@link #matchMethodInvocationSuppressible} instead. */
-        @Override
-        @Deprecated
-        default Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
-            return match(matchMethodInvocationSuppressible(tree, state), (BugChecker) this, tree, state);
-        }
-
-        Description matchMethodInvocationSuppressible(MethodInvocationTree tree, VisitorState state);
-    }
-    // END GENERATED CODE
 }
