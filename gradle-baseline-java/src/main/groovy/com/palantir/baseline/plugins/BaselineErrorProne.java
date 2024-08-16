@@ -174,9 +174,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
             errorProneOptions.disable("UnnecessaryLambda");
         }
 
-        if (isErrorProneRefactoring(project)
-                || project.hasProperty(SuppressibleErrorProne.SUPPRESS_STAGE_ONE)
-                || project.hasProperty(SuppressibleErrorProne.SUPPRESS_STAGE_TWO)) {
+        if (isErrorProneRefactoring(project)) {
             // Don't attempt to cache since it won't capture the source files that might be modified
             javaCompile.getOutputs().cacheIf(t -> false);
         }

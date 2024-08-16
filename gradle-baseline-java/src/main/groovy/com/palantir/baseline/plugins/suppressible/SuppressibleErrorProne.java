@@ -62,12 +62,23 @@ public final class SuppressibleErrorProne implements Plugin<Project> {
         }
 
         project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
+            configureJavaCompile(project, javaCompile);
+
             ((ExtensionAware) javaCompile.getOptions())
                     .getExtensions()
                     .configure(ErrorProneOptions.class, errorProneOptions -> {
                         configureErrorProneOptions(project, errorProneOptions);
                     });
         });
+    }
+
+    private void configureJavaCompile(Project project, JavaCompile javaCompile) {
+        // TODO(callumr): OK to be duplicated between here and BaselineErrorProne?
+        if (project.hasProperty(SuppressibleErrorProne.SUPPRESS_STAGE_ONE)
+                || project.hasProperty(SuppressibleErrorProne.SUPPRESS_STAGE_TWO)) {
+            // Don't attempt to cache since it won't capture the source files that might be modified
+            javaCompile.getOutputs().cacheIf(t -> false);
+        }
     }
 
     private static void setupTransform(Project project) {
