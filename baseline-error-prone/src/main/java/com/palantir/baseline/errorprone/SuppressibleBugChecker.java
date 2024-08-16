@@ -94,17 +94,17 @@ public abstract class SuppressibleBugChecker extends BugChecker {
     }
 
     // START GENERATED CODE
-    interface BaselineMethodTreeMatcher extends BugChecker.MethodTreeMatcher {
+    interface MethodTreeMatcher extends BugChecker.MethodTreeMatcher {
         @Override
         default Description matchMethod(MethodTree tree, VisitorState state) {
-            return match(this, tree, state, matchMethodBaseline(tree, state));
+            return match(this, tree, state, matchMethodSuppressible(tree, state));
         }
 
-        Description matchMethodBaseline(MethodTree tree, VisitorState state);
+        Description matchMethodSuppressible(MethodTree tree, VisitorState state);
     }
 
-    interface SuppressibleMethodInvocationTreeMatcher extends BugChecker.MethodInvocationTreeMatcher {
-        /** @deprecated use {@link #matchMethodInvocationSuppressible} instead */
+    interface MethodInvocationTreeMatcher extends BugChecker.MethodInvocationTreeMatcher {
+        /** @deprecated use {@link #matchMethodInvocationSuppressible} instead. */
         @Override
         @Deprecated
         default Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {

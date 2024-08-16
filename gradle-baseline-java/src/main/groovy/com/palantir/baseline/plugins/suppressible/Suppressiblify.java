@@ -23,16 +23,16 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.file.Files;
+import java.util.Arrays;
 import java.util.jar.JarEntry;
 import java.util.jar.JarFile;
+import java.util.regex.Pattern;
 import java.util.zip.ZipOutputStream;
 import org.gradle.api.artifacts.transform.InputArtifact;
 import org.gradle.api.artifacts.transform.TransformAction;
 import org.gradle.api.artifacts.transform.TransformOutputs;
 import org.gradle.api.artifacts.transform.TransformParameters;
 import org.gradle.api.file.FileSystemLocation;
-import org.gradle.api.logging.Logger;
-import org.gradle.api.logging.Logging;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Input;
@@ -43,9 +43,11 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 public abstract class Suppressiblify implements TransformAction<SParams> {
-    private static final Logger logger = Logging.getLogger(Suppressiblify.class);
     private static final String BUG_CHECKER = "com/google/errorprone/bugpatterns/BugChecker";
     private static final String SUPPRESSIBLE_BUG_CHECKER = "com/palantir/baseline/errorprone/SuppressibleBugChecker";
+
+    private static final Pattern BUG_CHECKER_MATCHER_PATTERN =
+            Pattern.compile("com/google/errorprone/bugpatterns/BugChecker\\$\\w+Matcher");
 
     @InputArtifact
     protected abstract Provider<FileSystemLocation> getInputArtifact();
@@ -154,7 +156,15 @@ public abstract class Suppressiblify implements TransformAction<SParams> {
                     name,
                     signature,
                     isBugCheckerWeWantToChange ? SUPPRESSIBLE_BUG_CHECKER : superName,
-                    interfaces);
+                    isBugCheckerWeWantToChange ? replaceInterfaces(interfaces) : interfaces);
+        }
+
+        private static String[] replaceInterfaces(String[] interfaces) {
+            return Arrays.stream(interfaces)
+                    .map(iface -> BUG_CHECKER_MATCHER_PATTERN.matcher(iface).matches()
+                            ? iface.replace(BUG_CHECKER, SUPPRESSIBLE_BUG_CHECKER)
+                            : iface)
+                    .toArray(String[]::new);
         }
 
         @Override
