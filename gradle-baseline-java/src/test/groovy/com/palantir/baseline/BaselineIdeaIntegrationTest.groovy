@@ -321,20 +321,20 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
             apply plugin: 'com.palantir.baseline-java-versions'
             javaVersions {
                 libraryTarget = 11
-                distributionTarget = 15
-                runtime = 17
+                distributionTarget = 17
+                runtime = 21
             }
         """.stripIndent()
 
         then:
         with('idea').build()
         def rootIpr = Files.asCharSource(new File(projectDir, projectDir.name + ".ipr"), Charsets.UTF_8).read()
-        rootIpr.contains('languageLevel="JDK_15"')
-        rootIpr.contains('project-jdk-name="15"')
+        rootIpr.contains('languageLevel="JDK_17"')
+        rootIpr.contains('project-jdk-name="17"')
         rootIpr.contains('<bytecodeTargetLevel target="11">')
-        rootIpr.contains("<module name=\"${projectDir.name}\" target=\"15\"/>")
+        rootIpr.contains("<module name=\"${projectDir.name}\" target=\"17\"/>")
         def rootIml = Files.asCharSource(new File(projectDir, projectDir.name + ".iml"), Charsets.UTF_8).read()
-        rootIml.contains('LANGUAGE_LEVEL="JDK_15')
+        rootIml.contains('LANGUAGE_LEVEL="JDK_17')
     }
 
     @RestoreSystemProperties

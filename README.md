@@ -437,8 +437,8 @@ apply plugin: 'com.palantir.baseline-java-versions'
 
 javaVersions {
     libraryTarget = 11
-    distributionTarget = 15
-    runtime = 17
+    distributionTarget = 17
+    runtime = 21
 }
 ```
 
