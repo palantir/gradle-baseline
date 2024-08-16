@@ -44,11 +44,11 @@ import java.util.Collection;
         summary = "jOOQ batch methods that execute without bind args can cause performance problems.",
         explanation =
                 "When batch queries execute without bind args, each query is sent to the database as a string with all"
-                        + " variables inline. Inline variables cause each query in the batch to be unique, so the database"
-                        + " uses extra CPU and memory to parse and query plan each query. Instead use one of the other"
-                        + " jOOQ batch methods that is documented as executing queries with bind args, as this allows"
-                        + " parsing and query planning the query once and then executing any number of times with"
-                        + " different bind values.")
+                    + " variables inline. Inline variables cause each query in the batch to be unique, so the database"
+                    + " uses extra CPU and memory to parse and query plan each query. Instead use one of the other"
+                    + " jOOQ batch methods that is documented as executing queries with bind args, as this allows"
+                    + " parsing and query planning the query once and then executing any number of times with"
+                    + " different bind values.")
 public final class JooqBatchWithoutBindArgs extends BugChecker implements MethodInvocationTreeMatcher {
 
     private static final long serialVersionUID = 1L;
