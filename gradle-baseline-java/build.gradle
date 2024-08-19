@@ -32,6 +32,7 @@ dependencies {
     testImplementation gradleTestKit()
     testImplementation 'com.github.stefanbirkner:system-rules'
     testImplementation 'com.netflix.nebula:nebula-test' // for better temp directory junit rule only
+    testImplementation 'commons-io:commons-io'
     testImplementation 'junit:junit'
     testImplementation 'net.lingala.zip4j:zip4j'
     testImplementation 'org.assertj:assertj-core'
