@@ -16,7 +16,6 @@
 
 package com.palantir.baseline.plugins.suppressible;
 
-import com.palantir.baseline.plugins.suppressible.Suppressiblify.InitMethodVisitor;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.regex.Matcher;
@@ -28,7 +27,8 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 final class SuppressifyingClassVisitor extends ClassVisitor {
-    private static final String SUPPRESSIBLE_BUG_CHECKER = "com/palantir/baseline/errorprone/SuppressibleBugChecker";
+    static final String SUPPRESSIBLE_BUG_CHECKER = "com/palantir/baseline/errorprone/SuppressibleBugChecker";
+    static final String BUG_CHECKER = "com/google/errorprone/bugpatterns/BugChecker";
 
     private static final Pattern BUG_CHECKER_MATCHER_PATTERN =
             Pattern.compile("com/google/errorprone/bugpatterns/BugChecker\\$(?<className>\\w+)TreeMatcher");

@@ -39,8 +39,6 @@ import org.objectweb.asm.ClassWriter;
 import org.objectweb.asm.Opcodes;
 
 public abstract class Suppressiblify implements TransformAction<SParams> {
-    private static final String BUG_CHECKER = "com/google/errorprone/bugpatterns/BugChecker";
-
     @InputArtifact
     protected abstract Provider<FileSystemLocation> getInputArtifact();
 
@@ -49,7 +47,7 @@ public abstract class Suppressiblify implements TransformAction<SParams> {
         File output = outputs.file(getInputArtifact().get().getAsFile().getName());
 
         ClassFileVisitor hasBugChecker = (jarEntry, classReader) -> {
-            return !BUG_CHECKER.equals(classReader.getSuperName());
+            return !SuppressifyingClassVisitor.BUG_CHECKER.equals(classReader.getSuperName());
         };
 
         if (visitClassFiles(hasBugChecker)) {

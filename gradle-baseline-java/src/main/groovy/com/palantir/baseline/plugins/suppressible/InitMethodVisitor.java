@@ -27,8 +27,11 @@ final class InitMethodVisitor extends MethodVisitor {
     @Override
     public void visitMethodInsn(int opcode, String owner, String name, String descriptor, boolean isInterface) {
         // Modify the BugChecker superclass constructor call to call the new superclass constructor
-        if (opcode == Opcodes.INVOKESPECIAL && "<init>".equals(name) && owner.equals(Suppressiblify.BUG_CHECKER)) {
-            super.visitMethodInsn(opcode, Suppressiblify.SUPPRESSIBLE_BUG_CHECKER, name, descriptor, isInterface);
+        if (opcode == Opcodes.INVOKESPECIAL
+                && "<init>".equals(name)
+                && owner.equals(SuppressifyingClassVisitor.BUG_CHECKER)) {
+            super.visitMethodInsn(
+                    opcode, SuppressifyingClassVisitor.SUPPRESSIBLE_BUG_CHECKER, name, descriptor, isInterface);
         } else {
             super.visitMethodInsn(opcode, owner, name, descriptor, isInterface);
         }
