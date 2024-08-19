@@ -203,7 +203,7 @@ public abstract class Suppressiblify implements TransformAction<SParams> {
                 newMatchMethod.visitMethodInsn(
                         Opcodes.INVOKEVIRTUAL, className, originalImplNewName, descriptor, false);
 
-                // The Description resolve from matchMethodSuppressibleImpl is on the stack, we need to add
+                // The Description returned from matchMethodSuppressibleImpl is on the stack, we need to add
                 // `this`, `tree` and `state` again then invoke SuppressibleBugChecker.match
                 newMatchMethod.visitVarInsn(Opcodes.ALOAD, thisIndex);
                 newMatchMethod.visitVarInsn(Opcodes.ALOAD, treeIndex);
