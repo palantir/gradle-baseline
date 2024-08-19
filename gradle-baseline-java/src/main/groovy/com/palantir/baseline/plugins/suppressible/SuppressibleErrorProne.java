@@ -52,7 +52,7 @@ public final class SuppressibleErrorProne implements Plugin<Project> {
                         BaselineErrorProne.class.getPackage().getImplementationVersion()))
                 .orElseThrow(() -> new RuntimeException("BaselineErrorProne implementation version not found"));
 
-        if (project.hasProperty(SuppressibleErrorProne.SUPPRESS_STAGE_TWO)) {
+        if (isStageTwo(project)) {
             project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
                 project.getDependencies()
                         .add(
@@ -74,8 +74,7 @@ public final class SuppressibleErrorProne implements Plugin<Project> {
 
     private void configureJavaCompile(Project project, JavaCompile javaCompile) {
         // TODO(callumr): OK to be duplicated between here and BaselineErrorProne?
-        if (project.hasProperty(SuppressibleErrorProne.SUPPRESS_STAGE_ONE)
-                || project.hasProperty(SuppressibleErrorProne.SUPPRESS_STAGE_TWO)) {
+        if (isStageOne(project) || isStageTwo(project)) {
             // Don't attempt to cache since it won't capture the source files that might be modified
             javaCompile.getOutputs().cacheIf(t -> false);
         }
@@ -104,7 +103,7 @@ public final class SuppressibleErrorProne implements Plugin<Project> {
     }
 
     private void configureErrorProneOptions(Project project, ErrorProneOptions errorProneOptions) {
-        if (project.hasProperty(SuppressibleErrorProne.SUPPRESS_STAGE_ONE)) {
+        if (isStageOne(project)) {
             errorProneOptions.getErrorproneArgumentProviders().add(new CommandLineArgumentProvider() {
                 @Override
                 public Iterable<String> asArguments() {
@@ -113,7 +112,7 @@ public final class SuppressibleErrorProne implements Plugin<Project> {
             });
         }
 
-        if (project.hasProperty(SuppressibleErrorProne.SUPPRESS_STAGE_TWO)) {
+        if (isStageTwo(project)) {
             errorProneOptions.getErrorproneArgumentProviders().add(new CommandLineArgumentProvider() {
                 @Override
                 public Iterable<String> asArguments() {
@@ -121,5 +120,13 @@ public final class SuppressibleErrorProne implements Plugin<Project> {
                 }
             });
         }
+    }
+
+    private static boolean isStageOne(Project project) {
+        return project.hasProperty(SuppressibleErrorProne.SUPPRESS_STAGE_ONE);
+    }
+
+    private static boolean isStageTwo(Project project) {
+        return project.hasProperty(SuppressibleErrorProne.SUPPRESS_STAGE_TWO);
     }
 }
