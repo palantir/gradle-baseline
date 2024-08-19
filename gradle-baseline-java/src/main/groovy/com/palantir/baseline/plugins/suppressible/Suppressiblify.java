@@ -208,6 +208,7 @@ public abstract class Suppressiblify implements TransformAction<SParams> {
                 newMatchMethod.visitVarInsn(Opcodes.ALOAD, thisIndex);
                 newMatchMethod.visitVarInsn(Opcodes.ALOAD, treeIndex);
                 newMatchMethod.visitVarInsn(Opcodes.ALOAD, stateIndex);
+                // The stack size is now 4
                 newMatchMethod.visitMethodInsn(
                         Opcodes.INVOKESTATIC,
                         SUPPRESSIBLE_BUG_CHECKER,
@@ -219,8 +220,10 @@ public abstract class Suppressiblify implements TransformAction<SParams> {
                                 + "Lcom/google/errorprone/matchers/Description;",
                         false);
 
+                // We then return the Description from SuppressibleBugChecker.match
                 newMatchMethod.visitInsn(Opcodes.ARETURN);
 
+                // Max stack size is 4 (see above), max local variables is 3 (this, tree, state)
                 newMatchMethod.visitMaxs(4, 3);
                 newMatchMethod.visitEnd();
 
