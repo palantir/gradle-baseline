@@ -30,7 +30,7 @@ import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.process.CommandLineArgumentProvider;
 
-public final class SuppressibleErrorProne implements Plugin<Project> {
+public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
     public static final String SUPPRESS_STAGE_ONE = "errorProneSuppressStage1";
     public static final String SUPPRESS_STAGE_TWO = "errorProneSuppressStage2";
 
@@ -109,7 +109,7 @@ public final class SuppressibleErrorProne implements Plugin<Project> {
             errorProneOptions.getErrorproneArgumentProviders().add(new CommandLineArgumentProvider() {
                 @Override
                 public Iterable<String> asArguments() {
-                    return List.of("-XepOpt:" + SuppressibleErrorProne.SUPPRESS_STAGE_ONE + "=true");
+                    return List.of("-XepOpt:" + SuppressibleErrorPronePlugin.SUPPRESS_STAGE_ONE + "=true");
                 }
             });
         }
@@ -125,10 +125,10 @@ public final class SuppressibleErrorProne implements Plugin<Project> {
     }
 
     private static boolean isStageOne(Project project) {
-        return project.hasProperty(SuppressibleErrorProne.SUPPRESS_STAGE_ONE);
+        return project.hasProperty(SuppressibleErrorPronePlugin.SUPPRESS_STAGE_ONE);
     }
 
     private static boolean isStageTwo(Project project) {
-        return project.hasProperty(SuppressibleErrorProne.SUPPRESS_STAGE_TWO);
+        return project.hasProperty(SuppressibleErrorPronePlugin.SUPPRESS_STAGE_TWO);
     }
 }
