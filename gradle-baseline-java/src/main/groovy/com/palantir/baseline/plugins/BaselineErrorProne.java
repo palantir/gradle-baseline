@@ -16,21 +16,17 @@
 
 package com.palantir.baseline.plugins;
 
-import com.google.common.base.Joiner;
 import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.MoreCollectors;
 import com.palantir.baseline.extensions.BaselineErrorProneExtension;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import net.ltgt.gradle.errorprone.CheckSeverity;
 import net.ltgt.gradle.errorprone.ErrorProneOptions;
 import net.ltgt.gradle.errorprone.ErrorPronePlugin;
 import org.gradle.api.Plugin;
@@ -40,9 +36,9 @@ import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.ExtensionAware;
-import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.specs.Spec;
 import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.process.CommandLineArgumentProvider;
 
@@ -172,42 +168,23 @@ public final class BaselineErrorProne implements Plugin<Project> {
             // Don't attempt to cache since it won't capture the source files that might be modified
             javaCompile.getOutputs().cacheIf(t -> false);
 
-            Optional<SourceSet> maybeSourceSet = project
-                    .getConvention()
-                    .getPlugin(JavaPluginConvention.class)
-                    .getSourceSets()
-                    .matching(ss -> javaCompile.getName().equals(ss.getCompileJavaTaskName()))
-                    .stream()
-                    .collect(MoreCollectors.toOptional());
-
-            // TODO(gatesn): Is there a way to discover error-prone checks?
-            // Maybe service-load from a ClassLoader configured with annotation processor path?
-            // https://github.com/google/error-prone/pull/947
             errorProneOptions.getErrorproneArgumentProviders().add(new CommandLineArgumentProvider() {
                 // intentionally not using a lambda to reduce gradle warnings
                 @Override
                 public Iterable<String> asArguments() {
-                    Optional<List<String>> specificChecks = getSpecificErrorProneChecks(project);
-                    if (specificChecks.isPresent()) {
-                        List<String> errorProneChecks = specificChecks.get();
-                        // Work around https://github.com/google/error-prone/issues/3908 by explicitly enabling any
-                        // check we want to use patch checks for (ensuring it is not disabled); if this is fixed, the
-                        // -Xep:*:ERROR arguments could be removed
-                        return Iterables.concat(
-                                errorProneChecks.stream()
-                                        .map(checkName -> "-Xep:" + checkName + ":ERROR")
-                                        .collect(Collectors.toList()),
-                                ImmutableList.of(
-                                        "-XepPatchChecks:" + Joiner.on(',').join(errorProneChecks),
-                                        "-XepPatchLocation:IN_PLACE"));
-                    } else {
-                        // Don't apply checks that have been explicitly disabled
-                        Stream<String> errorProneChecks = getNotDisabledErrorproneChecks(
-                                project, errorProneExtension, javaCompile, maybeSourceSet, errorProneOptions);
-                        return ImmutableList.of(
-                                "-XepPatchChecks:" + Joiner.on(',').join(errorProneChecks.iterator()),
-                                "-XepPatchLocation:IN_PLACE");
-                    }
+                    List<String> patchChecks = getSpecificErrorProneChecks(project)
+                            .orElseGet(() -> {
+                                // Apply all check that have not been explicitly disabled or filtered out
+                                return filterAllPatchingErrorProneChecksBasedOnDependencies(
+                                                project, errorProneExtension, javaCompile)
+                                        .collect(Collectors.toList());
+                            });
+
+                    // Ensure that the order of arguments never changes, which could affect Gradle caching
+                    String sortedJoinedPatchChecks =
+                            patchChecks.stream().sorted().collect(Collectors.joining(","));
+
+                    return List.of("-XepPatchChecks:" + sortedJoinedPatchChecks, "-XepPatchLocation:IN_PLACE");
                 }
             });
         }
@@ -228,12 +205,16 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 .flatMap(list -> list.isEmpty() ? Optional.empty() : Optional.of(list));
     }
 
-    private static Stream<String> getNotDisabledErrorproneChecks(
-            Project project,
-            BaselineErrorProneExtension errorProneExtension,
-            JavaCompile javaCompile,
-            Optional<SourceSet> maybeSourceSet,
-            ErrorProneOptions errorProneOptions) {
+    private static Stream<String> filterAllPatchingErrorProneChecksBasedOnDependencies(
+            Project project, BaselineErrorProneExtension errorProneExtension, JavaCompile javaCompile) {
+
+        Optional<SourceSet> maybeSourceSet = project
+                .getExtensions()
+                .getByType(SourceSetContainer.class)
+                .matching(ss -> javaCompile.getName().equals(ss.getCompileJavaTaskName()))
+                .stream()
+                .collect(MoreCollectors.toOptional());
+
         // If this javaCompile is associated with a source set, use it to figure out if it has preconditions or not.
         Predicate<String> filterOutPreconditions = maybeSourceSet
                 .map(ss -> {
@@ -246,16 +227,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 })
                 .orElse(check -> true);
 
-        return errorProneExtension.getPatchChecks().get().stream().filter(check -> {
-            if (checkExplicitlyDisabled(errorProneOptions, check)) {
-                log.info(
-                        "Task {}: not applying errorprone check {} because it has severity OFF in errorProneOptions",
-                        javaCompile.getPath(),
-                        check);
-                return false;
-            }
-            return filterOutPreconditions.test(check);
-        });
+        return errorProneExtension.getPatchChecks().get().stream().filter(filterOutPreconditions);
     }
 
     private static boolean hasDependenciesMatching(Configuration configuration, Spec<ModuleComponentIdentifier> spec) {
@@ -316,11 +288,5 @@ public final class BaselineErrorProne implements Plugin<Project> {
         } else {
             return !disable.equals("false");
         }
-    }
-
-    private static boolean checkExplicitlyDisabled(ErrorProneOptions errorProneOptions, String check) {
-        Map<String, CheckSeverity> checks = errorProneOptions.getChecks().get();
-        return checks.get(check) == CheckSeverity.OFF
-                || errorProneOptions.getErrorproneArgs().get().contains(String.format("-Xep:%s:OFF", check));
     }
 }
