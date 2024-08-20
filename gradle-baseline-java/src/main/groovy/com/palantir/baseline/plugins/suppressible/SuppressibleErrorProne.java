@@ -44,6 +44,8 @@ public final class SuppressibleErrorProne implements Plugin<Project> {
     private void applyToJavaProject(Project project) {
         project.getPluginManager().apply(ErrorPronePlugin.class);
 
+        project.getExtensions().create("suppressibleErrorProne", SuppressibleErrorProneExtension.class);
+
         setupTransform(project);
 
         // TODO(callumr): Change this when separating out
