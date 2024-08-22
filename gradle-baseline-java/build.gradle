@@ -69,6 +69,11 @@ test {
 
 gradlePlugin {
     plugins {
+        suppressibleErrorProne {
+            id = 'com.palantir.suppressible-error-prone'
+            displayName = 'Suppressible Error Prone'
+            implementationClass = 'com.palantir.baseline.plugins.suppressible.SuppressibleErrorPronePlugin'
+        }
         baselinePlugins {
             id = 'com.palantir.baseline'
             displayName = 'Palantir Baseline Plugins'
