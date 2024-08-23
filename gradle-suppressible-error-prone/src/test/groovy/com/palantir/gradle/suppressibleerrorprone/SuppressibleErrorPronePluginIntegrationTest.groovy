@@ -43,7 +43,7 @@ class SuppressibleErrorPronePluginIntegrationTest extends IntegrationSpec {
             package app;
             public final class App {
                 public static void main(String[] args) {
-                    new int[3].toString();
+                    System.out.println(new int[3].toString());
                 }
             }
         '''.stripIndent(true)
@@ -63,7 +63,7 @@ class SuppressibleErrorPronePluginIntegrationTest extends IntegrationSpec {
             public final class App {
                 @SuppressWarnings("for-rollout:ArrayToString")
                 public static void main(String[] args) {
-                    new int[3].toString();
+                    System.out.println(new int[3].toString());
                 }
             }
         '''.stripIndent(true)
