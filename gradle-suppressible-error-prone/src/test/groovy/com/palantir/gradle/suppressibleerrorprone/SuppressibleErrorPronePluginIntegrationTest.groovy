@@ -20,6 +20,8 @@ import nebula.test.IntegrationSpec
 import nebula.test.functional.ExecutionResult
 
 class SuppressibleErrorPronePluginIntegrationTest extends IntegrationSpec {
+    File appJava
+
     def setup() {
         // language=Gradle
         buildFile << '''
@@ -35,6 +37,8 @@ class SuppressibleErrorPronePluginIntegrationTest extends IntegrationSpec {
                 errorprone 'com.google.errorprone:error_prone_core:2.28.0'
             }
         '''.stripIndent(true)
+
+        appJava = file('src/main/java/app/App.java')
     }
 
     def 'reports a failing error prone'() {
@@ -75,6 +79,34 @@ class SuppressibleErrorPronePluginIntegrationTest extends IntegrationSpec {
         runTasksSuccessfully('compileJava')
     }
 
+    def 'can apply patches for a check if added to the patchChecks list'() {
+        // language=Gradle
+        buildFile << '''
+            suppressibleErrorProne {
+                patchChecks.add('ArrayToString')
+            }
+        '''.stripIndent(true)
+
+        // language=Java
+        writeJavaSourceFile '''
+            package app;
+            public final class App {
+                public static void main(String[] args) {
+                    System.out.println(new int[3].toString());
+                }
+            }
+        '''.stripIndent(true)
+
+        when:
+        runTasksSuccessfully('compileJava', '-PerrorProneApply')
+
+        then:
+        runTasksSuccessfully('compileJava')
+
+        appJava.text.contains('Arrays.toString(new int[3])')
+    }
+
+    // TODO(callumr): Even if the check is not in the patches list?
     def 'can suppress a failing check'() {
         // language=Java
         writeJavaSourceFile '''
@@ -93,9 +125,7 @@ class SuppressibleErrorPronePluginIntegrationTest extends IntegrationSpec {
         then:
         runTasksSuccessfully('compileJava')
 
-        def fileText = new File(projectDir, 'src/main/java/app/App.java').text
-
-        fileText.contains('@SuppressWarnings(\"for-rollout:ArrayToString\")')
+        appJava.text.contains('@SuppressWarnings(\"for-rollout:ArrayToString\")')
     }
 
     @Override
