@@ -79,6 +79,24 @@ class SuppressibleErrorPronePluginIntegrationTest extends IntegrationSpec {
         runTasksSuccessfully('compileJava')
     }
 
+    def 'ensure warnings are disabled in generated code'() {
+        when:
+        // language=Java
+        writeJavaSourceFile '''
+            package app;
+            import javax.annotation.processing.Generated;
+            @Generated("com.place.SomeProcessor")
+            public final class App {
+                public static void main(String[] args) {
+                    System.out.println(new int[3].toString());
+                }
+            }
+        '''.stripIndent(true)
+
+        then:
+        runTasksSuccessfully('compileJava')
+    }
+
     def 'can apply patches for a check if added to the patchChecks list'() {
         // language=Gradle
         buildFile << '''
@@ -132,6 +150,7 @@ class SuppressibleErrorPronePluginIntegrationTest extends IntegrationSpec {
     ExecutionResult runTasksSuccessfully(String... tasks) {
         def result = runTasks(tasks)
         println result.standardError
+        println result.standardOutput
         result.rethrowFailure()
     }
 

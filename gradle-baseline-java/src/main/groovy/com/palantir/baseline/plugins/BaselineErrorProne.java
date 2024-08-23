@@ -124,7 +124,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
             errorProneOptions.getEnabled().set(false);
         }
 
-        errorProneOptions.getDisableWarningsInGeneratedCode().set(true);
         errorProneOptions.getExcludedPaths().set(excludedPathsRegex());
 
         errorProneOptions.disable(
@@ -167,11 +166,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
         // Relax some checks for test code
         if (errorProneOptions.getCompilingTestOnlyCode().get()) {
             errorProneOptions.disable("UnnecessaryLambda");
-        }
-
-        if (isErrorProneRefactoring(project)) {
-            // Don't attempt to cache since it won't capture the source files that might be modified
-            javaCompile.getOutputs().cacheIf(t -> false);
         }
 
         if (isErrorProneRefactoring(project)) {

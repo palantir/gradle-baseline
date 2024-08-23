@@ -80,8 +80,7 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
     }
 
     private void configureJavaCompile(Project project, JavaCompile javaCompile) {
-        // TODO(callumr): OK to be duplicated between here and BaselineErrorProne?
-        if (isStageOne(project) || isStageTwo(project)) {
+        if (isRefactoring(project) || isStageOne(project) || isStageTwo(project)) {
             // Don't attempt to cache since it won't capture the source files that might be modified
             javaCompile.getOutputs().cacheIf(t -> false);
         }
@@ -110,6 +109,8 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
     }
 
     private void configureErrorProneOptions(Project project, ErrorProneOptions errorProneOptions) {
+        errorProneOptions.getDisableWarningsInGeneratedCode().set(true);
+
         if (isStageOne(project)) {
             errorProneOptions.getErrorproneArgumentProviders().add(new CommandLineArgumentProvider() {
                 @Override
@@ -127,6 +128,10 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
                 }
             });
         }
+    }
+
+    private static boolean isRefactoring(Project project) {
+        return project.hasProperty("errorProneApply");
     }
 
     private static boolean isStageOne(Project project) {
