@@ -64,7 +64,7 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
                 project.getDependencies()
                         .add(
                                 sourceSet.getCompileOnlyConfigurationName(),
-                                "com.palantir.baseline:suppressible-errorprone-annotations:" + version);
+                                "com.palantir.baseline:suppressible-error-prone-annotations:" + version);
             });
         }
 
@@ -80,6 +80,13 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
     }
 
     private void configureJavaCompile(Project project, JavaCompile javaCompile) {
+        javaCompile.getOptions().getForkOptions().getJvmArgumentProviders().add(new CommandLineArgumentProvider() {
+            @Override
+            public Iterable<String> asArguments() {
+                return List.of("-agentlib:jdwp=transport=dt_socket,server=n,address=localhost:5005");
+            }
+        });
+
         if (isRefactoring(project) || isStageOne(project) || isStageTwo(project)) {
             // Don't attempt to cache since it won't capture the source files that might be modified
             javaCompile.getOutputs().cacheIf(t -> false);
@@ -115,7 +122,10 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
             errorProneOptions.getErrorproneArgumentProviders().add(new CommandLineArgumentProvider() {
                 @Override
                 public Iterable<String> asArguments() {
-                    return List.of("-XepOpt:" + SuppressibleErrorPronePlugin.SUPPRESS_STAGE_ONE + "=true");
+                    return List.of(
+                            "-XepPatchLocation:IN_PLACE",
+                            "-XepPatchChecks:",
+                            "-XepOpt:" + SuppressibleErrorPronePlugin.SUPPRESS_STAGE_ONE + "=true");
                 }
             });
         }
