@@ -14,9 +14,8 @@
  * limitations under the License.
  */
 
-package com.palantir.baseline.plugins.suppressible;
+package com.palantir.gradle.suppressibleerrorprone;
 
-import com.palantir.baseline.plugins.BaselineErrorProne;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -51,8 +50,9 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
         // TODO(callumr): Change this when separating out
         String version = Optional.ofNullable((String) project.findProperty("baselineErrorProneVersion"))
                 .or(() -> Optional.ofNullable(
-                        BaselineErrorProne.class.getPackage().getImplementationVersion()))
-                .orElseThrow(() -> new RuntimeException("BaselineErrorProne implementation version not found"));
+                        SuppressibleErrorPronePlugin.class.getPackage().getImplementationVersion()))
+                .orElseThrow(
+                        () -> new RuntimeException("SuppressibleErrorPronePlugin implementation version not found"));
 
         if (isStageTwo(project)) {
             project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {

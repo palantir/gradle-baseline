@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.palantir.baseline.plugins.suppressible;
+package com.palantir.gradle.suppressibleerrorprone;
 
 import org.gradle.api.provider.SetProperty;
 

@@ -1,0 +1,34 @@
+apply plugin: 'groovy'
+apply plugin: 'java-gradle-plugin'
+apply plugin: 'com.palantir.external-publish-jar'
+apply plugin: 'com.palantir.external-publish-gradle-plugin'
+
+dependencies {
+    implementation 'net.ltgt.gradle:gradle-errorprone-plugin'
+    implementation 'org.ow2.asm:asm'
+
+    testImplementation 'com.netflix.nebula:nebula-test'
+}
+
+gradlePlugin {
+    plugins {
+        suppressibleErrorProne {
+            id = 'com.palantir.suppressible-error-prone'
+            displayName = 'Suppressible Error Prone'
+            implementationClass = 'com.palantir.gradle.suppressibleerrorprone.SuppressibleErrorPronePlugin'
+        }
+    }
+}
+
+test {
+    systemProperty 'ignoreDeprecations', 'true'
+    systemProperty 'projectVersion', project.version
+}
+
+tasks.test.dependsOn tasks.findByPath(':suppressible-error-prone-annotations:publishToMavenLocal')
+
+tasks.withType(JavaCompile) {
+    options.errorprone {
+        disable('StrictUnusedVariable')
+    }
+}

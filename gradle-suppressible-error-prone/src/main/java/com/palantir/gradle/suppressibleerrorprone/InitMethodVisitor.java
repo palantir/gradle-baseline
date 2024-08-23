@@ -14,13 +14,13 @@
  * limitations under the License.
  */
 
-package com.palantir.baseline.plugins.suppressible;
+package com.palantir.gradle.suppressibleerrorprone;
 
 import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 final class InitMethodVisitor extends MethodVisitor {
-    protected InitMethodVisitor(int api, MethodVisitor methodVisitor) {
+    InitMethodVisitor(int api, MethodVisitor methodVisitor) {
         super(api, methodVisitor);
     }
 

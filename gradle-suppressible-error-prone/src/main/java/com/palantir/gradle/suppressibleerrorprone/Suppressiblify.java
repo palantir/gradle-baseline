@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 
-package com.palantir.baseline.plugins.suppressible;
+package com.palantir.gradle.suppressibleerrorprone;
 
-import com.palantir.baseline.plugins.suppressible.Suppressiblify.SParams;
+import com.palantir.gradle.suppressibleerrorprone.Suppressiblify.SParams;
 import java.io.BufferedOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;

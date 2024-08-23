@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.palantir.baseline.plugins.suppressible;
+package com.palantir.gradle.suppressibleerrorprone;
 
 import java.util.Arrays;
 import java.util.Set;
@@ -37,7 +37,7 @@ final class SuppressifyingClassVisitor extends ClassVisitor {
     private boolean isBugCheckerWeWantToChange = false;
     private Set<String> matchMethodNames;
 
-    protected SuppressifyingClassVisitor(int api, ClassVisitor classVisitor) {
+    SuppressifyingClassVisitor(int api, ClassVisitor classVisitor) {
         super(api, classVisitor);
     }
 

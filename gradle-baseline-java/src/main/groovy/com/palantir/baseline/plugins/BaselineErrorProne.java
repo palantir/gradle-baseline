@@ -23,7 +23,6 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
 import com.google.common.collect.MoreCollectors;
 import com.palantir.baseline.extensions.BaselineErrorProneExtension;
-import com.palantir.baseline.plugins.suppressible.SuppressibleErrorPronePlugin;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -55,8 +54,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
-        project.getPluginManager().apply(SuppressibleErrorPronePlugin.class);
-
         project.getPluginManager().withPlugin("java", unused -> {
             applyToJavaProject(project);
         });
@@ -87,9 +84,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
         // these compiler flags after all configuration has happened.
         project.afterEvaluate(
                 unused -> project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
-                    if (isErrorProneRefactoring(project)
-                            || project.hasProperty(SuppressibleErrorPronePlugin.SUPPRESS_STAGE_ONE)
-                            || project.hasProperty(SuppressibleErrorPronePlugin.SUPPRESS_STAGE_TWO)) {
+                    if (isErrorProneRefactoring(project)) {
                         javaCompile.getOptions().setWarnings(false);
                         javaCompile.getOptions().setDeprecation(false);
                         javaCompile
@@ -179,7 +174,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
             javaCompile.getOutputs().cacheIf(t -> false);
         }
 
-        if (isErrorProneRefactoring(project) || project.hasProperty(SuppressibleErrorPronePlugin.SUPPRESS_STAGE_ONE)) {
+        if (isErrorProneRefactoring(project)) {
             // TODO(gatesn): Is there a way to discover error-prone checks?
             // Maybe service-load from a ClassLoader configured with annotation processor path?
             // https://github.com/google/error-prone/pull/947

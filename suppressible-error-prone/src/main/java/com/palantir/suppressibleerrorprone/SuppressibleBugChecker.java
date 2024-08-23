@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.palantir.baseline.errorprone;
+package com.palantir.suppressibleerrorprone;
 
 import com.google.common.base.Suppliers;
 import com.google.common.collect.ImmutableSet;
