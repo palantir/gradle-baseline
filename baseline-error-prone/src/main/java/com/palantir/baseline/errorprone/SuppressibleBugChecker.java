@@ -30,7 +30,7 @@ import java.util.stream.Stream;
 
 @SuppressWarnings("DesignForExtension")
 public abstract class SuppressibleBugChecker extends BugChecker {
-    private static final String AUTOMATICALLY_ADDED_PREFIX = "suppressed-for-rollout:";
+    private static final String AUTOMATICALLY_ADDED_PREFIX = "for-rollout:";
 
     private final Supplier<Set<String>> allNames = Suppliers.memoize(() -> {
         return ImmutableSet.<String>builder()

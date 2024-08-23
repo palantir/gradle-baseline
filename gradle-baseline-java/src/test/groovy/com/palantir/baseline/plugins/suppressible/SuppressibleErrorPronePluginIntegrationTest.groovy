@@ -25,6 +25,14 @@ class SuppressibleErrorPronePluginIntegrationTest extends IntegrationSpec {
         buildFile << '''
             apply plugin: 'com.palantir.suppressible-error-prone'
             apply plugin: 'java'
+            
+            repositories {
+                mavenCentral()
+            }
+            
+            dependencies {
+                errorprone 'com.google.errorprone:error_prone_core:2.28.0'
+            }
         '''.stripIndent(true)
     }
 
@@ -44,6 +52,25 @@ class SuppressibleErrorPronePluginIntegrationTest extends IntegrationSpec {
 
         then:
         stderr.contains('[ArrayToString]')
+    }
+
+    def 'can suppress an error prone with for-rollout prefix'() {
+        when:
+        // language=Java
+        writeJavaSourceFile '''
+            package app;
+            public final class App {
+                @SuppressWarnings("for-rollout:ArrayToString")
+                public static void main(String[] args) {
+                    new int[3].toString();
+                }
+            }
+        '''.stripIndent(true)
+
+        then:
+        def executionResult = runTasks('compileJava')
+        println executionResult.standardError
+        executionResult.rethrowFailure()
     }
 
     @Override
