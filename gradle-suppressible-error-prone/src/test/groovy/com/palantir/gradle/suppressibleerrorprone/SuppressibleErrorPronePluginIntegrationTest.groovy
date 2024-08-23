@@ -56,6 +56,9 @@ class SuppressibleErrorPronePluginIntegrationTest extends IntegrationSpec {
     }
 
     def 'can suppress an error prone with for-rollout prefix'() {
+        // This test is explicitly checking we suppress the for-rollout prefix as that is what exists
+        // in people's codebases
+
         when:
         // language=Java
         writeJavaSourceFile '''
@@ -69,9 +72,37 @@ class SuppressibleErrorPronePluginIntegrationTest extends IntegrationSpec {
         '''.stripIndent(true)
 
         then:
-        def executionResult = runTasks('compileJava')
-        println executionResult.standardError
-        executionResult.rethrowFailure()
+        runTasksSuccessfully('compileJava')
+    }
+
+    def 'can suppress a failing check'() {
+        // language=Java
+        writeJavaSourceFile '''
+            package app;
+            public final class App {
+                public static void main(String[] args) {
+                    System.out.println(new int[3].toString());
+                }
+            }
+        '''.stripIndent(true)
+
+        when:
+        runTasksSuccessfully('compileJava', '-PerrorProneSuppressStage1')
+        runTasksSuccessfully('compileJava', '-PerrorProneSuppressStage2')
+
+        then:
+        runTasksSuccessfully('compileJava')
+
+        def fileText = new File(projectDir, 'src/main/java/app/App.java').text
+
+        fileText.contains('@SuppressWarnings(\"for-rollout:ArrayToString\")')
+    }
+
+    @Override
+    ExecutionResult runTasksSuccessfully(String... tasks) {
+        def result = runTasks(tasks)
+        println result.standardError
+        result.rethrowFailure()
     }
 
     @Override
