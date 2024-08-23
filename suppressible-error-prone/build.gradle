@@ -2,5 +2,14 @@ apply plugin: 'java-library'
 apply plugin: 'com.palantir.external-publish-jar'
 
 dependencies {
-    implementation 'com.google.errorprone:error_prone_core'
+    implementation 'com.google.errorprone:error_prone_annotation'
+    implementation 'com.google.errorprone:error_prone_check_api'
+
+    annotationProcessor 'com.google.auto.service:auto-service'
+    compileOnly 'com.google.auto.service:auto-service'
+
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation 'com.google.errorprone:error_prone_test_helpers'
+    testImplementation 'org.assertj:assertj-core'
+    testRuntimeOnly project(':suppressible-error-prone-annotations')
 }

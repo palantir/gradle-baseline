@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.palantir.baseline.errorprone;
+package com.palantir.suppressibleerrorprone;
 
 import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
