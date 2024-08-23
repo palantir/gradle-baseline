@@ -52,7 +52,7 @@ public final class LogsafeArgName extends BugChecker implements MethodInvocation
 
     // Must have default constructor for service loading to work correctly
     public LogsafeArgName() {
-        this.unsafeParamNames = ImmutableSet.of();
+        this(ErrorProneFlags.empty());
     }
 
     @Inject

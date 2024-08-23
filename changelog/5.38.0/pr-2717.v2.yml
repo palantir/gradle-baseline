@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: Ignore `org.immutables:value::annotations` when deciding to add the
+    annotation processor arg required by immutables to run incrementally.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2717

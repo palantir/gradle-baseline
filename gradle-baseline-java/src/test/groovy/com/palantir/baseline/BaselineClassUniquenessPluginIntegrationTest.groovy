@@ -37,6 +37,37 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         }
     """.stripIndent()
 
+    def 'detect duplicates in two external jars, then --fix captures'() {
+        File lockfile = new File(projectDir, 'baseline-class-uniqueness.lock')
+
+        when:
+        buildFile << standardBuildFile
+        buildFile << """
+        dependencies {
+            api group: 'javax.el', name: 'javax.el-api', version: '3.0.0'
+            api group: 'javax.servlet.jsp', name: 'jsp-api', version: '2.1'
+        }
+        """.stripIndent()
+        BuildResult result = with('check', '-s').buildAndFail()
+
+        then:
+        result.getOutput().contains("baseline-class-uniqueness detected multiple jars containing identically named classes.")
+        result.getOutput().contains("[javax.el:javax.el-api, javax.servlet.jsp:jsp-api]")
+        result.getOutput().contains("javax.el.ArrayELResolver");
+        !lockfile.exists()
+
+        when:
+        with("checkClassUniqueness", "--fix").build()
+
+        then:
+        lockfile.exists()
+        File expected = new File("src/test/resources/com/palantir/baseline/baseline-class-uniqueness.expected.lock")
+        if (Boolean.getBoolean("recreate")) {
+            GFileUtils.writeFile(lockfile.text, expected)
+        }
+        lockfile.text == expected.text
+    }
+
     def 'detect duplicates in two external jars, then --write-locks captures'() {
         File lockfile = new File(projectDir, 'baseline-class-uniqueness.lock')
 
@@ -56,10 +87,42 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         result.getOutput().contains("javax.el.ArrayELResolver");
         !lockfile.exists()
 
+        when:
         with("checkClassUniqueness", "--write-locks").build()
-        lockfile.exists()
 
+        then:
+        lockfile.exists()
         File expected = new File("src/test/resources/com/palantir/baseline/baseline-class-uniqueness.expected.lock")
+        if (Boolean.getBoolean("recreate")) {
+            GFileUtils.writeFile(lockfile.text, expected)
+        }
+        lockfile.text == expected.text
+    }
+
+    def 'detect duplicates in two external jars with the same ModuleVersionIdentifier but different classifiers'() {
+        File lockfile = new File(projectDir, 'baseline-class-uniqueness.lock')
+
+        when:
+        buildFile << standardBuildFile
+        buildFile << """
+        dependencies {
+            api group: 'com.google.cloud.bigdataoss', name: 'gcs-connector', version: 'hadoop3-2.2.19'
+            api group: 'com.google.cloud.bigdataoss', name: 'gcs-connector', version: 'hadoop3-2.2.19', classifier: 'shaded'
+        }
+        """.stripIndent()
+        BuildResult result = with('check', '-s').buildAndFail()
+
+        then:
+        result.getOutput().contains("baseline-class-uniqueness detected multiple jars containing identically named classes.")
+        result.getOutput().contains("[com.google.cloud.bigdataoss:gcs-connector, com.google.cloud.bigdataoss:gcs-connector (classifier=shaded)]")
+        result.getOutput().contains("com.google.cloud.hadoop.fs.gcs.FsBenchmark")
+
+        when:
+        with("checkClassUniqueness", "--write-locks").build()
+
+        then:
+        lockfile.exists()
+        File expected = new File("src/test/resources/com/palantir/baseline/baseline-class-uniqueness-with-classifier.expected.lock")
         if (Boolean.getBoolean("recreate")) {
             GFileUtils.writeFile(lockfile.text, expected)
         }

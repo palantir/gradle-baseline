@@ -16,6 +16,7 @@
 
 package com.palantir.baseline
 
+import com.google.common.base.Throwables
 import org.gradle.util.GradleVersion
 import spock.lang.Unroll
 
@@ -25,6 +26,8 @@ import java.nio.file.Paths
 import nebula.test.IntegrationSpec
 import nebula.test.functional.ExecutionResult
 import org.assertj.core.api.Assumptions
+import java.util.regex.Matcher
+import java.util.regex.Pattern
 
 /**
  * This test exercises both the root-plugin {@code BaselineJavaVersions} AND the subproject
@@ -32,7 +35,7 @@ import org.assertj.core.api.Assumptions
  */
 @Unroll
 class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
-    private static final List<String> GRADLE_TEST_VERSIONS = ['8.4', GradleVersion.current().getVersion()]
+    private static final List<String> GRADLE_TEST_VERSIONS = ['8.8', GradleVersion.current().getVersion()]
 
     private static final int JAVA_8_BYTECODE = 52
     private static final int JAVA_11_BYTECODE = 55
@@ -40,28 +43,32 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
     private static final int ENABLE_PREVIEW_BYTECODE = 65535
     private static final int NOT_ENABLE_PREVIEW_BYTECODE = 0
 
+    File mainJava
+
+    // language=Gradle
     def standardBuildFile = '''
         buildscript {
             repositories { mavenCentral() }
             dependencies {
-                classpath 'com.netflix.nebula:nebula-publishing-plugin:17.0.0'
-                classpath 'com.palantir.gradle.shadow-jar:gradle-shadow-jar:2.5.0'
-                classpath 'com.palantir.gradle.consistentversions:gradle-consistent-versions:2.8.0'
+                classpath 'com.palantir.sls-packaging:gradle-sls-packaging:7.56.0'
+                classpath 'com.palantir.gradle.jdkslatest:gradle-jdks-latest:0.13.0'
             }
         }
         plugins {
-            id 'java-library'
-            id 'application'
+            id 'java'
+        }
+        
+        allprojects {
+            repositories {
+                mavenCentral()
+            }
         }
         
         apply plugin: 'com.palantir.baseline-java-versions'
         
-        repositories {
-            mavenCentral()
-        }
-        
-        application {
+        task runMainClass(type: JavaExec) {
             mainClass = 'Main'
+            classpath = sourceSets.main.runtimeClasspath
         }
     '''.stripIndent(true)
 
@@ -105,6 +112,8 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         setFork(true)
 
         buildFile << standardBuildFile
+
+        mainJava = file("src/main/java/Main.java")
     }
 
     def '#gradleVersionNumber: java 11 compilation fails targeting java 8'() {
@@ -116,7 +125,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             runtime = 11
         }
         '''.stripIndent(true)
-        file('src/main/java/Main.java') << java11CompatibleCode
+        mainJava << java11CompatibleCode
 
         then:
         runTasksWithFailure('compileJava')
@@ -133,7 +142,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             distributionTarget = 17
         }
         '''.stripIndent(true)
-        file('src/main/java/Main.java') << java11CompatibleCode
+        mainJava << java11CompatibleCode
         File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
 
         then:
@@ -152,7 +161,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             distributionTarget = '17_PREVIEW'
         }
         '''.stripIndent(true)
-        file('src/main/java/Main.java') << java17PreviewCode
+        mainJava << java17PreviewCode
         File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
 
         then:
@@ -170,7 +179,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             libraryTarget = '17_PREVIEW'
         }
         '''.stripIndent(true)
-        file('src/main/java/Main.java') << java17PreviewCode
+        mainJava << java17PreviewCode
 
         then:
         ExecutionResult result = runTasksWithFailure('compileJava', '-i')
@@ -188,7 +197,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             target = '17_PREVIEW'
         }
         '''.stripIndent(true)
-        file('src/main/java/Main.java') << java17PreviewCode
+        mainJava << java17PreviewCode
         File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
 
         then:
@@ -207,7 +216,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             distributionTarget = '17_PREVIEW'
         }
         '''.stripIndent(true)
-        file('src/main/java/Main.java') << java17PreviewCode
+        mainJava << java17PreviewCode
 
         then:
         runTasksSuccessfully('javadoc', '-i')
@@ -227,7 +236,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             library()
         }
         '''.stripIndent(true)
-        file('src/main/java/Main.java') << java11CompatibleCode
+        mainJava << java11CompatibleCode
         File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
 
         then:
@@ -238,43 +247,22 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         gradleVersionNumber << GRADLE_TEST_VERSIONS
     }
 
-    def '#gradleVersionNumber: library target is used when nebula maven publishing plugin is applied'() {
+    def '#gradleVersionNumber: distribution target is used when sls-packaging is used'() {
         when:
+        // language=Gradle
         buildFile << '''
-        apply plugin: 'nebula.maven-publish'
-        javaVersions {
-            libraryTarget = 11
-            distributionTarget = 17
-        }
+            apply plugin: 'com.palantir.sls-java-service-distribution'
+            javaVersions {
+                libraryTarget = 11
+                distributionTarget = 17
+            }
         '''.stripIndent(true)
-        file('src/main/java/Main.java') << java11CompatibleCode
+        mainJava << java11CompatibleCode
         File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
 
         then:
         runTasksSuccessfully('compileJava')
-        assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
-
-        where:
-        gradleVersionNumber << GRADLE_TEST_VERSIONS
-    }
-
-    def '#gradleVersionNumber: library target is used when the palantir shadowjar plugin is applied'() {
-        when:
-        buildFile << '''
-        apply plugin: 'com.palantir.consistent-versions' // required by shadow-jar
-        apply plugin: 'com.palantir.shadow-jar'
-        javaVersions {
-            libraryTarget = 11
-            distributionTarget = 17
-        }
-        '''.stripIndent(true)
-        file('src/main/java/Main.java') << java11CompatibleCode
-        File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
-
-        then:
-        runTasksSuccessfully('--write-locks')
-        runTasksSuccessfully('compileJava')
-        assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
+        assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
 
         where:
         gradleVersionNumber << GRADLE_TEST_VERSIONS
@@ -287,7 +275,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             libraryTarget = '11'
         }
         '''.stripIndent(true)
-        file('src/main/java/Main.java') << java11CompatibleCode
+        mainJava << java11CompatibleCode
         File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
 
         then:
@@ -300,16 +288,17 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
 
     def '#gradleVersionNumber: java 11 execution succeeds on java 11'() {
         when:
+        // language=gradle
         buildFile << '''
-        javaVersions {
-            libraryTarget = 11
-        }
+            javaVersions {
+                libraryTarget = 11
+            }
         '''.stripIndent(true)
-        file('src/main/java/Main.java') << java11CompatibleCode
+        mainJava << java11CompatibleCode
         File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
 
         then:
-        ExecutionResult result = runTasksSuccessfully('run')
+        ExecutionResult result = runTasksSuccessfully('runMainClass')
         result.standardOutput.contains 'jdk11 features on runtime 11'
         assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
 
@@ -325,13 +314,93 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             runtime = 17
         }
         '''.stripIndent(true)
-        file('src/main/java/Main.java') << java11CompatibleCode
+        mainJava << java11CompatibleCode
         File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
 
         then:
-        ExecutionResult result = runTasksSuccessfully('run')
+        ExecutionResult result = runTasksSuccessfully('runMainClass')
         result.standardOutput.contains 'jdk11 features on runtime 17'
         assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
+    }
+
+    def '#gradleVersionNumber: when setupJdkToolchains=true toolchains are configured by jdks-latest'() {
+        // language=gradle
+        buildFile << '''
+        apply plugin: 'com.palantir.jdks.latest'
+
+        javaVersions {
+            libraryTarget = 11
+            runtime = 21
+            setupJdkToolchains = true
+        }
+        java {
+            toolchain {
+                languageVersion = JavaLanguageVersion.of(11)
+                vendor = JvmVendorSpec.ADOPTIUM
+            }
+            toolchain {
+                languageVersion = JavaLanguageVersion.of(21)
+                vendor = JvmVendorSpec.ADOPTIUM
+            }
+        }
+        '''.stripIndent(true)
+        mainJava << java11CompatibleCode
+        File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
+
+        when:
+        ExecutionResult compileJavaResult = runTasksSuccessfully('compileJava')
+
+        then:
+        extractCompileToolchain(compileJavaResult.standardOutput).contains("amazon-corretto-11")
+        assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
+
+        when:
+        ExecutionResult runResult = runTasksSuccessfully('runMainClass')
+
+        then:
+        runResult.wasUpToDate('compileJava')
+        extractRunJavaCommand(runResult.standardOutput).contains("amazon-corretto-21.")
+
+        then:
+        runTasksSuccessfully('compileJava', 'run', '-Porg.gradle.java.installations.auto-detect=false', '-Porg.gradle.java.installations.auto-download=false')
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
+    }
+
+    def '#gradleVersionNumber: when setupJdkToolchains=false no toolchains are configured by gradle-baseline'() {
+        when:
+        // language=gradle
+        buildFile << '''
+        apply plugin: 'com.palantir.jdks.latest'
+        
+        javaVersions {
+            libraryTarget = 11
+            runtime = 21
+            setupJdkToolchains = false
+        }
+        
+        java {
+            toolchain {
+                languageVersion = JavaLanguageVersion.of(11)
+                vendor = JvmVendorSpec.ADOPTIUM
+            }
+            toolchain {
+                languageVersion = JavaLanguageVersion.of(21)
+                vendor = JvmVendorSpec.ADOPTIUM
+            }
+        }
+        '''.stripIndent(true)
+        mainJava << java11CompatibleCode
+        File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
+
+        then:
+        runTasksWithFailure('compileJava', 'run',
+                '-Porg.gradle.java.installations.auto-detect=false',
+                '-Porg.gradle.java.installations.auto-download=false')
 
         where:
         gradleVersionNumber << GRADLE_TEST_VERSIONS
@@ -347,10 +416,10 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             libraryTarget = 8
         }
         '''.stripIndent(true)
-        file('src/main/java/Main.java') << java8CompatibleCode
+        mainJava << java8CompatibleCode
 
         then:
-        ExecutionResult result = runTasksSuccessfully('run')
+        ExecutionResult result = runTasksSuccessfully('runMainClass')
         result.standardOutput.contains 'jdk8 features on runtime 1.8'
 
         where:
@@ -369,11 +438,11 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             runtime = 11
         }
         '''.stripIndent(true)
-        file('src/main/java/Main.java') << java8CompatibleCode
+        mainJava << java8CompatibleCode
         File compiledClass = new File(projectDir, "build/classes/java/main/Main.class")
 
         then:
-        ExecutionResult result = runTasksSuccessfully('run')
+        ExecutionResult result = runTasksSuccessfully('runMainClass')
         result.standardOutput.contains 'jdk8 features on runtime 11'
         assertBytecodeVersion(compiledClass, JAVA_8_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
 
@@ -522,6 +591,101 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         gradleVersionNumber << GRADLE_TEST_VERSIONS
     }
 
+    def '#gradleVersionNumber: checkRuntimeClasspathCompatible fails when there is a 17 jar on the runtimeClasspath but runtime is 11'() {
+        fork = false
+
+        // language=gradle
+        buildFile << '''
+            javaVersions {
+                libraryTarget = 11
+                runtime = 11
+            }
+            
+            configurations {
+                java17jar
+            }
+            
+            dependencies {
+                // This has java 17 class files and is a multi-release jar with java 21 class files 
+                java17jar 'org.springframework:spring-core:6.1.5'
+                implementation files(configurations.java17jar)
+            }
+        '''.stripIndent(true)
+
+        when:
+        def rootCause = Throwables.getRootCause(runTasksWithFailure('checkRuntimeClasspathCompatible').failure).message
+
+        then:
+        rootCause.contains('spring-core-6.1.5.jar')
+        rootCause.contains('spring-jcl-6.1.5.jar')
+        rootCause.contains('bytecode major version 61')
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
+    }
+
+    def '#gradleVersionNumber: checkRuntimeClasspathCompatible succeeds when there is only jars of the compatible java runtime versions on the runtimeClasspath'() {
+        fork = false
+
+        when:
+        // language=gradle
+        buildFile << '''
+            javaVersions {
+                libraryTarget = 8
+                runtime = 8
+            }
+            
+            dependencies {
+                implementation 'com.fasterxml.jackson.core:jackson-core:2.16.1'
+            }
+        '''.stripIndent(true)
+
+        then:
+        runTasksSuccessfully('checkRuntimeClasspathCompatible')
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
+    }
+
+    def '#gradleVersionNumber: checkRuntimeClasspathCompatible handles gradleApi'() {
+        fork = false
+
+        when:
+        // language=gradle
+        buildFile << '''
+            javaVersions {
+                libraryTarget = 8
+                runtime = 8
+            }
+            
+            dependencies {
+                // this has relocated multi-version jar classes that have not been put in the right place (at least
+                // for the versions of gradle used when tested). eg:
+                // gradle-api-7.5.1.jar: org/gradle/internal/impldep/META-INF/versions/9/module-info.class has bytecode major version 53
+                implementation gradleApi()
+            }
+        '''.stripIndent(true)
+
+        then:
+        runTasksSuccessfully('checkRuntimeClasspathCompatible', '--write-locks')
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
+    }
+
+    def '#gradleVersionNumber: checkRuntimeClasspathCompatible is a dependency of check'() {
+        fork = false
+
+        when:
+        def stdout = runTasksSuccessfully('check', '--dry-run').standardOutput
+
+        then:
+        stdout.contains(':checkRuntimeClasspathCompatible')
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
+    }
+
     private static final int BYTECODE_IDENTIFIER = (int) 0xCAFEBABE
 
     // See http://illegalargumentexception.blogspot.com/2009/07/java-finding-class-versions.html
@@ -536,8 +700,20 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             int minorBytecodeVersion = 0xFFFF & dis.readShort()
             int majorBytecodeVersion = 0xFFFF & dis.readShort()
 
-            majorBytecodeVersion == expectedMajorBytecodeVersion
-            minorBytecodeVersion == expectedMinorBytecodeVersion
+            assert majorBytecodeVersion == expectedMajorBytecodeVersion
+            assert minorBytecodeVersion == expectedMinorBytecodeVersion
         }
+    }
+
+    private static String extractCompileToolchain(String output) {
+        Matcher compileMatcher = Pattern.compile("^Compiling with toolchain '([^']*)'", Pattern.MULTILINE).matcher(output)
+        compileMatcher.find()
+        return compileMatcher.group(1)
+    }
+
+    private static String extractRunJavaCommand(String output) {
+        Matcher matcher =  Pattern.compile("^Starting process 'command '([^']*)/bin/java''.*Main", Pattern.MULTILINE).matcher(output)
+        matcher.find()
+        return matcher.group(1)
     }
 }

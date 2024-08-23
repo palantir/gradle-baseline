@@ -36,12 +36,15 @@ public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtens
     private final Property<ChosenJavaVersion> runtime;
     private final LazilyConfiguredMapping<JavaLanguageVersion, AtomicReference<JavaInstallationMetadata>, Project>
             jdks = new LazilyConfiguredMapping<>(AtomicReference::new);
+    private final Property<Boolean> setupJdkToolchains;
 
     @Inject
     public BaselineJavaVersionsExtension(Project project) {
         this.libraryTarget = project.getObjects().property(JavaLanguageVersion.class);
         this.distributionTarget = project.getObjects().property(ChosenJavaVersion.class);
         this.runtime = project.getObjects().property(ChosenJavaVersion.class);
+        this.setupJdkToolchains = project.getObjects().property(Boolean.class);
+        this.setupJdkToolchains.convention(true);
 
         // distribution defaults to the library value
         distributionTarget.convention(libraryTarget.map(ChosenJavaVersion::of));
@@ -125,5 +128,12 @@ public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtens
 
     public interface LazyJdks {
         Optional<JavaInstallationMetadata> jdkFor(JavaLanguageVersion javaLanguageVersion, Project project);
+    }
+
+    /**
+     * Enables the setup of JDK toolchains for all subprojects.
+     */
+    public final Property<Boolean> getSetupJdkToolchains() {
+        return setupJdkToolchains;
     }
 }

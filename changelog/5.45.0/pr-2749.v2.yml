@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: Check the runtime classpath contains jar that contain only class which
+    are compatible with the intended runtime java language version.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2749

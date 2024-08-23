@@ -104,12 +104,14 @@ public final class BaselineErrorProne implements Plugin<Project> {
                             javaCompile.getOptions())
                     .getExtensions()
                     .configure(ErrorProneOptions.class, errorProneOptions -> {
-                        errorProneOptions.check("Slf4jLogsafeArgs", CheckSeverity.OFF);
-                        errorProneOptions.check("PreferSafeLoggableExceptions", CheckSeverity.OFF);
-                        errorProneOptions.check("PreferSafeLogger", CheckSeverity.OFF);
-                        errorProneOptions.check("PreferSafeLoggingPreconditions", CheckSeverity.OFF);
-                        errorProneOptions.check("PreconditionsConstantMessage", CheckSeverity.OFF);
-                        errorProneOptions.check("JavaxInjectOnAbstractMethod", CheckSeverity.OFF);
+                        errorProneOptions.disable("CatchBlockLogException");
+                        errorProneOptions.disable("JavaxInjectOnAbstractMethod");
+                        errorProneOptions.disable("PreconditionsConstantMessage");
+                        errorProneOptions.disable("PreferSafeLoggableExceptions");
+                        errorProneOptions.disable("PreferSafeLogger");
+                        errorProneOptions.disable("PreferSafeLoggingPreconditions");
+                        errorProneOptions.disable("Slf4jConstantLogMessage");
+                        errorProneOptions.disable("Slf4jLogsafeArgs");
                     }));
         });
     }
@@ -131,13 +133,12 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 "AutoCloseableMustBeClosed",
                 "CatchSpecificity",
                 "CanIgnoreReturnValueSuggester",
+                // https://github.com/google/error-prone/issues/4544
+                "DistinctVarargsChecker",
                 "InlineMeSuggester",
                 // We often use javadoc comments without javadoc parameter information.
                 "NotJavadoc",
                 "PreferImmutableStreamExCollections",
-                // StringCaseLocaleUsage duplicates our existing DefaultLocale check which is already
-                // enforced in some places.
-                "StringCaseLocaleUsage",
                 "UnnecessaryTestMethodPrefix",
                 "UnusedVariable",
                 // See VarUsage: The var keyword results in illegible code in most cases and should not be used.

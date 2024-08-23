@@ -163,6 +163,7 @@ public final class Slf4jLevelCheck extends BugChecker implements IfTreeMatcher {
         }
 
         @Override
+        @SuppressWarnings("EnumOrdinal")
         public LogLevel reduce(LogLevel r1, LogLevel r2) {
             if (r1 == null) {
                 return r2;

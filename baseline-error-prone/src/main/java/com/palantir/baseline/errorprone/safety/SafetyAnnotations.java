@@ -147,7 +147,7 @@ public final class SafetyAnnotations {
     public static Safety getTypeSafetyFromAncestors(ClassTree classTree, VisitorState state) {
         Safety safety = SafetyAnnotations.getSafety(classTree.getExtendsClause(), state);
         for (Tree implemented : classTree.getImplementsClause()) {
-            safety = safety.leastUpperBound(SafetyAnnotations.getSafety(implemented, state));
+            safety = Safety.mergeAssumingUnknownIsSame(safety, SafetyAnnotations.getSafety(implemented, state));
         }
         return safety;
     }
@@ -205,6 +205,12 @@ public final class SafetyAnnotations {
             }
         }
         Safety typeArgumentCombination = SAFETY_IS_COMBINATION_OF_TYPE_ARGUMENTS.getSafety(type, state, dejaVu);
+        // Arrays are difficult to pipe through the above combiner without a large refactor, since the AST
+        // is not quite a tree it stores its type information adjacent to the node.
+        if (type instanceof Type.ArrayType) {
+            typeArgumentCombination = Safety.mergeAssumingUnknownIsSame(
+                    typeArgumentCombination, getSafety(((Type.ArrayType) type).elemtype.tsym, state));
+        }
         return ASTHelpers.isSubtype(type, throwableSupplier.get(state), state)
                 ? Safety.UNSAFE.leastUpperBound(typeArgumentCombination)
                 : typeArgumentCombination;

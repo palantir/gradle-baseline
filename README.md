@@ -55,7 +55,6 @@ repositories {
 }
 
 apply plugin: 'java'
-apply plugin: 'org.inferred.processors'  // installs the "processor" configuration needed for baseline-error-prone
 apply plugin: 'com.palantir.baseline'
 ```
 
@@ -106,16 +105,9 @@ The Eclipse plugin is compatible with the following versions: Checkstyle 7.5+, J
 
 
 ## com.palantir.baseline-error-prone
-The `com.palantir.baseline-error-prone` plugin brings in the `net.ltgt.errorprone-javacplugin` plugin. We recommend applying the `org.inferred.processors` plugin 1.3.0+ in order to avoid `error: plug-in not found: ErrorProne`. The minimal setup is as follows:
+The `com.palantir.baseline-error-prone` plugin brings in the `net.ltgt.errorprone-javacplugin` plugin. The minimal setup is as follows:
 
 ```groovy
-buildscript {
-    dependencies {
-        classpath 'gradle.plugin.org.inferred:gradle-processors:1.2.18'
-    }
-}
-
-apply plugin: 'org.inferred.processors'
 apply plugin: 'com.palantir.baseline-error-prone'
 ```
 
@@ -219,7 +211,6 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `ZoneIdConstant`: Prefer `ZoneId` constants.
 - `IncubatingMethod`: Prevents calling Conjure incubating APIs unless you explicitly opt-out of the check on a per-use or per-project basis.
 - `CompileTimeConstantViolatesLiskovSubstitution`: Requires consistent application of the `@CompileTimeConstant` annotation to resolve inconsistent validation based on the reference type on which the met is invoked.
-- `ClassInitializationDeadlock`: Detect type structures which can cause deadlocks initializing classes.
 - `ConsistentLoggerName`: Ensure Loggers are named consistently.
 - `PreferImmutableStreamExCollections`: It's common to use toMap/toSet/toList() as the terminal operation on a stream, but would be extremely surprising to rely on the mutability of these collections. Prefer `toImmutableMap`, `toImmutableSet` and `toImmutableList`. (If the performance overhead of a stream is already acceptable, then the `UnmodifiableFoo` wrapper is likely tolerable).
 - `DangerousIdentityKey`: Key type does not override equals() and hashCode, so comparisons will be done on reference equality only.
@@ -447,8 +438,8 @@ apply plugin: 'com.palantir.baseline-java-versions'
 
 javaVersions {
     libraryTarget = 11
-    distributionTarget = 15
-    runtime = 17
+    distributionTarget = 17
+    runtime = 21
 }
 ```
 
@@ -457,7 +448,18 @@ The configurable fields of the `javaVersions` extension are:
 * `distributionTarget`: (optional) The Java version used for compilation of code used within distributions, but not published externally. Defaults to the `libraryTarget` version.
 * `runtime`: (optional) Runtime Java version for testing and packaging distributions. Defaults to the `distributionTarget` version.
 
-The configured Java versions are used as defaults for all projects. Optionally, you can override the defaults in a sub-project, but it is recommended to avoid doing so:
+The configured Java versions are used as defaults for all projects.
+
+If a sub-project should use `libraryTarget` but is not considered a library (for example, because it is not published), you can explicitly indicate that it is a library:
+
+```gradle
+// In a sub-project's build.gradle
+javaVersion {
+    library()
+}
+```
+
+A sub-project can also explicitly override the default Java versions, but doing so is discouraged:
 
 ```gradle
 // In a sub-project's build.gradle
@@ -467,7 +469,9 @@ javaVersion {
 }
 ```
 
-The optionally configurable fields of the `javaVersion` extension are `target`, for setting the target version used for compilation and `runtime`, for setting the runtime version used for testing and distributions.
+The optionally configurable fields of the `javaVersion` extension are:
+* `target`: The target version used for compilation.
+* `runtime`: The runtime version used for testing and distributions.
 
 ### Opting in to `--enable-preview` flag
 

@@ -1,7 +1,43 @@
 # Danger! Multiple jars contain identically named classes. This may cause different behaviour depending on classpath ordering.
-# Run ./gradlew checkClassUniqueness --write-locks to update this file
+# Run ./gradlew checkClassUniqueness --fix to update this file
 
 ## runtimeClasspath
+[com.google.code.findbugs:jsr305, org.checkerframework:dataflow-nullaway]
+  - javax.annotation.CheckForNull
+  - javax.annotation.CheckForSigned
+  - javax.annotation.CheckReturnValue
+  - javax.annotation.Detainted
+  - javax.annotation.MatchesPattern
+  - javax.annotation.MatchesPattern$Checker
+  - javax.annotation.Nonnegative
+  - javax.annotation.Nonnegative$Checker
+  - javax.annotation.Nonnull
+  - javax.annotation.Nonnull$Checker
+  - javax.annotation.Nullable
+  - javax.annotation.OverridingMethodsMustInvokeSuper
+  - javax.annotation.ParametersAreNonnullByDefault
+  - javax.annotation.ParametersAreNullableByDefault
+  - javax.annotation.PropertyKey
+  - javax.annotation.RegEx
+  - javax.annotation.RegEx$Checker
+  - javax.annotation.Signed
+  - javax.annotation.Syntax
+  - javax.annotation.Tainted
+  - javax.annotation.Untainted
+  - javax.annotation.WillClose
+  - javax.annotation.WillCloseWhenClosed
+  - javax.annotation.WillNotClose
+  - javax.annotation.concurrent.GuardedBy
+  - javax.annotation.concurrent.Immutable
+  - javax.annotation.concurrent.NotThreadSafe
+  - javax.annotation.concurrent.ThreadSafe
+  - javax.annotation.meta.Exclusive
+  - javax.annotation.meta.Exhaustive
+  - javax.annotation.meta.TypeQualifier
+  - javax.annotation.meta.TypeQualifierDefault
+  - javax.annotation.meta.TypeQualifierNickname
+  - javax.annotation.meta.TypeQualifierValidator
+  - javax.annotation.meta.When
 [org.checkerframework:checker-qual, org.checkerframework:dataflow-nullaway]
   - org.checkerframework.dataflow.qual.AssertMethod
   - org.checkerframework.dataflow.qual.Deterministic

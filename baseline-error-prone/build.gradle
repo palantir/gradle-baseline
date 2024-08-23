@@ -1,5 +1,3 @@
-import net.ltgt.gradle.errorprone.CheckSeverity
-
 apply plugin: 'java-library'
 apply plugin: 'com.palantir.external-publish-jar'
 
@@ -31,6 +29,7 @@ dependencies {
     testImplementation 'com.palantir.tritium:tritium-registry'
     testImplementation 'com.palantir.conjure.java:conjure-lib'
     testImplementation 'com.palantir.conjure.java.api:test-utils'
+    testImplementation 'javax.ws.rs:javax.ws.rs-api'
     testCompileOnly 'org.immutables:value::annotations'
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-migrationsupport'
@@ -52,7 +51,7 @@ dependencies {
 tasks.checkJUnitDependencies.enabled = false
 tasks.withType(JavaCompile) {
     options.errorprone {
-        check("StrictUnusedVariable", CheckSeverity.OFF)
+        disable('StrictUnusedVariable')
     }
 }
 

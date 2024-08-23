@@ -16,19 +16,14 @@
 
 package com.palantir.baseline.plugins.javaversions;
 
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableSet;
 import java.util.Objects;
 import org.gradle.api.GradleException;
-import org.gradle.api.Named;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
-import org.gradle.api.publish.Publication;
 import org.gradle.api.publish.PublishingExtension;
-import org.gradle.api.publish.ivy.IvyPublication;
-import org.gradle.api.publish.maven.MavenPublication;
 import org.gradle.util.GradleVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,10 +34,14 @@ public final class BaselineJavaVersions implements Plugin<Project> {
     public static final String EXTENSION_NAME = "javaVersions";
 
     public static final GradleVersion MIN_GRADLE_VERSION = GradleVersion.version("7.0");
-    // 'nebula.maven-publish' and 'com.palantir.shadow-jar' create publications lazily which cause inconsistencies
-    // based on ordering.
+
     private static final ImmutableSet<String> LIBRARY_PLUGINS =
-            ImmutableSet.of("nebula.maven-publish", "com.palantir.shadow-jar");
+            ImmutableSet.of("com.palantir.external-publish-jar", "com.palantir.publish-jar");
+
+    private static final ImmutableSet<String> DISTRIBUTION_PLUGINS = ImmutableSet.of(
+            "com.palantir.external-publish-dist",
+            "com.palantir.publish-dist",
+            "com.palantir.sls-java-service-distribution");
 
     @Override
     public void apply(Project project) {
@@ -81,6 +80,7 @@ public final class BaselineJavaVersions implements Plugin<Project> {
                     project.getDisplayName());
             return libraryOverride.get();
         }
+
         for (String plugin : LIBRARY_PLUGINS) {
             if (project.getPluginManager().hasPlugin(plugin)) {
                 log.debug(
@@ -90,6 +90,17 @@ public final class BaselineJavaVersions implements Plugin<Project> {
                 return true;
             }
         }
+
+        for (String plugin : DISTRIBUTION_PLUGINS) {
+            if (project.getPluginManager().hasPlugin(plugin)) {
+                log.debug(
+                        "Project '{}' is considered a distribution because the '{}' plugin is applied",
+                        project.getDisplayName(),
+                        plugin);
+                return false;
+            }
+        }
+
         PublishingExtension publishing = project.getExtensions().findByType(PublishingExtension.class);
         if (publishing == null) {
             log.debug(
@@ -98,38 +109,9 @@ public final class BaselineJavaVersions implements Plugin<Project> {
                     project.getDisplayName());
             return false;
         }
-        ImmutableList<String> jarPublications = publishing.getPublications().stream()
-                .filter(pub -> isLibraryPublication(project, pub))
-                .map(Named::getName)
-                .collect(ImmutableList.toImmutableList());
-        if (jarPublications.isEmpty()) {
-            log.debug(
-                    "Project '{}' is considered a distribution because it does not publish jars",
-                    project.getDisplayName());
-            return false;
-        }
-        log.debug(
-                "Project '{}' is considered a library because it publishes jars: {}",
-                project.getDisplayName(),
-                jarPublications);
-        return true;
-    }
 
-    private static boolean isLibraryPublication(Project project, Publication publication) {
-        if (publication instanceof MavenPublication) {
-            MavenPublication mavenPublication = (MavenPublication) publication;
-            return mavenPublication.getArtifacts().stream().anyMatch(artifact -> "jar".equals(artifact.getExtension()));
-        }
-        if (publication instanceof IvyPublication) {
-            IvyPublication ivyPublication = (IvyPublication) publication;
-            return ivyPublication.getArtifacts().stream().anyMatch(artifact -> "jar".equals(artifact.getExtension()));
-        }
-        // Default to true for unknown publication types to avoid setting higher jvm targets than necessary
-        log.warn(
-                "Unknown publication '{}' of type '{}'. Assuming project {} is a library",
-                publication,
-                publication.getClass().getName(),
-                project.getName());
+        // Better to be conservative with the java version rather than release something that is too high to be used.
+        log.debug("Project '{}' is considered a library as no other conditions matched", project.getDisplayName());
         return true;
     }
 }
