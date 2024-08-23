@@ -25,6 +25,7 @@ test {
     systemProperty 'projectVersion', project.version
 }
 
+tasks.test.dependsOn tasks.findByPath(':suppressible-error-prone:publishToMavenLocal')
 tasks.test.dependsOn tasks.findByPath(':suppressible-error-prone-annotations:publishToMavenLocal')
 
 tasks.withType(JavaCompile) {

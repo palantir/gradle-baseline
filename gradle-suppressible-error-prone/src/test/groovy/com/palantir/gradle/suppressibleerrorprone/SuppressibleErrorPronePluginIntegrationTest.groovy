@@ -28,6 +28,7 @@ class SuppressibleErrorPronePluginIntegrationTest extends IntegrationSpec {
             
             repositories {
                 mavenCentral()
+                mavenLocal()
             }
             
             dependencies {
@@ -76,7 +77,7 @@ class SuppressibleErrorPronePluginIntegrationTest extends IntegrationSpec {
     @Override
     ExecutionResult runTasks(String... tasks) {
         def projectVersion = Optional.ofNullable(System.getProperty('projectVersion')).orElseThrow()
-        String[] strings = tasks + ["-PbaselineErrorProneVersion=${projectVersion}".toString()]
+        String[] strings = tasks + ["-PsuppressibleErrorProneVersion=${projectVersion}".toString()]
         return super.runTasks(strings)
     }
 }

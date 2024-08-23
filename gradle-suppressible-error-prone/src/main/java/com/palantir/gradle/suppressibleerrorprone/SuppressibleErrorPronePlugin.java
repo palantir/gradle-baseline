@@ -47,12 +47,17 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
 
         setupTransform(project);
 
-        // TODO(callumr): Change this when separating out
-        String version = Optional.ofNullable((String) project.findProperty("baselineErrorProneVersion"))
+        String version = Optional.ofNullable((String) project.findProperty("suppressibleErrorProneVersion"))
                 .or(() -> Optional.ofNullable(
                         SuppressibleErrorPronePlugin.class.getPackage().getImplementationVersion()))
                 .orElseThrow(
                         () -> new RuntimeException("SuppressibleErrorPronePlugin implementation version not found"));
+
+        project.getConfigurations().named(ErrorPronePlugin.CONFIGURATION_NAME).configure(errorProneConfiguration -> {
+            errorProneConfiguration
+                    .getDependencies()
+                    .add(project.getDependencies().create("com.palantir.baseline:suppressible-error-prone:" + version));
+        });
 
         if (isStageTwo(project)) {
             project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
