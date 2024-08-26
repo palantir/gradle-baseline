@@ -27,6 +27,7 @@ _Baseline is a family of Gradle plugins for configuring Java projects with sensi
 | `com.palantir.baseline-immutables`             | Enables incremental compilation for the [Immutables](http://immutables.github.io/) annotation processor.
 | `com.palantir.baseline-java-versions`          | Configures JDK versions in a consistent way via Gradle Toolchains.
 | `com.palantir.baseline-prefer-project-modules` | Configures Gradle to prefer project modules over external modules on dependency resolution per default.
+| `com.palantir.baseline-dead-code`              | Runs the ProGuard optimizer to detect classes which appear unused (i.e. have no callers visible at compile time).
 
 See also the [Baseline Java Style Guide and Best Practices](./docs).
 
@@ -504,3 +505,23 @@ $ unzip -p /path/to/your-project-1.2.3.jar META-INF/MANIFEST.MF
 ```
 
 _Note, this plugin should be used with **caution** because preview features may change or be removed, which might make upgrading to a new Java version harder._
+
+## com.palantir.baseline-dead-code
+
+Codebases often accumulate 'dead code' over time. Dead code can slow down development by obscuring readability, or even just adding one extra caller to internal methods so that refactors take slightly longer. Error-prone and the StrictUnusedVariable check already ensure that classes do not contain unused codepaths (e.g. in private methods or fields), but these tools are not capable of detecting an entire public class which is never used.
+
+Luckily Android developers have built tooling to solve this problem in order to stay under Android's hard limit on the number of classes, as well as to minimize bytes downloaded when installing an app. The `baseline-dead-code` plugin relies on **ProGuard**, an "open-sourced Java class file shrinker, optimizer, obfuscator, and preverifier" maintained by [Guardsquare](https://www.guardsquare.com/manual/home).
+
+Relies on https://github.com/SgtSilvio/gradle-proguard.
+
+It is recommended to apply this plugin to the project which produces your final distribution _only_, for example:
+
+```diff
+ apply plugin: 'com.palantir.sls-java-service-distribution'
++apply plugin: 'com.palantir.baseline-dead-code`
+```
+
+It adds the following tasks:
+
+- **`./gradlew proguard`** - analyzes the `runtimeClasspath` configuration to find unused classes, outputting the pruned classes to $buildDir/proguard/out
+- **`./gradlew deadCode`** - saves the list of unused classes to the `baseline-dead-code.lock` file. This should be checked in, and will be verified (but not overwritten) on CI.

@@ -13,6 +13,8 @@ dependencies {
     implementation 'com.github.ben-manes.caffeine:caffeine'
     implementation 'com.google.guava:guava'
     implementation 'net.ltgt.gradle:gradle-errorprone-plugin'
+    // implementation 'com.github.sgtsilvio.gradle.proguard:com.github.sgtsilvio.gradle.proguard.gradle.plugin'
+    implementation 'com.github.sgtsilvio.gradle:gradle-proguard'
     implementation 'org.apache.maven.shared:maven-dependency-analyzer', {
         // Use maven-core rather than the legacy maven-project component
         exclude group: 'org.apache.maven', module: 'maven-project'
@@ -121,6 +123,11 @@ gradlePlugin {
             id = 'com.palantir.baseline-prefer-project-modules'
             displayName = 'Palantir Baseline Prefer Project Modules Plugin'
             implementationClass = 'com.palantir.baseline.plugins.BaselinePreferProjectModules'
+        }
+        baselineDeadCode {
+            id = 'com.palantir.baseline-dead-code'
+            displayName = 'Palantir Baseline Dead Code Plugin'
+            implementationClass = 'com.palantir.baseline.plugins.BaselineDeadCode'
         }
     }
 }
