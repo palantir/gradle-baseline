@@ -1320,6 +1320,7 @@ class IllegalSafeLoggingArgumentTest {
                         "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'DO_NOT_LOG' "
                                 + "but the parameter requires 'SAFE'.",
                         "    fun(Stream.concat(s, Stream.of(dnl)));",
+                        "    fun(s.count());",
                         "  }",
                         "  void fun(@Safe Object in) {}",
                         "}")
@@ -1654,6 +1655,23 @@ class IllegalSafeLoggingArgumentTest {
                         "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
                         "    fun(input);",
                         "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testMapInput() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.Map;",
+                        "class Test {",
+                        "  @DoNotLog static interface DoNotLogType {}",
+                        "  @Unsafe static interface UnsafeType {}",
+                        "  private static void fun(DoNotLogType key, UnsafeType value) {",
+                        "    handle(Map.of(key, value));",
+                        "  }",
+                        "  private static <T> void handle(Map<T, UnsafeType> input) {}",
                         "}")
                 .doTest();
     }
