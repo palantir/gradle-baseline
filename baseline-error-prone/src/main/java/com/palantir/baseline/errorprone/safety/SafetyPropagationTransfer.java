@@ -23,6 +23,7 @@ import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
+import com.google.common.collect.Multimaps;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.dataflow.AccessPath;
@@ -408,7 +409,16 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
             MethodMatchers.staticMethod().onClass(ImmutableMap.class.getName()).named("toImmutableMap"),
             MethodMatchers.staticMethod()
                     .onClass(ImmutableBiMap.class.getName())
-                    .named("toImmutableBiMap"));
+                    .named("toImmutableBiMap"),
+            MethodMatchers.staticMethod()
+                    .onClass(Multimaps.class.getName())
+                    .namedAnyOf("toMultimap", "flatteningToMultimap"),
+            MethodMatchers.staticMethod()
+                    .onClass(ImmutableListMultimap.class.getName())
+                    .namedAnyOf("toImmutableListMultimap", "flatteningToImmutableListMultimap"),
+            MethodMatchers.staticMethod()
+                    .onClass(ImmutableSetMultimap.class.getName())
+                    .namedAnyOf("toImmutableSetMultimap", "flatteningToImmutableSetMultimap"));
 
     private static final Matcher<ExpressionTree> COLLECT_INCLUDES_STREAM_SAFETY = Matchers.methodInvocation(
             MethodMatchers.instanceMethod()

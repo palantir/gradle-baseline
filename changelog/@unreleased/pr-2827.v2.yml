@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: Stream collectors for multimaps now properly propagate safety information
+    based on their key and value types.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2827
