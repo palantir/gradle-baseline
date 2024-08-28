@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: turn off "Insert imports for inner classes"
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2736
