@@ -232,15 +232,13 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             if (!unusedElements.containsKey(unusedSymbol)) {
                 isEverUsed.add(unusedSymbol);
             }
-            SuggestedFix makeFirstAssignmentDeclaration =
-                    makeAssignmentDeclaration(unusedSymbol, specs, allUsageSites, state);
+
             // Don't complain if this is a public method and we only overwrote it once.
             if (onlyCheckForReassignments.contains(unusedSymbol) && specs.size() <= 1) {
                 continue;
             }
             Tree unused = specs.iterator().next().variableTree().getLeaf();
             Symbol.VarSymbol symbol = (Symbol.VarSymbol) unusedSymbol;
-            ImmutableList<SuggestedFix> fixes;
             if (symbol.getKind() == ElementKind.PARAMETER && !isEverUsed.contains(unusedSymbol)) {
                 Symbol.MethodSymbol methodSymbol = (Symbol.MethodSymbol) symbol.owner;
                 int index;
@@ -253,28 +251,14 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                 // If we can not find the parameter in the owning method, then it must be a parameter to a lambda
                 // defined within the method
                 if (index == -1) {
-                    fixes = buildUnusedLambdaParameterFix(symbol, entry.getValue(), state);
+                    reportUnusedLambdaParameter(symbol, unused, specs, state);
                 } else {
-                    fixes = buildUnusedParameterFixes(symbol, methodSymbol, allUsageSites, state);
+                    reportUnusedParameter(symbol, methodSymbol, unused, allUsageSites, state);
                 }
             } else {
-                fixes = buildUnusedVarFixes(symbol, allUsageSites, state);
+                reportUnusedAssignment(symbol, unused, specs, allUsageSites, state);
+                reportUnusedVar(symbol, unused, allUsageSites, state);
             }
-            state.reportMatch(buildDescription(unused)
-                    .setMessage(String.format(
-                            "%s %s '%s' is never read. Intentional occurrences are acknowledged by renaming "
-                                    + "the unused variable with a leading underscore. '_%s', for example.",
-                            unused instanceof VariableTree ? "The" : "The assignment to this",
-                            describeVariable(symbol),
-                            symbol.name,
-                            symbol.name))
-                    .addAllFixes(fixes.stream()
-                            .map(f -> SuggestedFix.builder()
-                                    .merge(makeFirstAssignmentDeclaration)
-                                    .merge(f)
-                                    .build())
-                            .collect(toImmutableList()))
-                    .build());
         }
         return Description.NO_MATCH;
     }
@@ -359,32 +343,6 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
         stripUnusedPrefix(name).ifPresent(newName -> fix.replace(node, newName));
     }
 
-    private static SuggestedFix makeAssignmentDeclaration(
-            Symbol unusedSymbol,
-            Collection<UnusedSpec> specs,
-            ImmutableList<TreePath> allUsageSites,
-            VisitorState state) {
-        if (unusedSymbol.getKind() != ElementKind.LOCAL_VARIABLE) {
-            return SuggestedFix.builder().build();
-        }
-        Optional<VariableTree> removedVariableTree = allUsageSites.stream()
-                .filter(tp -> tp.getLeaf() instanceof VariableTree)
-                .findFirst()
-                .map(tp -> (VariableTree) tp.getLeaf());
-        Optional<AssignmentTree> reassignment = specs.stream()
-                .map(UnusedSpec::terminatingAssignment)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
-                .filter(a -> allUsageSites.stream().noneMatch(tp -> tp.getLeaf().equals(a)))
-                .findFirst();
-        if (!removedVariableTree.isPresent() || !reassignment.isPresent()) {
-            return SuggestedFix.builder().build();
-        }
-        return SuggestedFix.prefixWith(
-                reassignment.get(),
-                state.getSourceForNode(removedVariableTree.get().getType()) + " ");
-    }
-
     private static String describeVariable(Symbol.VarSymbol symbol) {
         switch (symbol.getKind()) {
             case FIELD:
@@ -454,12 +412,47 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
         return firstNonNull(path.getParentPath().getLeaf().accept(new Visitor(), null), false);
     }
 
-    private static ImmutableList<SuggestedFix> buildUnusedVarFixes(
-            Symbol varSymbol, List<TreePath> usagePaths, VisitorState state) {
+    private void reportUnusedAssignment(
+            Symbol.VarSymbol unusedSymbol,
+            Tree unused,
+            Collection<UnusedSpec> specs,
+            List<TreePath> allUsageSites,
+            VisitorState state) {
+        if (unusedSymbol.getKind() != ElementKind.LOCAL_VARIABLE) {
+            return;
+        }
+        Optional<VariableTree> removedVariableTree = allUsageSites.stream()
+                .filter(tp -> tp.getLeaf() instanceof VariableTree)
+                .findFirst()
+                .map(tp -> (VariableTree) tp.getLeaf());
+        Optional<AssignmentTree> reassignment = specs.stream()
+                .map(UnusedSpec::terminatingAssignment)
+                .filter(Optional::isPresent)
+                .map(Optional::get)
+                .filter(a -> allUsageSites.stream().noneMatch(tp -> tp.getLeaf().equals(a)))
+                .findFirst();
+        if (!removedVariableTree.isPresent() || !reassignment.isPresent()) {
+            return;
+        }
+
+        SuggestedFix fix = SuggestedFix.prefixWith(
+                reassignment.get(),
+                state.getSourceForNode(removedVariableTree.get().getType()) + " ");
+
+        state.reportMatch(buildDescription(unused)
+                .setMessage(String.format(
+                        "The assignment to the %s '%s' is never read.",
+                        describeVariable(unusedSymbol), unusedSymbol.name))
+                .addFix(fix)
+                .build());
+    }
+
+    private void reportUnusedVar(
+            Symbol.VarSymbol varSymbol, Tree unused, List<TreePath> usagePaths, VisitorState state) {
         // Don't suggest a fix for fields annotated @Inject: we can warn on them, but they *could* be
         // used outside the class.
         if (ASTHelpers.hasDirectAnnotationWithSimpleName(varSymbol, "Inject")) {
-            return ImmutableList.of();
+            return;
         }
         ElementKind varKind = varSymbol.getKind();
         SuggestedFix.Builder fix = SuggestedFix.builder().setShortDescription("remove unused variable");
@@ -523,12 +516,17 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             String replacement = needsBlock(usagePath) ? "{}" : "";
             fix.replace(statement, replacement);
         }
-        return ImmutableList.of(fix.build());
+
+        state.reportMatch(buildDescription(unused)
+                .setMessage(String.format("The %s '%s' is never read.", describeVariable(varSymbol), varSymbol.name))
+                .addFix(fix.build())
+                .build());
     }
 
-    private static ImmutableList<SuggestedFix> buildUnusedLambdaParameterFix(
-            Symbol.VarSymbol _symbol, Collection<UnusedSpec> values, VisitorState state) {
-        SuggestedFix.Builder fix = SuggestedFix.builder();
+    private void reportUnusedLambdaParameter(
+            Symbol.VarSymbol symbol, Tree unused, Collection<UnusedSpec> values, VisitorState state) {
+        SuggestedFix.Builder fix =
+                SuggestedFix.builder().setShortDescription("acknowledge intentionally unused lambda parameter");
 
         for (UnusedSpec unusedSpec : values) {
             Tree leaf = unusedSpec.variableTree().getLeaf();
@@ -546,11 +544,21 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             }
         }
 
-        return ImmutableList.of(fix.build());
+        state.reportMatch(buildDescription(unused)
+                .setMessage(String.format(
+                        "The lambda parameter '%s' is never read. Acknowledge an intentional occurrence by renaming"
+                                + " the unused parameter with a leading underscore, or remove the parameter.",
+                        symbol.name))
+                .addFix(fix.build())
+                .build());
     }
 
-    private static ImmutableList<SuggestedFix> buildUnusedParameterFixes(
-            Symbol varSymbol, Symbol.MethodSymbol methodSymbol, List<TreePath> usagePaths, VisitorState state) {
+    private void reportUnusedParameter(
+            Symbol.VarSymbol varSymbol,
+            Symbol.MethodSymbol methodSymbol,
+            Tree unused,
+            List<TreePath> usagePaths,
+            VisitorState state) {
         boolean isPrivateMethod = methodSymbol.getModifiers().contains(Modifier.PRIVATE);
         int index = methodSymbol.params.indexOf(varSymbol);
         Preconditions.checkState(index != -1, "symbol %s must be a parameter to the owning method", varSymbol);
@@ -562,6 +570,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
         // Remove parameter if the method is private since we can automatically fix all invocation sites
         // Otherwise add `_` prefix to the variable name
         if (isPrivateMethod) {
+            fix.setShortDescription("remove unused parameter");
             new TreePathScanner<Void, Void>() {
                 @Override
                 public Void visitMethodInvocation(MethodInvocationTree tree, Void unused) {
@@ -612,7 +621,13 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                     fix.replace(startPos, endPos, "");
                 }
             }.scan(state.getPath().getCompilationUnit(), null);
+
+            state.reportMatch(buildDescription(unused)
+                    .setMessage(String.format("The parameter '%s' is never read.", varSymbol.name))
+                    .addFix(fix.build())
+                    .build());
         } else {
+            fix.setShortDescription("acknowledge intentionally unused parameter");
             new TreePathScanner<Void, Void>() {
                 @Override
                 public Void visitMethod(MethodTree methodTree, Void unused) {
@@ -653,8 +668,15 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                     }
                 }
             }.scan(state.getPath().getCompilationUnit(), null);
+
+            state.reportMatch(buildDescription(unused)
+                    .setMessage(String.format(
+                            "The public method parameter '%s' is never read. Acknowledge an intentional occurrence by"
+                                + " renaming the unused variable with a leading underscore, or remove the parameter.",
+                            varSymbol.name))
+                    .addFix(fix.build())
+                    .build());
         }
-        return ImmutableList.of(fix.build());
     }
 
     private static boolean isEnhancedForLoopVar(TreePath variablePath) {

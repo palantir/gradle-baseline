@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: Provide more specific error message for `StrictUsedVariable` check
+    based on unused variable type
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2835
