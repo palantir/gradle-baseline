@@ -110,7 +110,7 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
             // Attempting to just transform the one error_prone_check_api jar
             ModuleDependency errorProneCheckApi =
                     (ModuleDependency) project.getDependencies().create("com.google.errorprone:error_prone_check_api");
-            errorProneCheckApi.getAttributes().attribute(suppressiblified, false);
+            errorProneCheckApi.attributes(attributeContainer -> attributeContainer.attribute(suppressiblified, false));
 
             errorProneConfiguration.getDependencies().add(errorProneCheckApi);
             errorProneConfiguration.getAttributes().attribute(suppressiblified, true);
