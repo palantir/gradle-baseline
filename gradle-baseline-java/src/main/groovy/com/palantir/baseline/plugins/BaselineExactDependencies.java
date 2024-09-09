@@ -150,7 +150,14 @@ public final class BaselineExactDependencies implements Plugin<Project> {
         // We therefore want to look at only the dependencies _directly_ declared in the implementation and compile
         // configurations (belonging to our source set)
         project.afterEvaluate(p -> {
-            Configuration implCopy = implementation.get().copy();
+            Configuration implConfig = implementation.get();
+            Configuration implCopy = implConfig.copy();
+
+            // Preserves the configuration role behavior from Gradle 7, Gradle 8 fails to
+            // preserve these values when copying a configuration
+            implCopy.setCanBeResolved(implConfig.isCanBeResolved());
+            implCopy.setCanBeConsumed(implConfig.isCanBeConsumed());
+
             // Without these, explicitCompile will successfully resolve 0 files and you'll waste 1 hour trying
             // to figure out why.
             project.getConfigurations().add(implCopy);
