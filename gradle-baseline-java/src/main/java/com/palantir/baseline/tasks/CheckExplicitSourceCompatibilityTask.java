@@ -19,7 +19,6 @@ package com.palantir.baseline.tasks;
 import com.palantir.baseline.plugins.javaversions.BaselineJavaVersion;
 import com.palantir.gradle.failurereports.exceptions.ExceptionWithSuggestion;
 import java.io.IOException;
-import java.lang.reflect.Method;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
@@ -29,7 +28,6 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Task;
 import org.gradle.api.model.ObjectFactory;
-import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Property;
 import org.gradle.api.publish.PublishingExtension;
@@ -38,7 +36,6 @@ import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.options.Option;
 import org.gradle.jvm.toolchain.JavaToolchainSpec;
-import org.gradle.util.GradleVersion;
 
 /**
  * By default, Gradle will infer sourceCompat based on whatever JVM is currently being used to evaluate the
@@ -68,12 +65,6 @@ public class CheckExplicitSourceCompatibilityTask extends DefaultTask {
         onlyIf(new Spec<Task>() {
             @Override
             public boolean isSatisfiedBy(Task element) {
-                if (GradleVersion.current().compareTo(GradleVersion.version("6.7")) < 0) {
-                    // We're cheekily using this 'getRawSourceCompatibility' method which was only added in Gradle 6.7
-                    // https://github.com/gradle/gradle/commit/8e55abb151e7d933c8348b32b6163fb535254a08.
-                    return false;
-                }
-
                 // sometimes people apply the 'java' plugin to projects that doesn't actually have any java code in it
                 // (e.g. the root project), so if they're not publishing anything, then we don't bother enforcing the
                 // sourceCompat thing. Also they might apply the publishing plugin just to get the 'publish' task.
@@ -145,26 +136,6 @@ public class CheckExplicitSourceCompatibilityTask extends DefaultTask {
     }
 
     private JavaVersion getRawSourceCompat() {
-        // TODO(fwindheuser): Remove internal api usage. Maybe through adopting toolchains?
-        // We're doing this naughty casting because we need access to the `getRawSourceCompatibility` method.
-        if (GradleVersion.current().compareTo(GradleVersion.version("7.0")) < 0) {
-            org.gradle.api.plugins.internal.DefaultJavaPluginConvention convention =
-                    (org.gradle.api.plugins.internal.DefaultJavaPluginConvention)
-                            getProject().getConvention().getPlugin(JavaPluginConvention.class);
-
-            try {
-                Method getRawSourceCompatibility =
-                        org.gradle.api.plugins.internal.DefaultJavaPluginConvention.class.getMethod(
-                                "getRawSourceCompatibility");
-                return (JavaVersion) getRawSourceCompatibility.invoke(convention);
-            } catch (Exception e) {
-                throw new RuntimeException(
-                        "Error calling DefaultJavaPluginConvention#getRawSourceCompatibility for "
-                                + GradleVersion.current(),
-                        e);
-            }
-        }
-
         org.gradle.api.plugins.internal.DefaultJavaPluginExtension extension =
                 (org.gradle.api.plugins.internal.DefaultJavaPluginExtension)
                         getProject().getExtensions().getByType(JavaPluginExtension.class);

@@ -23,7 +23,7 @@ import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
 import org.gradle.api.Project;
-import org.gradle.api.plugins.JavaPluginConvention;
+import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.plugins.quality.CheckstyleExtension;
 import org.gradle.api.plugins.quality.CheckstylePlugin;
 import org.gradle.api.tasks.javadoc.Javadoc;
@@ -46,7 +46,7 @@ public final class BaselineCheckstyle extends AbstractBaselinePlugin {
 
         // Configure checkstyle
         project.getPluginManager().withPlugin("java", plugin -> {
-            JavaPluginConvention javaConvention = project.getConvention().getPlugin(JavaPluginConvention.class);
+            JavaPluginExtension javaConvention = project.getExtensions().getByType(JavaPluginExtension.class);
             // We use the "JavadocMethod" module in our Checkstyle configuration, making
             // Java 8+ new doclint compiler feature redundant.
             if (javaConvention.getSourceCompatibility().isJava8Compatible()) {

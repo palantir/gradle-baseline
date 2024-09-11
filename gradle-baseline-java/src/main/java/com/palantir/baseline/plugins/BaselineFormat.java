@@ -36,7 +36,7 @@ import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.plugins.JavaBasePlugin;
-import org.gradle.api.plugins.JavaPluginConvention;
+import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.language.base.plugins.LifecycleBasePlugin;
@@ -185,8 +185,8 @@ class BaselineFormat extends AbstractBaselinePlugin {
         spotlessExtension.java(java -> {
             // Configure a lazy FileCollection then pass it as the target
             ConfigurableFileCollection allJavaFiles = project.files();
-            project.getConvention()
-                    .getPlugin(JavaPluginConvention.class)
+            project.getExtensions()
+                    .getByType(JavaPluginExtension.class)
                     .getSourceSets()
                     .all(sourceSet -> allJavaFiles.from(sourceSet.getAllJava().filter(file -> !file.toString()
                             .contains(GENERATED_MARKER))));

@@ -51,7 +51,7 @@ import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.attributes.LibraryElements;
 import org.gradle.api.attributes.Usage;
-import org.gradle.api.plugins.JavaPluginConvention;
+import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.util.GUtil;
@@ -75,8 +75,8 @@ public final class BaselineExactDependencies implements Plugin<Project> {
             TaskProvider<CheckImplicitDependenciesParentTask> checkImplicitDependencies =
                     project.getTasks().register("checkImplicitDependencies", CheckImplicitDependenciesParentTask.class);
 
-            project.getConvention()
-                    .getPlugin(JavaPluginConvention.class)
+            project.getExtensions()
+                    .getByType(JavaPluginExtension.class)
                     .getSourceSets()
                     .configureEach(sourceSet ->
                             configureSourceSet(project, sourceSet, checkUnusedDependencies, checkImplicitDependencies));
