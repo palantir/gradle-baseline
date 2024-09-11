@@ -20,11 +20,9 @@ import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
 import groovy.util.Node;
 import groovy.xml.QName;
-import org.codehaus.groovy.runtime.InvokerHelper;
 import org.gradle.api.Project;
-import org.gradle.api.plugins.Convention;
 import org.gradle.api.plugins.JavaPluginExtension;
-import org.gradle.api.tasks.ScalaSourceSet;
+import org.gradle.api.tasks.ScalaSourceDirectorySet;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.scala.ScalaCompile;
 import org.gradle.plugins.ide.idea.model.IdeaModel;
@@ -54,11 +52,10 @@ public final class BaselineScala extends AbstractBaselinePlugin {
     }
 
     private void configureIdeaPlugin(IdeaModel ideaModel, SourceSet mainSourceSet) {
-        Convention scalaConvention = (Convention) InvokerHelper.getProperty(mainSourceSet, "convention");
-        ScalaSourceSet scalaSourceSet = scalaConvention.getByType(ScalaSourceSet.class);
+        ScalaSourceDirectorySet scalaSourceDirSet =
+                mainSourceSet.getExtensions().getByType(ScalaSourceDirectorySet.class);
         // If scala source directory doesn't contain java files use "JavaThenScala" compilation mode
-        String compilerMode = scalaSourceSet
-                        .getScala()
+        String compilerMode = scalaSourceDirSet
                         .filter(file -> file.getName().endsWith("java"))
                         .isEmpty()
                 ? "JavaThenScala"
