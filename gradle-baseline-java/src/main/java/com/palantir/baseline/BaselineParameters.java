@@ -14,10 +14,12 @@
  * limitations under the License.
  */
 
-package com.palantir.baseline
+package com.palantir.baseline;
 
-class BaselineParameters {
+public final class BaselineParameters {
 
     /** The directory relative to the project's rootDir in which Baseline configuration is stored. */
-    static final DEFAULT_CONFIG_DIR = ".baseline"
+    public static final String DEFAULT_CONFIG_DIR = ".baseline";
+
+    private BaselineParameters() {}
 }

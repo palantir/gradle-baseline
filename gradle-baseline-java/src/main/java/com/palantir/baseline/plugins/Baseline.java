@@ -46,8 +46,9 @@ public final class Baseline implements Plugin<Project> {
         rootProject.allprojects(proj -> {
             proj.getPluginManager().apply(BaselineCheckstyle.class);
             proj.getPluginManager().apply(BaselineScala.class);
-            proj.getPluginManager().apply(BaselineEclipse.class);
-            proj.getPluginManager().apply(BaselineIdea.class);
+            // these are groovy-based classes so java has trouble with cross compiler
+            proj.getPluginManager().apply("com.palantir.baseline-eclipse");
+            proj.getPluginManager().apply("com.palantir.baseline-idea");
             proj.getPluginManager().apply(BaselineErrorProne.class);
             proj.getPluginManager().apply(BaselineFormat.class);
             proj.getPluginManager().apply(BaselineEncoding.class);
