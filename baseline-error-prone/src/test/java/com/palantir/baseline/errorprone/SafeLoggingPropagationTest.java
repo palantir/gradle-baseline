@@ -1052,6 +1052,28 @@ class SafeLoggingPropagationTest {
     }
 
     @Test
+    void testAddsAnnotation_sealedTypes() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  sealed interface Base permits Dnl {}",
+                        "  @DoNotLog",
+                        "  final class Dnl implements Base {}",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  @DoNotLog",
+                        "  sealed interface Base permits Dnl {}",
+                        "  @DoNotLog",
+                        "  final class Dnl implements Base {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     void testSafetyAnnotatedArrayTypeDoesNotAnnotateMethod() {
         fix().addInputLines(
                         "Test.java",
@@ -1062,6 +1084,46 @@ class SafeLoggingPropagationTest {
                         "  public UnsafeType[] getType() { return new UnsafeType[]{ new UnsafeType() }; }",
                         "}")
                 .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void testAddsAnnotation_jacksonSubTypes_defaultImpl() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.fasterxml.jackson.annotation.*;",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  @JsonTypeInfo(",
+                        "    use = JsonTypeInfo.Id.NAME,",
+                        "    property = \"type\",",
+                        "    defaultImpl = Dnl.class)",
+                        "  @JsonSubTypes(value = {",
+                        "    @JsonSubTypes.Type(value = Unmarked.class, name = \"u\")",
+                        "  })",
+                        "  interface Base {}",
+                        "  @DoNotLog",
+                        "  class Dnl implements Base {}",
+                        "  class Unmarked implements Base {}",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.fasterxml.jackson.annotation.*;",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  @DoNotLog",
+                        "  @JsonTypeInfo(",
+                        "    use = JsonTypeInfo.Id.NAME,",
+                        "    property = \"type\",",
+                        "    defaultImpl = Dnl.class)",
+                        "  @JsonSubTypes(value = {",
+                        "    @JsonSubTypes.Type(value = Unmarked.class, name = \"u\")",
+                        "  })",
+                        "  interface Base {}",
+                        "  @DoNotLog",
+                        "  class Dnl implements Base {}",
+                        "  class Unmarked implements Base {}",
+                        "}")
                 .doTest();
     }
 
@@ -1077,6 +1139,78 @@ class SafeLoggingPropagationTest {
                         "  public List<UnsafeType> getType() { return new ArrayList<UnsafeType>(); }",
                         "}")
                 .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void testAddsAnnotation_jacksonSubTypes_subtypes_array() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.fasterxml.jackson.annotation.*;",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  @JsonTypeInfo(",
+                        "    use = JsonTypeInfo.Id.NAME,",
+                        "    property = \"type\")",
+                        "  @JsonSubTypes(value = {",
+                        "    @JsonSubTypes.Type(value = Dnl.class, name = \"dnl\")",
+                        "  })",
+                        "  interface Base {}",
+                        "  @DoNotLog",
+                        "  class Dnl implements Base {}",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.fasterxml.jackson.annotation.*;",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  @DoNotLog",
+                        "  @JsonTypeInfo(",
+                        "    use = JsonTypeInfo.Id.NAME,",
+                        "    property = \"type\")",
+                        "  @JsonSubTypes(value = {",
+                        "    @JsonSubTypes.Type(value = Dnl.class, name = \"dnl\")",
+                        "  })",
+                        "  interface Base {}",
+                        "  @DoNotLog",
+                        "  class Dnl implements Base {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testAddsAnnotation_jacksonSubTypes_subtypes_implicitArray() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.fasterxml.jackson.annotation.*;",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  @JsonTypeInfo(",
+                        "    use = JsonTypeInfo.Id.NAME,",
+                        "    property = \"type\")",
+                        "  @JsonSubTypes(",
+                        "    @JsonSubTypes.Type(value = Dnl.class, name = \"dnl\")",
+                        "  )",
+                        "  interface Base {}",
+                        "  @DoNotLog",
+                        "  class Dnl implements Base {}",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.fasterxml.jackson.annotation.*;",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  @DoNotLog",
+                        "  @JsonTypeInfo(",
+                        "    use = JsonTypeInfo.Id.NAME,",
+                        "    property = \"type\")",
+                        "  @JsonSubTypes(",
+                        "    @JsonSubTypes.Type(value = Dnl.class, name = \"dnl\")",
+                        "  )",
+                        "  interface Base {}",
+                        "  @DoNotLog",
+                        "  class Dnl implements Base {}",
+                        "}")
                 .doTest();
     }
 
