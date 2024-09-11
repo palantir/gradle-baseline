@@ -29,7 +29,7 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Task;
 import org.gradle.api.model.ObjectFactory;
-import org.gradle.api.plugins.JavaPluginConvention;
+import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Property;
 import org.gradle.api.publish.PublishingExtension;
@@ -150,7 +150,7 @@ public class CheckExplicitSourceCompatibilityTask extends DefaultTask {
         if (GradleVersion.current().compareTo(GradleVersion.version("7.0")) < 0) {
             org.gradle.api.plugins.internal.DefaultJavaPluginConvention convention =
                     (org.gradle.api.plugins.internal.DefaultJavaPluginConvention)
-                            getProject().getConvention().getPlugin(JavaPluginConvention.class);
+                            getProject().getExtensions().getByType(JavaPluginExtension.class);
 
             try {
                 Method getRawSourceCompatibility =

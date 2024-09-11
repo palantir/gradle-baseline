@@ -32,7 +32,7 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.result.ResolvedComponentResult;
-import org.gradle.api.plugins.JavaPluginConvention;
+import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.SourceSet;
@@ -71,7 +71,7 @@ public class CheckJUnitDependencies extends DefaultTask {
     }
 
     private Stream<SourceSet> getProbablyTestSourceSets() {
-        return getProject().getConvention().getPlugin(JavaPluginConvention.class).getSourceSets().stream()
+        return getProject().getExtensions().getByType(JavaPluginExtension.class).getSourceSets().stream()
                 .filter(ss -> !ss.getName().equals(SourceSet.MAIN_SOURCE_SET_NAME));
     }
 
