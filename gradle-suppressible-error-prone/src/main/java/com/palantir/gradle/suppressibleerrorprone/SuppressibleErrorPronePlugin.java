@@ -114,6 +114,7 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
         project.getDependencies().registerTransform(Suppressiblify.class, spec -> {
             spec.getParameters().getCacheBust().set(UUID.randomUUID().toString());
             spec.getParameters().getSuppressionStage1().set(isStageOne(project));
+
             Attribute<String> artifactType = Attribute.of("artifactType", String.class);
             spec.getFrom().attribute(suppressiblified, false).attribute(artifactType, "jar");
             spec.getTo().attribute(suppressiblified, true).attribute(artifactType, "jar");

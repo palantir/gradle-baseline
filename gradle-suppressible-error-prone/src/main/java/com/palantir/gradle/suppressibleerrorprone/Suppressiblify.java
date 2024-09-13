@@ -54,16 +54,12 @@ public abstract class Suppressiblify implements TransformAction<SParams> {
         outputs.file(getInputArtifact());
     }
 
-    interface ClassTransformer2 {
-        Optional<byte[]> transformClass(String classJarPath, InputStream inputStream);
-    }
-
     private void suppressCheckApi(File output) {
         visitJar(output, (classJarPath, inputStream) -> classVisitorFor(classJarPath)
-                .map(visitorFactory -> {
+                .map(classVisitorFactory -> {
                     ClassReader classReader = newClassReader(inputStream);
                     ClassWriter classWriter = new ClassWriter(classReader, 0);
-                    ClassVisitor classVisitor = visitorFactory.apply(classWriter);
+                    ClassVisitor classVisitor = classVisitorFactory.apply(classWriter);
 
                     classReader.accept(classVisitor, 0);
                     return classWriter.toByteArray();
@@ -83,7 +79,11 @@ public abstract class Suppressiblify implements TransformAction<SParams> {
         return Optional.empty();
     }
 
-    private void visitJar(File output, ClassTransformer2 classTransformer) {
+    private interface ClassTransformer {
+        Optional<byte[]> transformClass(String classJarPath, InputStream inputStream);
+    }
+
+    private void visitJar(File output, ClassTransformer classTransformer) {
         try (ZipOutputStream zipOutputStream =
                         new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(output)));
                 JarFile jarFile = new JarFile(getInputArtifact().get().getAsFile())) {

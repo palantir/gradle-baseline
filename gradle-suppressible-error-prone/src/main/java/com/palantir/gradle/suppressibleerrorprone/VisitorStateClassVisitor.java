@@ -31,15 +31,15 @@ final class VisitorStateClassVisitor extends ClassVisitor {
         MethodVisitor methodVisitor = super.visitMethod(access, name, descriptor, signature, exceptions);
 
         if (name.equals("reportMatch")) {
-            return new ReportMatchMethodVisitor(Opcodes.ASM9, methodVisitor);
+            return new ReportMatchMethodVisitor(methodVisitor);
         }
 
         return methodVisitor;
     }
 
-    static final class ReportMatchMethodVisitor extends MethodVisitor {
-        ReportMatchMethodVisitor(int api, MethodVisitor methodVisitor) {
-            super(api, methodVisitor);
+    private static final class ReportMatchMethodVisitor extends MethodVisitor {
+        ReportMatchMethodVisitor(MethodVisitor methodVisitor) {
+            super(Opcodes.ASM9, methodVisitor);
         }
 
         @Override

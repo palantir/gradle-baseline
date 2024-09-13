@@ -21,16 +21,11 @@ import com.google.errorprone.BugCheckerInfo;
 import java.lang.reflect.Field;
 
 public final class BugCheckerInfoModifications {
-    public static ImmutableSet<String> addAutomaticallyAddedPrefix(
-            ImmutableSet<String> allNames, String canonicalName) {
-        return ImmutableSet.<String>builder()
-                .addAll(allNames)
-                .add(SuppressibleBugChecker.AUTOMATICALLY_ADDED_PREFIX + canonicalName)
-                .build();
-    }
-
     public static void addAutomaticallyAddedPrefix(BugCheckerInfo bugCheckerInfo) {
         try {
+            // Preferring to use reflection to reduce bytecode editing (even though bytecode editing may result
+            // in a "cleaner" result) as if the field name changes, the error should be much clearer here than if
+            // the bytecode version goes wrong.
             Field allNamesField = BugCheckerInfo.class.getDeclaredField("allNames");
             allNamesField.setAccessible(true);
             ImmutableSet<String> currentAllNames = (ImmutableSet<String>) allNamesField.get(bugCheckerInfo);

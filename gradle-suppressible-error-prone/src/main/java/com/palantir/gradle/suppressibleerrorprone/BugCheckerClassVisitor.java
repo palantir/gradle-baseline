@@ -31,7 +31,7 @@ final class BugCheckerClassVisitor extends ClassVisitor {
         MethodVisitor methodVisitor = super.visitMethod(access, name, descriptor, signature, exceptions);
 
         if ("<init>".equals(name)) {
-            return new AllNamesModifier(Opcodes.ASM9, methodVisitor);
+            return new AllNamesModifier(methodVisitor);
         }
 
         return methodVisitor;
@@ -40,8 +40,8 @@ final class BugCheckerClassVisitor extends ClassVisitor {
     private static final class AllNamesModifier extends MethodVisitor {
         private boolean callsThisConstructor = false;
 
-        AllNamesModifier(int api, MethodVisitor methodVisitor) {
-            super(api, methodVisitor);
+        AllNamesModifier(MethodVisitor methodVisitor) {
+            super(Opcodes.ASM9, methodVisitor);
         }
 
         @Override
@@ -68,11 +68,6 @@ final class BugCheckerClassVisitor extends ClassVisitor {
                         false);
             }
             super.visitInsn(opcode);
-        }
-
-        @Override
-        public void visitFieldInsn(int opcode, String owner, String name, String descriptor) {
-            super.visitFieldInsn(opcode, owner, name, descriptor);
         }
     }
 }
