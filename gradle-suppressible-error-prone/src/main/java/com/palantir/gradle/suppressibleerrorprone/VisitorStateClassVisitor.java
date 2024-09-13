@@ -21,8 +21,8 @@ import org.objectweb.asm.MethodVisitor;
 import org.objectweb.asm.Opcodes;
 
 final class VisitorStateClassVisitor extends ClassVisitor {
-    VisitorStateClassVisitor(int api, ClassVisitor classVisitor) {
-        super(api, classVisitor);
+    VisitorStateClassVisitor(ClassVisitor classVisitor) {
+        super(Opcodes.ASM9, classVisitor);
     }
 
     @Override
