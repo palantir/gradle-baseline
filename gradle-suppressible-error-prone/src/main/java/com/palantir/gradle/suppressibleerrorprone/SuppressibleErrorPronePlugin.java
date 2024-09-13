@@ -23,7 +23,6 @@ import net.ltgt.gradle.errorprone.ErrorProneOptions;
 import net.ltgt.gradle.errorprone.ErrorPronePlugin;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.ModuleDependency;
 import org.gradle.api.attributes.Attribute;
 import org.gradle.api.plugins.ExtensionAware;
 import org.gradle.api.tasks.SourceSetContainer;
@@ -99,25 +98,22 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
                 Attribute.of("com.palantir.baseline.errorprone.suppressiblified", Boolean.class);
         project.getDependencies().getAttributesSchema().attribute(suppressiblified);
 
-        // The old way the transforms all the jars
-        //        project.getDependencies()
-        //                .getArtifactTypes()
-        //                .getByName("jar")
-        //                .getAttributes()
-        //                .attribute(suppressiblified, false);
+        project.getDependencies()
+                .getArtifactTypes()
+                .getByName("jar")
+                .getAttributes()
+                .attribute(suppressiblified, false);
 
         project.getConfigurations().named("annotationProcessor").configure(errorProneConfiguration -> {
-            // Attempting to just transform the one error_prone_check_api jar
-            ModuleDependency errorProneCheckApi =
-                    (ModuleDependency) project.getDependencies().create("com.google.errorprone:error_prone_check_api");
-            errorProneCheckApi.attributes(attributeContainer -> attributeContainer.attribute(suppressiblified, false));
-
-            errorProneConfiguration.getDependencies().add(errorProneCheckApi);
+            errorProneConfiguration
+                    .getDependencies()
+                    .add(project.getDependencies().create("com.google.errorprone:error_prone_check_api"));
             errorProneConfiguration.getAttributes().attribute(suppressiblified, true);
         });
 
         project.getDependencies().registerTransform(Suppressiblify.class, spec -> {
             spec.getParameters().getCacheBust().set(UUID.randomUUID().toString());
+            spec.getParameters().getSuppressionStage1().set(isStageOne(project));
             Attribute<String> artifactType = Attribute.of("artifactType", String.class);
             spec.getFrom().attribute(suppressiblified, false).attribute(artifactType, "jar");
             spec.getTo().attribute(suppressiblified, true).attribute(artifactType, "jar");

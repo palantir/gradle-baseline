@@ -22,8 +22,8 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.nio.file.Files;
-import java.util.jar.JarEntry;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.jar.JarFile;
 import java.util.zip.ZipOutputStream;
 import org.gradle.api.artifacts.transform.InputArtifact;
@@ -44,53 +44,59 @@ public abstract class Suppressiblify implements TransformAction<SParams> {
 
     @Override
     public final void transform(TransformOutputs outputs) {
-        File output = outputs.file(getInputArtifact().get().getAsFile().getName());
+        String inputName = getInputArtifact().get().getAsFile().getName();
 
-        ClassFileVisitor hasBugChecker = (jarEntry, classReader) -> {
-            return !SuppressifyingClassVisitor.BUG_CHECKER.equals(classReader.getSuperName());
-        };
+        if (inputName.startsWith("error_prone_check_api")) {
+            if (getParameters().getSuppressionStage1().get()) {
+                suppressCheckApi(outputs.file("error_prone_check_api_suppressible_error_prone_modified.jar"));
+                return;
+            }
+        }
 
-        if (visitClassFiles(hasBugChecker)) {
+        outputs.file(getInputArtifact());
+    }
+
+    private void suppressCheckApi(File output) {
+
+        Function<InputStream, byte[]> classTransformer = inputStream -> {
             try {
-                Files.copy(getInputArtifact().get().getAsFile().toPath(), output.toPath());
+                ClassReader classReader = new ClassReader(inputStream);
+                ClassWriter classWriter = new ClassWriter(classReader, 0);
+                VisitorStateClassVisitor visitorStateClassVisitor =
+                        new VisitorStateClassVisitor(Opcodes.ASM9, classWriter);
+                classReader.accept(visitorStateClassVisitor, 0);
+                return classWriter.toByteArray();
             } catch (IOException e) {
                 throw new RuntimeException(e);
             }
-            return;
-        }
+        };
 
+        visitJar(output, className -> className.equals("com/google/errorprone/VisitorState.class"), classTransformer);
+    }
+
+    private void visitJar(
+            File output, Predicate<String> shouldChangeClass, Function<InputStream, byte[]> classTransformer) {
         try (ZipOutputStream zipOutputStream =
-                new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(output)))) {
-            visitClassFiles(new ClassFileVisitor() {
-                @Override
-                public boolean continueAfterReading(JarEntry jarEntry, ClassReader classReader) {
-                    ClassWriter classWriter = new ClassWriter(classReader, 0);
-                    SuppressifyingClassVisitor suppressifyingClassVisitor =
-                            new SuppressifyingClassVisitor(Opcodes.ASM9, classWriter);
-                    classReader.accept(suppressifyingClassVisitor, 0);
-                    byte[] newClassBytes = classWriter.toByteArray();
+                        new ZipOutputStream(new BufferedOutputStream(new FileOutputStream(output)));
+                JarFile jarFile = new JarFile(getInputArtifact().get().getAsFile())) {
+            jarFile.stream().forEach(jarEntry -> {
+                try {
+                    if (jarEntry.getName().endsWith(".class") && shouldChangeClass.test(jarEntry.getName())) {
 
-                    jarEntry.setSize(newClassBytes.length);
-                    jarEntry.setCompressedSize(-1);
-                    try {
+                        byte[] newClassBytes = classTransformer.apply(jarFile.getInputStream(jarEntry));
+
+                        jarEntry.setSize(newClassBytes.length);
+                        jarEntry.setCompressedSize(-1);
                         zipOutputStream.putNextEntry(jarEntry);
                         zipOutputStream.write(newClassBytes);
                         zipOutputStream.closeEntry();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
-                    }
-                    return true;
-                }
-
-                @Override
-                public void visitNonClassFile(JarEntry jarEntry, InputStream inputStream) {
-                    try {
+                    } else {
                         zipOutputStream.putNextEntry(jarEntry);
-                        inputStream.transferTo(zipOutputStream);
+                        jarFile.getInputStream(jarEntry).transferTo(zipOutputStream);
                         zipOutputStream.closeEntry();
-                    } catch (IOException e) {
-                        throw new RuntimeException(e);
                     }
+                } catch (IOException e) {
+                    throw new RuntimeException(e);
                 }
             });
         } catch (IOException e) {
@@ -98,38 +104,16 @@ public abstract class Suppressiblify implements TransformAction<SParams> {
         }
     }
 
-    interface ClassFileVisitor {
-        default void visitNonClassFile(JarEntry jarEntry, InputStream inputStream) {}
-
-        boolean continueAfterReading(JarEntry jarEntry, ClassReader classReader);
-    }
-
-    private boolean visitClassFiles(ClassFileVisitor classFileVisitor) {
-        try (JarFile jarFile = new JarFile(getInputArtifact().get().getAsFile())) {
-            long totalEntriesVisited = jarFile.stream()
-                    .takeWhile(jarEntry -> {
-                        try {
-                            if (!jarEntry.getName().endsWith(".class")) {
-                                classFileVisitor.visitNonClassFile(jarEntry, jarFile.getInputStream(jarEntry));
-                                return true;
-                            }
-
-                            ClassReader classReader = new ClassReader(jarFile.getInputStream(jarEntry));
-                            return classFileVisitor.continueAfterReading(jarEntry, classReader);
-                        } catch (IOException e) {
-                            throw new RuntimeException(e);
-                        }
-                    })
-                    .count();
-
-            return totalEntriesVisited == jarFile.size();
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
+    public enum SuppressionStage {
+        STAGE1,
+        STAGE2
     }
 
     public abstract static class SParams implements TransformParameters {
         @Input
         public abstract Property<String> getCacheBust();
+
+        @Input
+        public abstract Property<Boolean> getSuppressionStage1();
     }
 }
