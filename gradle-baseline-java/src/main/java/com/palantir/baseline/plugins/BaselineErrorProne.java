@@ -114,6 +114,18 @@ public final class BaselineErrorProne implements Plugin<Project> {
                         errorProneOptions.disable("Slf4jLogsafeArgs");
                     }));
         });
+
+        project.getPluginManager().withPlugin("org.jetbrains.intellij", appliedPlugin -> {
+            project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> ((ExtensionAware)
+                            javaCompile.getOptions())
+                    .getExtensions()
+                    .configure(ErrorProneOptions.class, errorProneOptions -> {
+                        errorProneOptions.disable("PreferSafeLogger");
+                        errorProneOptions.disable("PreferSafeLoggableExceptions");
+                        errorProneOptions.disable("PreferSafeLoggingPreconditions");
+                        errorProneOptions.disable("StrictUnusedVariable");
+                    }));
+        });
     }
 
     @SuppressWarnings("UnstableApiUsage")
