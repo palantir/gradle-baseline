@@ -19,6 +19,7 @@ dependencies {
     }
     runtimeOnly 'org.apache.maven:maven-core'
 
+    implementation 'one.util:streamex'
     implementation 'commons-lang:commons-lang'
     implementation 'com.palantir.javaformat:palantir-java-format-spi'
     // Add an explicit dependency to ensure consumers can use JDK14 source compat

@@ -163,6 +163,37 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         task << ['checkUnusedDependencies', 'checkImplicitDependencies']
     }
 
+    def 'checkUnusedDependencies is successful for multi-source project dep'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << """
+        dependencies {
+            implementation project(':needs-building-first')
+        }
+        """
+
+        multiProject.addSubproject('needs-building-first', """
+            apply plugin: 'java-library'
+            apply plugin: 'scala'
+        """.stripIndent())
+
+        file('needs-building-first/src/main/java/pkg/Bar.java') << """
+            package pkg;
+            public class Bar {}
+        """.stripIndent()
+        file('src/main/java/pkg/Foo.java') << """
+            package pkg;
+            class Foo {
+                // Just reference something from the other project
+                void test() { new Bar(); }
+            }
+        """.stripIndent()
+
+        then:
+        def result = with("checkUnusedDependencies", '--stacktrace').build()
+        result.task(':checkUnusedDependenciesMain').getOutcome() == TaskOutcome.SUCCESS
+    }
+
     def 'checkUnusedDependenciesTest passes if main source set is not referenced in test'() {
         when:
         buildFile << standardBuildFile
