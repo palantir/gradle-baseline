@@ -77,7 +77,7 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
 
         excludeSourceOnlyDependencies();
 
-        Set<String> necessaryArtifactDeclaration = Streams.stream(
+        Set<String> necessaryArtifactsDeclaration = Streams.stream(
                         sourceClasses.get().iterator())
                 .flatMap(BaselineExactDependencies::referencedClasses)
                 .flatMap(BaselineExactDependencies.INDEXES::classToArtifacts)
@@ -86,7 +86,7 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
 
         Set<ResolvedArtifact> possiblyUnused = StreamEx.of(declaredArtifacts)
                 .remove(declaredArtifact ->
-                        necessaryArtifactDeclaration.contains(BaselineExactDependencies.asString(declaredArtifact)))
+                        necessaryArtifactsDeclaration.contains(BaselineExactDependencies.asString(declaredArtifact)))
                 .collect(Collectors.toSet());
         getLogger()
                 .debug(
