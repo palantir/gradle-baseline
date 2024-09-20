@@ -25,6 +25,7 @@ id 'org.inferred.processors' version '3.7.0'
 
 apply plugin: 'com.palantir.external-publish'
 apply plugin: 'com.palantir.failure-reports'
+apply plugin: 'com.palantir.jdks'
 apply plugin: 'com.palantir.consistent-versions'
 apply plugin: 'com.palantir.baseline'
 apply plugin: 'com.palantir.baseline-java-versions'
@@ -68,4 +69,8 @@ allprojects {
 javaVersions {
     libraryTarget = 11
     runtime = 11
+}
+
+jdks {
+    daemonTarget = 17
 }
