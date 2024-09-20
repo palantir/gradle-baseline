@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
-import one.util.streamex.StreamEx;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ResolvedArtifact;
@@ -84,9 +83,9 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
                 .map(BaselineExactDependencies::asString)
                 .collect(Collectors.toSet());
 
-        Set<ResolvedArtifact> possiblyUnused = StreamEx.of(declaredArtifacts)
-                .remove(declaredArtifact ->
-                        necessaryArtifactsDeclaration.contains(BaselineExactDependencies.asString(declaredArtifact)))
+        Set<ResolvedArtifact> possiblyUnused = declaredArtifacts.stream()
+                .filter(artifact ->
+                        !necessaryArtifactsDeclaration.contains(BaselineExactDependencies.asString(artifact)))
                 .collect(Collectors.toSet());
         getLogger()
                 .debug(
