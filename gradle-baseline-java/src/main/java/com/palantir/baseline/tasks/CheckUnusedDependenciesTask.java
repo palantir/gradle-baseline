@@ -17,7 +17,6 @@
 package com.palantir.baseline.tasks;
 
 import com.google.common.base.Preconditions;
-import com.google.common.collect.Sets;
 import com.google.common.collect.Streams;
 import com.palantir.baseline.plugins.BaselineExactDependencies;
 import com.palantir.gradle.failurereports.exceptions.ExceptionWithSuggestion;
@@ -77,13 +76,17 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
 
         excludeSourceOnlyDependencies();
 
-        Set<ResolvedArtifact> necessaryArtifacts = Streams.stream(
+        Set<String> necessaryArtifactsDeclaration = Streams.stream(
                         sourceClasses.get().iterator())
                 .flatMap(BaselineExactDependencies::referencedClasses)
                 .flatMap(BaselineExactDependencies.INDEXES::classToArtifacts)
+                .map(BaselineExactDependencies::asString)
                 .collect(Collectors.toSet());
 
-        Set<ResolvedArtifact> possiblyUnused = Sets.difference(declaredArtifacts, necessaryArtifacts);
+        Set<ResolvedArtifact> possiblyUnused = declaredArtifacts.stream()
+                .filter(artifact ->
+                        !necessaryArtifactsDeclaration.contains(BaselineExactDependencies.asString(artifact)))
+                .collect(Collectors.toSet());
         getLogger()
                 .debug(
                         "Possibly unused dependencies: {}",
