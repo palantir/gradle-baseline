@@ -70,7 +70,7 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
                     .add(project.getDependencies().create("com.palantir.baseline:suppressible-error-prone:" + version));
         });
 
-        if (isStageTwo(project)) {
+        if (isSuppressingStageTwo(project)) {
             project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
                 project.getDependencies()
                         .add(
@@ -88,6 +88,24 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
                         configureErrorProneOptions(project, extension, errorProneOptions);
                     });
         });
+
+        if (isAnyKindOfPatching(project)) {
+            project.afterEvaluate(_ignored -> {
+                // To allow refactoring near usages of deprecated methods, even when -Xlint:deprecation is specified,
+                // we need to remove these compiler flags after all configuration has happened.
+                project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
+                    javaCompile.getOptions().setWarnings(false);
+                    javaCompile.getOptions().setDeprecation(false);
+                    javaCompile
+                            .getOptions()
+                            .setCompilerArgs(javaCompile.getOptions().getCompilerArgs().stream()
+                                    .filter(arg -> !arg.equals("-Werror"))
+                                    .filter(arg -> !arg.equals("-deprecation"))
+                                    .filter(arg -> !arg.equals("-Xlint:deprecation"))
+                                    .collect(Collectors.toList()));
+                });
+            });
+        }
     }
 
     private static void setupTransform(Project project) {
@@ -113,7 +131,7 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
         project.getDependencies().registerTransform(Suppressiblify.class, spec -> {
             // TODO: remove cachebust before merge
             spec.getParameters().getCacheBust().set(UUID.randomUUID().toString());
-            spec.getParameters().getSuppressionStage1().set(isStageOne(project));
+            spec.getParameters().getSuppressionStage1().set(isSuppressingStageOne(project));
 
             Attribute<String> artifactType = Attribute.of("artifactType", String.class);
             spec.getFrom().attribute(suppressiblified, false).attribute(artifactType, "jar");
@@ -122,7 +140,7 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
     }
 
     private void configureJavaCompile(Project project, JavaCompile javaCompile) {
-        if (isRefactoring(project) || isStageOne(project) || isStageTwo(project)) {
+        if (isAnyKindOfPatching(project)) {
             // Don't attempt to cache since it won't capture the source files that might be modified
             javaCompile.getOutputs().cacheIf(t -> false);
         }
@@ -137,7 +155,7 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
         // TODO: Fix this nebulatests
         // errorProneOptions.getExcludedPaths().set(excludedPathsRegex());
 
-        if (isStageOne(project)) {
+        if (isSuppressingStageOne(project)) {
             errorProneOptions.getErrorproneArgumentProviders().add(new CommandLineArgumentProvider() {
                 @Override
                 public Iterable<String> asArguments() {
@@ -150,7 +168,7 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
             return;
         }
 
-        if (isStageTwo(project)) {
+        if (isSuppressingStageTwo(project)) {
             errorProneOptions.getErrorproneArgumentProviders().add(new CommandLineArgumentProvider() {
                 @Override
                 public Iterable<String> asArguments() {
@@ -160,7 +178,7 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
             return;
         }
 
-        if (isRefactoring(project)) {
+        if (isApplyingSuggestedPatches(project)) {
             errorProneOptions.getErrorproneArgumentProviders().add(new CommandLineArgumentProvider() {
                 @Override
                 public Iterable<String> asArguments() {
@@ -198,16 +216,20 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
         }
     }
 
-    private static boolean isRefactoring(Project project) {
+    private static boolean isApplyingSuggestedPatches(Project project) {
         return project.hasProperty(ERROR_PRONE_APPLY);
     }
 
-    private static boolean isStageOne(Project project) {
+    private static boolean isSuppressingStageOne(Project project) {
         return project.hasProperty(SuppressibleErrorPronePlugin.SUPPRESS_STAGE_ONE);
     }
 
-    private static boolean isStageTwo(Project project) {
+    private static boolean isSuppressingStageTwo(Project project) {
         return project.hasProperty(SuppressibleErrorPronePlugin.SUPPRESS_STAGE_TWO);
+    }
+
+    private static boolean isAnyKindOfPatching(Project project) {
+        return isApplyingSuggestedPatches(project) || isSuppressingStageOne(project) || isSuppressingStageTwo(project);
     }
 
     //    private static String excludedPathsRegex() {

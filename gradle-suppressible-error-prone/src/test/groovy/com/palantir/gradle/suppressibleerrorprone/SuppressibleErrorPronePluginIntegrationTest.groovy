@@ -281,6 +281,36 @@ class SuppressibleErrorPronePluginIntegrationTest extends IntegrationSpec {
         runTasksSuccessfully('compileJava', '-Pcom.palantir.baseline-error-prone.disable')
     }
 
+    def 'should be able to refactor near usages of deprecated methods'() {
+        // language=Gradle
+        buildFile << '''
+            tasks.withType(JavaCompile) {
+                options.compilerArgs += ['-Werror', '-Xlint:deprecation']
+            }
+            
+            suppressibleErrorProne {
+                patchChecks.add('ArrayToString')
+            }
+        '''.stripIndent(true)
+
+        // language=Java
+        writeJavaSourceFile '''
+            package app;
+            public final class App {
+                public static void main(String[] args) {
+                    Character.isJavaLetter('c'); // deprecated method
+                    System.out.println(new int[3].toString());
+                }
+            }
+        '''.stripIndent(true)
+
+        when:
+        runTasksSuccessfully('compileJava', '-PerrorProneApply')
+
+        then:
+        appJava.text.contains('Arrays.toString(new int[3])')
+    }
+
     @Override
     ExecutionResult runTasksSuccessfully(String... tasks) {
         def result = runTasks(tasks)
