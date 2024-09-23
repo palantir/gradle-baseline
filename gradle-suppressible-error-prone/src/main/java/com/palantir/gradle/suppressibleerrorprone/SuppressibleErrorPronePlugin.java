@@ -94,6 +94,8 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
                 .getAttributes()
                 .attribute(suppressiblified, false);
 
+        // It's the annotationProcessor configuration, not the errorprone that, is actually used by the compiler
+        // and so where we must put our transform. annotationProcessor extendsFrom errorprone.
         project.getConfigurations().named("annotationProcessor").configure(errorProneConfiguration -> {
             errorProneConfiguration
                     .getDependencies()
@@ -102,6 +104,7 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
         });
 
         project.getDependencies().registerTransform(Suppressiblify.class, spec -> {
+            // TODO: remove cachebust before merge
             spec.getParameters().getCacheBust().set(UUID.randomUUID().toString());
             spec.getParameters().getSuppressionStage1().set(isStageOne(project));
 

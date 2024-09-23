@@ -109,7 +109,7 @@ public final class SuppressWarningsCoalesce extends BugChecker
         fixBuilder.prefixWith(tree, "@SuppressWarnings(" + suppressWarningsString + ")");
 
         return buildDescription(tree)
-                .setMessage("blah")
+                .setMessage("Coalescing @SuppressWarnings annotations")
                 .addFix(fixBuilder.build())
                 .build();
     }

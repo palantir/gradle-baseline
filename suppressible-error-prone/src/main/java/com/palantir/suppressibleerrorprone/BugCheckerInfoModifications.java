@@ -33,10 +33,11 @@ public final class BugCheckerInfoModifications {
                     bugCheckerInfo,
                     ImmutableSet.<String>builder()
                             .addAll(currentAllNames)
-                            .add(SuppressibleBugChecker.AUTOMATICALLY_ADDED_PREFIX + bugCheckerInfo.canonicalName())
+                            .add(CommonConstants.AUTOMATICALLY_ADDED_PREFIX + bugCheckerInfo.canonicalName())
                             .build());
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException(
+                    "supressible-error-prone failed to modidy the allNames field of a BugChecker", e);
         }
     }
 

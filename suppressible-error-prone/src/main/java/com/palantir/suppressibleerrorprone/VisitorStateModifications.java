@@ -31,8 +31,7 @@ public final class VisitorStateModifications {
         }
 
         Tree firstSuppressibleParent = Stream.iterate(visitorState.getPath(), TreePath::getParentPath)
-                .dropWhile(path ->
-                        !SuppressibleBugChecker.suppressibleKind(path.getLeaf().getKind()))
+                .dropWhile(path -> !suppressibleKind(path.getLeaf().getKind()))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Can't find anything we can suppress"))
                 .getLeaf();
@@ -46,11 +45,23 @@ public final class VisitorStateModifications {
                         .prefixWith(
                                 firstSuppressibleParent,
                                 "@com.palantir.suppressibleerrorprone.RepeatableSuppressWarnings(\""
-                                        + SuppressibleBugChecker.AUTOMATICALLY_ADDED_PREFIX + description.checkName
+                                        + CommonConstants.AUTOMATICALLY_ADDED_PREFIX + description.checkName
                                         + "\")\n")
                         .build())
                 .build();
     }
 
     private VisitorStateModifications() {}
+
+    private static boolean suppressibleKind(Tree.Kind kind) {
+        switch (kind) {
+            case CLASS:
+            case METHOD:
+            case VARIABLE:
+                // VARIABLE includes fields
+                return true;
+            default:
+                return false;
+        }
+    }
 }
