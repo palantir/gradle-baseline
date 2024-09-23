@@ -23,6 +23,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import net.ltgt.gradle.errorprone.CheckSeverity;
 import net.ltgt.gradle.errorprone.ErrorProneOptions;
 import net.ltgt.gradle.errorprone.ErrorPronePlugin;
 import org.gradle.api.Plugin;
@@ -175,9 +176,13 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
                                 "-XepPatchChecks:" + String.join(",", specificPatchChecks));
                     }
 
-                    // Sorted so that we maintain arg ordering and continue to get cache hits
-                    List<String> patchChecks =
-                            extension.getPatchChecks().get().stream().sorted().collect(Collectors.toList());
+                    List<String> patchChecks = extension.getPatchChecks().get().stream()
+                            // Do not patch checks that have been explicitly disabled
+                            .filter(check ->
+                                    errorProneOptions.getChecks().getting(check).getOrNull() != CheckSeverity.OFF)
+                            // Sorted so that we maintain arg ordering and continue to get cache hits
+                            .sorted()
+                            .collect(Collectors.toList());
 
                     // If there are no checks to patch, we don't patch anything and just do a regular compile.
                     // The behaviour of "-XepPatchChecks:" is to patch *all* checks that are enabled, so we can't

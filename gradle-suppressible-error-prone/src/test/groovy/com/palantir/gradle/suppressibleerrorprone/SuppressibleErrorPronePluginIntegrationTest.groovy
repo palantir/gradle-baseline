@@ -193,6 +193,35 @@ class SuppressibleErrorPronePluginIntegrationTest extends IntegrationSpec {
         appJava.text.contains('new int[3].toString()')
     }
 
+    def 'does not apply patches for check that was explicitly disabled'() {
+        // language=Gradle
+        buildFile << '''
+            suppressibleErrorProne {
+                patchChecks.add('ArrayToString')
+            }
+            
+            tasks.withType(JavaCompile).configureEach {
+                options.errorprone.disable 'ArrayToString'
+            }
+        '''.stripIndent(true)
+
+        // language=Java
+        writeJavaSourceFile '''
+            package app;
+            public final class App {
+                public static void main(String[] args) {
+                    System.out.println(new int[3].toString());
+                }
+            }
+        '''.stripIndent(true)
+
+        when:
+        runTasksSuccessfully('compileJava', '-PerrorProneApply')
+
+        then:
+        appJava.text.contains('new int[3].toString()')
+    }
+
     def 'can patch specific checks using -PerrorProneApply'() {
         // language=Java
         writeJavaSourceFile '''
