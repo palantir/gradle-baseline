@@ -49,12 +49,14 @@ final class VisitorStateClassVisitor extends ClassVisitor {
             mv.visitVarInsn(Opcodes.ALOAD, 0);
             // Load the first argument aka the Description
             mv.visitVarInsn(Opcodes.ALOAD, 1);
+            // Modify the description using the method below. Result is on the stack.
             mv.visitMethodInsn(
                     Opcodes.INVOKESTATIC,
                     "com/palantir/suppressibleerrorprone/VisitorStateModifications",
                     "interceptDescription",
                     "(Lcom/google/errorprone/VisitorState;Lcom/google/errorprone/matchers/Description;)Lcom/google/errorprone/matchers/Description;",
                     false);
+            // Move modified result from the stack back into the description parameter variable
             mv.visitVarInsn(Opcodes.ASTORE, 1);
         }
     }

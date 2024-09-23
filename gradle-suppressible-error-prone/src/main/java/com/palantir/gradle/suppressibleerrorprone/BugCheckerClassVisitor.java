@@ -56,10 +56,13 @@ final class BugCheckerClassVisitor extends ClassVisitor {
 
         @Override
         public void visitInsn(int opcode) {
-            if (!callsThisConstructor && opcode == Opcodes.RETURN) {
+            boolean insideConstructorThatDoesntCallOtherConstructor = !callsThisConstructor;
+
+            if (insideConstructorThatDoesntCallOtherConstructor && opcode == Opcodes.RETURN) {
                 // Load this
                 mv.visitVarInsn(Opcodes.ALOAD, 0);
 
+                // Modify the instance using the below method
                 mv.visitMethodInsn(
                         Opcodes.INVOKESTATIC,
                         "com/palantir/suppressibleerrorprone/BugCheckerInfoModifications",
