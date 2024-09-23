@@ -216,6 +216,10 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
         }
     }
 
+    private static boolean isAnyKindOfPatching(Project project) {
+        return isApplyingSuggestedPatches(project) || isSuppressingStageOne(project) || isSuppressingStageTwo(project);
+    }
+
     private static boolean isApplyingSuggestedPatches(Project project) {
         return project.hasProperty(ERROR_PRONE_APPLY);
     }
@@ -226,10 +230,6 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
 
     private static boolean isSuppressingStageTwo(Project project) {
         return project.hasProperty(SuppressibleErrorPronePlugin.SUPPRESS_STAGE_TWO);
-    }
-
-    private static boolean isAnyKindOfPatching(Project project) {
-        return isApplyingSuggestedPatches(project) || isSuppressingStageOne(project) || isSuppressingStageTwo(project);
     }
 
     //    private static String excludedPathsRegex() {
