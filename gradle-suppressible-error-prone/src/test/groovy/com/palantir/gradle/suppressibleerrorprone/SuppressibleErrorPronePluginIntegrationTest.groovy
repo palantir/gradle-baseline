@@ -124,6 +124,59 @@ class SuppressibleErrorPronePluginIntegrationTest extends IntegrationSpec {
         appJava.text.contains('Arrays.toString(new int[3])')
     }
 
+    def 'does not apply patches for a check if not added to the patchChecks list'() {
+        // language=Gradle
+        buildFile << '''
+            suppressibleErrorProne {
+                // To make sure set is not empty
+                patchChecks = ['SomeCheck']
+            }
+        '''.stripIndent(true)
+
+        // language=Java
+        writeJavaSourceFile '''
+            package app;
+            public final class App {
+                public static void main(String[] args) {
+                    System.out.println(new int[3].toString());
+                }
+            }
+        '''.stripIndent(true)
+
+        when:
+        runTasksSuccessfully('compileJava', '-PerrorProneApply')
+
+        then:
+        appJava.text.contains('new int[3].toString()')
+    }
+
+    def 'does not apply patches if there is nothing in patchChecks set'() {
+        // language=Gradle
+        buildFile << '''
+            suppressibleErrorProne {
+                patchChecks.empty()
+            }
+        '''.stripIndent(true)
+
+        // language=Java
+        writeJavaSourceFile '''
+            package app;
+            public final class App {
+                public static void main(String[] args) {
+                    System.out.println(new int[3].toString());
+                }
+            }
+        '''.stripIndent(true)
+
+        when:
+        // Doesn't actually do any patching as the set is empty. It just does a normal compile that fails.
+        def stderr = runTasksWithFailure('compileJava', '-PerrorProneApply').standardError
+
+        then:
+        stderr.contains('[ArrayToString]')
+        appJava.text.contains('new int[3].toString()')
+    }
+
     // TODO(callumr): Even if the check is not in the patches list?
     def 'can suppress a failing check'() {
         // language=Java

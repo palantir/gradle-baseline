@@ -18,6 +18,7 @@ package com.palantir.gradle.suppressibleerrorprone;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import net.ltgt.gradle.errorprone.ErrorProneOptions;
 import net.ltgt.gradle.errorprone.ErrorPronePlugin;
@@ -153,13 +154,19 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
             errorProneOptions.getErrorproneArgumentProviders().add(new CommandLineArgumentProvider() {
                 @Override
                 public Iterable<String> asArguments() {
-                    return List.of(
-                            "-XepPatchLocation:IN_PLACE",
-                            "-XepPatchChecks:"
-                                    + String.join(
-                                            ",", extension.getPatchChecks().get()));
+                    Set<String> patchChecks = extension.getPatchChecks().get();
+
+                    // If there are no checks to patch, we don't patch anything and just do a regular compile.
+                    // The behaviour of "-XepPatchChecks:" is to patch *all* checks that are enabled, so we can't
+                    // just leave it as that.
+                    if (patchChecks.isEmpty()) {
+                        return List.of();
+                    }
+
+                    return List.of("-XepPatchLocation:IN_PLACE", "-XepPatchChecks:" + String.join(",", patchChecks));
                 }
             });
+            return;
         }
     }
 
