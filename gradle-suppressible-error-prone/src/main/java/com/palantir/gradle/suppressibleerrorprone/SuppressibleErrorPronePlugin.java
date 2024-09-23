@@ -43,7 +43,8 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
     private void applyToJavaProject(Project project) {
         project.getPluginManager().apply(ErrorPronePlugin.class);
 
-        project.getExtensions().create("suppressibleErrorProne", SuppressibleErrorProneExtension.class);
+        SuppressibleErrorProneExtension extension =
+                project.getExtensions().create("suppressibleErrorProne", SuppressibleErrorProneExtension.class);
 
         setupTransform(project);
 
@@ -74,7 +75,7 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
             ((ExtensionAware) javaCompile.getOptions())
                     .getExtensions()
                     .configure(ErrorProneOptions.class, errorProneOptions -> {
-                        configureErrorProneOptions(project, errorProneOptions);
+                        configureErrorProneOptions(project, extension, errorProneOptions);
                     });
         });
     }
@@ -121,7 +122,8 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
         });
     }
 
-    private void configureErrorProneOptions(Project project, ErrorProneOptions errorProneOptions) {
+    private void configureErrorProneOptions(
+            Project project, SuppressibleErrorProneExtension extension, ErrorProneOptions errorProneOptions) {
         errorProneOptions.getDisableWarningsInGeneratedCode().set(true);
 
         if (isStageOne(project)) {
@@ -134,6 +136,7 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
                             "-XepOpt:" + SuppressibleErrorPronePlugin.SUPPRESS_STAGE_ONE + "=true");
                 }
             });
+            return;
         }
 
         if (isStageTwo(project)) {
@@ -141,6 +144,20 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
                 @Override
                 public Iterable<String> asArguments() {
                     return List.of("-XepPatchLocation:IN_PLACE", "-XepPatchChecks:SuppressWarningsCoalesce");
+                }
+            });
+            return;
+        }
+
+        if (isRefactoring(project)) {
+            errorProneOptions.getErrorproneArgumentProviders().add(new CommandLineArgumentProvider() {
+                @Override
+                public Iterable<String> asArguments() {
+                    return List.of(
+                            "-XepPatchLocation:IN_PLACE",
+                            "-XepPatchChecks:"
+                                    + String.join(
+                                            ",", extension.getPatchChecks().get()));
                 }
             });
         }
