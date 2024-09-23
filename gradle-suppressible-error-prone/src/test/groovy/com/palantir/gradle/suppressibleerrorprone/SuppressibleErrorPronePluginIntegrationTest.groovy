@@ -177,8 +177,7 @@ class SuppressibleErrorPronePluginIntegrationTest extends IntegrationSpec {
         appJava.text.contains('new int[3].toString()')
     }
 
-    // TODO(callumr): Even if the check is not in the patches list?
-    def 'can suppress a failing check'() {
+    def 'can suppress a failing check (even if not in patchChecks set)'() {
         // language=Java
         writeJavaSourceFile '''
             package app;
