@@ -19,6 +19,7 @@ package com.palantir.gradle.suppressibleerrorprone;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -33,8 +34,13 @@ import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.process.CommandLineArgumentProvider;
 
 public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
-    public static final String SUPPRESS_STAGE_ONE = "errorProneSuppressStage1";
-    public static final String SUPPRESS_STAGE_TWO = "errorProneSuppressStage2";
+    private static final String SUPPRESS_STAGE_ONE = "errorProneSuppressStage1";
+    private static final String SUPPRESS_STAGE_TWO = "errorProneSuppressStage2";
+    private static final String ERROR_PRONE_APPLY = "errorProneApply";
+    private static final Set<String> ERROR_PRONE_DISABLE = Set.of(
+            "errorProneDisable",
+            // This is only here for backcompat from when all the errorprone code lived in baseline
+            "com.palantir.baseline-error-prone.disable");
 
     @Override
     public void apply(Project project) {
@@ -130,6 +136,10 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
 
     private void configureErrorProneOptions(
             Project project, SuppressibleErrorProneExtension extension, ErrorProneOptions errorProneOptions) {
+
+        errorProneOptions.getEnabled().set(project.provider(() -> ERROR_PRONE_DISABLE.stream()
+                .noneMatch(project::hasProperty)));
+
         // TODO: Fix this nebulatests
         // errorProneOptions.getExcludedPaths().set(excludedPathsRegex());
 
@@ -160,7 +170,7 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
             errorProneOptions.getErrorproneArgumentProviders().add(new CommandLineArgumentProvider() {
                 @Override
                 public Iterable<String> asArguments() {
-                    String possibleSpecificPatchChecks = (String) project.property("errorProneApply");
+                    String possibleSpecificPatchChecks = (String) project.property(ERROR_PRONE_APPLY);
                     if (!(possibleSpecificPatchChecks == null || possibleSpecificPatchChecks.isBlank())) {
                         List<String> specificPatchChecks = Arrays.stream(possibleSpecificPatchChecks.split(","))
                                 .map(String::trim)
@@ -191,7 +201,7 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
     }
 
     private static boolean isRefactoring(Project project) {
-        return project.hasProperty("errorProneApply");
+        return project.hasProperty(ERROR_PRONE_APPLY);
     }
 
     private static boolean isStageOne(Project project) {

@@ -80,9 +80,7 @@ class SuppressibleErrorPronePluginIntegrationTest extends IntegrationSpec {
     }
 
     def 'ensure warnings are disabled in generated code'() {
-        when:
         // language=Java
-        writeJavaSourceFile '''
         def erroringCode = '''
             package app;
             public final class App {
@@ -225,6 +223,23 @@ class SuppressibleErrorPronePluginIntegrationTest extends IntegrationSpec {
         runTasksSuccessfully('compileJava')
 
         appJava.text.contains('@SuppressWarnings(\"for-rollout:ArrayToString\")')
+    }
+
+    def 'can disable errorprone using property'() {
+        when:
+        // language=Java
+        writeJavaSourceFile '''
+            package app;
+            public final class App {
+                public static void main(String[] args) {
+                    System.out.println(new int[3].toString());
+                }
+            }
+        '''.stripIndent(true)
+
+        then:
+        runTasksSuccessfully('compileJava', '-PerrorProneDisable')
+        runTasksSuccessfully('compileJava', '-Pcom.palantir.baseline-error-prone.disable')
     }
 
     @Override
