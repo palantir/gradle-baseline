@@ -177,6 +177,27 @@ class SuppressibleErrorPronePluginIntegrationTest extends IntegrationSpec {
         appJava.text.contains('new int[3].toString()')
     }
 
+    def 'can patch specific checks using -PerrorProneApply'() {
+        // language=Java
+        writeJavaSourceFile '''
+            package app;
+            public final class App {
+                public static void main(String[] args) {
+                    System.out.println(new int[3].toString());
+                    System.out.println(new int[2].equals(new int[1]));
+                }
+            }
+        '''.stripIndent(true)
+
+        when:
+        runTasksSuccessfully('compileJava', '-PerrorProneApply=ArrayToString,ArrayEquals')
+
+        then:
+        def patchedSource = appJava.text
+        patchedSource.contains('Arrays.toString(new int[3])')
+        patchedSource.contains('Arrays.equals(new int[2], new int[1])')
+    }
+
     def 'can suppress a failing check (even if not in patchChecks set)'() {
         // language=Java
         writeJavaSourceFile '''
