@@ -83,14 +83,22 @@ class SuppressibleErrorPronePluginIntegrationTest extends IntegrationSpec {
         when:
         // language=Java
         writeJavaSourceFile '''
+        def erroringCode = '''
             package app;
-            import javax.annotation.processing.Generated;
-            @Generated("com.place.SomeProcessor")
             public final class App {
                 public static void main(String[] args) {
                     System.out.println(new int[3].toString());
                 }
             }
+        '''.stripIndent(true)
+
+        when:
+        writeJavaSourceFile(erroringCode, 'src/main/generated')
+        writeJavaSourceFile(erroringCode.replace('App', 'App2'), 'build/somePlace')
+
+        // language=Gradle
+        buildFile << '''
+            sourceSets.main.java.srcDirs('src/main/generated', 'build/somePlace')
         '''.stripIndent(true)
 
         then:
