@@ -36,6 +36,16 @@ class SuppressibleErrorPronePluginIntegrationTest extends IntegrationSpec {
             dependencies {
                 errorprone 'com.google.errorprone:error_prone_core:2.28.0'
             }
+            
+            tasks.withType(JavaCompile).configureEach {
+                // This makes debugging the errorprone running inside the compiler "just work" from inside these tests 
+                it.options.forkOptions.jvmArgumentProviders.add(new CommandLineArgumentProvider() {
+                    @Override
+                    public Iterable<String> asArguments() {
+                        return List.of("-agentlib:jdwp=transport=dt_socket,server=n,address=localhost:5005")
+                    }
+                })
+            }
         '''.stripIndent(true)
 
         appJava = file('src/main/java/app/App.java')

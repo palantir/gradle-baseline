@@ -121,13 +121,6 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
     }
 
     private void configureJavaCompile(Project project, JavaCompile javaCompile) {
-        javaCompile.getOptions().getForkOptions().getJvmArgumentProviders().add(new CommandLineArgumentProvider() {
-            @Override
-            public Iterable<String> asArguments() {
-                return List.of("-agentlib:jdwp=transport=dt_socket,server=n,address=localhost:5005");
-            }
-        });
-
         if (isRefactoring(project) || isStageOne(project) || isStageTwo(project)) {
             // Don't attempt to cache since it won't capture the source files that might be modified
             javaCompile.getOutputs().cacheIf(t -> false);
