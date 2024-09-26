@@ -20,6 +20,7 @@ import com.google.common.collect.ImmutableBiMap;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableListMultimap;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.ImmutableMultimap;
 import com.google.common.collect.ImmutableSet;
 import com.google.common.collect.ImmutableSetMultimap;
 import com.google.common.collect.ImmutableSortedSet;
@@ -406,6 +407,12 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
                     .onClass(Collectors.class.getName())
                     .namedAnyOf("toMap", "toUnmodifiableMap", "toConcurrentMap"),
             MethodMatchers.staticMethod().onClass(ImmutableMap.class.getName()).named("toImmutableMap"),
+            MethodMatchers.staticMethod()
+                    .onClass(ImmutableListMultimap.class.getName())
+                    .namedAnyOf("toImmutableListMultimap", "flatteningToImmutableListMultimap"),
+            MethodMatchers.staticMethod()
+                    .onClass(ImmutableSetMultimap.class.getName())
+                    .namedAnyOf("toImmutableSetMultimap", "flatteningToImmutableSetMultimap"),
             MethodMatchers.staticMethod()
                     .onClass(ImmutableBiMap.class.getName())
                     .named("toImmutableBiMap"));
