@@ -407,6 +407,12 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
                     .namedAnyOf("toMap", "toUnmodifiableMap", "toConcurrentMap"),
             MethodMatchers.staticMethod().onClass(ImmutableMap.class.getName()).named("toImmutableMap"),
             MethodMatchers.staticMethod()
+                    .onClass(ImmutableListMultimap.class.getName())
+                    .namedAnyOf("toImmutableListMultimap", "flatteningToImmutableListMultimap"),
+            MethodMatchers.staticMethod()
+                    .onClass(ImmutableSetMultimap.class.getName())
+                    .namedAnyOf("toImmutableSetMultimap", "flatteningToImmutableSetMultimap"),
+            MethodMatchers.staticMethod()
                     .onClass(ImmutableBiMap.class.getName())
                     .named("toImmutableBiMap"));
 
