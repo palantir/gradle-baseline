@@ -72,7 +72,7 @@ org.eclipse.sisu:org.eclipse.sisu.plexus:0.3.5 (2 constraints: 141abc34)
 org.immutables:value:2.10.1 (2 constraints: fc1456c1)
 org.inferred:freebuilder:1.14.6 (1 constraints: 3e053b3b)
 org.jspecify:jspecify:1.0.0 (4 constraints: 1444f2f5)
-org.ow2.asm:asm:9.7 (3 constraints: f722aced)
+org.ow2.asm:asm:9.7.1 (3 constraints: 56233b17)
 org.pcollections:pcollections:4.0.1 (1 constraints: f21028b8)
 org.slf4j:slf4j-api:1.7.36 (9 constraints: ac87f044)
 
