@@ -29,7 +29,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
             id 'java'
             id 'com.palantir.baseline-exact-dependencies'
             id 'com.palantir.baseline' apply false
-            id 'com.palantir.consistent-versions' version '2.0.0' apply false
+            id 'com.palantir.consistent-versions' version '2.25.0' apply false
         }
     '''.stripIndent(true)
 
@@ -331,16 +331,14 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
             pluginManager.withPlugin('java') {
                 java {
                     toolchain {
-                        languageVersion.set(JavaLanguageVersion.of(16))
+                        languageVersion.set(JavaLanguageVersion.of(17))
                     }
                 }
             }
         '''.stripIndent(true)
 
         then:
-        with('tasks', '--stacktrace')
-                .withGradleVersion('8.4')
-                .build()
+        with('tasks', '--stacktrace').build()
     }
 
     /**
