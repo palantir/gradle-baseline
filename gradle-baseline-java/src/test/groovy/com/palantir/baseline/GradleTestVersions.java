@@ -19,7 +19,7 @@ package com.palantir.baseline;
 import com.google.common.collect.ImmutableList;
 
 public final class GradleTestVersions {
-    public static final ImmutableList<String> VERSIONS = ImmutableList.of("7.6.4", "8.4");
+    public static final ImmutableList<String> VERSIONS = ImmutableList.of("7.6.4", "8.8");
 
     private GradleTestVersions() {}
 }

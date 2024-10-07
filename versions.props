@@ -48,7 +48,7 @@ com.palantir.javaformat:gradle-palantir-java-format = 1.1.0
 # Newer spotless versions have issues resolving dependencies at configuration time
 com.diffplug.spotless:spotless-plugin-gradle = 6.6.0
 # Groovy versions must be compatible with gradle
-org.codehaus.groovy:* = 3.0.13
+org.codehaus.groovy:* = 3.0.21
 # checkerframework dependencies should be limited to errorpropne and nullaway
 # requirements, upgrading prior to those often causes compilation failures.
 org.checkerframework:* = 3.42.0
