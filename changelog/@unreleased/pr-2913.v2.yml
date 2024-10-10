@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: Disable the `InjectOnConstructorOfAbstractClass` errorprone for gradle
+    plugin projects
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2913
