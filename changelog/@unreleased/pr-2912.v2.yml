@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Forbid doing full atlas range scans (without thinking about it!)
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2912
