@@ -36,14 +36,14 @@ import com.sun.source.tree.MethodInvocationTree;
 public final class DangerousRangeScanUsage extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
     private static final long serialVersionUID = 1L;
 
-    private static final Matcher<ExpressionTree> STRING_INTERN_METHOD_MATCHER = MethodMatchers.instanceMethod()
-            .onExactClass("com.palantir.atlasdb.keyvalue.api.RangeRequest")
+    private static final Matcher<ExpressionTree> ALL_RANGE_METHOD_MATCHER = MethodMatchers.staticMethod()
+            .onClass("com.palantir.atlasdb.keyvalue.api.RangeRequest")
             .named("all")
             .withNoParameters();
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
-        if (STRING_INTERN_METHOD_MATCHER.matches(tree, state)) {
+        if (ALL_RANGE_METHOD_MATCHER.matches(tree, state)) {
             return describeMatch(tree);
         }
         return Description.NO_MATCH;

@@ -35,6 +35,7 @@ dependencies {
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-migrationsupport'
     testRuntimeOnly 'one.util:streamex'
     testRuntimeOnly 'com.fasterxml.jackson.module:jackson-module-afterburner'
+    testRuntimeOnly 'com.palantir.atlasdb:atlasdb-api'
     // for ForbidJavax
     testRuntimeOnly 'com.palantir.conjure.java.runtime:conjure-java-annotations'
     // for PreferCommonAnnotations
