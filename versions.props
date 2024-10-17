@@ -1,4 +1,4 @@
-com.fasterxml.jackson.core:jackson-databind = 2.17.2
+com.fasterxml.jackson.core:jackson-databind = 2.18.0
 com.github.ben-manes.caffeine:caffeine = 3.1.8
 com.google.auto.service:auto-service = 1.1.1
 com.google.guava:guava = 33.3.1-jre
@@ -20,7 +20,7 @@ com.uber.nullaway:nullaway = 0.11.3
 com.palantir.gradle.failure-reports:* = 1.2.0
 
 # test deps
-com.fasterxml.jackson.*:* = 2.17.2
+com.fasterxml.jackson.*:* = 2.18.0
 com.github.stefanbirkner:system-rules = 1.19.0
 com.netflix.nebula:nebula-test = 10.6.1
 com.palantir.conjure.java:* = 8.29.0
