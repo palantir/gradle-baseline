@@ -35,13 +35,24 @@ class ChosenJavaVersionTest {
 
         assertThat(ChosenJavaVersion.fromString("11_PREVIEW")).hasToString("11_PREVIEW");
         assertThat(ChosenJavaVersion.fromString("11_PREVIEW").enablePreview()).isTrue();
+        assertThat(ChosenJavaVersion.fromString("11_PREVIEW").experimentalSuffix())
+                .isEmpty();
         assertThat(ChosenJavaVersion.fromString("11_PREVIEW").javaLanguageVersion())
                 .isEqualTo(JavaLanguageVersion.of(11));
+
+        assertThat(ChosenJavaVersion.fromString("24-loom-experimental")).hasToString("24-loom-experimental");
+        assertThat(ChosenJavaVersion.fromString("24-loom-experimental").enablePreview())
+                .isTrue();
+        assertThat(ChosenJavaVersion.fromString("24-loom-experimental").experimentalSuffix())
+                .isPresent()
+                .contains("-loom-experimental");
+        assertThat(ChosenJavaVersion.fromString("24-loom-experimental").javaLanguageVersion())
+                .isEqualTo(JavaLanguageVersion.of(24));
 
         assertThat(ChosenJavaVersion.fromString("17_PREVIEW")).hasToString("17_PREVIEW");
         assertThat(ChosenJavaVersion.fromString("33")).hasToString("33");
 
-        assertThatThrownBy(() -> ChosenJavaVersion.fromString("1.5")).isInstanceOf(NumberFormatException.class);
+        assertThatThrownBy(() -> ChosenJavaVersion.fromString("1.5")).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
@@ -49,6 +60,8 @@ class ChosenJavaVersionTest {
         assertThat(ChosenJavaVersion.of(11).asIdeaLanguageLevel()).isEqualTo("JDK_11");
         assertThat(ChosenJavaVersion.fromString("17_PREVIEW").asIdeaLanguageLevel())
                 .isEqualTo("JDK_17_PREVIEW");
+        assertThat(ChosenJavaVersion.fromString("24-loom-experimental").asIdeaLanguageLevel())
+                .isEqualTo("JDK_X");
     }
 
     @Test

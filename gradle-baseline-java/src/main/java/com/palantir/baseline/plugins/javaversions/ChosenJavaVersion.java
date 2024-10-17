@@ -16,8 +16,12 @@
 
 package com.palantir.baseline.plugins.javaversions;
 
+import com.google.common.base.Strings;
 import java.io.Serializable;
 import java.util.Objects;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 
 /**
@@ -26,18 +30,44 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion;
  */
 public final class ChosenJavaVersion implements Serializable {
 
+    private static final Pattern PREVIEW_PATTERN = Pattern.compile("^(\\d+)_PREVIEW$");
+    private static final Pattern EXPERIMENTAL_PATTERN = Pattern.compile("^(\\d+)-(.*)$");
+
     private final JavaLanguageVersion javaLanguageVersion;
     private final boolean enablePreview;
+    private final String experimentalSuffix;
 
     public ChosenJavaVersion(JavaLanguageVersion javaLanguageVersion, boolean enablePreview) {
         this.javaLanguageVersion = javaLanguageVersion;
         this.enablePreview = enablePreview;
+        this.experimentalSuffix = "";
     }
 
-    /** Accepts inputs like '17_PREVIEW' or '17'. */
+    public ChosenJavaVersion(JavaLanguageVersion javaLanguageVersion, String experimentalSuffix) {
+        this.javaLanguageVersion = javaLanguageVersion;
+        this.enablePreview = true;
+        this.experimentalSuffix = experimentalSuffix;
+    }
+
+    /** Accepts inputs like '17_PREVIEW' or '17', or '24-loom-experimental'. */
     public static ChosenJavaVersion fromString(String string) {
-        return new ChosenJavaVersion(
-                JavaLanguageVersion.of(string.replaceAll("_PREVIEW", "")), string.endsWith("_PREVIEW"));
+        try {
+            return new ChosenJavaVersion(JavaLanguageVersion.of(string), false);
+        } catch (NumberFormatException e) {
+            // not a JDK release version, check for preview or experimental suffix
+            Matcher previewMatcher = PREVIEW_PATTERN.matcher(string);
+            Matcher experimentalMatcher = EXPERIMENTAL_PATTERN.matcher(string);
+            if (previewMatcher.matches()) {
+                return new ChosenJavaVersion(JavaLanguageVersion.of(previewMatcher.group(1)), true);
+            } else if (experimentalMatcher.matches()) {
+                String experimentalSuffix = "-" + experimentalMatcher.group(2);
+                return new ChosenJavaVersion(JavaLanguageVersion.of(experimentalMatcher.group(1)), experimentalSuffix);
+            } else {
+                throw new IllegalArgumentException(
+                        "wrong format for ChosenJavaVersion, must be one of: `<majorVersion>`;"
+                                + " `<majorVersion>_PREVIEW`; or `<majorVersion>-<experimentalSuffix>`");
+            }
+        }
     }
 
     public static ChosenJavaVersion of(int number) {
@@ -56,8 +86,16 @@ public final class ChosenJavaVersion implements Serializable {
         return enablePreview;
     }
 
+    public Optional<String> experimentalSuffix() {
+        return Strings.isNullOrEmpty(experimentalSuffix) ? Optional.empty() : Optional.of(experimentalSuffix);
+    }
+
     public String asIdeaLanguageLevel() {
-        return "JDK_" + javaLanguageVersion.toString() + (enablePreview ? "_PREVIEW" : "");
+        if (!Strings.isNullOrEmpty(experimentalSuffix)) {
+            return "JDK_X";
+        } else {
+            return "JDK_" + javaLanguageVersion.toString() + (enablePreview ? "_PREVIEW" : "");
+        }
     }
 
     public int asBytecodeMajorVersion() {
@@ -68,7 +106,11 @@ public final class ChosenJavaVersion implements Serializable {
 
     @Override
     public String toString() {
-        return javaLanguageVersion.toString() + (enablePreview ? "_PREVIEW" : "");
+        if (!Strings.isNullOrEmpty(experimentalSuffix)) {
+            return javaLanguageVersion.toString() + experimentalSuffix;
+        } else {
+            return javaLanguageVersion.toString() + (enablePreview ? "_PREVIEW" : "");
+        }
     }
 
     @Override
@@ -80,11 +122,13 @@ public final class ChosenJavaVersion implements Serializable {
             return false;
         }
         ChosenJavaVersion that = (ChosenJavaVersion) other;
-        return enablePreview == that.enablePreview && javaLanguageVersion.equals(that.javaLanguageVersion);
+        return enablePreview == that.enablePreview
+                && Objects.equals(javaLanguageVersion, that.javaLanguageVersion)
+                && Objects.equals(experimentalSuffix, that.experimentalSuffix);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(javaLanguageVersion, enablePreview);
+        return Objects.hash(javaLanguageVersion, enablePreview, experimentalSuffix);
     }
 }
