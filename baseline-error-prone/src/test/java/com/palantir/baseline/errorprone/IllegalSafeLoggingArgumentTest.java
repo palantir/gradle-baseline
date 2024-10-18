@@ -1067,6 +1067,39 @@ class IllegalSafeLoggingArgumentTest {
     }
 
     @Test
+    @Timeout(2)
+    public void testSwitchExpressionPatternMatching() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  sealed interface Parent {}",
+                        "  record Child1() implements Parent {}",
+                        "  record Child2() implements Parent {}",
+                        "  record Child3() implements Parent {}",
+                        "  record Child4() implements Parent {}",
+                        "  record Child5() implements Parent {}",
+                        "  record Child6() implements Parent {}",
+                        "  record Child7() implements Parent {}",
+                        "  record Child8() implements Parent {}",
+                        "  void f(Parent parent) {",
+                        "    fun(switch (parent) {",
+                        "      case Child1 child1 -> child1;",
+                        "      case Child2 child2 -> child2;",
+                        "      case Child3 child3 -> child3;",
+                        "      case Child4 child4 -> child4;",
+                        "      case Child5 child5 -> child5;",
+                        "      case Child6 child6 -> child6;",
+                        "      case Child7 child7 -> child7;",
+                        "      case Child8 child8 -> child8;",
+                        "    });",
+                        "  }",
+                        "  private static void fun(@Safe Object obj) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testPreconditionsPassthrough() {
         helper().addSourceLines(
                         "Test.java",

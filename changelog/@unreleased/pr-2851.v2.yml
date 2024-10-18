@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Fix slow compilation for large pattern matching switch
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2851

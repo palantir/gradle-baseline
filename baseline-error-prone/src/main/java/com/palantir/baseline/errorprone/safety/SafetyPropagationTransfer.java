@@ -877,6 +877,9 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
                 // No safety information found, likely a captured reference used within a lambda or anonymous class.
                 safety = getCapturedLocalVariableSafety(node);
             }
+            ReadableUpdates updates = new ReadableUpdates();
+            updates.set(node, safety);
+            return updateRegularStore(safety, input, updates);
         }
         return noStoreChanges(safety, input);
     }
