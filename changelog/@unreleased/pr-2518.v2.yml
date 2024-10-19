@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Warn on usage of Maps.transformValues
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2518
