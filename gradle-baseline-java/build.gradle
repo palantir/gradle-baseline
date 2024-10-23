@@ -144,6 +144,9 @@ tasks.withType(Test) {
     systemProperty 'recreate', System.getProperty('recreate', 'false')
 }
 
+tasks.test.dependsOn tasks.findByPath(':suppressible-error-prone:publishToMavenLocal')
+tasks.test.dependsOn tasks.findByPath(':suppressible-error-prone-annotations:publishToMavenLocal')
+
 configurations {
     checkstyleVersion
 }
