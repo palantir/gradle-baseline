@@ -8,6 +8,7 @@ import org.gradle.api.internal.project.ProjectInternal
 
 dependencies {
     implementation gradleApi()
+    implementation project(':gradle-suppressible-error-prone')
     implementation 'org.apache.commons:commons-lang3'
     implementation 'com.diffplug.spotless:spotless-plugin-gradle'
     implementation 'com.github.ben-manes.caffeine:caffeine'

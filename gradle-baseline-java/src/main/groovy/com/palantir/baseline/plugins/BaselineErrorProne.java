@@ -16,18 +16,13 @@
 
 package com.palantir.baseline.plugins;
 
-import com.google.common.base.Joiner;
-import com.google.common.base.Splitter;
-import com.google.common.base.Strings;
-import com.google.common.collect.ImmutableList;
 import com.google.common.collect.Iterables;
-import com.google.common.collect.MoreCollectors;
 import com.palantir.baseline.extensions.BaselineErrorProneExtension;
+import com.palantir.gradle.suppressibleerrorprone.SuppressibleErrorPronePlugin;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 import java.util.Optional;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import net.ltgt.gradle.errorprone.CheckSeverity;
@@ -40,17 +35,13 @@ import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.ExtensionAware;
-import org.gradle.api.plugins.JavaPluginConvention;
 import org.gradle.api.specs.Spec;
-import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.compile.JavaCompile;
-import org.gradle.process.CommandLineArgumentProvider;
 
 public final class BaselineErrorProne implements Plugin<Project> {
     private static final Logger log = Logging.getLogger(BaselineErrorProne.class);
     public static final String EXTENSION_NAME = "baselineErrorProne";
-    private static final String PROP_ERROR_PRONE_APPLY = "errorProneApply";
-    private static final String DISABLE_PROPERTY = "com.palantir.baseline-error-prone.disable";
 
     @Override
     public void apply(Project project) {
@@ -61,8 +52,8 @@ public final class BaselineErrorProne implements Plugin<Project> {
 
     private static void applyToJavaProject(Project project) {
         BaselineErrorProneExtension errorProneExtension =
-                project.getExtensions().create(EXTENSION_NAME, BaselineErrorProneExtension.class, project);
-        project.getPluginManager().apply(ErrorPronePlugin.class);
+                project.getExtensions().create(EXTENSION_NAME, BaselineErrorProneExtension.class);
+        project.getPluginManager().apply(SuppressibleErrorPronePlugin.class);
 
         String version = Optional.ofNullable((String) project.findProperty("baselineErrorProneVersion"))
                 .or(() -> Optional.ofNullable(
@@ -79,23 +70,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
                         configureErrorProneOptions(project, errorProneExtension, javaCompile, errorProneOptions);
                     });
         });
-
-        // To allow refactoring of deprecated methods, even when -Xlint:deprecation is specified, we need to remove
-        // these compiler flags after all configuration has happened.
-        project.afterEvaluate(
-                unused -> project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
-                    if (isErrorProneRefactoring(project)) {
-                        javaCompile.getOptions().setWarnings(false);
-                        javaCompile.getOptions().setDeprecation(false);
-                        javaCompile
-                                .getOptions()
-                                .setCompilerArgs(javaCompile.getOptions().getCompilerArgs().stream()
-                                        .filter(arg -> !arg.equals("-Werror"))
-                                        .filter(arg -> !arg.equals("-deprecation"))
-                                        .filter(arg -> !arg.equals("-Xlint:deprecation"))
-                                        .collect(Collectors.toList()));
-                    }
-                }));
 
         project.getPluginManager().withPlugin("java-gradle-plugin", appliedPlugin -> {
             project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> ((ExtensionAware)
@@ -120,11 +94,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
             BaselineErrorProneExtension errorProneExtension,
             JavaCompile javaCompile,
             ErrorProneOptions errorProneOptions) {
-        if (isDisabled(project)) {
-            errorProneOptions.getEnabled().set(false);
-        }
-
-        errorProneOptions.getExcludedPaths().set(excludedPathsRegex());
 
         errorProneOptions.disable(
                 "AutoCloseableMustBeClosed",
@@ -168,91 +137,70 @@ public final class BaselineErrorProne implements Plugin<Project> {
             errorProneOptions.disable("UnnecessaryLambda");
         }
 
-        if (isErrorProneRefactoring(project)) {
-            // TODO(gatesn): Is there a way to discover error-prone checks?
-            // Maybe service-load from a ClassLoader configured with annotation processor path?
-            // https://github.com/google/error-prone/pull/947
-            errorProneOptions.getErrorproneArgumentProviders().add(new CommandLineArgumentProvider() {
-                // intentionally not using a lambda to reduce gradle warnings
-                @Override
-                public Iterable<String> asArguments() {
-                    Optional<List<String>> specificChecks = getSpecificErrorProneChecks(project);
-                    if (specificChecks.isPresent()) {
-                        List<String> errorProneChecks = specificChecks.get();
-                        // Work around https://github.com/google/error-prone/issues/3908 by explicitly enabling any
-                        // check we want to use patch checks for (ensuring it is not disabled); if this is fixed, the
-                        // -Xep:*:ERROR arguments could be removed
-                        return Iterables.concat(
-                                errorProneChecks.stream()
-                                        .map(checkName -> "-Xep:" + checkName + ":ERROR")
-                                        .collect(Collectors.toList()),
-                                ImmutableList.of(
-                                        "-XepPatchChecks:" + Joiner.on(',').join(errorProneChecks),
-                                        "-XepPatchLocation:IN_PLACE"));
-                    } else {
-                        Optional<SourceSet> maybeSourceSet = project
-                                .getConvention()
-                                .getPlugin(JavaPluginConvention.class)
-                                .getSourceSets()
-                                .matching(ss -> javaCompile.getName().equals(ss.getCompileJavaTaskName()))
-                                .stream()
-                                .collect(MoreCollectors.toOptional());
+        addChecksIfModuleExistsInSourceSet(
+                project,
+                errorProneExtension,
+                javaCompile,
+                errorProneOptions,
+                "com.palantir.safe-logging",
+                "preconditions",
+                "PreferSafeLoggingPreconditions",
+                "PreferSafeLoggableExceptions");
 
-                        // Don't apply checks that have been explicitly disabled
-                        Stream<String> errorProneChecks = getNotDisabledErrorproneChecks(
-                                project, errorProneExtension, javaCompile, maybeSourceSet, errorProneOptions);
-                        return ImmutableList.of(
-                                "-XepPatchChecks:" + Joiner.on(',').join(errorProneChecks.iterator()),
-                                "-XepPatchLocation:IN_PLACE");
-                    }
-                }
-            });
-        }
+        addChecksIfModuleExistsInSourceSet(
+                project,
+                errorProneExtension,
+                javaCompile,
+                errorProneOptions,
+                "com.palantir.safe-logging",
+                "logger",
+                "PreferSafeLogger");
     }
 
-    static String excludedPathsRegex() {
-        // Error-prone normalizes filenames to use '/' path separator:
-        // https://github.com/google/error-prone/blob/c601758e81723a8efc4671726b8363be7a306dce
-        // /check_api/src/main/java/com/google/errorprone/util/ASTHelpers.java#L1277-L1285
-        return ".*/(build|generated_.*[sS]rc|src/generated.*)/.*";
-    }
-
-    private static Optional<List<String>> getSpecificErrorProneChecks(Project project) {
-        return Optional.ofNullable(project.findProperty(PROP_ERROR_PRONE_APPLY))
-                .map(Objects::toString)
-                .flatMap(value -> Optional.ofNullable(Strings.emptyToNull(value)))
-                .map(value -> Splitter.on(',').trimResults().omitEmptyStrings().splitToList(value))
-                .flatMap(list -> list.isEmpty() ? Optional.empty() : Optional.of(list));
-    }
-
-    private static Stream<String> getNotDisabledErrorproneChecks(
+    private static void addChecksIfModuleExistsInSourceSet(
             Project project,
             BaselineErrorProneExtension errorProneExtension,
             JavaCompile javaCompile,
-            Optional<SourceSet> maybeSourceSet,
-            ErrorProneOptions errorProneOptions) {
-        // If this javaCompile is associated with a source set, use it to figure out if it has preconditions or not.
-        Predicate<String> filterOutPreconditions = maybeSourceSet
-                .map(ss -> {
-                    Configuration configuration =
-                            project.getConfigurations().findByName(ss.getCompileClasspathConfigurationName());
-                    if (configuration == null) {
-                        return null;
-                    }
-                    return filterOutPreconditions(configuration).and(filterOutSafeLogger(configuration));
-                })
-                .orElse(check -> true);
+            ErrorProneOptions errorProneOptions,
+            String group,
+            String module,
+            String... checks) {
+        errorProneExtension.getPatchChecks().addAll(project.provider(() -> {
+            boolean hasModule = project
+                    .getExtensions()
+                    .getByType(SourceSetContainer.class)
+                    .matching(sourceSet -> sourceSet.getCompileJavaTaskName().equals(javaCompile.getName()))
+                    .stream()
+                    .findFirst()
+                    .filter(sourceSet -> {
+                        Configuration compileClasspath =
+                                project.getConfigurations().getByName(sourceSet.getCompileClasspathConfigurationName());
 
-        return errorProneExtension.getPatchChecks().get().stream().filter(check -> {
-            if (checkExplicitlyDisabled(errorProneOptions, check)) {
-                log.info(
-                        "Task {}: not applying errorprone check {} because it has severity OFF in errorProneOptions",
-                        javaCompile.getPath(),
-                        check);
-                return false;
+                        return hasDependenciesMatching(
+                                compileClasspath,
+                                mci -> Objects.equals(mci.getGroup(), group)
+                                        && Objects.equals(mci.getModule(), module));
+                    })
+                    .isPresent();
+
+            if (!hasModule) {
+                return List.of();
             }
-            return filterOutPreconditions.test(check);
-        });
+
+            return Stream.of(checks)
+                    .filter(check -> {
+                        if (checkExplicitlyDisabled(errorProneOptions, check)) {
+                            log.info(
+                                    "Task {}: not applying errorprone check {} because "
+                                            + "it has severity OFF in errorProneOptions",
+                                    javaCompile.getPath(),
+                                    check);
+                            return false;
+                        }
+                        return true;
+                    })
+                    .collect(Collectors.toList());
+        }));
     }
 
     private static boolean hasDependenciesMatching(Configuration configuration, Spec<ModuleComponentIdentifier> spec) {
@@ -261,58 +209,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 .artifactView(viewConfiguration -> viewConfiguration.componentFilter(ci ->
                         ci instanceof ModuleComponentIdentifier && spec.isSatisfiedBy((ModuleComponentIdentifier) ci)))
                 .getArtifacts());
-    }
-
-    /** Filters out preconditions checks if the required libraries are not on the classpath. */
-    public static Predicate<String> filterOutPreconditions(Configuration compileClasspath) {
-        return filterOutBasedOnDependency(
-                compileClasspath,
-                "com.palantir.safe-logging",
-                "preconditions",
-                "PreferSafeLoggingPreconditions",
-                "PreferSafeLoggableExceptions");
-    }
-
-    /** Filters out PreferSafeLogger if the required libraries are not on the classpath. */
-    private static Predicate<String> filterOutSafeLogger(Configuration compileClasspath) {
-        return filterOutBasedOnDependency(compileClasspath, "com.palantir.safe-logging", "logger", "PreferSafeLogger");
-    }
-
-    private static Predicate<String> filterOutBasedOnDependency(
-            Configuration compileClasspath, String dependencyGroup, String dependencyModule, String... checkNames) {
-        boolean hasDependency = hasDependenciesMatching(
-                compileClasspath,
-                mci -> Objects.equals(mci.getGroup(), dependencyGroup)
-                        && Objects.equals(mci.getModule(), dependencyModule));
-        return check -> {
-            if (!hasDependency) {
-                for (String checkName : checkNames) {
-                    if (Objects.equals(checkName, check)) {
-                        log.info(
-                                "Disabling check {} as '{}:{}' missing from {}",
-                                checkName,
-                                dependencyGroup,
-                                dependencyModule,
-                                compileClasspath);
-                        return false;
-                    }
-                }
-            }
-            return true;
-        };
-    }
-
-    private static boolean isErrorProneRefactoring(Project project) {
-        return project.hasProperty(PROP_ERROR_PRONE_APPLY);
-    }
-
-    private static boolean isDisabled(Project project) {
-        Object disable = project.findProperty(DISABLE_PROPERTY);
-        if (disable == null) {
-            return false;
-        } else {
-            return !disable.equals("false");
-        }
     }
 
     private static boolean checkExplicitlyDisabled(ErrorProneOptions errorProneOptions, String check) {

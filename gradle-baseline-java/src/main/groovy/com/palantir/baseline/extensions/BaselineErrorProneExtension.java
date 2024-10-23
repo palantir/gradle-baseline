@@ -17,10 +17,9 @@
 package com.palantir.baseline.extensions;
 
 import com.google.common.collect.ImmutableList;
-import org.gradle.api.Project;
 import org.gradle.api.provider.ListProperty;
 
-public class BaselineErrorProneExtension {
+public abstract class BaselineErrorProneExtension {
 
     /*
      * Do not add SUGGESTION checks here. Instead either increase the severity to WARNING or do not apply them by
@@ -59,9 +58,7 @@ public class BaselineErrorProneExtension {
             "PreferCollectionTransform",
             "PreferInputStreamTransferTo",
             "PreferListsPartition",
-            "PreferSafeLoggableExceptions",
             "PreferSafeLogger",
-            "PreferSafeLoggingPreconditions",
             "PreferStaticLoggers",
             "ProxyNonConstantType",
             "ReadReturnValueIgnored",
@@ -97,14 +94,9 @@ public class BaselineErrorProneExtension {
             "UnnecessaryParentheses",
             "ZoneIdOfZ");
 
-    private final ListProperty<String> patchChecks;
+    public abstract ListProperty<String> getPatchChecks();
 
-    public BaselineErrorProneExtension(Project project) {
-        patchChecks = project.getObjects().listProperty(String.class);
-        patchChecks.set(DEFAULT_PATCH_CHECKS);
-    }
-
-    public final ListProperty<String> getPatchChecks() {
-        return patchChecks;
+    public BaselineErrorProneExtension() {
+        getPatchChecks().addAll(DEFAULT_PATCH_CHECKS);
     }
 }
