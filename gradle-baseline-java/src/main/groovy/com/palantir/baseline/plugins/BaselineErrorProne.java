@@ -137,6 +137,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
             errorProneOptions.disable("UnnecessaryLambda");
         }
 
+        // This makes no sense, we're adding the patch check globally based on if it's in any source set
         addChecksIfModuleExistsInSourceSet(
                 project,
                 errorProneExtension,
