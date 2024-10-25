@@ -16,27 +16,19 @@
 
 package com.palantir.baseline.plugins;
 
-import com.google.common.collect.Iterables;
 import com.palantir.baseline.extensions.BaselineErrorProneExtension;
+import com.palantir.gradle.suppressibleerrorprone.SuppressibleErrorProneExtension;
+import com.palantir.gradle.suppressibleerrorprone.SuppressibleErrorProneExtension.ConditionalPatchCheck;
+import com.palantir.gradle.suppressibleerrorprone.SuppressibleErrorProneExtension.IfModuleIsUsed;
 import com.palantir.gradle.suppressibleerrorprone.SuppressibleErrorPronePlugin;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Optional;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
-import net.ltgt.gradle.errorprone.CheckSeverity;
 import net.ltgt.gradle.errorprone.ErrorProneOptions;
 import net.ltgt.gradle.errorprone.ErrorPronePlugin;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.ExtensionAware;
-import org.gradle.api.specs.Spec;
-import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.compile.JavaCompile;
 
 public final class BaselineErrorProne implements Plugin<Project> {
@@ -51,9 +43,11 @@ public final class BaselineErrorProne implements Plugin<Project> {
     }
 
     private static void applyToJavaProject(Project project) {
-        BaselineErrorProneExtension errorProneExtension =
+        BaselineErrorProneExtension _errorProneExtension =
                 project.getExtensions().create(EXTENSION_NAME, BaselineErrorProneExtension.class);
         project.getPluginManager().apply(SuppressibleErrorPronePlugin.class);
+        SuppressibleErrorProneExtension suppressibleErrorProneExtension =
+                project.getExtensions().getByType(SuppressibleErrorProneExtension.class);
 
         String version = Optional.ofNullable((String) project.findProperty("baselineErrorProneVersion"))
                 .or(() -> Optional.ofNullable(
@@ -63,12 +57,20 @@ public final class BaselineErrorProne implements Plugin<Project> {
         project.getDependencies()
                 .add(ErrorPronePlugin.CONFIGURATION_NAME, "com.palantir.baseline:baseline-error-prone:" + version);
 
+        ConditionalPatchCheck safeLoggingPreconditions = project.getObjects().newInstance(ConditionalPatchCheck.class);
+        safeLoggingPreconditions.getChecks().addAll("PreferSafeLoggingPreconditions", "PreferSafeLoggableExceptions");
+        safeLoggingPreconditions.getWhen().set(new IfModuleIsUsed("com.palantir.safe-logging", "preconditions"));
+
+        ConditionalPatchCheck safeLoggingLogger = project.getObjects().newInstance(ConditionalPatchCheck.class);
+        safeLoggingLogger.getChecks().addAll("PreferSafeLogger");
+        safeLoggingLogger.getWhen().set(new IfModuleIsUsed("com.palantir.safe-logging", "logger"));
+
+        suppressibleErrorProneExtension.getConditionalPatchChecks().addAll(safeLoggingPreconditions, safeLoggingLogger);
+
         project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
             ((ExtensionAware) javaCompile.getOptions())
                     .getExtensions()
-                    .configure(ErrorProneOptions.class, errorProneOptions -> {
-                        configureErrorProneOptions(project, errorProneExtension, javaCompile, errorProneOptions);
-                    });
+                    .configure(ErrorProneOptions.class, BaselineErrorProne::configureErrorProneOptions);
         });
 
         project.getPluginManager().withPlugin("java-gradle-plugin", appliedPlugin -> {
@@ -89,11 +91,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
     }
 
     @SuppressWarnings("UnstableApiUsage")
-    private static void configureErrorProneOptions(
-            Project project,
-            BaselineErrorProneExtension errorProneExtension,
-            JavaCompile javaCompile,
-            ErrorProneOptions errorProneOptions) {
+    private static void configureErrorProneOptions(ErrorProneOptions errorProneOptions) {
 
         errorProneOptions.disable(
                 "AutoCloseableMustBeClosed",
@@ -136,85 +134,5 @@ public final class BaselineErrorProne implements Plugin<Project> {
         if (errorProneOptions.getCompilingTestOnlyCode().get()) {
             errorProneOptions.disable("UnnecessaryLambda");
         }
-
-        // This makes no sense, we're adding the patch check globally based on if it's in any source set
-        addChecksIfModuleExistsInSourceSet(
-                project,
-                errorProneExtension,
-                javaCompile,
-                errorProneOptions,
-                "com.palantir.safe-logging",
-                "preconditions",
-                "PreferSafeLoggingPreconditions",
-                "PreferSafeLoggableExceptions");
-
-        addChecksIfModuleExistsInSourceSet(
-                project,
-                errorProneExtension,
-                javaCompile,
-                errorProneOptions,
-                "com.palantir.safe-logging",
-                "logger",
-                "PreferSafeLogger");
-    }
-
-    private static void addChecksIfModuleExistsInSourceSet(
-            Project project,
-            BaselineErrorProneExtension errorProneExtension,
-            JavaCompile javaCompile,
-            ErrorProneOptions errorProneOptions,
-            String group,
-            String module,
-            String... checks) {
-        errorProneExtension.getPatchChecks().addAll(project.provider(() -> {
-            boolean hasModule = project
-                    .getExtensions()
-                    .getByType(SourceSetContainer.class)
-                    .matching(sourceSet -> sourceSet.getCompileJavaTaskName().equals(javaCompile.getName()))
-                    .stream()
-                    .findFirst()
-                    .filter(sourceSet -> {
-                        Configuration compileClasspath =
-                                project.getConfigurations().getByName(sourceSet.getCompileClasspathConfigurationName());
-
-                        return hasDependenciesMatching(
-                                compileClasspath,
-                                mci -> Objects.equals(mci.getGroup(), group)
-                                        && Objects.equals(mci.getModule(), module));
-                    })
-                    .isPresent();
-
-            if (!hasModule) {
-                return List.of();
-            }
-
-            return Stream.of(checks)
-                    .filter(check -> {
-                        if (checkExplicitlyDisabled(errorProneOptions, check)) {
-                            log.info(
-                                    "Task {}: not applying errorprone check {} because "
-                                            + "it has severity OFF in errorProneOptions",
-                                    javaCompile.getPath(),
-                                    check);
-                            return false;
-                        }
-                        return true;
-                    })
-                    .collect(Collectors.toList());
-        }));
-    }
-
-    private static boolean hasDependenciesMatching(Configuration configuration, Spec<ModuleComponentIdentifier> spec) {
-        return !Iterables.isEmpty(configuration
-                .getIncoming()
-                .artifactView(viewConfiguration -> viewConfiguration.componentFilter(ci ->
-                        ci instanceof ModuleComponentIdentifier && spec.isSatisfiedBy((ModuleComponentIdentifier) ci)))
-                .getArtifacts());
-    }
-
-    private static boolean checkExplicitlyDisabled(ErrorProneOptions errorProneOptions, String check) {
-        Map<String, CheckSeverity> checks = errorProneOptions.getChecks().get();
-        return checks.get(check) == CheckSeverity.OFF
-                || errorProneOptions.getErrorproneArgs().get().contains(String.format("-Xep:%s:OFF", check));
     }
 }

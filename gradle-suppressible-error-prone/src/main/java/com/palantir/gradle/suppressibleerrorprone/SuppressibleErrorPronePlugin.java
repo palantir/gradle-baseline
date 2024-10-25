@@ -85,7 +85,7 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
             ((ExtensionAware) javaCompile.getOptions())
                     .getExtensions()
                     .configure(ErrorProneOptions.class, errorProneOptions -> {
-                        configureErrorProneOptions(project, extension, errorProneOptions);
+                        configureErrorProneOptions(project, extension, javaCompile, errorProneOptions);
                     });
         });
 
@@ -147,7 +147,10 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
     }
 
     private void configureErrorProneOptions(
-            Project project, SuppressibleErrorProneExtension extension, ErrorProneOptions errorProneOptions) {
+            Project project,
+            SuppressibleErrorProneExtension extension,
+            JavaCompile javaCompile,
+            ErrorProneOptions errorProneOptions) {
 
         errorProneOptions.getEnabled().set(project.provider(() -> ERROR_PRONE_DISABLE.stream()
                 .noneMatch(project::hasProperty)));
@@ -194,7 +197,7 @@ public final class SuppressibleErrorPronePlugin implements Plugin<Project> {
                                 "-XepPatchChecks:" + String.join(",", specificPatchChecks));
                     }
 
-                    List<String> patchChecks = extension.getPatchChecks().get().stream()
+                    List<String> patchChecks = extension.patchChecksForCompilation(javaCompile).stream()
                             // Do not patch checks that have been explicitly disabled
                             .filter(check ->
                                     errorProneOptions.getChecks().getting(check).getOrNull() != CheckSeverity.OFF)
