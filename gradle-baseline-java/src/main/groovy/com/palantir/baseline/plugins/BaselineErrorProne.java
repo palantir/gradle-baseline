@@ -26,13 +26,10 @@ import net.ltgt.gradle.errorprone.ErrorProneOptions;
 import net.ltgt.gradle.errorprone.ErrorPronePlugin;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.logging.Logger;
-import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.ExtensionAware;
 import org.gradle.api.tasks.compile.JavaCompile;
 
 public final class BaselineErrorProne implements Plugin<Project> {
-    private static final Logger log = Logging.getLogger(BaselineErrorProne.class);
     public static final String EXTENSION_NAME = "baselineErrorProne";
 
     @Override
@@ -43,11 +40,12 @@ public final class BaselineErrorProne implements Plugin<Project> {
     }
 
     private static void applyToJavaProject(Project project) {
-        BaselineErrorProneExtension _errorProneExtension =
-                project.getExtensions().create(EXTENSION_NAME, BaselineErrorProneExtension.class);
         project.getPluginManager().apply(SuppressibleErrorPronePlugin.class);
         SuppressibleErrorProneExtension suppressibleErrorProneExtension =
                 project.getExtensions().getByType(SuppressibleErrorProneExtension.class);
+
+        project.getExtensions()
+                .create(EXTENSION_NAME, BaselineErrorProneExtension.class, suppressibleErrorProneExtension);
 
         String version = Optional.ofNullable((String) project.findProperty("baselineErrorProneVersion"))
                 .or(() -> Optional.ofNullable(

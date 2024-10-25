@@ -17,7 +17,8 @@
 package com.palantir.baseline.extensions;
 
 import com.google.common.collect.ImmutableList;
-import org.gradle.api.provider.ListProperty;
+import com.palantir.gradle.suppressibleerrorprone.SuppressibleErrorProneExtension;
+import org.gradle.api.provider.SetProperty;
 
 public abstract class BaselineErrorProneExtension {
 
@@ -94,9 +95,19 @@ public abstract class BaselineErrorProneExtension {
             "UnnecessaryParentheses",
             "ZoneIdOfZ");
 
-    public abstract ListProperty<String> getPatchChecks();
+    private final SuppressibleErrorProneExtension suppressibleErrorProneExtension;
 
-    public BaselineErrorProneExtension() {
-        getPatchChecks().addAll(DEFAULT_PATCH_CHECKS);
+    /**
+     * .
+     * @deprecated Interact with SuppressibleErrorProneExtension instead. This only provided for backcompat.
+     */
+    @Deprecated
+    public final SetProperty<String> getPatchChecks() {
+        return suppressibleErrorProneExtension.getPatchChecks();
+    }
+
+    public BaselineErrorProneExtension(SuppressibleErrorProneExtension suppressibleErrorProneExtension) {
+        this.suppressibleErrorProneExtension = suppressibleErrorProneExtension;
+        suppressibleErrorProneExtension.getPatchChecks().addAll(DEFAULT_PATCH_CHECKS);
     }
 }
