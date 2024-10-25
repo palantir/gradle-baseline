@@ -318,8 +318,8 @@ class SuppressibleErrorPronePluginIntegrationTest extends IntegrationSpec {
 
             suppressibleErrorProne {
                 patchChecks.add('Something')
-                conditionalPatchChecks.add(new ConditionalPatchCheck({ true },Set.of('ArrayToString') ))
-                conditionalPatchChecks.add(new ConditionalPatchCheck({ false },Set.of('ArrayEquals') ))
+                conditionalPatchChecks.add(new ConditionalPatchCheck({ true }, 'ArrayToString'))
+                conditionalPatchChecks.add(new ConditionalPatchCheck({ false }, Set.of('ArrayEquals')))
             }
         '''.stripIndent(true)
 
