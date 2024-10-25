@@ -16,18 +16,11 @@
 
 package com.palantir.gradle.suppressibleerrorprone;
 
-import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.gradle.api.Project;
-import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.provider.ListProperty;
-import org.gradle.api.provider.Property;
 import org.gradle.api.provider.SetProperty;
-import org.gradle.api.specs.Spec;
-import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.compile.JavaCompile;
 
 public abstract class SuppressibleErrorProneExtension {
@@ -40,56 +33,8 @@ public abstract class SuppressibleErrorProneExtension {
                         getPatchChecks().get().stream(),
                         getConditionalPatchChecks().get().stream()
                                 .filter(conditionalPatchCheck ->
-                                        conditionalPatchCheck.getWhen().get().isSatisfiedBy(javaCompile))
-                                .flatMap(conditionalPatchCheck -> conditionalPatchCheck.getChecks().get().stream()))
+                                        conditionalPatchCheck.when().isSatisfiedBy(javaCompile))
+                                .flatMap(conditionalPatchCheck -> conditionalPatchCheck.checks().stream()))
                 .collect(Collectors.toSet());
-    }
-
-    public abstract static class ConditionalPatchCheck {
-        public abstract SetProperty<String> getChecks();
-
-        public abstract Property<Spec<JavaCompile>> getWhen();
-    }
-
-    public static final class IfModuleIsUsed implements Spec<JavaCompile> {
-        private final String group;
-        private final String module;
-
-        public IfModuleIsUsed(String group, String module) {
-            this.group = group;
-            this.module = module;
-        }
-
-        @Override
-        public boolean isSatisfiedBy(JavaCompile javaCompile) {
-            Project project = javaCompile.getProject();
-            return project
-                    .getExtensions()
-                    .getByType(SourceSetContainer.class)
-                    .matching(sourceSet -> sourceSet.getCompileJavaTaskName().equals(javaCompile.getName()))
-                    .stream()
-                    .findFirst()
-                    .filter(sourceSet -> {
-                        Configuration compileClasspath =
-                                project.getConfigurations().getByName(sourceSet.getCompileClasspathConfigurationName());
-                        return hasDependenciesMatching(
-                                compileClasspath,
-                                mci -> Objects.equals(mci.getGroup(), group)
-                                        && Objects.equals(mci.getModule(), module));
-                    })
-                    .isPresent();
-        }
-
-        private static boolean hasDependenciesMatching(
-                Configuration configuration, Spec<ModuleComponentIdentifier> spec) {
-            return !configuration
-                    .getIncoming()
-                    .artifactView(viewConfiguration ->
-                            viewConfiguration.componentFilter(ci -> ci instanceof ModuleComponentIdentifier
-                                    && spec.isSatisfiedBy((ModuleComponentIdentifier) ci)))
-                    .getArtifacts()
-                    .iterator()
-                    .hasNext();
-        }
     }
 }

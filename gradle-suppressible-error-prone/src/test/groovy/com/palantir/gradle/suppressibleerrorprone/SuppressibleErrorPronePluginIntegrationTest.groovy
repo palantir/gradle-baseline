@@ -311,6 +311,74 @@ class SuppressibleErrorPronePluginIntegrationTest extends IntegrationSpec {
         appJava.text.contains('Arrays.toString(new int[3])')
     }
 
+    def 'can conditionally add patch checks'() {
+        // language=Gradle
+        buildFile << '''
+            import com.palantir.gradle.suppressibleerrorprone.ConditionalPatchCheck
+
+            suppressibleErrorProne {
+                patchChecks.add('Something')
+                conditionalPatchChecks.add(new ConditionalPatchCheck({ true },Set.of('ArrayToString') ))
+                conditionalPatchChecks.add(new ConditionalPatchCheck({ false },Set.of('ArrayEquals') ))
+            }
+        '''.stripIndent(true)
+
+        // language=Java
+        writeJavaSourceFile '''
+            package app;
+            public final class App {
+                public static void main(String[] args) {
+                    System.out.println(new int[3].toString());
+                    System.out.println(new int[2].equals(new int[1]));
+                }
+            }
+        '''.stripIndent(true)
+        when:
+        runTasksSuccessfully('compileJava', '-PerrorProneApply')
+
+
+        then:
+        def patchedText = appJava.text
+        patchedText.contains('Arrays.toString(new int[3])')
+        patchedText.contains('new int[2].equals(new int[1])')
+    }
+
+    def 'IfModuleIsUsed works properly'() {
+        // language=Gradle
+        buildFile << '''
+            import com.palantir.gradle.suppressibleerrorprone.ConditionalPatchCheck
+            import com.palantir.gradle.suppressibleerrorprone.IfModuleIsUsed
+
+            suppressibleErrorProne {
+                conditionalPatchChecks.add(new ConditionalPatchCheck(new IfModuleIsUsed('com.fasterxml.jackson.core', 'jackson-core'), 'ArrayToString'))
+                conditionalPatchChecks.add(new ConditionalPatchCheck(new IfModuleIsUsed('donesnt', 'exist'), 'ArrayEquals'))
+            }
+            
+            dependencies {
+                // Depends on jackson-core
+                implementation 'com.fasterxml.jackson.core:jackson-databind:2.17.1'
+            }
+        '''.stripIndent(true)
+
+        // language=Java
+        writeJavaSourceFile '''
+            package app;
+            public final class App {
+                public static void main(String[] args) {
+                    System.out.println(new int[3].toString());
+                    System.out.println(new int[2].equals(new int[1]));
+                }
+            }
+        '''.stripIndent(true)
+        when:
+        runTasksSuccessfully('compileJava', '-PerrorProneApply')
+
+        then:
+        def patchedText = appJava.text
+        patchedText.contains('Arrays.toString(new int[3])')
+        patchedText.contains('new int[2].equals(new int[1])')
+    }
+
     @Override
     ExecutionResult runTasksSuccessfully(String... tasks) {
         def result = runTasks(tasks)

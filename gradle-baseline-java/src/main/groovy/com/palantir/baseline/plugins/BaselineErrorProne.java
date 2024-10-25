@@ -18,8 +18,8 @@ package com.palantir.baseline.plugins;
 
 import com.palantir.baseline.extensions.BaselineErrorProneExtension;
 import com.palantir.gradle.suppressibleerrorprone.SuppressibleErrorProneExtension;
-import com.palantir.gradle.suppressibleerrorprone.SuppressibleErrorProneExtension.ConditionalPatchCheck;
-import com.palantir.gradle.suppressibleerrorprone.SuppressibleErrorProneExtension.IfModuleIsUsed;
+import com.palantir.gradle.suppressibleerrorprone.ConditionalPatchCheck;
+import com.palantir.gradle.suppressibleerrorprone.IfModuleIsUsed;
 import com.palantir.gradle.suppressibleerrorprone.SuppressibleErrorPronePlugin;
 import java.util.Optional;
 import net.ltgt.gradle.errorprone.ErrorProneOptions;
@@ -55,15 +55,15 @@ public final class BaselineErrorProne implements Plugin<Project> {
         project.getDependencies()
                 .add(ErrorPronePlugin.CONFIGURATION_NAME, "com.palantir.baseline:baseline-error-prone:" + version);
 
-        ConditionalPatchCheck safeLoggingPreconditions = project.getObjects().newInstance(ConditionalPatchCheck.class);
-        safeLoggingPreconditions.getChecks().addAll("PreferSafeLoggingPreconditions", "PreferSafeLoggableExceptions");
-        safeLoggingPreconditions.getWhen().set(new IfModuleIsUsed("com.palantir.safe-logging", "preconditions"));
-
-        ConditionalPatchCheck safeLoggingLogger = project.getObjects().newInstance(ConditionalPatchCheck.class);
-        safeLoggingLogger.getChecks().addAll("PreferSafeLogger");
-        safeLoggingLogger.getWhen().set(new IfModuleIsUsed("com.palantir.safe-logging", "logger"));
-
-        suppressibleErrorProneExtension.getConditionalPatchChecks().addAll(safeLoggingPreconditions, safeLoggingLogger);
+        suppressibleErrorProneExtension
+                .getConditionalPatchChecks()
+                .addAll(
+                        new ConditionalPatchCheck(
+                                new IfModuleIsUsed("com.palantir.safe-logging", "preconditions"),
+                                "PreferSafeLoggingPreconditions",
+                                "PreferSafeLoggableExceptions"),
+                        new ConditionalPatchCheck(
+                                new IfModuleIsUsed("com.palantir.safe-logging", "logger"), "PreferSafeLogger"));
 
         project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
             ((ExtensionAware) javaCompile.getOptions())
