@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Fix `checkUnusedDependencies` for multi-source projects
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2883
