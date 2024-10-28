@@ -17,17 +17,15 @@
 package com.palantir.baseline.plugins;
 
 import com.palantir.baseline.extensions.BaselineErrorProneExtension;
-import com.palantir.gradle.suppressibleerrorprone.SuppressibleErrorProneExtension;
 import com.palantir.gradle.suppressibleerrorprone.ConditionalPatchCheck;
 import com.palantir.gradle.suppressibleerrorprone.IfModuleIsUsed;
+import com.palantir.gradle.suppressibleerrorprone.SuppressibleErrorProneExtension;
 import com.palantir.gradle.suppressibleerrorprone.SuppressibleErrorPronePlugin;
 import java.util.Optional;
 import net.ltgt.gradle.errorprone.ErrorProneOptions;
 import net.ltgt.gradle.errorprone.ErrorPronePlugin;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.plugins.ExtensionAware;
-import org.gradle.api.tasks.compile.JavaCompile;
 
 public final class BaselineErrorProne implements Plugin<Project> {
     public static final String EXTENSION_NAME = "baselineErrorProne";
@@ -65,26 +63,19 @@ public final class BaselineErrorProne implements Plugin<Project> {
                         new ConditionalPatchCheck(
                                 new IfModuleIsUsed("com.palantir.safe-logging", "logger"), "PreferSafeLogger"));
 
-        project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
-            ((ExtensionAware) javaCompile.getOptions())
-                    .getExtensions()
-                    .configure(ErrorProneOptions.class, BaselineErrorProne::configureErrorProneOptions);
-        });
+        suppressibleErrorProneExtension.configureEachErrorProneOptions(BaselineErrorProne::configureErrorProneOptions);
 
         project.getPluginManager().withPlugin("java-gradle-plugin", appliedPlugin -> {
-            project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> ((ExtensionAware)
-                            javaCompile.getOptions())
-                    .getExtensions()
-                    .configure(ErrorProneOptions.class, errorProneOptions -> {
-                        errorProneOptions.disable("CatchBlockLogException");
-                        errorProneOptions.disable("JavaxInjectOnAbstractMethod");
-                        errorProneOptions.disable("PreconditionsConstantMessage");
-                        errorProneOptions.disable("PreferSafeLoggableExceptions");
-                        errorProneOptions.disable("PreferSafeLogger");
-                        errorProneOptions.disable("PreferSafeLoggingPreconditions");
-                        errorProneOptions.disable("Slf4jConstantLogMessage");
-                        errorProneOptions.disable("Slf4jLogsafeArgs");
-                    }));
+            suppressibleErrorProneExtension.configureEachErrorProneOptions(errorProneOptions -> {
+                errorProneOptions.disable("CatchBlockLogException");
+                errorProneOptions.disable("JavaxInjectOnAbstractMethod");
+                errorProneOptions.disable("PreconditionsConstantMessage");
+                errorProneOptions.disable("PreferSafeLoggableExceptions");
+                errorProneOptions.disable("PreferSafeLogger");
+                errorProneOptions.disable("PreferSafeLoggingPreconditions");
+                errorProneOptions.disable("Slf4jConstantLogMessage");
+                errorProneOptions.disable("Slf4jLogsafeArgs");
+            });
         });
     }
 

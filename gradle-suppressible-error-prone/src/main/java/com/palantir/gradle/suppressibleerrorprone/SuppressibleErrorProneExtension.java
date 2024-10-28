@@ -19,11 +19,21 @@ package com.palantir.gradle.suppressibleerrorprone;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import net.ltgt.gradle.errorprone.ErrorProneOptions;
+import org.gradle.api.Action;
+import org.gradle.api.Project;
+import org.gradle.api.plugins.ExtensionAware;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.compile.JavaCompile;
 
 public abstract class SuppressibleErrorProneExtension {
+    private final Project project;
+
+    public SuppressibleErrorProneExtension(Project project) {
+        this.project = project;
+    }
+
     public abstract SetProperty<String> getPatchChecks();
 
     public abstract ListProperty<ConditionalPatchCheck> getConditionalPatchChecks();
@@ -36,5 +46,12 @@ public abstract class SuppressibleErrorProneExtension {
                                         conditionalPatchCheck.when().isSatisfiedBy(javaCompile))
                                 .flatMap(conditionalPatchCheck -> conditionalPatchCheck.checks().stream()))
                 .collect(Collectors.toSet());
+    }
+
+    public final void configureEachErrorProneOptions(Action<ErrorProneOptions> action) {
+        project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> ((ExtensionAware)
+                        javaCompile.getOptions())
+                .getExtensions()
+                .configure(ErrorProneOptions.class, action));
     }
 }
