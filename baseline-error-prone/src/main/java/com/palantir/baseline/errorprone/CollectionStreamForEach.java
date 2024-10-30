@@ -37,7 +37,7 @@ import java.util.stream.Stream;
 @BugPattern(
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        severity = BugPattern.SeverityLevel.ERROR,
+        severity = BugPattern.SeverityLevel.WARNING,
         summary = "Collection.forEach is more efficient than Collection.stream().forEach")
 public final class CollectionStreamForEach extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
     private static final long serialVersionUID = 1L;
