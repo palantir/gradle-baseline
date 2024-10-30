@@ -35,6 +35,7 @@ allprojects {
     repositories {
         mavenCentral() { metadataSources { mavenPom(); ignoreGradleMetadataRedirection() } }
         gradlePluginPortal()
+        mavenLocal()
     }
 
     // Since we are using gradle-baseline in gradle-baseline we need to undo forces on project dependencies. Following
@@ -68,7 +69,7 @@ allprojects {
 
 javaVersions {
     libraryTarget = 11
-    runtime = 11
+    runtime = 17
 }
 
 jdks {

@@ -8,7 +8,7 @@ import org.gradle.api.internal.project.ProjectInternal
 
 dependencies {
     implementation gradleApi()
-    implementation project(':gradle-suppressible-error-prone')
+    implementation 'com.palantir.suppressible-error-prone:gradle-suppressible-error-prone'
     implementation 'org.apache.commons:commons-lang3'
     implementation 'com.diffplug.spotless:spotless-plugin-gradle'
     implementation 'com.github.ben-manes.caffeine:caffeine'
@@ -162,9 +162,6 @@ tasks.named('processResources').configure {
 tasks.withType(Test) {
     systemProperty 'recreate', System.getProperty('recreate', 'false')
 }
-
-tasks.test.dependsOn tasks.findByPath(':suppressible-error-prone:publishToMavenLocal')
-tasks.test.dependsOn tasks.findByPath(':suppressible-error-prone-annotations:publishToMavenLocal')
 
 // TODO(esword): turn off a bunch of checks until we come back and fix.  The code was compiled by the groovy compiler
 // and so none of these checks were active until we switched to the java compiler.
