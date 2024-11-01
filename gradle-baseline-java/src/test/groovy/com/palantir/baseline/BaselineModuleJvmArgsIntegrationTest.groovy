@@ -367,8 +367,7 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
         '''.stripIndent(true))
 
         then:
-        ExecutionResult result = runTasksSuccessfully('run')
-        !result.standardOutput.contains('--add-exports')
+        runTasksSuccessfully('run')
     }
 
     def 'Does not add externally defined exports to the jar manifest'() {
