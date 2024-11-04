@@ -102,6 +102,8 @@ class BaselineImmutablesTest extends IntegrationSpec {
             apply plugin: 'com.palantir.baseline-java-versions'
             tasks.withType(JavaCompile).configureEach({
                 options.compilerArgs += ['-Werror']
+                // See comment about fork options in BaselineImmutables
+                options.fork = true
             })
             javaVersions {
                 libraryTarget = $javaVersion
@@ -136,6 +138,7 @@ class BaselineImmutablesTest extends IntegrationSpec {
         then:
         ExecutionResult result = runTasks('compileJava')
         println(result.standardError)
+        println(result.standardOutput)
         result.success
 
         where:

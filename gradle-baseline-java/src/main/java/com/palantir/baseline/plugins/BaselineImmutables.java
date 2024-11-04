@@ -55,6 +55,13 @@ public final class BaselineImmutables implements Plugin<Project> {
                                                     : Collections.emptyList();
                                         }
                                     });
+
+                            // This *attempts* to make immutables work by add the exports to the fork options.
+                            // However, this only happens if the compilation is actually forked, which at the time
+                            // of writing is not always the case. Gradle will fork the compiler if the version of
+                            // Java required by the compiler is different to the one running the Gradle daemon. But
+                            // if they are the same, it will not fork and this extra export option **will have no
+                            // effect**.
                             javaCompileTask
                                     .getOptions()
                                     .getForkOptions()
