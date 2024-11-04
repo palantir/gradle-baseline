@@ -112,6 +112,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
                         errorProneOptions.disable("PreferSafeLoggingPreconditions");
                         errorProneOptions.disable("Slf4jConstantLogMessage");
                         errorProneOptions.disable("Slf4jLogsafeArgs");
+                        errorProneOptions.disable("InjectOnConstructorOfAbstractClass");
                     }));
         });
 
