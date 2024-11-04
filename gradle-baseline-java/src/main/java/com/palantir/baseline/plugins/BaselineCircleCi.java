@@ -18,6 +18,7 @@ package com.palantir.baseline.plugins;
 
 import com.google.common.base.Preconditions;
 import com.google.common.base.Splitter;
+import com.palantir.gradle.utils.environmentvariables.EnvironmentVariables;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -38,16 +39,21 @@ public final class BaselineCircleCi implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
-        configurePluginsForReports(project);
-        configurePluginsForArtifacts(project);
+        EnvironmentVariables environmentVariables = project.getObjects().newInstance(EnvironmentVariables.class);
+
+        configurePluginsForReports(project, environmentVariables);
+        configurePluginsForArtifacts(project, environmentVariables);
         Preconditions.checkState(
                 !project.getName().equals("project"),
                 "Please specify rootProject.name in your settings.gradle, otherwise CircleCI's"
                         + " checkout dir ('project') will be used instead.");
     }
 
-    private void configurePluginsForArtifacts(Project project) {
-        String circleArtifactsDir = System.getenv("CIRCLE_ARTIFACTS");
+    private void configurePluginsForArtifacts(Project project, EnvironmentVariables environmentVariables) {
+        String circleArtifactsDir = environmentVariables
+                .envVarOrFromTestingProperty("CIRCLE_ARTIFACTS")
+                .getOrNull();
+
         if (circleArtifactsDir == null) {
             project.getLogger().info("$CIRCLE_ARTIFACTS variable is not set, not configuring junit/profiling reports");
             return;
@@ -66,8 +72,11 @@ public final class BaselineCircleCi implements Plugin<Project> {
                 }));
     }
 
-    private void configurePluginsForReports(Project project) {
-        String circleReportsDir = System.getenv("CIRCLE_TEST_REPORTS");
+    private void configurePluginsForReports(Project project, EnvironmentVariables environmentVariables) {
+        String circleReportsDir = environmentVariables
+                .envVarOrFromTestingProperty("CIRCLE_TEST_REPORTS")
+                .getOrNull();
+
         if (circleReportsDir == null) {
             return;
         }

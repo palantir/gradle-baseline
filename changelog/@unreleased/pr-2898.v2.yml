@@ -1,0 +1,5 @@
+type: break
+break:
+  description: All modules now require Java 17.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2898
