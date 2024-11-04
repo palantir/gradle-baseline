@@ -26,6 +26,7 @@ import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
+import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.process.CommandLineArgumentProvider;
 
@@ -40,34 +41,45 @@ public final class BaselineImmutables implements Plugin<Project> {
     public void apply(Project project) {
         project.getPluginManager().withPlugin("java", unused -> {
             project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
-                project.getTasks()
-                        .named(sourceSet.getCompileJavaTaskName(), JavaCompile.class)
-                        .configure(javaCompileTask -> {
-                            javaCompileTask
-                                    .getOptions()
-                                    .getCompilerArgumentProviders()
-                                    // Use an anonymous class because tasks with lambda inputs cannot be cached
-                                    .add(new CommandLineArgumentProvider() {
-                                        @Override
-                                        public Iterable<String> asArguments() {
-                                            return hasImmutablesProcessor(project, sourceSet)
-                                                    ? GRADLE_INCREMENTAL
-                                                    : Collections.emptyList();
-                                        }
-                                    });
-                            javaCompileTask
-                                    .getOptions()
-                                    .getForkOptions()
-                                    .getJvmArgumentProviders()
-                                    .add(new CommandLineArgumentProvider() {
-                                        @Override
-                                        public Iterable<String> asArguments() {
-                                            return hasImmutablesProcessor(project, sourceSet)
-                                                    ? EXPORTS
-                                                    : Collections.emptyList();
-                                        }
-                                    });
-                        });
+                TaskProvider<JavaCompile> javaCompileTask =
+                        project.getTasks().named(sourceSet.getCompileJavaTaskName(), JavaCompile.class);
+                javaCompileTask.configure(javaCompile -> {
+                    javaCompile
+                            .getOptions()
+                            .getCompilerArgumentProviders()
+                            // Use an anonymous class because tasks with lambda inputs cannot be cached
+                            .add(new CommandLineArgumentProvider() {
+                                @Override
+                                public Iterable<String> asArguments() {
+                                    return hasImmutablesProcessor(project, sourceSet)
+                                            ? GRADLE_INCREMENTAL
+                                            : Collections.emptyList();
+                                }
+                            });
+                    javaCompile
+                            .getOptions()
+                            .getForkOptions()
+                            .getJvmArgumentProviders()
+                            .add(new CommandLineArgumentProvider() {
+                                @Override
+                                public Iterable<String> asArguments() {
+                                    return hasImmutablesProcessor(project, sourceSet)
+                                            ? EXPORTS
+                                            : Collections.emptyList();
+                                }
+                            });
+                });
+
+                // Unfortunately there is no way to set forking lazily
+                project.afterEvaluate(_ignored -> {
+                    // We want to avoid turning fork off it has been enabled elsewhere but the
+                    // processor is not present
+                    javaCompileTask.configure(javaCompile -> {
+                        if (!javaCompile.getOptions().isFork()) {
+                            javaCompile.getOptions().setFork(hasImmutablesProcessor(project, sourceSet));
+                        }
+                    });
+                });
             });
         });
     }
