@@ -22,14 +22,15 @@ import nebula.test.functional.ExecutionResult
 
 class BaselineImmutablesTest extends IntegrationSpec {
     private static final String IMMUTABLES = 'org.immutables:value:2.8.8'
-    private static final String IMMUTABLES_ANNOTATIONS = 'org.immutables:value:2.8.8:annotations'
+    private static final String IMMUTABLES_ANNOTATIONS = IMMUTABLES + ':annotations'
 
-    def 'inserts incremental compilation args into source sets that have immutables'() {
-        buildFile << """
+    def setup() {
+        // language=Gradle
+        buildFile << '''
             plugins {
                 id 'org.unbroken-dome.test-sets' version '4.0.0'
             }
-
+            
             apply plugin: 'com.palantir.baseline-immutables'
             apply plugin: 'java-library'
 
@@ -37,6 +38,22 @@ class BaselineImmutablesTest extends IntegrationSpec {
                 mavenCentral()
             }
             
+            task compileAll
+            
+            tasks.withType(JavaCompile) { javaCompile ->
+                doFirst {
+                    logger.lifecycle "Debug compiler args: \${javaCompile.name}: \${javaCompile.options.allCompilerArgs}"
+                    logger.lifecycle "Debug compiler fork args: \${javaCompile.name}: \${javaCompile.options.forkOptions.allJvmArgs}"
+                    logger.lifecycle "Debug compiler fork: \${javaCompile.name}: \${javaCompile.options.fork}"
+                }
+                                
+                tasks.compileAll.dependsOn javaCompile
+            }
+        '''.stripIndent(true)
+    }
+
+    def 'inserts incremental compilation args into source sets that have immutables'() {
+        buildFile << """
             testSets {
                 hasImmutables
                 doesNotHaveImmutables
@@ -56,16 +73,6 @@ class BaselineImmutablesTest extends IntegrationSpec {
                 hasImmutablesAnnotationProcessor '$IMMUTABLES'
 
                 onlyHasImmutablesAnnotationsAnnotationProcessor '$IMMUTABLES_ANNOTATIONS'
-            }
-            
-            task compileAll
-            
-            tasks.withType(JavaCompile) { javaCompile ->
-                doFirst {
-                    logger.lifecycle "\${javaCompile.name}: \${javaCompile.options.allCompilerArgs}"
-                }
-                                
-                tasks.compileAll.dependsOn javaCompile
             }
         """.stripIndent()
 
@@ -88,16 +95,15 @@ class BaselineImmutablesTest extends IntegrationSpec {
     }
 
     def 'Compatible with java #javaVersion'() {
+        // Context: https://github.com/immutables/immutables/issues/1379#issuecomment-1254224741
+
         when:
         buildFile << """
             apply plugin: 'com.palantir.baseline-java-versions'
-            apply plugin: 'com.palantir.baseline-immutables'
-            apply plugin: 'java-library'
-            repositories {
-                mavenCentral()
-            }
             tasks.withType(JavaCompile).configureEach({
-              options.compilerArgs += ['-Werror']
+                options.compilerArgs += ['-Werror']
+                // See comment about fork options in BaselineImmutables
+                options.fork = true
             })
             javaVersions {
                 libraryTarget = $javaVersion
@@ -106,27 +112,33 @@ class BaselineImmutablesTest extends IntegrationSpec {
                 annotationProcessor '$IMMUTABLES'
                 compileOnly '$IMMUTABLES_ANNOTATIONS'
             }
-        """.stripIndent()
-        writeJavaSourceFile("""
-        package com.palantir.one;
-        import com.palantir.two.ImmutableTwo;
-        import org.immutables.value.Value;
-        @Value.Immutable
-        public interface One {
-            ImmutableTwo two();
-        }
-        """.stripIndent())
-        writeJavaSourceFile("""
-        package com.palantir.two;
-        import org.immutables.value.Value;
-        @Value.Immutable
-        public interface Two {
-            String value();
-        }
-        """.stripIndent())
+        """.stripIndent(true)
+
+        // language=Java
+        writeJavaSourceFile('''
+            package com.palantir.one;
+            import com.palantir.two.ImmutableTwo;
+            import org.immutables.value.Value;
+            @Value.Immutable
+            public interface One {
+                ImmutableTwo two();
+            }
+        '''.stripIndent(true))
+
+        // language=Java
+        writeJavaSourceFile('''
+            package com.palantir.two;
+            import org.immutables.value.Value;
+            @Value.Immutable
+            public interface Two {
+                String value();
+            }
+        '''.stripIndent(true))
+
         then:
         ExecutionResult result = runTasks('compileJava')
         println(result.standardError)
+        println(result.standardOutput)
         result.success
 
         where:
@@ -135,13 +147,6 @@ class BaselineImmutablesTest extends IntegrationSpec {
 
     def 'handles an annotationProcesor source set extending from another one'() {
         buildFile << """
-            apply plugin: 'com.palantir.baseline-immutables'
-            apply plugin: 'java-library'
-
-            repositories {
-                mavenCentral()
-            }
-
             dependencies {
                 annotationProcessor '$IMMUTABLES'
                 compileOnly '$IMMUTABLES_ANNOTATIONS'
@@ -151,12 +156,6 @@ class BaselineImmutablesTest extends IntegrationSpec {
                 testAnnotationProcessor.extendsFrom annotationProcessor
                 testCompileOnly.extendsFrom compileOnly
             } 
-            
-            tasks.withType(JavaCompile) { javaCompile ->
-                doFirst {
-                    logger.lifecycle "\${javaCompile.name}: \${javaCompile.options.allCompilerArgs}"
-                }
-            }
         """.stripIndent(true)
 
         def testJava = 'src/test/java'

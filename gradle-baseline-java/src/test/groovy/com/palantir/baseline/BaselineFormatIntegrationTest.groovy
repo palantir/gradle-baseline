@@ -37,9 +37,14 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
                 new File("../gradle-baseline-java-config/resources"),
                 new File(projectDir, ".baseline"))
         // Disable copyright by default so we can test it individually
-        file('gradle.properties') << "com.palantir.baseline-format.copyright=false\n"
+        file('gradle.properties') << '''
+            com.palantir.baseline-format.copyright=false
+            # Required for the eclipse formatter. Delete once it's removed.
+            org.gradle.jvmargs = --add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED
+        '''.stripIndent(true)
     }
 
+    // language=Gradle
     def standardBuildFile = '''
         plugins {
             id 'java'
@@ -49,7 +54,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
             // to resolve the `palantirJavaFormat` configuration
             mavenCentral()
         }
-    '''.stripIndent()
+    '''.stripIndent(true)
 
     def noJavaBuildFile = '''
         plugins {

@@ -48,7 +48,6 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
     '''.stripIndent(true)
 
     def setup() {
-        setFork(true)
         buildFile << standardBuildFile
     }
 

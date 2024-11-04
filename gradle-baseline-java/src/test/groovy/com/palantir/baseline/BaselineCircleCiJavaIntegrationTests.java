@@ -29,23 +29,25 @@ import org.gradle.testkit.runner.GradleRunner;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.junit.rules.TemporaryFolder;
 
 public class BaselineCircleCiJavaIntegrationTests {
-
-    @Rule
-    public final EnvironmentVariables env = new EnvironmentVariables();
-
     @Rule
     public final TemporaryFolder projectDir = new TemporaryFolder();
 
     private File reportsDir;
 
     @Before
-    public void before() {
+    public void before() throws IOException {
         reportsDir = new File(projectDir.getRoot(), "circle/reports");
-        env.set("CIRCLE_TEST_REPORTS", reportsDir.toString());
+
+        java.nio.file.Files.writeString(
+                projectDir.newFile("gradle.properties").toPath(),
+                """
+                __TESTING=true
+                __TESTING_CIRCLE_TEST_REPORTS=%s
+                """
+                        .formatted(reportsDir.toString()));
 
         copyTestFile("build.gradle", projectDir, "build.gradle");
         copyTestFile("subproject.gradle", projectDir, "subproject/build.gradle");
