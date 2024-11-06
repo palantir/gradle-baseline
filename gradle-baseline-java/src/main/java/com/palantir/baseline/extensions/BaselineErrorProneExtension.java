@@ -59,7 +59,6 @@ public abstract class BaselineErrorProneExtension {
             "PreferCollectionTransform",
             "PreferInputStreamTransferTo",
             "PreferListsPartition",
-            "PreferSafeLogger",
             "PreferStaticLoggers",
             "ProxyNonConstantType",
             "ReadReturnValueIgnored",
