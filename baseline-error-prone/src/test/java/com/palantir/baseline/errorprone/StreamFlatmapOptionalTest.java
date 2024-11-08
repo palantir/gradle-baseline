@@ -26,9 +26,15 @@ class StreamFlatmapOptionalTest {
                         "import java.util.Collection;",
                         "import java.util.List;",
                         "import java.util.Optional;",
+                        "import java.util.stream.Collectors;",
                         "public class Test {",
-                        "  List<String> f(List<List<Optional<String>>> in) {",
-                        "    return in.stream().flatMap(Collection::stream).flatMap(Optional::stream).toList();",
+                        "  List<String> f1(List<List<Optional<String>>> in) {",
+                        "    return in.stream().flatMap(Collection::stream)"
+                                + ".flatMap(Optional::stream).collect(Collectors.toList());",
+                        "  }",
+                        "  List<String> f2(List<List<Optional<String>>> in) {",
+                        "    return in.stream().flatMap(list -> list.stream().flatMap(Optional::stream))"
+                                + ".collect(Collectors.toList());",
                         "  }",
                         "}")
                 .addOutputLines(
@@ -36,10 +42,15 @@ class StreamFlatmapOptionalTest {
                         "import java.util.Collection;",
                         "import java.util.List;",
                         "import java.util.Optional;",
+                        "import java.util.stream.Collectors;",
                         "public class Test {",
-                        "  List<String> f(List<List<Optional<String>>> in) {",
+                        "  List<String> f1(List<List<Optional<String>>> in) {",
                         "    return in.stream().flatMap(Collection::stream)"
-                                + ".filter(Optional::isPresent).map(Optional::get).toList();",
+                                + ".filter(Optional::isPresent).map(Optional::get).collect(Collectors.toList());",
+                        "  }",
+                        "  List<String> f2(List<List<Optional<String>>> in) {",
+                        "    return in.stream().flatMap(list -> list.stream()"
+                                + ".filter(Optional::isPresent).map(Optional::get)).collect(Collectors.toList());",
                         "  }",
                         "}")
                 .doTest();

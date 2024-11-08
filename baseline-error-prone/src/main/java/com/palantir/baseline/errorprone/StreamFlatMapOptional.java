@@ -57,19 +57,16 @@ public final class StreamFlatMapOptional extends BugChecker implements BugChecke
         if (STREAM_FLAT_MAP.matches(tree, state)) {
             ExpressionTree stream = ASTHelpers.getReceiver(tree);
             if (stream != null) {
-                ExpressionTree streamReceiver = ASTHelpers.getReceiver(stream);
-                if (streamReceiver != null) {
-                    List<? extends ExpressionTree> arguments = tree.getArguments();
-                    if (arguments != null && arguments.size() == 1) {
-                        if (OPTIONAL_STREAM.matches(arguments.get(0), state)) {
-                            String replacement = state.getSourceForNode(ASTHelpers.getReceiver(tree.getMethodSelect()))
-                                    + ".filter(Optional::isPresent).map(Optional::get)";
-                            SuggestedFix fix = SuggestedFix.builder()
-                                    .addImport("java.util.Optional")
-                                    .replace(tree, replacement)
-                                    .build();
-                            return buildDescription(tree).addFix(fix).build();
-                        }
+                List<? extends ExpressionTree> arguments = tree.getArguments();
+                if (arguments != null && arguments.size() == 1) {
+                    if (OPTIONAL_STREAM.matches(arguments.get(0), state)) {
+                        String replacement = state.getSourceForNode(ASTHelpers.getReceiver(tree.getMethodSelect()))
+                                + ".filter(Optional::isPresent).map(Optional::get)";
+                        SuggestedFix fix = SuggestedFix.builder()
+                                .addImport("java.util.Optional")
+                                .replace(tree, replacement)
+                                .build();
+                        return buildDescription(tree).addFix(fix).build();
                     }
                 }
             }
