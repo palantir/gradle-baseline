@@ -21,13 +21,15 @@ import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.fixes.SuggestedFix;
+import com.google.errorprone.fixes.SuggestedFixes;
+import com.google.errorprone.matchers.ChildMultiMatcher.MatchType;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
+import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
-import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.stream.Stream;
@@ -52,23 +54,24 @@ public final class StreamFlatMapOptional extends BugChecker implements BugChecke
             .named("stream")
             .withNoParameters();
 
+    private static final Matcher<ExpressionTree> STREAM_FLATMAP_OPTIONAL_STREAM = Matchers.methodInvocation(
+            STREAM_FLAT_MAP,
+            // Any of the three MatchTypes are reasonable in this case, given a single arg
+            MatchType.LAST,
+            OPTIONAL_STREAM);
+
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
-        if (STREAM_FLAT_MAP.matches(tree, state)) {
-            ExpressionTree stream = ASTHelpers.getReceiver(tree);
-            if (stream != null) {
-                List<? extends ExpressionTree> arguments = tree.getArguments();
-                if (arguments != null && arguments.size() == 1) {
-                    if (OPTIONAL_STREAM.matches(arguments.get(0), state)) {
-                        String replacement = state.getSourceForNode(ASTHelpers.getReceiver(tree.getMethodSelect()))
-                                + ".filter(Optional::isPresent).map(Optional::get)";
-                        SuggestedFix fix = SuggestedFix.builder()
-                                .addImport("java.util.Optional")
-                                .replace(tree, replacement)
-                                .build();
-                        return buildDescription(tree).addFix(fix).build();
-                    }
-                }
+        if (STREAM_FLATMAP_OPTIONAL_STREAM.matches(tree, state)) {
+            ExpressionTree receiver = ASTHelpers.getReceiver(tree.getMethodSelect());
+            if (receiver != null) {
+                SuggestedFix.Builder fix = SuggestedFix.builder();
+                String optionalType = SuggestedFixes.qualifyType(state, fix, Optional.class.getCanonicalName());
+                String replacement = ".filter(" + optionalType + "::isPresent).map(" + optionalType + "::get)";
+                return buildDescription(tree)
+                        .addFix(fix.replace(state.getEndPosition(receiver), state.getEndPosition(tree), replacement)
+                                .build())
+                        .build();
             }
         }
         return Description.NO_MATCH;
