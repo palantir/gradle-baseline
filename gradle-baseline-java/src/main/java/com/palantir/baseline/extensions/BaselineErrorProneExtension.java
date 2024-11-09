@@ -73,6 +73,7 @@ public class BaselineErrorProneExtension {
             "Slf4jThrowable",
             "StreamOfEmpty",
             "StreamFlatMapOptional",
+            "StreamToList",
             "StrictUnusedVariable",
             "StringBuilderConstantParameters",
             "ThrowError",
