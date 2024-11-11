@@ -67,7 +67,7 @@ test {
     environment 'CIRCLE_TEST_REPORTS', "${buildDir}/circle-reports"
 
     systemProperty 'ignoreDeprecations', 'true'
-    systemProperty 'projectVersion', project.version
+    environment 'ORG_GRADLE_PROJECT_baselineErrorProneVersion', project.version
 }
 
 gradlePlugin {

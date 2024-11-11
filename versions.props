@@ -20,6 +20,7 @@ com.palantir.gradle.utils:* = 0.9.0
 com.uber.nullaway:nullaway = 0.12.1
 com.palantir.gradle.failure-reports:* = 1.2.0
 
+
 # test deps
 com.fasterxml.jackson.*:* = 2.18.1
 com.github.stefanbirkner:system-rules = 1.19.0

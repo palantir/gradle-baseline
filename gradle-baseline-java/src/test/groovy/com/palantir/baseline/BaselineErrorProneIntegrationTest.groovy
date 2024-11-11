@@ -16,14 +16,9 @@
 
 package com.palantir.baseline
 
-
 import org.gradle.testkit.runner.BuildResult
-import org.gradle.testkit.runner.GradleRunner
 import org.gradle.testkit.runner.TaskOutcome
 import spock.lang.Unroll
-
-import java.util.stream.Stream
-
 /**
  * This test depends on ./gradlew :baseline-error-prone:publishToMavenLocal
  */
@@ -284,13 +279,5 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
 
         where:
         checkConfigurationMethod << CheckConfigurationMethod.values()
-    }
-
-    @Override
-    GradleRunner with(String... tasks) {
-        return super.with(Stream.concat(
-                        Arrays.stream(tasks),
-                        Stream.of('-PbaselineErrorProneVersion=' + System.getProperty('projectVersion')))
-                .toArray(String[]::new))
     }
 }
