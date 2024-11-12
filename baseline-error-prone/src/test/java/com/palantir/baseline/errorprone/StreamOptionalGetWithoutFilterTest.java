@@ -36,6 +36,16 @@ class StreamOptionalGetWithoutFilterTest {
                         "        // BUG: Diagnostic contains filter(Optional::isPresent) before map(Optional::get)",
                         "        return stream.map(opt -> opt.get());",
                         "    }",
+                        "    Stream<String> test3(Stream<Optional<String>> stream) {",
+                        "        // BUG: Diagnostic contains filter(Optional::isPresent) before map(Optional::get)"
+                                + " or map(Optional::orElseThrow)",
+                        "        return stream.map(opt -> opt.orElseThrow());",
+                        "    }",
+                        "    Stream<String> test4(Stream<Optional<String>> stream) {",
+                        "        // BUG: Diagnostic contains filter(Optional::isPresent) before map(Optional::get)"
+                                + " or map(Optional::orElseThrow)",
+                        "        return stream.map(Optional::orElseThrow);",
+                        "    }",
                         "}")
                 .doTest();
     }
@@ -64,6 +74,14 @@ class StreamOptionalGetWithoutFilterTest {
                         "        return stream.filter(opt -> opt.isPresent())",
                         "                .map(opt -> opt.get())",
                         "                .filter(s -> s.length() > 2);",
+                        "    }",
+                        "    Stream<String> test5(Stream<Optional<String>> stream) {",
+                        "        return stream.filter(opt -> opt.isPresent())",
+                        "                .map(Optional::orElseThrow);",
+                        "    }",
+                        "    Stream<String> test6(Stream<Optional<String>> stream) {",
+                        "        return stream.filter(opt -> opt.isPresent())",
+                        "                .map(opt -> opt.orElseThrow());",
                         "    }",
                         "}")
                 .doTest();

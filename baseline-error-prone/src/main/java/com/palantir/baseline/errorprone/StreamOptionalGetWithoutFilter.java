@@ -38,7 +38,8 @@ import java.util.stream.Stream;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.WARNING,
-        summary = "Stream<Optional<?>> should call filter(Optional::isPresent) before map(Optional::get)",
+        summary = "Stream<Optional<?>> should call filter(Optional::isPresent) before "
+                + "map(Optional::get) or map(Optional::orElseThrow)",
         explanation = "Calling map(Optional::get) on a Stream<Optional<?>> without first calling "
                 + "filter(Optional::isPresent) can cause NoSuchElementException.")
 public final class StreamOptionalGetWithoutFilter extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
@@ -47,6 +48,13 @@ public final class StreamOptionalGetWithoutFilter extends BugChecker implements 
             .onClass(Optional.class.getName())
             .named("get")
             .withNoParameters();
+    private static final Matcher<ExpressionTree> OPTIONAL_OR_ELSE_THROW_METHOD = Matchers.staticMethod()
+            .onClass(Optional.class.getName())
+            .named("orElseThrow")
+            .withNoParameters();
+
+    private static final Matcher<ExpressionTree> OPTIONAL_UNWRAP_METHOD =
+            Matchers.anyOf(OPTIONAL_GET_METHOD, OPTIONAL_OR_ELSE_THROW_METHOD);
 
     private static final Matcher<ExpressionTree> STREAM_MAP_METHOD = Matchers.instanceMethod()
             .onDescendantOf(Stream.class.getName())
@@ -67,7 +75,7 @@ public final class StreamOptionalGetWithoutFilter extends BugChecker implements 
             Matchers.methodInvocation(STREAM_FILTER_METHOD, MatchType.LAST, OPTIONAL_IS_PRESENT_METHOD);
 
     private static final Matcher<ExpressionTree> STREAM_MAP_OPTIONAL_GET =
-            Matchers.methodInvocation(STREAM_MAP_METHOD, MatchType.LAST, OPTIONAL_GET_METHOD);
+            Matchers.methodInvocation(STREAM_MAP_METHOD, MatchType.LAST, OPTIONAL_UNWRAP_METHOD);
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
