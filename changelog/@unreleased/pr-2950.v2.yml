@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Prefer Optional::orElseThrow over Optional::get
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2950
