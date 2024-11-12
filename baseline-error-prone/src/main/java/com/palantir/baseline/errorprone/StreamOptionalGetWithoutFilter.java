@@ -18,8 +18,10 @@ package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
+import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
+import com.google.errorprone.matchers.ChildMultiMatcher.MatchType;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
@@ -35,7 +37,7 @@ import java.util.stream.Stream;
 @BugPattern(
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        severity = BugPattern.SeverityLevel.WARNING,
+        severity = SeverityLevel.WARNING,
         summary = "Stream<Optional<?>> should call filter(Optional::isPresent) before map(Optional::get)",
         explanation = "Calling map(Optional::get) on a Stream<Optional<?>> without first calling "
                 + "filter(Optional::isPresent) can cause NoSuchElementException.")
@@ -56,9 +58,20 @@ public final class StreamOptionalGetWithoutFilter extends BugChecker implements 
             .named("filter")
             .withParameters(Predicate.class.getName());
 
+    private static final Matcher<ExpressionTree> OPTIONAL_IS_PRESENT_METHOD = Matchers.instanceMethod()
+            .onDescendantOf(Optional.class.getName())
+            .named("isPresent")
+            .withNoParameters();
+
+    private static final Matcher<ExpressionTree> STREAM_FILTER_IS_PRESENT =
+            Matchers.methodInvocation(STREAM_FILTER_METHOD, MatchType.LAST, OPTIONAL_IS_PRESENT_METHOD);
+
+    private static final Matcher<ExpressionTree> STREAM_MAP_OPTIONAL_GET =
+            Matchers.methodInvocation(STREAM_MAP_METHOD, MatchType.LAST, OPTIONAL_GET_METHOD);
+
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
-        if (STREAM_MAP_METHOD.matches(tree, state) && containsOptionalGet(tree, state)) {
+        if (STREAM_MAP_OPTIONAL_GET.matches(tree, state)) {
             ExpressionTree receiver = ASTHelpers.getReceiver(tree);
             if (receiver != null && !hasFilterIsPresent(receiver, state)) {
                 return describeMatch(tree);
@@ -67,19 +80,11 @@ public final class StreamOptionalGetWithoutFilter extends BugChecker implements 
         return Description.NO_MATCH;
     }
 
-    private static boolean containsOptionalGet(MethodInvocationTree tree, VisitorState state) {
-        return tree.getArguments().stream().anyMatch(arg -> OPTIONAL_GET_METHOD.matches(arg, state));
-    }
-
     private static boolean hasFilterIsPresent(ExpressionTree receiver, VisitorState state) {
         if (receiver instanceof MethodInvocationTree) {
             MethodInvocationTree methodInvocationTree = (MethodInvocationTree) receiver;
-            if (STREAM_FILTER_METHOD.matches(methodInvocationTree, state)) {
-                return methodInvocationTree.getArguments().stream()
-                        .anyMatch(arg -> "Optional::isPresent".equals(state.getSourceForNode(arg)));
-            } else {
-                return hasFilterIsPresent(methodInvocationTree.getMethodSelect(), state);
-            }
+            return STREAM_FILTER_IS_PRESENT.matches(methodInvocationTree, state)
+                    || hasFilterIsPresent(methodInvocationTree.getMethodSelect(), state);
         }
         return false;
     }
