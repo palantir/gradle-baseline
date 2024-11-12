@@ -39,7 +39,7 @@ import java.util.stream.Stream;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,
-        summary = "`Stream.filter(Optional::isPresent).map(Optional::get)` is more efficient than "
+        summary = "`Stream.filter(Optional::isPresent).map(Optional::orElseThrow)` is more efficient than "
                 + "`Stream.flatMap(Optional::stream)`")
 public final class StreamFlatMapOptional extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
     private static final long serialVersionUID = 1L;
@@ -67,7 +67,7 @@ public final class StreamFlatMapOptional extends BugChecker implements BugChecke
             if (receiver != null) {
                 SuggestedFix.Builder fix = SuggestedFix.builder();
                 String optionalType = SuggestedFixes.qualifyType(state, fix, Optional.class.getCanonicalName());
-                String replacement = ".filter(" + optionalType + "::isPresent).map(" + optionalType + "::get)";
+                String replacement = ".filter(" + optionalType + "::isPresent).map(" + optionalType + "::orElseThrow)";
                 return buildDescription(tree)
                         .addFix(fix.replace(state.getEndPosition(receiver), state.getEndPosition(tree), replacement)
                                 .build())
