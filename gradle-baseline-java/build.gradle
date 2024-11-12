@@ -8,6 +8,7 @@ import org.gradle.api.internal.project.ProjectInternal
 
 dependencies {
     implementation gradleApi()
+    implementation 'com.palantir.suppressible-error-prone:gradle-suppressible-error-prone'
     implementation 'org.apache.commons:commons-lang3'
     implementation 'com.diffplug.spotless:spotless-plugin-gradle'
     implementation 'com.github.ben-manes.caffeine:caffeine'
@@ -38,6 +39,7 @@ dependencies {
     testImplementation 'net.lingala.zip4j:zip4j'
     testImplementation 'org.assertj:assertj-core'
     testImplementation 'org.junit.jupiter:junit-jupiter'
+    testImplementation project(':baseline-error-prone')
     testRuntimeOnly 'org.junit.vintage:junit-vintage-engine', {
         because 'allows JUnit 3 and JUnit 4 tests to run'
     }
@@ -55,6 +57,8 @@ dependencies {
     compileOnly 'org.immutables:value::annotations'
 }
 
+// Baseline errorprone needs to give jars to the compilation process to enable testing, so we publish to maven
+// local first then they are available to the test process.
 tasks.test.dependsOn tasks.findByPath(':gradle-baseline-java-config:publishToMavenLocal')
 tasks.test.dependsOn tasks.findByPath(':baseline-error-prone:publishToMavenLocal')
 tasks.test.dependsOn tasks.findByPath(':baseline-null-away:publishToMavenLocal')
@@ -63,6 +67,10 @@ tasks.test.dependsOn tasks.publishToMavenLocal
 test {
     environment 'CIRCLE_ARTIFACTS', "${buildDir}/artifacts"
     environment 'CIRCLE_TEST_REPORTS', "${buildDir}/circle-reports"
+
+    // This sets the baselineErrorProneGradle property so that the tests know which version of baseline-error-prone
+    // to request from mavenLocal()
+    environment 'ORG_GRADLE_PROJECT_baselineErrorProneVersion', project.version
 
     systemProperty 'ignoreDeprecations', 'true'
 }

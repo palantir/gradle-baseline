@@ -16,11 +16,9 @@
 
 package com.palantir.baseline
 
-
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 import spock.lang.Unroll
-
 /**
  * This test depends on ./gradlew :baseline-error-prone:publishToMavenLocal
  */

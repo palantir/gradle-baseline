@@ -17,10 +17,10 @@
 package com.palantir.baseline.extensions;
 
 import com.google.common.collect.ImmutableList;
-import org.gradle.api.Project;
-import org.gradle.api.provider.ListProperty;
+import com.palantir.gradle.suppressibleerrorprone.SuppressibleErrorProneExtension;
+import org.gradle.api.provider.SetProperty;
 
-public class BaselineErrorProneExtension {
+public abstract class BaselineErrorProneExtension {
 
     /*
      * Do not add SUGGESTION checks here. Instead either increase the severity to WARNING or do not apply them by
@@ -59,9 +59,6 @@ public class BaselineErrorProneExtension {
             "PreferCollectionTransform",
             "PreferInputStreamTransferTo",
             "PreferListsPartition",
-            "PreferSafeLoggableExceptions",
-            "PreferSafeLogger",
-            "PreferSafeLoggingPreconditions",
             "PreferStaticLoggers",
             "ProxyNonConstantType",
             "ReadReturnValueIgnored",
@@ -98,14 +95,19 @@ public class BaselineErrorProneExtension {
             "UnnecessaryParentheses",
             "ZoneIdOfZ");
 
-    private final ListProperty<String> patchChecks;
+    private final SuppressibleErrorProneExtension suppressibleErrorProneExtension;
 
-    public BaselineErrorProneExtension(Project project) {
-        patchChecks = project.getObjects().listProperty(String.class);
-        patchChecks.set(DEFAULT_PATCH_CHECKS);
+    /**
+     * .
+     * @deprecated Interact with SuppressibleErrorProneExtension instead. This only provided for backcompat.
+     */
+    @Deprecated
+    public final SetProperty<String> getPatchChecks() {
+        return suppressibleErrorProneExtension.getPatchChecks();
     }
 
-    public final ListProperty<String> getPatchChecks() {
-        return patchChecks;
+    public BaselineErrorProneExtension(SuppressibleErrorProneExtension suppressibleErrorProneExtension) {
+        this.suppressibleErrorProneExtension = suppressibleErrorProneExtension;
+        suppressibleErrorProneExtension.getPatchChecks().addAll(DEFAULT_PATCH_CHECKS);
     }
 }
