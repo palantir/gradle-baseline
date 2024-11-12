@@ -48,19 +48,19 @@ class StreamFlatmapOptionalTest {
                         "public class Test {",
                         "  Stream<String> f1(Stream<Collection<Optional<String>>> in) {",
                         "    return in.flatMap(Collection::stream)"
-                                + ".filter(Optional::isPresent).map(Optional::get);",
+                                + ".filter(Optional::isPresent).map(Optional::orElseThrow);",
                         "  }",
                         "  Stream<String> f2(Stream<Collection<Optional<String>>> in) {",
                         "    return in.flatMap(list -> list.stream()"
-                                + ".filter(Optional::isPresent).map(Optional::get));",
+                                + ".filter(Optional::isPresent).map(Optional::orElseThrow));",
                         "  }",
                         "  Stream<String> f3(Stream<Collection<Optional<String>>> in) {",
                         "    return in.flatMap(list -> list.stream())"
-                                + ".filter(Optional::isPresent).map(Optional::get);",
+                                + ".filter(Optional::isPresent).map(Optional::orElseThrow);",
                         "  }",
                         "  Stream<String> f4(Stream<Optional<Optional<String>>> in) {",
-                        "      return in.filter(Optional::isPresent).map(Optional::get)"
-                                + ".filter(Optional::isPresent).map(Optional::get);",
+                        "      return in.filter(Optional::isPresent).map(Optional::orElseThrow)"
+                                + ".filter(Optional::isPresent).map(Optional::orElseThrow);",
                         "  }",
                         "}")
                 .doTest();
