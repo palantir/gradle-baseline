@@ -17,6 +17,7 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
+import com.google.common.base.Preconditions;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
@@ -30,8 +31,10 @@ import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @AutoService(BugChecker.class)
@@ -49,19 +52,32 @@ public final class StreamFlatMapOptional extends BugChecker implements BugChecke
             .namedAnyOf("flatMap")
             .withParameters(Function.class.getName());
 
+    private static final Matcher<ExpressionTree> STREAMEX_FLAT_MAP = MethodMatchers.instanceMethod()
+            .onDescendantOf("one.util.streamex.AbstractStreamEx")
+            .namedAnyOf("flatMap")
+            .withParameters(Function.class.getName());
+
+    private static final Matcher<ExpressionTree> ENTRY_STREAM_FLAT_MAP = MethodMatchers.instanceMethod()
+            .onDescendantOf("one.util.streamex.EntryStream")
+            .namedAnyOf("flatMapValues")
+            .withParameters(Function.class.getName());
+
     private static final Matcher<ExpressionTree> OPTIONAL_STREAM = MethodMatchers.instanceMethod()
             .onDescendantOf(Optional.class.getName())
             .named("stream")
             .withNoParameters();
 
     private static final Matcher<ExpressionTree> STREAM_FLATMAP_OPTIONAL_STREAM = Matchers.methodInvocation(
-            STREAM_FLAT_MAP,
+            Matchers.anyOf(STREAM_FLAT_MAP, STREAMEX_FLAT_MAP, ENTRY_STREAM_FLAT_MAP),
             // Any of the three MatchTypes are reasonable in this case, given a single arg
             MatchType.LAST,
             OPTIONAL_STREAM);
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
+        List<Optional<String>> test = List.of(Optional.of("test"));
+        List<String> collect = test.stream().map(Optional::get).collect(Collectors.toList());
+        Preconditions.checkState(!collect.isEmpty());
         if (STREAM_FLATMAP_OPTIONAL_STREAM.matches(tree, state)) {
             ExpressionTree receiver = ASTHelpers.getReceiver(tree.getMethodSelect());
             if (receiver != null) {

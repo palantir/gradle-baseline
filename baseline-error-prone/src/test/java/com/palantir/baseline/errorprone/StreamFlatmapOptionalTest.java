@@ -39,6 +39,9 @@ class StreamFlatmapOptionalTest {
                         "  Stream<String> f4(Stream<Optional<Optional<String>>> in) {",
                         "      return in.flatMap(Optional::stream).flatMap(Optional::stream);",
                         "  }",
+                        "  Stream<String> f5(Stream<Optional<String>> in) {",
+                        "    return in.filter(Optional::isPresent).map(Optional::get);",
+                        "  }",
                         "}")
                 .addOutputLines(
                         "Test.java",
@@ -61,6 +64,9 @@ class StreamFlatmapOptionalTest {
                         "  Stream<String> f4(Stream<Optional<Optional<String>>> in) {",
                         "      return in.filter(Optional::isPresent).map(Optional::get)"
                                 + ".filter(Optional::isPresent).map(Optional::get);",
+                        "  }",
+                        "  Stream<String> f5(Stream<Optional<String>> in) {",
+                        "    return in.filter(Optional::isPresent).map(Optional::get);",
                         "  }",
                         "}")
                 .doTest();
