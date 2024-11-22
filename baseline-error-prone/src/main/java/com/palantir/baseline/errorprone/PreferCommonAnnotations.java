@@ -37,9 +37,7 @@ import java.util.Objects;
  * - Guava's version of {@code @VisibleForTesting} over other copies.
  */
 @AutoService(BugChecker.class)
-@BugPattern(
-        summary = "Prefer the common version of annotations over other copies.",
-        severity = SeverityLevel.WARNING)
+@BugPattern(summary = "Prefer the common version of annotations over other copies.", severity = SeverityLevel.WARNING)
 public final class PreferCommonAnnotations extends BugChecker implements ImportTreeMatcher {
 
     /** ClassName -> preferred import. */
