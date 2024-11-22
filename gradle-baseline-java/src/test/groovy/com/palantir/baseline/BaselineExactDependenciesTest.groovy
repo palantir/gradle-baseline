@@ -29,7 +29,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
             id 'java'
             id 'com.palantir.baseline-exact-dependencies'
             id 'com.palantir.baseline' apply false
-            id 'com.palantir.consistent-versions' version '2.25.0' apply false
+            id 'com.palantir.consistent-versions' version '2.31.0' apply false
         }
     '''.stripIndent(true)
 
