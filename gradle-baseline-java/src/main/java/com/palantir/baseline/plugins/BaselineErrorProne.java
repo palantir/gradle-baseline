@@ -61,7 +61,9 @@ public final class BaselineErrorProne implements Plugin<Project> {
                                 "PreferSafeLoggingPreconditions",
                                 "PreferSafeLoggableExceptions"),
                         new ConditionalPatchCheck(
-                                new IfModuleIsUsed("com.palantir.safe-logging", "logger"), "PreferSafeLogger"));
+                                new IfModuleIsUsed("com.palantir.safe-logging", "logger"), "PreferSafeLogger"),
+                        new ConditionalPatchCheck(
+                                new IfModuleIsUsed("com.google.guava", "guava"), "PreferCommonAnnotations"));
 
         suppressibleErrorProneExtension.configureEachErrorProneOptions(BaselineErrorProne::configureErrorProneOptions);
 
@@ -76,6 +78,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 errorProneOptions.disable("Slf4jConstantLogMessage");
                 errorProneOptions.disable("Slf4jLogsafeArgs");
                 errorProneOptions.disable("InjectOnConstructorOfAbstractClass");
+                errorProneOptions.disable("PreferCommonAnnotations");
             });
         });
 
@@ -85,6 +88,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 errorProneOptions.disable("PreferSafeLoggableExceptions");
                 errorProneOptions.disable("PreferSafeLoggingPreconditions");
                 errorProneOptions.disable("StrictUnusedVariable");
+                errorProneOptions.disable("PreferCommonAnnotations");
             });
         });
     }
