@@ -39,7 +39,7 @@ import java.util.Objects;
 @AutoService(BugChecker.class)
 @BugPattern(
         summary = "Prefer the common version of annotations over other copies.",
-        severity = SeverityLevel.SUGGESTION)
+        severity = SeverityLevel.WARNING)
 public final class PreferCommonAnnotations extends BugChecker implements ImportTreeMatcher {
 
     /** ClassName -> preferred import. */
