@@ -16,6 +16,8 @@
 
 package com.palantir.baseline
 
+import com.palantir.gradle.plugintesting.GradleTestVersions
+
 import java.nio.file.Files
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
@@ -29,7 +31,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
             id 'java'
             id 'com.palantir.baseline-exact-dependencies'
             id 'com.palantir.baseline' apply false
-            id 'com.palantir.consistent-versions' version '2.0.0' apply false
+            id 'com.palantir.consistent-versions' version '2.31.0' apply false
         }
     '''.stripIndent(true)
 
@@ -58,7 +60,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
                 .build()
 
         where:
-        gradleVersion << GradleTestVersions.VERSIONS
+        gradleVersion << GradleTestVersions.gradleVersionsForTests
     }
 
     def 'both tasks vacuously pass with no dependencies when entire baseline is applied'() {
@@ -331,16 +333,14 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
             pluginManager.withPlugin('java') {
                 java {
                     toolchain {
-                        languageVersion.set(JavaLanguageVersion.of(16))
+                        languageVersion.set(JavaLanguageVersion.of(17))
                     }
                 }
             }
         '''.stripIndent(true)
 
         then:
-        with('tasks', '--stacktrace')
-                .withGradleVersion('8.4')
-                .build()
+        with('tasks', '--stacktrace').build()
     }
 
     /**

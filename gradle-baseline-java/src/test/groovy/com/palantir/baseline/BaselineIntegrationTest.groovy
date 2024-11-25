@@ -16,6 +16,7 @@
 
 package com.palantir.baseline
 
+import com.palantir.gradle.plugintesting.GradleTestVersions
 
 import spock.lang.Unroll
 
@@ -43,6 +44,6 @@ class BaselineIntegrationTest extends AbstractPluginTest {
         with().withArguments('-s').withGradleVersion(gradleVersion).build()
 
         where:
-        gradleVersion << GradleTestVersions.VERSIONS
+        gradleVersion << GradleTestVersions.gradleVersionsForTests
     }
 }

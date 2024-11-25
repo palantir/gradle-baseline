@@ -1,7 +1,9 @@
 apply plugin: 'groovy'
 apply plugin: 'java-library'
+apply plugin: 'java-gradle-plugin'
 apply plugin: 'com.palantir.external-publish-jar'
 apply plugin: 'com.palantir.external-publish-gradle-plugin'
+apply plugin: 'com.palantir.gradle-plugin-testing'
 
 import org.gradle.api.internal.classpath.ModuleRegistry
 import org.gradle.api.internal.project.ProjectInternal
@@ -43,6 +45,9 @@ dependencies {
     testRuntimeOnly 'org.junit.vintage:junit-vintage-engine', {
         because 'allows JUnit 3 and JUnit 4 tests to run'
     }
+    testRuntimeOnly 'com.palantir.sls-packaging:gradle-sls-packaging'
+    testRuntimeOnly 'com.palantir.gradle.jdkslatest:gradle-jdks-latest'
+
     // necessary because of https://github.com/gradle/gradle/issues/16774
     def toolingApiBuildersJar = (project as ProjectInternal).services.get(ModuleRegistry.class)
             .getModule("gradle-tooling-api-builders")

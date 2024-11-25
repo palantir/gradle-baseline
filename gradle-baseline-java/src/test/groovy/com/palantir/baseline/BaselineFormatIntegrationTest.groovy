@@ -18,6 +18,8 @@ package com.palantir.baseline
 
 import spock.lang.Unroll
 
+import com.palantir.gradle.plugintesting.GradleTestVersions
+
 import java.nio.file.Files
 import java.nio.file.Path
 import org.apache.commons.io.FileUtils
@@ -99,7 +101,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         with('format', '--stacktrace').withGradleVersion(gradleVersion).build()
 
         where:
-        gradleVersion << GradleTestVersions.VERSIONS
+        gradleVersion << GradleTestVersions.gradleVersionsForTests
     }
 
     def 'eclipse formatter integration test'() {
@@ -121,7 +123,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         assertThatFilesAreTheSame(testedDir, expectedDir)
 
         where:
-        gradleVersion << GradleTestVersions.VERSIONS
+        gradleVersion << GradleTestVersions.gradleVersionsForTests
     }
 
     def 'palantir java format works'() {
@@ -153,7 +155,7 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         assertThatFilesAreTheSame(testedDir, expectedDir)
 
         where:
-        gradleVersion << GradleTestVersions.VERSIONS
+        gradleVersion << GradleTestVersions.gradleVersionsForTests
     }
 
     private static void assertThatFilesAreTheSame(File outputDir, File expectedDir) throws IOException {
