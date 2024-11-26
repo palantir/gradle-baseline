@@ -2,7 +2,7 @@ apply plugin: 'java-library'
 apply plugin: 'com.palantir.external-publish-jar'
 
 javaVersion {
-    target = 11
+    target = 17
     runtime = 21
 }
 
