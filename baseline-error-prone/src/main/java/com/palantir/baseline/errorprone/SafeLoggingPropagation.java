@@ -92,6 +92,8 @@ public final class SafeLoggingPropagation extends BugChecker
         if (classSymbol == null || classSymbol.isAnonymous()) {
             return Description.NO_MATCH;
         }
+        TypeSymbol tsym = classSymbol.type.tsym;
+        tsym.getModifiers();
         if (ASTHelpers.isRecord(classSymbol)) {
             return matchRecord(classTree, classSymbol, state);
         } else {
@@ -146,6 +148,7 @@ public final class SafeLoggingPropagation extends BugChecker
     private Description matchRecord(ClassTree classTree, ClassSymbol classSymbol, VisitorState state) {
         Safety existingClassSafety = SafetyAnnotations.getSafety(classTree, state);
         Safety safety = SafetyAnnotations.getTypeSafetyFromAncestors(classTree, state);
+        safety = safety.leastUpperBound(SafetyAnnotations.getTypeSafetyFromKnownSubtypes(classTree, state));
         for (VarSymbol recordComponent : Records.getRecordComponents(classSymbol)) {
             Safety symbolSafety = SafetyAnnotations.getSafety(recordComponent, state);
             Safety typeSafety = SafetyAnnotations.getSafety(recordComponent.type, state);
@@ -160,7 +163,7 @@ public final class SafeLoggingPropagation extends BugChecker
         if (ASTHelpers.hasAnnotation(classSymbol, "org.immutables.value.Value.Immutable", state)) {
             return matchImmutables(classTree, classSymbol, state);
         }
-        return matchBasedOnToString(classTree, classSymbol, state);
+        return matchArbitraryObject(classTree, classSymbol, state);
     }
 
     private static boolean isImmutablesField(
@@ -239,6 +242,7 @@ public final class SafeLoggingPropagation extends BugChecker
     private Description matchImmutables(ClassTree classTree, ClassSymbol classSymbol, VisitorState state) {
         Safety existingClassSafety = SafetyAnnotations.getAnnotatedSafety(classTree, state);
         Safety safety = SafetyAnnotations.getTypeSafetyFromAncestors(classTree, state);
+        safety = safety.leastUpperBound(SafetyAnnotations.getTypeSafetyFromKnownSubtypes(classTree, state));
         boolean isJson = hasJacksonAnnotation(classSymbol, state);
         ClassSymbol symbol = ASTHelpers.getSymbol(classTree);
         Safety scanned = scanSymbolMethods(symbol, state, isJson);
@@ -246,15 +250,23 @@ public final class SafeLoggingPropagation extends BugChecker
         return handleSafety(classTree, classTree.getModifiers(), state, existingClassSafety, safety);
     }
 
-    private Description matchBasedOnToString(ClassTree classTree, ClassSymbol classSymbol, VisitorState state) {
+    private Safety getToStringSafety(ClassSymbol classSymbol, VisitorState state) {
         MethodSymbol toStringSymbol = ASTHelpers.resolveExistingMethod(
                 state, classSymbol, TO_STRING_NAME.get(state), ImmutableList.of(), ImmutableList.of());
-        if (toStringSymbol == null) {
-            return Description.NO_MATCH;
-        }
+        return SafetyAnnotations.getSafety(toStringSymbol, state);
+    }
+
+    private Description matchArbitraryObject(ClassTree classTree, ClassSymbol classSymbol, VisitorState state) {
+        Safety toStringSafety = getToStringSafety(classSymbol, state);
+        Safety subtypeSafety = SafetyAnnotations.getTypeSafetyFromKnownSubtypes(classTree, state);
+        Safety ancestorSafety = SafetyAnnotations.getTypeSafetyFromAncestors(classTree, state);
         Safety existingClassSafety = SafetyAnnotations.getSafety(classTree, state);
-        Safety symbolSafety = SafetyAnnotations.getSafety(toStringSymbol, state);
-        return handleSafety(classTree, classTree.getModifiers(), state, existingClassSafety, symbolSafety);
+        return handleSafety(
+                classTree,
+                classTree.getModifiers(),
+                state,
+                existingClassSafety,
+                Safety.mergeAssumingUnknownIsSame(toStringSafety, subtypeSafety, ancestorSafety));
     }
 
     private Description handleSafety(
