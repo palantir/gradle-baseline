@@ -25,14 +25,34 @@ public class ImmutablesInterfaceDefaultValueTest {
         helper().addSourceLines(
                         "Test.java",
                         "import org.immutables.value.*;",
+                        "import com.palantir.immutables.style.ImmutablesConfigStyle;",
                         "public class Test {",
                         "    @Value.Immutable",
+                        "    @ImmutablesConfigStyle",
                         "    public interface InterfaceWithValueDefault {",
                         "        String value();",
                         "",
                         "        // BUG: Diagnostic contains: @Value.Immutable interface"
                                 + " default methods should be annotated with"
-                                + " @Value.Default, @Value.Derived, or @Value.Lazy",
+                                + " @Value.Default, @Value.Derived, @Value.Lazy, or @JsonIgnore",
+                        "        default String defaultValue() {",
+                        "            return \"default\";",
+                        "        }",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testPassesWhenInterfaceIsNotConfig() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import org.immutables.value.*;",
+                        "public class Test {",
+                        "    @Value.Immutable",
+                        "    public interface InterfaceWithValueDefault {",
+                        "        String value();",
+                        "",
                         "        default String defaultValue() {",
                         "            return \"default\";",
                         "        }",
@@ -99,18 +119,41 @@ public class ImmutablesInterfaceDefaultValueTest {
     }
 
     @Test
-    public void refactorsMissingDefaultValueAnnotation() {
-        refactoring()
-                .addInputLines(
+    public void testPassesWhenDefaultMethodAnnotatedJsonIgnore() {
+        helper().addSourceLines(
                         "Test.java",
+                        "import com.fasterxml.jackson.annotation.JsonIgnore;",
                         "import org.immutables.value.*;",
                         "public class Test {",
                         "    @Value.Immutable",
                         "    public interface InterfaceWithValueDefault {",
                         "        String value();",
                         "",
+                        "        @JsonIgnore",
+                        "        default String lazyValue() {",
+                        "            return value();",
+                        "        }",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void refactorsMissingDefaultValueAnnotation() {
+        refactoring()
+                .addInputLines(
+                        "Test.java",
+                        "import org.immutables.value.*;",
+                        "import com.palantir.immutables.style.ImmutablesConfigStyle;",
+                        "public class Test {",
+                        "    @Value.Immutable",
+                        "    @ImmutablesConfigStyle",
+                        "    public interface InterfaceWithValueDefault {",
+                        "        String value();",
+                        "",
                         "    // BUG: Diagnostic contains: "
-                                + "@Value.Immutable interface default methods should be annotated @Value.Default",
+                                + "@Value.Immutable interface default methods should be annotated with "
+                                + "@Value.Default, @Value.Default, @Value.Derived, @Value.Lazy, or @JsonIgnore",
                         "        default String defaultValue() {",
                         "            return \"default\";",
                         "        }",
@@ -129,8 +172,10 @@ public class ImmutablesInterfaceDefaultValueTest {
                 .addOutputLines(
                         "Test.java",
                         "import org.immutables.value.*;",
+                        "import com.palantir.immutables.style.ImmutablesConfigStyle;",
                         "public class Test {",
                         "    @Value.Immutable",
+                        "    @ImmutablesConfigStyle",
                         "    public interface InterfaceWithValueDefault {",
                         "        String value();",
                         "",

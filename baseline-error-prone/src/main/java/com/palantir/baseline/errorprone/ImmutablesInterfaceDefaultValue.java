@@ -18,7 +18,6 @@ package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
-import com.google.errorprone.BugPattern.LinkType;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.bugpatterns.BugChecker.MethodTreeMatcher;
@@ -37,24 +36,28 @@ import javax.lang.model.element.Modifier;
  * <a href="https://immutables.github.io/immutable.html#default-attributes">@Value.Default</a> ,
  * <a href="https://immutables.github.io/immutable.html#derived-attributes">@Value.Derived</a> , or
  * <a href="https://immutables.github.io/immutable.html#lazy-attributes">@Value.Lazy</a> .
+ * <br>
+ * This check only applies to interfaces annotated with @ImmutablesConfigStyle.
  */
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "ImmutablesInterfaceDefaultValue",
-        linkType = LinkType.CUSTOM,
+        linkType = BugPattern.LinkType.CUSTOM,
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         severity = BugPattern.SeverityLevel.ERROR,
         summary = "@Value.Immutable interface default methods should be annotated with"
-                + " @Value.Default, @Value.Derived, or @Value.Lazy")
+                + " @Value.Default, @Value.Derived, @Value.Lazy, or @JsonIgnore")
 public final class ImmutablesInterfaceDefaultValue extends BugChecker implements MethodTreeMatcher {
 
     private static final Matcher<Tree> MISSING_ANNOTATION_MATCHER = Matchers.allOf(
-            Matchers.enclosingClass(Matchers.hasAnnotation("org.immutables.value.Value.Immutable")),
+            Matchers.enclosingClass(Matchers.allOf(
+                    Matchers.hasAnnotation("org.immutables.value.Value.Immutable"),
+                    Matchers.hasAnnotation("com.palantir.immutables.style.ImmutablesConfigStyle"))),
             Matchers.hasModifier(Modifier.DEFAULT),
             Matchers.not(Matchers.anyOf(
                     Matchers.hasAnnotation("org.immutables.value.Value.Default"),
                     Matchers.hasAnnotation("org.immutables.value.Value.Derived"),
-                    Matchers.hasAnnotation("org.immutables.value.Value.Lazy"))));
+                    Matchers.hasAnnotation("org.immutables.value.Value.Lazy"),
+                    Matchers.hasAnnotation("com.fasterxml.jackson.annotation.JsonIgnore"))));
 
     @Override
     public Description matchMethod(MethodTree tree, VisitorState state) {
