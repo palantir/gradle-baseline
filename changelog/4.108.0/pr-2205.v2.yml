@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: LoggingDoNotLog check ensures credentials aren't logged in any form
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2205

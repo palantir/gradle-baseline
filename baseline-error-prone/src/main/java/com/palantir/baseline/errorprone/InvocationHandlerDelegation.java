@@ -17,6 +17,7 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
+import com.google.common.collect.ImmutableList;
 import com.google.common.reflect.AbstractInvocationHandler;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
@@ -48,7 +49,6 @@ import java.lang.reflect.Method;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "InvocationHandlerDelegation",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,
@@ -63,17 +63,25 @@ public final class InvocationHandlerDelegation extends BugChecker implements Bug
     private static final Matcher<MethodTree> INVOCATION_HANDLER = Matchers.anyOf(
             Matchers.allOf(
                     Matchers.not(Matchers.isStatic()),
-                    MoreMatchers.hasSignature("invoke(java.lang.Object,java.lang.reflect.Method,java.lang.Object[])"),
-                    Matchers.enclosingClass(Matchers.isSubtypeOf(InvocationHandler.class.getName()))),
+                    Matchers.enclosingClass(Matchers.isSubtypeOf(InvocationHandler.class.getName())),
+                    Matchers.methodIsNamed("invoke"),
+                    Matchers.methodHasParameters(
+                            Matchers.isSameType(Object.class),
+                            Matchers.isSameType(Method.class),
+                            Matchers.isSameType(Suppliers.arrayOf(Suppliers.OBJECT_TYPE)))),
             Matchers.allOf(
                     Matchers.not(Matchers.isStatic()),
-                    MoreMatchers.hasSignature(
-                            "handleInvocation(java.lang.Object,java.lang.reflect.Method,java.lang.Object[])"),
-                    Matchers.enclosingClass(Matchers.isSubtypeOf(AbstractInvocationHandler.class.getName()))));
+                    Matchers.enclosingClass(Matchers.isSubtypeOf(AbstractInvocationHandler.class.getName())),
+                    Matchers.methodIsNamed("handleInvocation"),
+                    Matchers.methodHasParameters(
+                            Matchers.isSameType(Object.class),
+                            Matchers.isSameType(Method.class),
+                            Matchers.isSameType(Suppliers.arrayOf(Suppliers.OBJECT_TYPE)))));
 
     private static final Matcher<ExpressionTree> METHOD_INVOKE = MethodMatchers.instanceMethod()
             .onExactClass(Method.class.getName())
-            .withSignature("invoke(java.lang.Object,java.lang.Object...)");
+            .named("invoke")
+            .withParametersOfType(ImmutableList.of(Suppliers.OBJECT_TYPE, Suppliers.arrayOf(Suppliers.OBJECT_TYPE)));
 
     private static final Matcher<ExpressionTree> METHOD_INVOKE_ENCLOSED_BY_INVOCATION_HANDLER =
             Matchers.allOf(METHOD_INVOKE, Matchers.enclosingMethod(INVOCATION_HANDLER));
@@ -83,7 +91,7 @@ public final class InvocationHandlerDelegation extends BugChecker implements Bug
     private static final Matcher<ExpressionTree> UNWRAP_THROWABLE = MethodMatchers.instanceMethod()
             .onDescendantOf(Throwable.class.getName())
             .named("getCause")
-            .withParameters();
+            .withNoParameters();
 
     private static final Matcher<Tree> CONTAINS_UNWRAP_THROWABLE =
             Matchers.contains(ExpressionTree.class, UNWRAP_THROWABLE);
@@ -106,7 +114,7 @@ public final class InvocationHandlerDelegation extends BugChecker implements Bug
             .onClass(TypePredicates.anyOf(IS_ITE_SUBTYPE, IS_ITE_UNION))
             // getTargetException is deprecated, but does work correctly.
             .namedAnyOf("getCause", "getTargetException")
-            .withParameters();
+            .withNoParameters();
 
     private static final Matcher<ExpressionTree> PASS_ITE = Matchers.methodInvocation(
             Matchers.anyMethod(),

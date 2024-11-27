@@ -21,3 +21,6 @@ standards are established by experiment.*
 [Microservices Best Practices](microservices/readme.md)
 
 [Testing Software Intro](testing-software/readme.md)
+
+[Inclusive Language](java-style-guide/inclusive_code.md)
+

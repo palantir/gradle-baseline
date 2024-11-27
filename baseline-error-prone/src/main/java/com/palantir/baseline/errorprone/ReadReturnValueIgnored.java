@@ -38,11 +38,9 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.io.Reader;
 import java.util.List;
-import java.util.Optional;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "ReadReturnValueIgnored",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.ERROR,
@@ -58,7 +56,7 @@ public final class ReadReturnValueIgnored extends AbstractReturnValueIgnored {
             Matchers.not(MethodMatchers.instanceMethod()
                     .onDescendantOf(InputStream.class.getName())
                     .named("read")
-                    .withParameters()));
+                    .withNoParameters()));
 
     private static final Matcher<ExpressionTree> RAF_BUFFER_READ_MATCHER = Matchers.allOf(
             MethodMatchers.instanceMethod()
@@ -67,7 +65,7 @@ public final class ReadReturnValueIgnored extends AbstractReturnValueIgnored {
             Matchers.not(MethodMatchers.instanceMethod()
                     .onDescendantOf(RandomAccessFile.class.getName())
                     .named("read")
-                    .withParameters()));
+                    .withNoParameters()));
 
     private static final Matcher<ExpressionTree> READER_SKIP_MATCHER = MethodMatchers.instanceMethod()
             .onDescendantOf(Reader.class.getName())
@@ -128,15 +126,15 @@ public final class ReadReturnValueIgnored extends AbstractReturnValueIgnored {
     }
 
     // The old invocation target is used as the first argument of the new static invocation
-    private static Optional<SuggestedFix> replaceWithStatic(
+    private static SuggestedFix replaceWithStatic(
             MethodInvocationTree tree, VisitorState state, String fullyQualifiedReplacement) {
         Tree methodSelect = tree.getMethodSelect();
         if (!(methodSelect instanceof MemberSelectTree)) {
-            return Optional.empty();
+            return SuggestedFix.emptyFix();
         }
         CharSequence sourceCode = state.getSourceCode();
         if (sourceCode == null) {
-            return Optional.empty();
+            return SuggestedFix.emptyFix();
         }
         MemberSelectTree memberSelectTree = (MemberSelectTree) methodSelect;
         SuggestedFix.Builder fix = SuggestedFix.builder();
@@ -151,7 +149,7 @@ public final class ReadReturnValueIgnored extends AbstractReturnValueIgnored {
                         + ", "
                         + args
                         + ')');
-        return Optional.of(fix.build());
+        return fix.build();
     }
 
     private static <T> T lastItem(List<T> items) {

@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: StrictUnusedVariable is not suppressed when UnusedVariable is disabled
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2537

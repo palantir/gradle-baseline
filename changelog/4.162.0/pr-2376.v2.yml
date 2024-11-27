@@ -1,0 +1,10 @@
+type: feature
+feature:
+  description: |-
+    java versions preview enhancements
+
+    + support setting preview on a project-by-project basis.
+    + Fixes #2340
+    + fails more elegantly if javaVersions is set on not-the-root.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2376

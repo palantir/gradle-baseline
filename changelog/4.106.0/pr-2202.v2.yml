@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Implement RID safety passthrough based on the locator component
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2202

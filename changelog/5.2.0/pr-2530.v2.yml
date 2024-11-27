@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: 'Add check: Use Collection.isEmpty() instead of comparing size() with
+    0'
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2530

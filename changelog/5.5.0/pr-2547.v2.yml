@@ -1,0 +1,8 @@
+type: fix
+fix:
+  description: No longer suggest the "Save Actions" IntelliJ plugin which does not
+    work in IntelliJ 2023.1 for use with Palantir Java Format. Instead, Palantir Java
+    Format will support the IntelliJ native "Actions on save" reformat capability
+    in a future release.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2547

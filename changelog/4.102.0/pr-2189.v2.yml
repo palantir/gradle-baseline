@@ -1,0 +1,7 @@
+type: fix
+fix:
+  description: Fix the `com.palantir.baseline-circleci` plugin so that compilation
+    failures are once again parsed as XML and can be surfaced at the top of CircleCI
+    builds.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2189

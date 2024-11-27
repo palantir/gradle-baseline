@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: Fix NPE from StrictUnusedVarible check for unused lambda parameters
+    in static initializers.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1843

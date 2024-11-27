@@ -164,6 +164,43 @@ class Slf4jLevelCheckTest {
     }
 
     @Test
+    void testFix_nestedConditional_safelog() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.logger.SafeLogger;",
+                        "import com.palantir.logsafe.logger.SafeLoggerFactory;",
+                        "class Test {",
+                        "  private static final SafeLogger log = SafeLoggerFactory.get(Test.class);",
+                        "  void f() {",
+                        "    if (log.isInfoEnabled()) {",
+                        "        if (this.getClass().getName().startsWith(\"c\")) {",
+                        "            log.info(\"foo\");",
+                        "        } else {",
+                        "            log.warn(\"bar\");",
+                        "        }",
+                        "    }",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.logger.SafeLogger;",
+                        "import com.palantir.logsafe.logger.SafeLoggerFactory;",
+                        "class Test {",
+                        "  private static final SafeLogger log = SafeLoggerFactory.get(Test.class);",
+                        "  void f() {",
+                        "    if (log.isWarnEnabled()) {",
+                        "        if (this.getClass().getName().startsWith(\"c\")) {",
+                        "            log.info(\"foo\");",
+                        "        } else {",
+                        "            log.warn(\"bar\");",
+                        "        }",
+                        "    }",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     void testFix_complexCondition() {
         fix().addInputLines(
                         "Test.java",

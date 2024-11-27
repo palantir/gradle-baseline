@@ -1,0 +1,7 @@
+type: fix
+fix:
+  description: Ensure that `baseline-immutables` configures immutables to work incrementally
+    when the immutables `annotationProcessor` dependency is not a direct dependency
+    (ie it is brought in transitively or by an `extendsFrom`).
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2465

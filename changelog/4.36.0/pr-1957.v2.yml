@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: 'Revert "Feature: Zero Warmup Guava RateLimiter (#1950)" which results
+    in no rate limiting'
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1957

@@ -1,0 +1,7 @@
+type: fix
+fix:
+  description: Removed built in support for eclipse annotation processor configurations
+    - please use [gradle-processors](https://github.com/palantir/gradle-processors)
+    instead if using eclipse.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2279

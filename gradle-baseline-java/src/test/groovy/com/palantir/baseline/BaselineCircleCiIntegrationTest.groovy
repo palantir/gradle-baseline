@@ -23,16 +23,16 @@ import org.gradle.testkit.runner.TaskOutcome
 class BaselineCircleCiIntegrationTest extends AbstractPluginTest {
     def standardBuildFile = '''
         plugins {
-            id 'java'
+            id 'java-library'
             id 'com.palantir.baseline-circleci'
         }
         
         repositories {
-            jcenter()
+            mavenCentral()
         }
         
         dependencies {
-            testCompile 'junit:junit:4.12'
+            testImplementation 'junit:junit:4.12'
         }
     '''.stripIndent()
 
@@ -49,6 +49,18 @@ class BaselineCircleCiIntegrationTest extends AbstractPluginTest {
 
     def setup() {
         new File(System.getenv('CIRCLE_ARTIFACTS')).toPath().deleteDir()
+    }
+
+    def 'collects junit reports'() {
+        when:
+        buildFile << standardBuildFile
+        file('src/test/java/test/TestClass.java') << javaFile
+
+        String testReports = System.getenv('CIRCLE_TEST_REPORTS')
+        then:
+        BuildResult result = with('test').build()
+        result.task(':test').outcome == TaskOutcome.SUCCESS
+        new File(new File(testReports, 'junit'), 'test').list().toList().toSet() == ['TEST-test.TestClass.xml'].toSet()
     }
 
     def 'collects html reports'() {

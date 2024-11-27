@@ -1,0 +1,10 @@
+type: improvement
+improvement:
+  description: |-
+    Enable FilterOutputStreamSlowMultibyteWrite at warning level to identify
+    inefficient FilterOuputStream implementations.
+
+    Subclasses of FilterOutputStream should provide a more efficient
+    implementation of `write(byte[], int, int)` to avoid slow writes.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2026

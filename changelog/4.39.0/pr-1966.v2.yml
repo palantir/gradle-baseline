@@ -1,0 +1,6 @@
+type: feature
+feature:
+  description: Add Error Prone check to prefer `hasNoArgs` on service exception asserts
+    and loggable exception asserts.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1966

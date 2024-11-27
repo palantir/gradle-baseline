@@ -32,7 +32,6 @@ import com.sun.source.tree.MemberSelectTree;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "UnnecessarilyQualified",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = LinkType.CUSTOM,
         severity = SeverityLevel.WARNING,

@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Allow projects which don't use jdk-15 to resolve latest nullaway
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2400

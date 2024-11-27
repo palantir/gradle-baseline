@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Include mocktio-errorprone after it has picked up new errorprone
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2215

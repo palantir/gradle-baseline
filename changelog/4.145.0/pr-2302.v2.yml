@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: The mockito error-prone library is no longer included by default
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2302

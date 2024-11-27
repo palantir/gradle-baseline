@@ -1,0 +1,1 @@
+This module acts as a thin shim around NullAway, allowing us to manage the NullAway dependency via baseline.

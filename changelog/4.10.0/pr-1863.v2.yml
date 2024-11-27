@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: Recommend the Witchcraft logging plugin when the sls-packaging distribution
+    plugin is detected
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1863

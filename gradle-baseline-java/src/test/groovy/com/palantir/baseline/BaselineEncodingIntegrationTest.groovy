@@ -32,7 +32,7 @@ class BaselineEncodingIntegrationTest extends AbstractPluginTest {
 
         repositories {
             mavenLocal()
-            jcenter()
+            mavenCentral()
         }
     '''.stripIndent()
 
@@ -45,7 +45,7 @@ class BaselineEncodingIntegrationTest extends AbstractPluginTest {
 
         repositories {
             mavenLocal()
-            jcenter()
+            mavenCentral()
         }
         
         tasks.withType(JavaCompile) {
@@ -55,6 +55,10 @@ class BaselineEncodingIntegrationTest extends AbstractPluginTest {
 
     def javaFile = '''
         package test;
+
+        /**
+         * Test source file encoding with UTF-8 ☃ Javadoc.
+         */
         public class Test {
             private static final String VALUE = "•";
         }

@@ -31,7 +31,6 @@ import java.util.regex.Pattern;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "LogSafePreconditionsMessageFormat",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,

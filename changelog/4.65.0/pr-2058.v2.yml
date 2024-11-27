@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Handle java 17 removal of :com/sun/tools/javac/util/Filter in DangerousIdentityKey
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2058

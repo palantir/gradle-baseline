@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: '`SafeLoggingPropagation` error-prone check propages log-safety annotations
+    from getters and superclasses/superinterfaces to the type level'
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2218

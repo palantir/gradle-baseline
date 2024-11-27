@@ -33,6 +33,9 @@ final class TestCheckUtils {
 
     /** Note that this is a relatively expensive check and should be executed after simpler validation. */
     static boolean isTestCode(VisitorState state) {
+        if (state.errorProneOptions().isTestOnlyTarget()) {
+            return true;
+        }
         TreePath path = state.getPath();
         for (Tree ancestor : path) {
             if (ancestor instanceof ClassTree && hasTestCases.matches((ClassTree) ancestor, state)) {

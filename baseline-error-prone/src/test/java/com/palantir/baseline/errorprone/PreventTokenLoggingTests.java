@@ -260,18 +260,38 @@ public class PreventTokenLoggingTests {
     }
 
     @Test
+    public void testSafeArgAuthHeaderToString() {
+        failLogSafe("SafeArg.of(name, authHeader.toString());");
+    }
+
+    @Test
     public void testUnsafeArgAuthHeader() {
-        failLogSafe("UnsafeArg.of(name, bearerToken);");
+        failLogSafe("UnsafeArg.of(name, authHeader);");
+    }
+
+    @Test
+    public void testUnsafeArgAuthHeaderToString() {
+        failLogSafe("UnsafeArg.of(name, authHeader.toString());");
     }
 
     @Test
     public void testSafeArgBearerToken() {
-        failLogSafe("SafeArg.of(name, authHeader);");
+        failLogSafe("SafeArg.of(name, bearerToken);");
+    }
+
+    @Test
+    public void testSafeArgBearerTokenToString() {
+        failLogSafe("SafeArg.of(name, bearerToken.toString());");
     }
 
     @Test
     public void testUnsafeArgBearerToken() {
         failLogSafe("UnsafeArg.of(name, bearerToken);");
+    }
+
+    @Test
+    public void testUnsafeArgBearerTokenToString() {
+        failLogSafe("UnsafeArg.of(name, bearerToken.toString());");
     }
 
     @Test

@@ -16,6 +16,8 @@
 
 package com.palantir.baseline
 
+import spock.lang.Unroll
+
 import java.nio.file.Files
 import java.nio.file.Path
 import org.apache.commons.io.FileUtils
@@ -27,6 +29,7 @@ import org.gradle.testkit.runner.TaskOutcome
 
 import static org.assertj.core.api.Assertions.assertThat
 
+@Unroll
 class BaselineFormatIntegrationTest extends AbstractPluginTest {
 
     def setup() {
@@ -34,9 +37,14 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
                 new File("../gradle-baseline-java-config/resources"),
                 new File(projectDir, ".baseline"))
         // Disable copyright by default so we can test it individually
-        file('gradle.properties') << "com.palantir.baseline-format.copyright=false\n"
+        file('gradle.properties') << '''
+            com.palantir.baseline-format.copyright=false
+            # Required for the eclipse formatter. Delete once it's removed.
+            org.gradle.jvmargs = --add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED
+        '''.stripIndent(true)
     }
 
+    // language=Gradle
     def standardBuildFile = '''
         plugins {
             id 'java'
@@ -44,10 +52,9 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         }
         repositories {
             // to resolve the `palantirJavaFormat` configuration
-            maven { url 'https://dl.bintray.com/palantir/releases' }
-            jcenter()
+            mavenCentral()
         }
-    '''.stripIndent()
+    '''.stripIndent(true)
 
     def noJavaBuildFile = '''
         plugins {
@@ -89,7 +96,10 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         buildFile << standardBuildFile
 
         then:
-        with('format', '--stacktrace').build()
+        with('format', '--stacktrace').withGradleVersion(gradleVersion).build()
+
+        where:
+        gradleVersion << GradleTestVersions.VERSIONS
     }
 
     def 'eclipse formatter integration test'() {
@@ -99,21 +109,19 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
         def testedDir = new File(projectDir, "src/main/java")
         FileUtils.copyDirectory(inputDir, testedDir)
 
-        buildFile << """
-            plugins {
-                id 'java'
-                id 'com.palantir.baseline-format'
-            }
-        """.stripIndent()
+        buildFile << standardBuildFile
         file('gradle.properties') << "com.palantir.baseline-format.eclipse=true\n"
 
         when:
-        BuildResult result = with(':format').build()
+        BuildResult result = with(':format').withGradleVersion(gradleVersion).build()
         result.task(":format").outcome == TaskOutcome.SUCCESS
         result.task(":spotlessApply").outcome == TaskOutcome.SUCCESS
 
         then:
         assertThatFilesAreTheSame(testedDir, expectedDir)
+
+        where:
+        gradleVersion << GradleTestVersions.VERSIONS
     }
 
     def 'palantir java format works'() {
@@ -131,19 +139,21 @@ class BaselineFormatIntegrationTest extends AbstractPluginTest {
             }
             repositories {
                 // to resolve the `palantirJavaFormat` configuration
-                maven { url 'https://dl.bintray.com/palantir/releases' }
-                jcenter()
+                mavenCentral()
             }
         """.stripIndent()
         file('gradle.properties') << "com.palantir.baseline-format.palantir-java-format=true\n"
 
         when:
-        BuildResult result = with(':format').build()
+        BuildResult result = with(':format').withGradleVersion(gradleVersion).build()
 
         then:
         result.task(":format").outcome == TaskOutcome.SUCCESS
         result.task(":spotlessApply").outcome == TaskOutcome.SUCCESS
         assertThatFilesAreTheSame(testedDir, expectedDir)
+
+        where:
+        gradleVersion << GradleTestVersions.VERSIONS
     }
 
     private static void assertThatFilesAreTheSame(File outputDir, File expectedDir) throws IOException {

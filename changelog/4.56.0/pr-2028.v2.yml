@@ -1,0 +1,9 @@
+type: improvement
+improvement:
+  description: |-
+    Add BugCheckerAutoService
+
+    Concrete BugChecker implementations should be annotated
+    `@AutoService(BugChecker.class)` for auto registration with error-prone.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2028

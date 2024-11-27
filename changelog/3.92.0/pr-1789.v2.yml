@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Fix VarUsage false positives in lambdas
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1789

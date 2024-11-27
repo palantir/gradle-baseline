@@ -28,6 +28,7 @@ import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
+import com.google.errorprone.suppliers.Supplier;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.BinaryTree;
 import com.sun.source.tree.ConditionalExpressionTree;
@@ -36,6 +37,7 @@ import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.NewClassTree;
 import com.sun.source.util.SimpleTreeVisitor;
+import com.sun.tools.javac.code.Type;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -44,7 +46,6 @@ import java.util.stream.Stream;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "StringBuilderConstantParameters",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.WARNING,
@@ -63,7 +64,12 @@ public final class StringBuilderConstantParameters extends BugChecker
     private static final Matcher<ExpressionTree> STRING_BUILDER_TO_STRING = MethodMatchers.instanceMethod()
             .onExactClass(StringBuilder.class.getName())
             .named("toString")
-            .withParameters();
+            .withNoParameters();
+
+    private static final Supplier<Type> JAVA_STRING =
+            VisitorState.memoize(state -> state.getTypeFromString("java.lang.String"));
+    private static final Supplier<Type> JAVA_CHARSEQUENCE =
+            VisitorState.memoize(state -> state.getTypeFromString("java.lang.CharSequence"));
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
@@ -82,7 +88,7 @@ public final class StringBuilderConstantParameters extends BugChecker
         Stream<String> prefixStream = arguments.stream()
                 .findFirst()
                 .map(ASTHelpers::getType)
-                .filter(type -> ASTHelpers.isSameType(type, state.getTypeFromString("java.lang.String"), state))
+                .filter(type -> ASTHelpers.isSameType(type, JAVA_STRING.get(state), state))
                 .map(ignored -> Stream.<String>empty())
                 .orElseGet(() -> Stream.of("\"\""));
 
@@ -135,12 +141,10 @@ public final class StringBuilderConstantParameters extends BugChecker
             if (node.getArguments().size() == 1
                     // We shouldn't replace pre-sized builders until we target java 11 across most libraries.
                     && (ASTHelpers.isSameType(
-                                    ASTHelpers.getType(node.getArguments().get(0)),
-                                    state.getTypeFromString("java.lang.String"),
-                                    state)
+                                    ASTHelpers.getType(node.getArguments().get(0)), JAVA_STRING.get(state), state)
                             || ASTHelpers.isSameType(
                                     ASTHelpers.getType(node.getArguments().get(0)),
-                                    state.getTypeFromString("java.lang.CharSequence"),
+                                    JAVA_CHARSEQUENCE.get(state),
                                     state))) {
                 List<ExpressionTree> resultList = new ArrayList<>();
                 resultList.add(node.getArguments().get(0));

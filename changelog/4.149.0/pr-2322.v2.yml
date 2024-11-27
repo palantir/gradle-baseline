@@ -1,0 +1,7 @@
+type: feature
+feature:
+  description: Users of the `com.palantir.baseline-java-versions` plugin can now set
+    `javaVersions { distributionTarget = '17_PREVIEW' }` to opt-in to Java's `--enable-preview`
+    flag at compile time.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2322

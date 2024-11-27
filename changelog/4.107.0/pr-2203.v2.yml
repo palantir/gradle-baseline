@@ -1,0 +1,8 @@
+type: improvement
+improvement:
+  description: |-
+    Upgrade error-prone to 2.13.1 (from 2.12.1)
+
+    Use non-deprecated isSuppressed methods
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2203

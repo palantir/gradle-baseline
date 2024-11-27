@@ -4,33 +4,35 @@
 
 # Baseline Java code quality plugins
 [![CircleCI Build Status](https://circleci.com/gh/palantir/gradle-baseline/tree/develop.svg?style=shield)](https://circleci.com/gh/palantir/gradle-baseline)
-[![Bintray Release](https://api.bintray.com/packages/palantir/releases/gradle-baseline/images/download.svg) ](https://bintray.com/palantir/releases/gradle-baseline/_latestVersion)
+[![Gradle Plugin Portal](https://img.shields.io/maven-metadata/v/https/plugins.gradle.org/m2/com/palantir/baseline/com.palantir.baseline.gradle.plugin/maven-metadata.xml.svg?label=plugin&logo=gradle)](https://plugins.gradle.org/plugin/com.palantir.baseline)
 
 _Baseline is a family of Gradle plugins for configuring Java projects with sensible defaults for code-style, static analysis, dependency versioning, CircleCI and IntelliJ IDEA/Eclipse integration._
 
-| Plugin                                        | Description            |
-|-----------------------------------------------|------------------------|
-| `com.palantir.baseline-idea`                  | Configures [Intellij IDEA](https://www.jetbrains.com/idea/) with code style and copyright headers
-| `com.palantir.baseline-eclipse`               | Configures [Eclipse](https://www.eclipse.org/downloads/) with code style and copyright headers
-| `com.palantir.baseline-error-prone`           | Static analysis for your Java code using Google's [error-prone](http://errorprone.info/).
-| `com.palantir.baseline-checkstyle`            | Enforces consistent Java formatting using [checkstyle](http://checkstyle.sourceforge.io/)
-| `com.palantir.baseline-format`                | Formats your java files to comply with checkstyle
-| `com.palantir.baseline-scalastyle`            | Enforces formatting using [scalastyle](https://github.com/scalastyle/scalastyle)
-| `com.palantir.baseline-class-uniqueness`      | Analyses your classpath to ensure no fully-qualified class is defined more than once.
-| `com.palantir.baseline-circleci`              | [CircleCI](https://circleci.com/) integration using `$CIRCLE_ARTIFACTS` and `$CIRCLE_TEST_REPORTS` dirs
-| `com.palantir.baseline-config`                | Config files for the above plugins
-| `com.palantir.baseline-reproducibility`       | Sensible defaults to ensure Jar, Tar and Zip tasks can be reproduced
-| `com.palantir.baseline-exact-dependencies`    | Ensures projects explicitly declare all the dependencies they rely on, no more and no less
-| `com.palantir.baseline-encoding`              | Ensures projects use the UTF-8 encoding in compile tasks.
-| `com.palantir.baseline-release-compatibility` | Ensures projects targetting older JREs only compile against classes and methods available in those JREs.
-| `com.palantir.baseline-testing`               | Configures test tasks to dump heap dumps (hprof files) for convenient debugging
-| `com.palantir.baseline-immutables`            | Enables incremental compilation for the [Immutables](http://immutables.github.io/) annotation processor.
+| Plugin                                         | Description            |
+|------------------------------------------------|------------------------|
+| `com.palantir.baseline-idea`                   | Configures [Intellij IDEA](https://www.jetbrains.com/idea/) with code style and copyright headers
+| `com.palantir.baseline-eclipse`                | Configures [Eclipse](https://www.eclipse.org/downloads/) with code style and copyright headers
+| `com.palantir.baseline-error-prone`            | Static analysis for your Java code using Google's [error-prone](http://errorprone.info/).
+| `com.palantir.baseline-checkstyle`             | Enforces consistent Java formatting using [checkstyle](http://checkstyle.sourceforge.io/)
+| `com.palantir.baseline-format`                 | Formats your java files to comply with checkstyle
+| `com.palantir.baseline-scalastyle`             | Enforces formatting using [scalastyle](https://github.com/scalastyle/scalastyle)
+| `com.palantir.baseline-class-uniqueness`       | Analyses your classpath to ensure no fully-qualified class is defined more than once.
+| `com.palantir.baseline-circleci`               | [CircleCI](https://circleci.com/) integration using `$CIRCLE_ARTIFACTS` and `$CIRCLE_TEST_REPORTS` dirs
+| `com.palantir.baseline-config`                 | Config files for the above plugins
+| `com.palantir.baseline-reproducibility`        | Sensible defaults to ensure Jar, Tar and Zip tasks can be reproduced
+| `com.palantir.baseline-exact-dependencies`     | Ensures projects explicitly declare all the dependencies they rely on, no more and no less
+| `com.palantir.baseline-encoding`               | Ensures projects use the UTF-8 encoding in compile tasks.
+| `com.palantir.baseline-release-compatibility`  | Ensures projects targeting older JREs only compile against classes and methods available in those JREs.
+| `com.palantir.baseline-testing`                | Configures test tasks to dump heap dumps (hprof files) for convenient debugging
+| `com.palantir.baseline-immutables`             | Enables incremental compilation for the [Immutables](http://immutables.github.io/) annotation processor.
+| `com.palantir.baseline-java-versions`          | Configures JDK versions in a consistent way via Gradle Toolchains.
+| `com.palantir.baseline-prefer-project-modules` | Configures Gradle to prefer project modules over external modules on dependency resolution per default.
 
 See also the [Baseline Java Style Guide and Best Practices](./docs).
 
 
 ## Usage
-The baseline set of plugins requires at least Gradle 5.0.
+The baseline set of plugins requires at least Gradle 6.1.
 
 It is recommended to add `apply plugin: 'com.palantir.baseline'` to your root project's build.gradle.  Individual plugins will be automatically applied to appropriate subprojects.
 
@@ -38,7 +40,7 @@ It is recommended to add `apply plugin: 'com.palantir.baseline'` to your root pr
 buildscript {
     repositories {
         gradlePluginPortal()
-        maven { url  "http://palantir.bintray.com/releases" }
+        mavenCentral()
     }
 
     dependencies {
@@ -48,11 +50,10 @@ buildscript {
 }
 
 repositories {
-    maven { url  "http://palantir.bintray.com/releases" }
+    mavenCentral()
 }
 
 apply plugin: 'java'
-apply plugin: 'org.inferred.processors'  // installs the "processor" configuration needed for baseline-error-prone
 apply plugin: 'com.palantir.baseline'
 ```
 
@@ -103,16 +104,9 @@ The Eclipse plugin is compatible with the following versions: Checkstyle 7.5+, J
 
 
 ## com.palantir.baseline-error-prone
-The `com.palantir.baseline-error-prone` plugin brings in the `net.ltgt.errorprone-javacplugin` plugin. We recommend applying the `org.inferred.processors` plugin 1.3.0+ in order to avoid `error: plug-in not found: ErrorProne`. The minimal setup is as follows:
+The `com.palantir.baseline-error-prone` plugin brings in the `net.ltgt.errorprone-javacplugin` plugin. The minimal setup is as follows:
 
 ```groovy
-buildscript {
-    dependencies {
-        classpath 'gradle.plugin.org.inferred:gradle-processors:1.2.18'
-    }
-}
-
-apply plugin: 'org.inferred.processors'
 apply plugin: 'com.palantir.baseline-error-prone'
 ```
 
@@ -125,8 +119,20 @@ Error-prone rules can be suppressed on a per-line or per-block basis just like C
 Rules can be suppressed at the project level, or have their severity modified, by adding the following to the project's `build.gradle`:
 
 ```gradle
-tasks.withType(JavaCompile).configureEach {
-    options.errorprone.disable 'Slf4jLogsafeArgs'
+tasks.withType(JavaCompile).configureEach(new Action<Task>() {
+    public void execute(Task task) {
+        task.options.errorprone.disable 'Slf4jLogsafeArgs'
+    }
+})
+```
+
+To turn all of error-prone's warnings into errors:
+
+```gradle
+allprojects {
+    tasks.withType(JavaCompile) {
+        options.compilerArgs += ['-Werror']
+    }
 }
 ```
 
@@ -162,6 +168,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `DangerousStringInternUsage`: Disallow String.intern() invocations in favor of more predictable, scalable alternatives.
 - `OptionalOrElseThrowThrows`: Optional.orElseThrow argument must return an exception, not throw one.
 - `OptionalOrElseGetValue`: Prefer `Optional.orElse(value)` over `Optional.orElseGet(() -> value)` for trivial expressions.
+- `OptionalOrElseMethodInvocation`: Prefer `Optional.orElseGet(() -> methodInvocation())` over `Optional.orElse(methodInvocation())`.
 - `LambdaMethodReference`: Lambda should use a method reference.
 - `SafeLoggingExceptionMessageFormat`: SafeLoggable exceptions do not interpolate parameters.
 - `StrictUnusedVariable`: Functions shouldn't have unused parameters.
@@ -182,7 +189,6 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `ExceptionSpecificity`: Prefer more specific catch types than Exception and Throwable.
 - `ThrowSpecificity`: Prefer to declare more specific `throws` types than Exception and Throwable.
 - `UnsafeGaugeRegistration`: Use TaggedMetricRegistry.registerWithReplacement over TaggedMetricRegistry.gauge.
-- `BracesRequired`: Require braces for loops and if expressions.
 - `CollectionStreamForEach`: Collection.forEach is more efficient than Collection.stream().forEach.
 - `LoggerEnclosingClass`: Loggers created using getLogger(Class<?>) must reference their enclosing class.
 - `UnnecessaryLambdaArgumentParentheses`: Lambdas with a single parameter do not require argument parentheses.
@@ -190,7 +196,8 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `VisibleForTestingPackagePrivate`: `@VisibleForTesting` members should be package-private.
 - `OptionalFlatMapOfNullable`: Optional.map functions may return null to safely produce an empty result.
 - `ExtendsErrorOrThrowable`: Avoid extending Error (or subclasses of it) or Throwable directly.
-- `ImmutablesStyleCollision`: Prevent unintentionally voiding immutables Style meta-annotations through the introduction of inline style annotations.
+- `ImmutablesStyle`: Disallow the use of inline immutables style annotations to avoid forcing compile dependencies on consumers.
+- `ImmutablesReferenceEquality`: Comparison of Immutables value using reference equality instead of value equality.
 - `TooManyArguments`: Prefer Interface that take few arguments rather than many.
 - `ObjectsHashCodeUnnecessaryVarargs`: java.util.Objects.hash(non-varargs) should be replaced with java.util.Objects.hashCode(value) to avoid unnecessary varargs array allocations.
 - `PreferStaticLoggers`: Prefer static loggers over instance loggers.
@@ -200,20 +207,28 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `UnnecessarilyQualified`: Types should not be qualified if they are also imported.
 - `DeprecatedGuavaObjects`: `com.google.common.base.Objects` has been obviated by `java.util.Objects`.
 - `JavaTimeSystemDefaultTimeZone`: Avoid using the system default time zone.
+- `ZoneIdConstant`: Prefer `ZoneId` constants.
 - `IncubatingMethod`: Prevents calling Conjure incubating APIs unless you explicitly opt-out of the check on a per-use or per-project basis.
 - `CompileTimeConstantViolatesLiskovSubstitution`: Requires consistent application of the `@CompileTimeConstant` annotation to resolve inconsistent validation based on the reference type on which the met is invoked.
-- `ClassInitializationDeadlock`: Detect type structures which can cause deadlocks initializing classes.
 - `ConsistentLoggerName`: Ensure Loggers are named consistently.
 - `PreferImmutableStreamExCollections`: It's common to use toMap/toSet/toList() as the terminal operation on a stream, but would be extremely surprising to rely on the mutability of these collections. Prefer `toImmutableMap`, `toImmutableSet` and `toImmutableList`. (If the performance overhead of a stream is already acceptable, then the `UnmodifiableFoo` wrapper is likely tolerable).
 - `DangerousIdentityKey`: Key type does not override equals() and hashCode, so comparisons will be done on reference equality only.
+- `DangerousRecordArrayField`: Array fields in records perform reference equality when comparing records.
 - `ConsistentOverrides`: Ensure values are bound to the correct variables when overriding methods
+- `FilterOutputStreamSlowMultibyteWrite`: Subclasses of FilterOutputStream should provide a more efficient implementation of `write(byte[], int, int)` to avoid slow writes.
+- `BugCheckerAutoService`: Concrete BugChecker implementations should be annotated `@AutoService(BugChecker.class)` for auto registration with error-prone.
+- `DangerousCollapseKeysUsage`: Disallow usage of `EntryStream#collapseKeys()`.
+- `JooqBatchWithoutBindArgs`: jOOQ batch methods that execute without bind args can cause performance problems.
+- `InvocationTargetExceptionGetTargetException`: InvocationTargetException.getTargetException() predates the general-purpose exception chaining facility. The Throwable.getCause() method is now the preferred means of obtaining this information. [(source)](https://docs.oracle.com/en/java/javase/17/docs/api//java.base/java/lang/reflect/InvocationTargetException.html#getTargetException())
+- `PreferInputStreamTransferTo`: Prefer JDK `InputStream.transferTo(OutputStream)` over utility methods such as `com.google.common.io.ByteStreams.copy(InputStream, OutputStream)`, `org.apache.commons.io.IOUtils.copy(InputStream, OutputStream)`, `org.apache.commons.io.IOUtils.copyLong(InputStream, OutputStream)`.
+- `ConjureEndpointDeprecatedForRemoval`: Conjure endpoints marked with Deprecated and `forRemoval = true` should not be used as they are scheduled to be removed.
 
 ### Programmatic Application
 
-There exist a number of programmatic code modifications available via [refaster](https://errorprone.info/docs/refaster). You can run these on your code to apply some refactorings automatically:
+There exist a number of programmatic code modifications available via [error-prone](https://errorprone.info). You can run these on your code to apply some refactorings automatically:
 
 ```bash
-./gradlew compileJava compileTestJava -PrefasterApply -PerrorProneApply
+./gradlew compileJava compileTestJava -PerrorProneApply
 ```
 
 You may apply specific error-prone refactors including those which are not enabled by default by providing a comma
@@ -244,7 +259,7 @@ as that file will be overridden on updates.
 ### Copyright Checks
 
 Baseline enforces Palantir copyright at the beginning of files when applying `com.palantir.baseline-format`. To change this, edit the template copyrights
-in `.baseline/copyright/*.txt`. The largest file (sorted lexicographically) will be used to generate a new copyright if one is missing, or none of the existing templates match.￿
+in `.baseline/copyright/*.txt`. The largest file (sorted lexicographically) will be used to generate a new copyright if one is missing, or none of the existing templates match.
 
 To automatically update all files with mismatching/missing copyrights, run `./gradlew format`.
 
@@ -279,7 +294,7 @@ checkClassUniqueness {
 }
 ```
 
-If you discover multiple jars on your classpath contain clashing classes, you should ideally try to fix them upstream and then depend on the fixed version.  If this is not feasible, you may be able to tell Gradle to [use a substituted dependency instead](https://docs.gradle.org/current/userguide/customizing_dependency_resolution_behavior.html#sec:module_substitution):
+If you discover multiple jars on your classpath contain clashing classes, you should ideally try to fix them upstream and then depend on the fixed version.  If this is not feasible, you may be able to tell Gradle to [use a substituted dependency instead](https://docs.gradle.org/current/userguide/resolution_rules.html#sec:dependency_resolve_rules):
 
 ```gradle
 configurations.all {
@@ -293,12 +308,11 @@ configurations.all {
 ```
 
 ## com.palantir.baseline-circleci
+
 The plugin surfaces failures using JUnit XML which is rendered nicely by CircleCI, by
 
 1. Storing JUnit test reports in `$CIRCLE_TEST_REPORTS/junit`
-2. Converting java compilation errors and checkstyle errors into test failures stored under `$CIRCLE_TEST_REPORTS/javac` and `$CIRCLE_TEST_REPORTS/checkstyle` respectively
-![CHECKSTYLE — 1 FAILURE](images/checkstyle-circle-failure.png?raw=true "CircleCI failure image")
-3. Storeing the HTML output of tests in `$CIRCLE_ARTIFACTS/junit`
+2. Storeing the HTML output of tests in `$CIRCLE_ARTIFACTS/junit`
 
 ## com.palantir.baseline-format
 
@@ -412,40 +426,66 @@ This plugin adds the `-Aimmutables.gradle.incremental` compiler arg to the compi
 
 For more details, see the Immutables incremental compilation [tracking issue](https://github.com/immutables/immutables/issues/804).
 
-## com.palantir.baseline-fix-gradle-java (off by default)
+## com.palantir.baseline-java-versions
 
-Fixes up all Java [SourceSets](https://docs.gradle.org/current/userguide/building_java_projects.html#sec:java_source_sets)
-by marking their deprecated [configurations](https://docs.gradle.org/current/userguide/java_plugin.html#tab:configurations)
-- `compile` and `runtime` - as well as the `compileOnly` configuration as not resolvable
-(can't call resolve on them) and not consumable (can't be depended on from other projects).
-
-See [here](https://docs.gradle.org/current/userguide/declaring_dependencies.html#sec:resolvable-consumable-configs)
-for a more in-depth discussion on what these terms mean. By configuring them thusly, we are saying that these configurations
-now fulfil the "Bucket of dependencies" role described in that document, as they should.
-
-This will become the default in Gradle 7 and leaving these as they currently are can cause both unnecessary confusion
-(users looking in `compile` instead of `compileClasspath`) and [random crashes](https://github.com/gradle/gradle/issues/11844#issuecomment-585219427).
-
-
-## com.palantir.baseline-enable-preview-flag (off by default)
-
-As described in [JEP 12](https://openjdk.java.net/jeps/12), Java allows you to use shiny new syntax features if you add
-the `--enable-preview` flag. However, gradle requires you to add it in multiple places. This plugin can be applied to
-within an allprojects block and it will automatically ugprade any project which is already using the latest
-sourceCompatibility by adding the necessary `--enable-preview` flags to all of the following task types.
-
-_Note, this plugin should be used with **caution** because preview features may change or be removed, and it
-is undesirable to deeply couple a repo to a particular Java version as it makes upgrading to a new major Java version harder._
+This plugin allows consistent configuration of JDK versions via [Gradle Toolchains](https://docs.gradle.org/current/userguide/toolchains.html).
+The plugin is currently used on an opt-in basis. To use it, apply the plugin and configure the default JDK versions in your root project (note that the plugin requires Gradle 7):
 
 ```gradle
-// root build.gradle
-allprojects {
-    apply plugin: 'com.palantir.baseline-enable-preview-flag'
+// In the root build.gradle
+apply plugin: 'com.palantir.baseline-java-versions'
+
+javaVersions {
+    libraryTarget = 11
+    distributionTarget = 17
+    runtime = 21
 }
 ```
 
+The configurable fields of the `javaVersions` extension are:
+* `libraryTarget`: (required) The Java version used for compilation of libraries that are published.
+* `distributionTarget`: (optional) The Java version used for compilation of code used within distributions, but not published externally. Defaults to the `libraryTarget` version.
+* `runtime`: (optional) Runtime Java version for testing and packaging distributions. Defaults to the `distributionTarget` version.
+
+The configured Java versions are used as defaults for all projects.
+
+If a sub-project should use `libraryTarget` but is not considered a library (for example, because it is not published), you can explicitly indicate that it is a library:
+
 ```gradle
-// shorthand for the below:
+// In a sub-project's build.gradle
+javaVersion {
+    library()
+}
+```
+
+A sub-project can also explicitly override the default Java versions, but doing so is discouraged:
+
+```gradle
+// In a sub-project's build.gradle
+javaVersion {
+    target = 11
+    runtime = 11
+}
+```
+
+The optionally configurable fields of the `javaVersion` extension are:
+* `target`: The target version used for compilation.
+* `runtime`: The runtime version used for testing and distributions.
+
+### Opting in to `--enable-preview` flag
+
+As described in [JEP 12](https://openjdk.java.net/jeps/12), Java allows you to use incubating syntax features if you add the `--enable-preview` flag. Gradle requires you to add it in many places (including on JavaCompile, Javadoc tasks, as well as in production and on execution tasks like Test, JavaExec). The baseline-java-versions plugin provides a shorthand way of enabling this:
+
+```gradle
+// root build.gradle
+apply plugin: 'com.palantir.baseline-java-versions'
+javaVersions {
+    libraryTarget = 11
+    distributionTarget = '17_PREVIEW'
+    runtime = '17_PREVIEW'
+}
+
+// shorthand for configuring all the tasks individually, e.g.
 tasks.withType(JavaCompile) {
     options.compilerArgs += "--enable-preview"
 }
@@ -457,6 +497,10 @@ tasks.withType(JavaExec) {
 }
 ```
 
-If you've explicitly specified a lower sourceCompatibility (e.g. for a published API jar), then this plugin is a no-op.
-In fact, Java will actually error if you try to switch on the `--enable-preview` flag to get cutting edge syntax
-features but set `sourceCompatibility` (or `--release`) to an older Java version.
+In the example above, the `Baseline-Enable-Preview: 17` attribute will be embedded in the resultant Jar's `META-INF/MANIFEST.MF` file. To see for yourself, run:
+
+```
+$ unzip -p /path/to/your-project-1.2.3.jar META-INF/MANIFEST.MF
+```
+
+_Note, this plugin should be used with **caution** because preview features may change or be removed, which might make upgrading to a new Java version harder._

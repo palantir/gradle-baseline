@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Add deprecation warning to ./gradlew idea task
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2711

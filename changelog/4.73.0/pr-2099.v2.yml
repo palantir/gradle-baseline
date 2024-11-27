@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Validate that jqwik tests are run
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2099

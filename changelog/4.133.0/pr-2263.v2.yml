@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: More lazily acquire JDK storage locations
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2263

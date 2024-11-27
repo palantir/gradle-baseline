@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Don't ignore all directories named build/
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2578

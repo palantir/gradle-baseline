@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: Prevent "Circular evaluation detected" error when using baseline-java-versions
+    on Gradle 8.6+.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2820

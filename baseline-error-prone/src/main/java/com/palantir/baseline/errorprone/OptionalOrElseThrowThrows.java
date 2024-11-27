@@ -42,7 +42,6 @@ import java.util.function.Supplier;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "OptionalOrElseThrowThrows",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,
@@ -92,7 +91,7 @@ public final class OptionalOrElseThrowThrows extends BugChecker implements BugCh
         public Boolean visitBlock(BlockTree node, Void state) {
             // Only validate the first statement for the most common case to avoid unnecessary complexity
             StatementTree firstStatement = Iterables.getFirst(node.getStatements(), null);
-            return firstStatement != null && firstStatement.accept(this, state);
+            return firstStatement != null && firstStatement.accept(this, null);
         }
     }
 }

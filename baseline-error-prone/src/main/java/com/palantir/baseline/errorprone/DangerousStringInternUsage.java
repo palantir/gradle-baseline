@@ -29,7 +29,6 @@ import com.sun.source.tree.MethodInvocationTree;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "DangerousStringInternUsage",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.WARNING,
@@ -59,7 +58,7 @@ public final class DangerousStringInternUsage extends BugChecker implements BugC
     private static final Matcher<ExpressionTree> STRING_INTERN_METHOD_MATCHER = MethodMatchers.instanceMethod()
             .onExactClass(String.class.getName())
             .named("intern")
-            .withParameters();
+            .withNoParameters();
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {

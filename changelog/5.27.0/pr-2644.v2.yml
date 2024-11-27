@@ -1,0 +1,7 @@
+type: fix
+fix:
+  description: '`baseline-exact-dependencies` is now far more lazy around `Configuration`
+    creation in order to support Gradle 8. Fixed attempt to make this work that should
+    not break `--write-locks`.'
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2644

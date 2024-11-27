@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: Replace out instances of `RateLimiter.create(rate, Duration.ZERO)`
+    which do not rate limit at all. See https://github.com/google/guava/issues/2730
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1958

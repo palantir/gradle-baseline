@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: baseline-java-versions uses library presets for projects using shadow-jar
+    to prevent resolution/mutation ordering failures
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2108

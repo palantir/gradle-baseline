@@ -16,11 +16,9 @@
 
 package com.palantir.baseline
 
-
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 import spock.lang.Unroll
-
 /**
  * This test depends on ./gradlew :baseline-error-prone:publishToMavenLocal
  */
@@ -30,13 +28,11 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         plugins {
             id 'java'
             id 'com.palantir.baseline-error-prone'
-            id 'org.inferred.processors' version '3.1.0'
         }
         repositories {
             mavenLocal()
-            jcenter()
             // TODO(forozco): figure out why pTML no longer works
-            maven { url  "http://palantir.bintray.com/releases" }
+            mavenCentral()
         }
     '''.stripIndent()
 
@@ -97,13 +93,55 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         result.output.contains("[ArrayEquals] Reference equality used to compare arrays")
     }
 
-    def 'error-prone can be suppressed using property'() {
+    def 'compileJava fails when StrictUnusedVariable finds errors'() {
+        when:
+        buildFile << standardBuildFile
+        file('src/main/java/test/Test.java') << '''
+        package test;
+        public class Test {
+            void test() {
+                int a = 5;
+            }
+        }
+        '''.stripIndent()
+
+        then:
+        BuildResult result = with('compileJava').buildAndFail()
+        result.task(":compileJava").outcome == TaskOutcome.FAILED
+        result.output.contains("[StrictUnusedVariable]")
+    }
+
+    def 'error-prone can be disabled using property'() {
         when:
         buildFile << standardBuildFile
         file('src/main/java/test/Test.java') << invalidJavaFile
 
         then:
         BuildResult result = with('compileJava', '-Pcom.palantir.baseline-error-prone.disable').build()
+        result.task(":compileJava").outcome == TaskOutcome.SUCCESS
+    }
+
+    def 'error-prone is not disabled in IntelliJ'() {
+        when:
+        buildFile << standardBuildFile
+        file('src/main/java/test/Test.java') << invalidJavaFile
+
+        then:
+        BuildResult result = with('compileJava', '-Didea.active=true').buildAndFail()
+        result.task(":compileJava").outcome == TaskOutcome.FAILED
+        result.output.contains("[ArrayEquals] Reference equality used to compare arrays")
+
+    }
+
+    def 'error-prone can be enabled using property'() {
+        when:
+        buildFile << standardBuildFile
+        file('src/main/java/test/Test.java') << invalidJavaFile
+
+        then:
+        BuildResult result = with('compileJava', '-Pcom.palantir.baseline-error-prone.disable=false', '-Didea.active=true').buildAndFail()
+        result.task(":compileJava").outcome == TaskOutcome.FAILED
+        result.output.contains("[ArrayEquals] Reference equality used to compare arrays")
     }
 
     def 'compileJava succeeds when error-prone finds no errors'() {

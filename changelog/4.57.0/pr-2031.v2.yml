@@ -1,0 +1,9 @@
+type: fix
+fix:
+  description: |-
+    Refine FilterOutputStreamSlowMultibyteWrite findings
+
+    Avoid warning FilterOutputStreamSlowMultibyteWrite when intermediate
+    type overrides both single and multibyte write methods.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2031

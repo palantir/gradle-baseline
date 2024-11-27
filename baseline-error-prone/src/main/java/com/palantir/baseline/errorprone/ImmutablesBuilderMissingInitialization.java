@@ -30,6 +30,7 @@ import com.google.errorprone.bugpatterns.BugChecker.MethodInvocationTreeMatcher;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
+import com.google.errorprone.suppliers.Supplier;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
@@ -40,6 +41,8 @@ import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Type;
+import com.sun.tools.javac.util.Name;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
@@ -62,7 +65,6 @@ import java.util.stream.Stream;
  */
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "ImmutablesBuilderMissingInitialization",
         linkType = LinkType.CUSTOM,
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         severity = BugPattern.SeverityLevel.ERROR,
@@ -85,7 +87,9 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
     private static final Matcher<ExpressionTree> builderMethodMatcher = Matchers.instanceMethod()
             .onClass(ImmutablesBuilderMissingInitialization::extendsImmutablesGeneratedClass)
             .named("build")
-            .withParameters();
+            .withNoParameters();
+
+    private static final Supplier<Name> GENERATOR = VisitorState.memoize(state -> state.getName("generator"));
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
@@ -223,9 +227,9 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
      * the method methodName.
      */
     private Set<String> removeFieldsPotentiallyInitializedBy(Set<String> uninitializedFields, String methodName) {
-        String methodNameLowerCase = methodName.toLowerCase();
+        String methodNameLowerCase = methodName.toLowerCase(Locale.ROOT);
         return uninitializedFields.stream()
-                .filter(fieldName -> !methodNameLowerCase.endsWith(fieldName.toLowerCase()))
+                .filter(fieldName -> !methodNameLowerCase.endsWith(fieldName.toLowerCase(Locale.ROOT)))
                 .collect(Collectors.toSet());
     }
 
@@ -311,7 +315,7 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
                                     .tsym
                                     .getQualifiedName()
                                     .contentEquals("org.immutables.value.Generated"))
-                            .map(annotation -> annotation.member(state.getName("generator")))
+                            .map(annotation -> annotation.member(GENERATOR.get(state)))
                             .filter(Objects::nonNull)
                             .anyMatch(attribute -> Objects.equals(attribute.getValue(), "Immutables"))
                     || extendsImmutablesGeneratedClass(((ClassSymbol) type.tsym).getSuperclass(), state);

@@ -69,7 +69,7 @@ class BaselineReproducibilityIntegrationSpec extends IntegrationSpec {
         writeHelloWorld()
 
         then:
-        def result = runTasksSuccessfully("checkExplicitSourceCompatibility")
+        runTasksSuccessfully("checkExplicitSourceCompatibility")
     }
 
     def 'no-op if nothing is published'() {
@@ -108,5 +108,34 @@ class BaselineReproducibilityIntegrationSpec extends IntegrationSpec {
         then:
         def output = runTasksSuccessfully("check")
         output.getStandardOutput().contains("> Task :checkExplicitSourceCompatibility SKIPPED")
+    }
+
+    def 'task passes when toolchains are used'() {
+        when:
+        buildFile << """
+        ${applyPlugin(BaselineReproducibility.class)}
+        apply plugin: 'java'
+        apply plugin: 'maven-publish'
+
+        version '1.2.3'
+
+        publishing {
+            publications {
+                maven(MavenPublication) {
+                    from components.java
+                }
+            }
+        }
+        java {
+            toolchain {
+                languageVersion = JavaLanguageVersion.of(11)
+            }
+        }
+        """.stripIndent()
+
+        writeHelloWorld()
+
+        then:
+        runTasksSuccessfully("checkExplicitSourceCompatibility")
     }
 }

@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: When `com.palantir.external-publish-jar` is applied, the module should
+    be considered a library
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2722

@@ -47,9 +47,6 @@ import javax.annotation.Nullable;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "StrictCollectionIncompatibleType",
-        // Idea provides a similar check, avoid noise when that warning is already suppressed.
-        // https://github.com/JetBrains/intellij-community/blob/master/java/java-analysis-impl/src/com/intellij/codeInspection/miscGenerics/SuspiciousCollectionsMethodCallsInspection.java
         altNames = {"SuspiciousMethodCalls", "CollectionIncompatibleType"},
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
@@ -170,6 +167,7 @@ public final class StrictCollectionIncompatibleType extends BugChecker
     private IncompatibleTypeMatcher compatibleArgType(
             String baseType, String signature, int typeArgumentIndex, int argumentIndex) {
         // Eagerly create the matcher to avoid allocation for each check
+        @SuppressWarnings("deprecation")
         Matcher<ExpressionTree> methodMatcher =
                 MethodMatchers.instanceMethod().onDescendantOf(baseType).withSignature(signature);
         return new IncompatibleTypeMatcher() {

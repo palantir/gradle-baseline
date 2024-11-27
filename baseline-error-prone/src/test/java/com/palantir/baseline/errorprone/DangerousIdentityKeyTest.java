@@ -123,6 +123,20 @@ public final class DangerousIdentityKeyTest {
     }
 
     @Test
+    public void testValidClass() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.*;",
+                        "class Test {",
+                        "    private Object test() {",
+                        "        return new HashSet<Class<String>>();",
+                        "    }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testInvalidNoEquals() {
         compilationHelper
                 .addSourceLines(

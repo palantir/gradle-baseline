@@ -20,7 +20,9 @@ import org.gradle.api.JavaVersion
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
 import org.junit.Assume
+import spock.lang.Unroll
 
+@Unroll
 class BaselineReleaseCompatibilityIntegrationTest extends AbstractPluginTest {
 
     def standardBuildFile = '''
@@ -33,7 +35,6 @@ class BaselineReleaseCompatibilityIntegrationTest extends AbstractPluginTest {
 
         repositories {
             mavenLocal()
-            jcenter()
         }
     '''.stripIndent()
 
@@ -46,17 +47,20 @@ class BaselineReleaseCompatibilityIntegrationTest extends AbstractPluginTest {
         }
     '''.stripIndent()
 
-    def 'compileJava fails when features from Java9 are used'() {
+    def '#gradleVersion: compileJava fails when features from Java9 are used'() {
         when:
         buildFile << standardBuildFile
         file('src/main/java/test/Invalid.java').text = useJava9Features
 
         then:
-        BuildResult result = with('compileJava').buildAndFail()
+        BuildResult result = with('compileJava').withGradleVersion(gradleVersion)buildAndFail()
         result.task(":compileJava").outcome == TaskOutcome.FAILED
+
+        where:
+        gradleVersion << GradleTestVersions.VERSIONS
     }
 
-    def 'compileJava succeeds when sourceCompatibility = 11 and Java9 features are used'() {
+    def '#gradleVersion: compileJava succeeds when sourceCompatibility = 11 and Java9 features are used'() {
         Assume.assumeTrue(
                 "This test can only pass when run from a Java9+ JVM.",
                 JavaVersion.current().isJava9Compatible())
@@ -67,7 +71,10 @@ class BaselineReleaseCompatibilityIntegrationTest extends AbstractPluginTest {
         file('src/main/java/test/Invalid.java').text = useJava9Features
 
         then:
-        BuildResult result = with('compileJava').build()
+        BuildResult result = with('compileJava').withGradleVersion(gradleVersion).build()
         result.task(":compileJava").outcome == TaskOutcome.SUCCESS
+
+        where:
+        gradleVersion << GradleTestVersions.VERSIONS
     }
 }

@@ -16,28 +16,49 @@
 
 package com.palantir.baseline.plugins
 
+import com.google.common.collect.ImmutableList
 import nebula.test.IntegrationSpec
+import nebula.test.functional.ExecutionResult
 
 class BaselineImmutablesTest extends IntegrationSpec {
     private static final String IMMUTABLES = 'org.immutables:value:2.8.8'
+    private static final String IMMUTABLES_ANNOTATIONS = IMMUTABLES + ':annotations'
 
-    def 'inserts incremental compilation args into source sets that have immutables'() {
-        buildFile << """
+    def setup() {
+        // language=Gradle
+        buildFile << '''
             plugins {
-                id 'org.unbroken-dome.test-sets' version '3.0.1'
+                id 'org.unbroken-dome.test-sets' version '4.0.0'
             }
-
+            
             apply plugin: 'com.palantir.baseline-immutables'
-            apply plugin: 'java'
+            apply plugin: 'java-library'
 
             repositories {
                 mavenCentral()
             }
             
+            task compileAll
+            
+            tasks.withType(JavaCompile) { javaCompile ->
+                doFirst {
+                    logger.lifecycle "Debug compiler args: \${javaCompile.name}: \${javaCompile.options.allCompilerArgs}"
+                    logger.lifecycle "Debug compiler fork args: \${javaCompile.name}: \${javaCompile.options.forkOptions.allJvmArgs}"
+                    logger.lifecycle "Debug compiler fork: \${javaCompile.name}: \${javaCompile.options.fork}"
+                }
+                                
+                tasks.compileAll.dependsOn javaCompile
+            }
+        '''.stripIndent(true)
+    }
+
+    def 'inserts incremental compilation args into source sets that have immutables'() {
+        buildFile << """
             testSets {
                 hasImmutables
                 doesNotHaveImmutables
                 hasImmutablesAddedInAfterEvaluate
+                onlyHasImmutablesAnnotations
             }
             
             afterEvaluate {
@@ -50,20 +71,12 @@ class BaselineImmutablesTest extends IntegrationSpec {
                 annotationProcessor '$IMMUTABLES'
                 
                 hasImmutablesAnnotationProcessor '$IMMUTABLES'
-            }
-            
-            task compileAll
-            
-            tasks.withType(JavaCompile) { javaCompile ->
-                doFirst {
-                    logger.lifecycle "\${javaCompile.name}: \${javaCompile.options.allCompilerArgs}"
-                }
-                                
-                tasks.compileAll.dependsOn javaCompile
+
+                onlyHasImmutablesAnnotationsAnnotationProcessor '$IMMUTABLES_ANNOTATIONS'
             }
         """.stripIndent()
 
-        ['main', 'hasImmutables', 'doesNotHaveImmutables', 'hasImmutablesAddedInAfterEvaluate'].each {
+        ['main', 'hasImmutables', 'doesNotHaveImmutables', 'hasImmutablesAddedInAfterEvaluate', 'onlyHasImmutablesAnnotations'].each {
             writeJavaSourceFile '''
                 public class Foo {}
             '''.stripIndent(), "src/$it/java"
@@ -78,5 +91,90 @@ class BaselineImmutablesTest extends IntegrationSpec {
         stdout.contains 'compileHasImmutablesJava: [-Aimmutables.gradle.incremental]'
         stdout.contains 'compileDoesNotHaveImmutablesJava: []'
         stdout.contains 'compileHasImmutablesAddedInAfterEvaluateJava: [-Aimmutables.gradle.incremental]'
+        stdout.contains 'compileOnlyHasImmutablesAnnotationsJava: []'
+    }
+
+    def 'Compatible with java #javaVersion'() {
+        // Context: https://github.com/immutables/immutables/issues/1379#issuecomment-1254224741
+
+        when:
+        buildFile << """
+            apply plugin: 'com.palantir.baseline-java-versions'
+            tasks.withType(JavaCompile).configureEach({
+                options.compilerArgs += ['-Werror']
+                // See comment about fork options in BaselineImmutables
+                options.fork = true
+            })
+            javaVersions {
+                libraryTarget = $javaVersion
+            }
+            dependencies {
+                annotationProcessor '$IMMUTABLES'
+                compileOnly '$IMMUTABLES_ANNOTATIONS'
+            }
+        """.stripIndent(true)
+
+        // language=Java
+        writeJavaSourceFile('''
+            package com.palantir.one;
+            import com.palantir.two.ImmutableTwo;
+            import org.immutables.value.Value;
+            @Value.Immutable
+            public interface One {
+                ImmutableTwo two();
+            }
+        '''.stripIndent(true))
+
+        // language=Java
+        writeJavaSourceFile('''
+            package com.palantir.two;
+            import org.immutables.value.Value;
+            @Value.Immutable
+            public interface Two {
+                String value();
+            }
+        '''.stripIndent(true))
+
+        then:
+        ExecutionResult result = runTasks('compileJava')
+        println(result.standardError)
+        println(result.standardOutput)
+        result.success
+
+        where:
+        javaVersion << ImmutableList.of(11, 17)
+    }
+
+    def 'handles an annotationProcesor source set extending from another one'() {
+        buildFile << """
+            dependencies {
+                annotationProcessor '$IMMUTABLES'
+                compileOnly '$IMMUTABLES_ANNOTATIONS'
+            }
+            
+            configurations {
+                testAnnotationProcessor.extendsFrom annotationProcessor
+                testCompileOnly.extendsFrom compileOnly
+            } 
+        """.stripIndent(true)
+
+        def testJava = 'src/test/java'
+
+        // language=java
+        writeJavaSourceFile '''
+            package test;
+            import org.immutables.value.Value;
+            @Value.Immutable
+            public interface Test {
+                int item();
+            }
+        '''.stripIndent(true), testJava
+
+        when:
+        def stdout = runTasksSuccessfully('compileTestJava').standardOutput
+        println stdout
+
+        then:
+        stdout.contains('compileTestJava: [-Aimmutables.gradle.incremental]')
     }
 }

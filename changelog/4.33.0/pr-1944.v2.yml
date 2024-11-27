@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Plumb Add-Exports through to execution and annotation processing sites
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1944

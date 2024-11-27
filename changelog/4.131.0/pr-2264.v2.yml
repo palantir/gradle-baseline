@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Stream.collect safety no longer incorrectly includes map collectors
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2264

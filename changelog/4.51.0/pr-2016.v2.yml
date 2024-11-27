@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: Idea integration results in correct copyright xml files without duplicate
+    entries
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2016

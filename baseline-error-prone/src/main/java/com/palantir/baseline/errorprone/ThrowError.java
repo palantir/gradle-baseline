@@ -31,11 +31,9 @@ import com.sun.source.tree.NewClassTree;
 import com.sun.source.tree.ThrowTree;
 import com.sun.tools.javac.code.Type;
 import java.util.List;
-import java.util.Optional;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "ThrowError",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,
@@ -71,19 +69,18 @@ public final class ThrowError extends BugChecker implements BugChecker.ThrowTree
         return buildDescription(tree).addFix(generateFix(newClassTree, state)).build();
     }
 
-    private static Optional<SuggestedFix> generateFix(NewClassTree newClassTree, VisitorState state) {
+    private static SuggestedFix generateFix(NewClassTree newClassTree, VisitorState state) {
         Type throwableType = ASTHelpers.getType(newClassTree.getIdentifier());
         // AssertionError is the most common failure case we've encountered, likely because it sounds
         // similar to IllegalStateException. In this case we suggest replacing it with IllegalStateException.
         if (!ASTHelpers.isSameType(throwableType, state.getTypeFromString(AssertionError.class.getName()), state)) {
-            return Optional.empty();
+            return SuggestedFix.emptyFix();
         }
         List<? extends ExpressionTree> arguments = newClassTree.getArguments();
         if (arguments.isEmpty()) {
             SuggestedFix.Builder fix = SuggestedFix.builder();
             String qualifiedName = SuggestedFixes.qualifyType(state, fix, IllegalStateException.class.getName());
-            return Optional.of(
-                    fix.replace(newClassTree.getIdentifier(), qualifiedName).build());
+            return fix.replace(newClassTree.getIdentifier(), qualifiedName).build();
         }
         ExpressionTree firstArgument = arguments.get(0);
         if (ASTHelpers.isSameType(
@@ -95,9 +92,8 @@ public final class ThrowError extends BugChecker implements BugChecker.ThrowTree
                     compileTimeConstExpressionMatcher.matches(firstArgument, state)
                             ? "com.palantir.logsafe.exceptions.SafeIllegalStateException"
                             : IllegalStateException.class.getName());
-            return Optional.of(
-                    fix.replace(newClassTree.getIdentifier(), qualifiedName).build());
+            return fix.replace(newClassTree.getIdentifier(), qualifiedName).build();
         }
-        return Optional.empty();
+        return SuggestedFix.emptyFix();
     }
 }

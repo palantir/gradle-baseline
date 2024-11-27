@@ -11,8 +11,17 @@
 .java-version
 .project
 .settings
+.factorypath
+.apt_generated_tests/
+.profileconfig.json
+bin/
 build
 out/
 docs/node_modules/
 generated_src
 generated_testSrc
+generated
+generated_tests
+
+# Gradle JDKs setup
+!gradle/*

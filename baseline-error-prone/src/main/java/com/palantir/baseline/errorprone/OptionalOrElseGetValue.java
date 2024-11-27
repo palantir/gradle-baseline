@@ -24,7 +24,6 @@ import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.bugpatterns.BugChecker.MethodInvocationTreeMatcher;
 import com.google.errorprone.fixes.SuggestedFix;
 import com.google.errorprone.fixes.SuggestedFixes;
-import com.google.errorprone.matchers.CompileTimeConstantExpressionMatcher;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
@@ -38,7 +37,6 @@ import com.sun.source.tree.Tree;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "OptionalOrElseGetValue",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.WARNING,
@@ -48,7 +46,6 @@ public final class OptionalOrElseGetValue extends BugChecker implements MethodIn
     private static final long serialVersionUID = 1L;
     private static final Matcher<ExpressionTree> OR_ELSE_GET_METHOD =
             MethodMatchers.instanceMethod().onExactClass("java.util.Optional").named("orElseGet");
-    private static final Matcher<ExpressionTree> COMPILE_TIME_CONSTANT = new CompileTimeConstantExpressionMatcher();
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
@@ -70,9 +67,7 @@ public final class OptionalOrElseGetValue extends BugChecker implements MethodIn
         }
 
         ExpressionTree expressionBody = (ExpressionTree) lambdaExpressionTree.getBody();
-        if (!COMPILE_TIME_CONSTANT.matches(expressionBody, state)
-                && !isTrivialExpression(expressionBody)
-                && !isTrivialSelect(expressionBody)) {
+        if (!isTrivialExpression(expressionBody) && !isTrivialSelect(expressionBody)) {
             return Description.NO_MATCH;
         }
 

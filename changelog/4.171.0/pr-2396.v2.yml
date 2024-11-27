@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: '`com.palantir.baseline-null-away` no longer enables the `CheckOptionalEmptiness`
+    checker by default.'
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2396

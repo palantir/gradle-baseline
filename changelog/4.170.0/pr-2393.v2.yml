@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: lazily configure NullAway dependencies to successfully apply NullAway
+    without ordering issues
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2393

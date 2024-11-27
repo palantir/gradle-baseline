@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: Make the `checkUnusedDependencies` tasks added by `baseline-exact-dependencies`
+    compatible with Gradle's configure-on-demand feature.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2363

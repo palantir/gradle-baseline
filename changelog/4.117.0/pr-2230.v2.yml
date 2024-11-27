@@ -1,0 +1,8 @@
+type: improvement
+improvement:
+  description: |-
+    Propagate additional safety information in the `SafeLoggingPropagation` check and automated fixes:
+    1. Method return statements are analyzed to determine safety of unmarked methods
+    2. Types are annotated based on the safety of their `toString` method, which is a reasonable heuristic for value types that may be logged.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2230

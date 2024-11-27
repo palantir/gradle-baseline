@@ -1,0 +1,7 @@
+type: fix
+fix:
+  description: Ensure nebula-test 10/Spock 2 test run by automatically setting `useJUnitPlatform()`
+    on test tasks. Add extra verification to the `checkJUnitDependencies` task for
+    nebula-test 10/Spock 2 tests.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1929

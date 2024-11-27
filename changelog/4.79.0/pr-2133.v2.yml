@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: suggested fixes for IllegalSafeLoggingArgument check
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2133

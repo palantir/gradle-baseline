@@ -25,13 +25,14 @@ import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
+import com.google.errorprone.suppliers.Supplier;
+import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.tools.javac.code.Symbol;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "UnsafeGaugeRegistration",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,
@@ -49,6 +50,9 @@ public final class UnsafeGaugeRegistration extends AbstractReturnValueIgnored {
             .onDescendantOf(TAGGED_REGISTRY)
             .named("gauge")
             .withParameters("com.palantir.tritium.metrics.registry.MetricName", "com.codahale.metrics.Gauge");
+
+    private static final Supplier<Symbol> TAGGED_METRIC_REGISTRY =
+            VisitorState.memoize(state -> state.getSymbolFromString(TAGGED_REGISTRY));
 
     @Override
     public Matcher<? super ExpressionTree> specializedMatcher() {
@@ -71,12 +75,12 @@ public final class UnsafeGaugeRegistration extends AbstractReturnValueIgnored {
 
     /** TaggedMetricRegistry.registerWithReplacement was added in Tritium 0.16.1, avoid flagging older versions. */
     private static boolean hasRegisterWithReplacement(VisitorState state) {
-        Symbol symbol = state.getSymbolFromString(TAGGED_REGISTRY);
+        Symbol symbol = TAGGED_METRIC_REGISTRY.get(state);
         if (!(symbol instanceof Symbol.ClassSymbol)) {
             return false;
         }
         Symbol.ClassSymbol classSymbol = (Symbol.ClassSymbol) symbol;
-        for (Symbol enclosed : classSymbol.getEnclosedElements()) {
+        for (Symbol enclosed : ASTHelpers.getEnclosedElements(classSymbol)) {
             if (enclosed instanceof Symbol.MethodSymbol) {
                 Symbol.MethodSymbol enclosedMethod = (Symbol.MethodSymbol) enclosed;
                 if (enclosedMethod.name.contentEquals(REGISTER_WITH_REPLACEMENT)) {

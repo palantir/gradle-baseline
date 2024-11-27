@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: The `CyclomaticComplexity` check is now configured with `switchBlockAsSingleDecisionPoint`.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2383

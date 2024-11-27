@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Bring IntelliJ in sync with ErrorProne on bad inner static class names
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2447

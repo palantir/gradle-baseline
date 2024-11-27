@@ -42,7 +42,6 @@ public class StrictUnusedVariableTest {
                         "import java.util.Optional;",
                         "interface Test {",
                         "  void method(String param);",
-                        "  // BUG: Diagnostic contains: Unused",
                         "  default void defaultMethod(String param) { }",
                         "}")
                 .doTest();
@@ -110,6 +109,23 @@ public class StrictUnusedVariableTest {
                         "    BiFunction<String, String, Integer> first = (String value1, String value2) -> 1;",
                         "  // BUG: Diagnostic contains: Unused",
                         "    return first.andThen(value3 -> 2);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void handles_lambdas_in_static_init() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.function.BiFunction;",
+                        "class Test {",
+                        "  static {",
+                        "  // BUG: Diagnostic contains: Unused",
+                        "    BiFunction<String, String, Integer> first = (String value1, String value2) -> 1;",
+                        "  // BUG: Diagnostic contains: Unused",
+                        "    first.andThen(value3 -> 2);",
                         "  }",
                         "}")
                 .doTest();
@@ -298,10 +314,10 @@ public class StrictUnusedVariableTest {
     }
 
     @Test
-    @DisabledForJreRange(max = JRE.JAVA_13)
+    @DisabledForJreRange(max = JRE.JAVA_16)
     public void testRecord() {
         compilationHelper = CompilationTestHelper.newInstance(StrictUnusedVariable.class, getClass())
-                .setArgs("--enable-preview", "--release", "15");
+                .setArgs("--release", "17");
 
         compilationHelper
                 .addSourceLines("Test.java", "class Test {", "  record Foo(int bar) {}", "}")
@@ -309,7 +325,7 @@ public class StrictUnusedVariableTest {
     }
 
     @Test
-    public void testSuppression() {
+    public void testParameterSuppression() {
         refactoringTestHelper
                 .addInputLines(
                         "Test.java",
@@ -321,5 +337,62 @@ public class StrictUnusedVariableTest {
                         "}")
                 .expectUnchanged()
                 .doTest(TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    public void testMethodSuppression() {
+        refactoringTestHelper
+                .addInputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  @SuppressWarnings(\"StrictUnusedVariable\")",
+                        "  public static void a(int val) {}",
+                        "  @SuppressWarnings(\"UnusedVariable\")",
+                        "  public static void b(int val) {}",
+                        "  @SuppressWarnings(\"unused\")",
+                        "  public static void c(int val) {}",
+                        "  public static void d(int _val) {}",
+                        "}")
+                .expectUnchanged()
+                .doTest(TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    public void testClassSuppression() {
+        refactoringTestHelper
+                .addInputLines(
+                        "Test.java",
+                        "class Test {",
+                        "  @SuppressWarnings(\"StrictUnusedVariable\")",
+                        "  class Test1 {",
+                        "    public static void a(int val) {}",
+                        "  }",
+                        "  @SuppressWarnings(\"UnusedVariable\")",
+                        "  class Test2 {",
+                        "    public static void a(int val) {}",
+                        "  }",
+                        "  @SuppressWarnings(\"unused\")",
+                        "  class Test3 {",
+                        "    public static void a(int val) {}",
+                        "  }",
+                        "}")
+                .expectUnchanged()
+                .doTest(TestMode.TEXT_MATCH);
+    }
+
+    @Test
+    public void allows_unused_loggers() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import org.slf4j.*;",
+                        "import com.palantir.logsafe.logger.*;",
+                        "class Test {",
+                        "  private static final Logger slf4j = LoggerFactory.getLogger(Test.class);",
+                        "  private static final SafeLogger logsafe = SafeLoggerFactory.get(Test.class);",
+                        "  // BUG: Diagnostic contains: Unused",
+                        "  private static final String str = \"str\";",
+                        "}")
+                .doTest();
     }
 }

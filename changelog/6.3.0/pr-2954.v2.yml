@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: Bump suppressible-error-prone to 1.5.0 to get Java 11 target for libs
+    used in compilation
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2954

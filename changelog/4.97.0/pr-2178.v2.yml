@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Fix errorprone excluded-path regex on Windows
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2178

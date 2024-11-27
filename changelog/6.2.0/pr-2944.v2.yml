@@ -1,0 +1,6 @@
+type: feature
+feature:
+  description: Use suppressible-error-prone so it's easy to suppress error prones
+    that are currently failing
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2944

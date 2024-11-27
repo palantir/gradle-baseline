@@ -36,7 +36,6 @@ import javax.lang.model.element.Modifier;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "CompileTimeConstantViolatesLiskovSubstitution",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.ERROR,
@@ -67,7 +66,7 @@ public final class CompileTimeConstantViolatesLiskovSubstitution extends BugChec
         for (VarSymbol parameter : methodSymbol.getParameters()) {
             ++parameterIndex;
 
-            if (ASTHelpers.hasAnnotation(parameter, CompileTimeConstant.class, state)) {
+            if (ASTHelpers.hasAnnotation(parameter, CompileTimeConstant.class.getName(), state)) {
                 if (anySuperMethodsMissingParameterAnnotation(superMethods, parameterIndex, state)) {
                     state.reportMatch(buildDescription(tree.getParameters().get(parameterIndex))
                             .setMessage("@CompileTimeConstant annotations on method parameters "
@@ -99,7 +98,7 @@ public final class CompileTimeConstantViolatesLiskovSubstitution extends BugChec
             Set<MethodSymbol> superMethods, int parameterIndex, VisitorState state) {
         for (MethodSymbol superMethod : superMethods) {
             VarSymbol parameter = superMethod.getParameters().get(parameterIndex);
-            if (!ASTHelpers.hasAnnotation(parameter, CompileTimeConstant.class, state)) {
+            if (!ASTHelpers.hasAnnotation(parameter, CompileTimeConstant.class.getName(), state)) {
                 return true;
             }
         }
@@ -110,7 +109,7 @@ public final class CompileTimeConstantViolatesLiskovSubstitution extends BugChec
             Set<MethodSymbol> superMethods, int parameterIndex, VisitorState state) {
         for (MethodSymbol superMethod : superMethods) {
             VarSymbol parameter = superMethod.getParameters().get(parameterIndex);
-            if (ASTHelpers.hasAnnotation(parameter, CompileTimeConstant.class, state)) {
+            if (ASTHelpers.hasAnnotation(parameter, CompileTimeConstant.class.getName(), state)) {
                 return true;
             }
         }

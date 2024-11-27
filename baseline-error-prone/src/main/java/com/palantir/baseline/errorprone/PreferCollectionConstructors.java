@@ -27,8 +27,10 @@ import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
+import com.google.errorprone.suppliers.Supplier;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
+import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
 import com.sun.tools.javac.tree.JCTree.JCExpression;
 import com.sun.tools.javac.tree.JCTree.JCMethodInvocation;
@@ -52,7 +54,6 @@ import java.util.stream.Collectors;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "PreferCollectionConstructors",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.WARNING,
@@ -65,7 +66,7 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
     private static final Matcher<ExpressionTree> NEW_ARRAY_LIST = MethodMatchers.staticMethod()
             .onClass("com.google.common.collect.Lists")
             .named("newArrayList")
-            .withParameters();
+            .withNoParameters();
 
     private static final Matcher<ExpressionTree> NEW_ARRAY_LIST_WITH_ITERABLE = MethodMatchers.staticMethod()
             .onClass("com.google.common.collect.Lists")
@@ -80,7 +81,7 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
     private static final Matcher<ExpressionTree> NEW_LINKED_LIST = MethodMatchers.staticMethod()
             .onClass("com.google.common.collect.Lists")
             .named("newLinkedList")
-            .withParameters();
+            .withNoParameters();
 
     private static final Matcher<ExpressionTree> NEW_LINKED_LIST_WITH_ITERABLE = MethodMatchers.staticMethod()
             .onClass("com.google.common.collect.Lists")
@@ -90,7 +91,7 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
     private static final Matcher<ExpressionTree> NEW_COPY_ON_WRITE_ARRAY_LIST = MethodMatchers.staticMethod()
             .onClass("com.google.common.collect.Lists")
             .named("newCopyOnWriteArrayList")
-            .withParameters();
+            .withNoParameters();
 
     private static final Matcher<ExpressionTree> NEW_COPY_ON_WRITE_ARRAY_LIST_WITH_ITERABLE =
             MethodMatchers.staticMethod()
@@ -101,12 +102,12 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
     private static final Matcher<ExpressionTree> NEW_CONCURRENT_MAP = MethodMatchers.staticMethod()
             .onClass("com.google.common.collect.Maps")
             .named("newConcurrentMap")
-            .withParameters();
+            .withNoParameters();
 
     private static final Matcher<ExpressionTree> NEW_HASH_MAP = MethodMatchers.staticMethod()
             .onClass("com.google.common.collect.Maps")
             .named("newHashMap")
-            .withParameters();
+            .withNoParameters();
 
     private static final Matcher<ExpressionTree> NEW_HASH_MAP_WITH_MAP = MethodMatchers.staticMethod()
             .onClass("com.google.common.collect.Maps")
@@ -116,7 +117,7 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
     private static final Matcher<ExpressionTree> NEW_TREE_MAP = MethodMatchers.staticMethod()
             .onClass("com.google.common.collect.Maps")
             .named("newTreeMap")
-            .withParameters();
+            .withNoParameters();
 
     private static final Matcher<ExpressionTree> NEW_TREE_MAP_WITH_COMPARATOR = MethodMatchers.staticMethod()
             .onClass("com.google.common.collect.Maps")
@@ -131,7 +132,7 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
     private static final Matcher<ExpressionTree> NEW_COPY_ON_WRITE_ARRAY_SET = MethodMatchers.staticMethod()
             .onClass("com.google.common.collect.Sets")
             .named("newCopyOnWriteArraySet")
-            .withParameters();
+            .withNoParameters();
 
     private static final Matcher<ExpressionTree> NEW_COPY_ON_WRITE_ARRAY_SET_WITH_ITERABLE =
             MethodMatchers.staticMethod()
@@ -142,7 +143,7 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
     private static final Matcher<ExpressionTree> NEW_LINKED_HASH_SET = MethodMatchers.staticMethod()
             .onClass("com.google.common.collect.Sets")
             .named("newLinkedHashSet")
-            .withParameters();
+            .withNoParameters();
 
     private static final Matcher<ExpressionTree> NEW_LINKED_HASH_SET_WITH_ITERABLE = MethodMatchers.staticMethod()
             .onClass("com.google.common.collect.Sets")
@@ -152,7 +153,7 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
     private static final Matcher<ExpressionTree> NEW_TREE_SET = MethodMatchers.staticMethod()
             .onClass("com.google.common.collect.Sets")
             .named("newTreeSet")
-            .withParameters();
+            .withNoParameters();
 
     private static final Matcher<ExpressionTree> NEW_TREE_SET_WITH_COMPARATOR = MethodMatchers.staticMethod()
             .onClass("com.google.common.collect.Sets")
@@ -167,7 +168,7 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
     private static final Matcher<ExpressionTree> NEW_HASH_SET = MethodMatchers.staticMethod()
             .onClass("com.google.common.collect.Sets")
             .named("newHashSet")
-            .withParameters();
+            .withNoParameters();
 
     private static final Matcher<ExpressionTree> NEW_HASH_SET_WITH_ITERABLE = MethodMatchers.staticMethod()
             .onClass("com.google.common.collect.Sets")
@@ -177,7 +178,7 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
     private static final Matcher<ExpressionTree> NEW_LINKED_HASH_MAP = MethodMatchers.staticMethod()
             .onClass("com.google.common.collect.Maps")
             .named("newLinkedHashMap")
-            .withParameters();
+            .withNoParameters();
 
     private static final Matcher<ExpressionTree> NEW_LINKED_HASH_MAP_WITH_MAP = MethodMatchers.staticMethod()
             .onClass("com.google.common.collect.Maps")
@@ -187,7 +188,7 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
     private static final Matcher<ExpressionTree> NEW_ENUM_MAP = MethodMatchers.staticMethod()
             .onClass("com.google.common.collect.Maps")
             .named("newEnumMap")
-            .withParameters();
+            .withNoParameters();
 
     private static final Matcher<ExpressionTree> NEW_ENUM_MAP_WITH_MAP = MethodMatchers.staticMethod()
             .onClass("com.google.common.collect.Maps")
@@ -233,7 +234,7 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
                     .put(NEW_ENUM_MAP_WITH_CLASS, EnumMap.class)
                     .put(NEW_ENUM_MAP_WITH_MAP, EnumMap.class)
                     .put(NEW_IDENTITY_HASH_MAP, IdentityHashMap.class)
-                    .build();
+                    .buildOrThrow();
 
     private static final Set<Matcher<ExpressionTree>> requiresCollectionArg = ImmutableSet.of(
             NEW_ARRAY_LIST_WITH_ITERABLE,
@@ -243,6 +244,9 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
             NEW_LINKED_HASH_SET_WITH_ITERABLE,
             NEW_TREE_SET_WITH_ITERABLE,
             NEW_HASH_SET_WITH_ITERABLE);
+
+    private static final Supplier<Type> JAVA_UTIL_COLLECTION =
+            VisitorState.memoize(state -> state.getTypeFromString("java.util.Collection"));
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
@@ -288,7 +292,6 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
             return false;
         }
         Types types = state.getTypes();
-        return types.isSubtype(
-                types.erasure(args.get(0).type), types.erasure(state.getTypeFromString("java.util.Collection")));
+        return types.isSubtype(types.erasure(args.get(0).type), types.erasure(JAVA_UTIL_COLLECTION.get(state)));
     }
 }

@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Allow `PreferSafeLogger` to migrate logger uses which include level-checks
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1842

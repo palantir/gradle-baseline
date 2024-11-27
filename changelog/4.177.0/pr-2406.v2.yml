@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: baseline-immutables adds required exports to the java compiler for
+    compatibility with jdk-17+
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2406

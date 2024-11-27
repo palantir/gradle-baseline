@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: Automatically fix upstream [LongDoubleConversion](https://errorprone.info/bugpattern/LongDoubleConversion)
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2199
+  - https://errorprone.info/bugpattern/LongDoubleConversion

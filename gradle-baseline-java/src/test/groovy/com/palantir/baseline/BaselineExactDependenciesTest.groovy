@@ -23,14 +23,15 @@ import spock.lang.Unroll
 
 class BaselineExactDependenciesTest extends AbstractPluginTest {
 
+    // language=Gradle
     def standardBuildFile = '''
         plugins {
             id 'java'
             id 'com.palantir.baseline-exact-dependencies'
             id 'com.palantir.baseline' apply false
-            id 'com.palantir.consistent-versions' version '1.17.3' apply false
+            id 'com.palantir.consistent-versions' version '2.0.0' apply false
         }
-    '''.stripIndent()
+    '''.stripIndent(true)
 
     def minimalJavaFile = '''
     package pkg;
@@ -46,12 +47,26 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         with('checkUnusedDependencies', 'checkImplicitDependencies', '--stacktrace').build()
     }
 
+    def '#gradleVersion: both tasks work with different gradle versions'() {
+        when:
+        buildFile << standardBuildFile
+        file('src/main/java/pkg/Foo.java') << minimalJavaFile
+
+        then:
+        with('checkUnusedDependencies', 'checkImplicitDependencies', '--stacktrace')
+                .withGradleVersion(gradleVersion)
+                .build()
+
+        where:
+        gradleVersion << GradleTestVersions.VERSIONS
+    }
+
     def 'both tasks vacuously pass with no dependencies when entire baseline is applied'() {
         when:
         buildFile << standardBuildFile
         buildFile << """
             repositories {
-                jcenter()
+                mavenCentral()
                 mavenLocal() // for baseline-error-prone
             }
             apply plugin: 'com.palantir.baseline'
@@ -81,7 +96,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
             mavenCentral()
         }
         dependencies {
-            compile 'com.google.guava:guava:27.0.1-jre'
+            implementation 'com.google.guava:guava:27.0.1-jre'
         }
         """
         file('src/main/java/pkg/Foo.java') << minimalJavaFile
@@ -120,7 +135,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         buildFile << standardBuildFile
         buildFile << """
         dependencies {
-            compile project(':needs-building-first')
+            implementation project(':needs-building-first')
         }
         """
 
@@ -148,7 +163,38 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         task << ['checkUnusedDependencies', 'checkImplicitDependencies']
     }
 
-    def 'checkUnusedDependenciesTest passes if dependency from main source set is not referenced in test'() {
+    def 'checkUnusedDependencies is successful for multi-source project dep'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << """
+        dependencies {
+            implementation project(':needs-building-first')
+        }
+        """
+
+        multiProject.addSubproject('needs-building-first', """
+            apply plugin: 'java-library'
+            apply plugin: 'scala'
+        """.stripIndent())
+
+        file('needs-building-first/src/main/java/pkg/Bar.java') << """
+            package pkg;
+            public class Bar {}
+        """.stripIndent()
+        file('src/main/java/pkg/Foo.java') << """
+            package pkg;
+            class Foo {
+                // Just reference something from the other project
+                void test() { new Bar(); }
+            }
+        """.stripIndent()
+
+        then:
+        def result = with("checkUnusedDependencies", '--stacktrace').build()
+        result.task(':checkUnusedDependenciesMain').getOutcome() == TaskOutcome.SUCCESS
+    }
+
+    def 'checkUnusedDependenciesTest passes if main source set is not referenced in test'() {
         when:
         buildFile << standardBuildFile
         buildFile << """
@@ -156,7 +202,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
             mavenCentral()
         }
         dependencies {
-            compile 'com.google.guava:guava:28.0-jre'
+            implementation 'com.google.guava:guava:28.0-jre'
         }
         """
         file('src/main/java/pkg/Foo.java') << '''
@@ -173,6 +219,20 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         result.task(':checkUnusedDependenciesTest').getOutcome() == TaskOutcome.SUCCESS
     }
 
+    def 'checkUnusedDependenciesTest passes if test fixture source set is not referenced in test'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << """
+        plugins {
+            id 'java-test-fixtures'
+        }
+        """
+
+        then:
+        def result = with('checkUnusedDependencies', '--stacktrace').build()
+        result.task(':checkUnusedDependenciesTest').getOutcome() == TaskOutcome.SUCCESS
+    }
+
     def 'checkImplicitDependencies fails when a class is imported without being declared as a dependency'() {
         when:
         buildFile << standardBuildFile
@@ -181,7 +241,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
             mavenCentral()
         }
         dependencies {
-            compile 'com.fasterxml.jackson.datatype:jackson-datatype-guava:2.9.8' // pulls in guava transitively
+            implementation 'com.fasterxml.jackson.datatype:jackson-datatype-guava:2.9.8' // pulls in guava transitively
         }
         """
         file('src/main/java/pkg/Foo.java') << '''
@@ -248,7 +308,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
 
         then:
         BuildResult result = with(':checkUnusedDependencies', '--stacktrace').withDebug(true).buildAndFail()
-        result.output.contains "project(':sub-project-with-deps') (sub-project-with-deps.jar (project :sub-project-with-deps))"
+        result.output.contains "project(':sub-project-with-deps') <-- main"
         result.output.contains "project(':sub-project-no-deps')"
     }
 
@@ -263,8 +323,28 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         with(':checkUnusedConstraints', '--stacktrace', '--write-locks').withDebug(true).build()
     }
 
+    def 'in Gradle >=8.3 you can set the toolchain language version without it being finalised'() {
+        when:
+        buildFile << standardBuildFile
+        // language=Gradle
+        buildFile << '''
+            pluginManager.withPlugin('java') {
+                java {
+                    toolchain {
+                        languageVersion.set(JavaLanguageVersion.of(16))
+                    }
+                }
+            }
+        '''.stripIndent(true)
+
+        then:
+        with('tasks', '--stacktrace')
+                .withGradleVersion('8.4')
+                .build()
+    }
+
     /**
-     * Sets up a multi-module project with 2 sub projects.  The root project has a transitive dependency on sub-project-no-deps
+     * Sets up a multi-module project with 2 sub projects. The root project has a transitive dependency on sub-project-no-deps
      * and so checkImplicitDependencies should fail on it.
      */
     private void setupMultiProject() {
@@ -275,7 +355,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
             apply plugin: 'com.palantir.baseline-exact-dependencies'
         }
         dependencies {
-            compile project(':sub-project-with-deps')
+            implementation project(':sub-project-with-deps')
         }
         """.stripIndent()
 
@@ -283,8 +363,10 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
 
         //properly declare dependency between two sub-projects
         subProjects['sub-project-with-deps'].buildGradle << '''
+            apply plugin: 'java-library'
+            
             dependencies {
-                compile project(':sub-project-no-deps')
+                api project(':sub-project-no-deps')
             }
         '''.stripIndent()
 
@@ -323,6 +405,5 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
             }
         }
         '''.stripIndent()
-
     }
 }

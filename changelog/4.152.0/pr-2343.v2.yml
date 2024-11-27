@@ -1,0 +1,10 @@
+type: feature
+feature:
+  description: |-
+    Add DefaultLocale check
+
+    Related to https://github.com/google/error-prone/issues/632
+
+    Adds a `DefaultLocale` check that replaces uses of `String.toLowerCase()` and `String.toUpperCase()` with the overloads that take a `Locale`, using `Locale.ROOT`.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2343

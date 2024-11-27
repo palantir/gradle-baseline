@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Immutables redactions may be unsafe (previously forced do-not-log)
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2277

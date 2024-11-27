@@ -26,14 +26,13 @@ import spock.util.environment.RestoreSystemProperties
 class BaselineIdeaIntegrationTest extends AbstractPluginTest {
     def standardBuildFile = '''
         plugins {
-            id 'java'
+            id 'java-library'
             id 'com.palantir.baseline-idea'
         }
         allprojects {
             apply plugin: 'com.palantir.baseline-idea'
             repositories {
-                maven { url 'https://dl.bintray.com/palantir/releases' }
-                jcenter()
+                mavenCentral()
             }
         }
     '''.stripIndent()
@@ -51,6 +50,7 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         then:
         BuildResult result = with('idea').build()
         assert result.task(':idea').outcome == TaskOutcome.SUCCESS ?: result.output
+        result.output.contains("DEPRECATED: Using `./gradlew idea`")
     }
 
     def 'Works with checkstyle and IntelliJ import'() {
@@ -117,6 +117,8 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
 
         def apacheCopyright = new File(copyrightDir, "001_apache-2.0.xml").text
         apacheCopyright.contains('<option name="myName" value="001_apache-2.0.txt"/>')
+        // Ensure correct xml encoding (not double-encoded)
+        apacheCopyright.contains('Apache License, Version 2.0 (the &quot;License&quot;)')
 
         def palantirCopyright = new File(copyrightDir, "999_palantir.xml").text
         palantirCopyright.contains('<option name="myName" value="999_palantir.txt"/>')
@@ -142,7 +144,8 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
 
         def ideaStyleSettings = new File(projectDir, ".idea/codeStyles/Project.xml").text
         ideaStyleSettings.startsWith('<component name="ProjectCodeStyleConfiguration">')
-        ideaStyleSettings.contains('<code_scheme name="Project">')
+        ideaStyleSettings.contains('<code_scheme name="Project" version="173">')
+        ideaStyleSettings.contains('<JavaCodeStyleSettings>')
         ideaStyleSettings.contains('<option name="ALIGN_MULTILINE_ARRAY_INITIALIZER_EXPRESSION" value="true"/>')
         ideaStyleSettings.endsWith("""
               </code_scheme>
@@ -195,7 +198,7 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         buildFile << standardBuildFile
         buildFile << """
             dependencies {
-                compile localGroovy()
+                api localGroovy()
             }
         """
 
@@ -210,7 +213,7 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         buildFile << standardBuildFile
         buildFile << '''
             dependencies {
-                compile localGroovy()
+                api localGroovy()
             }
             idea.workspace {
                 iws.withXml { provider ->
@@ -239,7 +242,7 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         buildFile << standardBuildFile
         buildFile << '''
             dependencies {
-                compile localGroovy()
+                api localGroovy()
             }
             idea.workspace {
                 iws.withXml { provider ->
@@ -254,28 +257,6 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         with('idea').build()
         def iws = Files.asCharSource(new File(projectDir, projectDir.name + ".iws"), Charsets.UTF_8).read()
         iws ==~ '(?s).*name="WORKING_DIRECTORY"[^\\n]*value="file://abc".*'
-    }
-
-    def 'scalastyle renders correctly'() {
-        when:
-        buildFile << '''
-        plugins {
-            id 'scala'
-            id 'com.palantir.baseline-idea'
-            id 'com.palantir.baseline-scalastyle'
-        }
-        repositories {
-            jcenter()
-            mavenLocal()
-        }
-        dependencies {
-            compile 'org.scala-lang:scala-library:2.11.12'
-        }
-        '''.stripIndent()
-
-        then:
-        BuildResult result = with('--stacktrace', '--info', 'idea').build()
-        assert result.tasks(TaskOutcome.SUCCESS).collect { it.path }.contains(':idea')
     }
 
     def 'deletes redundant iml,ipr,iws files'() {
@@ -333,53 +314,60 @@ class BaselineIdeaIntegrationTest extends AbstractPluginTest {
         !otherSubprojectIml.exists()
     }
 
-    def "idea configures the save-action plugin when PJF is enabled on a subproject"() {
-        buildFile << standardBuildFile
-        multiProject.addSubproject('formatted-project', """
-            apply plugin: 'com.palantir.java-format'
-        """.stripIndent())
-
+    def 'Idea files use versions derived from the baseline-java-versions plugin'() {
         when:
-        with('idea').build()
+        buildFile << standardBuildFile
+        buildFile << """
+            apply plugin: 'com.palantir.baseline-java-versions'
+            javaVersions {
+                libraryTarget = 11
+                distributionTarget = 17
+                runtime = 21
+            }
+        """.stripIndent()
 
         then:
-        def iprFile = new File(projectDir, "${moduleName}.ipr")
-        def ipr = new XmlSlurper().parse(iprFile)
-        ipr.component.find { it.@name == "ExternalDependencies" }
-        ipr.component.find { it.@name == "SaveActionSettings" }
-    }
-
-    def "idea does not configure the save-action plugin when PJF is not enabled"() {
-        buildFile << standardBuildFile
-
-        when:
         with('idea').build()
-
-        then:
-        def iprFile = new File(projectDir, "${moduleName}.ipr")
-        def ipr = new XmlSlurper().parse(iprFile)
-        !ipr.component.find { it.@name == "ExternalDependencies" }
-        !ipr.component.find { it.@name == "SaveActionSettings" }
+        def rootIpr = Files.asCharSource(new File(projectDir, projectDir.name + ".ipr"), Charsets.UTF_8).read()
+        rootIpr.contains('languageLevel="JDK_17"')
+        rootIpr.contains('project-jdk-name="17"')
+        rootIpr.contains('<bytecodeTargetLevel target="11">')
+        rootIpr.contains("<module name=\"${projectDir.name}\" target=\"17\"/>")
+        def rootIml = Files.asCharSource(new File(projectDir, projectDir.name + ".iml"), Charsets.UTF_8).read()
+        rootIml.contains('LANGUAGE_LEVEL="JDK_17')
     }
 
     @RestoreSystemProperties
-    def "idea configures the save-action plugin for IntelliJ import"() {
+    def 'Removes the save-actions external dep if it exists'() {
         buildFile << standardBuildFile
-        multiProject.addSubproject('formatted-project', """
-            apply plugin: 'com.palantir.java-format'
-        """.stripIndent())
+
+        file('.idea/externalDependencies.xml') << /* language=xml */ '''
+            <project version="4">
+              <component name="ExternalDependencies">
+                <plugin id="CheckStyle-IDEA"/>
+                <plugin id="com.dubreuia" min-version="1.9.0"/>
+                <plugin id="palantir-java-format"/>
+              </component>
+            </project>
+        '''.stripIndent(true).trim()
 
         when:
         System.setProperty("idea.active", "true")
         with().build()
 
         then:
-        def saveActionsSettingsFile = new File(projectDir, ".idea/saveactions_settings.xml")
-        def settings = new XmlSlurper().parse(saveActionsSettingsFile)
-        settings.component.find { it.@name == "SaveActionSettings" }
+        def newExternalDeps = file('.idea/externalDependencies.xml').text.trim()
 
-        def externalDepsSettingsFile = new File(projectDir, ".idea/externalDependencies.xml")
-        def deps = new XmlSlurper().parse(externalDepsSettingsFile)
-        deps.component.find { it.@name == "ExternalDependencies" }
+        // language=xml
+        def expected = '''
+            <project version="4">
+              <component name="ExternalDependencies">
+                <plugin id="CheckStyle-IDEA"/>
+                <plugin id="palantir-java-format"/>
+              </component>
+            </project>
+        '''.stripIndent(true).trim()
+
+        newExternalDeps == expected
     }
 }

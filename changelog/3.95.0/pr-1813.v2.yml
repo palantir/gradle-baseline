@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Increase default test heap from 512m to 2g unless otherwise specified
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1813

@@ -1,9 +1,16 @@
+buildscript {
+    repositories {
+        mavenCentral() { metadataSources { mavenPom(); ignoreGradleMetadataRedirection() } }
+        gradlePluginPortal() { metadataSources { mavenPom(); ignoreGradleMetadataRedirection() } }
+    }
+    dependencies {
+        classpath 'com.palantir.gradle.jdks:gradle-jdks-settings:0.58.0'
+    }
+}
+apply plugin: 'com.palantir.jdks.settings'
 rootProject.name = "gradle-baseline"
 
 include "baseline-error-prone"
-include "baseline-refaster-javac-plugin"
-include "baseline-refaster-rules"
-include "baseline-refaster-testing"
+include "baseline-null-away"
 include "gradle-baseline-java"
 include "gradle-baseline-java-config"
-include "gradle-junit-reports"

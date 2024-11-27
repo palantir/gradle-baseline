@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Fix BaselineModuleJvmArgs without toolchains
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2148

@@ -41,6 +41,7 @@ import static com.google.common.collect.Iterables.getOnlyElement;
 import static com.google.errorprone.BugPattern.SeverityLevel.ERROR;
 import static com.google.errorprone.util.ASTHelpers.getSymbol;
 import static com.google.errorprone.util.ASTHelpers.getType;
+import static com.google.errorprone.util.ASTHelpers.isStatic;
 import static com.google.errorprone.util.ASTHelpers.isSubtype;
 import static com.google.errorprone.util.SideEffectAnalysis.hasSideEffect;
 import static com.sun.source.tree.Tree.Kind.POSTFIX_DECREMENT;
@@ -66,7 +67,10 @@ import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.bugpatterns.UnusedVariable;
 import com.google.errorprone.fixes.SuggestedFix;
 import com.google.errorprone.fixes.SuggestedFixes;
+import com.google.errorprone.matchers.ChildMultiMatcher.MatchType;
 import com.google.errorprone.matchers.Description;
+import com.google.errorprone.matchers.Matcher;
+import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.suppliers.Suppliers;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.AnnotationTree;
@@ -91,6 +95,7 @@ import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.ReturnTree;
 import com.sun.source.tree.StatementTree;
 import com.sun.source.tree.Tree;
+import com.sun.source.tree.Tree.Kind;
 import com.sun.source.tree.TryTree;
 import com.sun.source.tree.UnaryTree;
 import com.sun.source.tree.VariableTree;
@@ -123,8 +128,6 @@ import javax.lang.model.element.Name;
  */
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "StrictUnusedVariable",
-        altNames = {"unused", "UnusedVariable"},
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         summary = "Unused.",
@@ -141,6 +144,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             "javax.persistence.Version",
             "javax.xml.bind.annotation.XmlElement",
             "org.junit.Rule",
+            "org.junit.jupiter.api.extension.RegisterExtension",
             "org.mockito.Mock",
             "org.openqa.selenium.support.FindBy",
             "org.openqa.selenium.support.FindBys");
@@ -152,13 +156,28 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
 
     /** The set of types exempting a field of type extending them. */
     private static final ImmutableSet<String> EXEMPTING_FIELD_SUPER_TYPES =
-            ImmutableSet.of("org.junit.rules.TestRule", "org.slf4j.Logger");
+            ImmutableSet.of("org.junit.rules.TestRule", "org.slf4j.Logger", "com.palantir.logsafe.logger.SafeLogger");
 
     private static final ImmutableList<String> SPECIAL_FIELDS = ImmutableList.of(
             "serialVersionUID",
             // TAG fields are used by convention in Android apps.
             "TAG");
     private static final String UNUSED = "unused";
+
+    private static final Matcher<Tree> ALTERNATIVE_SUPPRESSED = Matchers.allOf(
+            // Matchers.annotations will throw given a tree that doesn't support annotations, so we must enumerate
+            // supported types.
+            Matchers.kindAnyOf(Set.of(
+                    Kind.CLASS, Kind.VARIABLE, Kind.METHOD, Kind.ANNOTATED_TYPE, Kind.PACKAGE, Kind.COMPILATION_UNIT)),
+            Matchers.annotations(
+                    MatchType.AT_LEAST_ONE,
+                    Matchers.allOf(
+                            Matchers.isType("java.lang.SuppressWarnings"),
+                            Matchers.hasArgumentWithValue(
+                                    "value",
+                                    Matchers.anyOf(
+                                            Matchers.stringLiteral("UnusedVariable"),
+                                            Matchers.stringLiteral(UNUSED))))));
 
     @Override
     public Description matchCompilationUnit(CompilationUnitTree tree, VisitorState state) {
@@ -224,7 +243,13 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             ImmutableList<SuggestedFix> fixes;
             if (symbol.getKind() == ElementKind.PARAMETER && !isEverUsed.contains(unusedSymbol)) {
                 Symbol.MethodSymbol methodSymbol = (Symbol.MethodSymbol) symbol.owner;
-                int index = methodSymbol.params.indexOf(symbol);
+                int index;
+                if (methodSymbol.params == null) {
+                    // if the parameter is for a lambda is defined in a static initializer, params is null
+                    index = -1;
+                } else {
+                    index = methodSymbol.params.indexOf(symbol);
+                }
                 // If we can not find the parameter in the owning method, then it must be a parameter to a lambda
                 // defined within the method
                 if (index == -1) {
@@ -269,6 +294,11 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                     .addFix(constructUsedVariableSuggestedFix(usageSites, state))
                     .build());
         });
+    }
+
+    @Override
+    public boolean isSuppressed(Tree tree, VisitorState state) {
+        return super.isSuppressed(tree, state) || ALTERNATIVE_SUPPRESSED.matches(tree, state);
     }
 
     private static SuggestedFix constructUsedVariableSuggestedFix(List<TreePath> usagePaths, VisitorState state) {
@@ -444,8 +474,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                 if (hasSideEffect(initializer) && TOP_LEVEL_EXPRESSIONS.contains(initializer.getKind())) {
                     if (varKind == ElementKind.FIELD) {
                         String newContent = String.format(
-                                "%s{ %s; }",
-                                varSymbol.isStatic() ? "static " : "", state.getSourceForNode(initializer));
+                                "%s{ %s; }", isStatic(varSymbol) ? "static " : "", state.getSourceForNode(initializer));
                         fix.merge(SuggestedFixes.replaceIncludingComments(usagePath, newContent, state));
                     } else {
                         fix.replace(statement, String.format("%s;", state.getSourceForNode(initializer)));
@@ -674,7 +703,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
         @Override
         @SuppressWarnings("SwitchStatementDefaultCase")
         public Void visitVariable(VariableTree variableTree, Void unused) {
-            if (isSuppressed(variableTree)) {
+            if (isSuppressed(variableTree, state)) {
                 return null;
             }
             Symbol.VarSymbol symbol = getSymbol(variableTree);
@@ -737,7 +766,8 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             checkArgument(sym.getKind() == ElementKind.PARAMETER);
             Symbol enclosingMethod = sym.owner;
 
-            return !enclosingMethod.getModifiers().contains(Modifier.ABSTRACT);
+            return !enclosingMethod.getModifiers().contains(Modifier.ABSTRACT)
+                    && !enclosingMethod.getModifiers().contains(Modifier.DEFAULT);
         }
 
         @Override
@@ -751,7 +781,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
 
         @Override
         public Void visitClass(ClassTree tree, Void unused) {
-            if (isSuppressed(tree)) {
+            if (isSuppressed(tree, state)) {
                 return null;
             }
             if (EXEMPTING_SUPER_TYPES.stream()
@@ -771,7 +801,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
 
         @Override
         public Void visitMethod(MethodTree tree, Void unused) {
-            return isSuppressed(tree) ? null : super.visitMethod(tree, unused);
+            return isSuppressed(tree, state) ? null : super.visitMethod(tree, null);
         }
     }
 

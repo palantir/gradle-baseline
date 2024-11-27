@@ -24,6 +24,7 @@ import org.immutables.value.Value;
 import org.immutables.value.Value.Style.ImplementationVisibility;
 import org.junit.jupiter.api.Test;
 
+@SuppressWarnings("ImmutablesStyle") // explicitly testing immutables
 public class ImmutablesBuilderMissingInitializationTest {
     @Test
     public void testPassesWhenAllFieldsPopulated() {

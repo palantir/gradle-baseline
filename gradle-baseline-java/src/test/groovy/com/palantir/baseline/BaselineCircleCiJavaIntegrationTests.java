@@ -29,56 +29,30 @@ import org.gradle.testkit.runner.GradleRunner;
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
-import org.junit.contrib.java.lang.system.EnvironmentVariables;
 import org.junit.rules.TemporaryFolder;
 
 public class BaselineCircleCiJavaIntegrationTests {
-
-    @Rule
-    public final EnvironmentVariables env = new EnvironmentVariables();
-
     @Rule
     public final TemporaryFolder projectDir = new TemporaryFolder();
 
     private File reportsDir;
 
     @Before
-    public void before() {
+    public void before() throws IOException {
         reportsDir = new File(projectDir.getRoot(), "circle/reports");
-        env.set("CIRCLE_TEST_REPORTS", reportsDir.toString());
+
+        java.nio.file.Files.writeString(
+                projectDir.newFile("gradle.properties").toPath(),
+                """
+                __TESTING=true
+                __TESTING_CIRCLE_TEST_REPORTS=%s
+                """
+                        .formatted(reportsDir.toString()));
 
         copyTestFile("build.gradle", projectDir, "build.gradle");
         copyTestFile("subproject.gradle", projectDir, "subproject/build.gradle");
         copyTestFile("settings.gradle", projectDir, "settings.gradle");
         copyTestFile("checkstyle.xml", projectDir, "config/checkstyle/checkstyle.xml");
-    }
-
-    @Test
-    public void javacIntegrationTest() throws IOException {
-        copyTestFile("non-compiling-class", projectDir, "src/main/java/com/example/MyClass.java");
-
-        BuildResult result = GradleRunner.create()
-                .withPluginClasspath()
-                .withProjectDir(projectDir.getRoot())
-                .withArguments("--stacktrace", "compileJava")
-                .buildAndFail();
-        assertThat(result.getOutput())
-                .contains("Compilation failed")
-                .contains("error: incompatible types")
-                .contains("private final int a")
-                .contains("error: cannot assign a value to final variable b")
-                .contains("b = 2")
-                .contains("uses unchecked or unsafe operations");
-
-        File report = new File(reportsDir, "javac/foobar-compileJava.xml");
-        assertThat(report).exists();
-        String reportXml = Files.asCharSource(report, StandardCharsets.UTF_8).read();
-        assertThat(reportXml)
-                .contains("incompatible types")
-                .contains("private final int a")
-                .contains("cannot assign a value to final variable b")
-                .contains("b = 2")
-                .doesNotContain("uses unchecked or unsafe operations");
     }
 
     @Test
@@ -121,57 +95,6 @@ public class BaselineCircleCiJavaIntegrationTests {
                 .contains("tests=\"2\"")
                 .contains("failures=\"1\"")
                 .contains("org.junit.ComparisonFailure");
-    }
-
-    @Test
-    public void checkstyleIntegrationTest() throws IOException {
-        copyTestFile("checkstyle-violating-class", projectDir, "src/main/java/com/example/MyClass.java");
-
-        BuildResult result = GradleRunner.create()
-                .withPluginClasspath()
-                .withProjectDir(projectDir.getRoot())
-                .withArguments("--stacktrace", "checkstyleMain")
-                .buildAndFail();
-        assertThat(result.getOutput()).contains("Checkstyle rule violations were found");
-
-        File report = new File(reportsDir, "checkstyle/foobar-checkstyleMain.xml");
-        assertThat(report).exists();
-        String reportXml = Files.asCharSource(report, StandardCharsets.UTF_8).read();
-        assertThat(reportXml).contains("Name 'a_constant' must match pattern");
-    }
-
-    @Test
-    public void buildStepFailureIntegrationTest() throws IOException {
-        BuildResult result = GradleRunner.create()
-                .withPluginClasspath()
-                .withProjectDir(projectDir.getRoot())
-                .withArguments("--stacktrace", "failingTask")
-                .buildAndFail();
-        assertThat(result.getOutput()).contains("This task will always fail");
-
-        File report = new File(reportsDir, "gradle/build.xml");
-        assertThat(report).exists();
-        String reportXml = Files.asCharSource(report, StandardCharsets.UTF_8).read();
-        assertThat(reportXml).contains("message=\"RuntimeException: This task will always fail\"");
-    }
-
-    @Test
-    public void findsUniqueBuildStepsReportFileName() throws IOException {
-        assertThat(new File(reportsDir, "gradle").mkdirs()).isTrue();
-        assertThat(new File(reportsDir, "gradle/build.xml").createNewFile()).isTrue();
-        assertThat(new File(reportsDir, "gradle/build2.xml").createNewFile()).isTrue();
-
-        BuildResult result = GradleRunner.create()
-                .withPluginClasspath()
-                .withProjectDir(projectDir.getRoot())
-                .withArguments("--stacktrace", "failingTask")
-                .buildAndFail();
-        assertThat(result.getOutput()).contains("This task will always fail");
-
-        File report = new File(reportsDir, "gradle/build3.xml");
-        assertThat(report).exists();
-        String reportXml = Files.asCharSource(report, StandardCharsets.UTF_8).read();
-        assertThat(reportXml).contains("message=\"RuntimeException: This task will always fail\"");
     }
 
     @Test

@@ -22,17 +22,25 @@ import com.google.errorprone.VisitorState;
 import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.CatchTree;
+import com.sun.source.tree.ClassTree;
+import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.NewArrayTree;
+import com.sun.source.tree.Tree;
 import com.sun.source.tree.TryTree;
 import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Types;
+import java.lang.reflect.InvocationTargetException;
+import java.util.Collections;
 import java.util.Comparator;
+import java.util.List;
 import java.util.Optional;
 import javax.annotation.Nullable;
 
 /** Utility functionality that does not exist in {@link com.google.errorprone.util.ASTHelpers}. */
 @SuppressWarnings("checkstyle:AbbreviationAsWordInName")
-final class MoreASTHelpers {
+public final class MoreASTHelpers {
 
     /** Removes any type that is a subtype of another type in the set. */
     @SuppressWarnings("ReferenceEquality")
@@ -95,7 +103,7 @@ final class MoreASTHelpers {
     /** Returns an optional of the {@link AutoCloseable#close()} method on the provided symbol. */
     private static Optional<Symbol.MethodSymbol> getCloseMethod(Symbol.ClassSymbol symbol, VisitorState state) {
         Types types = state.getTypes();
-        return symbol.getEnclosedElements().stream()
+        return ASTHelpers.getEnclosedElements(symbol).stream()
                 .filter(sym -> types.isAssignable(symbol.type, state.getTypeFromString(AutoCloseable.class.getName()))
                         && sym.getSimpleName().contentEquals("close")
                         && sym.getTypeParameters().isEmpty())
@@ -113,6 +121,46 @@ final class MoreASTHelpers {
             return ImmutableList.copyOf(unionType.getAlternativeTypes());
         }
         return ImmutableList.of(type);
+    }
+
+    public static Type getResultType(Tree tree) {
+        return tree instanceof ExpressionTree
+                ? ASTHelpers.getResultType((ExpressionTree) tree)
+                : ASTHelpers.getType(tree);
+    }
+
+    public static boolean isSealed(@Nullable ClassSymbol classSymbol) {
+        if (classSymbol == null) {
+            return false;
+        }
+        long flags = classSymbol.flags();
+        return (flags & (1L << 62)) != 0;
+    }
+
+    public static List<ExpressionTree> getPermitsClause(@Nullable ClassTree classTree) {
+        if (classTree == null) {
+            return Collections.emptyList();
+        }
+        try {
+            return (List<ExpressionTree>)
+                    ClassTree.class.getMethod("getPermitsClause").invoke(classTree);
+        } catch (IllegalAccessException | InvocationTargetException e) {
+            throw new RuntimeException("Failed to extract permitted classes", e);
+        } catch (NoSuchMethodException e) {
+            // This is expected on older JDKs which do not support the permits clause
+            return Collections.emptyList();
+        }
+    }
+
+    public static List<? extends ExpressionTree> unwrapArray(@Nullable ExpressionTree expressionTree) {
+        if (expressionTree == null) {
+            return Collections.emptyList();
+        }
+        if (expressionTree instanceof NewArrayTree) {
+            NewArrayTree tree = (NewArrayTree) expressionTree;
+            return tree.getInitializers();
+        }
+        return Collections.singletonList(expressionTree);
     }
 
     private MoreASTHelpers() {}

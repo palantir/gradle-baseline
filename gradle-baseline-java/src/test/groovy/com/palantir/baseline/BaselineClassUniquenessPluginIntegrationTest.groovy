@@ -26,27 +26,26 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
 
     def standardBuildFile = """
         plugins {
-            id 'java'
+            id 'java-library'
             id 'com.palantir.baseline-class-uniqueness'
         }
         subprojects {
-            apply plugin: 'java'
+            apply plugin: 'java-library'
         }
         repositories {
             mavenCentral()
-            maven { url 'https://dl.bintray.com/palantir/releases' }
         }
     """.stripIndent()
 
-    def 'detect duplicates in two external jars, then --write-locks captures'() {
+    def 'detect duplicates in two external jars, then --fix captures'() {
         File lockfile = new File(projectDir, 'baseline-class-uniqueness.lock')
 
         when:
         buildFile << standardBuildFile
         buildFile << """
         dependencies {
-            compile group: 'javax.el', name: 'javax.el-api', version: '3.0.0'
-            compile group: 'javax.servlet.jsp', name: 'jsp-api', version: '2.1'
+            api group: 'javax.el', name: 'javax.el-api', version: '3.0.0'
+            api group: 'javax.servlet.jsp', name: 'jsp-api', version: '2.1'
         }
         """.stripIndent()
         BuildResult result = with('check', '-s').buildAndFail()
@@ -57,10 +56,73 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         result.getOutput().contains("javax.el.ArrayELResolver");
         !lockfile.exists()
 
-        with("checkClassUniqueness", "--write-locks").build()
-        lockfile.exists()
+        when:
+        with("checkClassUniqueness", "--fix").build()
 
+        then:
+        lockfile.exists()
         File expected = new File("src/test/resources/com/palantir/baseline/baseline-class-uniqueness.expected.lock")
+        if (Boolean.getBoolean("recreate")) {
+            GFileUtils.writeFile(lockfile.text, expected)
+        }
+        lockfile.text == expected.text
+    }
+
+    def 'detect duplicates in two external jars, then --write-locks captures'() {
+        File lockfile = new File(projectDir, 'baseline-class-uniqueness.lock')
+
+        when:
+        buildFile << standardBuildFile
+        buildFile << """
+        dependencies {
+            api group: 'javax.el', name: 'javax.el-api', version: '3.0.0'
+            api group: 'javax.servlet.jsp', name: 'jsp-api', version: '2.1'
+        }
+        """.stripIndent()
+        BuildResult result = with('check', '-s').buildAndFail()
+
+        then:
+        result.getOutput().contains("baseline-class-uniqueness detected multiple jars containing identically named classes.")
+        result.getOutput().contains("[javax.el:javax.el-api, javax.servlet.jsp:jsp-api]")
+        result.getOutput().contains("javax.el.ArrayELResolver");
+        !lockfile.exists()
+
+        when:
+        with("checkClassUniqueness", "--write-locks").build()
+
+        then:
+        lockfile.exists()
+        File expected = new File("src/test/resources/com/palantir/baseline/baseline-class-uniqueness.expected.lock")
+        if (Boolean.getBoolean("recreate")) {
+            GFileUtils.writeFile(lockfile.text, expected)
+        }
+        lockfile.text == expected.text
+    }
+
+    def 'detect duplicates in two external jars with the same ModuleVersionIdentifier but different classifiers'() {
+        File lockfile = new File(projectDir, 'baseline-class-uniqueness.lock')
+
+        when:
+        buildFile << standardBuildFile
+        buildFile << """
+        dependencies {
+            api group: 'com.google.cloud.bigdataoss', name: 'gcs-connector', version: 'hadoop3-2.2.19'
+            api group: 'com.google.cloud.bigdataoss', name: 'gcs-connector', version: 'hadoop3-2.2.19', classifier: 'shaded'
+        }
+        """.stripIndent()
+        BuildResult result = with('check', '-s').buildAndFail()
+
+        then:
+        result.getOutput().contains("baseline-class-uniqueness detected multiple jars containing identically named classes.")
+        result.getOutput().contains("[com.google.cloud.bigdataoss:gcs-connector, com.google.cloud.bigdataoss:gcs-connector (classifier=shaded)]")
+        result.getOutput().contains("com.google.cloud.hadoop.fs.gcs.FsBenchmark")
+
+        when:
+        with("checkClassUniqueness", "--write-locks").build()
+
+        then:
+        lockfile.exists()
+        File expected = new File("src/test/resources/com/palantir/baseline/baseline-class-uniqueness-with-classifier.expected.lock")
         if (Boolean.getBoolean("recreate")) {
             GFileUtils.writeFile(lockfile.text, expected)
         }
@@ -96,8 +158,23 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         buildFile << standardBuildFile
         buildFile << """
         dependencies {
-            compile 'com.palantir.tritium:tritium-api:0.9.0'
-            compile 'com.palantir.tritium:tritium-core:0.9.0'
+            api 'com.palantir.tritium:tritium-api:0.9.0'
+            api 'com.palantir.tritium:tritium-core:0.9.0'
+        }
+        """.stripIndent()
+
+        then:
+        with('checkClassUniqueness', '-s').build()
+    }
+
+    def 'ignores duplicates based on module-info and UnusedStubClass'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << """
+        dependencies {
+            // depends on spark-network-common, which also contains UnusedStubClass. Also depends on versions of Jackson
+            // that use module-info.java.
+            api 'org.apache.spark:spark-network-shuffle_2.13:3.3.0'
         }
         """.stripIndent()
 
@@ -122,10 +199,10 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         buildFile << standardBuildFile
         buildFile << """
         dependencies {
-            compile 'com.google.guava:guava:19.0'
-            compile 'org.apache.commons:commons-io:1.3.2'
-            compile 'junit:junit:4.12'
-            compile 'com.netflix.nebula:nebula-test:6.4.2'
+            api 'com.google.guava:guava:19.0'
+            api 'org.apache.commons:commons-io:1.3.2'
+            api 'junit:junit:4.12'
+            api 'com.netflix.nebula:nebula-test:6.4.2'
         }
         """.stripIndent()
         BuildResult result = with('checkClassUniqueness', '--info').build()
@@ -140,20 +217,20 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         when:
         multiProject.addSubproject('foo', """
         dependencies {
-            compile group: 'javax.el', name: 'javax.el-api', version: '3.0.0'
+            api group: 'javax.el', name: 'javax.el-api', version: '3.0.0'
         }
         """)
         multiProject.addSubproject('bar', """
         dependencies {
-            compile group: 'javax.servlet.jsp', name: 'jsp-api', version: '2.1'
+            api group: 'javax.servlet.jsp', name: 'jsp-api', version: '2.1'
         }
         """)
 
         buildFile << standardBuildFile
         buildFile << """
         dependencies {
-            compile project(':foo')
-            compile project(':bar')
+            api project(':foo')
+            api project(':bar')
         }
         """.stripIndent()
 
@@ -173,8 +250,8 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         buildFile << standardBuildFile
         buildFile << """
         dependencies {
-            compile project(':foo')
-            compile project(':bar')
+            api project(':foo')
+            api project(':bar')
         }
         """.stripIndent()
 

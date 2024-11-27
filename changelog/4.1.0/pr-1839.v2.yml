@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Replace deprecated Report.enabled property
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1839

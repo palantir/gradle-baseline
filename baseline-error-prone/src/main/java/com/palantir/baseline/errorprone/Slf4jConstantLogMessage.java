@@ -33,7 +33,6 @@ import java.util.regex.Pattern;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "Slf4jConstantLogMessage",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,

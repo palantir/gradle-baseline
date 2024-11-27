@@ -1,32 +1,47 @@
-import net.ltgt.gradle.errorprone.CheckSeverity
-
 apply plugin: 'java-library'
 apply plugin: 'com.palantir.external-publish-jar'
 
-dependencies {
-    compile 'com.google.errorprone:error_prone_core'
-    compile 'org.mockito:mockito-errorprone'
-    compile 'org.immutables:value::annotations'
+javaVersion {
+    target = 11
+    runtime = 21
+}
 
-    testCompile gradleApi()
-    testCompile 'com.palantir.tokens:auth-tokens'
-    testCompile 'com.fasterxml.jackson.core:jackson-annotations'
-    testCompile 'com.google.errorprone:error_prone_test_helpers'
-    testCompile 'com.palantir.safe-logging:preconditions'
-    testCompile 'com.palantir.safe-logging:safe-logging'
-    testCompile 'org.slf4j:slf4j-api'
-    testCompile 'org.apache.commons:commons-lang3'
-    testCompile 'commons-lang:commons-lang'
-    testCompile 'org.assertj:assertj-core'
-    testCompile 'org.jooq:jooq'
-    testCompile 'com.palantir.tritium:tritium-registry'
-    testCompile 'com.palantir.conjure.java:conjure-lib'
+dependencies {
+    implementation 'com.google.errorprone:error_prone_core'
+    // Ensure a new enough version of dataflow-errorprone is available
+    implementation 'io.github.eisop:dataflow-errorprone'
+
+    testImplementation gradleApi()
+    testImplementation 'com.palantir.tokens:auth-tokens'
+    testImplementation 'com.fasterxml.jackson.core:jackson-annotations'
+    testImplementation 'com.google.errorprone:error_prone_test_helpers'
+    testImplementation 'com.palantir.safe-logging:preconditions'
+    testImplementation 'com.palantir.safe-logging:preconditions-assertj'
+    testImplementation 'com.palantir.safe-logging:safe-logging'
+    testImplementation 'com.palantir.safe-logging:logger'
+    testImplementation 'org.slf4j:slf4j-api'
+    testImplementation 'org.apache.commons:commons-lang3'
+    testImplementation 'commons-io:commons-io'
+    testImplementation 'commons-lang:commons-lang'
+    testImplementation 'org.assertj:assertj-core'
+    testImplementation 'org.immutables:value::annotations'
+    testImplementation 'org.jooq:jooq'
+    testImplementation 'com.palantir.tritium:tritium-registry'
+    testImplementation 'com.palantir.conjure.java:conjure-lib'
+    testImplementation 'com.palantir.conjure.java.api:test-utils'
+    testImplementation 'javax.ws.rs:javax.ws.rs-api'
     testCompileOnly 'org.immutables:value::annotations'
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.jupiter:junit-jupiter-migrationsupport'
     testRuntimeOnly 'one.util:streamex'
+    testRuntimeOnly 'com.fasterxml.jackson.module:jackson-module-afterburner'
+    // for ForbidJavax
+    testRuntimeOnly 'com.palantir.conjure.java.runtime:conjure-java-annotations'
+    // for PreferCommonAnnotations
+    testRuntimeOnly 'org.jetbrains:annotations'
 
     annotationProcessor 'com.google.auto.service:auto-service'
+    compileOnly 'org.immutables:value::annotations'
     annotationProcessor 'org.immutables:value'
     testAnnotationProcessor 'org.immutables:value'
     compileOnly 'com.google.auto.service:auto-service'
@@ -36,7 +51,7 @@ dependencies {
 tasks.checkJUnitDependencies.enabled = false
 tasks.withType(JavaCompile) {
     options.errorprone {
-        check("StrictUnusedVariable", CheckSeverity.OFF)
+        disable('StrictUnusedVariable')
     }
 }
 
@@ -46,4 +61,21 @@ def originalGroup = project.group
 group = originalGroup + '-internal'
 publishing.publications.maven {
     groupId = originalGroup
+}
+
+moduleJvmArgs {
+    exports = [
+        'jdk.compiler/com.sun.tools.javac.api',
+        'jdk.compiler/com.sun.tools.javac.file',
+        'jdk.compiler/com.sun.tools.javac.code',
+        'jdk.compiler/com.sun.tools.javac.util',
+        'jdk.compiler/com.sun.tools.javac.comp',
+        'jdk.compiler/com.sun.tools.javac.main',
+        'jdk.compiler/com.sun.tools.javac.model',
+        'jdk.compiler/com.sun.tools.javac.parser',
+        'jdk.compiler/com.sun.tools.javac.processing',
+        'jdk.compiler/com.sun.tools.javac.tree',
+        'jdk.compiler/com.sun.tools.javac.util'
+    ]
+    opens = ['jdk.compiler/com.sun.tools.javac.comp']
 }

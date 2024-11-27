@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Ban the var keyword via error-prone `VarUsage`
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1788

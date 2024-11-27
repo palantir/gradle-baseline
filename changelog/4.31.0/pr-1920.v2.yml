@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: BaselineJavaVersions consistent JDK control via gradle toolchains on
+    an opt-in basis
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1920

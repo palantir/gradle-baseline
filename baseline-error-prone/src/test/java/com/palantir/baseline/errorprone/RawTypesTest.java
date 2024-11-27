@@ -305,6 +305,21 @@ class RawTypesTest {
                 .doTest();
     }
 
+    @Test
+    void testNegativeImplicitRawTypes() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import static org.assertj.core.api.Assertions.*;",
+                        "import java.util.function.*;",
+                        "import com.codahale.metrics.*;",
+                        "class Test {",
+                        "  void func(Metric metric) {",
+                        "    assertThat(metric).isInstanceOfSatisfying(Gauge.class, value -> {});",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(RawTypes.class, getClass());
     }

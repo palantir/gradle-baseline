@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Workaround to IDEA-301084
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2368

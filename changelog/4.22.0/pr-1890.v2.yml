@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: Java compilation warnings and errors are no longer limited to the first
+    100
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1890

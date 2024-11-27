@@ -1,0 +1,6 @@
+type: feature
+feature:
+  description: Add a configuration point for providing your own JDKs to all java requiring
+    tasks.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2193

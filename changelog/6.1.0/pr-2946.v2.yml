@@ -1,0 +1,8 @@
+type: improvement
+improvement:
+  description: |-
+    If one has a `Stream<Optional<T>> stream` of size `N` and does `stream.flatMap(Optional::stream)`, you’ll end up allocating `N` extra streams — one for each `Optional` input element. When `N` is large, those allocations can cause extra GC cycles and pauses if allocation rate is high enough leading to issues with latency, throughput, and allocation sensitive code paths.
+
+    `Stream.filter(Optional::isPresent).map(Optional::get)` is more efficient than `Stream.flatMap(Optional::stream)` as it does not allocate a new `Stream` for every element in the stream.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2946

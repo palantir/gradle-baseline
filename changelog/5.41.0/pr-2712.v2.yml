@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: Fix some false positives in `OptionalOrElseGetValue`. `OptionalOrElseGetValue`
+    no longer allows compile-time constants that are not literals or identifiers.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2712

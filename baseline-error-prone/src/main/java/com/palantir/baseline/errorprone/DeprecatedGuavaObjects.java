@@ -31,7 +31,6 @@ import com.sun.source.tree.MethodInvocationTree;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "DeprecatedGuavaObjects",
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = LinkType.CUSTOM,
         severity = SeverityLevel.WARNING,

@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: ProxyNonConstantType documents describe suppression cases and steps
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1827

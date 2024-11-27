@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Use `LazilyConfiguredMapping` that was extracted out to gradle-utils.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2276

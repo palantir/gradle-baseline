@@ -1,0 +1,6 @@
+type: improvement
+improvement:
+  description: Improve coordination between java-versions and idea ipr allowing project
+    iprs to be successfully imported
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2012

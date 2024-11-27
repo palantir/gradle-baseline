@@ -1,0 +1,6 @@
+type: fix
+fix:
+  description: Reverts a change introduced to baseline-java-version 4.160.0, which
+    was causing failures on multi-project builds.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2369

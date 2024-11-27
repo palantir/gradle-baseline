@@ -17,6 +17,10 @@
 package com.palantir.baseline.plugins
 
 import com.google.common.collect.ImmutableMap
+import com.palantir.baseline.IntellijSupport
+import com.palantir.baseline.plugins.javaversions.BaselineJavaVersionExtension
+import com.palantir.baseline.plugins.javaversions.BaselineJavaVersionsExtension
+import com.palantir.baseline.plugins.javaversions.ChosenJavaVersion
 import com.palantir.baseline.util.GitUtils
 import groovy.transform.CompileStatic
 import groovy.xml.XmlUtil
@@ -32,6 +36,7 @@ import org.gradle.api.file.FileTreeElement
 import org.gradle.api.plugins.quality.CheckstyleExtension
 import org.gradle.api.specs.Spec
 import org.gradle.api.tasks.util.PatternFilterable
+import org.gradle.jvm.toolchain.JavaLanguageVersion
 import org.gradle.plugins.ide.idea.GenerateIdeaModule
 import org.gradle.plugins.ide.idea.GenerateIdeaProject
 import org.gradle.plugins.ide.idea.GenerateIdeaWorkspace
@@ -42,9 +47,6 @@ import org.gradle.plugins.ide.idea.model.ModuleDependency
 // TODO(dfox): separate the xml manipulation (which really benefits from groovy syntax) from typed things
 //@CompileStatic
 class BaselineIdea extends AbstractBaselinePlugin {
-
-    static SAVE_ACTIONS_PLUGIN_MINIMUM_VERSION = '1.9.0'
-
     void apply(Project project) {
         this.project = project
 
@@ -52,14 +54,12 @@ class BaselineIdea extends AbstractBaselinePlugin {
 
         if (project == project.rootProject) {
             applyToRootProject(project)
-        } else {
-            // Be defensive - it never makes sense to apply this project to only a subproject but not to the root.
-            project.rootProject.pluginManager.apply(BaselineIdea)
         }
 
         // Configure Idea module
         IdeaModel ideaModuleModel = project.extensions.getByType(IdeaModel)
         moveProjectReferencesToEnd(ideaModuleModel)
+        updateModuleLanguageVersion(ideaModuleModel, project)
 
         // If someone renames a project, leftover {ipr,iml,ipr} files may still exist on disk and
         // confuse users, so we proactively clean them up. Intentionally using an Action<Task> to allow up-to-dateness.
@@ -80,7 +80,19 @@ class BaselineIdea extends AbstractBaselinePlugin {
             }
         }
 
-        project.getTasks().findByName("idea").doLast(cleanup)
+        project.getTasks().named("idea").configure(idea -> {
+            idea.doFirst(_t -> project.getLogger().warn("""
+                DEPRECATED: Using `./gradlew idea` is no longer recommended, some functionality may not function as expected. 
+                Instead, we suggest opening the project directly in IntelliJ or running `idea .`.
+                Follow the instructions below to start using the native Gradle integration:
+                    1. Close the IntelliJ project
+                    2. Run `./gradlew cleanIdea`
+                    3. Run `rm -rf .idea || true`
+                    4. Open the  project in IntelliJ or use `idea .` if installed by Jetbrains Toolbox.
+                Note: For new projects only step 4. is required.
+                """.stripIndent()))
+            idea.doLast(cleanup)
+        })
     }
 
     void applyToRootProject(Project rootProject) {
@@ -89,6 +101,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
         ideaRootModel.project.ipr.withXml {XmlProvider provider ->
             Node node = provider.asNode()
             addCodeStyle(node)
+            setRootJavaVersions(node)
             addCopyright(node)
             addCheckstyle(node)
             addEclipseFormat(node)
@@ -108,17 +121,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
             }
         }
 
-        // Suggest and configure the "save actions" plugin if Palantir Java Format is turned on.
-        // This plugin can only be applied to the root project, and it applied as a side-effect of applying
-        // 'com.palantir.java-format' to any subproject.
-        rootProject.getPluginManager().withPlugin("com.palantir.java-format-idea") {
-            ideaRootModel.project.ipr.withXml {XmlProvider provider ->
-                Node node = provider.asNode()
-                configureSaveActions(node)
-                configureExternalDependencies(node)
-            }
-            configureSaveActionsForIntellijImport(rootProject)
-        }
+        removeSaveActionsExternalDependency(rootProject)
     }
 
     @CompileStatic
@@ -127,7 +130,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
     }
 
     private void configureProjectForIntellijImport(Project project) {
-        if (Boolean.getBoolean("idea.active")) {
+        if (IntellijSupport.isRunningInIntellij()) {
             addCodeStyleIntellijImport()
             addCheckstyleIntellijImport(project)
             addCopyrightIntellijImport()
@@ -144,6 +147,11 @@ class BaselineIdea extends AbstractBaselinePlugin {
 
     private void addCodeStyleIntellijImport() {
         def ideaStyleFile = project.file("${configDir}/idea/intellij-java-palantir-style.xml")
+        // This runs eagerly, so the file might not exist if we haven't run `baselineUpdateConfig` yet.
+        // Thus, don't do anything if the file is not there yet.
+        if (!ideaStyleFile.isFile()) {
+            return
+        }
 
         def ideaStyle = new XmlParser().parse(ideaStyleFile)
                 .component
@@ -168,15 +176,64 @@ class BaselineIdea extends AbstractBaselinePlugin {
                 project.file(".idea/codeStyles/Project.xml"),
                 {
                     def codeScheme = GroovyXmlUtils.matchOrCreateChild(it, "code_scheme", [name: 'Project'])
-                    // Just add the default configuration nodes on top of whatever nodes already exist
-                    // We could be better about this, but IDEA will mostly resolve the duplicates here for us
-                    ideaStyleSettings.value.option.forEach {
-                        codeScheme.append(it)
+                    codeScheme.attributes().putIfAbsent("version", 173)
+                    def javaCodeStyleSettings = GroovyXmlUtils.matchOrCreateChild(codeScheme, "JavaCodeStyleSettings")
+                    // Avoid re-adding duplicate options to the project. This allows users to override settings based
+                    // on preference.
+                    ideaStyleSettings.value.option.forEach { ideaStyleSetting ->
+                        def settingName = ideaStyleSetting.attributes().get("name")
+                        if (settingName != null && javaCodeStyleSettings["option"].find { it.attributes().get("name") == settingName } == null) {
+                            javaCodeStyleSettings.append(ideaStyleSetting)
+                        }
                     }
                 },
                 {
                     new Node(null, "component", ImmutableMap.of("name", "ProjectCodeStyleConfiguration"))
                 })
+    }
+
+    private void setRootJavaVersions(Node node) {
+        BaselineJavaVersionsExtension versions = project.getExtensions().findByType(BaselineJavaVersionsExtension.class)
+        if (versions != null) {
+            updateCompilerConfiguration(node, versions)
+            updateProjectRootManager(node, versions)
+        }
+    }
+
+    private void updateCompilerConfiguration(Node node, BaselineJavaVersionsExtension versions) {
+        Node compilerConfiguration = node.component.find { it.'@name' == 'CompilerConfiguration' }
+        Node bytecodeTargetLevel = GroovyXmlUtils.matchOrCreateChild(compilerConfiguration, "bytecodeTargetLevel")
+        JavaLanguageVersion defaultBytecodeVersion = versions.libraryTarget().get()
+        bytecodeTargetLevel.attributes().put("target", defaultBytecodeVersion.toString())
+        project.allprojects.forEach({ project ->
+            BaselineJavaVersionExtension version = project.getExtensions().findByType(BaselineJavaVersionExtension.class)
+            if (version != null && version.target().get().javaLanguageVersion().asInt() != defaultBytecodeVersion.asInt()) {
+                bytecodeTargetLevel.appendNode("module", ImmutableMap.of(
+                        "name", project.getName(),
+                        "target", version.target().get().toString()))
+            }
+        })
+    }
+
+    private void updateProjectRootManager(Node node, BaselineJavaVersionsExtension versions) {
+        Node projectRootManager = node.component.find { it.'@name' == 'ProjectRootManager' }
+        ChosenJavaVersion chosenJavaVersion = versions.distributionTarget().get()
+        int featureRelease = chosenJavaVersion.javaLanguageVersion().asInt()
+        projectRootManager.attributes().put("project-jdk-name", featureRelease)
+        projectRootManager.attributes().put("languageLevel", chosenJavaVersion.asIdeaLanguageLevel())
+    }
+
+    private static void updateModuleLanguageVersion(IdeaModel ideaModel, Project currentProject) {
+        ideaModel.module.iml.withXml { XmlProvider provider ->
+            // Extension must be checked lazily within the transformer
+            BaselineJavaVersionExtension versionExtension = currentProject.extensions.findByType(BaselineJavaVersionExtension.class)
+            if (versionExtension != null) {
+                ChosenJavaVersion chosenJavaVersion = versionExtension.target().get()
+                Node node = provider.asNode()
+                Node newModuleRootManager = node.component.find { it.'@name' == 'NewModuleRootManager' }
+                newModuleRootManager.attributes().put("LANGUAGE_LEVEL", chosenJavaVersion.asIdeaLanguageLevel())
+            }
+        }
     }
 
     /**
@@ -220,7 +277,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
                     // Replace the extension by xml for the actual file
                     project.file(".idea/copyright/" + xmlFileName),
                     {node ->
-                        addCopyrightFile(node, file, fileName)
+                        createOrUpdateCopyrightFile(node, file, fileName)
                     },
                     copyrightManagerNode)
         }
@@ -255,6 +312,19 @@ class BaselineIdea extends AbstractBaselinePlugin {
             </copyright>
             """.stripIndent()
         ))
+    }
+
+    private static void createOrUpdateCopyrightFile(Node node, File file, String fileName) {
+        def copyrightText = file.text.trim()
+        // Ensure that subsequent runs don't produce duplicate entries
+        Node copyrightNode = GroovyXmlUtils.matchOrCreateChild(node, "copyright")
+        Node noticeNode = GroovyXmlUtils.matchOrCreateChild(copyrightNode, "option", ["name": "notice"])
+        // Update the copyright text if it has changed
+        noticeNode.attributes().put("value", copyrightText)
+        GroovyXmlUtils.matchOrCreateChild(copyrightNode, "option", ["name": "keyword"], ["value": "Copyright"])
+        GroovyXmlUtils.matchOrCreateChild(copyrightNode, "option", ["name": "allowReplaceKeyword"], ["value": ""])
+        GroovyXmlUtils.matchOrCreateChild(copyrightNode, "option", ["name": "myName"], ["value": fileName])
+        GroovyXmlUtils.matchOrCreateChild(copyrightNode, "option", ["name": "myLocal"], ["value": true])
     }
 
     private void addEclipseFormat(node) {
@@ -371,6 +441,8 @@ class BaselineIdea extends AbstractBaselinePlugin {
                     </inspection_tool>
                         
                     <inspection_tool class="PlaceholderCountMatchesArgumentCount" enabled="false" level="WARNING" enabled_by_default="false" />
+                    
+                    <inspection_tool class="ClassCanBeRecord" enabled="false" level="WEAK WARNING" enabled_by_default="false" />
 
                     <inspection_tool class="UnstableApiUsage" enabled="true" level="WARNING" enabled_by_default="true">
                         <option name="unstableApiAnnotations">
@@ -436,6 +508,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
             <component name="JavaProjectCodeInsightSettings">
               <excluded-names>
                 <name>shadow</name><!-- from gradle-shadow-jar -->
+                <name>org.junit.jupiter.params.shadow</name><!-- shaded deps from junit5 -->
                 <name>org.gradle.internal.impldep</name>
                 <name>autovalue.shaded</name>
                 <name>org.inferred.freebuilder.shaded</name>
@@ -446,18 +519,6 @@ class BaselineIdea extends AbstractBaselinePlugin {
               </excluded-names>
             </component>
         '''.stripIndent()))
-    }
-
-    private static void configureSaveActionsForIntellijImport(Project project) {
-        if (!Boolean.getBoolean("idea.active")) {
-            return
-        }
-        XmlUtils.createOrUpdateXmlFile(
-                project.file(".idea/externalDependencies.xml"),
-                BaselineIdea.&configureExternalDependencies)
-        XmlUtils.createOrUpdateXmlFile(
-                project.file(".idea/saveactions_settings.xml"),
-                BaselineIdea.&configureSaveActions)
     }
 
     /**
@@ -501,34 +562,24 @@ class BaselineIdea extends AbstractBaselinePlugin {
     }
 
     /**
-     * Configures some defaults on the save-actions plugin, but only if it hasn't been configured before.
+     * We used to add the 'Save Actions' plugin as an external dependency to support Palantir Java Format,
+     * however this plugin is broken in IntelliJ 2023.1 and we no longer use it. However, without actually
+     * removing it from the persistent intellij config people will still get nagged. So this code removing
+     * needs to remain here a sufficiently long time until every extant repo checkout has had a version of
+     * baseline run on it that remove the config.
      */
-    private static void configureSaveActions(Node rootNode) {
-        GroovyXmlUtils.matchOrCreateChild(rootNode, 'component', [name: 'SaveActionSettings'], [:]) {
-            // Configure defaults if this plugin is configured for the first time only
-            appendNode('option', [name: 'actions']).appendNode('set').with {
-                appendNode('option', [value: 'activate'])
-                appendNode('option', [value: 'noActionIfCompileErrors'])
-                appendNode('option', [value: 'organizeImports'])
-                appendNode('option', [value: 'reformat'])
-            }
-            appendNode('option', [name: 'configurationPath', value: ''])
-            appendNode('option', [name: 'inclusions']).appendNode('set').with {
-                appendNode('option', [value: "src${File.separator}.*\\.java"])
+    private static void removeSaveActionsExternalDependency(Project rootProject) {
+        if (!IntellijSupport.isRunningInIntellij()) {
+            return
+        }
+
+        XmlUtils.updateXmlFileIfExists(rootProject.file(".idea/externalDependencies.xml")) { rootNode ->
+            GroovyXmlUtils.matchChild(rootNode, 'component', [name: 'ExternalDependencies']).ifPresent { externalDeps ->
+                // No joke the Save Actions plugin's id is 'com.dubreuia'.
+                GroovyXmlUtils.matchChild(externalDeps, 'plugin', [id: 'com.dubreuia']).ifPresent { saveActionsPlugin ->
+                    externalDeps.remove(saveActionsPlugin)
+                }
             }
         }
-    }
-
-    private static void configureExternalDependencies(Node rootNode) {
-        def externalDependencies =
-                GroovyXmlUtils.matchOrCreateChild(rootNode, 'component', [name: 'ExternalDependencies'])
-        // I kid you not, this is the id for the save actions plugin:
-        // https://github.com/dubreuia/intellij-plugin-save-actions/blob/v1.9.0/src/main/resources/META-INF/plugin.xml#L5
-        // https://plugins.jetbrains.com/plugin/7642-save-actions/
-        GroovyXmlUtils.matchOrCreateChild(
-                externalDependencies,
-                'plugin',
-                [id: 'com.dubreuia'],
-                ['min-version': SAVE_ACTIONS_PLUGIN_MINIMUM_VERSION])
     }
 }

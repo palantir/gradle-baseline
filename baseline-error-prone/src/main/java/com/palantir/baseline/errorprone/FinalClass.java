@@ -32,14 +32,11 @@ import com.sun.source.tree.NewClassTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.util.TreeScanner;
 import java.util.List;
-import java.util.Optional;
 import java.util.Set;
 import javax.lang.model.element.Modifier;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        name = "FinalClass",
-        // Support legacy suppressions from checkstyle
         altNames = {"checkstyle:finalclass", "checkstyle:FinalClass"},
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
@@ -83,18 +80,20 @@ public final class FinalClass extends BugChecker implements BugChecker.ClassTree
         return buildDescription(tree).addFix(buildFix(tree, state)).build();
     }
 
-    private static Optional<SuggestedFix> buildFix(ClassTree tree, VisitorState state) {
-        return SuggestedFixes.addModifiers(tree, state, Modifier.FINAL).map(fix -> {
-            // Remove redundant 'final' methods modifers that are no longer necessary.
-            SuggestedFix.Builder builder = SuggestedFix.builder().merge(fix);
-            tree.getMembers().stream()
-                    .filter(member -> member instanceof MethodTree)
-                    .map(MethodTree.class::cast)
-                    .filter(methodTree -> SIMPLIFIABLE_INSTANCE_METHOD.matches(methodTree, state))
-                    .forEach(methodTree -> SuggestedFixes.removeModifiers(methodTree, state, Modifier.FINAL)
-                            .ifPresent(builder::merge));
-            return builder.build();
-        });
+    private static SuggestedFix buildFix(ClassTree tree, VisitorState state) {
+        return SuggestedFixes.addModifiers(tree, state, Modifier.FINAL)
+                .map(fix -> {
+                    // Remove redundant 'final' methods modifers that are no longer necessary.
+                    SuggestedFix.Builder builder = SuggestedFix.builder().merge(fix);
+                    tree.getMembers().stream()
+                            .filter(member -> member instanceof MethodTree)
+                            .map(MethodTree.class::cast)
+                            .filter(methodTree -> SIMPLIFIABLE_INSTANCE_METHOD.matches(methodTree, state))
+                            .forEach(methodTree -> SuggestedFixes.removeModifiers(methodTree, state, Modifier.FINAL)
+                                    .ifPresent(builder::merge));
+                    return builder.build();
+                })
+                .orElseGet(SuggestedFix::emptyFix);
     }
 
     private static boolean isClassExtendedInternally(ClassTree tree, VisitorState state) {
@@ -118,7 +117,7 @@ public final class FinalClass extends BugChecker implements BugChecker.ClassTree
                                             ASTHelpers.getType(tree), ASTHelpers.getType(extendsClause), state)) {
                                 return true;
                             }
-                            return super.visitClass(classTree, attachment);
+                            return super.visitClass(classTree, null);
                         }
 
                         @Override
@@ -130,7 +129,7 @@ public final class FinalClass extends BugChecker implements BugChecker.ClassTree
                                             state)) {
                                 return true;
                             }
-                            return super.visitNewClass(newClassTree, attachment);
+                            return super.visitNewClass(newClassTree, null);
                         }
                     },
                     null);

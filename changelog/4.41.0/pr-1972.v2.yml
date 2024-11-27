@@ -1,0 +1,5 @@
+type: fix
+fix:
+  description: Stop idea recommending autocompletions from `org.junit.jupiter.params.shadow`
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/1972
