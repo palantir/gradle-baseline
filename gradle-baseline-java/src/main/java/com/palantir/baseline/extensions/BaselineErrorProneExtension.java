@@ -102,7 +102,7 @@ public abstract class BaselineErrorProneExtension {
      * @deprecated Interact with SuppressibleErrorProneExtension instead. This only provided for backcompat.
      */
     @Deprecated
-    public final SetProperty<String> getPatchChecks() {
+    public static final SetProperty<String> getPatchChecks() {
         return suppressibleErrorProneExtension.getPatchChecks();
     }
 
