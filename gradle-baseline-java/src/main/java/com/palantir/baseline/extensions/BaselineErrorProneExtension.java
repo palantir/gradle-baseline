@@ -26,7 +26,7 @@ public abstract class BaselineErrorProneExtension {
      * Do not add SUGGESTION checks here. Instead either increase the severity to WARNING or do not apply them by
      * default.
      */
-    private static final ImmutableList<String> DEFAULT_PATCH_CHECKS = ImmutableList.of(
+    public static final ImmutableList<String> DEFAULT_PATCH_CHECKS = ImmutableList.of(
             // Baseline checks
             "AssertNoArgs",
             "AvoidNewHashMapInt",
@@ -102,7 +102,7 @@ public abstract class BaselineErrorProneExtension {
      * @deprecated Interact with SuppressibleErrorProneExtension instead. This only provided for backcompat.
      */
     @Deprecated
-    public static final SetProperty<String> getPatchChecks() {
+    public final SetProperty<String> getPatchChecks() {
         return suppressibleErrorProneExtension.getPatchChecks();
     }
 
