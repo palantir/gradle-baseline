@@ -18,6 +18,7 @@ package com.palantir.baseline.extensions;
 
 import com.google.common.collect.ImmutableList;
 import com.palantir.gradle.suppressibleerrorprone.SuppressibleErrorProneExtension;
+import java.util.List;
 import org.gradle.api.provider.SetProperty;
 
 public abstract class BaselineErrorProneExtension {
@@ -26,7 +27,7 @@ public abstract class BaselineErrorProneExtension {
      * Do not add SUGGESTION checks here. Instead either increase the severity to WARNING or do not apply them by
      * default.
      */
-    public static final ImmutableList<String> DEFAULT_PATCH_CHECKS = ImmutableList.of(
+    public static final List<String> DEFAULT_PATCH_CHECKS = ImmutableList.of(
             // Baseline checks
             "AssertNoArgs",
             "AvoidNewHashMapInt",
