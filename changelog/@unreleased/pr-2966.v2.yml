@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: baseline-error-prone targets jdk-17+
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2966
