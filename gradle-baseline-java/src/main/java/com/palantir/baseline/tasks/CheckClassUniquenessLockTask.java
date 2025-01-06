@@ -182,7 +182,7 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
             throw new ExceptionWithSuggestion(
                     "baseline-class-uniqueness detected multiple jars containing identically named classes."
                             + " Please resolve these problems, or run `./gradlew checkClassUniqueness --fix`"
-                            + "to accept them:\n\n " + expected,
+                            + " to accept them:\n\n " + expected,
                     "./gradlew checkClassUniqueness --fix");
         }
 
