@@ -34,7 +34,6 @@ import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
 import com.palantir.baseline.errorprone.MoreASTHelpers;
-import com.palantir.baseline.errorprone.Records;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.LambdaExpressionTree;
@@ -49,6 +48,7 @@ import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
+import com.sun.tools.javac.code.Symbol.RecordComponent;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
 import com.sun.tools.javac.code.Type.ClassType;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
@@ -1343,13 +1343,13 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
         if (type instanceof ClassType) {
             ClassType classType = (ClassType) type;
             ClassSymbol symbol = (ClassSymbol) classType.tsym;
-            if (ASTHelpers.isRecord(symbol)) {
-                List<VarSymbol> recordComponents = Records.getRecordComponents(symbol);
+            if (symbol != null && symbol.isRecord()) {
+                List<? extends RecordComponent> recordComponents = symbol.getRecordComponents();
                 List<Node> nestedPatterns = node.getNestedPatterns();
                 if (recordComponents.size() == nestedPatterns.size() && !recordComponents.isEmpty()) {
                     ReadableUpdates updates = new ReadableUpdates();
                     for (int i = 0; i < recordComponents.size(); i++) {
-                        VarSymbol recordComponent = recordComponents.get(i);
+                        RecordComponent recordComponent = recordComponents.get(i);
                         Node pattern = nestedPatterns.get(i);
                         Safety existing = getValueOfSubNode(input, pattern);
                         Safety recordComponentSafety = Safety.mergeAssumingUnknownIsSame(

@@ -47,8 +47,8 @@ import com.sun.tools.javac.code.Flags;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
+import com.sun.tools.javac.code.Symbol.RecordComponent;
 import com.sun.tools.javac.code.Symbol.TypeSymbol;
-import com.sun.tools.javac.code.Symbol.VarSymbol;
 import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.util.Name;
 import javax.lang.model.element.Modifier;
@@ -94,7 +94,7 @@ public final class SafeLoggingPropagation extends BugChecker
         }
         TypeSymbol tsym = classSymbol.type.tsym;
         tsym.getModifiers();
-        if (ASTHelpers.isRecord(classSymbol)) {
+        if (classSymbol.isRecord()) {
             return matchRecord(classTree, classSymbol, state);
         } else {
             return matchClassOrInterface(classTree, classSymbol, state);
@@ -149,7 +149,7 @@ public final class SafeLoggingPropagation extends BugChecker
         Safety existingClassSafety = SafetyAnnotations.getSafety(classTree, state);
         Safety safety = SafetyAnnotations.getTypeSafetyFromAncestors(classTree, state);
         safety = safety.leastUpperBound(SafetyAnnotations.getTypeSafetyFromKnownSubtypes(classTree, state));
-        for (VarSymbol recordComponent : Records.getRecordComponents(classSymbol)) {
+        for (RecordComponent recordComponent : classSymbol.getRecordComponents()) {
             Safety symbolSafety = SafetyAnnotations.getSafety(recordComponent, state);
             Safety typeSafety = SafetyAnnotations.getSafety(recordComponent.type, state);
             Safety typeSymSafety = SafetyAnnotations.getSafety(recordComponent.type.tsym, state);
