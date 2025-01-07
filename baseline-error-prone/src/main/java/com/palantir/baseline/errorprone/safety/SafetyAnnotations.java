@@ -161,11 +161,12 @@ public final class SafetyAnnotations {
         return safety;
     }
 
+    @SuppressWarnings("checkstyle:CyclomaticComplexity")
     public static Safety getTypeSafetyFromKnownSubtypes(ClassTree classTree, VisitorState state) {
         Safety safety = Safety.UNKNOWN;
         ClassSymbol symbol = ASTHelpers.getSymbol(classTree);
-        if (MoreASTHelpers.isSealed(symbol)) {
-            for (ExpressionTree permitted : MoreASTHelpers.getPermitsClause(classTree)) {
+        if (symbol != null && symbol.isSealed()) {
+            for (Tree permitted : classTree.getPermitsClause()) {
                 safety = Safety.mergeAssumingUnknownIsSame(safety, SafetyAnnotations.getSafety(permitted, state));
             }
         }

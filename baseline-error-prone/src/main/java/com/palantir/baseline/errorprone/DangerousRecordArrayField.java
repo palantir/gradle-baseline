@@ -49,7 +49,7 @@ public final class DangerousRecordArrayField extends BugChecker implements BugCh
     @Override
     public Description matchClass(ClassTree classTree, VisitorState state) {
         ClassSymbol classSymbol = ASTHelpers.getSymbol(classTree);
-        if (!ASTHelpers.isRecord(classSymbol)) {
+        if (classSymbol == null || !classSymbol.isRecord()) {
             return Description.NO_MATCH;
         }
         if (!hasArrayField(classTree, state)) {
