@@ -71,6 +71,7 @@ import java.util.stream.BaseStream;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
+import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.VariableElement;
 import javax.lang.model.type.TypeMirror;
 import org.checkerframework.errorprone.dataflow.analysis.Analysis;
@@ -871,7 +872,8 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
             // Cast a wide net for all throwables (covers catch statements)
             if (THROWABLE_SUBTYPE.matches(node.getTree(), state)) {
                 safety = Safety.UNSAFE.leastUpperBound(SafetyAnnotations.getSafety(node.getTree(), state));
-            } else if (isPatternBinding(node, state)) {
+            } else if (isElementKind(node, ElementKind.PARAMETER)
+                    || isElementKind(node, ElementKind.BINDING_VARIABLE)) {
                 safety = SafetyAnnotations.getSafety(node.getTree(), state);
             } else {
                 // No safety information found, likely a captured reference used within a lambda or anonymous class.
@@ -884,24 +886,9 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
         return noStoreChanges(safety, input);
     }
 
-    private static boolean isPatternBinding(LocalVariableNode node, VisitorState state) {
-        TreePath varPath = TreePath.getPath(state.getPath().getCompilationUnit(), node.getTree());
-        if (varPath == null) {
-            // Synthetic expression
-            return false;
-        }
-        TreePath parentPath = varPath.getParentPath();
-        if (parentPath == null) {
-            return false;
-        }
-        Tree enclosing = parentPath.getLeaf();
-        if (enclosing == null) {
-            return false;
-        }
-        // JCBindingPattern is newer than our compilation target, so we match strings to avoid
-        // complex build-system configurations.
-        String kindString = enclosing.getKind().name();
-        return "BINDING_PATTERN".equals(kindString);
+    private static boolean isElementKind(LocalVariableNode node, ElementKind elementKind) {
+        Symbol symbol = ASTHelpers.getSymbol(node.getTree());
+        return symbol != null && symbol.getKind() == elementKind;
     }
 
     private Safety getCapturedLocalVariableSafety(LocalVariableNode node) {
