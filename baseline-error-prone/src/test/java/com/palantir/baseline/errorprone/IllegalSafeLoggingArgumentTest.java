@@ -1746,6 +1746,26 @@ class IllegalSafeLoggingArgumentTest {
     }
 
     @Test
+    public void testRecordStaticConstructor() {
+        helper().setArgs("--release", "17")
+                .addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  record MyRecord(@Unsafe String value) {",
+                        "    public static MyRecord of(String value) {",
+                        "      return new MyRecord(value);",
+                        "    }",
+                        "  }",
+                        "  void f(@DoNotLog String value) {",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'DO_NOT_LOG'",
+                        "    MyRecord.of(value);",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testRecordComponentUsage() {
         helper().setArgs("--release", "17")
                 .addSourceLines(
