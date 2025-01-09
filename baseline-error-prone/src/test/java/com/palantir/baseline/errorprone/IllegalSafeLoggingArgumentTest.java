@@ -1528,6 +1528,25 @@ class IllegalSafeLoggingArgumentTest {
     }
 
     @Test
+    public void testSafeArgOfUnsafeAnnotatedClassAs_noRecommendation() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import com.palantir.logsafe.exceptions.*;",
+                        "import java.util.*;",
+                        "class Test {",
+                        "  @Unsafe static class UnsafeClass {}",
+                        "  void f(UnsafeClass unsafeParam) {",
+                        "    Optional.empty().orElseThrow(() -> ",
+                        "        // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
+                        "        new SafeIllegalArgumentException(\"message\", SafeArg.of(\"unsafe\", unsafeParam)));",
+//                        "        new SafeIllegalArgumentException(\"message\", SafeArg.of(\"unsafe\", new UnsafeClass())));",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testUnsafeArgumentForSafeParameter_noRecommendation() {
         refactoringHelper()
                 .addInputLines(
