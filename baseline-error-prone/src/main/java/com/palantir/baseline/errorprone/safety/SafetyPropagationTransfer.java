@@ -870,14 +870,16 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
             // 4. Pattern matching (input instanceof String str)
 
             // Cast a wide net for all throwables (covers catch statements)
+            Safety treeSafety = SafetyAnnotations.getSafety(node.getTree(), state);
             if (THROWABLE_SUBTYPE.matches(node.getTree(), state)) {
-                safety = Safety.UNSAFE.leastUpperBound(SafetyAnnotations.getSafety(node.getTree(), state));
-            } else if (isElementKind(node, ElementKind.PARAMETER)
-                    || isElementKind(node, ElementKind.BINDING_VARIABLE)) {
-                safety = SafetyAnnotations.getSafety(node.getTree(), state);
-            } else {
+                safety = Safety.UNSAFE.leastUpperBound(treeSafety);
+            } else if (isElementKind(node, ElementKind.LOCAL_VARIABLE) && treeSafety == Safety.UNKNOWN) {
                 // No safety information found, likely a captured reference used within a lambda or anonymous class.
+                // If safety can be computed based on the symbol, use that, otherwise evaluate flow which is much
+                // more expensive.
                 safety = getCapturedLocalVariableSafety(node);
+            } else {
+                safety = treeSafety;
             }
             ReadableUpdates updates = new ReadableUpdates();
             updates.set(node, safety);
