@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: safe-logging analysis correctly handles out-of-scope parameter references
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2988
