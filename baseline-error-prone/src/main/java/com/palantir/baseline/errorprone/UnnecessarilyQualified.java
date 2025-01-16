@@ -29,6 +29,8 @@ import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.CompilationUnitTree;
 import com.sun.source.tree.ImportTree;
 import com.sun.source.tree.MemberSelectTree;
+import com.sun.tools.javac.code.Kinds.Kind;
+import com.sun.tools.javac.code.Symbol;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -40,6 +42,11 @@ public final class UnnecessarilyQualified extends BugChecker implements BugCheck
 
     @Override
     public Description matchMemberSelect(MemberSelectTree tree, VisitorState state) {
+        // Only consider member selects in which the left hand side is a package and right is a class.
+        // This means we won't do anything clever for imported nested classes or method imports.
+        if (!isQualifiedClassReference(tree)) {
+            return Description.NO_MATCH;
+        }
         String nameString = state.getSourceForNode(tree);
         if (nameString == null) {
             return Description.NO_MATCH;
@@ -54,13 +61,21 @@ public final class UnnecessarilyQualified extends BugChecker implements BugCheck
             if (!importTree.isStatic()
                     && nameString.equals(state.getSourceForNode(importTree.getQualifiedIdentifier()))) {
                 SuggestedFix.Builder fix = SuggestedFix.builder();
-                String treeSource = state.getSourceForNode(tree);
-                String updated = treeSource.replace(nameString, SuggestedFixes.qualifyType(state, fix, nameString));
+                String updated = nameString.replace(nameString, SuggestedFixes.qualifyType(state, fix, nameString));
                 return buildDescription(tree)
                         .addFix(fix.replace(tree, updated).build())
                         .build();
             }
         }
         return Description.NO_MATCH;
+    }
+
+    private static boolean isQualifiedClassReference(MemberSelectTree tree) {
+        Symbol selectedSymbol = ASTHelpers.getSymbol(tree);
+        if (selectedSymbol == null || selectedSymbol.kind != Kind.TYP) {
+            return false;
+        }
+        Symbol selectedSymbolQualifier = ASTHelpers.getSymbol(tree.getExpression());
+        return selectedSymbolQualifier != null && selectedSymbolQualifier.kind == Kind.PCK;
     }
 }
