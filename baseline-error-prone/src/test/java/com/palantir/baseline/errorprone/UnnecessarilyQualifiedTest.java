@@ -50,6 +50,31 @@ class UnnecessarilyQualifiedTest {
                 .doTest();
     }
 
+    @Test
+    void testEnclosedClassNotFlaggedWhenImportIsPresent() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import java.util.Map;",
+                        "import java.util.Map.Entry;",
+                        "import java.util.Set;",
+                        "class Test {",
+                        "  java.util.Map.Entry<?, ?> get() {",
+                        "    return null;",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import java.util.Map;",
+                        "import java.util.Map.Entry;",
+                        "import java.util.Set;",
+                        "class Test {",
+                        "  Map.Entry<?, ?> get() {",
+                        "    return null;",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
     private RefactoringValidator fix() {
         return RefactoringValidator.of(UnnecessarilyQualified.class, getClass());
     }
