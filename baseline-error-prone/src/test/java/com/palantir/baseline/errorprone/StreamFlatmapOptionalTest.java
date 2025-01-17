@@ -88,7 +88,7 @@ class StreamFlatmapOptionalTest {
                         "    return in.filter(Optional::isEmpty).map(o -> o.orElse(\"\"));",
                         "  }",
                         "  Stream<String> flatMap_simple(Stream<Optional<String>> in) {",
-                        "    return in.mapMulti(Optional::ifPresent);",
+                        "    return in.<String>mapMulti(Optional::ifPresent);",
                         "  }",
                         "  Stream<String> filter_map_get(Stream<Optional<String>> in) {",
                         "    return in.mapMulti(Optional::ifPresent);",

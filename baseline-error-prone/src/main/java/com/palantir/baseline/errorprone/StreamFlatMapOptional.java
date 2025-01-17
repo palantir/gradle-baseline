@@ -41,6 +41,7 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.jspecify.annotations.Nullable;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -108,8 +109,11 @@ public final class StreamFlatMapOptional extends BugChecker implements MethodInv
     }
 
     private Description fix(
-            MethodInvocationTree tree, VisitorState state, ExpressionTree receiver, ExpressionTree expressionTree) {
-        if (receiver == null) {
+            MethodInvocationTree tree,
+            VisitorState state,
+            @Nullable ExpressionTree receiver,
+            @Nullable ExpressionTree expressionTree) {
+        if (receiver == null || expressionTree == null) {
             return Description.NO_MATCH;
         }
 
@@ -143,9 +147,14 @@ public final class StreamFlatMapOptional extends BugChecker implements MethodInv
 
     private static boolean needsQualification(
             ExpressionTree receiver, ExpressionTree expressionTree, Type elementType) {
-        long receiverCount = args(ASTHelpers.getReceiverType(receiver)).count();
+        long receiverArgCount = args(ASTHelpers.getReceiverType(receiver)).count();
         long treeArgCount = args(ASTHelpers.getReceiverType(expressionTree)).count();
-        return args(elementType).findAny().isPresent() || receiverCount > 1 || (receiverCount == 0 && treeArgCount > 0);
+        int elementArgCount = elementType.getTypeArguments().size();
+        boolean q1 = args(elementType).findAny().isPresent();
+        boolean q2 = receiverArgCount > 1;
+        boolean q3 = receiverArgCount == 0 && treeArgCount > 0;
+        boolean q4 = receiverArgCount == 0 && elementArgCount > 0;
+        return q1 || q2 || q3 || q4;
     }
 
     private static String qualifyType(
