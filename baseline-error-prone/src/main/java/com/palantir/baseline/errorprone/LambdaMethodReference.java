@@ -52,7 +52,7 @@ import javax.annotation.Nullable;
 @BugPattern(
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        severity = SeverityLevel.WARNING,
+        severity = SeverityLevel.SUGGESTION,
         summary = "Lambda should be a method reference")
 @SuppressWarnings("checkstyle:CyclomaticComplexity")
 public final class LambdaMethodReference extends BugChecker implements BugChecker.LambdaExpressionTreeMatcher {

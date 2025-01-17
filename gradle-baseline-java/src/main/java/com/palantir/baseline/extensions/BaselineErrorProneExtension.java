@@ -48,7 +48,6 @@ public abstract class BaselineErrorProneExtension {
             "ImplicitPublicBuilderConstructor",
             "JavaTimeDefaultTimeZone",
             "JavaTimeSystemDefaultTimeZone",
-            "LambdaMethodReference",
             "LoggerEnclosingClass",
             "LogsafeArgName",
             "ObjectsHashCodeUnnecessaryVarargs",
