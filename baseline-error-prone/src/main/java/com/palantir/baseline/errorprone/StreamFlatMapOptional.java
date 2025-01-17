@@ -47,7 +47,7 @@ import org.jspecify.annotations.Nullable;
 @BugPattern(
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        severity = SeverityLevel.SUGGESTION,
+        severity = SeverityLevel.WARNING,
         summary = "`Stream.mapMulti(Optional::ifPresent)` is more efficient than `Stream.flatMap(Optional::stream)`")
 public final class StreamFlatMapOptional extends BugChecker implements MethodInvocationTreeMatcher {
     @Serial
