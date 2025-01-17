@@ -35,6 +35,7 @@ import com.sun.source.tree.MethodInvocationTree;
 import com.sun.tools.javac.code.Type;
 import java.io.Serial;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -124,17 +125,11 @@ public final class StreamFlatMapOptional extends BugChecker implements MethodInv
 
         SuggestedFix.Builder fix = SuggestedFix.builder();
 
-        long receiverCount = args(ASTHelpers.getReceiverType(receiver)).count();
-        Stream<Type> args = args(ASTHelpers.getReceiverType(expressionTree));
-        long argCount = args.count();
-        boolean shouldQualifyType =
-                args(elementType).findAny().isPresent() || receiverCount > 1 || (receiverCount == 0 && argCount > 0);
-
         String qualifiedType = "";
-        if (shouldQualifyType) {
+        if (needsQualification(receiver, expressionTree, elementType)) {
             qualifiedType = qualifyType(state, fix, receiverType.getTypeArguments());
             if (qualifiedType.isEmpty()) {
-                qualifiedType = SuggestedFixes.qualifyType(state, fix, elementType);
+                qualifiedType = qualifyType(state, fix, Collections.singleton(elementType));
             }
         }
 
@@ -146,8 +141,19 @@ public final class StreamFlatMapOptional extends BugChecker implements MethodInv
                 .build();
     }
 
+    private static boolean needsQualification(
+            ExpressionTree receiver, ExpressionTree expressionTree, Type elementType) {
+        long receiverCount = args(ASTHelpers.getReceiverType(receiver)).count();
+        long treeArgCount = args(ASTHelpers.getReceiverType(expressionTree)).count();
+        return args(elementType).findAny().isPresent() || receiverCount > 1 || (receiverCount == 0 && treeArgCount > 0);
+    }
+
     private static String qualifyType(
             VisitorState state, SuggestedFix.Builder fix, Collection<Type> receiverTypeArguments) {
+        if (receiverTypeArguments.isEmpty()
+                || args(receiverTypeArguments).findAny().isEmpty()) {
+            return "";
+        }
         return args(receiverTypeArguments)
                 .map(type -> SuggestedFixes.qualifyType(state, fix, type))
                 .collect(Collectors.joining(", ", "<", ">"));
@@ -157,7 +163,7 @@ public final class StreamFlatMapOptional extends BugChecker implements MethodInv
         return args(type.getTypeArguments());
     }
 
-    private static Stream<Type> args(Collection<Type> types) {
-        return types.stream().flatMap(type -> type.getTypeArguments().stream());
+    static Stream<Type> args(Collection<Type> types) {
+        return types.stream().flatMap(t -> t.getTypeArguments().stream());
     }
 }
