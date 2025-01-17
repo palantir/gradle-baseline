@@ -148,13 +148,13 @@ public final class StreamFlatMapOptional extends BugChecker implements MethodInv
     private static boolean needsQualification(
             ExpressionTree receiver, ExpressionTree expressionTree, Type elementType) {
         long receiverArgCount = args(ASTHelpers.getReceiverType(receiver)).count();
-        long treeArgCount = args(ASTHelpers.getReceiverType(expressionTree)).count();
-        int elementArgCount = elementType.getTypeArguments().size();
-        boolean q1 = args(elementType).findAny().isPresent();
-        boolean q2 = receiverArgCount > 1;
-        boolean q3 = receiverArgCount == 0 && treeArgCount > 0;
-        boolean q4 = receiverArgCount == 0 && elementArgCount > 0;
-        return q1 || q2 || q3 || q4;
+        return args(elementType).findAny().isPresent()
+                || receiverArgCount > 1
+                || (receiverArgCount == 0
+                        && args(ASTHelpers.getReceiverType(expressionTree))
+                                .findAny()
+                                .isPresent())
+                || (receiverArgCount == 0 && !elementType.getTypeArguments().isEmpty());
     }
 
     private static String qualifyType(
