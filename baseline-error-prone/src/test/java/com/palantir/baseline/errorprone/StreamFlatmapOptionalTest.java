@@ -65,6 +65,17 @@ class StreamFlatmapOptionalTest {
                         "    return in.flatMap(Optional::stream).map(Map.Entry::getValue)"
                                 + ".flatMap(Optional::stream).toList();",
                         "  }",
+                        "  Collection<String> chained_flatMap_maps(Stream<Optional<String>> in) {",
+                        "    return in.flatMap(Optional::stream)",
+                        "      .map(Test::maybe)",
+                        "      .flatMap(Optional::stream)",
+                        "      .map(Test::maybe)",
+                        "      .flatMap(Optional::stream)",
+                        "      .toList();",
+                        "  }",
+                        "  static Optional<String> maybe(String in) {",
+                        "    return in.isEmpty() ? Optional.empty() : Optional.of(in);",
+                        "  }",
                         "}")
                 .addOutputLines(
                         "Test.java",
@@ -112,6 +123,17 @@ class StreamFlatmapOptionalTest {
                                 + ".map(Map.Entry::getValue)"
                                 + ".<String>mapMulti(Optional::ifPresent)"
                                 + ".toList();",
+                        "  }",
+                        "  Collection<String> chained_flatMap_maps(Stream<Optional<String>> in) {",
+                        "    return in.<String>mapMulti(Optional::ifPresent)",
+                        "      .map(Test::maybe)",
+                        "      .<String>mapMulti(Optional::ifPresent)",
+                        "      .map(Test::maybe)",
+                        "      .<String>mapMulti(Optional::ifPresent)",
+                        "      .toList();",
+                        "  }",
+                        "  static Optional<String> maybe(String in) {",
+                        "    return in.isEmpty() ? Optional.empty() : Optional.of(in);",
                         "  }",
                         "}")
                 .doTest();
