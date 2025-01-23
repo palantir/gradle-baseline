@@ -36,6 +36,7 @@ import com.sun.tools.javac.code.Type;
 import java.io.Serial;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
@@ -127,52 +128,52 @@ public final class StreamFlatMapOptional extends BugChecker implements MethodInv
             return Description.NO_MATCH;
         }
 
-        SuggestedFix.Builder fix = SuggestedFix.builder();
+        return Stream.of(
+                        getSuggestedFix(SuggestedFix.builder(), tree, state, expressionTree, ""),
+                        getQualifiedSuggestedFix(tree, state, expressionTree, receiverType, elementType))
+                .filter(fix -> SuggestedFixes.compilesWithFix(fix, state))
+                .findFirst()
+                .map(fix -> buildDescription(tree).addFix(fix).build())
+                .orElse(Description.NO_MATCH);
+    }
 
-        String qualifiedType = "";
-        if (needsQualification(receiver, expressionTree, elementType)) {
-            qualifiedType = qualifyType(state, fix, receiverType.getTypeArguments());
-            if (qualifiedType.isEmpty()) {
-                qualifiedType = qualifyType(state, fix, Collections.singleton(elementType));
-            }
-        }
-
-        String replacement = "." + qualifiedType + "mapMulti("
+    private static SuggestedFix getSuggestedFix(
+            SuggestedFix.Builder fix,
+            MethodInvocationTree tree,
+            VisitorState state,
+            ExpressionTree expressionTree,
+            String maybeQualifiedElementType) {
+        String replacement = "." + maybeQualifiedElementType + "mapMulti("
                 + SuggestedFixes.qualifyType(state, fix, Optional.class.getCanonicalName()) + "::ifPresent)";
-        return buildDescription(tree)
-                .addFix(fix.replace(state.getEndPosition(expressionTree), state.getEndPosition(tree), replacement)
-                        .build())
+        return fix.replace(state.getEndPosition(expressionTree), state.getEndPosition(tree), replacement)
                 .build();
     }
 
-    private static boolean needsQualification(
-            ExpressionTree receiver, ExpressionTree expressionTree, Type elementType) {
-        long receiverArgCount = args(ASTHelpers.getReceiverType(receiver)).count();
-        return args(elementType).findAny().isPresent()
-                || receiverArgCount > 1
-                || (receiverArgCount == 0
-                        && args(ASTHelpers.getReceiverType(expressionTree))
-                                .findAny()
-                                .isPresent())
-                || (receiverArgCount == 0 && !elementType.getTypeArguments().isEmpty());
+    private static SuggestedFix getQualifiedSuggestedFix(
+            MethodInvocationTree tree,
+            VisitorState state,
+            ExpressionTree expressionTree,
+            Type receiverType,
+            Type elementType) {
+        SuggestedFix.Builder fix = SuggestedFix.builder();
+        String qualifiedType = qualifyType(state, fix, receiverType.getTypeArguments());
+        if (qualifiedType.isEmpty()) {
+            qualifiedType = qualifyType(state, fix, Collections.singleton(elementType));
+        }
+        return getSuggestedFix(fix, tree, state, expressionTree, qualifiedType);
     }
 
     private static String qualifyType(
             VisitorState state, SuggestedFix.Builder fix, Collection<Type> receiverTypeArguments) {
-        if (receiverTypeArguments.isEmpty()
-                || args(receiverTypeArguments).findAny().isEmpty()) {
+        if (receiverTypeArguments.isEmpty() || args(receiverTypeArguments).isEmpty()) {
             return "";
         }
-        return args(receiverTypeArguments)
+        return args(receiverTypeArguments).stream()
                 .map(type -> SuggestedFixes.qualifyType(state, fix, type))
                 .collect(Collectors.joining(", ", "<", ">"));
     }
 
-    private static Stream<Type> args(Type type) {
-        return args(type.getTypeArguments());
-    }
-
-    static Stream<Type> args(Collection<Type> types) {
-        return types.stream().flatMap(t -> t.getTypeArguments().stream());
+    static List<Type> args(Collection<Type> types) {
+        return types.stream().flatMap(t -> t.getTypeArguments().stream()).toList();
     }
 }

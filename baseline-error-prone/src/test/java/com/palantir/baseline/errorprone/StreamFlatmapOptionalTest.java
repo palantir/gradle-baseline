@@ -16,6 +16,11 @@
 
 package com.palantir.baseline.errorprone;
 
+import java.util.Collection;
+import java.util.Optional;
+import java.util.Set;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 class StreamFlatmapOptionalTest {
@@ -27,6 +32,8 @@ class StreamFlatmapOptionalTest {
                         "import java.util.Collection;",
                         "import java.util.Map;",
                         "import java.util.Optional;",
+                        "import java.util.Set;",
+                        "import java.util.stream.Collectors;",
                         "import java.util.stream.Stream;",
                         "public class Test {",
                         "  Stream<String> filter_empty(Stream<Optional<String>> in) {",
@@ -65,16 +72,22 @@ class StreamFlatmapOptionalTest {
                         "    return in.flatMap(Optional::stream).map(Map.Entry::getValue)"
                                 + ".flatMap(Optional::stream).toList();",
                         "  }",
-                        "  Collection<String> chained_flatMap_maps(Stream<Optional<String>> in) {",
+                        "  Collection<String> chain_flatMap_maps(Stream<Optional<String>> in) {",
                         "    return in.flatMap(Optional::stream)",
-                        "      .map(Test::maybe)",
+                        "      .map(Optional::ofNullable)",
                         "      .flatMap(Optional::stream)",
-                        "      .map(Test::maybe)",
+                        "      .map(Optional::ofNullable)",
                         "      .flatMap(Optional::stream)",
                         "      .toList();",
                         "  }",
-                        "  static Optional<String> maybe(String in) {",
-                        "    return in.isEmpty() ? Optional.empty() : Optional.of(in);",
+                        "  Set<Integer> chain_flatMap_maps_toSet(Stream<Optional<Collection<Optional<String>>>> in) {",
+                        "    return in.flatMap(Optional::stream)",
+                        "      .map(Optional::ofNullable)",
+                        "      .flatMap(Optional::stream)",
+                        "      .flatMap(Collection::stream)",
+                        "      .flatMap(Optional::stream)",
+                        "      .map(String::length)",
+                        "      .collect(Collectors.toSet());",
                         "  }",
                         "}")
                 .addOutputLines(
@@ -82,13 +95,15 @@ class StreamFlatmapOptionalTest {
                         "import java.util.Collection;",
                         "import java.util.Map;",
                         "import java.util.Optional;",
+                        "import java.util.Set;",
+                        "import java.util.stream.Collectors;",
                         "import java.util.stream.Stream;",
                         "public class Test {",
                         "  Stream<String> filter_empty(Stream<Optional<String>> in) {",
                         "    return in.filter(Optional::isEmpty).map(o -> o.orElse(\"\"));",
                         "  }",
                         "  Stream<String> flatMap_simple(Stream<Optional<String>> in) {",
-                        "    return in.<String>mapMulti(Optional::ifPresent);",
+                        "    return in.mapMulti(Optional::ifPresent);",
                         "  }",
                         "  Stream<String> filter_map_get(Stream<Optional<String>> in) {",
                         "    return in.mapMulti(Optional::ifPresent);",
@@ -124,16 +139,22 @@ class StreamFlatmapOptionalTest {
                                 + ".<String>mapMulti(Optional::ifPresent)"
                                 + ".toList();",
                         "  }",
-                        "  Collection<String> chained_flatMap_maps(Stream<Optional<String>> in) {",
+                        "  Collection<String> chain_flatMap_maps(Stream<Optional<String>> in) {",
                         "    return in.<String>mapMulti(Optional::ifPresent)",
-                        "      .map(Test::maybe)",
+                        "      .map(Optional::ofNullable)",
                         "      .<String>mapMulti(Optional::ifPresent)",
-                        "      .map(Test::maybe)",
+                        "      .map(Optional::ofNullable)",
                         "      .<String>mapMulti(Optional::ifPresent)",
                         "      .toList();",
                         "  }",
-                        "  static Optional<String> maybe(String in) {",
-                        "    return in.isEmpty() ? Optional.empty() : Optional.of(in);",
+                        "  Set<Integer> chain_flatMap_maps_toSet(Stream<Optional<Collection<Optional<String>>>> in) {",
+                        "    return in.<Collection<Optional<String>>>mapMulti(Optional::ifPresent)",
+                        "      .map(Optional::ofNullable)",
+                        "      .<Collection<Optional<String>>>mapMulti(Optional::ifPresent)",
+                        "      .flatMap(Collection::stream)",
+                        "      .<String>mapMulti(Optional::ifPresent)",
+                        "      .map(String::length)",
+                        "      .collect(Collectors.toSet());",
                         "  }",
                         "}")
                 .doTest();
@@ -141,5 +162,17 @@ class StreamFlatmapOptionalTest {
 
     private RefactoringValidator fix() {
         return RefactoringValidator.of(StreamFlatMapOptional.class, getClass());
+    }
+
+    static class Foo {
+        Set<Integer> chain_flatMap_maps_toSet(Stream<Optional<Collection<Optional<String>>>> in) {
+            return in.<Collection<Optional<String>>>mapMulti(Optional::ifPresent)
+                    .map(Optional::ofNullable)
+                    .<Collection<Optional<String>>>mapMulti(Optional::ifPresent)
+                    .flatMap(Collection::stream)
+                    .<String>mapMulti(Optional::ifPresent)
+                    .map(String::length)
+                    .collect(Collectors.toSet());
+        }
     }
 }
