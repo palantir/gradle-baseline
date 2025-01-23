@@ -35,11 +35,11 @@ import com.sun.source.tree.MethodInvocationTree;
 import com.sun.tools.javac.code.Type;
 import java.io.Serial;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.jspecify.annotations.Nullable;
@@ -128,10 +128,16 @@ public final class StreamFlatMapOptional extends BugChecker implements MethodInv
             return Description.NO_MATCH;
         }
 
-        return Stream.of(
-                        getSuggestedFix(SuggestedFix.builder(), tree, state, expressionTree, ""),
-                        getQualifiedSuggestedFix(tree, state, expressionTree, receiverType, elementType))
-                .filter(fix -> SuggestedFixes.compilesWithFix(fix, state))
+        return Stream.<Supplier<SuggestedFix>>of(
+                        () -> getSuggestedFix(SuggestedFix.builder(), tree, state, expressionTree, ""),
+                        () -> getQualifiedSuggestedFix(tree, state, expressionTree, receiverType.getTypeArguments()),
+                        () -> getQualifiedSuggestedFix(tree, state, expressionTree, List.of(elementType)))
+                .<SuggestedFix>mapMulti((f, consumer) -> {
+                    SuggestedFix fix = f.get();
+                    if (SuggestedFixes.compilesWithFix(fix, state)) {
+                        consumer.accept(fix);
+                    }
+                })
                 .findFirst()
                 .map(fix -> buildDescription(tree).addFix(fix).build())
                 .orElse(Description.NO_MATCH);
@@ -150,17 +156,9 @@ public final class StreamFlatMapOptional extends BugChecker implements MethodInv
     }
 
     private static SuggestedFix getQualifiedSuggestedFix(
-            MethodInvocationTree tree,
-            VisitorState state,
-            ExpressionTree expressionTree,
-            Type receiverType,
-            Type elementType) {
+            MethodInvocationTree tree, VisitorState state, ExpressionTree expressionTree, List<Type> args) {
         SuggestedFix.Builder fix = SuggestedFix.builder();
-        String qualifiedType = qualifyType(state, fix, receiverType.getTypeArguments());
-        if (qualifiedType.isEmpty()) {
-            qualifiedType = qualifyType(state, fix, Collections.singleton(elementType));
-        }
-        return getSuggestedFix(fix, tree, state, expressionTree, qualifiedType);
+        return getSuggestedFix(fix, tree, state, expressionTree, qualifyType(state, fix, args));
     }
 
     private static String qualifyType(
