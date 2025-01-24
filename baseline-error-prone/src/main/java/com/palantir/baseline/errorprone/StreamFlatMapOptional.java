@@ -41,7 +41,6 @@ import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import org.jspecify.annotations.Nullable;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -92,27 +91,22 @@ public final class StreamFlatMapOptional extends BugChecker implements MethodInv
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
         if (STREAM_FLATMAP_OPTIONAL_STREAM.matches(tree, state)) {
-            ExpressionTree receiver = ASTHelpers.getReceiver(tree);
-            return fix(tree, state, receiver, receiver);
+            return fix(tree, state, tree);
         }
 
         if (STREAM_MAP_GET.matches(tree, state)) {
             ExpressionTree mapTree = ASTHelpers.getReceiver(tree);
             if (mapTree != null && STREAM_FILTER_IS_PRESENT.matches(mapTree, state)) {
-                ExpressionTree filterTree = ASTHelpers.getReceiver(mapTree);
-                return fix(tree, state, tree.getMethodSelect(), filterTree);
+                return fix(tree, state, mapTree);
             }
         }
 
         return Description.NO_MATCH;
     }
 
-    private Description fix(
-            MethodInvocationTree tree,
-            VisitorState state,
-            @Nullable ExpressionTree receiver,
-            @Nullable ExpressionTree expressionTree) {
-        if (receiver == null || expressionTree == null) {
+    private Description fix(MethodInvocationTree tree, VisitorState state, ExpressionTree expressionTree) {
+        ExpressionTree receiver = ASTHelpers.getReceiver(expressionTree);
+        if (receiver == null) {
             return Description.NO_MATCH;
         }
 
@@ -121,16 +115,10 @@ public final class StreamFlatMapOptional extends BugChecker implements MethodInv
             return Description.NO_MATCH;
         }
 
-        Type receiverType = ASTHelpers.getType(receiver);
-        if (receiverType == null) {
-            return Description.NO_MATCH;
-        }
-
         // try to elide the type arguments for mapMulti if it compiles, otherwise fallback on including qualified types
-        SuggestedFix fix = Optional.of(getSuggestedFix(SuggestedFix.builder(), tree, state, expressionTree, ""))
+        SuggestedFix fix = Optional.of(getSuggestedFix(SuggestedFix.builder(), tree, state, receiver, ""))
                 .filter(f -> SuggestedFixes.compilesWithFix(f, state))
-                .orElseGet(
-                        () -> getQualifiedSuggestedFix(tree, state, expressionTree, receiverType.getTypeArguments()));
+                .orElseGet(() -> getQualifiedSuggestedFix(tree, state, receiver, List.of(elementType)));
         return buildDescription(tree).addFix(fix).build();
     }
 
@@ -138,18 +126,18 @@ public final class StreamFlatMapOptional extends BugChecker implements MethodInv
             SuggestedFix.Builder fix,
             MethodInvocationTree tree,
             VisitorState state,
-            ExpressionTree expressionTree,
+            ExpressionTree receiver,
             String maybeQualifiedElementType) {
         String replacement = "." + maybeQualifiedElementType + "mapMulti("
                 + SuggestedFixes.qualifyType(state, fix, Optional.class.getCanonicalName()) + "::ifPresent)";
-        return fix.replace(state.getEndPosition(expressionTree), state.getEndPosition(tree), replacement)
+        return fix.replace(state.getEndPosition(receiver), state.getEndPosition(tree), replacement)
                 .build();
     }
 
     private static SuggestedFix getQualifiedSuggestedFix(
-            MethodInvocationTree tree, VisitorState state, ExpressionTree expressionTree, List<Type> args) {
+            MethodInvocationTree tree, VisitorState state, ExpressionTree receiver, List<Type> args) {
         SuggestedFix.Builder fix = SuggestedFix.builder();
-        return getSuggestedFix(fix, tree, state, expressionTree, qualifyType(state, fix, args));
+        return getSuggestedFix(fix, tree, state, receiver, qualifyType(state, fix, args));
     }
 
     private static String qualifyType(
