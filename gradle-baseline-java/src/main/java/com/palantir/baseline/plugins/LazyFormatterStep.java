@@ -56,4 +56,9 @@ class LazyFormatterStep implements FormatterStep {
         FormatterStep serialized = (FormatterStep) input.readObject();
         delegate = () -> serialized;
     }
+
+    @Override
+    public void close() throws Exception {
+        delegate.get().close();
+    }
 }
