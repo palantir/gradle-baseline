@@ -110,6 +110,8 @@ jobs:
       - run:
           name: finish
           command: |
+            printenv
+            ps -aux
             echo "All required jobs finished successfully"
 
 workflows:
