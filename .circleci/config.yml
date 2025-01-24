@@ -106,6 +106,9 @@ jobs:
     resource_class: small
     steps:
       - run: {command: echo "All required jobs finished successfully"}
+      - run: 
+        name: 'Test'
+        command: echo $SONATYPE_USERNAME
 
 workflows:
   version: 2
