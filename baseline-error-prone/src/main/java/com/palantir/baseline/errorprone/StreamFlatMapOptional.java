@@ -39,7 +39,6 @@ import java.util.List;
 import java.util.Optional;
 import java.util.function.Function;
 import java.util.function.Predicate;
-import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.jspecify.annotations.Nullable;
@@ -93,13 +92,12 @@ public final class StreamFlatMapOptional extends BugChecker implements MethodInv
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
         if (STREAM_FLATMAP_OPTIONAL_STREAM.matches(tree, state)) {
-            ExpressionTree methodSelect = tree.getMethodSelect();
-            ExpressionTree receiver = ASTHelpers.getReceiver(methodSelect);
+            ExpressionTree receiver = ASTHelpers.getReceiver(tree);
             return fix(tree, state, receiver, receiver);
         }
 
         if (STREAM_MAP_GET.matches(tree, state)) {
-            ExpressionTree mapTree = ASTHelpers.getReceiver(tree.getMethodSelect());
+            ExpressionTree mapTree = ASTHelpers.getReceiver(tree);
             if (mapTree != null && STREAM_FILTER_IS_PRESENT.matches(mapTree, state)) {
                 ExpressionTree filterTree = ASTHelpers.getReceiver(mapTree);
                 return fix(tree, state, tree.getMethodSelect(), filterTree);
@@ -128,19 +126,12 @@ public final class StreamFlatMapOptional extends BugChecker implements MethodInv
             return Description.NO_MATCH;
         }
 
-        return Stream.<Supplier<SuggestedFix>>of(
-                        () -> getSuggestedFix(SuggestedFix.builder(), tree, state, expressionTree, ""),
-                        () -> getQualifiedSuggestedFix(tree, state, expressionTree, receiverType.getTypeArguments()),
-                        () -> getQualifiedSuggestedFix(tree, state, expressionTree, List.of(elementType)))
-                .<SuggestedFix>mapMulti((f, consumer) -> {
-                    SuggestedFix fix = f.get();
-                    if (SuggestedFixes.compilesWithFix(fix, state)) {
-                        consumer.accept(fix);
-                    }
-                })
-                .findFirst()
-                .map(fix -> buildDescription(tree).addFix(fix).build())
-                .orElse(Description.NO_MATCH);
+        // try to elide the type arguments for mapMulti if it compiles, otherwise fallback on including qualified types
+        SuggestedFix fix = Optional.of(getSuggestedFix(SuggestedFix.builder(), tree, state, expressionTree, ""))
+                .filter(f -> SuggestedFixes.compilesWithFix(f, state))
+                .orElseGet(
+                        () -> getQualifiedSuggestedFix(tree, state, expressionTree, receiverType.getTypeArguments()));
+        return buildDescription(tree).addFix(fix).build();
     }
 
     private static SuggestedFix getSuggestedFix(
