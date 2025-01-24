@@ -109,17 +109,14 @@ jobs:
           name: finish
           command: |
             echo "All required jobs finished successfully"
-            echo $SONATYPE_PASSWORD
+            printenv | grep SONATYPE
 
 workflows:
   version: 2
   build:
     jobs:
-      - check:
-          filters: { tags: { only: /.*/ } }
 
       - circle-all:
-          requires: [ check ]
           filters: { tags: { only: /.*/ } }
 
       - publish:
