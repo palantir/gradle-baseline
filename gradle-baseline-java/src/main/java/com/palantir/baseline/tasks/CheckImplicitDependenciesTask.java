@@ -87,7 +87,7 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
                 .collect(Collectors.toList());
         if (!usedButUndeclared.isEmpty()) {
             String suggestion = usedButUndeclared.stream()
-                    .map(artifact -> getSuggestionString(artifact))
+                    .map(this::getSuggestionString)
                     .sorted()
                     .collect(Collectors.joining("\n", "    dependencies {\n", "\n    }"));
             throw new ExceptionWithSuggestion(
