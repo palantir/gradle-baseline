@@ -108,8 +108,8 @@ jobs:
       - run: 
         name: 'Test'
         command: | 
-        echo "All required jobs finished successfully"
-        echo $SONATYPE_USERNAME
+          echo "All required jobs finished successfully"
+          echo $SONATYPE_USERNAME
 
 workflows:
   version: 2
