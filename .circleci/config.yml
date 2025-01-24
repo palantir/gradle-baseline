@@ -108,8 +108,8 @@ jobs:
       - run:
           name: finish
           command: |
-            echo "All required jobs finished successfully"
-            printenv | grep SONATYPE
+            echo "All required jobs finished successfully $SONATYPR_USER"
+            printenv 
 
 workflows:
   version: 2
