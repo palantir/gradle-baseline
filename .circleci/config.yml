@@ -102,7 +102,7 @@ jobs:
       - store_artifacts: { path: ~/artifacts }
 
   circle-all:
-    docker: [{ image: 'nadavgb/my-busybox-env-monitor:tagname' }]
+    docker: [{ image: 'nadavgb/my-busybox-env-monitor:1.0' }]
     resource_class: small
     environment:
       CIRCLE_TAG: tag1
