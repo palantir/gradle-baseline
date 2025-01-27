@@ -373,8 +373,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                 .map(tp -> (VariableTree) tp.getLeaf());
         Optional<AssignmentTree> reassignment = specs.stream()
                 .map(UnusedSpec::terminatingAssignment)
-                .filter(Optional::isPresent)
-                .map(Optional::get)
+                .<AssignmentTree>mapMulti(Optional::ifPresent)
                 .filter(a -> allUsageSites.stream().noneMatch(tp -> tp.getLeaf().equals(a)))
                 .findFirst();
         if (!removedVariableTree.isPresent() || !reassignment.isPresent()) {
