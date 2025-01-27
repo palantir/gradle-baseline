@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Stream.mapMulti(Optional::ifPresent)` is more efficient than `Stream.flatMap(Optional::stream)
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/2996
