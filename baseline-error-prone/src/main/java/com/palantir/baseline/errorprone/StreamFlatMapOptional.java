@@ -146,7 +146,7 @@ public final class StreamFlatMapOptional extends BugChecker implements MethodInv
             return "";
         }
         return args(receiverTypeArguments).stream()
-                .map(type -> SuggestedFixes.qualifyType(state, fix, type))
+                .map(type -> SuggestedFixes.prettyType(state, fix, type))
                 .collect(Collectors.joining(", ", "<", ">"));
     }
 
