@@ -16,11 +16,6 @@
 
 package com.palantir.baseline.errorprone;
 
-import java.util.Collection;
-import java.util.Optional;
-import java.util.Set;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import org.junit.jupiter.api.Test;
 
 class StreamFlatmapOptionalTest {
@@ -29,12 +24,8 @@ class StreamFlatmapOptionalTest {
     public void test() {
         fix().addInputLines(
                         "Test.java",
-                        "import java.util.Collection;",
-                        "import java.util.Map;",
-                        "import java.util.Optional;",
-                        "import java.util.Set;",
-                        "import java.util.stream.Collectors;",
-                        "import java.util.stream.Stream;",
+                        "import java.util.*;",
+                        "import java.util.stream.*;",
                         "public class Test {",
                         "  Stream<String> filter_empty(Stream<Optional<String>> in) {",
                         "    return in.filter(Optional::isEmpty).map(o -> o.orElse(\"\"));",
@@ -92,12 +83,8 @@ class StreamFlatmapOptionalTest {
                         "}")
                 .addOutputLines(
                         "Test.java",
-                        "import java.util.Collection;",
-                        "import java.util.Map;",
-                        "import java.util.Optional;",
-                        "import java.util.Set;",
-                        "import java.util.stream.Collectors;",
-                        "import java.util.stream.Stream;",
+                        "import java.util.*;",
+                        "import java.util.stream.*;",
                         "public class Test {",
                         "  Stream<String> filter_empty(Stream<Optional<String>> in) {",
                         "    return in.filter(Optional::isEmpty).map(o -> o.orElse(\"\"));",
@@ -160,19 +147,80 @@ class StreamFlatmapOptionalTest {
                 .doTest();
     }
 
-    private RefactoringValidator fix() {
-        return RefactoringValidator.of(StreamFlatMapOptional.class, getClass());
+    @Test
+    public void testWildcards() {
+        fix().addInputLines(
+                        "Test.java",
+                        "import java.util.*;",
+                        "import java.util.stream.*;",
+                        "public class Test {",
+                        "  Stream<? extends Number> flatMap(Stream<Optional<? extends Number>> in) {",
+                        "    return in.flatMap(Optional::stream);",
+                        "  }",
+                        "  Stream<? extends Number> map_maybe_flatMap(Stream<? extends Number> in) {",
+                        "    return in.map(Test::maybeNumber).flatMap(Optional::stream);",
+                        "  }",
+                        "  Set<? extends Number> flatMap_wildcard_producer_set(Stream<? extends Number> in) {",
+                        "    return in.map(Test::maybeNumber)",
+                        "      .<Number>flatMap(Optional::stream)",
+                        "      .collect(Collectors.toSet());",
+                        "  }",
+                        "  List<? extends Number> flatMap_wildcard_producer_list(Stream<? extends Number> in) {",
+                        "    return in.map(Test::maybeNumber)",
+                        "      .<Number>flatMap(Optional::stream)",
+                        "      .toList();",
+                        "  }",
+                        "  interface Wildcards {",
+                        "    Map<String, Set<? extends Number>> numbers();",
+                        "    private Set<? extends Number> getNumbers(Stream<String> in) {",
+                        "      return in.map(string -> Optional.ofNullable(numbers().get(string)))",
+                        "        .flatMap(Optional::stream)",
+                        "        .findFirst()",
+                        "        .orElseGet(Collections::emptySet);",
+                        "    }",
+                        "  }",
+                        "  static <T extends Number> Optional<? extends Number> maybeNumber(T number) {",
+                        "    return Optional.ofNullable(number);",
+                        "  }",
+                        "}")
+                .addOutputLines(
+                        "Test.java",
+                        "import java.util.*;",
+                        "import java.util.stream.*;",
+                        "public class Test {",
+                        "  Stream<? extends Number> flatMap(Stream<Optional<? extends Number>> in) {",
+                        "    return in.mapMulti(Optional::ifPresent);",
+                        "  }",
+                        "  Stream<? extends Number> map_maybe_flatMap(Stream<? extends Number> in) {",
+                        "    return in.map(Test::maybeNumber).mapMulti(Optional::ifPresent);",
+                        "  }",
+                        "  Set<? extends Number> flatMap_wildcard_producer_set(Stream<? extends Number> in) {",
+                        "    return in.map(Test::maybeNumber)",
+                        "      .<Number>mapMulti(Optional::ifPresent)",
+                        "      .collect(Collectors.toSet());",
+                        "  }",
+                        "  List<? extends Number> flatMap_wildcard_producer_list(Stream<? extends Number> in) {",
+                        "    return in.map(Test::maybeNumber)",
+                        "      .<Number>mapMulti(Optional::ifPresent)",
+                        "      .toList();",
+                        "  }",
+                        "  interface Wildcards {",
+                        "    Map<String, Set<? extends Number>> numbers();",
+                        "    private Set<? extends Number> getNumbers(Stream<String> in) {",
+                        "      return in.map(string -> Optional.ofNullable(numbers().get(string)))",
+                        "        .<Set<? extends Number>>mapMulti(Optional::ifPresent)",
+                        "        .findFirst()",
+                        "        .orElseGet(Collections::emptySet);",
+                        "    }",
+                        "  }",
+                        "  static <T extends Number> Optional<? extends Number> maybeNumber(T number) {",
+                        "    return Optional.ofNullable(number);",
+                        "  }",
+                        "}")
+                .doTest();
     }
 
-    static class Foo {
-        Set<Integer> chain_flatMap_maps_toSet(Stream<Optional<Collection<Optional<String>>>> in) {
-            return in.<Collection<Optional<String>>>mapMulti(Optional::ifPresent)
-                    .map(Optional::ofNullable)
-                    .<Collection<Optional<String>>>mapMulti(Optional::ifPresent)
-                    .flatMap(Collection::stream)
-                    .<String>mapMulti(Optional::ifPresent)
-                    .map(String::length)
-                    .collect(Collectors.toSet());
-        }
+    private RefactoringValidator fix() {
+        return RefactoringValidator.of(StreamFlatMapOptional.class, getClass());
     }
 }
