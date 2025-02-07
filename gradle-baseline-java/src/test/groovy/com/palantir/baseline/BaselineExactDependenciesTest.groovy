@@ -341,6 +341,9 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
 
         then:
         with('tasks', '--stacktrace').build()
+
+        where:
+        gradleVersion << GradleTestVersions.gradleVersionsForTests
     }
 
     /**
