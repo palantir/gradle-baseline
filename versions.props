@@ -45,7 +45,7 @@ org.mockito:* = 5.15.2
 com.palantir.sls-packaging:gradle-sls-packaging = 7.73.0
 com.palantir.gradle.jdkslatest:gradle-jdks-latest = 0.17.0
 
-org.codehaus.groovy:* = 3.0.21
+org.codehaus.groovy:* = 3.0.13
 
 # dependency-upgrader:OFF
 # Don't upgrade, we will remove this in a future release.
