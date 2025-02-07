@@ -44,8 +44,7 @@ org.junit.platform:* = 1.11.4
 org.mockito:* = 5.15.2
 com.palantir.sls-packaging:gradle-sls-packaging = 7.73.0
 com.palantir.gradle.jdkslatest:gradle-jdks-latest = 0.17.0
-
-org.codehaus.groovy:* = 3.0.13
+org.unbroken-dome.gradle-plugins:gradle-testsets-plugin = 4.1.0
 
 # dependency-upgrader:OFF
 # Don't upgrade, we will remove this in a future release.
@@ -53,6 +52,8 @@ org.codehaus.groovy:* = 3.0.13
 com.palantir.javaformat:gradle-palantir-java-format = 1.1.0
 # Newer spotless versions have issues resolving dependencies at configuration time
 com.diffplug.spotless:spotless-plugin-gradle = 6.6.0
+# Groovy versions must be compatible with gradle
+org.codehaus.groovy:* = 3.0.13
 # checkerframework dependencies should be limited to errorpropne and nullaway
 # requirements, upgrading prior to those often causes compilation failures.
 org.checkerframework:* = 3.48.1

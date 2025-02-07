@@ -27,10 +27,7 @@ class BaselineImmutablesTest extends IntegrationSpec {
     def setup() {
         // language=Gradle
         buildFile << '''
-            plugins {
-                id 'org.unbroken-dome.test-sets' version '4.1.0'
-            }
-            
+            apply plugin: 'org.unbroken-dome.test-sets'            
             apply plugin: 'com.palantir.baseline-immutables'
             apply plugin: 'java-library'
 

@@ -47,6 +47,7 @@ dependencies {
     }
     testRuntimeOnly 'com.palantir.sls-packaging:gradle-sls-packaging'
     testRuntimeOnly 'com.palantir.gradle.jdkslatest:gradle-jdks-latest'
+    testRuntimeOnly 'org.unbroken-dome.gradle-plugins:gradle-testsets-plugin'
 
     // necessary because of https://github.com/gradle/gradle/issues/16774
     def toolingApiBuildersJar = (project as ProjectInternal).services.get(ModuleRegistry.class)

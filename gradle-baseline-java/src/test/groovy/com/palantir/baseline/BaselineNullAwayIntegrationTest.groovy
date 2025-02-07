@@ -90,9 +90,7 @@ class BaselineNullAwayIntegrationTest extends IntegrationSpec {
     def 'Integration test tasks are not impacted by null-away'() {
         when:
         buildFile << '''
-        plugins {
-            id 'org.unbroken-dome.test-sets' version '4.1.0'
-        }
+            apply plugin: 'org.unbroken-dome.test-sets'
         '''.stripIndent(true)
         buildFile << standardBuildFile
         buildFile << '''
