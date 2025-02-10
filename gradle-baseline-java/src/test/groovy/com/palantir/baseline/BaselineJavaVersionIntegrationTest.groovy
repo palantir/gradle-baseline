@@ -29,13 +29,16 @@ import org.assertj.core.api.Assumptions
 import java.util.regex.Matcher
 import java.util.regex.Pattern
 
+import com.palantir.gradle.plugintesting.TestContentHelpers
+import com.palantir.gradle.plugintesting.GradleTestVersions
+
 /**
  * This test exercises both the root-plugin {@code BaselineJavaVersions} AND the subproject
  * specific plugin, {@code BaselineJavaVersion}.
  */
 @Unroll
 class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
-    private static final List<String> GRADLE_TEST_VERSIONS = ['8.8', GradleVersion.current().getVersion()]
+    private static final List<String> GRADLE_TEST_VERSIONS = GradleTestVersions.gradleVersionsForTests
 
     private static final int JAVA_8_BYTECODE = 52
     private static final int JAVA_11_BYTECODE = 55
@@ -44,33 +47,6 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
     private static final int NOT_ENABLE_PREVIEW_BYTECODE = 0
 
     File mainJava
-
-    // language=Gradle
-    def standardBuildFile = '''
-        buildscript {
-            repositories { mavenCentral() }
-            dependencies {
-                classpath 'com.palantir.sls-packaging:gradle-sls-packaging:7.56.0'
-                classpath 'com.palantir.gradle.jdkslatest:gradle-jdks-latest:0.13.0'
-            }
-        }
-        plugins {
-            id 'java'
-        }
-        
-        allprojects {
-            repositories {
-                mavenCentral()
-            }
-        }
-        
-        apply plugin: 'com.palantir.baseline-java-versions'
-        
-        task runMainClass(type: JavaExec) {
-            mainClass = 'Main'
-            classpath = sourceSets.main.runtimeClasspath
-        }
-    '''.stripIndent(true)
 
     def java8CompatibleCode = '''
         public class Main { 
@@ -107,11 +83,33 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         '''
 
     def setup() {
+        buildFile << TestContentHelpers.addBuildScriptBlock("mavenCentral()",
+                'com.palantir.sls-packaging:gradle-sls-packaging',
+                'com.palantir.gradle.jdkslatest:gradle-jdks-latest',
+        )
+        // language=Gradle
+        buildFile << '''
+            plugins {
+                id 'java'
+            }
+            
+            allprojects {
+                repositories {
+                    mavenCentral()
+                }
+            }
+            
+            apply plugin: 'com.palantir.baseline-java-versions'
+            
+            task runMainClass(type: JavaExec) {
+                mainClass = 'Main'
+                classpath = sourceSets.main.runtimeClasspath
+            }
+        '''.stripIndent(true)
+
         // Fork needed or build fails on circleci with "SystemInfo is not supported on this operating system."
         // Comment out locally in order to get debugging to work
         setFork(true)
-
-        buildFile << standardBuildFile
 
         mainJava = file("src/main/java/Main.java")
     }
@@ -675,6 +673,12 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
 
     def '#gradleVersionNumber: checkRuntimeClasspathCompatible is a dependency of check'() {
         fork = false
+        buildFile << '''
+        javaVersions {
+            libraryTarget = 11
+            runtime = 11
+        }
+        '''.stripIndent(true)
 
         when:
         def stdout = runTasksSuccessfully('check', '--dry-run').standardOutput

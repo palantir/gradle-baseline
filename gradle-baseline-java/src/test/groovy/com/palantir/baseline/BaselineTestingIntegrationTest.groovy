@@ -16,6 +16,7 @@
 
 package com.palantir.baseline
 
+import com.palantir.gradle.plugintesting.GradleTestVersions
 
 import nebula.test.IntegrationSpec
 import nebula.test.functional.ExecutionResult
@@ -95,19 +96,14 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         new File(projectDir, "build/reports/tests/test/classes/test.TestClass5.html").exists()
 
         where:
-        gradleVersionNumber << GradleTestVersions.VERSIONS
+        gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
     def 'runs integration tests with junit5'() {
         when:
-        buildFile << '''
-        plugins {
-            id 'org.unbroken-dome.test-sets' version '4.0.0'
-        }
-        '''.stripIndent(true)
         buildFile << standardBuildFile
         buildFile << '''
-
+        apply plugin: 'org.unbroken-dome.test-sets'
         testSets {
             integrationTest
         }
@@ -149,13 +145,9 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
 
     def 'checkJUnitDependencies ensures mixture of junit4 and 5 tests => legacy must be present'() {
         when:
-        buildFile << '''
-        plugins {
-            id 'org.unbroken-dome.test-sets' version '4.0.0'
-        }
-        '''.stripIndent(true)
         buildFile << standardBuildFile
         buildFile << '''
+        apply plugin: 'org.unbroken-dome.test-sets'
         testSets {
             integrationTest
         }
