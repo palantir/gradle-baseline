@@ -1075,7 +1075,7 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
         return visitThisOrSuper(node, input);
     }
 
-    public TransferResult<Safety, AccessPathStore<Safety>> visitThisOrSuper(
+    private TransferResult<Safety, AccessPathStore<Safety>> visitThisOrSuper(
             Node node, TransferInput<Safety, AccessPathStore<Safety>> input) {
         Type nodeType = getTypeForThisOrSuper(node.getType());
         Symbol symbol = ASTHelpers.getSymbol(node.getTree());
