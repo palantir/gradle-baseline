@@ -994,6 +994,22 @@ class IllegalSafeLoggingArgumentTest {
     }
 
     @Test
+    public void testParameterizedTypeThisSafety() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.List;",
+                        "abstract class Test<@Unsafe T> implements List<T> {",
+                        "  public void f() {",
+                        "    // BUG: Diagnostic contains: arg is 'UNSAFE' but the parameter requires 'SAFE'",
+                        "    consume(this);",
+                        "  }",
+                        "  static void consume(@Safe Object obj) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testThrowableSafeLoggable_thisGetMessageIsUnsafe() {
         helper().addSourceLines(
                         "TestThrowable.java",
