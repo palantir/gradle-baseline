@@ -959,6 +959,97 @@ class IllegalSafeLoggingArgumentTest {
     }
 
     @Test
+    public void testThrowableSafeLoggable_superGetMessageIsUnsafe() {
+        helper().addSourceLines(
+                        "TestThrowable.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.List;",
+                        "class TestThrowable extends RuntimeException implements SafeLoggable {",
+                        "  @Override",
+                        "  public String getLogMessage() {",
+                        "    // BUG: Diagnostic contains: result is 'UNSAFE' but the method is annotated 'SAFE'",
+                        "    return super.getMessage();",
+                        "  }",
+                        "  @Override",
+                        "  public List<Arg<?>> getArgs() {",
+                        "    return List.of();",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testThrowableThisSafety() {
+        helper().addSourceLines(
+                        "TestThrowable.java",
+                        "import com.palantir.logsafe.*;",
+                        "class TestThrowable extends RuntimeException {",
+                        "  public void f() {",
+                        "    // BUG: Diagnostic contains: arg is 'UNSAFE' but the parameter requires 'SAFE'",
+                        "    consume(this);",
+                        "  }",
+                        "  static void consume(@Safe Object obj) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testParameterizedTypeThisSafety() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.List;",
+                        "abstract class Test<@Unsafe T> implements List<T> {",
+                        "  public void f() {",
+                        "    // BUG: Diagnostic contains: arg is 'UNSAFE' but the parameter requires 'SAFE'",
+                        "    consume(this);",
+                        "  }",
+                        "  static void consume(@Safe Object obj) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testThrowableSafeLoggable_thisGetMessageIsUnsafe() {
+        helper().addSourceLines(
+                        "TestThrowable.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.List;",
+                        "class TestThrowable extends RuntimeException implements SafeLoggable {",
+                        "  @Override",
+                        "  public String getLogMessage() {",
+                        "    // BUG: Diagnostic contains: result is 'UNSAFE' but the method is annotated 'SAFE'",
+                        "    return this.getMessage();",
+                        "  }",
+                        "  @Override",
+                        "  public List<Arg<?>> getArgs() {",
+                        "    return List.of();",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    public void testThrowableSafeLoggable_getMessageIsUnsafe() {
+        helper().addSourceLines(
+                        "TestThrowable.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.List;",
+                        "class TestThrowable extends RuntimeException implements SafeLoggable {",
+                        "  @Override",
+                        "  public String getLogMessage() {",
+                        "    // BUG: Diagnostic contains: result is 'UNSAFE' but the method is annotated 'SAFE'",
+                        "    return getMessage();",
+                        "  }",
+                        "  @Override",
+                        "  public List<Arg<?>> getArgs() {",
+                        "    return List.of();",
+                        "  }",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testStringFormat() {
         helper().addSourceLines(
                         "Test.java",

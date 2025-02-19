@@ -49,7 +49,9 @@ import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Symbol.RecordComponent;
+import com.sun.tools.javac.code.Symbol.TypeSymbol;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
+import com.sun.tools.javac.code.Type;
 import com.sun.tools.javac.code.Type.ClassType;
 import com.sun.tools.javac.processing.JavacProcessingEnvironment;
 import java.io.Closeable;
@@ -1058,25 +1060,40 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitImplicitThis(
             ImplicitThisNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        Symbol symbol = ASTHelpers.getSymbol(node.getTree());
-        Safety safety = symbol == null ? Safety.UNKNOWN : SafetyAnnotations.getSafety(symbol.owner, state);
-        return noStoreChanges(safety, input);
+        return visitThisOrSuper(node, input);
     }
 
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitExplicitThis(
             ExplicitThisNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
-        Symbol symbol = ASTHelpers.getSymbol(node.getTree());
-        Safety safety = symbol == null ? Safety.UNKNOWN : SafetyAnnotations.getSafety(symbol.owner, state);
-        return noStoreChanges(safety, input);
+        return visitThisOrSuper(node, input);
     }
 
     @Override
     public TransferResult<Safety, AccessPathStore<Safety>> visitSuper(
             SuperNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
+        return visitThisOrSuper(node, input);
+    }
+
+    private TransferResult<Safety, AccessPathStore<Safety>> visitThisOrSuper(
+            Node node, TransferInput<Safety, AccessPathStore<Safety>> input) {
+        Type nodeType = getTypeForThisOrSuper(node.getType());
         Symbol symbol = ASTHelpers.getSymbol(node.getTree());
-        Safety safety = symbol == null ? Safety.UNKNOWN : SafetyAnnotations.getSafety(symbol.owner, state);
-        return noStoreChanges(safety, input);
+        Safety treeSymbolSafety = symbol == null ? Safety.UNKNOWN : SafetyAnnotations.getSafety(symbol.owner, state);
+        Safety typeSymbolSafety = SafetyAnnotations.getSafety(nodeType, state);
+        Safety combined = Safety.mergeAssumingUnknownIsSame(treeSymbolSafety, typeSymbolSafety);
+        return noStoreChanges(combined, input);
+    }
+
+    @Nullable
+    private static Type getTypeForThisOrSuper(TypeMirror typeMirror) {
+        if (typeMirror instanceof ClassType classType) {
+            TypeSymbol typeSymbol = classType.tsym;
+            if (typeSymbol != null) {
+                return typeSymbol.type;
+            }
+        }
+        return null;
     }
 
     @Override

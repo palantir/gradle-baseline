@@ -892,11 +892,30 @@ class SafeLoggingPropagationTest {
                         "Test.java",
                         "import com.palantir.logsafe.*;",
                         "class MyException extends RuntimeException {",
+                        "}")
+                .expectUnchanged()
+                .doTest();
+    }
+
+    @Test
+    void testThrowableGetMessageDelegatesToSuper() {
+        // We do, however, annotate the `getMessage` method if it delegates to super.
+        fix().addInputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class MyException extends RuntimeException {",
                         "  @Override public String getMessage() {",
                         "     return super.getMessage();",
                         "  }",
                         "}")
-                .expectUnchanged()
+                .addOutputLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "class MyException extends RuntimeException {",
+                        "  @Unsafe @Override public String getMessage() {",
+                        "     return super.getMessage();",
+                        "  }",
+                        "}")
                 .doTest();
     }
 
