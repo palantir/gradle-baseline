@@ -86,6 +86,90 @@ class IllegalSafeLoggingLambdaTest {
                 .doTest();
     }
 
+    //    @Test
+    //    public void testUnsafeStatementLambdaSupplier() {
+    //        helper().addSourceLines(
+    //                        "Test.java",
+    //                        "import com.palantir.logsafe.*;",
+    //                        "import java.util.function.*;",
+    //                        "class Test {",
+    //                        "  static void f(@Unsafe Object value) {",
+    //                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
+    //                        "    Supplier<@Safe Object> supplier = () -> {return value;};",
+    //                        "  }",
+    //                        "}")
+    //                .doTest();
+    //    }
+
+    @Test
+    @SuppressWarnings("MisformattedTestData")
+    public void testUnsafeExpressionLambdaSupplier() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+                        class Test {
+                          static void f(@Unsafe Object value) {
+                            // BUG: Diagnostic contains: Dangerous return type in lambda function:
+                            // expected return type is 'SAFE' but the lambda is returning 'UNSAFE'
+                            Supplier<@Safe Object> supplier = () -> value;
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
+    @SuppressWarnings("MisformattedTestData")
+    public void testFunctionalInterfaceWithVoidReturnType() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+                        class Test {
+                          static void f() {
+                            // void-returning lambdas should pass the checks fine
+                            Consumer<@Safe Object> supplier = (value) -> {};
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
+    @SuppressWarnings("MisformattedTestData")
+    public void testFunctionalInterfaceWithMultipleMethods() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.List;import java.util.function.*;
+                        @FunctionalInterface
+                        interface MultiMethod<T> {
+                            T get();
+                            default List<T> getMany() {
+                                return List.of(get());
+                            }
+                            static <T> MultiMethod<T> of(T value) {
+                                return () -> value;
+                            }
+                        }
+                        class Test {
+                          static void f(@Unsafe Object value) {
+                            // BUG: Diagnostic contains: Dangerous return type in lambda function:
+                            // expected return type is 'SAFE' but the lambda is returning 'UNSAFE'
+                            MultiMethod<@Safe Object> supplier = () -> value;
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(IllegalSafeLoggingArgument.class, getClass());
     }

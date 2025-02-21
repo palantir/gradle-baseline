@@ -17,6 +17,7 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
+import com.google.common.collect.Iterables;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
@@ -33,6 +34,7 @@ import com.sun.source.tree.AssignmentTree;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompoundAssignmentTree;
 import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.LambdaExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.NewClassTree;
@@ -53,6 +55,8 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import java.util.stream.StreamSupport;
+import javax.lang.model.element.Modifier;
 
 /**
  * Ensures that safe-logging annotated elements are handled correctly by annotated method parameters.
@@ -78,7 +82,8 @@ public final class IllegalSafeLoggingArgument extends BugChecker
                 BugChecker.MethodTreeMatcher,
                 BugChecker.VariableTreeMatcher,
                 BugChecker.NewClassTreeMatcher,
-                BugChecker.ClassTreeMatcher {
+                BugChecker.ClassTreeMatcher,
+                BugChecker.LambdaExpressionTreeMatcher {
 
     private static final String UNSAFE_ARG = "com.palantir.logsafe.UnsafeArg";
     private static final Matcher<ExpressionTree> SAFE_ARG_OF_METHOD_MATCHER = MethodMatchers.staticMethod()
@@ -426,5 +431,87 @@ public final class IllegalSafeLoggingArgument extends BugChecker
                 .setMessage(String.format(
                         "Dangerous type: annotated '%s' but ancestors declare '%s'.", directSafety, ancestorSafety))
                 .build();
+    }
+
+    @Override
+    public Description matchLambdaExpression(LambdaExpressionTree tree, VisitorState state) {
+        TreePath path = state.getPath();
+        while (path != null && !(path.getLeaf() instanceof VariableTree)) {
+            path = path.getParentPath();
+        }
+        if (path == null) {
+            // The lambda isn't directly assigned to a variable, so we don't know how to analyze it (yet)
+            // TODO(aldexis): handle other ways that a lambda can be used, e.g. returned from a method
+            return Description.NO_MATCH;
+        }
+        VariableTree variable = (VariableTree) path.getLeaf();
+        Type variableType = ASTHelpers.getType(variable);
+
+        Type returnType = getFunctionalInterfaceReturnType(variableType, state);
+        if (returnType == null) {
+            return Description.NO_MATCH;
+        }
+        Safety requiredReturnSafety = SafetyAnnotations.getSafety(returnType, state);
+
+        if (requiredReturnSafety.allowsAll()) {
+            // Short-circuit if the return type allows all values
+            return Description.NO_MATCH;
+        }
+
+        Safety resultSafety = getLambdaReturnSafety(tree, state);
+
+        if (requiredReturnSafety.allowsValueWith(resultSafety)) {
+            return Description.NO_MATCH;
+        }
+
+        return buildDescription(tree)
+                .setMessage(String.format(
+                        "Dangerous return type in lambda function: expected return type is '%s' "
+                                + "but the lambda is returning '%s'.",
+                        requiredReturnSafety, resultSafety))
+                .build();
+    }
+
+    private Type getFunctionalInterfaceReturnType(Type variableType, VisitorState state) {
+        if (variableType == null) {
+            return null;
+        }
+
+        Iterable<Symbol> methods =
+                ASTHelpers.scope(variableType.tsym.members()).getSymbols(s -> s instanceof MethodSymbol);
+        List<MethodSymbol> abstractMethods = StreamSupport.stream(methods.spliterator(), false)
+                .map(MethodSymbol.class::cast)
+                .filter(m -> m.getModifiers().contains(Modifier.ABSTRACT))
+                .toList();
+        if (abstractMethods.size() != 1) {
+            // Functional interfaces should have exactly one abstract method
+            // Return nothing when we encounter something that isn't one
+            return null;
+        }
+        MethodSymbol method = Iterables.getOnlyElement(abstractMethods);
+        Type returnType = method.getReturnType();
+
+        com.sun.tools.javac.util.List<Type> classTypeArguments =
+                variableType.tsym.asType().getTypeArguments();
+
+        for (int i = 0; i < classTypeArguments.size(); i++) {
+            // TODO: check whether this is the correct way to compare the type arguments
+            if (ASTHelpers.isSameType(classTypeArguments.get(i), returnType, state)) {
+                return variableType.getTypeArguments().get(i);
+            }
+        }
+        return returnType;
+    }
+
+    private Safety getLambdaReturnSafety(LambdaExpressionTree tree, VisitorState state) {
+        LambdaExpressionTree.BodyKind bodyKind = tree.getBodyKind();
+        switch (bodyKind) {
+            case EXPRESSION:
+                return SafetyAnalysis.of(state.withPath(new TreePath(state.getPath(), tree.getBody())));
+            case STATEMENT:
+                // TODO(aldexis): Handle statement lambdas, by getting and analyzing all the return blocks
+                return Safety.UNKNOWN;
+        }
+        throw new IllegalStateException("Unexpected BodyKind: " + bodyKind);
     }
 }
