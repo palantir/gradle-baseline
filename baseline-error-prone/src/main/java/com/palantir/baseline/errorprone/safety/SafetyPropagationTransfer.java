@@ -438,16 +438,44 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     private final Set<VarSymbol> traversed = new HashSet<>();
 
     @Override
-    public AccessPathStore<Safety> initialStore(UnderlyingAST _underlyingAst, List<LocalVariableNode> parameters) {
+    public AccessPathStore<Safety> initialStore(UnderlyingAST underlyingAst, List<LocalVariableNode> parameters) {
         if (parameters == null) {
             return AccessPathStore.empty();
         }
         AccessPathStore.Builder<Safety> result = AccessPathStore.<Safety>empty().toBuilder();
 
-        for (LocalVariableNode param : parameters) {
-            Safety declared = SafetyAnnotations.getSafety(param.getTree(), state);
-            result.setInformation(AccessPath.fromLocalVariable(param), declared);
+        if (underlyingAst.getKind() == UnderlyingAST.Kind.LAMBDA) {
+            // Special-case lambda types as the parameter annotations are not propagated in
+            //   ForwardAnalysisImpl#getParameters, which is passed as the argument here
+            LambdaExpressionTree lambda = ((UnderlyingAST.CFGLambda) underlyingAst).getLambdaTree();
+
+            // We grab the inferred type of the lambda, then the argument types of the functional interface
+            //  and match them one by one with the actual parameters
+            com.sun.tools.javac.util.List<Type> parameterTypes = state.getTypes()
+                    .findDescriptorType(ASTHelpers.getType(lambda))
+                    .getParameterTypes();
+
+            // This is expected to be true, but let's be defensive here
+            if (parameterTypes.size() == parameters.size()) {
+                for (int i = 0; i < parameters.size(); i++) {
+                    Type type = parameterTypes.get(i);
+                    LocalVariableNode param = parameters.get(i);
+
+                    // If the lambda itself has a safety annotation, which doesn't match the expected one from the
+                    //   type it is used as, combine both
+                    Safety declared = SafetyAnnotations.getSafety(param.getTree(), state);
+                    Safety safety = SafetyAnnotations.getSafety(type, state);
+                    result.setInformation(
+                            AccessPath.fromLocalVariable(param), Safety.mergeAssumingUnknownIsSame(declared, safety));
+                }
+            }
+        } else {
+            for (LocalVariableNode param : parameters) {
+                Safety declared = SafetyAnnotations.getSafety(param.getTree(), state);
+                result.setInformation(AccessPath.fromLocalVariable(param), declared);
+            }
         }
+
         return result.build();
     }
 
