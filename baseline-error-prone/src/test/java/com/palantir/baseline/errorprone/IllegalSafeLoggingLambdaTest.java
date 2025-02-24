@@ -86,23 +86,8 @@ class IllegalSafeLoggingLambdaTest {
                 .doTest();
     }
 
-    //    @Test
-    //    public void testUnsafeStatementLambdaSupplier() {
-    //        helper().addSourceLines(
-    //                        "Test.java",
-    //                        "import com.palantir.logsafe.*;",
-    //                        "import java.util.function.*;",
-    //                        "class Test {",
-    //                        "  static void f(@Unsafe Object value) {",
-    //                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE'",
-    //                        "    Supplier<@Safe Object> supplier = () -> {return value;};",
-    //                        "  }",
-    //                        "}")
-    //                .doTest();
-    //    }
-
     @Test
-    public void testUnsafeExpressionLambdaSupplier() {
+    public void testUnsafeStatementLambda() {
         helper().addSourceLines(
                         "Test.java",
                         // language=Java
@@ -112,9 +97,83 @@ class IllegalSafeLoggingLambdaTest {
 
                         class Test {
                           static void f(@Unsafe Object value) {
-                            // BUG: Diagnostic contains: Dangerous return type in lambda function:
-                            // expected return type is 'SAFE' but the lambda is returning 'UNSAFE'
+                            Supplier<@Safe Object> supplier =
+                                () -> {
+                                  // BUG: Diagnostic contains: Dangerous return value:
+                                  // result is 'UNSAFE' but the lambda expects return 'SAFE'.
+                                  return value;
+                                };
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
+    public void testUnsafeStatementLambdaMultipleReturns() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+
+                        class Test {
+                          static void f(int i, @Safe Object safeValue, @Unsafe Object unsafeValue) {
+                            Supplier<@Safe Object> supplier =
+                                () -> {
+                                  if (i == 0) {
+                                    // BUG: Diagnostic contains: Dangerous return value:
+                                    // result is 'UNSAFE' but the lambda expects return 'SAFE'.
+                                    return unsafeValue;
+                                  } else if (i > 0) {
+                                    return safeValue;
+                                  } else {
+                                    // BUG: Diagnostic contains: Dangerous return value:
+                                    // result is 'UNSAFE' but the lambda expects return 'SAFE'.
+                                    return unsafeValue;
+                                  }
+                                };
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
+    public void testUnsafeExpressionLambdaIdentityResult() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+
+                        class Test {
+                          static void f(@Unsafe Object value) {
+                            // BUG: Diagnostic contains: Dangerous return value:
+                            // result is 'UNSAFE' but the lambda expects return 'SAFE'.
                             Supplier<@Safe Object> supplier = () -> value;
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
+    public void testUnsafeExpressionLambdaExpressionResult() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+
+                        class Test {
+                          static void f(@Unsafe String value) {
+                            // BUG: Diagnostic contains: Dangerous return value:
+                            // result is 'UNSAFE' but the lambda expects return 'SAFE'.
+                            Supplier<@Safe Object> supplier = () -> value + value;
                           }
                         }
                         """)
@@ -165,8 +224,8 @@ class IllegalSafeLoggingLambdaTest {
 
                         class Test {
                           static void f(@Unsafe Object value) {
-                            // BUG: Diagnostic contains: Dangerous return type in lambda function:
-                            // expected return type is 'SAFE' but the lambda is returning 'UNSAFE'
+                            // BUG: Diagnostic contains: Dangerous return value:
+                            // result is 'UNSAFE' but the lambda expects return 'SAFE'.
                             MultiMethod<@Safe Object> supplier = () -> value;
                           }
                         }
@@ -185,8 +244,8 @@ class IllegalSafeLoggingLambdaTest {
 
                         class Test {
                           static Supplier<@Safe Object> f(@Unsafe Object value) {
-                            // BUG: Diagnostic contains: Dangerous return type in lambda function:
-                            // expected return type is 'SAFE' but the lambda is returning 'UNSAFE'
+                            // BUG: Diagnostic contains: Dangerous return value:
+                            // result is 'UNSAFE' but the lambda expects return 'SAFE'.
                             return () -> value;
                           }
                         }
@@ -205,8 +264,8 @@ class IllegalSafeLoggingLambdaTest {
 
                         class Test {
                           static void f(@Unsafe Object value) {
-                            // BUG: Diagnostic contains: Dangerous return type in lambda function:
-                            // expected return type is 'SAFE' but the lambda is returning 'UNSAFE'
+                            // BUG: Diagnostic contains: Dangerous return value:
+                            // result is 'UNSAFE' but the lambda expects return 'SAFE'.
                             fun(() -> value);
                           }
 

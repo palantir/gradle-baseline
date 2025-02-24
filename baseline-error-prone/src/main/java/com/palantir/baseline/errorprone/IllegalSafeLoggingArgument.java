@@ -17,7 +17,6 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
-import com.google.common.collect.Iterables;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
@@ -27,6 +26,7 @@ import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
+import com.google.errorprone.util.ASTHelpers.TargetType;
 import com.palantir.baseline.errorprone.safety.Safety;
 import com.palantir.baseline.errorprone.safety.SafetyAnalysis;
 import com.palantir.baseline.errorprone.safety.SafetyAnnotations;
@@ -55,8 +55,6 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
-import javax.lang.model.element.Modifier;
 
 /**
  * Ensures that safe-logging annotated elements are handled correctly by annotated method parameters.
@@ -265,11 +263,24 @@ public final class IllegalSafeLoggingArgument extends BugChecker
         while (path != null && path.getLeaf() instanceof StatementTree) {
             path = path.getParentPath();
         }
-        if (path == null || !(path.getLeaf() instanceof MethodTree)) {
+        if (path == null || !(path.getLeaf() instanceof MethodTree || path.getLeaf() instanceof LambdaExpressionTree)) {
             return Description.NO_MATCH;
         }
-        MethodTree method = (MethodTree) path.getLeaf();
+
+        if (path.getLeaf() instanceof MethodTree method) {
+            return handleMethodReturn(tree, method, state);
+        } else if (path.getLeaf() instanceof LambdaExpressionTree lambda) {
+            return handleLambdaReturn(tree, lambda, state);
+        } else {
+            // We verified just above that it should be either
+            throw new IllegalStateException(
+                    "Unexpected parent of return statement: " + state.getSourceForNode(path.getLeaf()));
+        }
+    }
+
+    private Description handleMethodReturn(ReturnTree tree, MethodTree method, VisitorState state) {
         Safety methodDeclaredSafety = SafetyAnnotations.getSafety(ASTHelpers.getSymbol(method), state);
+
         if (methodDeclaredSafety.allowsAll()) {
             // Fast path, all types are accepted, there's no reason to do further analysis.
             return Description.NO_MATCH;
@@ -283,6 +294,25 @@ public final class IllegalSafeLoggingArgument extends BugChecker
                 .setMessage(String.format(
                         "Dangerous return value: result is '%s' but the method is annotated '%s'.",
                         returnValueSafety, methodDeclaredSafety))
+                .build();
+    }
+
+    private Description handleLambdaReturn(ReturnTree tree, LambdaExpressionTree lambda, VisitorState state) {
+        Safety requiredSafety = getLambdaRequiredReturnSafety(lambda, state);
+
+        if (requiredSafety.allowsAll()) {
+            // Fast path, all types are accepted, there's no reason to do further analysis.
+            return Description.NO_MATCH;
+        }
+        Safety returnValueSafety =
+                SafetyAnalysis.of(state.withPath(new TreePath(state.getPath(), tree.getExpression())));
+        if (requiredSafety.allowsValueWith(returnValueSafety)) {
+            return Description.NO_MATCH;
+        }
+        return buildDescription(tree)
+                .setMessage(String.format(
+                        "Dangerous return value: result is '%s' but the lambda expects return '%s'.",
+                        returnValueSafety, requiredSafety))
                 .build();
     }
 
@@ -435,20 +465,23 @@ public final class IllegalSafeLoggingArgument extends BugChecker
 
     @Override
     public Description matchLambdaExpression(LambdaExpressionTree tree, VisitorState state) {
-        Type variableType = ASTHelpers.getType(tree);
-
-        Type returnType = getFunctionalInterfaceReturnType(variableType, state);
-        if (returnType == null) {
-            return Description.NO_MATCH;
-        }
-        Safety requiredReturnSafety = SafetyAnnotations.getSafety(returnType, state);
+        Safety requiredReturnSafety = getLambdaRequiredReturnSafety(tree, state);
 
         if (requiredReturnSafety.allowsAll()) {
             // Short-circuit if the return type allows all values
             return Description.NO_MATCH;
         }
 
-        Safety resultSafety = getLambdaReturnSafety(tree, state);
+        Safety resultSafety = Safety.UNKNOWN;
+        switch (tree.getBodyKind()) {
+            case EXPRESSION:
+                resultSafety = SafetyAnalysis.of(state.withPath(new TreePath(state.getPath(), tree.getBody())));
+                break;
+            case STATEMENT:
+                // Shortcut - statement lambdas get their return type checked in the return statement matcher
+                // This also allows us to indicate which return statement is bad (if any) rather than the lambda itself
+                return Description.NO_MATCH;
+        }
 
         if (requiredReturnSafety.allowsValueWith(resultSafety)) {
             return Description.NO_MATCH;
@@ -456,52 +489,16 @@ public final class IllegalSafeLoggingArgument extends BugChecker
 
         return buildDescription(tree)
                 .setMessage(String.format(
-                        "Dangerous return type in lambda function: expected return type is '%s' "
-                                + "but the lambda is returning '%s'.",
-                        requiredReturnSafety, resultSafety))
+                        "Dangerous return value: result is '%s' but the lambda expects return '%s'.",
+                        resultSafety, requiredReturnSafety))
                 .build();
     }
 
-    private Type getFunctionalInterfaceReturnType(Type variableType, VisitorState state) {
-        if (variableType == null) {
-            return null;
+    private Safety getLambdaRequiredReturnSafety(LambdaExpressionTree tree, VisitorState state) {
+        TargetType returnType = ASTHelpers.targetType(state.withPath(new TreePath(state.getPath(), tree)));
+        if (returnType == null) {
+            return Safety.UNKNOWN;
         }
-
-        Iterable<Symbol> methods =
-                ASTHelpers.scope(variableType.tsym.members()).getSymbols(s -> s instanceof MethodSymbol);
-        List<MethodSymbol> abstractMethods = StreamSupport.stream(methods.spliterator(), false)
-                .map(MethodSymbol.class::cast)
-                .filter(m -> m.getModifiers().contains(Modifier.ABSTRACT))
-                .toList();
-        if (abstractMethods.size() != 1) {
-            // Functional interfaces should have exactly one abstract method
-            // Return nothing when we encounter something that isn't one
-            return null;
-        }
-        MethodSymbol method = Iterables.getOnlyElement(abstractMethods);
-        Type returnType = method.getReturnType();
-
-        com.sun.tools.javac.util.List<Type> classTypeArguments =
-                variableType.tsym.asType().getTypeArguments();
-
-        for (int i = 0; i < classTypeArguments.size(); i++) {
-            // TODO: check whether this is the correct way to compare the type arguments
-            if (ASTHelpers.isSameType(classTypeArguments.get(i), returnType, state)) {
-                return variableType.getTypeArguments().get(i);
-            }
-        }
-        return returnType;
-    }
-
-    private Safety getLambdaReturnSafety(LambdaExpressionTree tree, VisitorState state) {
-        LambdaExpressionTree.BodyKind bodyKind = tree.getBodyKind();
-        switch (bodyKind) {
-            case EXPRESSION:
-                return SafetyAnalysis.of(state.withPath(new TreePath(state.getPath(), tree.getBody())));
-            case STATEMENT:
-                // TODO(aldexis): Handle statement lambdas, by getting and analyzing all the return blocks
-                return Safety.UNKNOWN;
-        }
-        throw new IllegalStateException("Unexpected BodyKind: " + bodyKind);
+        return SafetyAnnotations.getSafety(returnType.type(), state);
     }
 }
