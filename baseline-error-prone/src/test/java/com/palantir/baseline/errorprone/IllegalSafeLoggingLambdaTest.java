@@ -356,13 +356,19 @@ class IllegalSafeLoggingLambdaTest {
     void testLambdaConsumesSafetyAnnotatedType_expression() {
         helper().addSourceLines(
                         "Test.java",
-                        "import com.palantir.logsafe.*;",
-                        "import java.util.function.*;",
-                        "class Test {",
-                        "  // BUG: Diagnostic contains: Dangerous",
-                        "  Consumer<@Unsafe String> func = in -> fun(in);",
-                        "  void fun(@Safe Object ob) {}",
-                        "}")
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+
+                        class Test {
+                          // BUG: Diagnostic contains: Dangerous argument value:
+                          // arg is 'UNSAFE' but the parameter requires 'SAFE'.
+                          Consumer<@Unsafe String> func = in -> fun(in);
+
+                          void fun(@Safe Object ob) {}
+                        }
+                        """)
                 .doTest();
     }
 
@@ -370,13 +376,22 @@ class IllegalSafeLoggingLambdaTest {
     void testLambdaConsumesSafetyAnnotatedType_statement() {
         helper().addSourceLines(
                         "Test.java",
-                        "import com.palantir.logsafe.*;",
-                        "import java.util.function.*;",
-                        "class Test {",
-                        "  // BUG: Diagnostic contains: Dangerous",
-                        "  Consumer<@Unsafe String> func = in -> { fun(in); };",
-                        "  void fun(@Safe Object ob) {}",
-                        "}")
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+
+                        class Test {
+                          Consumer<@Unsafe String> func =
+                              in -> {
+                                // BUG: Diagnostic contains: Dangerous argument value:
+                                // arg is 'UNSAFE' but the parameter requires 'SAFE'.
+                                fun(in);
+                              };
+
+                          void fun(@Safe Object ob) {}
+                        }
+                        """)
                 .doTest();
     }
 
