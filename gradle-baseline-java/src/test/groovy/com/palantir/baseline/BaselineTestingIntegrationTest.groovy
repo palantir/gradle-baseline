@@ -17,13 +17,13 @@
 package com.palantir.baseline
 
 import com.palantir.gradle.plugintesting.GradleTestVersions
-
 import nebula.test.IntegrationSpec
 import nebula.test.functional.ExecutionResult
 import spock.lang.Unroll
 
 @Unroll
 class BaselineTestingIntegrationTest extends IntegrationSpec {
+
     def standardBuildFile = '''
         plugins {
             id 'java-library'
@@ -35,8 +35,15 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
             mavenCentral()
         }
         
-        dependencies {
-            testImplementation 'junit:junit:4.12'
+        configurations.all {
+            resolutionStrategy {
+                force 'com.netflix.nebula:nebula-test:10.2.0'
+                force 'junit:junit:4.13.2'
+                force 'net.jqwik:jqwik:1.9.2'
+                force 'org.junit.jupiter:junit-jupiter:5.12.0'
+                force 'org.junit.platform:junit-platform-launcher:1.12.0'
+                force 'org.junit.vintage:junit-vintage-engine:5.12.0'
+            }
         }
     '''.stripIndent(true)
 
@@ -45,7 +52,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         
         import org.junit.Test;
         
-        public class TestClass4 { 
+        public class JUnit4Test { 
             @Test
             public void test() {}
         }
@@ -56,7 +63,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         
         import org.junit.jupiter.api.Test;
         
-        public class TestClass5 { 
+        public class JUnit5Test { 
             @Test
             public void test() {}
         }
@@ -68,66 +75,106 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         import net.jqwik.api.Property;
         import net.jqwik.api.ForAll;
         
-        class TestClass6 { 
+        class JqwikTest { 
             @Property
             void test(@ForAll byte value) {}
         }
         '''.stripIndent(true)
 
-    def '#gradleVersionNumber: capable of running both junit4 and junit5 tests'() {
+    def '#gradleVersionNumber: runs JUnit4 tests'() {
         when:
         gradleVersion = gradleVersionNumber
 
         buildFile << standardBuildFile
         buildFile << '''
         dependencies {
-            testImplementation "org.junit.jupiter:junit-jupiter:5.4.2"
-            testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.4.2") {
-                because 'allows JUnit 3 and JUnit 4 tests to run\'
-            }
+            testImplementation 'junit:junit'
+
+            testRuntimeOnly 'org.junit.vintage:junit-vintage-engine'
         }
         '''.stripIndent(true)
-        file('src/test/java/test/TestClass4.java') << junit4Test
-        file('src/test/java/test/TestClass5.java') << junit5Test
+        file('src/test/java/test/JUnit4Test.java') << junit4Test
 
         then:
-        runTasksSuccessfully('test')
-        new File(projectDir, "build/reports/tests/test/classes/test.TestClass4.html").exists()
-        new File(projectDir, "build/reports/tests/test/classes/test.TestClass5.html").exists()
+        ExecutionResult result = runTasksSuccessfully('test')
+        result.wasExecuted('checkJUnitDependencies')
+        fileExists("build/reports/tests/test/classes/test.JUnit4Test.html")
 
         where:
         gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
-    def 'runs integration tests with junit5'() {
+    def '#gradleVersionNumber: runs JUnit5 tests'() {
         when:
+        gradleVersion = gradleVersionNumber
+
         buildFile << standardBuildFile
-        buildFile << '''
-        apply plugin: 'org.unbroken-dome.test-sets'
-        testSets {
-            integrationTest
-        }
-        
-        dependencies {
-            integrationTestImplementation "org.junit.jupiter:junit-jupiter:5.4.2"
-        }
-        '''.stripIndent(true)
-        file('src/integrationTest/java/test/TestClass5.java') << junit5Test
+        file('src/test/java/test/JUnit5Test.java') << junit5Test
 
         then:
-        // Explicitly testing broken state that needs fixing before gradle 8
-        runTasksSuccessfully('-DignoreDeprecations=true', 'integrationTest')
-        fileExists("build/reports/tests/integrationTest/classes/test.TestClass5.html")
+        ExecutionResult result = runTasksSuccessfully('test')
+        result.wasExecuted('checkJUnitDependencies')
+        fileExists("build/reports/tests/test/classes/test.JUnit5Test.html")
+
+        where:
+        gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
-    
-    def 'runs nebula-test version 10+ tests that require junit platform'() {
+
+    def '#gradleVersionNumber: runs both JUnit4 and Junit5 tests'() {
         when:
+        gradleVersion = gradleVersionNumber
+
         buildFile << standardBuildFile
-        
+        buildFile << '''
+        dependencies {
+            testImplementation 'junit:junit'
+
+            testRuntimeOnly 'org.junit.vintage:junit-vintage-engine'
+        }
+        '''.stripIndent(true)
+        file('src/test/java/test/JUnit4Test.java') << junit4Test
+        file('src/test/java/test/JUnit5Test.java') << junit5Test
+
+        then:
+        ExecutionResult result = runTasksSuccessfully('test')
+        result.wasExecuted('checkJUnitDependencies')
+        fileExists("build/reports/tests/test/classes/test.JUnit4Test.html")
+        fileExists("build/reports/tests/test/classes/test.JUnit5Test.html")
+
+        where:
+        gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
+    }
+
+    def '#gradleVersionNumber: runs Jqwik tests'() {
+        when:
+        gradleVersion = gradleVersionNumber
+
+        buildFile << standardBuildFile
+        buildFile << '''
+        dependencies {
+            testImplementation 'net.jqwik:jqwik'
+        }
+        '''.stripIndent(true)
+        file('src/test/java/test/JqwikTest.java') << jqwikTest
+
+        then:
+        ExecutionResult result = runTasksSuccessfully('test')
+        result.wasExecuted('checkJUnitDependencies')
+        fileExists("build/reports/tests/test/classes/test.JqwikTest.html")
+
+        where:
+        gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
+    }
+
+    def '#gradleVersionNumber: runs Nebula tests'() {
+        when:
+        gradleVersion = gradleVersionNumber
+
+        buildFile << standardBuildFile
         buildFile << '''
             apply plugin: 'groovy'
             dependencies {
-                testImplementation 'com.netflix.nebula:nebula-test:10.2.0'
+                testImplementation 'com.netflix.nebula:nebula-test'
             }
         '''.stripIndent(true)
 
@@ -139,126 +186,116 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         '''.stripIndent(true)
 
         then:
-        // Explicitly testing broken state that needs fixing before gradle 8
-        runTasksSuccessfully('-DignoreDeprecations=true', 'test')
+        ExecutionResult result = runTasksSuccessfully('test')
+        result.wasExecuted('checkJUnitDependencies')
+
+        where:
+        gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
-    def 'checkJUnitDependencies ensures mixture of junit4 and 5 tests => legacy must be present'() {
+    def '#gradleVersionNumber: runs test-sets tests'() {
         when:
+        gradleVersion = gradleVersionNumber
+
         buildFile << standardBuildFile
         buildFile << '''
         apply plugin: 'org.unbroken-dome.test-sets'
         testSets {
             integrationTest
         }
-
-        dependencies {
-            integrationTestImplementation "org.junit.jupiter:junit-jupiter:5.4.2"
-        }
         '''.stripIndent(true)
-        file('src/integrationTest/java/test/TestClass2.java') << junit4Test
-        file('src/integrationTest/java/test/TestClass5.java') << junit5Test
+        file('src/integrationTest/java/test/JUnit5Test.java') << junit5Test
+
+        then:
+        ExecutionResult result = runTasksSuccessfully('integrationTest')
+        result.wasExecuted('checkJUnitDependencies')
+        fileExists("build/reports/tests/integrationTest/classes/test.JUnit5Test.html")
+
+        where:
+        gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
+    }
+
+    def '#gradleVersionNumber: checkJUnitDependencies => JUnit4 without junit-vintage-engine'() {
+        when:
+        gradleVersion = gradleVersionNumber
+
+        buildFile << standardBuildFile
+        file('src/test/java/test/JUnit4Test.java') << junit4Test
 
         then:
         ExecutionResult result = runTasksWithFailure('checkJUnitDependencies')
-        result.failure.cause.cause.message.contains 'Some tests still use JUnit4, but Gradle has been set to use JUnit Platform'
+        result.failure.cause.cause.message.contains 'Some tests use JUnit4, but the \'test\' task is not using the JUnit Vintage engine.'
+
+        where:
+        gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
-    def 'checkJUnitDependencies ensures mixture of junit4 and 5 tests => new must be present'() {
+    def '#gradleVersionNumber: checkJUnitDependencies => JUnit5 without junit-jupiter'() {
         when:
+        gradleVersion = gradleVersionNumber
+
         buildFile << standardBuildFile
+        // The junit-jupiter dependency is added automatically by the jvm-test-suite plugin, so it is practically
+        // impossible for junit-jupiter to be absent. We manually exclude it here in order to test this case.
         buildFile << '''
-        dependencies {
-            testImplementation "junit:junit:4.12"
+        configurations {
+            testRuntimeClasspath.exclude group: 'org.junit.jupiter', module: 'junit-jupiter'
         }
         '''.stripIndent(true)
-        file('src/test/java/test/TestClass2.java') << junit4Test
-        file('src/test/java/test/TestClass5.java') << junit5Test
+        file('src/test/java/test/JUnit5Test.java') << junit5Test
 
         then:
         ExecutionResult result = runTasksWithFailure('checkJUnitDependencies')
-        result.failure.cause.cause.message.contains 'Some tests mention JUnit5, but the \'test\' task does not have useJUnitPlatform() enabled'
+        result.failure.cause.cause.message.contains 'Some tests use JUnit5, but the \'test\' task is not using the JUnit Jupiter engine.'
+
+        where:
+        gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
-    def 'checkJUnitDependencies ensures nebula test => vintage must be present'() {
+    def '#gradleVersionNumber: checkJUnitDependencies => Jqwik without jqwik-engine'() {
         when:
+        gradleVersion = gradleVersionNumber
+
         buildFile << standardBuildFile
+        // jqwik depends on jqwik-engine, so it is practically impossible for jqwik-engine to be absent. We manually exclude it
+        // here in order to test this case.
         buildFile << '''
-        apply plugin: 'groovy'
-        dependencies {
-            testImplementation "org.junit.jupiter:junit-jupiter:5.4.2"
-            testImplementation 'com.netflix.nebula:nebula-test:7.3.0'
+        dependencies { 
+            testImplementation 'net.jqwik:jqwik'
+        }
+        
+        configurations {
+            testRuntimeClasspath.exclude group: 'net.jqwik', module: 'jqwik-engine'
         }
         '''.stripIndent(true)
+        file('src/test/java/test/JqwikTest.java') << jqwikTest
 
         then:
         ExecutionResult result = runTasksWithFailure('checkJUnitDependencies')
-        result.failure.cause.cause.message.contains 'Tests may be silently not running! Spock 1.x dependency detected'
+        result.failure.cause.cause.message.contains 'Some tests use Jqwik, but the \'test\' task is not using the Jqwik engine.'
+
+        where:
+        gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
-    def 'runs jqwik tests'() {
+    def '#gradleVersionNumber: checkJUnitDependencies => run as part of check'() {
         when:
+        gradleVersion = gradleVersionNumber
+
         buildFile << standardBuildFile
-        buildFile << '''
-        tasks.withType(Test) {
-            useJUnitPlatform {
-                includeEngines 'jqwik', 'junit-jupiter'
-            }
-        }
-        dependencies {
-            testImplementation "org.junit.jupiter:junit-jupiter:5.4.2"
-            testImplementation "net.jqwik:jqwik:1.5.3"
-        }
-        '''.stripIndent(true)
-        file('src/test/java/test/TestClass6.java') << jqwikTest
 
         then:
-        runTasksSuccessfully('checkJUnitDependencies')
-        runTasksSuccessfully('test')
-        new File(projectDir, "build/reports/tests/test/classes/test.TestClass6.html").exists()
-    }
+        ExecutionResult result = runTasksSuccessfully('check')
+        result.wasExecuted('checkJUnitDependencies')
 
-    def 'checkJUnitDependencies fails when jqwik engine is not configured'() {
-        when:
-        buildFile << standardBuildFile
-        buildFile << '''
-        dependencies {
-            testImplementation "org.junit.jupiter:junit-jupiter:5.4.2"
-            testImplementation "net.jqwik:jqwik:1.5.3"
-        }
-        '''.stripIndent(true)
-        file('src/test/java/test/TestClass6.java') << jqwikTest
-
-        then:
-        ExecutionResult result = runTasksWithFailure('checkJUnitDependencies')
-        result.failure.cause.cause.message.contains 'task does not have the jqwik engine enabled'
-    }
-
-    def 'checkJUnitDependencies fails when jqwik engine is not on the classpath'() {
-        when:
-        buildFile << standardBuildFile
-        buildFile << '''
-        tasks.withType(Test) {
-            useJUnitPlatform {
-                includeEngines 'jqwik', 'junit-jupiter'
-            }
-        }
-        dependencies {
-            testImplementation "org.junit.jupiter:junit-jupiter:5.4.2"
-            testImplementation "net.jqwik:jqwik-api:1.5.3"
-        }
-        '''.stripIndent(true)
-        file('src/test/java/test/TestClass6.java') << jqwikTest
-
-        then:
-        ExecutionResult result = runTasksWithFailure('checkJUnitDependencies')
-        result.failure.cause.cause.message.contains 'task does not depend on the jqwik engine'
+        where:
+        gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
     def 'running -Drecreate=true will re-run tests even if no code changes'() {
         when:
         buildFile << standardBuildFile
-        file('src/test/java/test/TestClass4.java') << junit4Test
+        file('src/test/java/test/JUnit5Test.java') << junit5Test
 
         then:
         def result = runTasksSuccessfully('test')
