@@ -275,6 +275,31 @@ class IllegalSafeLoggingLambdaTest {
                 .doTest();
     }
 
+    @Test
+    public void testUnsafeOptionalLambdaReturn() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+                        import java.util.*;
+
+                        interface MaybeSupplier<T> {
+                          Optional<T> get();
+                        }
+
+                        class Test {
+                          static MaybeSupplier<@Safe Object> f(@Unsafe Object value) {
+                            // BUG: Diagnostic contains: Dangerous return value:
+                            // result is 'UNSAFE' but the lambda expects return 'SAFE'.
+                            return () -> Optional.of(value);
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(IllegalSafeLoggingArgument.class, getClass());
     }
