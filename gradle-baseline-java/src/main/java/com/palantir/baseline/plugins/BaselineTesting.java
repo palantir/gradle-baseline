@@ -30,6 +30,8 @@ import org.gradle.api.Task;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.result.ResolvedComponentResult;
 import org.gradle.api.plugins.JavaPluginExtension;
+import org.gradle.api.plugins.JvmTestSuitePlugin;
+import org.gradle.api.plugins.jvm.JvmTestSuite;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
@@ -37,6 +39,7 @@ import org.gradle.api.tasks.testing.Test;
 import org.gradle.api.tasks.testing.TestFrameworkOptions;
 import org.gradle.api.tasks.testing.junitplatform.JUnitPlatformOptions;
 import org.gradle.api.tasks.testing.logging.TestLogEvent;
+import org.gradle.testing.base.TestingExtension;
 import org.gradle.util.GradleVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -64,7 +67,7 @@ public final class BaselineTesting implements Plugin<Project> {
             }
         });
 
-        project.getPluginManager().withPlugin("java-base", unusedPlugin -> {
+        project.getPluginManager().withPlugin("java", unusedPlugin -> {
             TaskProvider<CheckJUnitDependencies> checkJUnitDependencies =
                     project.getTasks().register("checkJUnitDependencies", CheckJUnitDependencies.class);
 
@@ -82,7 +85,14 @@ public final class BaselineTesting implements Plugin<Project> {
                                 BaselineTesting::requiresJunitPlatform,
                                 () -> fixSourceSet(project, sourceSet));
                     });
-        });
+
+            project.getExtensions()
+                    .getByType(TestingExtension.class)
+                    .getSuites()
+                    .named(JvmTestSuitePlugin.DEFAULT_TEST_SUITE_NAME, JvmTestSuite.class, testSuite -> {
+                        testSuite.useJUnitJupiter();
+                    });
+                });
     }
 
     private void fixSourceSet(Project project, SourceSet ss) {
