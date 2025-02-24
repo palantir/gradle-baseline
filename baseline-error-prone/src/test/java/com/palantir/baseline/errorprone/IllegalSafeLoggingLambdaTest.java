@@ -315,8 +315,38 @@ class IllegalSafeLoggingLambdaTest {
                             // result is 'UNSAFE' but the lambda expects return 'SAFE'.
                             Function<@Unsafe String, @Safe String> func = in -> in;
                           }
+                        }
+                        """)
+                .doTest();
+    }
 
-                          static void fun(Supplier<@Safe Object> in) {}
+    @Test
+    void testFunctionalInterfaceSafeType() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+
+                        interface F<T, U, V> {
+                          V apply(T t, U u);
+                        }
+
+                        class Test {
+                          static void f(@Unsafe Object value) {
+                            F<@Unsafe String, @Safe String, @Safe String> func =
+                                (s1, s2) -> {
+                                  if (s1 == null) {
+                                    // This is safe
+                                    return s2;
+                                  } else {
+                                    // BUG: Diagnostic contains: Dangerous return value:
+                                    // result is 'UNSAFE' but the lambda expects return 'SAFE'.
+                                    return s1;
+                                  }
+                                };
+                          }
                         }
                         """)
                 .doTest();
