@@ -35,6 +35,7 @@ import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompoundAssignmentTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.LambdaExpressionTree;
+import com.sun.source.tree.MemberReferenceTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.NewClassTree;
@@ -81,7 +82,8 @@ public final class IllegalSafeLoggingArgument extends BugChecker
                 BugChecker.VariableTreeMatcher,
                 BugChecker.NewClassTreeMatcher,
                 BugChecker.ClassTreeMatcher,
-                BugChecker.LambdaExpressionTreeMatcher {
+                BugChecker.LambdaExpressionTreeMatcher,
+                BugChecker.MemberReferenceTreeMatcher {
 
     private static final String UNSAFE_ARG = "com.palantir.logsafe.UnsafeArg";
     private static final Matcher<ExpressionTree> SAFE_ARG_OF_METHOD_MATCHER = MethodMatchers.staticMethod()
@@ -496,5 +498,60 @@ public final class IllegalSafeLoggingArgument extends BugChecker
             return Safety.UNKNOWN;
         }
         return SafetyAnnotations.getSafety(returnType.type(), state);
+    }
+
+    @Override
+    public Description matchMemberReference(MemberReferenceTree tree, VisitorState state) {
+        Type expectedReferenceType = state.getTypes().findDescriptorType(ASTHelpers.getType(tree));
+        // The reference will be used as the expected type. This means:
+        //   * the safety of the return type of the expected must be "lower" than the actual safety of the reference
+        //   * the safety of the arguments of the expected must be "higher" than the actual safety of the reference
+        // i.e. "Supplier<@Safe String> f = this::method" shouldn't be allowed, when method returns unsafe
+        // Similarly, "@Consumer<@Unsafe String> f = this::method" shouldn't be allowed, when method expects to take a
+        //   safe argument (since it might log it)
+
+        Safety expectedReturnTypeSafety = SafetyAnnotations.getSafety(expectedReferenceType.getReturnType(), state);
+
+        // TODO: test method combined safety (super methods, class return type, etc)
+        MethodSymbol methodSymbol = ASTHelpers.getSymbol(tree);
+        Safety referenceReturnTypeSafety = Safety.mergeAssumingUnknownIsSame(
+                SafetyAnnotations.getDirectSafety(methodSymbol, state),
+                SafetyAnnotations.getSafety(methodSymbol.getReturnType(), state));
+
+        if (!expectedReturnTypeSafety.allowsValueWith(referenceReturnTypeSafety)) {
+            return buildDescription(tree)
+                    .setMessage(String.format(
+                            "Dangerous method reference: expected return type '%s' but the reference returns '%s'.",
+                            expectedReturnTypeSafety, referenceReturnTypeSafety))
+                    .build();
+        }
+
+        if (methodSymbol.getParameters().size()
+                != expectedReferenceType.getParameterTypes().size()) {
+            // This is unexpected, as this should pass compilation - we don't know how to handle it, so just ignore
+            return Description.NO_MATCH;
+        }
+
+        // TODO: test multiple params
+        for (int i = 0; i < methodSymbol.getParameters().size(); i++) {
+            Type expectedParameterType =
+                    expectedReferenceType.getParameterTypes().get(i);
+            Safety expectedParameterSafety = SafetyAnnotations.getSafety(expectedParameterType, state);
+
+            VarSymbol parameter = methodSymbol.getParameters().get(i);
+            Type referenceParameterType = parameter.type;
+            Safety referenceParameterSafety = SafetyAnnotations.getSafety(referenceParameterType, state);
+
+            if (!referenceParameterSafety.allowsValueWith(expectedParameterSafety)) {
+                state.reportMatch(buildDescription(tree)
+                        .setMessage(String.format(
+                                "Dangerous method reference: method reference expects argument %d with safety '%s', "
+                                        + "but will be passed '%s'",
+                                i, referenceParameterSafety, expectedParameterSafety))
+                        .build());
+            }
+        }
+
+        return Description.NO_MATCH;
     }
 }

@@ -395,6 +395,49 @@ class IllegalSafeLoggingLambdaTest {
                 .doTest();
     }
 
+    @Test
+    void testLambdaConsumesSafetyAnnotatedType_reference() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+
+                        class Test {
+                          // BUG: Diagnostic contains: Dangerous method reference:
+                          // method reference expects argument 0 with safety 'SAFE', but will be passed 'UNSAFE'
+                          Consumer<@Unsafe String> func = this::fun;
+
+                          void fun(@Safe Object ob) {}
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
+    void testLambdaProducesSafetyAnnotatedType_reference() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+
+                        class Test {
+                          // BUG: Diagnostic contains: Dangerous method reference:
+                          // expected return type 'SAFE' but the reference returns 'UNSAFE'.
+                          Supplier<@Safe String> func = this::fun;
+
+                          @Unsafe
+                          String fun() {
+                            return "unsafe";
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(IllegalSafeLoggingArgument.class, getClass());
     }
