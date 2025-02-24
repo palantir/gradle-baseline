@@ -435,17 +435,7 @@ public final class IllegalSafeLoggingArgument extends BugChecker
 
     @Override
     public Description matchLambdaExpression(LambdaExpressionTree tree, VisitorState state) {
-        TreePath path = state.getPath();
-        while (path != null && !(path.getLeaf() instanceof VariableTree)) {
-            path = path.getParentPath();
-        }
-        if (path == null) {
-            // The lambda isn't directly assigned to a variable, so we don't know how to analyze it (yet)
-            // TODO(aldexis): handle other ways that a lambda can be used, e.g. returned from a method
-            return Description.NO_MATCH;
-        }
-        VariableTree variable = (VariableTree) path.getLeaf();
-        Type variableType = ASTHelpers.getType(variable);
+        Type variableType = ASTHelpers.getType(tree);
 
         Type returnType = getFunctionalInterfaceReturnType(variableType, state);
         if (returnType == null) {
