@@ -300,6 +300,101 @@ class IllegalSafeLoggingLambdaTest {
                 .doTest();
     }
 
+    @Test
+    void testFunctionSafeType() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+
+                        class Test {
+                          static void f(@Unsafe Object value) {
+                            // BUG: Diagnostic contains: Dangerous return value:
+                            // result is 'UNSAFE' but the lambda expects return 'SAFE'.
+                            Function<@Unsafe String, @Safe String> func = in -> in;
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
+    void testFunctionalInterfaceSafeType() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+
+                        interface F<T, U, V> {
+                          V apply(T t, U u);
+                        }
+
+                        class Test {
+                          static void f(@Unsafe Object value) {
+                            F<@Unsafe String, @Safe String, @Safe String> func =
+                                (s1, s2) -> {
+                                  if (s1 == null) {
+                                    // This is safe
+                                    return s2;
+                                  } else {
+                                    // BUG: Diagnostic contains: Dangerous return value:
+                                    // result is 'UNSAFE' but the lambda expects return 'SAFE'.
+                                    return s1;
+                                  }
+                                };
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
+    void testLambdaConsumesSafetyAnnotatedType_expression() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+
+                        class Test {
+                          // BUG: Diagnostic contains: Dangerous argument value:
+                          // arg is 'UNSAFE' but the parameter requires 'SAFE'.
+                          Consumer<@Unsafe String> func = in -> fun(in);
+
+                          void fun(@Safe Object ob) {}
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
+    void testLambdaConsumesSafetyAnnotatedType_statement() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+
+                        class Test {
+                          Consumer<@Unsafe String> func =
+                              in -> {
+                                // BUG: Diagnostic contains: Dangerous argument value:
+                                // arg is 'UNSAFE' but the parameter requires 'SAFE'.
+                                fun(in);
+                              };
+
+                          void fun(@Safe Object ob) {}
+                        }
+                        """)
+                .doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(IllegalSafeLoggingArgument.class, getClass());
     }
