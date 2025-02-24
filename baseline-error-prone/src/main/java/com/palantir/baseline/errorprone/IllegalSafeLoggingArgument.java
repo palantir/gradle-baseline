@@ -26,6 +26,7 @@ import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
+import com.google.errorprone.util.ASTHelpers.TargetType;
 import com.palantir.baseline.errorprone.safety.Safety;
 import com.palantir.baseline.errorprone.safety.SafetyAnalysis;
 import com.palantir.baseline.errorprone.safety.SafetyAnnotations;
@@ -33,6 +34,7 @@ import com.sun.source.tree.AssignmentTree;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompoundAssignmentTree;
 import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.LambdaExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.NewClassTree;
@@ -78,7 +80,8 @@ public final class IllegalSafeLoggingArgument extends BugChecker
                 BugChecker.MethodTreeMatcher,
                 BugChecker.VariableTreeMatcher,
                 BugChecker.NewClassTreeMatcher,
-                BugChecker.ClassTreeMatcher {
+                BugChecker.ClassTreeMatcher,
+                BugChecker.LambdaExpressionTreeMatcher {
 
     private static final String UNSAFE_ARG = "com.palantir.logsafe.UnsafeArg";
     private static final Matcher<ExpressionTree> SAFE_ARG_OF_METHOD_MATCHER = MethodMatchers.staticMethod()
@@ -260,11 +263,20 @@ public final class IllegalSafeLoggingArgument extends BugChecker
         while (path != null && path.getLeaf() instanceof StatementTree) {
             path = path.getParentPath();
         }
-        if (path == null || !(path.getLeaf() instanceof MethodTree)) {
-            return Description.NO_MATCH;
+        if (path != null) {
+            if (path.getLeaf() instanceof MethodTree method) {
+                return handleMethodReturn(tree, method, state);
+            } else if (path.getLeaf() instanceof LambdaExpressionTree lambda) {
+                return handleLambdaReturn(tree, lambda, state);
+            }
         }
-        MethodTree method = (MethodTree) path.getLeaf();
+
+        return Description.NO_MATCH;
+    }
+
+    private Description handleMethodReturn(ReturnTree tree, MethodTree method, VisitorState state) {
         Safety methodDeclaredSafety = SafetyAnnotations.getSafety(ASTHelpers.getSymbol(method), state);
+
         if (methodDeclaredSafety.allowsAll()) {
             // Fast path, all types are accepted, there's no reason to do further analysis.
             return Description.NO_MATCH;
@@ -278,6 +290,25 @@ public final class IllegalSafeLoggingArgument extends BugChecker
                 .setMessage(String.format(
                         "Dangerous return value: result is '%s' but the method is annotated '%s'.",
                         returnValueSafety, methodDeclaredSafety))
+                .build();
+    }
+
+    private Description handleLambdaReturn(ReturnTree tree, LambdaExpressionTree lambda, VisitorState state) {
+        Safety requiredSafety = getLambdaRequiredReturnSafety(lambda, state);
+
+        if (requiredSafety.allowsAll()) {
+            // Fast path, all types are accepted, there's no reason to do further analysis.
+            return Description.NO_MATCH;
+        }
+        Safety returnValueSafety =
+                SafetyAnalysis.of(state.withPath(new TreePath(state.getPath(), tree.getExpression())));
+        if (requiredSafety.allowsValueWith(returnValueSafety)) {
+            return Description.NO_MATCH;
+        }
+        return buildDescription(tree)
+                .setMessage(String.format(
+                        "Dangerous return value: result is '%s' but the lambda expects return '%s'.",
+                        returnValueSafety, requiredSafety))
                 .build();
     }
 
@@ -426,5 +457,44 @@ public final class IllegalSafeLoggingArgument extends BugChecker
                 .setMessage(String.format(
                         "Dangerous type: annotated '%s' but ancestors declare '%s'.", directSafety, ancestorSafety))
                 .build();
+    }
+
+    @Override
+    public Description matchLambdaExpression(LambdaExpressionTree tree, VisitorState state) {
+        Safety requiredReturnSafety = getLambdaRequiredReturnSafety(tree, state);
+
+        if (requiredReturnSafety.allowsAll()) {
+            // Short-circuit if the return type allows all values
+            return Description.NO_MATCH;
+        }
+
+        Safety resultSafety = Safety.UNKNOWN;
+        switch (tree.getBodyKind()) {
+            case EXPRESSION:
+                resultSafety = SafetyAnalysis.of(state.withPath(new TreePath(state.getPath(), tree.getBody())));
+                break;
+            case STATEMENT:
+                // Shortcut - statement lambdas get their return type checked in the return statement matcher
+                // This also allows us to indicate which return statement is bad (if any) rather than the lambda itself
+                return Description.NO_MATCH;
+        }
+
+        if (requiredReturnSafety.allowsValueWith(resultSafety)) {
+            return Description.NO_MATCH;
+        }
+
+        return buildDescription(tree)
+                .setMessage(String.format(
+                        "Dangerous return value: result is '%s' but the lambda expects return '%s'.",
+                        resultSafety, requiredReturnSafety))
+                .build();
+    }
+
+    private Safety getLambdaRequiredReturnSafety(LambdaExpressionTree tree, VisitorState state) {
+        TargetType returnType = ASTHelpers.targetType(state.withPath(new TreePath(state.getPath(), tree)));
+        if (returnType == null) {
+            return Safety.UNKNOWN;
+        }
+        return SafetyAnnotations.getSafety(returnType.type(), state);
     }
 }
