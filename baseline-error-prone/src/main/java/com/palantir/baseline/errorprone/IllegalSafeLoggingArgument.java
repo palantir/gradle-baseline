@@ -263,19 +263,15 @@ public final class IllegalSafeLoggingArgument extends BugChecker
         while (path != null && path.getLeaf() instanceof StatementTree) {
             path = path.getParentPath();
         }
-        if (path == null || !(path.getLeaf() instanceof MethodTree || path.getLeaf() instanceof LambdaExpressionTree)) {
-            return Description.NO_MATCH;
+        if (path != null) {
+            if (path.getLeaf() instanceof MethodTree method) {
+                return handleMethodReturn(tree, method, state);
+            } else if (path.getLeaf() instanceof LambdaExpressionTree lambda) {
+                return handleLambdaReturn(tree, lambda, state);
+            }
         }
 
-        if (path.getLeaf() instanceof MethodTree method) {
-            return handleMethodReturn(tree, method, state);
-        } else if (path.getLeaf() instanceof LambdaExpressionTree lambda) {
-            return handleLambdaReturn(tree, lambda, state);
-        } else {
-            // We verified just above that it should be either
-            throw new IllegalStateException(
-                    "Unexpected parent of return statement: " + state.getSourceForNode(path.getLeaf()));
-        }
+        return Description.NO_MATCH;
     }
 
     private Description handleMethodReturn(ReturnTree tree, MethodTree method, VisitorState state) {
