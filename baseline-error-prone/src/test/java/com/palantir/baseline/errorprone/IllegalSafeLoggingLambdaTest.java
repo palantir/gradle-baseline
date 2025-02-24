@@ -352,6 +352,34 @@ class IllegalSafeLoggingLambdaTest {
                 .doTest();
     }
 
+    @Test
+    void testLambdaConsumesSafetyAnnotatedType_expression() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.function.*;",
+                        "class Test {",
+                        "  // BUG: Diagnostic contains: Dangerous",
+                        "  Consumer<@Unsafe String> func = in -> fun(in);",
+                        "  void fun(@Safe Object ob) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
+    void testLambdaConsumesSafetyAnnotatedType_statement() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import com.palantir.logsafe.*;",
+                        "import java.util.function.*;",
+                        "class Test {",
+                        "  // BUG: Diagnostic contains: Dangerous",
+                        "  Consumer<@Unsafe String> func = in -> { fun(in); };",
+                        "  void fun(@Safe Object ob) {}",
+                        "}")
+                .doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(IllegalSafeLoggingArgument.class, getClass());
     }
