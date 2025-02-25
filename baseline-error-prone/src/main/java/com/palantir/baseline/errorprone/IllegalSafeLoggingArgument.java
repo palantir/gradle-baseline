@@ -512,10 +512,10 @@ public final class IllegalSafeLoggingArgument extends BugChecker
 
         Safety expectedReturnTypeSafety = SafetyAnnotations.getSafety(expectedReferenceType.getReturnType(), state);
 
-        // TODO: test method combined safety (super methods, class return type, etc)
         MethodSymbol methodSymbol = ASTHelpers.getSymbol(tree);
         Safety referenceReturnTypeSafety = Safety.mergeAssumingUnknownIsSame(
-                SafetyAnnotations.getDirectSafety(methodSymbol, state),
+                // This gets the combined safety annotations of the method and any of its supers
+                SafetyAnnotations.getSafety(methodSymbol, state),
                 SafetyAnnotations.getSafety(methodSymbol.getReturnType(), state));
 
         if (!expectedReturnTypeSafety.allowsValueWith(referenceReturnTypeSafety)) {
@@ -532,7 +532,6 @@ public final class IllegalSafeLoggingArgument extends BugChecker
             return Description.NO_MATCH;
         }
 
-        // TODO: test multiple params
         for (int i = 0; i < methodSymbol.getParameters().size(); i++) {
             Type expectedParameterType =
                     expectedReferenceType.getParameterTypes().get(i);
