@@ -685,6 +685,23 @@ class IllegalSafeLoggingLambdaTest {
                 .doTest();
     }
 
+    @Test
+    void testFunctionIdentityLambda() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+
+                        class Test {
+                          // BUG: Diagnostic contains: Dangerous
+                          Function<@Unsafe String, @Safe String> func = Function.identity();
+                        }
+                        """)
+                .doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(IllegalSafeLoggingArgument.class, getClass());
     }
