@@ -47,13 +47,6 @@ public final class BaselineTesting implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
-        project.getPluginManager().withPlugin("java", unusedPlugin -> {
-            if (GradleVersion.current().compareTo(GradleVersion.version("8.0")) >= 0) {
-                // manually declaring dependencies
-                // https://docs.gradle.org/8.12/userguide/upgrading_version_8.html#manually_declaring_dependencies
-                project.getDependencies().add("testRuntimeOnly", "org.junit.platform:junit-platform-launcher:1.12.0");
-            }
-        });
         project.getTasks().withType(Test.class).configureEach(task -> {
             task.jvmArgs("-XX:+HeapDumpOnOutOfMemoryError", "-XX:+CrashOnOutOfMemoryError");
 
@@ -82,6 +75,12 @@ public final class BaselineTesting implements Plugin<Project> {
                         getTestTaskForSourceSet(project, sourceSet).ifPresent(testTask -> {
                             testTask.dependsOn(checkJUnitDependencies);
                         });
+
+                        // https://docs.gradle.org/8.12/userguide/upgrading_version_8.html#manually_declaring_dependencies
+                        project.getDependencies()
+                                .add(
+                                        sourceSet.getRuntimeOnlyConfigurationName(),
+                                        "org.junit.platform:junit-platform-launcher:1.12.0");
 
                         ifHasResolvedCompileDependenciesMatching(
                                 project,
