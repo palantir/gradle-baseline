@@ -80,7 +80,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         buildFile << standardBuildFile
         buildFile << '''
         dependencies {
-            testImplementation "org.junit.jupiter:junit-jupiter:5.4.2"
+            testImplementation "org.junit.jupiter:junit-jupiter:5.12.0"
             testRuntimeOnly("org.junit.vintage:junit-vintage-engine:5.4.2") {
                 because 'allows JUnit 3 and JUnit 4 tests to run\'
             }
@@ -113,7 +113,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         }
         
         dependencies {
-            integrationTestImplementation "org.junit.jupiter:junit-jupiter:5.4.2"
+            integrationTestImplementation "org.junit.jupiter:junit-jupiter:5.12.0"
         }
         '''.stripIndent(true)
         file('src/integrationTest/java/test/TestClass5.java') << junit5Test
@@ -161,7 +161,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         }
 
         dependencies {
-            integrationTestImplementation "org.junit.jupiter:junit-jupiter:5.4.2"
+            integrationTestImplementation "org.junit.jupiter:junit-jupiter:5.12.0"
         }
         '''.stripIndent(true)
         file('src/integrationTest/java/test/TestClass2.java') << junit4Test
@@ -194,7 +194,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         buildFile << '''
         apply plugin: 'groovy'
         dependencies {
-            testImplementation "org.junit.jupiter:junit-jupiter:5.4.2"
+            testImplementation "org.junit.jupiter:junit-jupiter:5.12.0"
             testImplementation 'com.netflix.nebula:nebula-test:7.3.0'
         }
         '''.stripIndent(true)
@@ -214,7 +214,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
             }
         }
         dependencies {
-            testImplementation "org.junit.jupiter:junit-jupiter:5.4.2"
+            testImplementation "org.junit.jupiter:junit-jupiter:5.12.0"
             testImplementation "net.jqwik:jqwik:1.5.3"
         }
         '''.stripIndent(true)
@@ -231,7 +231,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         buildFile << standardBuildFile
         buildFile << '''
         dependencies {
-            testImplementation "org.junit.jupiter:junit-jupiter:5.4.2"
+            testImplementation "org.junit.jupiter:junit-jupiter:5.12.0"
             testImplementation "net.jqwik:jqwik:1.5.3"
         }
         '''.stripIndent(true)
@@ -252,7 +252,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
             }
         }
         dependencies {
-            testImplementation "org.junit.jupiter:junit-jupiter:5.4.2"
+            testImplementation "org.junit.jupiter:junit-jupiter:5.12.0"
             testImplementation "net.jqwik:jqwik-api:1.5.3"
         }
         '''.stripIndent(true)
