@@ -607,6 +607,29 @@ class IllegalSafeLoggingLambdaTest {
                 .doTest();
     }
 
+    @Test
+    public void testMemberReferenceUnsafeOptionalReturn() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+                        import java.util.*;
+
+                        class Test {
+                          // BUG: Diagnostic contains: Dangerous method reference:
+                          // expected return type 'SAFE' but the reference returns 'UNSAFE'.
+                          Supplier<Optional<@Safe String>> func = this::fun;
+
+                          public Optional<@Unsafe String> fun() {
+                            return Optional.of("unsafe");
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(IllegalSafeLoggingArgument.class, getClass());
     }
