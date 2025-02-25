@@ -524,12 +524,19 @@ class IllegalSafeLoggingLambdaTest {
                         class MyObject {}
 
                         class Test {
-                          // BUG: Diagnostic contains: Dangerous method reference:
-                          // expected return type 'SAFE' but the reference returns 'UNSAFE'.
-                          Supplier<@Safe MyObject> func = this::fun;
-
                           MyObject fun() {
                             return new MyObject();
+                          }
+
+                          void f(@Safe Object o) {}
+
+                          void g() {
+                            // This passes the tests currently, but isn't a huge deal since the type itself is annotated
+                            // and the Safe annotation doesn't prevent us from catching the issue on usage below.
+                            Supplier<@Safe MyObject> func = this::fun;
+                            // BUG: Diagnostic contains: Dangerous argument value:
+                            // arg is 'UNSAFE' but the parameter requires 'SAFE'.
+                            f(func.get());
                           }
                         }
                         """)

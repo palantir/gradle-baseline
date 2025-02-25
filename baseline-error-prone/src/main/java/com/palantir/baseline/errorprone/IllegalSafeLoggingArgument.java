@@ -502,7 +502,8 @@ public final class IllegalSafeLoggingArgument extends BugChecker
 
     @Override
     public Description matchMemberReference(MemberReferenceTree tree, VisitorState state) {
-        Type expectedReferenceType = state.getTypes().findDescriptorType(ASTHelpers.getType(tree));
+        // This is the type the reference gets "cast" into, whether through assignment, return type, argument, etc
+        Type castType = state.getTypes().findDescriptorType(ASTHelpers.getType(tree));
         // The reference will be used as the expected type. This means:
         //   * the safety of the return type of the expected must be "lower" than the actual safety of the reference
         //   * the safety of the arguments of the expected must be "higher" than the actual safety of the reference
@@ -510,31 +511,38 @@ public final class IllegalSafeLoggingArgument extends BugChecker
         // Similarly, "@Consumer<@Unsafe String> f = this::method" shouldn't be allowed, when method expects to take a
         //   safe argument (since it might log it)
 
-        Safety expectedReturnTypeSafety = SafetyAnnotations.getSafety(expectedReferenceType.getReturnType(), state);
+        Safety castTypeReturnSafety = SafetyAnnotations.getSafety(castType.getReturnType(), state);
 
         MethodSymbol methodSymbol = ASTHelpers.getSymbol(tree);
-        Safety referenceReturnTypeSafety = Safety.mergeAssumingUnknownIsSame(
+        Safety referenceReturnSafety = Safety.mergeAssumingUnknownIsSame(
                 // This gets the combined safety annotations of the method and any of its supers
                 SafetyAnnotations.getSafety(methodSymbol, state),
                 SafetyAnnotations.getSafety(methodSymbol.getReturnType(), state));
 
-        if (!expectedReturnTypeSafety.allowsValueWith(referenceReturnTypeSafety)) {
+        // The reference will get used as the cast type
+        // This means that we expect the cast type's return type safety and will use it as such
+        // If e.g. the cast type says it will return SAFE, but the reference returns UNSAFE, that's a problem
+        // On the other hand, if the cast returns UNSAFE and the reference returns SAFE, that's fine
+        if (!castTypeReturnSafety.allowsValueWith(referenceReturnSafety)) {
             return buildDescription(tree)
                     .setMessage(String.format(
                             "Dangerous method reference: expected return type '%s' but the reference returns '%s'.",
-                            expectedReturnTypeSafety, referenceReturnTypeSafety))
+                            castTypeReturnSafety, referenceReturnSafety))
                     .build();
         }
 
-        if (methodSymbol.getParameters().size()
-                != expectedReferenceType.getParameterTypes().size()) {
-            // This is unexpected, as this should pass compilation - we don't know how to handle it, so just ignore
+        if (methodSymbol.getParameters().size() != castType.getParameterTypes().size()) {
+            // This is unexpected, as the code should pass compilation - we don't know how to handle it, so just ignore
             return Description.NO_MATCH;
         }
 
+        // This is similar to the return type check, but for each parameter
+        // In this case, the requirement is reversed
+        // If the cast type says it accepts an UNSAFE parameter, but the reference needs a SAFE one,
+        //   then this should break
+        // If the cast type accepts SAFE, and the reference needs UNSAFE, that's fine, since we're less permissive
         for (int i = 0; i < methodSymbol.getParameters().size(); i++) {
-            Type expectedParameterType =
-                    expectedReferenceType.getParameterTypes().get(i);
+            Type expectedParameterType = castType.getParameterTypes().get(i);
             Safety expectedParameterSafety = SafetyAnnotations.getSafety(expectedParameterType, state);
 
             VarSymbol parameter = methodSymbol.getParameters().get(i);
@@ -542,6 +550,7 @@ public final class IllegalSafeLoggingArgument extends BugChecker
             Safety referenceParameterSafety = SafetyAnnotations.getSafety(referenceParameterType, state);
 
             if (!referenceParameterSafety.allowsValueWith(expectedParameterSafety)) {
+                // use state.reportMatch to report all failing arguments if multiple are invalid
                 state.reportMatch(buildDescription(tree)
                         .setMessage(String.format(
                                 "Dangerous method reference: method reference expects argument %d with safety '%s', "
