@@ -35,6 +35,7 @@ import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.CompoundAssignmentTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.LambdaExpressionTree;
+import com.sun.source.tree.MemberReferenceTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.NewClassTree;
@@ -81,7 +82,8 @@ public final class IllegalSafeLoggingArgument extends BugChecker
                 BugChecker.VariableTreeMatcher,
                 BugChecker.NewClassTreeMatcher,
                 BugChecker.ClassTreeMatcher,
-                BugChecker.LambdaExpressionTreeMatcher {
+                BugChecker.LambdaExpressionTreeMatcher,
+                BugChecker.MemberReferenceTreeMatcher {
 
     private static final String UNSAFE_ARG = "com.palantir.logsafe.UnsafeArg";
     private static final Matcher<ExpressionTree> SAFE_ARG_OF_METHOD_MATCHER = MethodMatchers.staticMethod()
@@ -496,5 +498,99 @@ public final class IllegalSafeLoggingArgument extends BugChecker
             return Safety.UNKNOWN;
         }
         return SafetyAnnotations.getSafety(returnType.type(), state);
+    }
+
+    @Override
+    public Description matchMemberReference(MemberReferenceTree tree, VisitorState state) {
+        Type type = ASTHelpers.getType(tree);
+        if (type == null) {
+            return Description.NO_MATCH;
+        }
+
+        // This is the type the reference gets "cast" into, whether through assignment, return type, argument, etc
+        Type castType = state.getTypes().findDescriptorType(type);
+        if (castType == null) {
+            return Description.NO_MATCH;
+        }
+
+        MethodSymbol methodSymbol = ASTHelpers.getSymbol(tree);
+
+        // These methods rely on state.reportMatch to report all failures in one pass if multiple are found
+        handleMemberReferenceReturnType(tree, castType, methodSymbol, state);
+        handleMemberReferenceParameterTypes(tree, castType, methodSymbol, state);
+
+        return Description.NO_MATCH;
+    }
+
+    /**
+     * Verifies the return type of a method reference, when cast to a different type.
+     *
+     * This means that we expect the cast type's return type safety and will use it as such.
+     * If e.g. the cast type says it will return SAFE, but the reference returns UNSAFE, that's a problem.
+     * On the other hand, if the cast returns UNSAFE and the reference returns SAFE, that's fine.
+     */
+    private void handleMemberReferenceReturnType(
+            MemberReferenceTree tree, Type castType, MethodSymbol methodSymbol, VisitorState state) {
+        Safety castTypeReturnSafety = SafetyAnnotations.getSafety(castType.getReturnType(), state);
+
+        if (castTypeReturnSafety.allowsAll()) {
+            // Fast path - the type we're casting to allows all values (unknown or do-not-log), so we don't need to
+            //   check further
+            return;
+        }
+
+        Safety referenceReturnSafety = Safety.mergeAssumingUnknownIsSame(
+                // This gets the combined safety annotations of the method and any of its supers
+                SafetyAnnotations.getSafety(methodSymbol, state),
+                SafetyAnnotations.getSafety(methodSymbol.getReturnType(), state));
+
+        if (!castTypeReturnSafety.allowsValueWith(referenceReturnSafety)) {
+            state.reportMatch(buildDescription(tree)
+                    .setMessage(String.format(
+                            "Dangerous method reference: expected return type '%s' but the reference returns '%s'.",
+                            castTypeReturnSafety, referenceReturnSafety))
+                    .build());
+        }
+    }
+
+    /**
+     * Verifies the parameter types of a method reference, when cast to a different type.
+     *
+     * This is similar to the return type check {@link #handleMemberReferenceReturnType}, but for each parameter.
+     * In this case, the requirement is reversed.
+     *
+     * If the cast type says it accepts an UNSAFE parameter, but the reference needs a SAFE one, then this should break.
+     * If the cast type accepts SAFE, and the reference needs UNSAFE, that's fine, since we're less permissive.
+     */
+    private void handleMemberReferenceParameterTypes(
+            MemberReferenceTree tree, Type castType, MethodSymbol methodSymbol, VisitorState state) {
+        if (methodSymbol.getParameters().size() != castType.getParameterTypes().size()) {
+            // This is unexpected, as the code should pass compilation - we don't know how to handle it, so just ignore
+            return;
+        }
+
+        for (int i = 0; i < methodSymbol.getParameters().size(); i++) {
+            VarSymbol parameter = methodSymbol.getParameters().get(i);
+            Type referenceParameterType = parameter.type;
+            Safety referenceParameterSafety = SafetyAnnotations.getSafety(referenceParameterType, state);
+            if (referenceParameterSafety.allowsAll()) {
+                // Fast path - the method reference allows all arguments for the parameter, so we don't need to check
+                //   further
+                continue;
+            }
+
+            Type expectedParameterType = castType.getParameterTypes().get(i);
+            Safety expectedParameterSafety = SafetyAnnotations.getSafety(expectedParameterType, state);
+
+            if (!referenceParameterSafety.allowsValueWith(expectedParameterSafety)) {
+                // use state.reportMatch to report all failing arguments if multiple are invalid
+                state.reportMatch(buildDescription(tree)
+                        .setMessage(String.format(
+                                "Dangerous method reference: method reference expects argument %d with safety '%s', "
+                                        + "but will be passed '%s'",
+                                i, referenceParameterSafety, expectedParameterSafety))
+                        .build());
+            }
+        }
     }
 }

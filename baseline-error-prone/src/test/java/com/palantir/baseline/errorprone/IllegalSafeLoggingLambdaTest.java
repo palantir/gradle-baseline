@@ -395,6 +395,241 @@ class IllegalSafeLoggingLambdaTest {
                 .doTest();
     }
 
+    @Test
+    void testMemberReferenceParameterType() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+
+                        class Test {
+                          // BUG: Diagnostic contains: Dangerous method reference:
+                          // method reference expects argument 0 with safety 'SAFE', but will be passed 'UNSAFE'
+                          Consumer<@Unsafe String> func = this::fun;
+
+                          void fun(@Safe Object ob) {}
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
+    void testMemberReferenceAsMethodReturn() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+
+                        class Test {
+                          void fun(@Safe Object ob) {}
+
+                          Consumer<@Unsafe String> getFunc() {
+                            // BUG: Diagnostic contains: Dangerous method reference:
+                            // method reference expects argument 0 with safety 'SAFE', but will be passed 'UNSAFE'
+                            return this::fun;
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
+    void testMemberReferenceAsMethodArgument() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+
+                        class Test {
+                          void fun(@Safe Object ob) {}
+
+                          void callFunc(Consumer<@Unsafe String> func) {}
+
+                          void f(@Unsafe Object value) {
+                            // BUG: Diagnostic contains: Dangerous method reference:
+                            // method reference expects argument 0 with safety 'SAFE', but will be passed 'UNSAFE'
+                            callFunc(this::fun);
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
+    void testMemberReferenceMultipleParameters() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+
+                        class Test {
+                          // BUG: Diagnostic contains: Dangerous method reference:
+                          // method reference expects argument 1 with safety 'SAFE', but will be passed 'UNSAFE'
+                          BiConsumer<@Unsafe String, @Unsafe String> func = this::fun;
+
+                          // BUG: Diagnostic contains: Dangerous method reference:
+                          // method reference expects argument 1 with safety 'SAFE', but will be passed 'UNSAFE'
+                          BiConsumer<@Safe String, @Unsafe String> func2 = this::fun;
+
+                          // This is fine
+                          BiConsumer<@Safe String, @Safe String> func3 = this::fun;
+
+                          void fun(@Unsafe Object ob, @Safe Object ob2) {}
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
+    void testMemberReferenceMethodAnnotation() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+
+                        class Test {
+                          // BUG: Diagnostic contains: Dangerous method reference:
+                          // expected return type 'SAFE' but the reference returns 'UNSAFE'.
+                          Supplier<@Safe String> func = this::fun;
+
+                          @Unsafe
+                          String fun() {
+                            return "unsafe";
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
+    void testMemberReferenceReturnType() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+
+                        @Unsafe
+                        class MyObject {}
+
+                        class Test {
+                          MyObject fun() {
+                            return new MyObject();
+                          }
+
+                          void f(@Safe Object o) {}
+
+                          void g() {
+                            // This passes the tests currently, but isn't a huge deal since the type itself is annotated
+                            // and the Safe annotation doesn't prevent us from catching the issue on usage below.
+                            Supplier<@Safe MyObject> func = this::fun;
+                            // BUG: Diagnostic contains: Dangerous argument value:
+                            // arg is 'UNSAFE' but the parameter requires 'SAFE'.
+                            f(func.get());
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
+    void testMemberReferenceInheritedSafety() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+
+                        interface MyInterface {
+                          @Unsafe
+                          String fun();
+                        }
+
+                        class Test implements MyInterface {
+                          // BUG: Diagnostic contains: Dangerous method reference:
+                          // expected return type 'SAFE' but the reference returns 'UNSAFE'.
+                          Supplier<@Safe String> func = this::fun;
+
+                          public String fun() {
+                            return "unsafe";
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
+    void testMemberReferenceInheritedDiamondSafety() {
+        // Note: Diamond inheritance with conflicting safety types is prevented and covered
+        //   by IllegalSafeLoggingArgumentTest#testDiamondMethodSafetyInheritance
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+
+                        interface MyInterface {
+                          @Unsafe
+                          String fun();
+                        }
+
+                        interface MySafeInterface extends MyInterface {
+                          String fun();
+                        }
+
+                        interface MyUnsafeInterface extends MyInterface {
+                          String fun();
+                        }
+
+                        class Test implements MySafeInterface, MyUnsafeInterface {
+                          // BUG: Diagnostic contains: Dangerous method reference:
+                          // expected return type 'SAFE' but the reference returns 'UNSAFE'.
+                          Supplier<@Safe String> func = this::fun;
+
+                          public String fun() {
+                            return "unsafe";
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
+    public void testMemberReferenceUnsafeOptionalReturn() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+                        import java.util.*;
+
+                        class Test {
+                          // BUG: Diagnostic contains: Dangerous method reference:
+                          // expected return type 'SAFE' but the reference returns 'UNSAFE'.
+                          Supplier<Optional<@Safe String>> func = this::fun;
+
+                          public Optional<@Unsafe String> fun() {
+                            return Optional.of("unsafe");
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(IllegalSafeLoggingArgument.class, getClass());
     }
