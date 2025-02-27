@@ -19,13 +19,13 @@ package com.palantir.baseline.plugins;
 import com.palantir.baseline.tasks.CheckJUnitDependencies;
 import java.util.Objects;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.plugins.JvmTestSuitePlugin;
 import org.gradle.api.plugins.jvm.JvmTestSuite;
 import org.gradle.api.tasks.SourceSet;
-import org.gradle.api.tasks.TaskCollection;
+import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.api.tasks.testing.logging.TestLogEvent;
@@ -60,7 +60,6 @@ public final class BaselineTesting implements Plugin<Project> {
         });
 
         project.getPluginManager().withPlugin("java", unusedPlugin -> {
-            JavaPluginExtension javaPluginExtension = project.getExtensions().getByType(JavaPluginExtension.class);
             TestingExtension testingExtension = project.getExtensions().getByType(TestingExtension.class);
 
             TaskProvider<CheckJUnitDependencies> checkJUnitDependencies =
@@ -72,44 +71,64 @@ public final class BaselineTesting implements Plugin<Project> {
 
             testingExtension
                     .getSuites()
-                    .named(JvmTestSuitePlugin.DEFAULT_TEST_SUITE_NAME, JvmTestSuite.class, testSuite -> {
-                        testSuite.useJUnitJupiter();
-                    });
+                    .named(
+                            JvmTestSuitePlugin.DEFAULT_TEST_SUITE_NAME,
+                            JvmTestSuite.class,
+                            JvmTestSuite::useJUnitJupiter);
 
-            javaPluginExtension.getSourceSets().configureEach(sourceSet -> {
-                TaskCollection<Test> testTasks = project.getTasks()
-                        .withType(Test.class)
-                        .matching(task -> task.getName().equals(sourceSet.getName()));
+            project.getConfigurations().configureEach(configuration -> {
+                configuration.getDependencies().addAllLater(project.provider(() -> {
+                    return testSourceSetsWhereJunitToolchainDepsHaveNotBeenAutomaticallyAdded(project)
+                            .flatMap(sourceSet -> {
+                                // See https://github.com/gradle/gradle/pull/26369
+                                if (configuration.getName().equals(sourceSet.getImplementationConfigurationName())) {
+                                    return Stream.of(project.getDependencies().create(JUNIT_JUPITER));
+                                }
 
-                // We must eagerly create the test task in order to add the junit-platform-launcher dependency.
-                // Otherwise the dependencies will already have been resolved by the time we create the test task.
-                testTasks.all(task -> {
-                    // See https://github.com/gradle/gradle/pull/21919
-                    if (GradleVersion.current().compareTo(GRADLE_8) < 0) {
-                        addJUnitJupiterTestToolchainDependencies(project, sourceSet);
-                    }
+                                if (configuration.getName().equals(sourceSet.getRuntimeOnlyConfigurationName())) {
+                                    return Stream.of(project.getDependencies().create(JUNIT_PLATFORM_LAUNCHER));
+                                }
 
-                    // For test tasks not created using test suites, we must explicitly the test to use JUnit Platform
-                    // and add the junit-platform-launcher dependency.
-                    if (testingExtension.getSuites().findByName(sourceSet.getName()) == null) {
-                        task.useJUnitPlatform();
-                        addJUnitJupiterTestToolchainDependencies(project, sourceSet);
-                    }
-                });
+                                return Stream.empty();
+                            })
+                            .toList();
+                }));
+            });
 
-                testTasks.configureEach(task -> {
-                    configureTestTask(task);
+            project.getTasks().withType(Test.class).configureEach(task -> {
+                configureTestTask(task);
 
-                    task.dependsOn(checkJUnitDependencies);
-                });
+                task.dependsOn(checkJUnitDependencies);
+
+                // For test tasks not created using test suites (ie using the old unbroken dome test-suites plugin),
+                // we must explicitly use the JUnit Platform
+                if (testTaskNotCreatedByJvmTestSuites(testingExtension, task.getName())) {
+                    task.useJUnitPlatform();
+                }
             });
         });
     }
 
-    private void addJUnitJupiterTestToolchainDependencies(Project project, SourceSet sourceSet) {
-        // See https://github.com/gradle/gradle/pull/26369
-        project.getDependencies().add(sourceSet.getImplementationConfigurationName(), JUNIT_JUPITER);
-        project.getDependencies().add(sourceSet.getRuntimeOnlyConfigurationName(), JUNIT_PLATFORM_LAUNCHER);
+    private static Stream<SourceSet> testSourceSetsWhereJunitToolchainDepsHaveNotBeenAutomaticallyAdded(
+            Project project) {
+
+        SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
+        TestingExtension testingExtension = project.getExtensions().getByType(TestingExtension.class);
+
+        // Gradle <8 does not automatically add junit toolchain deps - see https://github.com/gradle/gradle/pull/21919
+        boolean gradleVersionLessThan8 = GradleVersion.current().compareTo(GRADLE_8) < 0;
+
+        return project.getTasks().withType(Test.class).getNames().stream().flatMap(testTaskName -> {
+            if (gradleVersionLessThan8 || testTaskNotCreatedByJvmTestSuites(testingExtension, testTaskName)) {
+                return Stream.of(sourceSets.getByName(testTaskName));
+            }
+
+            return Stream.empty();
+        });
+    }
+
+    private static boolean testTaskNotCreatedByJvmTestSuites(TestingExtension testingExtension, String testTaskName) {
+        return !testingExtension.getSuites().getNames().contains(testTaskName);
     }
 
     private void configureTestTask(Test task) {

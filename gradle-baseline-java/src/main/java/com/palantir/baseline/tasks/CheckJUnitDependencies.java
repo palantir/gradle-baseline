@@ -45,7 +45,7 @@ public abstract class CheckJUnitDependencies extends DefaultTask {
         setGroup("Verification");
         setDescription("Ensures the correct JUnit4/5 dependencies are present, otherwise tests may silently not run");
 
-        getErrorMessages().set(getProject().provider(() -> validateDependencies()));
+        getErrorMessages().set(getProject().provider(this::validateDependencies));
     }
 
     @TaskAction
