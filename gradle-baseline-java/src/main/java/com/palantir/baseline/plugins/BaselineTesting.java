@@ -100,8 +100,6 @@ public final class BaselineTesting implements Plugin<Project> {
             project.getTasks().withType(Test.class).configureEach(task -> {
                 configureTestTask(task);
 
-                task.dependsOn(checkJUnitDependencies);
-
                 // For test tasks not created using test suites (ie using the old unbroken dome test-suites plugin),
                 // we must explicitly use the JUnit Platform
                 if (testTaskNotCreatedByJvmTestSuites(testingExtension, task.getName())) {

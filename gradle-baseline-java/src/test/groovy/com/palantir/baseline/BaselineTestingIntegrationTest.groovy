@@ -19,6 +19,7 @@ package com.palantir.baseline
 import com.palantir.gradle.plugintesting.GradleTestVersions
 import nebula.test.IntegrationSpec
 import nebula.test.functional.ExecutionResult
+import org.assertj.core.util.Throwables
 import spock.lang.Unroll
 
 @Unroll
@@ -82,7 +83,6 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         '''.stripIndent(true)
 
     def '#gradleVersionNumber: runs JUnit4 tests'() {
-        when:
         gradleVersion = gradleVersionNumber
 
         buildFile << standardBuildFile
@@ -95,9 +95,10 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         '''.stripIndent(true)
         file('src/test/java/test/JUnit4Test.java') << junit4Test
 
+        when:
+        runTasksSuccessfully('test')
+
         then:
-        ExecutionResult result = runTasksSuccessfully('test')
-        result.wasExecuted('checkJUnitDependencies')
         fileExists("build/reports/tests/test/classes/test.JUnit4Test.html")
 
         where:
@@ -105,15 +106,15 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
     }
 
     def '#gradleVersionNumber: runs JUnit5 tests'() {
-        when:
         gradleVersion = gradleVersionNumber
 
         buildFile << standardBuildFile
         file('src/test/java/test/JUnit5Test.java') << junit5Test
 
+        when:
+        runTasksSuccessfully('test')
+
         then:
-        ExecutionResult result = runTasksSuccessfully('test')
-        result.wasExecuted('checkJUnitDependencies')
         fileExists("build/reports/tests/test/classes/test.JUnit5Test.html")
 
         where:
@@ -136,8 +137,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         file('src/test/java/test/JUnit5Test.java') << junit5Test
 
         then:
-        ExecutionResult result = runTasksSuccessfully('test')
-        result.wasExecuted('checkJUnitDependencies')
+        runTasksSuccessfully('test')
         fileExists("build/reports/tests/test/classes/test.JUnit4Test.html")
         fileExists("build/reports/tests/test/classes/test.JUnit5Test.html")
 
@@ -146,7 +146,6 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
     }
 
     def '#gradleVersionNumber: runs Jqwik tests'() {
-        when:
         gradleVersion = gradleVersionNumber
 
         buildFile << standardBuildFile
@@ -157,9 +156,10 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         '''.stripIndent(true)
         file('src/test/java/test/JqwikTest.java') << jqwikTest
 
+        when:
+        runTasksSuccessfully('test')
+
         then:
-        ExecutionResult result = runTasksSuccessfully('test')
-        result.wasExecuted('checkJUnitDependencies')
         fileExists("build/reports/tests/test/classes/test.JqwikTest.html")
 
         where:
@@ -186,8 +186,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         '''.stripIndent(true)
 
         then:
-        ExecutionResult result = runTasksSuccessfully('test')
-        result.wasExecuted('checkJUnitDependencies')
+        runTasksSuccessfully('test')
 
         where:
         gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
@@ -207,8 +206,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         file('src/integrationTest/java/test/JUnit5Test.java') << junit5Test
 
         then:
-        ExecutionResult result = runTasksSuccessfully('integrationTest')
-        result.wasExecuted('checkJUnitDependencies')
+        runTasksSuccessfully('integrationTest')
         fileExists("build/reports/tests/integrationTest/classes/test.JUnit5Test.html")
 
         where:
@@ -216,22 +214,22 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
     }
 
     def '#gradleVersionNumber: checkJUnitDependencies => JUnit4 without junit-vintage-engine'() {
-        when:
         gradleVersion = gradleVersionNumber
 
         buildFile << standardBuildFile
         file('src/test/java/test/JUnit4Test.java') << junit4Test
 
+        when:
+        String message = Throwables.getRootCause(runTasksWithFailure('checkJUnitDependencies').failure).message
+
         then:
-        ExecutionResult result = runTasksWithFailure('checkJUnitDependencies')
-        result.failure.cause.cause.message.contains 'Some tests use JUnit4, but the \'test\' task is not using the JUnit Vintage engine.'
+        message.contains 'Some tests use JUnit4, but the \'test\' task is not using the JUnit Vintage engine.'
 
         where:
         gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
     def '#gradleVersionNumber: checkJUnitDependencies => JUnit5 without junit-jupiter'() {
-        when:
         gradleVersion = gradleVersionNumber
 
         buildFile << standardBuildFile
@@ -244,16 +242,17 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         '''.stripIndent(true)
         file('src/test/java/test/JUnit5Test.java') << junit5Test
 
+        when:
+        String message = Throwables.getRootCause(runTasksWithFailure('checkJUnitDependencies').failure).message
+
         then:
-        ExecutionResult result = runTasksWithFailure('checkJUnitDependencies')
-        result.failure.cause.cause.message.contains 'Some tests use JUnit5, but the \'test\' task is not using the JUnit Jupiter engine.'
+        message.contains 'Some tests use JUnit5, but the \'test\' task is not using the JUnit Jupiter engine.'
 
         where:
         gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
     def '#gradleVersionNumber: checkJUnitDependencies => Jqwik without jqwik-engine'() {
-        when:
         gradleVersion = gradleVersionNumber
 
         buildFile << standardBuildFile
@@ -270,22 +269,25 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         '''.stripIndent(true)
         file('src/test/java/test/JqwikTest.java') << jqwikTest
 
+        when:
+        String message = Throwables.getRootCause(runTasksWithFailure('checkJUnitDependencies').failure).message
+
         then:
-        ExecutionResult result = runTasksWithFailure('checkJUnitDependencies')
-        result.failure.cause.cause.message.contains 'Some tests use Jqwik, but the \'test\' task is not using the Jqwik engine.'
+        message.contains 'Some tests use Jqwik, but the \'test\' task is not using the Jqwik engine.'
 
         where:
         gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
     def '#gradleVersionNumber: checkJUnitDependencies => run as part of check'() {
-        when:
         gradleVersion = gradleVersionNumber
 
         buildFile << standardBuildFile
 
-        then:
+        when:
         ExecutionResult result = runTasksSuccessfully('check')
+
+        then:
         result.wasExecuted('checkJUnitDependencies')
 
         where:
@@ -293,21 +295,31 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
     }
 
     def 'running -Drecreate=true will re-run tests even if no code changes'() {
-        when:
         buildFile << standardBuildFile
         file('src/test/java/test/JUnit5Test.java') << junit5Test
 
-        then:
+        when:
         def result = runTasksSuccessfully('test')
+
+        then:
         result.wasExecuted(':test')
 
+        when:
         def result2 = runTasksSuccessfully('test')
+
+        then:
         result2.wasUpToDate(':test')
 
+        when:
         def result3 = runTasksSuccessfully('test', '-Drecreate=true')
+
+        then:
         result3.wasExecuted(':test')
 
+        when:
         def result4 = runTasksSuccessfully('test', '-Drecreate=true')
+
+        then:
         result4.wasExecuted(':test')
     }
 
