@@ -91,7 +91,9 @@ public final class BaselineTesting implements Plugin<Project> {
 
                                 return Stream.empty();
                             })
-                            .toList();
+                            .findFirst()
+                            .map(Set::of)
+                            .orElseGet(Set::of);
                 }));
             });
 
