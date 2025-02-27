@@ -69,6 +69,9 @@ public final class BaselineTesting implements Plugin<Project> {
                 task.dependsOn(checkJUnitDependencies);
             });
 
+            // For backwards compatibility reasons, Gradle uses the legacy JUnit4 test toolchain for the default
+            // test suite and the JUnit Platform test toolchain for everything else.
+            // We want to use junit jupiter by default for the default test suite.
             testingExtension
                     .getSuites()
                     .named(
@@ -76,11 +79,16 @@ public final class BaselineTesting implements Plugin<Project> {
                             JvmTestSuite.class,
                             JvmTestSuite::useJUnitJupiter);
 
+            // Gradle <8 does not automatically add junit toolchain deps. When the test-sets plugin is used instead
+            // of jvm-test-suites, these deps are not added either. We make sure that we lazily add these deps to
+            // the correct configurations if required. Note: we can't lazily configure test tasks or test suite then
+            // add the dependencies in that configuration action, as the Configurations may be resolved before the
+            // tasks/suites are realised, hence we have to work from the Configurations directly.
+            // See https://github.com/gradle/gradle/pull/26369
             project.getConfigurations().configureEach(configuration -> {
                 configuration.getDependencies().addAllLater(project.provider(() -> {
                     return testSourceSetsWhereJunitToolchainDepsHaveNotBeenAutomaticallyAdded(project)
                             .flatMap(sourceSet -> {
-                                // See https://github.com/gradle/gradle/pull/26369
                                 if (configuration.getName().equals(sourceSet.getImplementationConfigurationName())) {
                                     return Stream.of(project.getDependencies().create(JUNIT_JUPITER));
                                 }
@@ -109,28 +117,6 @@ public final class BaselineTesting implements Plugin<Project> {
         });
     }
 
-    private static Stream<SourceSet> testSourceSetsWhereJunitToolchainDepsHaveNotBeenAutomaticallyAdded(
-            Project project) {
-
-        SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
-        TestingExtension testingExtension = project.getExtensions().getByType(TestingExtension.class);
-
-        // Gradle <8 does not automatically add junit toolchain deps - see https://github.com/gradle/gradle/pull/21919
-        boolean gradleVersionLessThan8 = GradleVersion.current().compareTo(GRADLE_8) < 0;
-
-        return project.getTasks().withType(Test.class).getNames().stream().flatMap(testTaskName -> {
-            if (gradleVersionLessThan8 || testTaskNotCreatedByJvmTestSuites(testingExtension, testTaskName)) {
-                return Stream.of(sourceSets.getByName(testTaskName));
-            }
-
-            return Stream.empty();
-        });
-    }
-
-    private static boolean testTaskNotCreatedByJvmTestSuites(TestingExtension testingExtension, String testTaskName) {
-        return !testingExtension.getSuites().getNames().contains(testTaskName);
-    }
-
     private void configureTestTask(Test task) {
         task.systemProperty("junit.platform.output.capture.stdout", "true");
         task.systemProperty("junit.platform.output.capture.stderr", "true");
@@ -153,5 +139,27 @@ public final class BaselineTesting implements Plugin<Project> {
                     .getEvents()
                     .addAll(Set.of(TestLogEvent.STARTED, TestLogEvent.PASSED, TestLogEvent.SKIPPED));
         }
+    }
+
+    private static Stream<SourceSet> testSourceSetsWhereJunitToolchainDepsHaveNotBeenAutomaticallyAdded(
+            Project project) {
+
+        SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
+        TestingExtension testingExtension = project.getExtensions().getByType(TestingExtension.class);
+
+        // Gradle <8 does not automatically add junit toolchain deps - see https://github.com/gradle/gradle/pull/21919
+        boolean gradleVersionLessThan8 = GradleVersion.current().compareTo(GRADLE_8) < 0;
+
+        return project.getTasks().withType(Test.class).getNames().stream().flatMap(testTaskName -> {
+            if (gradleVersionLessThan8 || testTaskNotCreatedByJvmTestSuites(testingExtension, testTaskName)) {
+                return Stream.of(sourceSets.getByName(testTaskName));
+            }
+
+            return Stream.empty();
+        });
+    }
+
+    private static boolean testTaskNotCreatedByJvmTestSuites(TestingExtension testingExtension, String testTaskName) {
+        return !testingExtension.getSuites().getNames().contains(testTaskName);
     }
 }
