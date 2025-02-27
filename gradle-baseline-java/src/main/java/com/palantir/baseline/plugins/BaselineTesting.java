@@ -105,19 +105,17 @@ public final class BaselineTesting implements Plugin<Project> {
                 }));
             });
 
-            project.getTasks().withType(Test.class).configureEach(task -> {
-                configureTestTask(task);
-
-                // For test tasks not created using test suites (ie using the old unbroken dome test-suites plugin),
-                // we must explicitly use the JUnit Platform
-                if (testTaskNotCreatedByJvmTestSuites(testingExtension, task.getName())) {
-                    task.useJUnitPlatform();
-                }
-            });
+            project.getTasks().withType(Test.class).configureEach(task -> configureTestTask(testingExtension, task));
         });
     }
 
-    private void configureTestTask(Test task) {
+    private void configureTestTask(TestingExtension testingExtension, Test task) {
+        // For test tasks not created using test suites (ie using the old unbroken dome test-suites plugin),
+        // we must explicitly use the JUnit Platform
+        if (testTaskNotCreatedByJvmTestSuites(testingExtension, task.getName())) {
+            task.useJUnitPlatform();
+        }
+
         task.systemProperty("junit.platform.output.capture.stdout", "true");
         task.systemProperty("junit.platform.output.capture.stderr", "true");
 
