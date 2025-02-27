@@ -16,11 +16,12 @@
 
 package com.palantir.baseline.tasks;
 
-import static com.google.common.base.Preconditions.checkState;
-
+import com.google.common.base.Preconditions;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.nio.file.Files;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
@@ -28,22 +29,40 @@ import org.gradle.api.DefaultTask;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.result.ResolvedComponentResult;
 import org.gradle.api.plugins.JavaPluginExtension;
+import org.gradle.api.provider.ListProperty;
+import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.testing.Test;
 import org.gradle.api.tasks.testing.TestFrameworkOptions;
 import org.gradle.api.tasks.testing.junitplatform.JUnitPlatformOptions;
 
-public class CheckJUnitDependencies extends DefaultTask {
+public abstract class CheckJUnitDependencies extends DefaultTask {
+    @Input
+    public abstract ListProperty<String> getErrorMessages();
 
     public CheckJUnitDependencies() {
         setGroup("Verification");
         setDescription("Ensures the correct JUnit4/5 dependencies are present, otherwise tests may silently not run");
-        getOutputs().upToDateWhen(_task -> true);
+
+        getErrorMessages().set(getProject().provider(() -> validateDependencies()));
     }
 
     @TaskAction
-    public final void validateDependencies() {
+    public final void action() {
+        List<String> errorMessages = getErrorMessages().get();
+
+        if (errorMessages.isEmpty()) {
+            return;
+        }
+
+        throw new IllegalStateException(
+                "There were %s issues:\n\n".formatted(errorMessages.size()) + String.join("\n\n", errorMessages));
+    }
+
+    private List<String> validateDependencies() {
+        List<String> errorMessages = new ArrayList<>();
+
         getProject()
                 .getExtensions()
                 .getByType(JavaPluginExtension.class)
@@ -56,12 +75,18 @@ public class CheckJUnitDependencies extends DefaultTask {
 
                     getLogger().info("Analyzing source set {} with task {}", sourceSet.getName(), task.getName());
 
-                    validateSourceSet(sourceSet, task);
+                    try {
+                        validateSourceSet(sourceSet, task);
+                    } catch (IllegalStateException e) {
+                        errorMessages.add(e.getMessage());
+                    }
                 });
+
+        return errorMessages;
     }
 
     @SuppressWarnings("CyclomaticComplexity")
-    private void validateSourceSet(SourceSet sourceSet, Test task) {
+    private void validateSourceSet(SourceSet sourceSet, Test task) throws IllegalStateException {
         Set<ResolvedComponentResult> deps = getProject()
                 .getConfigurations()
                 .getByName(sourceSet.getRuntimeClasspathConfigurationName())
@@ -82,7 +107,7 @@ public class CheckJUnitDependencies extends DefaultTask {
 
         if (options instanceof JUnitPlatformOptions) {
             if (usesJUnit4) {
-                checkState(
+                Preconditions.checkState(
                         hasVintageEngine,
                         """
                         Some tests use JUnit4, but the '%s' task is not using the JUnit Vintage engine. \
@@ -96,7 +121,7 @@ public class CheckJUnitDependencies extends DefaultTask {
             }
 
             if (usesJUnit5) {
-                checkState(
+                Preconditions.checkState(
                         hasJunitJupiter,
                         """
                         Some tests use JUnit5, but the '%s' task is not using the JUnit Jupiter engine. \
@@ -110,7 +135,7 @@ public class CheckJUnitDependencies extends DefaultTask {
             }
 
             if (usesJqwik) {
-                checkState(
+                Preconditions.checkState(
                         hasJqwikEngine,
                         """
                         Some tests use Jqwik, but the '%s' task is not using the Jqwik engine. \
