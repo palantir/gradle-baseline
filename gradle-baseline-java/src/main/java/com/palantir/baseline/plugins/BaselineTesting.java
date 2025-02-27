@@ -16,34 +16,29 @@
 
 package com.palantir.baseline.plugins;
 
-import com.google.common.base.Predicate;
-import com.google.common.collect.ImmutableSet;
 import com.palantir.baseline.tasks.CheckJUnitDependencies;
-import com.palantir.baseline.util.VersionUtils;
-import java.lang.reflect.Method;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.Set;
+import java.util.stream.Stream;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.Task;
-import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
-import org.gradle.api.artifacts.result.ResolvedComponentResult;
-import org.gradle.api.plugins.JavaPluginExtension;
-import org.gradle.api.provider.Property;
+import org.gradle.api.plugins.JvmTestSuitePlugin;
+import org.gradle.api.plugins.jvm.JvmTestSuite;
 import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.testing.Test;
-import org.gradle.api.tasks.testing.TestFrameworkOptions;
-import org.gradle.api.tasks.testing.junitplatform.JUnitPlatformOptions;
 import org.gradle.api.tasks.testing.logging.TestLogEvent;
+import org.gradle.language.base.plugins.LifecycleBasePlugin;
+import org.gradle.testing.base.TestingExtension;
 import org.gradle.util.GradleVersion;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public final class BaselineTesting implements Plugin<Project> {
 
-    private static final Logger log = LoggerFactory.getLogger(BaselineTesting.class);
+    private static final GradleVersion GRADLE_8 = GradleVersion.version("8.0");
+
+    private static final String JUNIT_JUPITER = "org.junit.jupiter:junit-jupiter";
+    private static final String JUNIT_PLATFORM_LAUNCHER = "org.junit.platform:junit-platform-launcher";
 
     @Override
     public void apply(Project project) {
@@ -64,85 +59,60 @@ public final class BaselineTesting implements Plugin<Project> {
             }
         });
 
-        project.getPluginManager().withPlugin("java-base", unusedPlugin -> {
+        project.getPluginManager().withPlugin("java", unusedPlugin -> {
+            TestingExtension testingExtension = project.getExtensions().getByType(TestingExtension.class);
+
             TaskProvider<CheckJUnitDependencies> checkJUnitDependencies =
                     project.getTasks().register("checkJUnitDependencies", CheckJUnitDependencies.class);
 
-            project.getExtensions()
-                    .getByType(JavaPluginExtension.class)
-                    .getSourceSets()
-                    .configureEach(sourceSet -> {
-                        getTestTaskForSourceSet(project, sourceSet).ifPresent(testTask -> {
-                            testTask.dependsOn(checkJUnitDependencies);
-                        });
+            project.getTasks().named(LifecycleBasePlugin.CHECK_TASK_NAME).configure(task -> {
+                task.dependsOn(checkJUnitDependencies);
+            });
 
-                        ifHasResolvedCompileDependenciesMatching(
-                                project,
-                                sourceSet,
-                                BaselineTesting::requiresJunitPlatform,
-                                () -> fixSourceSet(project, sourceSet));
-                    });
+            // For backwards compatibility reasons, Gradle uses the legacy JUnit4 test toolchain for the default
+            // test suite and the JUnit Platform test toolchain for everything else.
+            // We want to use junit jupiter by default for the default test suite.
+            testingExtension
+                    .getSuites()
+                    .named(
+                            JvmTestSuitePlugin.DEFAULT_TEST_SUITE_NAME,
+                            JvmTestSuite.class,
+                            JvmTestSuite::useJUnitJupiter);
+
+            // Gradle <8 does not automatically add junit toolchain deps. When the test-sets plugin is used instead
+            // of jvm-test-suites, these deps are not added either. We make sure that we lazily add these deps to
+            // the correct configurations if required. Note: we can't lazily configure test tasks or test suite then
+            // add the dependencies in that configuration action, as the Configurations may be resolved before the
+            // tasks/suites are realised, hence we have to work from the Configurations directly.
+            // See https://github.com/gradle/gradle/pull/26369
+            project.getConfigurations().configureEach(configuration -> {
+                configuration.getDependencies().addAllLater(project.provider(() -> {
+                    return testSourceSetsWhereJunitToolchainDepsHaveNotBeenAutomaticallyAdded(project)
+                            .flatMap(sourceSet -> {
+                                if (configuration.getName().equals(sourceSet.getImplementationConfigurationName())) {
+                                    return Stream.of(project.getDependencies().create(JUNIT_JUPITER));
+                                }
+
+                                if (configuration.getName().equals(sourceSet.getRuntimeOnlyConfigurationName())) {
+                                    return Stream.of(project.getDependencies().create(JUNIT_PLATFORM_LAUNCHER));
+                                }
+
+                                return Stream.empty();
+                            })
+                            .findFirst()
+                            .map(Set::of)
+                            .orElseGet(Set::of);
+                }));
+            });
+
+            project.getTasks().withType(Test.class).configureEach(task -> configureTestTask(testingExtension, task));
         });
     }
 
-    private void fixSourceSet(Project project, SourceSet ss) {
-        Optional<Test> maybeTestTask = getTestTaskForSourceSet(project, ss);
-        if (!maybeTestTask.isPresent()) {
-            log.warn("Detected 'org:junit.jupiter:junit-jupiter', but unable to find test task");
-            return;
-        }
-        log.info(
-                "Detected 'org:junit.jupiter:junit-jupiter', enabling useJUnitPlatform() on {}",
-                maybeTestTask.get().getName());
-        enableJunit5ForTestTask(maybeTestTask.get());
-    }
-
-    public static Optional<Test> getTestTaskForSourceSet(Project proj, SourceSet ss) {
-        String testTaskName = ss.getTaskName(null, "test");
-
-        Task task1 = proj.getTasks().findByName(testTaskName);
-        if (task1 instanceof Test) {
-            return Optional.of((Test) task1);
-        }
-
-        // unbroken dome does this
-        Task task2 = proj.getTasks().findByName(ss.getName());
-        if (task2 instanceof Test) {
-            return Optional.of((Test) task2);
-        }
-        return Optional.empty();
-    }
-
-    private static void ifHasResolvedCompileDependenciesMatching(
-            Project project, SourceSet sourceSet, Predicate<ModuleComponentIdentifier> spec, Runnable runnable) {
-        project.getConfigurations()
-                .getByName(sourceSet.getRuntimeClasspathConfigurationName())
-                .getIncoming()
-                .afterResolve(deps -> {
-                    boolean anyMatch = deps.getResolutionResult().getAllComponents().stream()
-                            .map(ResolvedComponentResult::getId)
-                            .filter(ModuleComponentIdentifier.class::isInstance)
-                            .map(ModuleComponentIdentifier.class::cast)
-                            .anyMatch(spec);
-
-                    if (anyMatch) {
-                        runnable.run();
-                    }
-                });
-    }
-
-    private static boolean requiresJunitPlatform(ModuleComponentIdentifier dep) {
-        return isDep(dep, "org.junit.jupiter", "junit-jupiter")
-                || (isDep(dep, "org.spockframework", "spock-core")
-                        && VersionUtils.majorVersionNumber(dep.getVersion()) >= 2);
-    }
-
-    private static boolean isDep(ModuleComponentIdentifier dep, String group, String name) {
-        return group.equals(dep.getGroup()) && name.equals(dep.getModule());
-    }
-
-    private static void enableJunit5ForTestTask(Test task) {
-        if (!useJUnitPlatformEnabled(task)) {
+    private void configureTestTask(TestingExtension testingExtension, Test task) {
+        // For test tasks not created using test suites (ie using the old unbroken dome test-suites plugin),
+        // we must explicitly use the JUnit Platform
+        if (testTaskNotCreatedByJvmTestSuites(testingExtension, task.getName())) {
             task.useJUnitPlatform();
         }
 
@@ -162,76 +132,32 @@ public final class BaselineTesting implements Plugin<Project> {
         // circleci 10 min deadline if there are lots of tests. Don't do this locally to avoid spamming massive
         // amount of info for people running tests through the command line. Only for non unit test tasks as unit
         // test tasks tend to be fast and avoid this issue.
-        if (!task.getName().equals("test") && "true".equals(System.getenv("CI"))) {
+        if (!task.getName().equals(JvmTestSuitePlugin.DEFAULT_TEST_SUITE_NAME) && "true".equals(System.getenv("CI"))) {
             task.getTestLogging()
                     .getEvents()
-                    .addAll(ImmutableSet.of(TestLogEvent.STARTED, TestLogEvent.PASSED, TestLogEvent.SKIPPED));
+                    .addAll(Set.of(TestLogEvent.STARTED, TestLogEvent.PASSED, TestLogEvent.SKIPPED));
         }
     }
 
-    @SuppressWarnings("IllegalImports")
-    public static boolean useJUnitPlatformEnabled(Test task) {
-        // Starting with Gradle 7.3, the test framework property is getting finalized and can't be set multiple times.
-        // Using getter such as 'Test#getOptions' will set a default test framework if it is not configured yet and
-        // finalize this value. This result in errors when trying to set the test framework at a later point.
-        // For Gradle 7.3, we can actually access the test framework as a property without finalizing its value which
-        // allows us to check if it's already configured.
-        // See: https: // github.com/palantir/gradle-baseline/pull/1974
-        if (GradleVersion.current().compareTo(GradleVersion.version("7.3")) < 0) {
-            return task.getOptions() instanceof JUnitPlatformOptions;
-        }
-        return getTestFrameworkWithReflection(task)
-                .map(org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestFramework.class::isInstance)
-                .getOrElse(false);
-    }
+    private static Stream<SourceSet> testSourceSetsWhereJunitToolchainDepsHaveNotBeenAutomaticallyAdded(
+            Project project) {
 
-    @SuppressWarnings("IllegalImports")
-    public static Set<String> getJUnitPlatformEngines(Test task) {
-        // Starting with Gradle 7.3, the test framework property is getting finalized and can't be set multiple times.
-        // Using getter such as 'Test#getOptions' will set a default test framework if it is not configured yet and
-        // finalize this value. This result in errors when trying to set the test framework at a later point.
-        // For Gradle 7.3, we can actually access the test framework as a property without finalizing its value which
-        // allows us to check if it's already configured.
-        // See: https: // github.com/palantir/gradle-baseline/pull/1974
-        if (GradleVersion.current().compareTo(GradleVersion.version("7.3")) < 0) {
-            TestFrameworkOptions testOpts = task.getOptions();
-            if (testOpts instanceof JUnitPlatformOptions) {
-                JUnitPlatformOptions platformOptions = (JUnitPlatformOptions) testOpts;
-                return ImmutableSet.copyOf(platformOptions.getIncludeEngines());
-            } else {
-                return ImmutableSet.of();
+        SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
+        TestingExtension testingExtension = project.getExtensions().getByType(TestingExtension.class);
+
+        // Gradle <8 does not automatically add junit toolchain deps - see https://github.com/gradle/gradle/pull/21919
+        boolean gradleVersionLessThan8 = GradleVersion.current().compareTo(GRADLE_8) < 0;
+
+        return project.getTasks().withType(Test.class).getNames().stream().flatMap(testTaskName -> {
+            if (gradleVersionLessThan8 || testTaskNotCreatedByJvmTestSuites(testingExtension, testTaskName)) {
+                return Stream.of(sourceSets.getByName(testTaskName));
             }
-        }
-        return getTestFrameworkWithReflection(task)
-                .map(framework -> {
-                    if (framework
-                            instanceof org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestFramework) {
-                        org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestFramework
-                                platformFramework =
-                                        (org.gradle.api.internal.tasks.testing.junitplatform.JUnitPlatformTestFramework)
-                                                framework;
-                        return ImmutableSet.copyOf(
-                                platformFramework.getOptions().getIncludeEngines());
-                    }
 
-                    return ImmutableSet.<String>of();
-                })
-                .getOrElse(ImmutableSet.of());
+            return Stream.empty();
+        });
     }
 
-    @SuppressWarnings("IllegalImports")
-    private static Property<org.gradle.api.internal.tasks.testing.TestFramework> getTestFrameworkWithReflection(
-            Test task) {
-        try {
-            Method getTestFrameworkProperty = Test.class.getMethod("getTestFrameworkProperty");
-            return (Property<org.gradle.api.internal.tasks.testing.TestFramework>)
-                    getTestFrameworkProperty.invoke(task);
-        } catch (ReflectiveOperationException e) {
-            throw new RuntimeException(
-                    String.format(
-                            "Error calling Test#getTestFrameworkProperty reflectively on Gradle version %s",
-                            GradleVersion.current()),
-                    e);
-        }
+    private static boolean testTaskNotCreatedByJvmTestSuites(TestingExtension testingExtension, String testTaskName) {
+        return !testingExtension.getSuites().getNames().contains(testTaskName);
     }
 }
