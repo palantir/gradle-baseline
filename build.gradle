@@ -28,9 +28,9 @@ id 'org.inferred.processors' version '3.7.0'
 apply plugin: 'com.palantir.external-publish'
 apply plugin: 'com.palantir.failure-reports'
 apply plugin: 'com.palantir.jdks'
-apply plugin: 'com.palantir.consistent-versions'
 apply plugin: 'com.palantir.baseline'
 apply plugin: 'com.palantir.baseline-java-versions'
+apply plugin: 'com.palantir.consistent-versions'
 apply plugin: 'com.palantir.jdks.latest'
 
 allprojects {
