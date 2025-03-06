@@ -119,15 +119,6 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             setJavaCompiler(
                     javaCompileTask, rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, target);
             javaCompileTask.getOptions().getCompilerArgumentProviders().add(new EnablePreviewArgumentProvider(target));
-            // Set sourceCompatibility to opt out of '-release', allowing opens/exports to be used.
-            javaCompileTask.doFirst(new Action<Task>() {
-                @Override
-                public void execute(Task task) {
-                    ((JavaCompile) task)
-                            .setSourceCompatibility(
-                                    target.get().javaLanguageVersion().toString());
-                }
-            });
         });
 
         project.getTasks().withType(Javadoc.class).configureEach(javadocTask -> {
@@ -163,16 +154,6 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                     .getOptions()
                     .getCompilerArgumentProviders()
                     .add(new EnablePreviewArgumentProvider(target));
-
-            // Set sourceCompatibility to opt out of '-release', allowing opens/exports to be used.
-            groovyCompileTask.doFirst(new Action<Task>() {
-                @Override
-                public void execute(Task task) {
-                    ((GroovyCompile) task)
-                            .setSourceCompatibility(
-                                    target.get().javaLanguageVersion().toString());
-                }
-            });
         });
 
         project.getTasks().withType(ScalaCompile.class).configureEach(scalaCompileTask -> {
@@ -181,16 +162,6 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                     .set(getJavaLauncher(
                             rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, target));
             scalaCompileTask.getOptions().getCompilerArgumentProviders().add(new EnablePreviewArgumentProvider(target));
-
-            // Set sourceCompatibility to opt out of '-release', allowing opens/exports to be used.
-            scalaCompileTask.doFirst(new Action<Task>() {
-                @Override
-                public void execute(Task task) {
-                    ((ScalaCompile) task)
-                            .setSourceCompatibility(
-                                    target.get().javaLanguageVersion().toString());
-                }
-            });
         });
 
         project.getTasks().withType(ScalaDoc.class).configureEach(scalaDoc -> scalaDoc.getJavaLauncher()
