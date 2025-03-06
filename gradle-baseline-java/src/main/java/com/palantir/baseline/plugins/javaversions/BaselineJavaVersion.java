@@ -120,7 +120,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             setJavaCompiler(
                     javaCompileTask, rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, target);
             javaCompileTask.getOptions().getCompilerArgumentProviders().add(new EnablePreviewArgumentProvider(target));
-            optOfReleaseFlagForGradle7(javaCompileTask, target);
+            optOutOfReleaseFlagForGradle7(javaCompileTask, target);
         });
 
         project.getTasks().withType(Javadoc.class).configureEach(javadocTask -> {
@@ -157,7 +157,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                     .getCompilerArgumentProviders()
                     .add(new EnablePreviewArgumentProvider(target));
 
-            optOfReleaseFlagForGradle7(groovyCompileTask, target);
+            optOutOfReleaseFlagForGradle7(groovyCompileTask, target);
         });
 
         project.getTasks().withType(ScalaCompile.class).configureEach(scalaCompileTask -> {
@@ -167,14 +167,14 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                             rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, target));
             scalaCompileTask.getOptions().getCompilerArgumentProviders().add(new EnablePreviewArgumentProvider(target));
 
-            optOfReleaseFlagForGradle7(scalaCompileTask, target);
+            optOutOfReleaseFlagForGradle7(scalaCompileTask, target);
         });
 
         project.getTasks().withType(ScalaDoc.class).configureEach(scalaDoc -> scalaDoc.getJavaLauncher()
                 .set(getJavaLauncher(rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, target)));
     }
 
-    private static void optOfReleaseFlagForGradle7(AbstractCompile compileTask, Provider<ChosenJavaVersion> target) {
+    private static void optOutOfReleaseFlagForGradle7(AbstractCompile compileTask, Provider<ChosenJavaVersion> target) {
         if (GradleVersion.current().compareTo(GradleVersion.version("8.0")) >= 0) {
             return;
         }
