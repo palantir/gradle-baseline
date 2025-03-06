@@ -17,8 +17,10 @@
 package com.palantir.baseline
 
 import com.google.common.collect.MoreCollectors
+import com.palantir.gradle.plugintesting.GradleTestVersions
 import nebula.test.IntegrationSpec
 import nebula.test.functional.ExecutionResult
+import spock.lang.Unroll
 
 import java.util.jar.Attributes
 import java.util.jar.JarFile
@@ -26,8 +28,8 @@ import java.util.jar.JarOutputStream
 import java.util.jar.Manifest
 import java.util.zip.ZipOutputStream
 
+@Unroll
 class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
-
     def standardBuildFile = '''
     plugins {
         id 'java-library'
@@ -51,7 +53,9 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
         buildFile << standardBuildFile
     }
 
-    def 'Compiles with locally defined exports'() {
+    def '#gradleVersionNumber: Compiles with locally defined exports'() {
+        gradleVersion = gradleVersionNumber
+        
         when:
         buildFile << '''
         application {
@@ -72,9 +76,14 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
 
         then:
         runTasksSuccessfully('compileJava')
+
+        where:
+        gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
-    def 'Compiles with locally defined opens'() {
+    def '#gradleVersionNumber: Compiles with locally defined opens'() {
+        gradleVersion = gradleVersionNumber
+
         when:
         buildFile << '''
         application {
@@ -95,9 +104,14 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
 
         then:
         runTasksSuccessfully('compileJava')
+
+        where:
+        gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
-    def 'Builds javadoc with locally defined exports'() {
+    def '#gradleVersionNumber: Builds javadoc with locally defined exports'() {
+        gradleVersion = gradleVersionNumber
+
         when:
         buildFile << '''
         application {
@@ -122,9 +136,14 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
 
         then:
         runTasksSuccessfully('javadoc')
+
+        where:
+        gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
-    def 'Builds javadoc with locally defined opens'() {
+    def '#gradleVersionNumber: Builds javadoc with locally defined opens'() {
+        gradleVersion = gradleVersionNumber
+
         when:
         buildFile << '''
         application {
@@ -149,9 +168,14 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
 
         then:
         runTasksSuccessfully('javadoc')
+
+        where:
+        gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
-    def 'Runs with locally defined exports'() {
+    def '#gradleVersionNumber: Runs with locally defined exports'() {
+        gradleVersion = gradleVersionNumber
+
         when:
         buildFile << '''
         application {
@@ -178,9 +202,14 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
         // Gradle appears to normalize args, joining '--add-exports java.management/sun.management=ALL-UNNAMED'
         // with an equals.
         result.standardOutput.contains('--add-exports=java.management/sun.management=ALL-UNNAMED')
+
+        where:
+        gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
-    def 'Runs with locally defined exports with the release plugin, not toolchains'() {
+    def '#gradleVersionNumber: Runs with locally defined exports with the release plugin, not toolchains'() {
+        gradleVersion = gradleVersionNumber
+
         when:
         buildFile.text = '''
         plugins {
@@ -216,9 +245,14 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
         // Gradle appears to normalize args, joining '--add-exports java.management/sun.management=ALL-UNNAMED'
         // with an equals.
         result.standardOutput.contains('--add-exports=java.management/sun.management=ALL-UNNAMED')
+
+        where:
+        gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
-    def 'Runs with locally defined opens'() {
+    def '#gradleVersionNumber: Runs with locally defined opens'() {
+        gradleVersion = gradleVersionNumber
+
         when:
         buildFile << '''
         application {
@@ -245,9 +279,14 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
         // Gradle appears to normalize args, joining '--add-exports java.management/sun.management=ALL-UNNAMED'
         // with an equals.
         result.standardOutput.contains('--add-opens=java.management/sun.management=ALL-UNNAMED')
+
+        where:
+        gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
-    def 'Adds locally defined exports to the jar manifest'() {
+    def '#gradleVersionNumber: Adds locally defined exports to the jar manifest'() {
+        gradleVersion = gradleVersionNumber
+
         when:
         buildFile << '''
         application {
@@ -279,9 +318,14 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
         manifestValue == 'java.management/sun.management'
 
         !jarFile.getManifest().getMainAttributes().containsKey('Baseline-Enable-Preview')
+
+        where:
+        gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
-    def 'Adds Baseline-Enable-Preview attribute to jar manifest'() {
+    def '#gradleVersionNumber: Adds Baseline-Enable-Preview attribute to jar manifest'() {
+        gradleVersion = gradleVersionNumber
+
         when:
         buildFile << '''
         javaVersions {
@@ -304,9 +348,14 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
                 .collect(MoreCollectors.onlyElement())
         String manifestValue = jarFile.getManifest().getMainAttributes().getValue('Baseline-Enable-Preview')
         manifestValue == '11'
+
+        where:
+        gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
-    def 'Executes with externally defined exports'() {
+    def '#gradleVersionNumber: Executes with externally defined exports'() {
+        gradleVersion = gradleVersionNumber
+
         when:
         Manifest manifest = new Manifest()
         manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0")
@@ -339,9 +388,14 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
         // Gradle appears to normalize args, joining '--add-exports java.management/sun.management=ALL-UNNAMED'
         // with an equals.
         result.standardOutput.contains('--add-exports=java.management/sun.management=ALL-UNNAMED')
+
+        where:
+        gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
-    def 'Handles jars with no manifest'() {
+    def '#gradleVersionNumber: Handles jars with no manifest'() {
+        gradleVersion = gradleVersionNumber
+
         when:
         File testJar = new File(getProjectDir(),"test.jar");
         testJar.withOutputStream { fos ->
@@ -369,9 +423,14 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
         then:
         ExecutionResult result = runTasksSuccessfully('run')
         !result.standardOutput.contains('--add-exports')
+
+        where:
+        gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
-    def 'Does not add externally defined exports to the jar manifest'() {
+    def '#gradleVersionNumber: Does not add externally defined exports to the jar manifest'() {
+        gradleVersion = gradleVersionNumber
+
         when:
         Manifest manifest = new Manifest()
         manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0")
@@ -407,9 +466,14 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
                 .collect(MoreCollectors.onlyElement())
         String manifestValue = jarFile.getManifest().getMainAttributes().getValue('Add-Exports')
         manifestValue == null
+
+        where:
+        gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
-    def 'Validates exports'() {
+    def '#gradleVersionNumber: Validates exports'() {
+        gradleVersion = gradleVersionNumber
+
         when:
         buildFile << '''
         application {
@@ -424,9 +488,14 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
         then:
         ExecutionResult result = runTasksWithFailure('jar')
         result.standardError.contains('separated by a single slash')
+
+        where:
+        gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
-    def 'Task not up-to-date when extension value changes'() {
+    def '#gradleVersionNumber: Task not up-to-date when extension value changes'() {
+        gradleVersion = gradleVersionNumber
+
         when:
         buildFile << '''
         application {
@@ -467,5 +536,8 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
         resultBeforeChange.wasExecuted('jar')
         !resultAfterChange.wasUpToDate('jar')
         resultAfterChange.wasExecuted('jar')
+
+        where:
+        gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 }
