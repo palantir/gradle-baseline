@@ -17,6 +17,8 @@
 package com.palantir.baseline.plugins.javaversions;
 
 import java.util.Collections;
+import java.util.Locale;
+import java.util.stream.Stream;
 import javax.inject.Inject;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
@@ -131,17 +133,19 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                                 project.getExtensions().getByType(TestingExtension.class);
                         SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
 
-                        boolean isTestCompile = testingExtension.getSuites().getNames().stream()
-                                .anyMatch(suiteName -> sourceSets
-                                        .getByName(suiteName)
+                        boolean isTestCompile = Stream.concat(
+                                        // New JVM test suites: the future
+                                        testingExtension.getSuites().getNames().stream(),
+                                        // Old unbroken dome test-sets: delete this once we migrate away from them
+                                        sourceSets.getNames().stream().filter(sourceSetName -> sourceSetName
+                                                .toLowerCase(Locale.ROOT)
+                                                .contains("test")))
+                                .anyMatch(name -> sourceSets
+                                        .getByName(name)
                                         .getCompileJavaTaskName()
                                         .equals(javaCompileTask.getName()));
 
-                        if (isTestCompile) {
-                            return runtimeValue;
-                        } else {
-                            return targetValue;
-                        }
+                        return isTestCompile ? runtimeValue : targetValue;
                     });
 
             setJavaCompiler(

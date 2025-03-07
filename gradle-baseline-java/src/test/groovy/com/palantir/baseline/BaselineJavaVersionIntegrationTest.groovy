@@ -105,6 +105,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         buildFile << '''
             plugins {
                 id 'java'
+                id 'org.unbroken-dome.test-sets' version '4.1.0'
             }
             
             allprojects {
@@ -354,6 +355,31 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
 
         when:
         ExecutionResult result = runTasksSuccessfully('test')
+
+        then:
+        result.standardOutput.contains 'jdk17 features on runtime 17'
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
+    }
+
+    def '#gradleVersionNumber: when target is 11 and runtime is 17, java 17 source features can be used in tests made by the tests sets plugin'() {
+        // language=Gradle
+        buildFile << '''
+            javaVersions {
+                libraryTarget = 11
+                runtime = 17
+            }
+            
+            testSets {
+                integrationTest
+            }
+        '''.stripIndent(true)
+
+        file('src/integrationTest/java/TestClass.java') << java17CompatibleTestCode
+
+        when:
+        ExecutionResult result = runTasksSuccessfully('integrationTest')
 
         then:
         result.standardOutput.contains 'jdk17 features on runtime 17'
