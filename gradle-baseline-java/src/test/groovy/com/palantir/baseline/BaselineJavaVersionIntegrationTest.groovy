@@ -17,7 +17,6 @@
 package com.palantir.baseline
 
 import com.google.common.base.Throwables
-import org.gradle.util.GradleVersion
 import spock.lang.Unroll
 
 import java.nio.file.Files
@@ -47,6 +46,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
     private static final int NOT_ENABLE_PREVIEW_BYTECODE = 0
 
     File mainJava
+    File testJava
 
     def java8CompatibleCode = '''
         public class Main { 
@@ -63,6 +63,20 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             public static void main(String[] args) {
                 Optional.of(args).isEmpty();
                 System.out.println("jdk11 features on runtime " + System.getProperty("java.specification.version"));
+            }
+        }
+        '''.stripIndent(true)
+
+    // language=Java
+    def java17CompatibleTestCode = '''
+        import java.util.stream.Stream;
+        import org.junit.jupiter.api.Test;
+        
+        class TestClass { 
+            @Test
+            void test() {
+                Stream.of(1).mapMulti((integer, consumer) -> {});
+                System.out.println("jdk17 features on runtime " + System.getProperty("java.specification.version"));
             }
         }
         '''.stripIndent(true)
@@ -99,6 +113,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
                 }
             }
             
+            apply plugin: 'com.palantir.baseline-testing'
             apply plugin: 'com.palantir.baseline-java-versions'
             
             task runMainClass(type: JavaExec) {
@@ -112,6 +127,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         setFork(true)
 
         mainJava = file("src/main/java/Main.java")
+        testJava = file("src/test/java/TestClass.java")
     }
 
     def '#gradleVersionNumber: java 11 compilation fails targeting java 8'() {
@@ -319,6 +335,28 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         ExecutionResult result = runTasksSuccessfully('runMainClass')
         result.standardOutput.contains 'jdk11 features on runtime 17'
         assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE)
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
+    }
+
+
+    def '#gradleVersionNumber: when target is 11 and runtime is 17, java 17 source features can be used in tests'() {
+        // language=Gradle
+        buildFile << '''
+            javaVersions {
+                libraryTarget = 11
+                runtime = 17
+            }
+        '''.stripIndent(true)
+
+        testJava << java17CompatibleTestCode
+
+        when:
+        ExecutionResult result = runTasksSuccessfully('test')
+
+        then:
+        result.standardOutput.contains 'jdk17 features on runtime 17'
 
         where:
         gradleVersionNumber << GRADLE_TEST_VERSIONS
@@ -719,5 +757,16 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         Matcher matcher =  Pattern.compile("^Starting process 'command '([^']*)/bin/java''.*Main", Pattern.MULTILINE).matcher(output)
         matcher.find()
         return matcher.group(1)
+    }
+
+    @Override
+    ExecutionResult runTasksSuccessfully(String... tasks) {
+        def executionResult = super.runTasks(tasks)
+        if (!executionResult.success) {
+            println executionResult.standardOutput
+            println executionResult.standardError
+            executionResult.rethrowFailure()
+        }
+        return executionResult
     }
 }

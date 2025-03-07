@@ -33,6 +33,7 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.JavaExec;
+import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.AbstractCompile;
@@ -47,6 +48,7 @@ import org.gradle.jvm.toolchain.JavaLauncher;
 import org.gradle.jvm.toolchain.JavaToolchainService;
 import org.gradle.jvm.toolchain.JavaToolchainSpec;
 import org.gradle.process.CommandLineArgumentProvider;
+import org.gradle.testing.base.TestingExtension;
 import org.gradle.util.GradleVersion;
 
 public final class BaselineJavaVersion implements Plugin<Project> {
@@ -83,7 +85,12 @@ public final class BaselineJavaVersion implements Plugin<Project> {
 
             // Compilation tasks (using target version)
             configureCompilationTasks(
-                    project, extension.target(), baselineConfiguredJavaToolchains, rootExtension, toolchainService);
+                    project,
+                    extension.target(),
+                    extension.runtime(),
+                    baselineConfiguredJavaToolchains,
+                    rootExtension,
+                    toolchainService);
 
             // Execution tasks (using the runtime version)
             configureExecutionTasks(
@@ -112,15 +119,42 @@ public final class BaselineJavaVersion implements Plugin<Project> {
     private static void configureCompilationTasks(
             Project project,
             Property<ChosenJavaVersion> target,
+            Property<ChosenJavaVersion> runtime,
             JavaToolchains baselineConfiguredJavaToolchains,
             BaselineJavaVersionsExtension rootExtension,
             JavaToolchainService javaToolchainService) {
 
         project.getTasks().withType(JavaCompile.class).configureEach(javaCompileTask -> {
+            Provider<ChosenJavaVersion> javaVersionForThisCompilationTask =
+                    target.zip(runtime, (targetValue, runtimeValue) -> {
+                        TestingExtension testingExtension =
+                                project.getExtensions().getByType(TestingExtension.class);
+                        SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
+
+                        boolean isTestCompile = testingExtension.getSuites().getNames().stream()
+                                .anyMatch(suiteName -> sourceSets
+                                        .getByName(suiteName)
+                                        .getCompileJavaTaskName()
+                                        .equals(javaCompileTask.getName()));
+
+                        if (isTestCompile) {
+                            return runtimeValue;
+                        } else {
+                            return targetValue;
+                        }
+                    });
+
             setJavaCompiler(
-                    javaCompileTask, rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, target);
-            javaCompileTask.getOptions().getCompilerArgumentProviders().add(new EnablePreviewArgumentProvider(target));
-            optOutOfReleaseFlagForGradle7(javaCompileTask, target);
+                    javaCompileTask,
+                    rootExtension,
+                    baselineConfiguredJavaToolchains,
+                    javaToolchainService,
+                    javaVersionForThisCompilationTask);
+            javaCompileTask
+                    .getOptions()
+                    .getCompilerArgumentProviders()
+                    .add(new EnablePreviewArgumentProvider(javaVersionForThisCompilationTask));
+            optOutOfReleaseFlagForGradle7(javaCompileTask, javaVersionForThisCompilationTask);
         });
 
         project.getTasks().withType(Javadoc.class).configureEach(javadocTask -> {
@@ -218,7 +252,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             BaselineJavaVersionsExtension rootExtension,
             JavaToolchains baselineConfiguredJavaToolchains,
             JavaToolchainService javaToolchainService,
-            Property<ChosenJavaVersion> version) {
+            Provider<ChosenJavaVersion> version) {
         if (rootExtension.getSetupJdkToolchains().get()) {
             log.debug("Using baselineConfiguredJavaToolchains to configure the javaCompileTask");
             javaCompileTask
@@ -238,7 +272,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             BaselineJavaVersionsExtension rootExtension,
             JavaToolchains baselineConfiguredJavaToolchains,
             JavaToolchainService javaToolchainService,
-            Property<ChosenJavaVersion> version) {
+            Provider<ChosenJavaVersion> version) {
         if (rootExtension.getSetupJdkToolchains().get()) {
             log.debug("Using baselineConfiguredJavaToolchains to configure javaDocTool");
             javadocTask
@@ -257,7 +291,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             BaselineJavaVersionsExtension rootExtension,
             JavaToolchains baselineConfiguredJavaToolchains,
             JavaToolchainService javaToolchainService,
-            Property<ChosenJavaVersion> version) {
+            Provider<ChosenJavaVersion> version) {
         if (rootExtension.getSetupJdkToolchains().get()) {
             log.debug("Using baselineConfiguredJavaToolchains to configure JavaLauncher");
             return baselineConfiguredJavaToolchains.forVersion(version).flatMap(BaselineJavaToolchain::javaLauncher);
