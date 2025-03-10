@@ -294,6 +294,23 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
+    def '#gradleVersionNumber: test task without source set'() {
+        when:
+        gradleVersion = gradleVersionNumber
+
+        buildFile << standardBuildFile
+        buildFile << '''
+            tasks.register('otherTest', Test.class)
+        '''.stripIndent(true)
+
+        then:
+        // Run a task that will attempt to resolve dependencies
+        runTasksSuccessfully('compileJava')
+
+        where:
+        gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
+    }
+
     def 'running -Drecreate=true will re-run tests even if no code changes'() {
         buildFile << standardBuildFile
         file('src/test/java/test/JUnit5Test.java') << junit5Test
