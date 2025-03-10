@@ -141,7 +141,6 @@ public final class BaselineTesting implements Plugin<Project> {
 
     private static Stream<SourceSet> testSourceSetsWhereJunitToolchainDepsHaveNotBeenAutomaticallyAdded(
             Project project) {
-
         SourceSetContainer sourceSets = project.getExtensions().getByType(SourceSetContainer.class);
         TestingExtension testingExtension = project.getExtensions().getByType(TestingExtension.class);
 
@@ -150,7 +149,7 @@ public final class BaselineTesting implements Plugin<Project> {
 
         return project.getTasks().withType(Test.class).getNames().stream().flatMap(testTaskName -> {
             if (gradleVersionLessThan8 || testTaskNotCreatedByJvmTestSuites(testingExtension, testTaskName)) {
-                return Stream.of(sourceSets.getByName(testTaskName));
+                return Stream.ofNullable(sourceSets.findByName(testTaskName));
             }
 
             return Stream.empty();
