@@ -20,7 +20,6 @@ import com.palantir.baseline.tasks.CheckExplicitSourceCompatibilityTask;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
-import org.gradle.api.file.DuplicatesStrategy;
 import org.gradle.api.plugins.JavaBasePlugin;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.bundling.AbstractArchiveTask;
@@ -34,7 +33,6 @@ public final class BaselineReproducibility implements Plugin<Project> {
         project.getTasks().withType(AbstractArchiveTask.class).configureEach(t -> {
             t.setPreserveFileTimestamps(false);
             t.setReproducibleFileOrder(true);
-            t.setDuplicatesStrategy(DuplicatesStrategy.WARN);
         });
 
         project.getPluginManager().withPlugin("nebula.info", plugin -> {
