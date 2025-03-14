@@ -166,10 +166,6 @@ gradlePlugin {
     }
 }
 
-tasks.named('processResources').configure {
-    duplicatesStrategy 'include'
-}
-
 // Run `./gradlew test -Drecreate=true` to recreate all the expected
 // generated code that we have checked into the repo.
 tasks.withType(Test) {
