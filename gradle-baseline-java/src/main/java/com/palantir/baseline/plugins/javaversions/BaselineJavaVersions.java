@@ -18,6 +18,7 @@ package com.palantir.baseline.plugins.javaversions;
 
 import com.google.common.collect.ImmutableSet;
 import java.util.Objects;
+import java.util.Set;
 import org.gradle.api.GradleException;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -75,7 +76,7 @@ public final class BaselineJavaVersions implements Plugin<Project> {
     private static boolean isLibrary(Project project, BaselineJavaVersionExtension projectVersions) {
         Property<Boolean> libraryOverride = projectVersions.overrideLibraryAutoDetection();
         if (libraryOverride.isPresent()) {
-            log.debug(
+            log.warn(
                     "Project '{}' is considered a library because it has been overridden with library = true",
                     project.getDisplayName());
             return libraryOverride.get();
@@ -83,7 +84,7 @@ public final class BaselineJavaVersions implements Plugin<Project> {
 
         for (String plugin : LIBRARY_PLUGINS) {
             if (project.getPluginManager().hasPlugin(plugin)) {
-                log.debug(
+                log.warn(
                         "Project '{}' is considered a library because the '{}' plugin is applied",
                         project.getDisplayName(),
                         plugin);
@@ -93,7 +94,7 @@ public final class BaselineJavaVersions implements Plugin<Project> {
 
         for (String plugin : DISTRIBUTION_PLUGINS) {
             if (project.getPluginManager().hasPlugin(plugin)) {
-                log.debug(
+                log.warn(
                         "Project '{}' is considered a distribution because the '{}' plugin is applied",
                         project.getDisplayName(),
                         plugin);
@@ -103,15 +104,23 @@ public final class BaselineJavaVersions implements Plugin<Project> {
 
         PublishingExtension publishing = project.getExtensions().findByType(PublishingExtension.class);
         if (publishing == null) {
-            log.debug(
+            log.warn(
                     "Project '{}' is considered a distribution, not a library, because "
                             + "it doesn't define any publishing extensions",
                     project.getDisplayName());
             return false;
         }
 
+        if (publishing.getPublications().getNames().equals(Set.of("conjure"))) {
+            log.warn(
+                    "Project '{}' is considered a distribution, not a library, because "
+                            + "it only has a single 'conjure' publication",
+                    project.getDisplayName());
+            return false;
+        }
+
         // Better to be conservative with the java version rather than release something that is too high to be used.
-        log.debug("Project '{}' is considered a library as no other conditions matched", project.getDisplayName());
+        log.warn("Project '{}' is considered a library as no other conditions matched", project.getDisplayName());
         return true;
     }
 }
