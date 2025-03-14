@@ -1,0 +1,8 @@
+type: fix
+fix:
+  description: baseline-java-versions is now much less conservative about what it
+    regards for `libraryTarget` instead of `distributionTarget`. `libraryTarget` will
+    be used if and only if a jar is published using one of the Palantir jar publish
+    plugins.
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/3066
