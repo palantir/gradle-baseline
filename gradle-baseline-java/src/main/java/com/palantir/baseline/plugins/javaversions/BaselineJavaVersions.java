@@ -69,7 +69,7 @@ public final class BaselineJavaVersions implements Plugin<Project> {
     private static boolean isLibrary(Project project, BaselineJavaVersionExtension projectVersions) {
         Property<Boolean> libraryOverride = projectVersions.overrideLibraryAutoDetection();
         if (libraryOverride.isPresent()) {
-            log.warn(
+            log.info(
                     "{} is considered a library because it has been overridden with library = true",
                     project.getDisplayName());
             return libraryOverride.get();
@@ -77,7 +77,7 @@ public final class BaselineJavaVersions implements Plugin<Project> {
 
         for (String plugin : LIBRARY_PLUGINS) {
             if (project.getPluginManager().hasPlugin(plugin)) {
-                log.warn(
+                log.info(
                         "{} is considered a library because the '{}' plugin is applied",
                         project.getDisplayName(),
                         plugin);
@@ -85,12 +85,21 @@ public final class BaselineJavaVersions implements Plugin<Project> {
             }
         }
 
-        // The assumption here is that (at least for Palantir code):
-        //   1. Only individual published jars matter when we upgrade Java versions, as this is what will
-        //      spread to other projects
+        // The whole reason for having libraryTarget vs distributionTarget is so that we can allow distributions
+        // (ie Java code that isn't published and only used in that service) to use newer source features and
+        // class files, allowing everyone to support the newer compilation level *before* libraries they depend on
+        // start requiring the newer compilation level. We want to upgrade distributionTarget first, wait for every
+        // repo to support the new compilation level, then allow libraries to be published with the new level.
+        //
+        // So the assumptions here are that (at least for Palantir code):
+        //   1. Only individual published jars matter for spreading higher compilation level requirements between repos
+        //      when we upgrade Java versions:
         //        a) Jars inside dists/containers are not relevant as they will normally have JDK packaged with them.
-        //        b) Shaded jars will still need to be published to have any kind of affect.
+        //        b) Shaded/fat jars will still need to be published to have any kind of effect.
         //   2. The *only* way to publish an individual jar is to use one of the above library plugins.
+        //
+        // So if the project does not use one of these jar publish plugins, we should let it use distributionTarget
+        // source features.
         log.warn("{} is considered distribution code as it does not publish a jar", project.getDisplayName());
         return false;
     }
