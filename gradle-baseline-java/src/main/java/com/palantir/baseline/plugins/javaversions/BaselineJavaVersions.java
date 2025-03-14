@@ -18,13 +18,11 @@ package com.palantir.baseline.plugins.javaversions;
 
 import com.google.common.collect.ImmutableSet;
 import java.util.Objects;
-import java.util.Set;
 import org.gradle.api.GradleException;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
-import org.gradle.api.publish.PublishingExtension;
 import org.gradle.util.GradleVersion;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,11 +36,6 @@ public final class BaselineJavaVersions implements Plugin<Project> {
 
     private static final ImmutableSet<String> LIBRARY_PLUGINS =
             ImmutableSet.of("com.palantir.external-publish-jar", "com.palantir.publish-jar");
-
-    private static final ImmutableSet<String> DISTRIBUTION_PLUGINS = ImmutableSet.of(
-            "com.palantir.external-publish-dist",
-            "com.palantir.publish-dist",
-            "com.palantir.sls-java-service-distribution");
 
     @Override
     public void apply(Project project) {
@@ -77,7 +70,7 @@ public final class BaselineJavaVersions implements Plugin<Project> {
         Property<Boolean> libraryOverride = projectVersions.overrideLibraryAutoDetection();
         if (libraryOverride.isPresent()) {
             log.warn(
-                    "Project '{}' is considered a library because it has been overridden with library = true",
+                    "{} is considered a library because it has been overridden with library = true",
                     project.getDisplayName());
             return libraryOverride.get();
         }
@@ -85,42 +78,20 @@ public final class BaselineJavaVersions implements Plugin<Project> {
         for (String plugin : LIBRARY_PLUGINS) {
             if (project.getPluginManager().hasPlugin(plugin)) {
                 log.warn(
-                        "Project '{}' is considered a library because the '{}' plugin is applied",
+                        "{} is considered a library because the '{}' plugin is applied",
                         project.getDisplayName(),
                         plugin);
                 return true;
             }
         }
 
-        for (String plugin : DISTRIBUTION_PLUGINS) {
-            if (project.getPluginManager().hasPlugin(plugin)) {
-                log.warn(
-                        "Project '{}' is considered a distribution because the '{}' plugin is applied",
-                        project.getDisplayName(),
-                        plugin);
-                return false;
-            }
-        }
-
-        PublishingExtension publishing = project.getExtensions().findByType(PublishingExtension.class);
-        if (publishing == null) {
-            log.warn(
-                    "Project '{}' is considered a distribution, not a library, because "
-                            + "it doesn't define any publishing extensions",
-                    project.getDisplayName());
-            return false;
-        }
-
-        if (publishing.getPublications().getNames().equals(Set.of("conjure"))) {
-            log.warn(
-                    "Project '{}' is considered a distribution, not a library, because "
-                            + "it only has a single 'conjure' publication",
-                    project.getDisplayName());
-            return false;
-        }
-
-        // Better to be conservative with the java version rather than release something that is too high to be used.
-        log.warn("Project '{}' is considered a library as no other conditions matched", project.getDisplayName());
-        return true;
+        // The assumption here is that (at least for Palantir code):
+        //   1. Only individual published jars matter when we upgrade Java versions, as this is what will
+        //      spread to other projects
+        //        a) Jars inside dists/containers are not relevant as they will normally have JDK packaged with them.
+        //        b) Shaded jars will still need to be published to have any kind of affect.
+        //   2. The *only* way to publish an individual jar is to use one of the above library plugins.
+        log.warn("{} is considered distribution code as it does not publish a jar", project.getDisplayName());
+        return false;
     }
 }
