@@ -1,0 +1,5 @@
+type: improvement
+improvement:
+  description: Bump checkstyle 10.21.2 -> 10.21.4
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/3071
