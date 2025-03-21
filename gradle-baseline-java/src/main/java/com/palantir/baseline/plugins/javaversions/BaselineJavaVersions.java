@@ -76,12 +76,16 @@ public final class BaselineJavaVersions implements Plugin<Project> {
                     : rootExtension.distributionTarget().get();
         });
 
+        Property<ChosenJavaVersion> suggestedRuntime = rootExtension.runtime();
+
         projectVersions.target().convention(suggestedTarget);
-        projectVersions.runtime().convention(rootExtension.runtime());
+        projectVersions.runtime().convention(suggestedRuntime);
 
         project.getTasks().register("explainJavaVersions", ExplainJavaVersions.class, explainJavaVersions -> {
             explainJavaVersions.getTarget().set(projectVersions.target());
+            explainJavaVersions.getDefaultTarget().set(suggestedTarget);
             explainJavaVersions.getRuntime().set(projectVersions.runtime());
+            explainJavaVersions.getDefaultRuntime().set(suggestedRuntime);
             explainJavaVersions.getReasoning().set(project.provider(() -> isLibrary(project, projectVersions)
                     .toString()));
         });

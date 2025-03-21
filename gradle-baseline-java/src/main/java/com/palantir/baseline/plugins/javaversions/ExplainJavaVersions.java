@@ -26,15 +26,38 @@ public abstract class ExplainJavaVersions extends DefaultTask {
     public abstract Property<ChosenJavaVersion> getTarget();
 
     @Input
+    public abstract Property<ChosenJavaVersion> getDefaultTarget();
+
+    @Input
     public abstract Property<ChosenJavaVersion> getRuntime();
+
+    @Input
+    public abstract Property<ChosenJavaVersion> getDefaultRuntime();
 
     @Input
     public abstract Property<String> getReasoning();
 
     @TaskAction
     public final void action() {
-        getLogger().lifecycle("target  = {}", getTarget().get().toString());
-        getLogger().lifecycle("runtime = {}", getRuntime().get().toString());
+        getLogger()
+                .lifecycle(
+                        "target  = {} {}",
+                        getTarget().get().toString(),
+                        defaultValueChanged(getTarget(), getDefaultTarget()));
+
+        getLogger()
+                .lifecycle(
+                        "runtime = {} {}",
+                        getRuntime().get().toString(),
+                        defaultValueChanged(getRuntime(), getDefaultRuntime()));
+
         getLogger().lifecycle("Reason: {}", getReasoning().get());
+    }
+
+    private static String defaultValueChanged(
+            Property<ChosenJavaVersion> actualValue, Property<ChosenJavaVersion> defaultValue) {
+        return actualValue.get().equals(defaultValue.get())
+                ? "(default value)"
+                : String.format("(default value was %s - changed by a Gradle script or plugin)", defaultValue.get());
     }
 }
