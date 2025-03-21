@@ -449,6 +449,16 @@ The configurable fields of the `javaVersions` extension are:
 
 The configured Java versions are used as defaults for all projects.
 
+You can run the `explainJavaVersions` task to both show what the `target` and `runtime` versions are for each subproject, and explain why:
+
+```
+$ ./gradle explainJavaVersions
+> Task :subproject:explainJavaVersions
+target  = 11
+runtime = 17
+Reason: considered a distribution because it doesn't have any publishing extensions defined
+```
+
 If a sub-project should use `libraryTarget` but is not considered a library (for example, because it is not published), you can explicitly indicate that it is a library:
 
 ```gradle
