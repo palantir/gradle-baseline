@@ -126,8 +126,8 @@ public final class BaselineJavaVersions implements Plugin<Project> {
                                 + "distribution type is being published. The publications in this extensions are "
                                 + publishing.getPublications().getNames(),
                         String.format(
-                                "Despite not having any library publish plugins (%s), this is conservatively regarded as a "
-                                        + "library for safety.",
+                                "Despite not having any library publish plugins (%s), this is conservatively "
+                                        + "regarded as a library for safety.",
                                 LIBRARY_PLUGINS)));
     }
 
