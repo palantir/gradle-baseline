@@ -41,7 +41,7 @@ class ChosenJavaVersionTest {
         assertThat(ChosenJavaVersion.fromString("17_PREVIEW")).hasToString("17_PREVIEW");
         assertThat(ChosenJavaVersion.fromString("33")).hasToString("33");
 
-        assertThatThrownBy(() -> ChosenJavaVersion.fromString("1.5")).isInstanceOf(NumberFormatException.class);
+        assertThatThrownBy(() -> ChosenJavaVersion.fromString("1.5")).isInstanceOf(IllegalArgumentException.class);
     }
 
     @Test
