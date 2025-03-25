@@ -59,59 +59,82 @@ public final class BaselineJavaVersions implements Plugin<Project> {
                 proj.getExtensions().create(EXTENSION_NAME, SubprojectBaselineJavaVersionsExtension.class, proj));
 
         project.allprojects(proj -> proj.getPluginManager().withPlugin("java", unused -> {
-            proj.getPluginManager().apply(BaselineJavaVersion.class);
-            BaselineJavaVersionExtension projectVersions =
-                    proj.getExtensions().getByType(BaselineJavaVersionExtension.class);
-
-            Provider<ChosenJavaVersion> suggestedTarget = proj.provider(() -> isLibrary(proj, projectVersions)
-                    ? ChosenJavaVersion.of(rootExtension.libraryTarget().get())
-                    : rootExtension.distributionTarget().get());
-
-            projectVersions.target().convention(suggestedTarget);
-            projectVersions.runtime().convention(rootExtension.runtime());
+            configureJavaProject(proj, rootExtension);
         }));
     }
 
-    private static boolean isLibrary(Project project, BaselineJavaVersionExtension projectVersions) {
+    private static void configureJavaProject(Project project, BaselineJavaVersionsExtension rootExtension) {
+        project.getPluginManager().apply(BaselineJavaVersion.class);
+        BaselineJavaVersionExtension projectVersions =
+                project.getExtensions().getByType(BaselineJavaVersionExtension.class);
+
+        Provider<ChosenJavaVersion> suggestedTarget = project.provider(() -> {
+            IsLibraryWithReason isLibraryWithReason = isLibrary(project, projectVersions);
+            log.info("{} is {}", project.getDisplayName(), isLibraryWithReason);
+            return isLibraryWithReason.isLibrary()
+                    ? ChosenJavaVersion.of(rootExtension.libraryTarget().get())
+                    : rootExtension.distributionTarget().get();
+        });
+
+        Property<ChosenJavaVersion> suggestedRuntime = rootExtension.runtime();
+
+        projectVersions.target().convention(suggestedTarget);
+        projectVersions.runtime().convention(suggestedRuntime);
+
+        project.getTasks().register("explainJavaVersions", ExplainJavaVersions.class, explainJavaVersions -> {
+            explainJavaVersions.getTarget().set(projectVersions.target());
+            explainJavaVersions.getDefaultTarget().set(suggestedTarget);
+            explainJavaVersions.getRuntime().set(projectVersions.runtime());
+            explainJavaVersions.getDefaultRuntime().set(suggestedRuntime);
+            explainJavaVersions.getReasoning().set(project.provider(() -> isLibrary(project, projectVersions)
+                    .toString()));
+        });
+    }
+
+    private static IsLibraryWithReason isLibrary(Project project, BaselineJavaVersionExtension projectVersions) {
         Property<Boolean> libraryOverride = projectVersions.overrideLibraryAutoDetection();
         if (libraryOverride.isPresent()) {
-            log.debug(
-                    "Project '{}' is considered a library because it has been overridden with library = true",
-                    project.getDisplayName());
-            return libraryOverride.get();
+            return new IsLibraryWithReason(
+                    libraryOverride.get(), "has been overridden with `library = " + libraryOverride.get() + "`");
         }
 
         for (String plugin : LIBRARY_PLUGINS) {
             if (project.getPluginManager().hasPlugin(plugin)) {
-                log.debug(
-                        "Project '{}' is considered a library because the '{}' plugin is applied",
-                        project.getDisplayName(),
-                        plugin);
-                return true;
+                return new IsLibraryWithReason(true, String.format("has the '%s' plugin applied", plugin));
             }
         }
 
         for (String plugin : DISTRIBUTION_PLUGINS) {
             if (project.getPluginManager().hasPlugin(plugin)) {
-                log.debug(
-                        "Project '{}' is considered a distribution because the '{}' plugin is applied",
-                        project.getDisplayName(),
-                        plugin);
-                return false;
+                return new IsLibraryWithReason(false, String.format("has the '%s' plugin applied", plugin));
             }
         }
 
         PublishingExtension publishing = project.getExtensions().findByType(PublishingExtension.class);
         if (publishing == null) {
-            log.debug(
-                    "Project '{}' is considered a distribution, not a library, because "
-                            + "it doesn't define any publishing extensions",
-                    project.getDisplayName());
-            return false;
+            return new IsLibraryWithReason(false, "doesn't have any publishing extensions defined");
         }
 
         // Better to be conservative with the java version rather than release something that is too high to be used.
-        log.debug("Project '{}' is considered a library as no other conditions matched", project.getDisplayName());
-        return true;
+        return new IsLibraryWithReason(
+                true,
+                String.join(
+                        "\n",
+                        "didn't match any other conditions that would indicate it was a distribution:",
+                        "  * It did not have a distribution plugin: " + DISTRIBUTION_PLUGINS,
+                        "  * It had a publishing extension, indicating *something* that isn't a known "
+                                + "distribution type is being published. The publications in this extensions are "
+                                + publishing.getPublications().getNames(),
+                        String.format(
+                                "Despite not having any library publish plugins (%s), this is conservatively "
+                                        + "regarded as a library for safety.",
+                                LIBRARY_PLUGINS)));
+    }
+
+    private record IsLibraryWithReason(boolean isLibrary, String reason) {
+        @Override
+        public String toString() {
+            return String.format("considered a %s because it %s", isLibrary ? "library" : "distribution", reason);
+        }
     }
 }

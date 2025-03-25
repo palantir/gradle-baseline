@@ -689,6 +689,28 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
         gradleVersionNumber << GRADLE_TEST_VERSIONS
     }
 
+
+    def '#gradleVersionNumber: explainJavaVersions prints the java version used'() {
+        fork = false
+        buildFile << '''
+            javaVersions {
+                libraryTarget = 11
+                runtime = 17
+            }
+        '''.stripIndent(true)
+
+        when:
+        def stdout = runTasksSuccessfully('explainJavaVersions').standardOutput
+
+        then:
+        stdout.contains('target  = 11')
+        stdout.contains('runtime = 17')
+        stdout.contains('Reason:')
+
+        where:
+        gradleVersionNumber << GRADLE_TEST_VERSIONS
+    }
+
     private static final int BYTECODE_IDENTIFIER = (int) 0xCAFEBABE
 
     // See http://illegalargumentexception.blogspot.com/2009/07/java-finding-class-versions.html
