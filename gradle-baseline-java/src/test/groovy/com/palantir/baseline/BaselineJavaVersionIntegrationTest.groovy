@@ -572,6 +572,10 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
                     Directory getInstallationPath() {
                         return layout.dir(provider { new File('$newJavaHome') }).get()
                     }
+                    @Override
+                    boolean isCurrentJvm() {
+                        return false
+                    }
                 }
             }
         """.stripIndent(true)

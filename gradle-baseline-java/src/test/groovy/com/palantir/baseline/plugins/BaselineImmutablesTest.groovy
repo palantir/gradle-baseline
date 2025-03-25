@@ -35,6 +35,10 @@ class BaselineImmutablesTest extends IntegrationSpec {
             repositories {
                 mavenCentral()
             }
+
+            javaVersions {
+                libraryTarget = 17
+            }
             
             task compileAll
             
