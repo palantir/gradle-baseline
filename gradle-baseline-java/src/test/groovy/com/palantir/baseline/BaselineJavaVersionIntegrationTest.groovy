@@ -100,6 +100,7 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
             }
             
             apply plugin: 'com.palantir.baseline-java-versions'
+            apply plugin: 'com.palantir.jdks.latest'
             
             task runMainClass(type: JavaExec) {
                 mainClass = 'Main'
@@ -327,8 +328,6 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
     def '#gradleVersionNumber: when setupJdkToolchains=true toolchains are configured by jdks-latest'() {
         // language=gradle
         buildFile << '''
-        apply plugin: 'com.palantir.jdks.latest'
-
         javaVersions {
             libraryTarget = 11
             runtime = 21
@@ -572,6 +571,10 @@ class BaselineJavaVersionIntegrationTest extends IntegrationSpec {
                     @Override
                     Directory getInstallationPath() {
                         return layout.dir(provider { new File('$newJavaHome') }).get()
+                    }
+                    @Override
+                    boolean isCurrentJvm() {
+                        return false
                     }
                 }
             }

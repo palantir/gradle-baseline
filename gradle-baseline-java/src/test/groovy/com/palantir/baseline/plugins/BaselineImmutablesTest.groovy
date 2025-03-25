@@ -29,10 +29,15 @@ class BaselineImmutablesTest extends IntegrationSpec {
         buildFile << '''
             apply plugin: 'org.unbroken-dome.test-sets'            
             apply plugin: 'com.palantir.baseline-immutables'
+            apply plugin: 'com.palantir.jdks.latest'
             apply plugin: 'java-library'
 
             repositories {
                 mavenCentral()
+            }
+
+            javaVersions {
+                libraryTarget = 17
             }
             
             task compileAll
