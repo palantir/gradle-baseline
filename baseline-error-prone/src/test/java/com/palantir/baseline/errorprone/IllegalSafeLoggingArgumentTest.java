@@ -1204,10 +1204,14 @@ class IllegalSafeLoggingArgumentTest {
                         "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
                                 + "but the parameter requires 'SAFE'.",
                         "    fun(com.palantir.logsafe.Preconditions.checkNotNull(unsafe));",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'DO_NOT_LOG' "
+                                + "but the parameter requires 'SAFE'.",
                         "    fun(com.palantir.logsafe.Preconditions.checkNotNull(safe, dnl));",
                         "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'UNSAFE' "
                                 + "but the parameter requires 'SAFE'.",
                         "    fun(com.palantir.logsafe.Preconditions.checkArgumentNotNull(unsafe));",
+                        "    // BUG: Diagnostic contains: Dangerous argument value: arg is 'DO_NOT_LOG' "
+                                + "but the parameter requires 'SAFE'.",
                         "    fun(com.palantir.logsafe.Preconditions.checkArgumentNotNull(safe, dnl));",
                         "  }",
                         "  private static void fun(@Safe Object obj) {}",
