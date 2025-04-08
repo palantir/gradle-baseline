@@ -36,6 +36,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.GradleException;
+import org.gradle.api.Named;
 import org.gradle.api.Task;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.provider.Property;
@@ -86,11 +87,13 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
      */
     @Input
     public final Map<String, ImmutableList<String>> getContentsOfAllConfigurations() {
-        return configurations.get().stream().collect(Collectors.toMap(Configuration::getName, configuration -> {
-            return configuration.getIncoming().getResolutionResult().getAllComponents().stream()
-                    .map(resolvedComponentResult -> Objects.toString(resolvedComponentResult.getModuleVersion()))
-                    .collect(ImmutableList.toImmutableList()); // Gradle requires this to be Serializable
-        }));
+        return configurations.get().stream()
+                .collect(Collectors.toMap(CheckClassUniquenessLockTask::getConfigurationName, configuration -> {
+                    return configuration.getIncoming().getResolutionResult().getAllComponents().stream()
+                            .map(resolvedComponentResult ->
+                                    Objects.toString(resolvedComponentResult.getModuleVersion()))
+                            .collect(ImmutableList.toImmutableList()); // Gradle requires this to be Serializable
+                }));
     }
 
     @OutputFile
@@ -107,7 +110,9 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
     public final void doIt() {
         ImmutableSortedMap<String, Optional<String>> resultsByConfiguration = configurations.get().stream()
                 .collect(ImmutableSortedMap.toImmutableSortedMap(
-                        Comparator.naturalOrder(), Configuration::getName, configuration -> {
+                        Comparator.naturalOrder(),
+                        CheckClassUniquenessLockTask::getConfigurationName,
+                        configuration -> {
                             ClassUniquenessAnalyzer analyzer = new ClassUniquenessAnalyzer(
                                     jarClassHasher.get(), getProject().getLogger());
                             analyzer.analyzeConfiguration(configuration);
@@ -225,5 +230,23 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
                 throw new GradleException(lockFile + " should not exist (as no problems were found).");
             }
         }
+    }
+
+    /**
+     * Needed for gradle 7 -> 8 compatibility.  The Configuration interface directly had a getName() method in gradle 7.
+     * This was removed in gradle 8 and instead Configuration extends Named.  While the method signature is the same,
+     * code compiled against gradle 8 will have an incorrect reference to it in the class file when run under gradle 7.
+     *
+     * This method works around that by having the code check for what interfaces are implemented at runtime.  Could
+     * also use reflection to just find the getName method but this is a little more explicit as to why.
+     */
+    private static String getConfigurationName(Object config) {
+        if (config instanceof Named) {
+            return ((Named) config).getName();
+        } else if (config instanceof Configuration) {
+            return ((Configuration) config).getName();
+        }
+
+        throw new IllegalArgumentException("Unknown class for getting name: " + config.getClass());
     }
 }
