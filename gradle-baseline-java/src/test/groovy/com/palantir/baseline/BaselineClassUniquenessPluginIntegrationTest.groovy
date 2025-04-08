@@ -16,6 +16,9 @@
 
 package com.palantir.baseline
 
+import com.palantir.gradle.plugintesting.GradleTestVersions
+import spock.lang.Unroll
+
 import java.nio.file.Files
 import java.util.stream.Stream
 import org.gradle.testkit.runner.BuildResult
@@ -37,7 +40,8 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         }
     """.stripIndent()
 
-    def 'detect duplicates in two external jars, then --fix captures'() {
+    @Unroll
+    def '#gradleVersion: detect duplicates in two external jars, then --fix captures'() {
         File lockfile = new File(projectDir, 'baseline-class-uniqueness.lock')
 
         when:
@@ -48,7 +52,7 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
             api group: 'javax.servlet.jsp', name: 'jsp-api', version: '2.1'
         }
         """.stripIndent()
-        BuildResult result = with('check', '-s').buildAndFail()
+        BuildResult result = with('check', '-s').withGradleVersion(gradleVersion).buildAndFail()
 
         then:
         result.getOutput().contains("baseline-class-uniqueness detected multiple jars containing identically named classes.")
@@ -57,7 +61,7 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
         !lockfile.exists()
 
         when:
-        with("checkClassUniqueness", "--fix").build()
+        with("checkClassUniqueness", "--fix").withGradleVersion(gradleVersion).build()
 
         then:
         lockfile.exists()
@@ -66,6 +70,9 @@ class BaselineClassUniquenessPluginIntegrationTest extends AbstractPluginTest {
             GFileUtils.writeFile(lockfile.text, expected)
         }
         lockfile.text == expected.text
+
+        where:
+        gradleVersion << GradleTestVersions.gradleVersionsForTests
     }
 
     def 'detect duplicates in two external jars, then --write-locks captures'() {
