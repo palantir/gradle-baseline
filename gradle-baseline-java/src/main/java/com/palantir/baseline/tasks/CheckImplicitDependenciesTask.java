@@ -29,7 +29,7 @@ import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ResolvedArtifact;
-import org.gradle.api.artifacts.ResolvedDependency;
+import org.gradle.api.artifacts.ResolvedConfiguration;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.provider.ListProperty;
@@ -63,17 +63,20 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
 
     @TaskAction
     public final void checkImplicitDependencies() {
-        Set<ResolvedDependency> declaredDependencies = dependenciesConfigurations.get().stream()
+        Set<ResolvedConfiguration> resolvedConfigurations = dependenciesConfigurations.get().stream()
                 .map(Configuration::getResolvedConfiguration)
-                .flatMap(resolved -> resolved.getFirstLevelModuleDependencies().stream())
                 .collect(Collectors.toSet());
-        BaselineExactDependencies.INDEXES.populateIndexes(declaredDependencies);
+        BaselineExactDependencies.INDEXES.populateIndexes(resolvedConfigurations);
+
+        Set<ResolvedArtifact> declaredArtifacts = resolvedConfigurations.stream()
+                .flatMap(resolved -> resolved.getFirstLevelModuleDependencies().stream())
+                .flatMap(dependency -> dependency.getModuleArtifacts().stream())
+                .filter(dependency ->
+                        BaselineExactDependencies.VALID_ARTIFACT_EXTENSIONS.contains(dependency.getExtension()))
+                .collect(Collectors.toSet());
 
         Set<List<ResolvedArtifact>> necessaryArtifacts = referencedClasses().stream()
                 .map(c -> BaselineExactDependencies.INDEXES.classToArtifacts(c).collect(Collectors.toList()))
-                .collect(Collectors.toSet());
-        Set<ResolvedArtifact> declaredArtifacts = declaredDependencies.stream()
-                .flatMap(dependency -> dependency.getModuleArtifacts().stream())
                 .collect(Collectors.toSet());
 
         List<ResolvedArtifact> usedButUndeclared = necessaryArtifacts.stream()

@@ -46,6 +46,8 @@ class AbstractPluginTest extends Specification {
             .withProjectDir(projectDir)
             .withArguments(tasks)
             .withPluginClasspath()
+            .withDebug(true)
+            .forwardOutput()
     }
 
     String exec(String task) {

@@ -31,7 +31,6 @@ import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.concurrent.ThreadSafe;
 import org.apache.commons.lang3.StringUtils;
@@ -46,7 +45,7 @@ import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ExcludeRule;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
-import org.gradle.api.artifacts.ResolvedDependency;
+import org.gradle.api.artifacts.ResolvedConfiguration;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
 import org.gradle.api.attributes.LibraryElements;
@@ -300,50 +299,29 @@ public final class BaselineExactDependencies implements Plugin<Project> {
 
     @ThreadSafe
     public static final class Indexes {
-        private final Map<String, Set<ResolvedArtifact>> classToDependency = new ConcurrentHashMap<>();
-        private final Map<ResolvedArtifact, Set<String>> classesFromArtifact = new ConcurrentHashMap<>();
-        private final Map<ResolvedArtifact, ResolvedDependency> artifactsFromDependency = new ConcurrentHashMap<>();
+        private final Map<String, Set<ResolvedArtifact>> classToArtifacts = new ConcurrentHashMap<>();
 
-        public void populateIndexes(Set<ResolvedDependency> declaredDependencies) {
-            Set<ResolvedArtifact> allArtifacts = declaredDependencies.stream()
-                    .flatMap(dependency -> dependency.getAllModuleArtifacts().stream())
-                    .filter(dependency -> VALID_ARTIFACT_EXTENSIONS.contains(dependency.getExtension()))
-                    .collect(Collectors.toSet());
-
-            allArtifacts.forEach(artifact -> {
-                try {
-                    File jar = artifact.getFile();
-                    Set<String> classesInArtifact =
-                            JAR_ANALYZER.analyze(jar.toURI().toURL());
-                    classesFromArtifact.put(artifact, classesInArtifact);
-                    classesInArtifact.forEach(clazz -> classToDependency
-                            .computeIfAbsent(clazz, _ignored -> ConcurrentHashMap.newKeySet())
-                            .add(artifact));
-                } catch (IOException e) {
-                    throw new RuntimeException("Unable to analyze artifact", e);
-                }
-            });
-
-            declaredDependencies.forEach(dependency -> dependency
-                    .getModuleArtifacts()
-                    .forEach(artifact -> artifactsFromDependency.put(artifact, dependency)));
+        public void populateIndexes(Set<ResolvedConfiguration> configurations) {
+            configurations.stream()
+                    .flatMap(configuration -> configuration.getResolvedArtifacts().stream())
+                    .filter(artifact -> VALID_ARTIFACT_EXTENSIONS.contains(artifact.getExtension()))
+                    .forEach(artifact -> {
+                        try {
+                            File jar = artifact.getFile();
+                            Set<String> classesInArtifact =
+                                    JAR_ANALYZER.analyze(jar.toURI().toURL());
+                            classesInArtifact.forEach(clazz -> classToArtifacts
+                                    .computeIfAbsent(clazz, _ignored -> ConcurrentHashMap.newKeySet())
+                                    .add(artifact));
+                        } catch (IOException e) {
+                            throw new RuntimeException("Unable to analyze artifact", e);
+                        }
+                    });
         }
 
         /** Given a class, what dependency brought it in. */
         public Stream<ResolvedArtifact> classToArtifacts(String clazz) {
-            return classToDependency.getOrDefault(clazz, ImmutableSet.of()).stream();
-        }
-
-        /** Given an artifact, what classes does it contain. */
-        public Stream<String> classesFromArtifact(ResolvedArtifact resolvedArtifact) {
-            return Preconditions.checkNotNull(
-                    classesFromArtifact.get(resolvedArtifact), "Unable to find resolved artifact")
-                    .stream();
-        }
-
-        public ResolvedDependency artifactsFromDependency(ResolvedArtifact resolvedArtifact) {
-            return Preconditions.checkNotNull(
-                    artifactsFromDependency.get(resolvedArtifact), "Unable to find resolved artifact");
+            return classToArtifacts.getOrDefault(clazz, ImmutableSet.of()).stream();
         }
     }
 

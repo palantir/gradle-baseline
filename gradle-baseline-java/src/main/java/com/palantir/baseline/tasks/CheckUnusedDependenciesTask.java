@@ -30,7 +30,7 @@ import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ResolvedArtifact;
-import org.gradle.api.artifacts.ResolvedDependency;
+import org.gradle.api.artifacts.ResolvedConfiguration;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
@@ -62,13 +62,13 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
 
     @TaskAction
     public final void checkUnusedDependencies() {
-        Set<ResolvedDependency> declaredDependencies = dependenciesConfigurations.get().stream()
+        Set<ResolvedConfiguration> resolvedConfigurations = dependenciesConfigurations.get().stream()
                 .map(Configuration::getResolvedConfiguration)
-                .flatMap(resolved -> resolved.getFirstLevelModuleDependencies().stream())
                 .collect(Collectors.toSet());
-        BaselineExactDependencies.INDEXES.populateIndexes(declaredDependencies);
+        BaselineExactDependencies.INDEXES.populateIndexes(resolvedConfigurations);
 
-        Set<ResolvedArtifact> declaredArtifacts = declaredDependencies.stream()
+        Set<ResolvedArtifact> declaredArtifacts = resolvedConfigurations.stream()
+                .flatMap(resolved -> resolved.getFirstLevelModuleDependencies().stream())
                 .flatMap(dependency -> dependency.getModuleArtifacts().stream())
                 .filter(dependency ->
                         BaselineExactDependencies.VALID_ARTIFACT_EXTENSIONS.contains(dependency.getExtension()))
@@ -83,55 +83,29 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
                 .map(BaselineExactDependencies::asString)
                 .collect(Collectors.toSet());
 
-        Set<ResolvedArtifact> possiblyUnused = declaredArtifacts.stream()
+        Set<ResolvedArtifact> possiblyUnusedArtifacts = declaredArtifacts.stream()
                 .filter(artifact ->
                         !necessaryArtifactsDeclaration.contains(BaselineExactDependencies.asString(artifact)))
                 .collect(Collectors.toSet());
         getLogger()
                 .debug(
                         "Possibly unused dependencies: {}",
-                        possiblyUnused.stream()
+                        possiblyUnusedArtifacts.stream()
                                 .map(BaselineExactDependencies::asString)
                                 .sorted()
                                 .collect(Collectors.toList()));
-        List<ResolvedArtifact> declaredButUnused = possiblyUnused.stream()
+        List<ResolvedArtifact> unusedArtifacts = possiblyUnusedArtifacts.stream()
                 .filter(artifact -> !shouldIgnore(artifact))
                 .sorted(Comparator.comparing(BaselineExactDependencies::asString))
                 .collect(Collectors.toList());
-        if (!declaredButUnused.isEmpty()) {
+        if (!unusedArtifacts.isEmpty()) {
             // TODO(dfox): don't print warnings for jars that define service loaded classes (e.g. meta-inf)
             StringBuilder builder = new StringBuilder();
             builder.append(String.format(
-                    "Found %s dependencies unused during compilation, please delete them from '%s' or choose one of "
-                            + "the suggested fixes:\n",
-                    declaredButUnused.size(), buildFile()));
-            for (ResolvedArtifact resolvedArtifact : declaredButUnused) {
-                builder.append('\t')
-                        .append(BaselineExactDependencies.asDependencyStringWithName(resolvedArtifact))
-                        .append('\n');
-
-                // Suggest fixes by looking at all transitive classes, filtering the ones we have declarations on,
-                // and mapping the remaining ones back to the jars they came from.
-                ResolvedDependency dependency =
-                        BaselineExactDependencies.INDEXES.artifactsFromDependency(resolvedArtifact);
-                Set<ResolvedArtifact> didYouMean = dependency.getAllModuleArtifacts().stream()
-                        .filter(artifact ->
-                                BaselineExactDependencies.VALID_ARTIFACT_EXTENSIONS.contains(artifact.getExtension()))
-                        .flatMap(BaselineExactDependencies.INDEXES::classesFromArtifact)
-                        .filter(referencedClasses()::contains)
-                        .flatMap(BaselineExactDependencies.INDEXES::classToArtifacts)
-                        .filter(artifact -> !declaredArtifacts.contains(artifact))
-                        .collect(Collectors.toSet());
-
-                if (!didYouMean.isEmpty()) {
-                    builder.append("\t\tDid you mean:\n");
-                    didYouMean.stream()
-                            .map(BaselineExactDependencies::asDependencyStringWithoutName)
-                            .sorted()
-                            .forEach(dependencyString -> builder.append("\t\t\t")
-                                    .append(dependencyString)
-                                    .append("\n"));
-                }
+                    "Found %s dependencies unused during compilation, please delete them from '%s':",
+                    unusedArtifacts.size(), buildFile()));
+            for (ResolvedArtifact resolvedArtifact : unusedArtifacts) {
+                builder.append("\n\t").append(BaselineExactDependencies.asDependencyStringWithName(resolvedArtifact));
             }
             throw new ExceptionWithSuggestion(builder.toString(), buildFile().toString());
         }
@@ -155,13 +129,6 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
         String dependencyId = BaselineExactDependencies.asString(artifact);
         getLogger().info("Ignoring {} dependency: {}", config.getName(), dependencyId);
         ignore.add(dependencyId);
-    }
-
-    /** All classes which are mentioned in this project's source code. */
-    private Set<String> referencedClasses() {
-        return Streams.stream(sourceClasses.get().iterator())
-                .flatMap(BaselineExactDependencies::referencedClasses)
-                .collect(Collectors.toSet());
     }
 
     private Path buildFile() {
