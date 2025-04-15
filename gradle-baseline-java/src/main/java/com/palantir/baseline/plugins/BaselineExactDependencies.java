@@ -317,9 +317,10 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                             classesInArtifact.forEach(clazz -> classToArtifacts
                                     .computeIfAbsent(clazz, _ignored -> ConcurrentHashMap.newKeySet())
                                     .add(artifact));
-                            
+
                             // Store the module ID for later reference
-                            ModuleVersionIdentifier id = artifact.getModuleVersion().getId();
+                            ModuleVersionIdentifier id =
+                                    artifact.getModuleVersion().getId();
                             artifactModuleId.put(artifact, id.getModule());
                         } catch (IOException e) {
                             throw new RuntimeException("Unable to analyze artifact", e);
@@ -338,14 +339,12 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                     classesFromArtifact.get(resolvedArtifact), "Unable to find resolved artifact")
                     .stream();
         }
-        
-        /** Get the module ID for an artifact. */
+
         public ModuleIdentifier getArtifactModuleId(ResolvedArtifact resolvedArtifact) {
             return Preconditions.checkNotNull(
                     artifactModuleId.get(resolvedArtifact), "Unable to find module ID for artifact");
         }
-        
-        /** Find artifacts with the same module ID. */
+
         public Stream<ResolvedArtifact> findArtifactsWithSameModuleId(ResolvedArtifact artifact) {
             ModuleIdentifier moduleId = getArtifactModuleId(artifact);
             return artifactModuleId.entrySet().stream()
