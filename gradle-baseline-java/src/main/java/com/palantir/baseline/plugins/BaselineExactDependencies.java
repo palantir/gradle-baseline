@@ -43,6 +43,7 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ExcludeRule;
+import org.gradle.api.artifacts.ModuleIdentifier;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedConfiguration;
@@ -301,7 +302,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     public static final class Indexes {
         private final Map<String, Set<ResolvedArtifact>> classToArtifacts = new ConcurrentHashMap<>();
         private final Map<ResolvedArtifact, Set<String>> classesFromArtifact = new ConcurrentHashMap<>();
-        private final Map<ResolvedArtifact, String> artifactModuleId = new ConcurrentHashMap<>();
+        private final Map<ResolvedArtifact, ModuleIdentifier> artifactModuleId = new ConcurrentHashMap<>();
 
         public void populateIndexes(Set<ResolvedConfiguration> configurations) {
             configurations.stream()
@@ -319,7 +320,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                             
                             // Store the module ID for later reference
                             ModuleVersionIdentifier id = artifact.getModuleVersion().getId();
-                            artifactModuleId.put(artifact, id.getGroup() + ":" + id.getName());
+                            artifactModuleId.put(artifact, id.getModule());
                         } catch (IOException e) {
                             throw new RuntimeException("Unable to analyze artifact", e);
                         }
@@ -339,14 +340,14 @@ public final class BaselineExactDependencies implements Plugin<Project> {
         }
         
         /** Get the module ID for an artifact. */
-        public String getArtifactModuleId(ResolvedArtifact resolvedArtifact) {
+        public ModuleIdentifier getArtifactModuleId(ResolvedArtifact resolvedArtifact) {
             return Preconditions.checkNotNull(
                     artifactModuleId.get(resolvedArtifact), "Unable to find module ID for artifact");
         }
         
         /** Find artifacts with the same module ID. */
         public Stream<ResolvedArtifact> findArtifactsWithSameModuleId(ResolvedArtifact artifact) {
-            String moduleId = getArtifactModuleId(artifact);
+            ModuleIdentifier moduleId = getArtifactModuleId(artifact);
             return artifactModuleId.entrySet().stream()
                     .filter(entry -> entry.getValue().equals(moduleId))
                     .map(Map.Entry::getKey);
