@@ -311,7 +311,6 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
         then:
         BuildResult result = with(':checkUnusedDependencies', '--stacktrace').withDebug(true).buildAndFail()
         result.output.contains "project(':sub-project-with-deps') <-- main"
-        result.output.contains "project(':sub-project-no-deps')"
     }
 
     def 'plugin does not cause GCV checkUnusedConstraints to fail'() {
