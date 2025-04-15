@@ -302,7 +302,6 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     public static final class Indexes {
         private final Map<String, Set<ResolvedArtifact>> classToArtifacts = new ConcurrentHashMap<>();
         private final Map<ResolvedArtifact, Set<String>> classesFromArtifact = new ConcurrentHashMap<>();
-        private final Map<ResolvedArtifact, ModuleIdentifier> artifactModuleId = new ConcurrentHashMap<>();
 
         public void populateIndexes(Set<ResolvedConfiguration> configurations) {
             configurations.stream()
@@ -317,11 +316,6 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                             classesInArtifact.forEach(clazz -> classToArtifacts
                                     .computeIfAbsent(clazz, _ignored -> ConcurrentHashMap.newKeySet())
                                     .add(artifact));
-
-                            // Store the module ID for later reference
-                            ModuleVersionIdentifier id =
-                                    artifact.getModuleVersion().getId();
-                            artifactModuleId.put(artifact, id.getModule());
                         } catch (IOException e) {
                             throw new RuntimeException("Unable to analyze artifact", e);
                         }
@@ -332,7 +326,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
         public Stream<ResolvedArtifact> classToArtifacts(String clazz) {
             return classToArtifacts.getOrDefault(clazz, ImmutableSet.of()).stream();
         }
-        
+
         /** Given an artifact, what classes does it contain. */
         public Stream<String> classesFromArtifact(ResolvedArtifact resolvedArtifact) {
             return Preconditions.checkNotNull(
@@ -341,15 +335,13 @@ public final class BaselineExactDependencies implements Plugin<Project> {
         }
 
         public ModuleIdentifier getArtifactModuleId(ResolvedArtifact resolvedArtifact) {
-            return Preconditions.checkNotNull(
-                    artifactModuleId.get(resolvedArtifact), "Unable to find module ID for artifact");
+            return resolvedArtifact.getModuleVersion().getId().getModule();
         }
 
         public Stream<ResolvedArtifact> findArtifactsWithSameModuleId(ResolvedArtifact artifact) {
             ModuleIdentifier moduleId = getArtifactModuleId(artifact);
-            return artifactModuleId.entrySet().stream()
-                    .filter(entry -> entry.getValue().equals(moduleId))
-                    .map(Map.Entry::getKey);
+            return classesFromArtifact.keySet().stream()
+                    .filter(otherArtifact -> getArtifactModuleId(otherArtifact).equals(moduleId));
         }
     }
 
