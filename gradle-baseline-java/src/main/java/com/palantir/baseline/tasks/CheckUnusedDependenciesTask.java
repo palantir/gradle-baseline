@@ -155,6 +155,13 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
         ignore.add(dependencyId);
     }
 
+    /** All classes which are mentioned in this project's source code. */
+    private Set<String> referencedClasses() {
+        return Streams.stream(sourceClasses.get().iterator())
+                .flatMap(BaselineExactDependencies::referencedClasses)
+                .collect(Collectors.toSet());
+    }
+
     private Path buildFile() {
         return getProject()
                 .getRootDir()
@@ -164,12 +171,6 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
 
     private boolean shouldIgnore(ResolvedArtifact artifact) {
         return ignore.get().contains(BaselineExactDependencies.asString(artifact));
-    }
-
-    private Set<String> referencedClasses() {
-        return Streams.stream(sourceClasses.get().iterator())
-                .flatMap(BaselineExactDependencies::referencedClasses)
-                .collect(Collectors.toSet());
     }
 
     @Classpath
