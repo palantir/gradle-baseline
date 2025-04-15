@@ -300,6 +300,8 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     @ThreadSafe
     public static final class Indexes {
         private final Map<String, Set<ResolvedArtifact>> classToArtifacts = new ConcurrentHashMap<>();
+        private final Map<ResolvedArtifact, Set<String>> classesFromArtifact = new ConcurrentHashMap<>();
+        private final Map<ResolvedArtifact, String> artifactModuleId = new ConcurrentHashMap<>();
 
         public void populateIndexes(Set<ResolvedConfiguration> configurations) {
             configurations.stream()
@@ -310,9 +312,14 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                             File jar = artifact.getFile();
                             Set<String> classesInArtifact =
                                     JAR_ANALYZER.analyze(jar.toURI().toURL());
+                            classesFromArtifact.put(artifact, classesInArtifact);
                             classesInArtifact.forEach(clazz -> classToArtifacts
                                     .computeIfAbsent(clazz, _ignored -> ConcurrentHashMap.newKeySet())
                                     .add(artifact));
+                            
+                            // Store the module ID for later reference
+                            ModuleVersionIdentifier id = artifact.getModuleVersion().getId();
+                            artifactModuleId.put(artifact, id.getGroup() + ":" + id.getName());
                         } catch (IOException e) {
                             throw new RuntimeException("Unable to analyze artifact", e);
                         }
@@ -322,6 +329,27 @@ public final class BaselineExactDependencies implements Plugin<Project> {
         /** Given a class, what dependency brought it in. */
         public Stream<ResolvedArtifact> classToArtifacts(String clazz) {
             return classToArtifacts.getOrDefault(clazz, ImmutableSet.of()).stream();
+        }
+        
+        /** Given an artifact, what classes does it contain. */
+        public Stream<String> classesFromArtifact(ResolvedArtifact resolvedArtifact) {
+            return Preconditions.checkNotNull(
+                    classesFromArtifact.get(resolvedArtifact), "Unable to find resolved artifact")
+                    .stream();
+        }
+        
+        /** Get the module ID for an artifact. */
+        public String getArtifactModuleId(ResolvedArtifact resolvedArtifact) {
+            return Preconditions.checkNotNull(
+                    artifactModuleId.get(resolvedArtifact), "Unable to find module ID for artifact");
+        }
+        
+        /** Find artifacts with the same module ID. */
+        public Stream<ResolvedArtifact> findArtifactsWithSameModuleId(ResolvedArtifact artifact) {
+            String moduleId = getArtifactModuleId(artifact);
+            return artifactModuleId.entrySet().stream()
+                    .filter(entry -> entry.getValue().equals(moduleId))
+                    .map(Map.Entry::getKey);
         }
     }
 
