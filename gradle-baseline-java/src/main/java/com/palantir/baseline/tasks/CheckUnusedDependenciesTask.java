@@ -102,34 +102,10 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
             // TODO(dfox): don't print warnings for jars that define service loaded classes (e.g. meta-inf)
             StringBuilder builder = new StringBuilder();
             builder.append(String.format(
-                    "Found %s dependencies unused during compilation, please delete them from '%s' or choose one of "
-                            + "the suggested fixes:\n",
+                    "Found %s dependencies unused during compilation, please delete them from '%s':",
                     unusedArtifacts.size(), buildFile()));
             for (ResolvedArtifact resolvedArtifact : unusedArtifacts) {
-                builder.append('\t')
-                        .append(BaselineExactDependencies.asDependencyStringWithName(resolvedArtifact))
-                        .append('\n');
-
-                // Suggest fixes by looking at all artifacts with the same module ID,
-                // filtering the ones we have declarations on, and mapping the remaining ones
-                // back to the jars they came from.
-                Set<ResolvedArtifact> didYouMean = BaselineExactDependencies.INDEXES
-                        .findArtifactsWithSameModuleId(resolvedArtifact)
-                        .flatMap(BaselineExactDependencies.INDEXES::classesFromArtifact)
-                        .filter(referencedClasses()::contains)
-                        .flatMap(BaselineExactDependencies.INDEXES::classToArtifacts)
-                        .filter(artifact -> !declaredArtifacts.contains(artifact))
-                        .collect(Collectors.toSet());
-
-                if (!didYouMean.isEmpty()) {
-                    builder.append("\t\tDid you mean:\n");
-                    didYouMean.stream()
-                            .map(BaselineExactDependencies::asDependencyStringWithoutName)
-                            .sorted()
-                            .forEach(dependencyString -> builder.append("\t\t\t")
-                                    .append(dependencyString)
-                                    .append("\n"));
-                }
+                builder.append("\n\t").append(BaselineExactDependencies.asDependencyStringWithName(resolvedArtifact));
             }
             throw new ExceptionWithSuggestion(builder.toString(), buildFile().toString());
         }
@@ -153,13 +129,6 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
         String dependencyId = BaselineExactDependencies.asString(artifact);
         getLogger().info("Ignoring {} dependency: {}", config.getName(), dependencyId);
         ignore.add(dependencyId);
-    }
-
-    /** All classes which are mentioned in this project's source code. */
-    private Set<String> referencedClasses() {
-        return Streams.stream(sourceClasses.get().iterator())
-                .flatMap(BaselineExactDependencies::referencedClasses)
-                .collect(Collectors.toSet());
     }
 
     private Path buildFile() {

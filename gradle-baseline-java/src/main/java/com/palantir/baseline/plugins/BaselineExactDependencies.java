@@ -43,7 +43,6 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ExcludeRule;
-import org.gradle.api.artifacts.ModuleIdentifier;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedConfiguration;
@@ -301,7 +300,6 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     @ThreadSafe
     public static final class Indexes {
         private final Map<String, Set<ResolvedArtifact>> classToArtifacts = new ConcurrentHashMap<>();
-        private final Map<ResolvedArtifact, Set<String>> classesFromArtifact = new ConcurrentHashMap<>();
 
         public void populateIndexes(Set<ResolvedConfiguration> configurations) {
             configurations.stream()
@@ -312,7 +310,6 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                             File jar = artifact.getFile();
                             Set<String> classesInArtifact =
                                     JAR_ANALYZER.analyze(jar.toURI().toURL());
-                            classesFromArtifact.put(artifact, classesInArtifact);
                             classesInArtifact.forEach(clazz -> classToArtifacts
                                     .computeIfAbsent(clazz, _ignored -> ConcurrentHashMap.newKeySet())
                                     .add(artifact));
@@ -325,23 +322,6 @@ public final class BaselineExactDependencies implements Plugin<Project> {
         /** Given a class, what dependency brought it in. */
         public Stream<ResolvedArtifact> classToArtifacts(String clazz) {
             return classToArtifacts.getOrDefault(clazz, ImmutableSet.of()).stream();
-        }
-
-        /** Given an artifact, what classes does it contain. */
-        public Stream<String> classesFromArtifact(ResolvedArtifact resolvedArtifact) {
-            return Preconditions.checkNotNull(
-                    classesFromArtifact.get(resolvedArtifact), "Unable to find resolved artifact")
-                    .stream();
-        }
-
-        public ModuleIdentifier getArtifactModuleId(ResolvedArtifact resolvedArtifact) {
-            return resolvedArtifact.getModuleVersion().getId().getModule();
-        }
-
-        public Stream<ResolvedArtifact> findArtifactsWithSameModuleId(ResolvedArtifact artifact) {
-            ModuleIdentifier moduleId = getArtifactModuleId(artifact);
-            return classesFromArtifact.keySet().stream()
-                    .filter(otherArtifact -> getArtifactModuleId(otherArtifact).equals(moduleId));
         }
     }
 
