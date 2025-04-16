@@ -17,6 +17,7 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
+import com.google.common.collect.Streams;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
@@ -47,7 +48,8 @@ import java.util.stream.Stream;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.WARNING,
-        summary = "`Stream.mapMulti(Optional::ifPresent)` is more efficient than `Stream.flatMap(Optional::stream)`")
+        summary = "`Stream.mapMulti(Optional::ifPresent)` is more efficient than `Stream.flatMap(Optional::stream)`"
+                + " and similar patterns.")
 public final class StreamFlatMapOptional extends BugChecker implements MethodInvocationTreeMatcher {
     @Serial
     private static final long serialVersionUID = 1L;
@@ -59,10 +61,15 @@ public final class StreamFlatMapOptional extends BugChecker implements MethodInv
                     .withParameters(Function.class.getName()),
             // Any of the three MatchTypes are reasonable in this case, given a single arg
             MatchType.AT_LEAST_ONE,
-            MethodMatchers.instanceMethod()
-                    .onDescendantOf(Optional.class.getCanonicalName())
-                    .named("stream")
-                    .withNoParameters());
+            Matchers.anyOf(
+                    MethodMatchers.instanceMethod()
+                            .onDescendantOf(Optional.class.getCanonicalName())
+                            .named("stream")
+                            .withNoParameters(),
+                    MethodMatchers.staticMethod()
+                            .onClass(Streams.class.getCanonicalName())
+                            .named("stream")
+                            .withParameters(Optional.class.getName())));
 
     private static final Matcher<ExpressionTree> STREAM_FILTER_IS_PRESENT = Matchers.methodInvocation(
             MethodMatchers.instanceMethod()
