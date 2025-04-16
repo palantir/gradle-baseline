@@ -48,6 +48,7 @@ public final class BaselineJavaVersions implements Plugin<Project> {
         if (!Objects.equals(project, project.getRootProject())) {
             throw new GradleException("BaselineJavaVersions may only be applied to the root project");
         }
+
         GradleVersion currentGradleVersion = GradleVersion.current();
         if (currentGradleVersion.compareTo(MIN_GRADLE_VERSION) < 0) {
             throw new GradleException(String.format(
