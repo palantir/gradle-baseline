@@ -19,13 +19,14 @@ package com.palantir.baseline
 
 import nebula.test.IntegrationSpec
 
-class BaselineJavaVersionDefaults extends IntegrationSpec {
+class BaselineJavaVersionsIntegrationSpec extends IntegrationSpec {
     def test() {
         // language=Gradle
         buildFile << '''
+            apply plugin: 'com.palantir.baseline-java-versions'
+
             allprojects {
                 apply plugin: 'java'
-                apply plugin: com.palantir.baseline.plugins.javaversions.BaselineJavaVersionDefaults
             }
         '''.stripIndent(true)
 
@@ -39,7 +40,7 @@ class BaselineJavaVersionDefaults extends IntegrationSpec {
         '''.stripIndent(true)
 
         when:
-        def stdout = runTasksSuccessfully(':bar:outgoingVariants', ':foo:getDependents', '-PpublishBuildScan').standardOutput
+        def stdout = runTasksSuccessfully('compileJava').standardOutput
 
         then:
         stdout.contains('lol')

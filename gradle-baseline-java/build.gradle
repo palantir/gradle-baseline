@@ -30,9 +30,11 @@ dependencies {
     implementation 'com.palantir.gradle.utils:lazily-configured-mapping'
     implementation 'com.palantir.gradle.utils:environment-variables'
     implementation 'com.palantir.gradle.failure-reports:gradle-failure-reports-exceptions'
+    implementation 'com.fasterxml.jackson.core:jackson-databind'
 
     runtimeOnly 'com.palantir.javaformat:gradle-palantir-java-format'
 
+    testCompileOnly 'org.jetbrains:annotations'
     testImplementation gradleTestKit()
     testImplementation 'com.github.stefanbirkner:system-rules'
     testImplementation 'com.netflix.nebula:nebula-test' // for better temp directory junit rule only
@@ -79,6 +81,16 @@ test {
     environment 'ORG_GRADLE_PROJECT_baselineErrorProneVersion', project.version
 
     systemProperty 'ignoreDeprecations', 'true'
+    
+    // JUnit 5 parallel execution configuration
+    systemProperty 'junit.jupiter.execution.parallel.enabled', 'true'
+    systemProperty 'junit.jupiter.execution.parallel.mode.default', 'concurrent'
+    systemProperty 'junit.jupiter.execution.parallel.mode.classes.default', 'concurrent'
+    systemProperty 'junit.jupiter.execution.parallel.config.strategy', 'fixed'
+    systemProperty 'junit.jupiter.execution.parallel.config.fixed.parallelism', '4'
+    
+    // Use JUnit Platform for test execution
+    useJUnitPlatform()
 }
 
 gradlePlugin {
