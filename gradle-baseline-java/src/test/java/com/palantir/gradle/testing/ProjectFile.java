@@ -24,17 +24,21 @@ import java.nio.file.StandardOpenOption;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
-public interface ProjectFile {
+public interface ProjectFile<T extends ProjectFile<T>> {
     Path path();
 
-    default ProjectFile replace(String text) {
+    default T overwrite(String text) {
         writeString(path(), text);
-        return this;
+        return (T) this;
     }
 
-    default ProjectFile append(String text) {
+    default T append(String text) {
         writeString(path(), text, StandardOpenOption.APPEND);
-        return this;
+        return (T) this;
+    }
+
+    default T appendLine(String line) {
+        return append(line + "\n");
     }
 
     default String text() {
@@ -47,6 +51,8 @@ public interface ProjectFile {
 
     private static void writeString(Path path, String text, StandardOpenOption... options) {
         try {
+            Files.createDirectories(path.getParent());
+
             StandardOpenOption[] allOptions = Stream.concat(
                             Arrays.stream(options), Stream.of(StandardOpenOption.CREATE))
                     .toArray(StandardOpenOption[]::new);

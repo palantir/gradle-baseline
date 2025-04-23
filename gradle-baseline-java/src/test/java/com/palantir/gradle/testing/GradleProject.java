@@ -16,10 +16,32 @@
 
 package com.palantir.gradle.testing;
 
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
+import org.intellij.lang.annotations.Language;
 
 public interface GradleProject {
     Path projectDir();
+
+    RootProject rootProject();
+
+    default SubProject addSubproject(String name) {
+        Path subprojectDir = projectDir().resolve(name);
+
+        try {
+            Files.createDirectories(subprojectDir);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        String subprojectPath =
+                rootProject().projectDir().relativize(subprojectDir).toString().replace('/', ':');
+
+        rootProject().settingsFile().appendLine("include '%s'".formatted(subprojectPath));
+
+        return new SubProject(name, subprojectDir, rootProject());
+    }
 
     default GradleFile gradleFile(String name) {
         return new GradleFile(projectDir().resolve(name));
@@ -27,5 +49,19 @@ public interface GradleProject {
 
     default GradleFile buildFile() {
         return gradleFile("build.gradle");
+    }
+
+    default JavaFile javaClass(@Language("Java") String javaSource) {
+        String packagePath = JavaSourceUtils.extractPackage(javaSource)
+                .map(pkg -> pkg.replace('.', '/') + '/')
+                .orElse("");
+
+        String className = JavaSourceUtils.extractClassName(javaSource)
+                .orElseThrow(() -> new IllegalArgumentException(
+                        "Could not find the class name from the source: \n\n" + javaSource));
+
+        String directory = "src/main/java/" + packagePath;
+
+        return new JavaFile(projectDir().resolve(directory + className + ".java")).overwrite(javaSource);
     }
 }

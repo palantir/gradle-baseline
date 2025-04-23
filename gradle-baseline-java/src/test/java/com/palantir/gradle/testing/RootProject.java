@@ -18,15 +18,10 @@ package com.palantir.gradle.testing;
 
 import java.nio.file.Path;
 
-public final class RootProject implements GradleProject {
-    private final Path projectDir;
-
-    public RootProject(Path projectDir) {
-        this.projectDir = projectDir;
-    }
-
-    public Path projectDir() {
-        return projectDir;
+public record RootProject(Path projectDir) implements GradleProject {
+    @Override
+    public RootProject rootProject() {
+        return this;
     }
 
     public GradleFile settingsFile() {

@@ -16,10 +16,14 @@
 
 package com.palantir.baseline.plugins.javaversions;
 
+import static org.assertj.core.api.Assertions.assertThat;
+
+import com.palantir.gradle.testing.BuildOutcome;
 import com.palantir.gradle.testing.GradlePluginTesting;
 import com.palantir.gradle.testing.Gradlew;
 import com.palantir.gradle.testing.RootProject;
 import com.palantir.gradle.testing.SubProject;
+import org.gradle.testkit.runner.TaskOutcome;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
@@ -35,6 +39,22 @@ final class BaselineJavaVersionsTest {
             apply plugin: 'java'
             """);
 
-        gradlew.build("help").buildSuccessfully();
+        SubProject bar = subProject.addSubproject("foo").addSubproject("bar");
+
+        bar.buildFile().appendLine("apply plugin: 'java'");
+        bar.javaClass(
+                """
+            package app;
+            class Main {
+                public static void main(String[] args) {
+                    System.out.println("Hello world!");
+                }
+            }
+            """);
+
+        BuildOutcome buildOutcome = gradlew.build("compileJava").buildSuccessfully();
+
+        assertThat(buildOutcome.task(":subProject:foo:bar:compileJava").getOutcome())
+                .isEqualTo(TaskOutcome.FAILED);
     }
 }

@@ -16,21 +16,22 @@
 
 package com.palantir.gradle.testing;
 
-import org.gradle.testkit.runner.BuildResult;
-import org.gradle.testkit.runner.BuildTask;
+import java.nio.file.Path;
+import org.intellij.lang.annotations.Language;
 
-public final class BuildOutcome {
-    private final BuildResult buildResult;
-
-    public BuildOutcome(BuildResult buildResult) {
-        this.buildResult = buildResult;
+public record JavaFile(Path path) implements ProjectFile<JavaFile> {
+    @Override
+    public JavaFile overwrite(@Language("Java") String text) {
+        return ProjectFile.super.overwrite(text);
     }
 
-    public String output() {
-        return buildResult.getOutput();
+    @Override
+    public JavaFile append(@Language("Java") String text) {
+        return ProjectFile.super.append(text);
     }
 
-    public BuildTask task(String taskPath) {
-        return buildResult.task(taskPath);
+    @Override
+    public JavaFile appendLine(@Language("Java") String line) {
+        return ProjectFile.super.appendLine(line);
     }
 }

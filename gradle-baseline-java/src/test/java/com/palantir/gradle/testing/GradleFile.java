@@ -19,25 +19,19 @@ package com.palantir.gradle.testing;
 import java.nio.file.Path;
 import org.intellij.lang.annotations.Language;
 
-public final class GradleFile implements ProjectFile {
-    private final Path path;
-
-    public GradleFile(Path path) {
-        this.path = path;
+public record GradleFile(Path path) implements ProjectFile<GradleFile> {
+    @Override
+    public GradleFile overwrite(@Language("Gradle") String text) {
+        return ProjectFile.super.overwrite(text);
     }
 
     @Override
-    public Path path() {
-        return path;
-    }
-
-    @Override
-    public ProjectFile replace(@Language("Gradle") String text) {
-        return ProjectFile.super.replace(text);
-    }
-
-    @Override
-    public ProjectFile append(@Language("Gradle") String text) {
+    public GradleFile append(@Language("Gradle") String text) {
         return ProjectFile.super.append(text);
+    }
+
+    @Override
+    public GradleFile appendLine(@Language("Gradle") String line) {
+        return ProjectFile.super.appendLine(line);
     }
 }

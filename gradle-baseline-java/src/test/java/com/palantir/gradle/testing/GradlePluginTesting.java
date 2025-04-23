@@ -37,16 +37,6 @@ public final class GradlePluginTesting implements Extension, ParameterResolver {
             Path.of("build/gradle-testing/").toAbsolutePath();
     private static final String PROJECT_DIR_KEY = "projectDir";
 
-    public SubProject addSubproject(ExtensionContext context, String name) {
-        Path subprojectDir = rootProjectDir(context).resolve(name);
-        try {
-            Files.createDirectories(subprojectDir);
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        }
-        return new SubProject(name, subprojectDir);
-    }
-
     @Override
     public boolean supportsParameter(ParameterContext parameterContext, ExtensionContext extensionContext)
             throws ParameterResolutionException {
@@ -57,12 +47,12 @@ public final class GradlePluginTesting implements Extension, ParameterResolver {
     public Object resolveParameter(ParameterContext parameterContext, ExtensionContext extensionContext)
             throws ParameterResolutionException {
         if (parameterContext.getParameter().getType().equals(RootProject.class)) {
-            return new RootProject(rootProjectDir(extensionContext));
+            return rootProject(extensionContext);
         }
 
         if (parameterContext.getParameter().getType().equals(SubProject.class)) {
-            return addSubproject(
-                    extensionContext, parameterContext.getParameter().getName());
+            return rootProject(extensionContext)
+                    .addSubproject(parameterContext.getParameter().getName());
         }
 
         if (parameterContext.getParameter().getType().equals(Gradlew.class)) {
@@ -71,6 +61,10 @@ public final class GradlePluginTesting implements Extension, ParameterResolver {
 
         throw new IllegalArgumentException(
                 "Unsupported parameter type: " + parameterContext.getParameter().getType());
+    }
+
+    private static RootProject rootProject(ExtensionContext extensionContext) {
+        return new RootProject(rootProjectDir(extensionContext));
     }
 
     private static Path rootProjectDir(ExtensionContext context) {

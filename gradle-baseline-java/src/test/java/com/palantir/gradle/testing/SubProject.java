@@ -18,20 +18,4 @@ package com.palantir.gradle.testing;
 
 import java.nio.file.Path;
 
-public final class SubProject implements GradleProject {
-    private final String name;
-    private final Path projectDir;
-
-    public SubProject(String name, Path projectDir) {
-        this.name = name;
-        this.projectDir = projectDir;
-    }
-
-    public String name() {
-        return name;
-    }
-
-    public Path projectDir() {
-        return projectDir;
-    }
-}
+public record SubProject(String name, Path projectDir, RootProject rootProject) implements GradleProject {}
