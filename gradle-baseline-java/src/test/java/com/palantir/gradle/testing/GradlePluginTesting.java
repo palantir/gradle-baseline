@@ -23,6 +23,8 @@ import java.util.Set;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.apache.commons.io.FileUtils;
+import org.junit.jupiter.api.extension.ClassTemplateInvocationContext;
+import org.junit.jupiter.api.extension.ClassTemplateInvocationContextProvider;
 import org.junit.jupiter.api.extension.Extension;
 import org.junit.jupiter.api.extension.ExtensionContext;
 import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
@@ -30,7 +32,7 @@ import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
 
-public final class GradlePluginTesting implements Extension, ParameterResolver {
+public final class GradlePluginTesting implements Extension, ParameterResolver, ClassTemplateInvocationContextProvider {
     private static final Set<Class<?>> SUPPORTED_TYPES = Set.of(Gradlew.class, RootProject.class, SubProject.class);
     private static final Namespace NAMESPACE = Namespace.create(GradlePluginTesting.class);
     private static final Path GRADLE_TESTING_DIR =
@@ -85,6 +87,24 @@ public final class GradlePluginTesting implements Extension, ParameterResolver {
             Files.createDirectories(projectDir);
         } catch (IOException e) {
             throw new RuntimeException(e);
+        }
+    }
+
+    @Override
+    public boolean supportsClassTemplate(ExtensionContext context) {
+        return true;
+    }
+
+    @Override
+    public Stream<? extends ClassTemplateInvocationContext> provideClassTemplateInvocationContexts(
+            ExtensionContext context) {
+        return Stream.of(new GradleVersionInvocationContext("8.12.1"), new GradleVersionInvocationContext("8.14"));
+    }
+
+    private record GradleVersionInvocationContext(String gradleVersion) implements ClassTemplateInvocationContext {
+        @Override
+        public String getDisplayName(int invocationIndex) {
+            return "Gradle " + gradleVersion;
         }
     }
 }

@@ -19,15 +19,15 @@ package com.palantir.baseline.plugins.javaversions;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.palantir.gradle.testing.BuildOutcome;
-import com.palantir.gradle.testing.GradlePluginTesting;
+import com.palantir.gradle.testing.GradlePluginTests;
 import com.palantir.gradle.testing.Gradlew;
 import com.palantir.gradle.testing.RootProject;
 import com.palantir.gradle.testing.SubProject;
 import org.gradle.testkit.runner.TaskOutcome;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.extension.ExtendWith;
 
-@ExtendWith(GradlePluginTesting.class)
+@GradlePluginTests
 final class BaselineJavaVersionsTest {
     @Test
     void test(Gradlew gradlew, RootProject rootProject, SubProject subProject) {
@@ -62,5 +62,14 @@ final class BaselineJavaVersionsTest {
                         .task(":subProject:foo:bar:compileIntegrationTestJava")
                         .getOutcome())
                 .isEqualTo(TaskOutcome.FAILED);
+    }
+
+    @Test
+    void another_test() {}
+
+    @Nested
+    class Foo {
+        @Test
+        void bar(RootProject rootProject) {}
     }
 }
