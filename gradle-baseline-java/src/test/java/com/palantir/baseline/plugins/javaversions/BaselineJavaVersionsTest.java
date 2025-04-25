@@ -42,8 +42,10 @@ final class BaselineJavaVersionsTest {
         SubProject bar = subProject.addSubproject("foo").addSubproject("bar");
 
         bar.buildFile().appendLine("apply plugin: 'java'");
-        bar.javaClass(
-                """
+        bar.buildFile().appendLine("sourceSets { integrationTest }");
+        bar.sourceSet("integrationTest")
+                .writeJavaClass(
+                        """
             package app;
             class Main {
                 public static void main(String[] args) {
@@ -52,9 +54,13 @@ final class BaselineJavaVersionsTest {
             }
             """);
 
-        BuildOutcome buildOutcome = gradlew.build("compileJava").buildSuccessfully();
+        BuildOutcome buildOutcome = gradlew.build("compileIntegrationTestJava").buildSuccessfully();
 
-        assertThat(buildOutcome.task(":subProject:foo:bar:compileJava").getOutcome())
+        bar.buildFile().assertThat().hasContent("sfsdfsource");
+
+        assertThat(buildOutcome
+                        .task(":subProject:foo:bar:compileIntegrationTestJava")
+                        .getOutcome())
                 .isEqualTo(TaskOutcome.FAILED);
     }
 }

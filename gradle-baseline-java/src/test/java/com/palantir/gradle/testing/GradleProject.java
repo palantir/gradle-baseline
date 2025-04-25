@@ -19,7 +19,6 @@ package com.palantir.gradle.testing;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import org.intellij.lang.annotations.Language;
 
 public interface GradleProject {
     Path projectDir();
@@ -51,17 +50,15 @@ public interface GradleProject {
         return gradleFile("build.gradle");
     }
 
-    default JavaFile javaClass(@Language("Java") String javaSource) {
-        String packagePath = JavaSourceUtils.extractPackage(javaSource)
-                .map(pkg -> pkg.replace('.', '/') + '/')
-                .orElse("");
+    default GradleSourceSet mainSourceSet() {
+        return sourceSet("main");
+    }
 
-        String className = JavaSourceUtils.extractClassName(javaSource)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Could not find the class name from the source: \n\n" + javaSource));
+    default GradleSourceSet testSourceSet() {
+        return sourceSet("test");
+    }
 
-        String directory = "src/main/java/" + packagePath;
-
-        return new JavaFile(projectDir().resolve(directory + className + ".java")).overwrite(javaSource);
+    default GradleSourceSet sourceSet(String sourceSetName) {
+        return new GradleSourceSet(projectDir(), sourceSetName);
     }
 }
