@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.palantir.gradle.testing;
+package com.palantir.gradle.testing.files.java;
 
 import java.util.Optional;
 import java.util.regex.Matcher;

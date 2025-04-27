@@ -14,25 +14,9 @@
  * limitations under the License.
  */
 
-package com.palantir.gradle.testing;
+package com.palantir.gradle.testing.files.arbitrary;
 
+import com.palantir.gradle.testing.files.ProjectFile;
 import java.nio.file.Path;
-import org.gradle.testkit.runner.GradleRunner;
 
-public final class Gradlew {
-    private final Path rootProjectDir;
-
-    public Gradlew(Path rootProjectDir) {
-        this.rootProjectDir = rootProjectDir;
-    }
-
-    public GradleInvocation build(String... args) {
-        return new GradleInvocation(GradleRunner.create()
-                .withProjectDir(rootProjectDir.toFile())
-                .withDebug(false)
-                .forwardOutput()
-                .withGradleVersion("8.12.1")
-                .withPluginClasspath()
-                .withArguments(args));
-    }
-}
+public record ArbitraryFile(Path path) implements ProjectFile<ArbitraryFile> {}

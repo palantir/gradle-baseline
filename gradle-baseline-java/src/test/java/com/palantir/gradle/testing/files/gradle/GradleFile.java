@@ -14,8 +14,25 @@
  * limitations under the License.
  */
 
-package com.palantir.gradle.testing;
+package com.palantir.gradle.testing.files.gradle;
 
+import com.palantir.gradle.testing.files.ProjectFile;
 import java.nio.file.Path;
+import org.intellij.lang.annotations.Language;
 
-public record SubProject(String name, Path projectDir, RootProject rootProject) implements GradleProject {}
+public record GradleFile(Path path) implements ProjectFile<GradleFile> {
+    @Override
+    public GradleFile overwrite(@Language("Gradle") String text) {
+        return ProjectFile.super.overwrite(text);
+    }
+
+    @Override
+    public GradleFile append(@Language("Gradle") String text) {
+        return ProjectFile.super.append(text);
+    }
+
+    @Override
+    public GradleFile appendLine(@Language("Gradle") String line) {
+        return ProjectFile.super.appendLine(line);
+    }
+}

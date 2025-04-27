@@ -14,23 +14,12 @@
  * limitations under the License.
  */
 
-package com.palantir.gradle.testing;
+package com.palantir.gradle.testing.files.yaml;
 
-import org.gradle.testkit.runner.BuildResult;
-import org.gradle.testkit.runner.BuildTask;
+import com.palantir.gradle.testing.files.GradleSourceSet;
 
-public final class BuildOutcome {
-    private final BuildResult buildResult;
-
-    public BuildOutcome(BuildResult buildResult) {
-        this.buildResult = buildResult;
-    }
-
-    public String output() {
-        return buildResult.getOutput();
-    }
-
-    public BuildTask task(String taskPath) {
-        return buildResult.task(taskPath);
+public record YamlSrcDir(GradleSourceSet sourceSet, String srcDirName) {
+    public YamlFile file(String path) {
+        return new YamlFile(sourceSet.path().resolve(srcDirName).resolve(path));
     }
 }

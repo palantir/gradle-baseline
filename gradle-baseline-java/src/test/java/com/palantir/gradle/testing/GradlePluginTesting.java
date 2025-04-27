@@ -16,6 +16,9 @@
 
 package com.palantir.gradle.testing;
 
+import com.palantir.gradle.testing.execution.Gradlew;
+import com.palantir.gradle.testing.project.RootProject;
+import com.palantir.gradle.testing.project.SubProject;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -31,14 +34,8 @@ import org.junit.jupiter.api.extension.ExtensionContext.Namespace;
 import org.junit.jupiter.api.extension.ParameterContext;
 import org.junit.jupiter.api.extension.ParameterResolutionException;
 import org.junit.jupiter.api.extension.ParameterResolver;
-import org.junit.jupiter.api.extension.TestTemplateInvocationContext;
-import org.junit.jupiter.api.extension.TestTemplateInvocationContextProvider;
 
-public final class GradlePluginTesting
-        implements Extension,
-                ParameterResolver,
-                ClassTemplateInvocationContextProvider,
-        TestTemplateInvocationContextProvider {
+public final class GradlePluginTesting implements Extension, ParameterResolver, ClassTemplateInvocationContextProvider {
     private static final Set<Class<?>> SUPPORTED_TYPES = Set.of(Gradlew.class, RootProject.class, SubProject.class);
     private static final Namespace NAMESPACE = Namespace.create(GradlePluginTesting.class);
     private static final Path GRADLE_TESTING_DIR =
@@ -105,16 +102,6 @@ public final class GradlePluginTesting
     public Stream<? extends ClassTemplateInvocationContext> provideClassTemplateInvocationContexts(
             ExtensionContext context) {
         return Stream.of(new GradleVersionInvocationContext("8.12.1"), new GradleVersionInvocationContext("8.14"));
-    }
-
-    @Override
-    public boolean supportsTestTemplate(ExtensionContext context) {
-        return true;
-    }
-
-    @Override
-    public Stream<TestTemplateInvocationContext> provideTestTemplateInvocationContexts(ExtensionContext context) {
-        return Stream.of(new TestTemplateInvocationContext() {}, new TestTemplateInvocationContext() {});
     }
 
     private record GradleVersionInvocationContext(String gradleVersion) implements ClassTemplateInvocationContext {

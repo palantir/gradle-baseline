@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-package com.palantir.gradle.testing;
+package com.palantir.gradle.testing.files;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;

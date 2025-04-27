@@ -14,8 +14,9 @@
  * limitations under the License.
  */
 
-package com.palantir.gradle.testing;
+package com.palantir.gradle.testing.files.java;
 
+import com.palantir.gradle.testing.files.GradleSourceSet;
 import org.intellij.lang.annotations.Language;
 
 public record JavaSrcDir(GradleSourceSet sourceSet) {

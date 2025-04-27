@@ -14,17 +14,28 @@
  * limitations under the License.
  */
 
-package com.palantir.gradle.testing;
+package com.palantir.gradle.testing.execution;
 
-import java.nio.file.Path;
+import java.util.Map;
+import org.gradle.testkit.runner.GradleRunner;
 
-public record RootProject(Path projectDir) implements GradleProject {
-    @Override
-    public RootProject rootProject() {
+public final class GradleInvocation {
+    private final GradleRunner gradleRunner;
+
+    public GradleInvocation(GradleRunner gradleRunner) {
+        this.gradleRunner = gradleRunner;
+    }
+
+    public GradleInvocation withEnvironment(Map<String, String> environment) {
+        gradleRunner.withEnvironment(environment);
         return this;
     }
 
-    public GradleFile settingsFile() {
-        return gradleFile("settings.gradle");
+    public BuildOutcome buildSuccessfully() {
+        return new BuildOutcome(gradleRunner.build());
+    }
+
+    public BuildOutcome buildWithFailure() {
+        return new BuildOutcome(gradleRunner.buildAndFail());
     }
 }

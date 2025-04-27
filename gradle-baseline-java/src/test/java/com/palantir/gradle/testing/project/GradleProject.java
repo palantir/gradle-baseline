@@ -14,8 +14,10 @@
  * limitations under the License.
  */
 
-package com.palantir.gradle.testing;
+package com.palantir.gradle.testing.project;
 
+import com.palantir.gradle.testing.files.GradleSourceSet;
+import com.palantir.gradle.testing.files.gradle.GradleFile;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

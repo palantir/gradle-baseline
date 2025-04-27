@@ -18,15 +18,14 @@ package com.palantir.baseline.plugins.javaversions;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
-import com.palantir.gradle.testing.BuildOutcome;
 import com.palantir.gradle.testing.GradlePluginTests;
-import com.palantir.gradle.testing.Gradlew;
-import com.palantir.gradle.testing.RootProject;
-import com.palantir.gradle.testing.SubProject;
+import com.palantir.gradle.testing.execution.BuildOutcome;
+import com.palantir.gradle.testing.execution.Gradlew;
+import com.palantir.gradle.testing.project.RootProject;
+import com.palantir.gradle.testing.project.SubProject;
 import org.gradle.testkit.runner.TaskOutcome;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.TestTemplate;
 
 @GradlePluginTests
 final class BaselineJavaVersionsTest {
@@ -44,6 +43,8 @@ final class BaselineJavaVersionsTest {
 
         bar.buildFile().appendLine("apply plugin: 'java'");
         bar.buildFile().appendLine("sourceSets { integrationTest }");
+
+        bar.mainSourceSet().yamlSrcDir("conjure").file("something.yml").append("foo: 3");
 
         bar.sourceSet("integrationTest")
                 .java()
@@ -67,7 +68,7 @@ final class BaselineJavaVersionsTest {
                 .isEqualTo(TaskOutcome.FAILED);
     }
 
-    @TestTemplate
+    @Test
     void another_test() {}
 
     @Nested

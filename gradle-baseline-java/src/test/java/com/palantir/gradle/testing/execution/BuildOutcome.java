@@ -14,24 +14,23 @@
  * limitations under the License.
  */
 
-package com.palantir.gradle.testing;
+package com.palantir.gradle.testing.execution;
 
-import java.nio.file.Path;
-import org.intellij.lang.annotations.Language;
+import org.gradle.testkit.runner.BuildResult;
+import org.gradle.testkit.runner.BuildTask;
 
-public record JavaFile(Path path) implements ProjectFile<JavaFile> {
-    @Override
-    public JavaFile overwrite(@Language("Java") String text) {
-        return ProjectFile.super.overwrite(text);
+public final class BuildOutcome {
+    private final BuildResult buildResult;
+
+    public BuildOutcome(BuildResult buildResult) {
+        this.buildResult = buildResult;
     }
 
-    @Override
-    public JavaFile append(@Language("Java") String text) {
-        return ProjectFile.super.append(text);
+    public String output() {
+        return buildResult.getOutput();
     }
 
-    @Override
-    public JavaFile appendLine(@Language("Java") String line) {
-        return ProjectFile.super.appendLine(line);
+    public BuildTask task(String taskPath) {
+        return buildResult.task(taskPath);
     }
 }

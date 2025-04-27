@@ -14,16 +14,8 @@
  * limitations under the License.
  */
 
-package com.palantir.gradle.testing;
+package com.palantir.gradle.testing.project;
 
 import java.nio.file.Path;
 
-public record GradleSourceSet(Path projectDir, String sourceSetName) {
-    public Path path() {
-        return projectDir.resolve("src").resolve(sourceSetName);
-    }
-
-    public JavaSrcDir java() {
-        return new JavaSrcDir(this);
-    }
-}
+public record SubProject(String name, Path projectDir, RootProject rootProject) implements GradleProject {}

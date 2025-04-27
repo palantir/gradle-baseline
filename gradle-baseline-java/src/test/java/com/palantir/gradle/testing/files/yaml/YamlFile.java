@@ -14,24 +14,25 @@
  * limitations under the License.
  */
 
-package com.palantir.gradle.testing;
+package com.palantir.gradle.testing.files.yaml;
 
+import com.palantir.gradle.testing.files.ProjectFile;
 import java.nio.file.Path;
 import org.intellij.lang.annotations.Language;
 
-public record GradleFile(Path path) implements ProjectFile<GradleFile> {
+public record YamlFile(Path path) implements ProjectFile<YamlFile> {
     @Override
-    public GradleFile overwrite(@Language("Gradle") String text) {
+    public YamlFile overwrite(@Language("YAML") String text) {
         return ProjectFile.super.overwrite(text);
     }
 
     @Override
-    public GradleFile append(@Language("Gradle") String text) {
+    public YamlFile append(@Language("YAML") String text) {
         return ProjectFile.super.append(text);
     }
 
     @Override
-    public GradleFile appendLine(@Language("Gradle") String line) {
+    public YamlFile appendLine(@Language("YAML") String line) {
         return ProjectFile.super.appendLine(line);
     }
 }
