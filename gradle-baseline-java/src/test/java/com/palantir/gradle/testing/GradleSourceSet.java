@@ -17,32 +17,13 @@
 package com.palantir.gradle.testing;
 
 import java.nio.file.Path;
-import org.intellij.lang.annotations.Language;
 
-public final class GradleSourceSet {
-    private final Path projectDir;
-    private final String sourceSetName;
-
-    public GradleSourceSet(Path projectDir, String sourceSetName) {
-        this.projectDir = projectDir;
-        this.sourceSetName = sourceSetName;
+public record GradleSourceSet(Path projectDir, String sourceSetName) {
+    public Path path() {
+        return projectDir.resolve("src").resolve(sourceSetName);
     }
 
-    public JavaFile writeJavaClass(@Language("Java") String javaSource) {
-        String packagePath = JavaSourceUtils.extractPackage(javaSource).orElse("");
-
-        String className = JavaSourceUtils.extractClassName(javaSource)
-                .orElseThrow(() -> new IllegalArgumentException(
-                        "Could not find the class name from the source: \n\n" + javaSource));
-
-        String canonicalClassName = packagePath + className;
-
-        return javaFile(canonicalClassName).overwrite(javaSource);
-    }
-
-    public JavaFile javaFile(String canonicalClassName) {
-        String directory = "src/%s/java/".formatted(sourceSetName);
-
-        return new JavaFile(projectDir.resolve(directory + canonicalClassName.replace('.', '/') + '/' + ".java"));
+    public JavaSrcDir java() {
+        return new JavaSrcDir(this);
     }
 }

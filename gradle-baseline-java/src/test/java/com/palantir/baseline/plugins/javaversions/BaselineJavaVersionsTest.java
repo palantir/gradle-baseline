@@ -26,6 +26,7 @@ import com.palantir.gradle.testing.SubProject;
 import org.gradle.testkit.runner.TaskOutcome;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.TestTemplate;
 
 @GradlePluginTests
 final class BaselineJavaVersionsTest {
@@ -43,8 +44,10 @@ final class BaselineJavaVersionsTest {
 
         bar.buildFile().appendLine("apply plugin: 'java'");
         bar.buildFile().appendLine("sourceSets { integrationTest }");
+
         bar.sourceSet("integrationTest")
-                .writeJavaClass(
+                .java()
+                .writeClass(
                         """
             package app;
             class Main {
@@ -64,7 +67,7 @@ final class BaselineJavaVersionsTest {
                 .isEqualTo(TaskOutcome.FAILED);
     }
 
-    @Test
+    @TestTemplate
     void another_test() {}
 
     @Nested
