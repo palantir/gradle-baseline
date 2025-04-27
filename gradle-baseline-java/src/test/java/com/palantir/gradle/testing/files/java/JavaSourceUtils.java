@@ -16,26 +16,8 @@
 
 package com.palantir.gradle.testing.files.java;
 
-import java.util.Optional;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-
 final class JavaSourceUtils {
-    private static final Pattern PACKAGE_PATTERN = Pattern.compile("package\\s+([^;]+);");
-    private static final Pattern CLASS_PATTERN = Pattern.compile("(?:class|interface|record|enum)\\s+(\\w+)");
 
-    static Optional<String> extractPackage(String source) {
-        return possiblyExtractGroup(PACKAGE_PATTERN, source);
-    }
-
-    static Optional<String> extractClassName(String source) {
-        return possiblyExtractGroup(CLASS_PATTERN, source);
-    }
-
-    private static Optional<String> possiblyExtractGroup(Pattern pattern, String source) {
-        Matcher matcher = pattern.matcher(source);
-        return matcher.find() ? Optional.of(matcher.group(1)) : Optional.empty();
-    }
 
     private JavaSourceUtils() {}
 }

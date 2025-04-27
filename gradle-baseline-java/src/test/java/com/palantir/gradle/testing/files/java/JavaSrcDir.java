@@ -17,13 +17,19 @@
 package com.palantir.gradle.testing.files.java;
 
 import com.palantir.gradle.testing.files.GradleSourceSet;
+import java.util.Optional;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import org.intellij.lang.annotations.Language;
 
 public record JavaSrcDir(GradleSourceSet sourceSet) {
-    public JavaFile writeClass(@Language("Java") String javaSource) {
-        String packagePath = JavaSourceUtils.extractPackage(javaSource).orElse("");
+    private static final Pattern PACKAGE_PATTERN = Pattern.compile("package\\s+([^;]+);");
+    private static final Pattern CLASS_PATTERN = Pattern.compile("(?:class|interface|record|enum)\\s+(\\w+)");
 
-        String className = JavaSourceUtils.extractClassName(javaSource)
+    public JavaFile writeClass(@Language("Java") String javaSource) {
+        String packagePath = possiblyExtractGroup(PACKAGE_PATTERN, javaSource).orElse("");
+
+        String className = possiblyExtractGroup(CLASS_PATTERN, javaSource)
                 .orElseThrow(() -> new IllegalArgumentException(
                         "Could not find the class name from the source: \n\n" + javaSource));
 
@@ -38,5 +44,10 @@ public record JavaSrcDir(GradleSourceSet sourceSet) {
 
     public JavaFile fileByPath(String path) {
         return new JavaFile(sourceSet.path().resolve("java").resolve(path));
+    }
+
+    private static Optional<String> possiblyExtractGroup(Pattern pattern, String source) {
+        Matcher matcher = pattern.matcher(source);
+        return matcher.find() ? Optional.of(matcher.group(1)) : Optional.empty();
     }
 }

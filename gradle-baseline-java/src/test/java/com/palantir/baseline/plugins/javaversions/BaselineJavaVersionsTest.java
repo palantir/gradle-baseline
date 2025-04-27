@@ -44,7 +44,7 @@ final class BaselineJavaVersionsTest {
         bar.buildFile().appendLine("apply plugin: 'java'");
         bar.buildFile().appendLine("sourceSets { integrationTest }");
 
-        bar.mainSourceSet().yamlSrcDir("conjure").file("something.yml").append("foo: 3");
+        bar.mainSourceSet().srcDir("conjure").yamlFile("something.yml").append("foo: 3");
 
         bar.sourceSet("integrationTest")
                 .java()

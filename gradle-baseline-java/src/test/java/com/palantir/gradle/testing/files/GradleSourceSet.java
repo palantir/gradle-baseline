@@ -18,7 +18,6 @@ package com.palantir.gradle.testing.files;
 
 import com.palantir.gradle.testing.files.arbitrary.ArbitrarySrcDir;
 import com.palantir.gradle.testing.files.java.JavaSrcDir;
-import com.palantir.gradle.testing.files.yaml.YamlSrcDir;
 import java.nio.file.Path;
 
 public record GradleSourceSet(Path projectDir, String name) {
@@ -32,9 +31,5 @@ public record GradleSourceSet(Path projectDir, String name) {
 
     public ArbitrarySrcDir srcDir(String srcDirName) {
         return new ArbitrarySrcDir(this, srcDirName);
-    }
-
-    public YamlSrcDir yamlSrcDir(String srcDirName) {
-        return new YamlSrcDir(this, srcDirName);
     }
 }
