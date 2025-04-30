@@ -24,6 +24,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
@@ -85,7 +86,7 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
                 .filter(artifacts -> artifacts.stream().noneMatch(declaredArtifacts::contains))
                 // Select a single deterministic artifact for the suggestion
                 .map(artifacts -> artifacts.stream().min(ARTIFACT_COMPARATOR))
-                .flatMap(Streams::stream)
+                .<ResolvedArtifact>mapMulti(Optional::ifPresent)
                 .sorted(ARTIFACT_COMPARATOR)
                 .collect(Collectors.toList());
         if (!usedButUndeclared.isEmpty()) {

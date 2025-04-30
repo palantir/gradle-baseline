@@ -106,7 +106,7 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
                         immutableClass.getInterfaces().stream(), Stream.of(immutableClass.getSuperclass()))
                 .map(type -> type.tsym)
                 .map(filterByType(ClassSymbol.class))
-                .flatMap(Streams::stream)
+                .<ClassSymbol>mapMulti(Optional::ifPresent)
                 .filter(classSymbol ->
                         ASTHelpers.hasAnnotation(classSymbol, "org.immutables.value.Value.Immutable", state))
                 .findAny();
@@ -212,7 +212,7 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
     private boolean checkAllFieldsCanBeInitialized(Set<String> fields, Symbol builderClass) {
         return Streams.stream(builderClass.members().getSymbols())
                 .map(filterByType(MethodSymbol.class))
-                .flatMap(Streams::stream)
+                .<MethodSymbol>mapMulti(Optional::ifPresent)
                 .filter(symbol -> !symbol.isStaticOrInstanceInit()
                         && !symbol.isConstructor()
                         && !symbol.isAnonymous()
