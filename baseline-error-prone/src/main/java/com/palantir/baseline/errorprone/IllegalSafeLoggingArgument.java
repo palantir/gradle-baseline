@@ -26,7 +26,7 @@ import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
-import com.google.errorprone.util.ASTHelpers.TargetType;
+import com.google.errorprone.util.TargetType;
 import com.palantir.baseline.errorprone.safety.Safety;
 import com.palantir.baseline.errorprone.safety.SafetyAnalysis;
 import com.palantir.baseline.errorprone.safety.SafetyAnnotations;
@@ -493,7 +493,7 @@ public final class IllegalSafeLoggingArgument extends BugChecker
     }
 
     private Safety getLambdaRequiredReturnSafety(LambdaExpressionTree tree, VisitorState state) {
-        TargetType returnType = ASTHelpers.targetType(state.withPath(new TreePath(state.getPath(), tree)));
+        TargetType returnType = TargetType.targetType(state.withPath(new TreePath(state.getPath(), tree)));
         if (returnType == null) {
             return Safety.UNKNOWN;
         }

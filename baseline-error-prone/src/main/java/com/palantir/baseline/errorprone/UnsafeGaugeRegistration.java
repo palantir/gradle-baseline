@@ -18,9 +18,11 @@ package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
+import com.google.errorprone.ErrorProneFlags;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.AbstractReturnValueIgnored;
 import com.google.errorprone.bugpatterns.BugChecker;
+import com.google.errorprone.bugpatterns.threadsafety.ConstantExpressions;
 import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
@@ -53,6 +55,10 @@ public final class UnsafeGaugeRegistration extends AbstractReturnValueIgnored {
 
     private static final Supplier<Symbol> TAGGED_METRIC_REGISTRY =
             VisitorState.memoize(state -> state.getSymbolFromString(TAGGED_REGISTRY));
+
+    public UnsafeGaugeRegistration() {
+        super(ConstantExpressions.fromFlags(ErrorProneFlags.empty()));
+    }
 
     @Override
     public Matcher<? super ExpressionTree> specializedMatcher() {
