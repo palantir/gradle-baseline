@@ -32,6 +32,7 @@ import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.tools.javac.code.Symbol;
+import javax.inject.Inject;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -58,6 +59,11 @@ public final class UnsafeGaugeRegistration extends AbstractReturnValueIgnored {
 
     public UnsafeGaugeRegistration() {
         super(ConstantExpressions.fromFlags(ErrorProneFlags.empty()));
+    }
+
+    @Inject
+    UnsafeGaugeRegistration(ConstantExpressions constantExpressions) {
+        super(constantExpressions);
     }
 
     @Override

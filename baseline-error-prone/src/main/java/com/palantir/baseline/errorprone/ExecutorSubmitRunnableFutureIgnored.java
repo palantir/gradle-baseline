@@ -30,6 +30,7 @@ import com.google.errorprone.matchers.method.MethodMatchers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import java.util.concurrent.ExecutorService;
+import javax.inject.Inject;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -49,6 +50,11 @@ public final class ExecutorSubmitRunnableFutureIgnored extends AbstractReturnVal
 
     public ExecutorSubmitRunnableFutureIgnored() {
         super(ConstantExpressions.fromFlags(ErrorProneFlags.empty()));
+    }
+
+    @Inject
+    ExecutorSubmitRunnableFutureIgnored(ConstantExpressions constantExpressions) {
+        super(constantExpressions);
     }
 
     @Override

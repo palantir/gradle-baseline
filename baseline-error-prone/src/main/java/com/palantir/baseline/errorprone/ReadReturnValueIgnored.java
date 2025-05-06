@@ -40,6 +40,7 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.io.Reader;
 import java.util.List;
+import javax.inject.Inject;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -52,6 +53,11 @@ public final class ReadReturnValueIgnored extends AbstractReturnValueIgnored {
 
     public ReadReturnValueIgnored() {
         super(ConstantExpressions.fromFlags(ErrorProneFlags.empty()));
+    }
+
+    @Inject
+    ReadReturnValueIgnored(ConstantExpressions constantExpressions) {
+        super(constantExpressions);
     }
 
     // MethodMatchers does not support matching arrays
