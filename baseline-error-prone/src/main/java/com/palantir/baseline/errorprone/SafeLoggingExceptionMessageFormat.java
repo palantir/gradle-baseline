@@ -64,17 +64,15 @@ public final class SafeLoggingExceptionMessageFormat extends BugChecker implemen
             return Description.NO_MATCH;
         }
 
-        if (!(messageArg instanceof LiteralTree)) {
+        if (!(messageArg instanceof LiteralTree literalTreeMessageArg)) {
             return Description.NO_MATCH;
         }
-        LiteralTree literalTreeMessageArg = (LiteralTree) messageArg;
 
         Object value = literalTreeMessageArg.getValue();
 
-        if (!(value instanceof String)) {
+        if (!(value instanceof String message)) {
             return Description.NO_MATCH;
         }
-        String message = (String) value;
 
         if (message.contains("{}")) {
             return buildDescription(tree)

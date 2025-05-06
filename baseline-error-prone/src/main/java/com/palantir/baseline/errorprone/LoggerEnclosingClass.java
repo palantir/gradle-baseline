@@ -68,10 +68,9 @@ public final class LoggerEnclosingClass extends BugChecker implements BugChecker
         MethodInvocationTree getLoggerInvocation = (MethodInvocationTree) tree.getInitializer();
         ExpressionTree classArgument = getLoggerInvocation.getArguments().get(0);
 
-        if (!(classArgument instanceof MemberSelectTree)) {
+        if (!(classArgument instanceof MemberSelectTree memberSelectTree)) {
             return Description.NO_MATCH;
         }
-        MemberSelectTree memberSelectTree = (MemberSelectTree) classArgument;
         if (!memberSelectTree.getIdentifier().contentEquals("class")
                 || memberSelectTree.getExpression().getKind() != Tree.Kind.IDENTIFIER) {
             return Description.NO_MATCH;

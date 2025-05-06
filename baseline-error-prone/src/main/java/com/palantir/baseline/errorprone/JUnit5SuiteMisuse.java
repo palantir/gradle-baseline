@@ -96,13 +96,13 @@ public final class JUnit5SuiteMisuse extends BugChecker
             return Collections.emptyList();
         }
 
-        if (value instanceof JCTree.JCFieldAccess) {
-            return Collections.singletonList(((JCTree.JCFieldAccess) value).selected.type);
+        if (value instanceof JCTree.JCFieldAccess jcFieldAccess) {
+            return Collections.singletonList(jcFieldAccess.selected.type);
         }
 
-        if (value instanceof JCTree.JCNewArray) {
+        if (value instanceof JCTree.JCNewArray jcNewArray) {
             ImmutableList.Builder<Type> list = ImmutableList.builder();
-            for (JCTree.JCExpression elem : ((JCTree.JCNewArray) value).elems) {
+            for (JCTree.JCExpression elem : jcNewArray.elems) {
                 list.add(((JCTree.JCFieldAccess) elem).selected.type);
             }
             return list.build();

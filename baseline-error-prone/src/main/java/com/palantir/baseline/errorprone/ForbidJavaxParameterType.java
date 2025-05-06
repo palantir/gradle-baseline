@@ -41,10 +41,13 @@ import java.util.function.Predicate;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.ERROR,
-        summary = "Supplying an object which uses legacy javax types, such as javax.ws.rs to a\n"
-                + "method which requires newer jakarta types is a runtime error. This check ensures\n"
-                + "that you only supply proper types to these methods which generally just take an\n"
-                + "untyped Object. There is no auto-fix for this check, you must fix it manually")
+        summary =
+                """
+                Supplying an object which uses legacy javax types, such as javax.ws.rs to a
+                method which requires newer jakarta types is a runtime error. This check ensures
+                that you only supply proper types to these methods which generally just take an
+                untyped Object. There is no auto-fix for this check, you must fix it manually
+                """)
 public final class ForbidJavaxParameterType extends BugChecker implements BugChecker.MethodInvocationTreeMatcher {
 
     private static final String FORBID_JAVAX_TYPE = "com.palantir.errorprone.ForbidJavax";
@@ -102,8 +105,7 @@ public final class ForbidJavaxParameterType extends BugChecker implements BugChe
     }
 
     private boolean hasJavaxInclusionsOnType(TypeSymbol symbol, VisitorState state) {
-        if (symbol instanceof ClassSymbol) {
-            ClassSymbol classType = (ClassSymbol) symbol;
+        if (symbol instanceof ClassSymbol classType) {
 
             if (IMPLEMENTS_FEATURE.apply(classType.type, state)) {
                 return true;

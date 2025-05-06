@@ -92,8 +92,7 @@ public final class IllegalSafeLoggingArgument extends BugChecker
 
     private static Type resolveParameterType(Type input, ExpressionTree tree, VisitorState state) {
         // Important not to call getReceiver/getReceiverType on a NewClassTree, which throws.
-        if (input instanceof TypeVar && tree instanceof MethodInvocationTree) {
-            TypeVar typeVar = (TypeVar) input;
+        if (input instanceof TypeVar typeVar && tree instanceof MethodInvocationTree) {
 
             Type receiver = ASTHelpers.getReceiverType(tree);
             if (receiver == null) {
@@ -472,13 +471,13 @@ public final class IllegalSafeLoggingArgument extends BugChecker
 
         Safety resultSafety = Safety.UNKNOWN;
         switch (tree.getBodyKind()) {
-            case EXPRESSION:
+            case EXPRESSION ->
                 resultSafety = SafetyAnalysis.of(state.withPath(new TreePath(state.getPath(), tree.getBody())));
-                break;
-            case STATEMENT:
+            case STATEMENT -> {
                 // Shortcut - statement lambdas get their return type checked in the return statement matcher
                 // This also allows us to indicate which return statement is bad (if any) rather than the lambda itself
                 return Description.NO_MATCH;
+            }
         }
 
         if (requiredReturnSafety.allowsValueWith(resultSafety)) {

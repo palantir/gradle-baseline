@@ -82,13 +82,11 @@ public final class UnsafeGaugeRegistration extends AbstractReturnValueIgnored {
     /** TaggedMetricRegistry.registerWithReplacement was added in Tritium 0.16.1, avoid flagging older versions. */
     private static boolean hasRegisterWithReplacement(VisitorState state) {
         Symbol symbol = TAGGED_METRIC_REGISTRY.get(state);
-        if (!(symbol instanceof Symbol.ClassSymbol)) {
+        if (!(symbol instanceof Symbol.ClassSymbol classSymbol)) {
             return false;
         }
-        Symbol.ClassSymbol classSymbol = (Symbol.ClassSymbol) symbol;
         for (Symbol enclosed : ASTHelpers.getEnclosedElements(classSymbol)) {
-            if (enclosed instanceof Symbol.MethodSymbol) {
-                Symbol.MethodSymbol enclosedMethod = (Symbol.MethodSymbol) enclosed;
+            if (enclosed instanceof Symbol.MethodSymbol enclosedMethod) {
                 if (enclosedMethod.name.contentEquals(REGISTER_WITH_REPLACEMENT)) {
                     return true;
                 }

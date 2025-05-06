@@ -50,9 +50,15 @@ allprojects {
         tasks.withType(JavaCompile) {
             options.compilerArgs += ['-Werror', '-Xlint:deprecation']
             options.errorprone {
-                // Temporarily disable errorprone, because it cannot pass due to the issue that is being fixed
-                // in #3101. Remove this line after a new version has been released.
-                getDisableAllChecks().set(true)
+                // Temporarily disable some checks which cannot pass due to the issue that is being fixed
+                // in #3101. Remove these line after a new version has been released.
+                disable("DangerousIdentityKey")
+                disable("ExecutorSubmitRunnableFutureIgnored")
+                disable("IllegalSafeLoggingArgument")
+                disable("ReadReturnValueIgnored")
+                disable("UnsafeGaugeRegistration")
+                disable("VarUsage")
+                // End temporary disabled checks
 
                 disable("Slf4jLogsafeArgs")
                 disable("PreferSafeLoggableExceptions")

@@ -38,7 +38,7 @@ final class TestCheckUtils {
         }
         TreePath path = state.getPath();
         for (Tree ancestor : path) {
-            if (ancestor instanceof ClassTree && hasTestCases.matches((ClassTree) ancestor, state)) {
+            if (ancestor instanceof ClassTree classTree && hasTestCases.matches(classTree, state)) {
                 return true;
             }
         }

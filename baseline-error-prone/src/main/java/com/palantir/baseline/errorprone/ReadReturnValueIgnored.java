@@ -135,14 +135,13 @@ public final class ReadReturnValueIgnored extends AbstractReturnValueIgnored {
     private static SuggestedFix replaceWithStatic(
             MethodInvocationTree tree, VisitorState state, String fullyQualifiedReplacement) {
         Tree methodSelect = tree.getMethodSelect();
-        if (!(methodSelect instanceof MemberSelectTree)) {
+        if (!(methodSelect instanceof MemberSelectTree memberSelectTree)) {
             return SuggestedFix.emptyFix();
         }
         CharSequence sourceCode = state.getSourceCode();
         if (sourceCode == null) {
             return SuggestedFix.emptyFix();
         }
-        MemberSelectTree memberSelectTree = (MemberSelectTree) methodSelect;
         SuggestedFix.Builder fix = SuggestedFix.builder();
         String qualifiedReference = SuggestedFixes.qualifyType(state, fix, fullyQualifiedReplacement);
         CharSequence args = sourceCode.subSequence(
