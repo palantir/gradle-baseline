@@ -10,6 +10,7 @@ import org.gradle.api.internal.project.ProjectInternal
 
 dependencies {
     implementation gradleApi()
+    implementation 'com.palantir.gradle.idea-configuration:gradle-idea-configuration'
     implementation 'com.palantir.suppressible-error-prone:gradle-suppressible-error-prone'
     implementation 'org.apache.commons:commons-lang3'
     implementation 'com.diffplug.spotless:spotless-plugin-gradle'

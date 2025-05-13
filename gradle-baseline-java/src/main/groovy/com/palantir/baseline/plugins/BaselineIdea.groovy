@@ -22,6 +22,8 @@ import com.palantir.baseline.plugins.javaversions.BaselineJavaVersionExtension
 import com.palantir.baseline.plugins.javaversions.BaselineJavaVersionsExtension
 import com.palantir.baseline.plugins.javaversions.ChosenJavaVersion
 import com.palantir.baseline.util.GitUtils
+import com.palantir.gradle.ideaconfiguration.IdeaConfigurationExtension
+import com.palantir.gradle.ideaconfiguration.IdeaConfigurationPlugin
 import groovy.transform.CompileStatic
 import groovy.xml.XmlUtil
 import java.nio.file.Files
@@ -96,6 +98,9 @@ class BaselineIdea extends AbstractBaselinePlugin {
     }
 
     void applyToRootProject(Project rootProject) {
+        rootProject.getPluginManager().apply(IdeaConfigurationPlugin.class);
+        IdeaConfigurationExtension extension = rootProject.getExtensions().getByType(IdeaConfigurationExtension.class);
+
         // Configure Idea project
         IdeaModel ideaRootModel = rootProject.extensions.findByType(IdeaModel)
         ideaRootModel.project.ipr.withXml {XmlProvider provider ->
@@ -103,15 +108,15 @@ class BaselineIdea extends AbstractBaselinePlugin {
             addCodeStyle(node)
             setRootJavaVersions(node)
             addCopyright(node)
-            addCheckstyle(node)
-            addEclipseFormat(node)
+            addCheckstyle(node, extension)
+            addEclipseFormat(node, extension)
             addGit(node)
             addInspectionProjectProfile(node)
             addJavacSettings(node)
             addGitHubIssueNavigation(node)
             addExcludedAutoImports(node)
         }
-        configureProjectForIntellijImport(rootProject)
+        configureProjectForIntellijImport(rootProject, extension)
 
         rootProject.afterEvaluate {
             ideaRootModel.workspace.iws.withXml {XmlProvider provider ->
@@ -129,10 +134,10 @@ class BaselineIdea extends AbstractBaselinePlugin {
         {FileTreeElement details -> details.file == file} as Spec<FileTreeElement>
     }
 
-    private void configureProjectForIntellijImport(Project project) {
+    private void configureProjectForIntellijImport(Project project, IdeaConfigurationExtension extension) {
         if (IntellijSupport.isRunningInIntellij()) {
             addCodeStyleIntellijImport()
-            addCheckstyleIntellijImport(project)
+            addCheckstyleIntellijImport(project, extension)
             addCopyrightIntellijImport()
         }
     }
@@ -327,7 +332,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
         GroovyXmlUtils.matchOrCreateChild(copyrightNode, "option", ["name": "myLocal"], ["value": true])
     }
 
-    private void addEclipseFormat(node) {
+    private void addEclipseFormat(node, IdeaConfigurationExtension extension) {
         def baselineFormat = project.plugins.findPlugin(BaselineFormat)
         if (baselineFormat == null) {
             project.logger.debug "Baseline: Skipping IDEA eclipse format configuration since baseline-format not applied"
@@ -360,29 +365,26 @@ class BaselineIdea extends AbstractBaselinePlugin {
                 </option>
               </component>
             """))
-        def externalDependencies = GroovyXmlUtils.matchOrCreateChild(node, 'component', [name: 'ExternalDependencies'])
-        GroovyXmlUtils.matchOrCreateChild(externalDependencies, 'plugin', [id: 'EclipseCodeFormatter'])
+        extension.getExternalDependencies().maybeCreate("EclipseCodeFormatter");
     }
 
-    private void addCheckstyle(Node node) {
+    private void addCheckstyle(Node node, IdeaConfigurationExtension extension) {
         project.plugins.withType(BaselineCheckstyle) {
             project.logger.debug "Baseline: Configuring Checkstyle for Idea"
 
             addCheckstyleNode(node)
-            addCheckstyleExternalDependencies(node)
+            addCheckstyleExternalDependencies(extension)
         }
     }
 
-    private void addCheckstyleIntellijImport(Project project) {
+    private void addCheckstyleIntellijImport(Project project, IdeaConfigurationExtension extension) {
         project.plugins.withType(BaselineCheckstyle) {
             project.logger.debug "Baseline: Configuring Checkstyle for Idea"
 
             XmlUtils.createOrUpdateXmlFile(
                     project.file(".idea/checkstyle-idea.xml"),
                     { addCheckstyleNode(it) })
-            XmlUtils.createOrUpdateXmlFile(
-                    project.file(".idea/externalDependencies.xml"),
-                    BaselineIdea.&addCheckstyleExternalDependencies)
+            addCheckstyleExternalDependencies(extension);
         }
     }
 
@@ -407,9 +409,8 @@ class BaselineIdea extends AbstractBaselinePlugin {
             """.stripIndent()))
     }
 
-    private static void addCheckstyleExternalDependencies(node) {
-        def externalDependencies = GroovyXmlUtils.matchOrCreateChild(node, 'component', [name: 'ExternalDependencies'])
-        GroovyXmlUtils.matchOrCreateChild(externalDependencies, 'plugin', [id: 'CheckStyle-IDEA'])
+    private static void addCheckstyleExternalDependencies(IdeaConfigurationExtension extension) {
+        extension.getExternalDependencies().maybeCreate("CheckStyle-IDEA");
     }
 
     /**
