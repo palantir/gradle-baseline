@@ -39,7 +39,6 @@ public abstract class BaselineErrorProneExtension {
             "ConsistentLoggerName",
             "ConsistentOverrides",
             "DeprecatedGuavaObjects",
-            "ExecutorSubmitRunnableFutureIgnored",
             "ExtendsErrorOrThrowable",
             "FinalClass",
             "IllegalSafeLoggingArgument",
