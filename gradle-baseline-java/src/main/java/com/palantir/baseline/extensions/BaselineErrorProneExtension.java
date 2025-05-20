@@ -91,6 +91,7 @@ public abstract class BaselineErrorProneExtension {
             "NarrowCalculation",
             "ObjectsHashCodePrimitive",
             "ProtectedMembersInFinalClass",
+            "PatternMatchingInstanceof",
             "UnnecessaryParentheses",
             "ZoneIdOfZ");
 
