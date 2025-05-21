@@ -78,7 +78,7 @@ org.inferred:freebuilder:1.14.6 (1 constraints: 3e053b3b)
 org.jspecify:jspecify:1.0.0 (7 constraints: a66e34db)
 org.ow2.asm:asm:9.8 (4 constraints: ff3f9a80)
 org.pcollections:pcollections:4.0.1 (1 constraints: f21028b8)
-org.slf4j:slf4j-api:1.7.36 (9 constraints: ac87f044)
+org.slf4j:slf4j-api:2.0.17 (9 constraints: a587883a)
 
 [Test dependencies]
 cglib:cglib-nodep:3.2.2 (1 constraints: 490ded24)
