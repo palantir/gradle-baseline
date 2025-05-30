@@ -15,7 +15,7 @@ public final class UnsafeXmlMapperConstructionTest {
             import com.fasterxml.jackson.dataformat.xml.XmlMapper;
             class Test {
                 void foo() {
-                    // BUG: Diagnostic contains: Do not use 'new XmlMapper()' without providing an input/output factory.
+                    // BUG: Diagnostic contains: constructed with XMLInput/XMLOutput factories
                     XmlMapper mapper = new XmlMapper();
                 }
             }
@@ -124,7 +124,7 @@ public final class UnsafeXmlMapperConstructionTest {
             class Test {
                 void foo() {
                     XmlFactory factory = new XmlFactory();
-                    // BUG: Diagnostic contains: unless at least one XMLInputFactory or XMLOutputFactory
+                    // BUG: Diagnostic contains: constructed with XMLInput/XMLOutput factories
                     XmlMapper mapper = new XmlMapper(factory);
                 }
             }
@@ -139,7 +139,7 @@ public final class UnsafeXmlMapperConstructionTest {
             import com.fasterxml.jackson.dataformat.xml.XmlFactory;
             class Test {
                 void foo() {
-                    // BUG: Diagnostic contains: unless at least one XMLInputFactory or XMLOutputFactory
+                    // BUG: Diagnostic contains: constructed with XMLInput/XMLOutput factories
                     XmlMapper mapper = new XmlMapper(new XmlFactory());
                 }
             }
@@ -152,7 +152,7 @@ public final class UnsafeXmlMapperConstructionTest {
                 """
             import com.fasterxml.jackson.dataformat.xml.XmlMapper;
             class Test {
-                // BUG: Diagnostic contains: Do not use 'new XmlMapper()' without providing an input/output factory.
+                // BUG: Diagnostic contains: constructed with XMLInput/XMLOutput factories
                 private static final XmlMapper xmlMapper = new XmlMapper();
             }
             """);
@@ -247,7 +247,7 @@ public final class UnsafeXmlMapperConstructionTest {
             import com.fasterxml.jackson.dataformat.xml.XmlFactory;
             class Test {
                 private static final XmlFactory factory = new XmlFactory();
-                // BUG: Diagnostic contains: unless at least one XMLInputFactory or XMLOutputFactory
+                // BUG: Diagnostic contains: constructed with XMLInput/XMLOutput factories
                 private static final XmlMapper xmlMapper = new XmlMapper(factory);
             }
             """);
@@ -260,7 +260,7 @@ public final class UnsafeXmlMapperConstructionTest {
             import com.fasterxml.jackson.dataformat.xml.XmlMapper;
             class Test {
                 void foo() {
-                    // BUG: Diagnostic contains: without configuring an input/output factory
+                    // BUG: Diagnostic contains: constructed with XMLInput/XMLOutput factories
                     XmlMapper mapper = XmlMapper.builder().build();
                 }
             }
@@ -342,7 +342,7 @@ public final class UnsafeXmlMapperConstructionTest {
             class Test {
                 void foo() {
                     XmlFactory factory = new XmlFactory();
-                    // BUG: Diagnostic contains: without configuring an input/output factory
+                    // BUG: Diagnostic contains: constructed with XMLInput/XMLOutput factories
                     XmlMapper mapper = XmlMapper.builder(factory).build();
                 }
             }
@@ -357,7 +357,7 @@ public final class UnsafeXmlMapperConstructionTest {
             import com.fasterxml.jackson.dataformat.xml.XmlFactory;
             class Test {
                 void foo() {
-                    // BUG: Diagnostic contains: without configuring an input/output factory
+                    // BUG: Diagnostic contains: constructed with XMLInput/XMLOutput factories
                     XmlMapper mapper = XmlMapper.builder(new XmlFactory()).build();
                 }
             }

@@ -32,8 +32,8 @@ import java.util.stream.Stream;
 
 @AutoService(BugChecker.class)
 @BugPattern(
-        summary = "XmlMapper must be constructed with an explicit XmlFactory or "
-                + "XMLInput/XMLOutput factory for security and correctness.",
+        summary = "XmlMapper must be constructed with XMLInput/XMLOutput factories either directly or via XmlFactory. "
+                + "This prevents XmlMapper discovering shaded version of woodstox and erroring.",
         severity = SeverityLevel.ERROR)
 public final class UnsafeXmlMapperConstruction extends BugChecker
         implements BugChecker.NewClassTreeMatcher, BugChecker.MethodInvocationTreeMatcher {
@@ -42,14 +42,6 @@ public final class UnsafeXmlMapperConstruction extends BugChecker
     private static final String XML_MAPPER = "com.fasterxml.jackson.dataformat.xml.XmlMapper";
     private static final String XML_INPUT_FACTORY = "javax.xml.stream.XMLInputFactory";
     private static final String XML_OUTPUT_FACTORY = "javax.xml.stream.XMLOutputFactory";
-
-    private static final String ERR_NEW_DEFAULT =
-            "Do not use 'new XmlMapper()' without providing an input/output factory.";
-    private static final String ERR_NO_FACTORY =
-            "Do not use 'new XmlMapper(...)' unless at least one XMLInputFactory or "
-                    + "XMLOutputFactory is supplied (directly or via XmlFactory).";
-    private static final String ERR_BUILDER =
-            "Do not use 'XmlMapper.builder()' without configuring an input/output factory.";
 
     private static final Matcher<ExpressionTree> XML_MAPPER_DEFAULT_CTOR =
             Matchers.constructor().forClass(XML_MAPPER).withParameters(Collections.emptyList());
@@ -73,11 +65,11 @@ public final class UnsafeXmlMapperConstruction extends BugChecker
     @Override
     public Description matchNewClass(NewClassTree tree, VisitorState state) {
         if (XML_MAPPER_DEFAULT_CTOR.matches(tree, state)) {
-            return buildDescription(tree).setMessage(ERR_NEW_DEFAULT).build();
+            return describeMatch(tree);
         }
 
         if (XML_MAPPER_ANY_CTOR.matches(tree, state) && !hasSafeFactory(tree.getArguments(), state)) {
-            return buildDescription(tree).setMessage(ERR_NO_FACTORY).build();
+            return describeMatch(tree);
         }
         return Description.NO_MATCH;
     }
@@ -99,8 +91,8 @@ public final class UnsafeXmlMapperConstruction extends BugChecker
                 .findFirst()
                 .map(builderCall -> hasSafeFactory(builderCall.getArguments(), state)
                         ? Description.NO_MATCH
-                        : buildDescription(builderCall).setMessage(ERR_BUILDER).build())
-                .orElseGet(() -> buildDescription(tree).setMessage(ERR_BUILDER).build());
+                        : describeMatch(builderCall))
+                .orElseGet(() -> describeMatch(tree));
     }
 
     private Tree getPreviousInChain(Tree current) {
