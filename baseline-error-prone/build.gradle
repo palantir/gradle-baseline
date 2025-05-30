@@ -13,6 +13,7 @@ dependencies {
     implementation 'io.github.eisop:dataflow-errorprone'
 
     testImplementation gradleApi()
+    testImplementation 'com.fasterxml.jackson.dataformat:jackson-dataformat-xml'
     testImplementation 'com.palantir.tokens:auth-tokens'
     testImplementation 'com.fasterxml.jackson.core:jackson-annotations'
     testImplementation 'com.google.errorprone:error_prone_test_helpers'
