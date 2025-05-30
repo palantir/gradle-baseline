@@ -12,6 +12,7 @@ import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.suppliers.Supplier;
 import com.google.errorprone.suppliers.Suppliers;
 import com.google.errorprone.util.ASTHelpers;
+import com.sun.source.tree.BlockTree;
 import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.IdentifierTree;
@@ -19,12 +20,14 @@ import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.NewClassTree;
+import com.sun.source.tree.Tree;
 import com.sun.source.tree.VariableTree;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
 import com.sun.tools.javac.code.Type;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Stream;
 
 @AutoService(BugChecker.class)
@@ -85,30 +88,49 @@ public final class UnsafeXmlMapperConstruction extends BugChecker
             return Description.NO_MATCH;
         }
 
-        // Find the builder() call in the method chain
-        ExpressionTree current = tree.getMethodSelect();
-        while (current instanceof MemberSelectTree mst) {
-            ExpressionTree expr = mst.getExpression();
-            if (expr instanceof MethodInvocationTree mit && XML_MAPPER_BUILDER.matches(mit, state)) {
-                // Found the builder call, check if it has safe factory args
-                return hasSafeFactory(mit.getArguments(), state)
+        // Find the builder() call in the method chain using streams
+        return Stream.iterate(tree.getMethodSelect(), Objects::nonNull, this::getPreviousInChain)
+                .filter(MemberSelectTree.class::isInstance)
+                .map(MemberSelectTree.class::cast)
+                .map(MemberSelectTree::getExpression)
+                .filter(expr -> expr instanceof MethodInvocationTree)
+                .map(MethodInvocationTree.class::cast)
+                .filter(mit -> XML_MAPPER_BUILDER.matches(mit, state))
+                .findFirst()
+                .map(builderCall -> hasSafeFactory(builderCall.getArguments(), state)
                         ? Description.NO_MATCH
-                        : buildDescription(mit).setMessage(ERR_BUILDER).build();
-            }
-            if (!(expr instanceof MethodInvocationTree)) {
-                break;
-            }
-            current = expr;
-        }
+                        : buildDescription(builderCall).setMessage(ERR_BUILDER).build())
+                .orElseGet(() -> buildDescription(tree).setMessage(ERR_BUILDER).build());
+    }
 
-        // Couldn't find the builder call or it wasn't safe
-        return buildDescription(tree).setMessage(ERR_BUILDER).build();
+    private Tree getPreviousInChain(Tree current) {
+        if (current instanceof MemberSelectTree mst) {
+            return mst.getExpression();
+        }
+        return null;
     }
 
     private boolean hasSafeFactory(List<? extends ExpressionTree> args, VisitorState state) {
         return args.stream().anyMatch(arg -> isFactorySafe(arg, state));
     }
 
+    /**
+     * Determines if an expression represents a safe XML factory.
+     * <p>
+     * This method performs three checks in sequence:
+     * <ol>
+     *   <li>If the expression is directly assignable to XMLInputFactory or XMLOutputFactory</li>
+     *   <li>If the expression is an XmlFactory constructor that includes at least one safe factory argument</li>
+     *   <li>If the expression is a variable reference whose initializer resolves to a safe factory</li>
+     * </ol>
+     * <p>
+     * The method handles variable resolution to trace factory configurations through variable references
+     * and field declarations.
+     *
+     * @param tree The expression tree to check
+     * @param state The visitor state for type checking and AST traversal
+     * @return true if the expression represents a safe factory, false otherwise
+     */
     private boolean isFactorySafe(ExpressionTree tree, VisitorState state) {
         // Check if it's a direct XML input/output factory
         Type type = ASTHelpers.getType(tree);
@@ -124,42 +146,47 @@ public final class UnsafeXmlMapperConstruction extends BugChecker
         }
 
         // For variable references, try to resolve their initializers
-        if (tree instanceof IdentifierTree id) {
-            VarSymbol var = ASTHelpers.getSymbol(id) instanceof VarSymbol v ? v : null;
-            if (var != null) {
-                ExpressionTree init = variableInitializer(var, state);
-                if (init != null && init != tree) {
-                    return isFactorySafe(init, state);
-                }
-            }
-        }
-
-        return false;
+        return tree instanceof IdentifierTree id
+                && ASTHelpers.getSymbol(id) instanceof VarSymbol var
+                && Optional.ofNullable(variableInitializer(var, state))
+                        .filter(init -> init != tree)
+                        .map(init -> isFactorySafe(init, state))
+                        .orElse(false);
     }
 
+    /**
+     * Finds the initializer expression for a given variable symbol.
+     * <p>
+     * This method searches for variable declarations in both class scope (fields) and method
+     * scope (local variables) that match the provided symbol. When found, it returns the
+     * initializer expression of that variable.
+     * <p>
+     * The search is performed in the following order:
+     * <ol>
+     *   <li>Class member variables (fields)</li>
+     *   <li>Local method variables</li>
+     * </ol>
+     *
+     * @param var The variable symbol to find the initializer for
+     * @param state The visitor state for accessing the current AST context
+     * @return The initializer expression if found, or null if the variable has no initializer
+     *         or couldn't be located in the current scope
+     */
     private static ExpressionTree variableInitializer(VarSymbol var, VisitorState state) {
-        Stream<VariableTree> variables = Stream.empty();
+        return Stream.of(
+                        // Class member variables
+                        Optional.ofNullable(state.findEnclosing(ClassTree.class))
+                                .map(ClassTree::getMembers)
+                                .orElseGet(Collections::emptyList),
 
-        ClassTree cls = state.findEnclosing(ClassTree.class);
-        if (cls != null) {
-            variables = Stream.concat(
-                    variables,
-                    cls.getMembers().stream()
-                            .filter(VariableTree.class::isInstance)
-                            .map(VariableTree.class::cast));
-        }
-
-        MethodTree method = state.findEnclosing(MethodTree.class);
-        if (method != null && method.getBody() != null) {
-            variables = Stream.concat(
-                    variables,
-                    method.getBody().getStatements().stream()
-                            .filter(VariableTree.class::isInstance)
-                            .map(VariableTree.class::cast));
-        }
-
-        // Find matching variable and return its initializer
-        return variables
+                        // Local method variables
+                        Optional.ofNullable(state.findEnclosing(MethodTree.class))
+                                .map(MethodTree::getBody)
+                                .map(BlockTree::getStatements)
+                                .orElseGet(Collections::emptyList))
+                .flatMap(List::stream)
+                .filter(VariableTree.class::isInstance)
+                .map(VariableTree.class::cast)
                 .filter(vt -> Objects.equals(ASTHelpers.getSymbol(vt), var))
                 .map(VariableTree::getInitializer)
                 .filter(Objects::nonNull)
