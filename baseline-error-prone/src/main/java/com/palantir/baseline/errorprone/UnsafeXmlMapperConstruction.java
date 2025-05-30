@@ -19,14 +19,12 @@ import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.NewClassTree;
-import com.sun.source.tree.Tree;
 import com.sun.source.tree.VariableTree;
 import com.sun.tools.javac.code.Symbol.VarSymbol;
 import com.sun.tools.javac.code.Type;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Stream;
 
 @AutoService(BugChecker.class)
@@ -69,72 +67,80 @@ public final class UnsafeXmlMapperConstruction extends BugChecker
     private static final Supplier<Type> XML_INPUT_TYPE = Suppliers.typeFromString(XML_INPUT_FACTORY);
     private static final Supplier<Type> XML_OUTPUT_TYPE = Suppliers.typeFromString(XML_OUTPUT_FACTORY);
 
-    // new XmlMapper(...)
     @Override
     public Description matchNewClass(NewClassTree tree, VisitorState state) {
         if (XML_MAPPER_DEFAULT_CTOR.matches(tree, state)) {
-            return error(tree, ERR_NEW_DEFAULT);
+            return buildDescription(tree).setMessage(ERR_NEW_DEFAULT).build();
         }
 
-        if (XML_MAPPER_ANY_CTOR.matches(tree, state) && !containsSafeFactory(tree.getArguments(), state)) {
-            return error(tree, ERR_NO_FACTORY);
+        if (XML_MAPPER_ANY_CTOR.matches(tree, state) && !hasSafeFactory(tree.getArguments(), state)) {
+            return buildDescription(tree).setMessage(ERR_NO_FACTORY).build();
         }
         return Description.NO_MATCH;
     }
 
-    // XmlMapper.builder(...).build()
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
         if (!XML_MAPPER_BUILDER_BUILD.matches(tree, state)) {
             return Description.NO_MATCH;
         }
 
-        Optional<MethodInvocationTree> builderCall = findBuilderCall(tree, state);
-
-        if (builderCall.isEmpty()) {
-            return error(tree, ERR_BUILDER);
+        // Find the builder() call in the method chain
+        ExpressionTree current = tree.getMethodSelect();
+        while (current instanceof MemberSelectTree mst) {
+            ExpressionTree expr = mst.getExpression();
+            if (expr instanceof MethodInvocationTree mit && XML_MAPPER_BUILDER.matches(mit, state)) {
+                // Found the builder call, check if it has safe factory args
+                return hasSafeFactory(mit.getArguments(), state)
+                        ? Description.NO_MATCH
+                        : buildDescription(mit).setMessage(ERR_BUILDER).build();
+            }
+            if (!(expr instanceof MethodInvocationTree)) {
+                break;
+            }
+            current = expr;
         }
 
-        if (!containsSafeFactory(builderCall.get().getArguments(), state)) {
-            return error(builderCall.get(), ERR_NO_FACTORY);
-        }
-
-        return Description.NO_MATCH;
+        // Couldn't find the builder call or it wasn't safe
+        return buildDescription(tree).setMessage(ERR_BUILDER).build();
     }
 
-    private static boolean containsSafeFactory(List<? extends ExpressionTree> args, VisitorState state) {
-        return args.stream().anyMatch(arg -> isIoFactory(arg, state) || isSafeXmlFactory(arg, state));
+    private boolean hasSafeFactory(List<? extends ExpressionTree> args, VisitorState state) {
+        return args.stream().anyMatch(arg -> isFactorySafe(arg, state));
     }
 
-    private static boolean isIoFactory(ExpressionTree expr, VisitorState state) {
-        Type type = ASTHelpers.getType(expr);
-        return type != null
+    private boolean isFactorySafe(ExpressionTree tree, VisitorState state) {
+        // Check if it's a direct XML input/output factory
+        Type type = ASTHelpers.getType(tree);
+        if (type != null
                 && (state.getTypes().isAssignable(type, XML_INPUT_TYPE.get(state))
-                        || state.getTypes().isAssignable(type, XML_OUTPUT_TYPE.get(state)));
-    }
-
-    private static boolean isSafeXmlFactory(ExpressionTree expr, VisitorState state) {
-        // inline: new XmlFactory(...)
-        if (expr instanceof NewClassTree nct && XML_FACTORY_ANY_CTOR.matches(expr, state)) {
-            return containsSafeFactory(nct.getArguments(), state);
+                        || state.getTypes().isAssignable(type, XML_OUTPUT_TYPE.get(state)))) {
+            return true;
         }
 
-        // reference (variable/field/parameter)
-        if (expr instanceof IdentifierTree id) {
+        // Check if it's an XmlFactory with safe arguments
+        if (tree instanceof NewClassTree nct && XML_FACTORY_ANY_CTOR.matches(tree, state)) {
+            return !nct.getArguments().isEmpty() && hasSafeFactory(nct.getArguments(), state);
+        }
+
+        // For variable references, try to resolve their initializers
+        if (tree instanceof IdentifierTree id) {
             VarSymbol var = ASTHelpers.getSymbol(id) instanceof VarSymbol v ? v : null;
-            ExpressionTree init = (var == null) ? null : variableInitializer(var, state);
-            if (init instanceof NewClassTree nct && XML_FACTORY_ANY_CTOR.matches(init, state)) {
-                return containsSafeFactory(nct.getArguments(), state);
+            if (var != null) {
+                ExpressionTree init = variableInitializer(var, state);
+                if (init != null && init != tree) {
+                    return isFactorySafe(init, state);
+                }
             }
         }
+
         return false;
     }
 
     private static ExpressionTree variableInitializer(VarSymbol var, VisitorState state) {
-        // Build a single stream containing all VariableTree nodes we care about
         Stream<VariableTree> variables = Stream.empty();
 
-        ClassTree cls = ASTHelpers.findEnclosingNode(state.getPath(), ClassTree.class);
+        ClassTree cls = state.findEnclosing(ClassTree.class);
         if (cls != null) {
             variables = Stream.concat(
                     variables,
@@ -143,7 +149,7 @@ public final class UnsafeXmlMapperConstruction extends BugChecker
                             .map(VariableTree.class::cast));
         }
 
-        MethodTree method = ASTHelpers.findEnclosingNode(state.getPath(), MethodTree.class);
+        MethodTree method = state.findEnclosing(MethodTree.class);
         if (method != null && method.getBody() != null) {
             variables = Stream.concat(
                     variables,
@@ -152,32 +158,12 @@ public final class UnsafeXmlMapperConstruction extends BugChecker
                             .map(VariableTree.class::cast));
         }
 
-        // Find the first matching symbol, return its initializer (or null)
+        // Find matching variable and return its initializer
         return variables
-                .filter(vt -> ASTHelpers.getSymbol(vt).equals(var))
+                .filter(vt -> Objects.equals(ASTHelpers.getSymbol(vt), var))
                 .map(VariableTree::getInitializer)
                 .filter(Objects::nonNull)
                 .findFirst()
                 .orElse(null);
-    }
-
-    private static Optional<MethodInvocationTree> findBuilderCall(MethodInvocationTree build, VisitorState state) {
-
-        return Stream.iterate(build, Objects::nonNull, UnsafeXmlMapperConstruction::receiverInvocation)
-                .filter(mit -> XML_MAPPER_BUILDER.matches(mit, state))
-                .findFirst();
-    }
-
-    private static MethodInvocationTree receiverInvocation(MethodInvocationTree current) {
-        ExpressionTree select = current.getMethodSelect();
-        if (select instanceof MemberSelectTree mst) {
-            ExpressionTree receiver = mst.getExpression();
-            return receiver instanceof MethodInvocationTree prev ? prev : null;
-        }
-        return null;
-    }
-
-    private Description error(Tree where, String message) {
-        return buildDescription(where).setMessage(message).build();
     }
 }
