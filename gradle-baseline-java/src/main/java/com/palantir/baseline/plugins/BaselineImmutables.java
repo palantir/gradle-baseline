@@ -19,12 +19,13 @@ package com.palantir.baseline.plugins;
 import com.google.common.collect.ImmutableList;
 import java.util.Collections;
 import java.util.Objects;
+import java.util.Set;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
-import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.artifacts.result.ResolvedArtifactResult;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.process.CommandLineArgumentProvider;
@@ -43,18 +44,20 @@ public final class BaselineImmutables implements Plugin<Project> {
                 project.getTasks()
                         .named(sourceSet.getCompileJavaTaskName(), JavaCompile.class)
                         .configure(javaCompileTask -> {
+                            Provider<Set<ResolvedArtifactResult>> annotationSourceSet = project.getConfigurations()
+                                    .getByName(sourceSet.getAnnotationProcessorConfigurationName())
+                                    .getIncoming()
+                                    .getArtifacts()
+                                    .getResolvedArtifacts();
+                            ImmutablesCommandLineArgumentProvider incrementalCommandLineIncrementalArgumentProvider =
+                                    new ImmutablesCommandLineArgumentProvider(annotationSourceSet, GRADLE_INCREMENTAL);
                             javaCompileTask
                                     .getOptions()
                                     .getCompilerArgumentProviders()
-                                    // Use an anonymous class because tasks with lambda inputs cannot be cached
-                                    .add(new CommandLineArgumentProvider() {
-                                        @Override
-                                        public Iterable<String> asArguments() {
-                                            return hasImmutablesProcessor(project, sourceSet)
-                                                    ? GRADLE_INCREMENTAL
-                                                    : Collections.emptyList();
-                                        }
-                                    });
+                                    .add(incrementalCommandLineIncrementalArgumentProvider);
+
+                            ImmutablesCommandLineArgumentProvider incrementalCommandLineExportsArgumentProvider =
+                                    new ImmutablesCommandLineArgumentProvider(annotationSourceSet, EXPORTS);
 
                             // This *attempts* to make immutables work by add the exports to the fork options.
                             // However, this only happens if the compilation is actually forked, which at the time
@@ -66,30 +69,31 @@ public final class BaselineImmutables implements Plugin<Project> {
                                     .getOptions()
                                     .getForkOptions()
                                     .getJvmArgumentProviders()
-                                    .add(new CommandLineArgumentProvider() {
-                                        @Override
-                                        public Iterable<String> asArguments() {
-                                            return hasImmutablesProcessor(project, sourceSet)
-                                                    ? EXPORTS
-                                                    : Collections.emptyList();
-                                        }
-                                    });
+                                    .add(incrementalCommandLineExportsArgumentProvider);
                         });
             });
         });
     }
 
-    private static boolean hasImmutablesProcessor(Project project, SourceSet sourceSet) {
-        return project
-                .getConfigurations()
-                .getByName(sourceSet.getAnnotationProcessorConfigurationName())
-                .getResolvedConfiguration()
-                .getResolvedArtifacts()
-                .stream()
-                .anyMatch(BaselineImmutables::isImmutablesValue);
+    static class ImmutablesCommandLineArgumentProvider implements CommandLineArgumentProvider {
+        private final Provider<Set<ResolvedArtifactResult>> resolvedArtifacts;
+        private final ImmutableList<String> argsIfTrue;
+
+        ImmutablesCommandLineArgumentProvider(
+                Provider<Set<ResolvedArtifactResult>> resolvedArtifacts, ImmutableList<String> argsIfTrue) {
+            this.resolvedArtifacts = resolvedArtifacts;
+            this.argsIfTrue = argsIfTrue;
+        }
+
+        @Override
+        public Iterable<String> asArguments() {
+            boolean hasImmutables = resolvedArtifacts.get().stream().anyMatch(BaselineImmutables::isImmutablesValue);
+
+            return hasImmutables ? argsIfTrue : Collections.emptyList();
+        }
     }
 
-    private static boolean isImmutablesValue(ResolvedArtifact resolvedArtifact) {
+    private static boolean isImmutablesValue(ResolvedArtifactResult resolvedArtifact) {
         ComponentIdentifier id = resolvedArtifact.getId().getComponentIdentifier();
 
         if (!(id instanceof ModuleComponentIdentifier)) {
@@ -98,12 +102,11 @@ public final class BaselineImmutables implements Plugin<Project> {
 
         ModuleComponentIdentifier moduleId = (ModuleComponentIdentifier) id;
 
-        // The actual annotation processor jar has no classifier, we must make sure not to match on the
-        // `annotations` jar which has the `annotations` classifier
-        boolean noClassifier = resolvedArtifact.getClassifier() == null;
+        //        // The actual annotation processor jar has no classifier, we must make sure not to match on the
+        //        // `annotations` jar which has the `annotations` classifier
+        //        boolean noClassifier = resolvedArtifact.getClassifier() == null;
 
-        return Objects.equals(moduleId.getGroup(), "org.immutables")
-                && Objects.equals(moduleId.getModule(), "value")
-                && noClassifier;
+        return Objects.equals(moduleId.getGroup(), "org.immutables") && Objects.equals(moduleId.getModule(), "value");
+        //                && noClassifier;
     }
 }
