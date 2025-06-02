@@ -5,6 +5,7 @@ import com.google.errorprone.BugPattern;
 import com.google.errorprone.BugPattern.SeverityLevel;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
+import com.google.errorprone.fixes.SuggestedFix;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
@@ -65,11 +66,62 @@ public final class UnsafeXmlMapperConstruction extends BugChecker
     @Override
     public Description matchNewClass(NewClassTree tree, VisitorState state) {
         if (XML_MAPPER_DEFAULT_CTOR.matches(tree, state)) {
-            return describeMatch(tree);
+            SuggestedFix.Builder fix = SuggestedFix.builder();
+            fix.addImport("com.ctc.wstx.stax.WstxInputFactory");
+            fix.addImport("com.ctc.wstx.stax.WstxOutputFactory");
+            fix.replace(tree, "new XmlMapper(new WstxInputFactory(), new WstxOutputFactory())");
+            return buildDescription(tree).addFix(fix.build()).build();
         }
 
         if (XML_MAPPER_ANY_CTOR.matches(tree, state) && !hasSafeFactory(tree.getArguments(), state)) {
-            return describeMatch(tree);
+            List<? extends ExpressionTree> args = tree.getArguments();
+            if (args.size() == 1) {
+                ExpressionTree arg = args.get(0);
+
+                // Inline new XmlFactory()
+                if (arg instanceof NewClassTree nct
+                        && XML_FACTORY_ANY_CTOR.matches(nct, state)
+                        && nct.getArguments().isEmpty()) {
+                    SuggestedFix.Builder fix = SuggestedFix.builder();
+                    fix.addImport("com.ctc.wstx.stax.WstxInputFactory");
+                    fix.addImport("com.ctc.wstx.stax.WstxOutputFactory");
+                    fix.removeImport("com.fasterxml.jackson.dataformat.xml.XmlFactory");
+                    fix.replace(tree, "new XmlMapper(new WstxInputFactory(), new WstxOutputFactory())");
+                    return buildDescription(tree).addFix(fix.build()).build();
+                }
+
+                // Variable reference to unsafe XmlFactory
+                if (arg instanceof IdentifierTree id && ASTHelpers.getSymbol(id) instanceof VarSymbol var) {
+                    ExpressionTree init = variableInitializer(var, state);
+                    if (init instanceof NewClassTree nct
+                            && XML_FACTORY_ANY_CTOR.matches(nct, state)
+                            && nct.getArguments().isEmpty()) {
+                        SuggestedFix.Builder fix = SuggestedFix.builder();
+                        fix.addImport("com.ctc.wstx.stax.WstxInputFactory");
+                        fix.addImport("com.ctc.wstx.stax.WstxOutputFactory");
+                        fix.removeImport("com.fasterxml.jackson.dataformat.xml.XmlFactory");
+                        // Inline at the callsite
+                        fix.replace(tree, "new XmlMapper(new WstxInputFactory(), new WstxOutputFactory())");
+                        // Optionally remove the variable assignment for factory
+                        Stream.of(
+                                        Optional.ofNullable(state.findEnclosing(ClassTree.class))
+                                                .map(ClassTree::getMembers)
+                                                .orElseGet(Collections::emptyList),
+                                        Optional.ofNullable(state.findEnclosing(MethodTree.class))
+                                                .map(MethodTree::getBody)
+                                                .map(BlockTree::getStatements)
+                                                .orElseGet(Collections::emptyList))
+                                .flatMap(List::stream)
+                                .filter(VariableTree.class::isInstance)
+                                .map(VariableTree.class::cast)
+                                .filter(vt -> Objects.equals(ASTHelpers.getSymbol(vt), var))
+                                .findFirst()
+                                .ifPresent(fix::delete);
+
+                        return buildDescription(tree).addFix(fix.build()).build();
+                    }
+                }
+            }
         }
         return Description.NO_MATCH;
     }
@@ -80,19 +132,74 @@ public final class UnsafeXmlMapperConstruction extends BugChecker
             return Description.NO_MATCH;
         }
 
-        // Find the builder() call in the method chain using streams
-        return Stream.iterate(tree.getMethodSelect(), Objects::nonNull, this::getPreviousInChain)
+        Optional<MethodInvocationTree> builderCallOpt = Stream.iterate(
+                        tree.getMethodSelect(), Objects::nonNull, this::getPreviousInChain)
                 .filter(MemberSelectTree.class::isInstance)
                 .map(MemberSelectTree.class::cast)
                 .map(MemberSelectTree::getExpression)
                 .filter(expr -> expr instanceof MethodInvocationTree)
                 .map(MethodInvocationTree.class::cast)
                 .filter(mit -> XML_MAPPER_BUILDER.matches(mit, state))
-                .findFirst()
-                .map(builderCall -> hasSafeFactory(builderCall.getArguments(), state)
-                        ? Description.NO_MATCH
-                        : describeMatch(builderCall))
-                .orElseGet(() -> describeMatch(tree));
+                .findFirst();
+
+        if (builderCallOpt.isPresent()) {
+            MethodInvocationTree builderCall = builderCallOpt.get();
+            if (hasSafeFactory(builderCall.getArguments(), state)) {
+                return Description.NO_MATCH;
+            }
+
+            SuggestedFix.Builder fix = SuggestedFix.builder();
+            fix.addImport("com.ctc.wstx.stax.WstxInputFactory");
+            fix.addImport("com.ctc.wstx.stax.WstxOutputFactory");
+            fix.addImport("com.fasterxml.jackson.dataformat.xml.XmlFactory");
+
+            List<? extends ExpressionTree> args = builderCall.getArguments();
+            if (args.isEmpty()) {
+                // builder() → builder(new XmlFactory(new WstxInputFactory(), new WstxOutputFactory()))
+                fix.replace(
+                        builderCall,
+                        "XmlMapper.builder(new XmlFactory(new WstxInputFactory(), new WstxOutputFactory()))");
+                return buildDescription(builderCall).addFix(fix.build()).build();
+            } else if (args.size() == 1) {
+                ExpressionTree arg = args.get(0);
+                // Inline new XmlFactory()
+                if (arg instanceof NewClassTree nct
+                        && XML_FACTORY_ANY_CTOR.matches(nct, state)
+                        && nct.getArguments().isEmpty()) {
+                    fix.replace(nct, "new XmlFactory(new WstxInputFactory(), new WstxOutputFactory())");
+                    return buildDescription(builderCall).addFix(fix.build()).build();
+                }
+                // Variable reference to unsafe XmlFactory
+                if (arg instanceof IdentifierTree id && ASTHelpers.getSymbol(id) instanceof VarSymbol var) {
+                    ExpressionTree init = variableInitializer(var, state);
+                    if (init instanceof NewClassTree nct
+                            && XML_FACTORY_ANY_CTOR.matches(nct, state)
+                            && nct.getArguments().isEmpty()) {
+                        // Inline at the callsite
+                        fix.replace(
+                                builderCall,
+                                "XmlMapper.builder(new XmlFactory(new WstxInputFactory(), new WstxOutputFactory()))");
+                        // Optionally remove the variable assignment for factory
+                        Stream.of(
+                                        Optional.ofNullable(state.findEnclosing(ClassTree.class))
+                                                .map(ClassTree::getMembers)
+                                                .orElseGet(Collections::emptyList),
+                                        Optional.ofNullable(state.findEnclosing(MethodTree.class))
+                                                .map(MethodTree::getBody)
+                                                .map(BlockTree::getStatements)
+                                                .orElseGet(Collections::emptyList))
+                                .flatMap(List::stream)
+                                .filter(VariableTree.class::isInstance)
+                                .map(VariableTree.class::cast)
+                                .filter(vt -> Objects.equals(ASTHelpers.getSymbol(vt), var))
+                                .findFirst()
+                                .ifPresent(fix::delete);
+                        return buildDescription(builderCall).addFix(fix.build()).build();
+                    }
+                }
+            }
+        }
+        return buildDescription(tree).build();
     }
 
     private Tree getPreviousInChain(Tree current) {
