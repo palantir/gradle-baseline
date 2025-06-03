@@ -24,7 +24,6 @@ class ConfigurationCacheTest extends IntegrationTestKitSpec {
         // language=Gradle
         buildFile << """
             apply plugin: 'com.palantir.baseline'
-            apply plugin: 'com.palantir.baseline-java-versions'
             apply plugin: 'java-library'
         
             repositories {
