@@ -24,6 +24,7 @@ import com.palantir.baseline.extensions.BaselineModuleJvmArgsExtension;
 import com.palantir.baseline.plugins.javaversions.BaselineJavaVersion;
 import com.palantir.baseline.plugins.javaversions.BaselineJavaVersionExtension;
 import java.io.IOException;
+import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -192,50 +193,18 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                 }
             });
 
-            project.getTasks().withType(Test.class).configureEach(new Action<Test>() {
-
-                @Override
-                public void execute(Test test) {
-                    test.getJvmArgumentProviders().add(new CommandLineArgumentProvider() {
-
-                        @Override
-                        public Iterable<String> asArguments() {
-                            ImmutableList<String> arguments =
-                                    collectClasspathArgs(project, extension, test.getClasspath(), OpensMode.RUNTIME);
-                            log.debug(
-                                    "BaselineModuleJvmArgs executing {} on {} with exports: {}",
-                                    test.getName(),
-                                    project,
-                                    arguments);
-                            return arguments;
-                        }
-                    });
-
-                    setTaskInputsFromExtension(test, extension);
-                }
+            project.getTasks().withType(Test.class).configureEach(test -> {
+                test.getJvmArgumentProviders()
+                        .add(new ModuleJvmArgsArgumentProvider(
+                                extension.exports(), extension.opens(), test.getClasspath(), project.getPath()));
+                setTaskInputsFromExtension(test, extension);
             });
 
-            project.getTasks().withType(JavaExec.class).configureEach(new Action<JavaExec>() {
-
-                @Override
-                public void execute(JavaExec javaExec) {
-                    javaExec.getJvmArgumentProviders().add(new CommandLineArgumentProvider() {
-
-                        @Override
-                        public Iterable<String> asArguments() {
-                            ImmutableList<String> arguments = collectClasspathArgs(
-                                    project, extension, javaExec.getClasspath(), OpensMode.RUNTIME);
-                            log.debug(
-                                    "BaselineModuleJvmArgs executing {} on {} with exports: {}",
-                                    javaExec.getName(),
-                                    project,
-                                    arguments);
-                            return arguments;
-                        }
-                    });
-
-                    setTaskInputsFromExtension(javaExec, extension);
-                }
+            project.getTasks().withType(JavaExec.class).configureEach(javaExec -> {
+                javaExec.getJvmArgumentProviders()
+                        .add(new ModuleJvmArgsArgumentProvider(
+                                extension.exports(), extension.opens(), javaExec.getClasspath(), project.getPath()));
+                setTaskInputsFromExtension(javaExec, extension);
             });
 
             // Derive this plugin's `enablePreview` property from BaselineJavaVersion's extension
@@ -404,5 +373,43 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
     enum OpensMode {
         COMPILATION,
         RUNTIME;
+    }
+
+    public static final class ModuleJvmArgsArgumentProvider implements CommandLineArgumentProvider, Serializable {
+        private static final long serialVersionUID = 1L;
+
+        private final Provider<Set<String>> exports;
+        private final Provider<Set<String>> opens;
+        private final FileCollection classpath;
+        private final String projectPath;
+
+        public ModuleJvmArgsArgumentProvider(
+                Provider<Set<String>> exports,
+                Provider<Set<String>> opens,
+                FileCollection classpath,
+                String projectPath) {
+            this.exports = exports;
+            this.opens = opens;
+            this.classpath = classpath;
+            this.projectPath = projectPath;
+        }
+
+        @Override
+        public Iterable<String> asArguments() {
+            // We don't need the project reference for the actual work, we can use the stored values directly
+            ImmutableList<JarManifestModuleInfo> classpathInfo = collectClasspathInfo(null, classpath);
+            Stream<String> allExports = Stream.concat(
+                    exports.get().stream(), classpathInfo.stream().flatMap(info -> info.exports().stream()));
+            Stream<String> allOpens =
+                    Stream.concat(opens.get().stream(), classpathInfo.stream().flatMap(info -> info.opens().stream()));
+
+            Stream<String> exportsArgs = allExports.distinct().sorted().flatMap(BaselineModuleJvmArgs::addExportArg);
+            Stream<String> opensArgs = allOpens.distinct().sorted().flatMap(BaselineModuleJvmArgs::addOpensArg);
+
+            ImmutableList<String> arguments =
+                    Stream.concat(exportsArgs, opensArgs).collect(ImmutableList.toImmutableList());
+            log.debug("BaselineModuleJvmArgs executing task on project {} with exports: {}", projectPath, arguments);
+            return arguments;
+        }
     }
 }
