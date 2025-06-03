@@ -18,9 +18,10 @@ package com.palantir.baseline.plugins
 
 import com.google.common.collect.ImmutableList
 import nebula.test.IntegrationSpec
+import nebula.test.IntegrationTestKitSpec
 import nebula.test.functional.ExecutionResult
 
-class BaselineImmutablesTest extends IntegrationSpec {
+class BaselineImmutablesTest extends IntegrationTestKitSpec {
     private static final String IMMUTABLES = 'org.immutables:value:2.8.8'
     private static final String IMMUTABLES_ANNOTATIONS = IMMUTABLES + ':annotations'
 
@@ -52,6 +53,9 @@ class BaselineImmutablesTest extends IntegrationSpec {
                 tasks.compileAll.dependsOn javaCompile
             }
         '''.stripIndent(true)
+
+        definePluginOutsideOfPluginBlock = true
+        keepFiles = true
     }
 
     def 'inserts incremental compilation args into source sets that have immutables'() {
@@ -85,7 +89,7 @@ class BaselineImmutablesTest extends IntegrationSpec {
         }
 
         when:
-        def stdout = runTasksSuccessfully('compileAll').standardOutput
+        def stdout = runTasks('compileAll', '--configuration-cache').output
         println stdout
 
         then:
