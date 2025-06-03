@@ -85,7 +85,7 @@ class BaselineImmutablesTest extends IntegrationSpec {
         }
 
         when:
-        def stdout = runTasks('compileAll').standardOutput
+        def stdout = runTasksSuccessfully('compileAll').standardOutput
         println stdout
 
         then:
