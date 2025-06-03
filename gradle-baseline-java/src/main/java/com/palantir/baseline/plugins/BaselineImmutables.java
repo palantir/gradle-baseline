@@ -19,7 +19,6 @@ package com.palantir.baseline.plugins;
 import com.google.common.collect.ImmutableList;
 import java.util.Collections;
 import java.util.Objects;
-import java.util.Set;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
@@ -44,11 +43,17 @@ public final class BaselineImmutables implements Plugin<Project> {
                 project.getTasks()
                         .named(sourceSet.getCompileJavaTaskName(), JavaCompile.class)
                         .configure(javaCompileTask -> {
-                            Provider<Set<ResolvedArtifactResult>> annotationSourceSet = project.getConfigurations()
+                            Provider<Boolean> hasImmutablesProvider = project.provider(() -> project
+                                    .getConfigurations()
                                     .getByName(sourceSet.getAnnotationProcessorConfigurationName())
                                     .getIncoming()
                                     .getArtifacts()
-                                    .getResolvedArtifacts();
+                                    .getResolvedArtifacts()
+                                    .get()
+                                    .stream()
+                                    .anyMatch(BaselineImmutables::isImmutablesValue));
+
+                            javaCompileTask.getInputs().property("hasImmutables", hasImmutablesProvider);
 
                             javaCompileTask
                                     .getOptions()
@@ -56,18 +61,12 @@ public final class BaselineImmutables implements Plugin<Project> {
                                     .add(new CommandLineArgumentProvider() {
                                         @Override
                                         public Iterable<String> asArguments() {
-                                            boolean hasImmutables = annotationSourceSet.get().stream()
-                                                    .anyMatch(BaselineImmutables::isImmutablesValue);
-                                            return hasImmutables ? GRADLE_INCREMENTAL : Collections.emptyList();
+                                            return hasImmutablesProvider.get()
+                                                    ? GRADLE_INCREMENTAL
+                                                    : Collections.emptyList();
                                         }
                                     });
 
-                            // This *attempts* to make immutables work by add the exports to the fork options.
-                            // However, this only happens if the compilation is actually forked, which at the time
-                            // of writing is not always the case. Gradle will fork the compiler if the version of
-                            // Java required by the compiler is different to the one running the Gradle daemon. But
-                            // if they are the same, it will not fork and this extra export option **will have no
-                            // effect**.
                             javaCompileTask
                                     .getOptions()
                                     .getForkOptions()
@@ -75,9 +74,7 @@ public final class BaselineImmutables implements Plugin<Project> {
                                     .add(new CommandLineArgumentProvider() {
                                         @Override
                                         public Iterable<String> asArguments() {
-                                            boolean hasImmutables = annotationSourceSet.get().stream()
-                                                    .anyMatch(BaselineImmutables::isImmutablesValue);
-                                            return hasImmutables ? EXPORTS : Collections.emptyList();
+                                            return hasImmutablesProvider.get() ? EXPORTS : Collections.emptyList();
                                         }
                                     });
                         });
