@@ -21,9 +21,9 @@ import java.util.Collections;
 import java.util.Objects;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
-import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -46,10 +46,8 @@ public final class BaselineImmutables implements Plugin<Project> {
                             Provider<Boolean> hasImmutablesProvider = project.provider(() -> project
                                     .getConfigurations()
                                     .getByName(sourceSet.getAnnotationProcessorConfigurationName())
-                                    .getIncoming()
-                                    .getArtifacts()
+                                    .getResolvedConfiguration()
                                     .getResolvedArtifacts()
-                                    .get()
                                     .stream()
                                     .anyMatch(BaselineImmutables::isImmutablesValue));
 
@@ -82,18 +80,19 @@ public final class BaselineImmutables implements Plugin<Project> {
         });
     }
 
-    private static boolean isImmutablesValue(ResolvedArtifactResult resolvedArtifact) {
+    private static boolean isImmutablesValue(ResolvedArtifact resolvedArtifact) {
         ComponentIdentifier id = resolvedArtifact.getId().getComponentIdentifier();
 
         if (!(id instanceof ModuleComponentIdentifier moduleId)) {
             return false;
         }
 
-        // Previously, we used the classifier to distinguish between the processor jar and the annotations jar.
-        // However, ResolvedArtifactResult does not expose a classifier property, so we now check the file name
-        // directly.
+        // The actual annotation processor jar has no classifier, we must make sure not to match on the
+        // `annotations` jar which has the `annotations` classifier
+        boolean noClassifier = resolvedArtifact.getClassifier() == null;
+
         return Objects.equals(moduleId.getGroup(), "org.immutables")
                 && Objects.equals(moduleId.getModule(), "value")
-                && !resolvedArtifact.getFile().getName().contains("-annotations");
+                && noClassifier;
     }
 }
