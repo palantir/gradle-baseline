@@ -1,5 +1,5 @@
 /*
- * (c) Copyright 2025 Palantir Technologies Inc. All rights reserved.
+ * (c) Copyright 2021 Palantir Technologies Inc. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 package com.palantir.baseline.plugins;
 
 import com.google.common.base.Splitter;
@@ -22,9 +23,7 @@ import com.google.common.collect.ImmutableMap;
 import com.palantir.baseline.extensions.BaselineModuleJvmArgsExtension;
 import com.palantir.baseline.plugins.javaversions.BaselineJavaVersion;
 import com.palantir.baseline.plugins.javaversions.BaselineJavaVersionExtension;
-import java.io.File;
 import java.io.IOException;
-import java.io.Serializable;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -40,10 +39,9 @@ import org.gradle.api.Task;
 import org.gradle.api.UnknownTaskException;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.java.archives.Manifest;
-import org.gradle.api.logging.Logger;
-import org.gradle.api.logging.Logging;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.JavaExec;
+import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.TaskProvider;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -62,7 +60,6 @@ import org.immutables.value.Value;
  * execution (tests, javaExec, etc) for runtime dependencies.
  */
 public final class BaselineModuleJvmArgs implements Plugin<Project> {
-    private static final Logger log = Logging.getLogger(BaselineModuleJvmArgs.class);
 
     private static final String EXTENSION_NAME = "moduleJvmArgs";
     private static final String ENABLE_PREVIEW_ATTRIBUTE = "Baseline-Enable-Preview";
@@ -83,28 +80,51 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
             // https://github.com/gradle/gradle/issues/18824
             // However, we set sourceCompatibility in BaselineJavaVersion to opt out of the '--release' flag.
             project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
+                // Only capture the configuration name (String), not the SourceSet itself
+                final String annotationProcessorConfigurationName = sourceSet.getAnnotationProcessorConfigurationName();
+
                 TaskProvider<JavaCompile> javaCompileProvider =
                         project.getTasks().named(sourceSet.getCompileJavaTaskName(), JavaCompile.class);
                 javaCompileProvider.configure(javaCompile -> {
-                    FileCollection annotationProcessorClasspath =
-                            project.getConfigurations().getByName(sourceSet.getAnnotationProcessorConfigurationName());
-
-                    // Register all inputs needed for configuration cache
-                    javaCompile
-                            .getInputs()
-                            .files(annotationProcessorClasspath)
-                            .withPropertyName("baseline-module-jvm-args-annotationProcessorClasspath");
-                    javaCompile.getInputs().property("baseline-module-jvm-args-exports", extension.exports());
-                    javaCompile.getInputs().property("baseline-module-jvm-args-opens", extension.opens());
-
                     javaCompile
                             .getOptions()
                             .getCompilerArgumentProviders()
-                            .add(new CompilationArgumentsProvider(
-                                    annotationProcessorClasspath,
-                                    extension.exports(),
-                                    extension.opens(),
-                                    project.getPlugins().hasPlugin(BaselineJavaVersion.class)));
+                            // Use an anonymous class because tasks with lambda inputs cannot be cached
+                            .add(new CommandLineArgumentProvider() {
+                                @Override
+                                public Iterable<String> asArguments() {
+                                    // The '--release' flag is set when BaselineJavaVersion is not used.
+                                    Project taskProject = javaCompile.getProject();
+                                    if (!taskProject.getPlugins().hasPlugin(BaselineJavaVersion.class)) {
+                                        taskProject
+                                                .getLogger()
+                                                .debug(
+                                                        "BaselineModuleJvmArgs not applying args to compilation task "
+                                                                + "{} on {} due to lack of BaselineJavaVersion",
+                                                        javaCompile.getName(),
+                                                        taskProject);
+                                        return ImmutableList.of();
+                                    }
+                                    FileCollection annotationProcessorClasspath = taskProject
+                                            .getConfigurations()
+                                            .getByName(annotationProcessorConfigurationName);
+
+                                    ImmutableList<String> arguments = collectClasspathArgs(
+                                            taskProject,
+                                            extension,
+                                            annotationProcessorClasspath,
+                                            OpensMode.COMPILATION);
+                                    taskProject
+                                            .getLogger()
+                                            .debug(
+                                                    "BaselineModuleJvmArgs compiling {} on {} with exports: {}",
+                                                    javaCompile.getName(),
+                                                    taskProject,
+                                                    arguments);
+                                    return arguments;
+                                }
+                            });
+
                     setTaskInputsFromExtension(javaCompile, extension);
                 });
 
@@ -121,20 +141,22 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                             public void execute(Task task) {
                                 // The '--release' flag is set when BaselineJavaVersion is not used.
                                 if (!project.getPlugins().hasPlugin(BaselineJavaVersion.class)) {
-                                    log.debug(
-                                            "BaselineModuleJvmArgs not applying args to compilation task "
-                                                    + "{} on {} due to lack of BaselineJavaVersion",
-                                            task.getName(),
-                                            project);
+                                    project.getLogger()
+                                            .debug(
+                                                    "BaselineModuleJvmArgs not applying args to compilation task "
+                                                            + "{} on {} due to lack of BaselineJavaVersion",
+                                                    task.getName(),
+                                                    project);
                                     return;
                                 }
 
                                 Javadoc javadoc = (Javadoc) task;
 
                                 MinimalJavadocOptions options = javadoc.getOptions();
-                                if (options instanceof CoreJavadocOptions coreOptions) {
-                                    ImmutableList<JarManifestModuleInfo> info = collectClasspathInfoFromFiles(
-                                            javadoc.getClasspath().getFiles());
+                                if (options instanceof CoreJavadocOptions) {
+                                    CoreJavadocOptions coreOptions = (CoreJavadocOptions) options;
+                                    ImmutableList<JarManifestModuleInfo> info =
+                                            collectClasspathInfo(project, sourceSet);
                                     List<String> exportValues = Stream.concat(
                                                     // Compilation only supports exports, so we union with opens.
                                                     Stream.concat(
@@ -147,11 +169,12 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                                             .sorted()
                                             .map(item -> item + "=ALL-UNNAMED")
                                             .collect(ImmutableList.toImmutableList());
-                                    log.debug(
-                                            "BaselineModuleJvmArgs building {} on {} " + "with exports: {}",
-                                            javadoc.getName(),
-                                            project,
-                                            exportValues);
+                                    project.getLogger()
+                                            .debug(
+                                                    "BaselineModuleJvmArgs building {} on {} " + "with exports: {}",
+                                                    javadoc.getName(),
+                                                    project,
+                                                    exportValues);
                                     if (!exportValues.isEmpty()) {
                                         coreOptions
                                                 // options are automatically prefixed with '-' internally
@@ -159,10 +182,11 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                                                 .setValue(exportValues);
                                     }
                                 } else {
-                                    log.error(
-                                            "MinimalJavadocOptions implementation was "
-                                                    + "not CoreJavadocOptions, rather '{}'",
-                                            options.getClass().getName());
+                                    project.getLogger()
+                                            .error(
+                                                    "MinimalJavadocOptions implementation was "
+                                                            + "not CoreJavadocOptions, rather '{}'",
+                                                    options.getClass().getName());
                                 }
                             }
                         });
@@ -176,15 +200,22 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
 
                 @Override
                 public void execute(Test test) {
-                    test.getInputs()
-                            .files(test.getClasspath())
-                            .withPropertyName("baseline-module-jvm-args-runtimeClasspath");
-                    test.getInputs().property("baseline-module-jvm-args-exports", extension.exports());
-                    test.getInputs().property("baseline-module-jvm-args-opens", extension.opens());
+                    test.getJvmArgumentProviders().add(new CommandLineArgumentProvider() {
 
-                    test.getJvmArgumentProviders()
-                            .add(new RuntimeArgumentsProvider(
-                                    test.getClasspath(), extension.exports(), extension.opens()));
+                        @Override
+                        public Iterable<String> asArguments() {
+                            ImmutableList<String> arguments =
+                                    collectClasspathArgs(project, extension, test.getClasspath(), OpensMode.RUNTIME);
+                            project.getLogger()
+                                    .debug(
+                                            "BaselineModuleJvmArgs executing {} on {} with exports: {}",
+                                            test.getName(),
+                                            project,
+                                            arguments);
+                            return arguments;
+                        }
+                    });
+
                     setTaskInputsFromExtension(test, extension);
                 }
             });
@@ -193,15 +224,22 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
 
                 @Override
                 public void execute(JavaExec javaExec) {
-                    javaExec.getInputs()
-                            .files(javaExec.getClasspath())
-                            .withPropertyName("baseline-module-jvm-args-runtimeClasspath");
-                    javaExec.getInputs().property("baseline-module-jvm-args-exports", extension.exports());
-                    javaExec.getInputs().property("baseline-module-jvm-args-opens", extension.opens());
+                    javaExec.getJvmArgumentProviders().add(new CommandLineArgumentProvider() {
 
-                    javaExec.getJvmArgumentProviders()
-                            .add(new RuntimeArgumentsProvider(
-                                    javaExec.getClasspath(), extension.exports(), extension.opens()));
+                        @Override
+                        public Iterable<String> asArguments() {
+                            ImmutableList<String> arguments = collectClasspathArgs(
+                                    project, extension, javaExec.getClasspath(), OpensMode.RUNTIME);
+                            project.getLogger()
+                                    .debug(
+                                            "BaselineModuleJvmArgs executing {} on {} with exports: {}",
+                                            javaExec.getName(),
+                                            project,
+                                            arguments);
+                            return arguments;
+                        }
+                    });
+
                     setTaskInputsFromExtension(javaExec, extension);
                 }
             });
@@ -258,97 +296,68 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
         // Only locally defined values are applied to jars
         Set<String> values = valueProperty.get();
         if (!values.isEmpty()) {
-            log.debug(
-                    "BaselineModuleJvmArgs adding {} attribute to {} in {}: {}",
-                    attributeName,
-                    jarTask.getName(),
-                    project,
-                    values);
+            project.getLogger()
+                    .debug(
+                            "BaselineModuleJvmArgs adding {} attribute to {} in {}: {}",
+                            attributeName,
+                            jarTask.getName(),
+                            project,
+                            values);
             manifest.attributes(ImmutableMap.of(attributeName, String.join(" ", values)));
         } else {
-            log.debug(
-                    "BaselineModuleJvmArgs not adding {} attribute to {} in {}",
-                    attributeName,
-                    jarTask.getName(),
-                    project);
+            project.getLogger()
+                    .debug(
+                            "BaselineModuleJvmArgs not adding {} attribute to {} in {}",
+                            attributeName,
+                            jarTask.getName(),
+                            project);
         }
     }
 
-    public static final class CompilationArgumentsProvider implements CommandLineArgumentProvider, Serializable {
-        private final Set<File> classpathFiles;
-        private final Set<String> exports;
-        private final Set<String> opens;
-        private final boolean hasBaselineJavaVersion;
-
-        public CompilationArgumentsProvider(
-                FileCollection annotationProcessorClasspath,
-                Provider<Set<String>> exports,
-                Provider<Set<String>> opens,
-                boolean hasBaselineJavaVersion) {
-            this.classpathFiles = annotationProcessorClasspath.getFiles();
-            this.exports = exports.get();
-            this.opens = opens.get();
-            this.hasBaselineJavaVersion = hasBaselineJavaVersion;
+    private static ImmutableList<String> collectClasspathArgs(
+            Project project, BaselineModuleJvmArgsExtension extension, FileCollection classpath, OpensMode mode) {
+        ImmutableList<JarManifestModuleInfo> classpathInfo = collectClasspathInfo(project, classpath);
+        Stream<String> allExports = Stream.concat(
+                extension.exports().get().stream(), classpathInfo.stream().flatMap(info -> info.exports().stream()));
+        Stream<String> allOpens = Stream.concat(
+                extension.opens().get().stream(), classpathInfo.stream().flatMap(info -> info.opens().stream()));
+        switch (mode) {
+            case COMPILATION:
+                return Stream.concat(allExports, allOpens)
+                        .distinct()
+                        .sorted()
+                        .flatMap(BaselineModuleJvmArgs::addExportArg)
+                        .collect(ImmutableList.toImmutableList());
+            case RUNTIME:
+                Stream<String> exports = allExports.distinct().sorted().flatMap(BaselineModuleJvmArgs::addExportArg);
+                Stream<String> opens = allOpens.distinct().sorted().flatMap(BaselineModuleJvmArgs::addOpensArg);
+                return Stream.concat(exports, opens).collect(ImmutableList.toImmutableList());
         }
-
-        @Override
-        public Iterable<String> asArguments() {
-            if (!hasBaselineJavaVersion) {
-                return ImmutableList.of();
-            }
-            ImmutableList<JarManifestModuleInfo> classpathInfo = collectClasspathInfoFromFiles(classpathFiles);
-            Stream<String> allExports =
-                    Stream.concat(exports.stream(), classpathInfo.stream().flatMap(info -> info.exports().stream()));
-            Stream<String> allOpens =
-                    Stream.concat(opens.stream(), classpathInfo.stream().flatMap(info -> info.opens().stream()));
-            return Stream.concat(allExports, allOpens)
-                    .distinct()
-                    .sorted()
-                    .flatMap(BaselineModuleJvmArgs::addExportArg)
-                    .collect(ImmutableList.toImmutableList());
-        }
+        throw new IllegalStateException("unknown mode: " + mode);
     }
 
-    public static final class RuntimeArgumentsProvider implements CommandLineArgumentProvider, Serializable {
-        private final Set<File> classpathFiles;
-        private final Set<String> exports;
-        private final Set<String> opens;
-
-        public RuntimeArgumentsProvider(
-                FileCollection runtimeClasspath, Provider<Set<String>> exports, Provider<Set<String>> opens) {
-            this.classpathFiles = runtimeClasspath.getFiles();
-            this.exports = exports.get();
-            this.opens = opens.get();
-        }
-
-        @Override
-        public Iterable<String> asArguments() {
-            ImmutableList<JarManifestModuleInfo> classpathInfo = collectClasspathInfoFromFiles(classpathFiles);
-            Stream<String> allExports =
-                    Stream.concat(exports.stream(), classpathInfo.stream().flatMap(info -> info.exports().stream()));
-            Stream<String> allOpens =
-                    Stream.concat(opens.stream(), classpathInfo.stream().flatMap(info -> info.opens().stream()));
-            Stream<String> exportsArgs = allExports.distinct().sorted().flatMap(BaselineModuleJvmArgs::addExportArg);
-            Stream<String> opensArgs = allOpens.distinct().sorted().flatMap(BaselineModuleJvmArgs::addOpensArg);
-            return Stream.concat(exportsArgs, opensArgs).collect(ImmutableList.toImmutableList());
-        }
+    private static ImmutableList<JarManifestModuleInfo> collectClasspathInfo(Project project, SourceSet sourceSet) {
+        return collectClasspathInfo(
+                project, project.getConfigurations().getByName(sourceSet.getAnnotationProcessorConfigurationName()));
     }
 
-    private static ImmutableList<JarManifestModuleInfo> collectClasspathInfoFromFiles(Set<File> files) {
-        return files.stream()
+    private static ImmutableList<JarManifestModuleInfo> collectClasspathInfo(
+            Project project, FileCollection classpath) {
+        return classpath.getFiles().stream()
                 .map(file -> {
                     try {
                         if (file.getName().endsWith(".jar") && file.isFile()) {
                             try (JarFile jar = new JarFile(file)) {
                                 java.util.jar.Manifest maybeJarManifest = jar.getManifest();
                                 Optional<JarManifestModuleInfo> parsedModuleInfo = parseModuleInfo(maybeJarManifest);
-                                log.debug("Jar '{}' produced manifest info: {}", file, parsedModuleInfo);
+                                project.getLogger()
+                                        .debug("Jar '{}' produced manifest info: {}", file, parsedModuleInfo);
                                 return parsedModuleInfo.orElse(null);
                             }
                         }
                         return null;
                     } catch (IOException e) {
-                        log.warn("Failed to check jar {} for manifest attributes", file, e);
+                        project.getLogger().warn("Failed to check jar {} for manifest attributes", file, e);
                         return null;
                     }
                 })
@@ -399,5 +408,10 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
         }
 
         class Builder extends ImmutableJarManifestModuleInfo.Builder {}
+    }
+
+    enum OpensMode {
+        COMPILATION,
+        RUNTIME;
     }
 }
