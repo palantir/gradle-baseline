@@ -36,7 +36,7 @@ class ConfigurationCacheTest extends IntegrationTestKitSpec {
         keepFiles = true
     }
 
-    def "classes task runs with configuration cache"() {
+    def "build task runs with configuration cache"() {
 
         expect:
         createRunner('build', '--dry-run', '--configuration-cache')
