@@ -49,15 +49,18 @@ public final class BaselineImmutables implements Plugin<Project> {
                                     .getIncoming()
                                     .getArtifacts()
                                     .getResolvedArtifacts();
-                            ImmutablesCommandLineArgumentProvider incrementalCommandLineIncrementalArgumentProvider =
-                                    new ImmutablesCommandLineArgumentProvider(annotationSourceSet, GRADLE_INCREMENTAL);
+
                             javaCompileTask
                                     .getOptions()
                                     .getCompilerArgumentProviders()
-                                    .add(incrementalCommandLineIncrementalArgumentProvider);
-
-                            ImmutablesCommandLineArgumentProvider incrementalCommandLineExportsArgumentProvider =
-                                    new ImmutablesCommandLineArgumentProvider(annotationSourceSet, EXPORTS);
+                                    .add(new CommandLineArgumentProvider() {
+                                        @Override
+                                        public Iterable<String> asArguments() {
+                                            boolean hasImmutables = annotationSourceSet.get().stream()
+                                                    .anyMatch(BaselineImmutables::isImmutablesValue);
+                                            return hasImmutables ? GRADLE_INCREMENTAL : Collections.emptyList();
+                                        }
+                                    });
 
                             // This *attempts* to make immutables work by add the exports to the fork options.
                             // However, this only happens if the compilation is actually forked, which at the time
@@ -69,44 +72,31 @@ public final class BaselineImmutables implements Plugin<Project> {
                                     .getOptions()
                                     .getForkOptions()
                                     .getJvmArgumentProviders()
-                                    .add(incrementalCommandLineExportsArgumentProvider);
+                                    .add(new CommandLineArgumentProvider() {
+                                        @Override
+                                        public Iterable<String> asArguments() {
+                                            boolean hasImmutables = annotationSourceSet.get().stream()
+                                                    .anyMatch(BaselineImmutables::isImmutablesValue);
+                                            return hasImmutables ? EXPORTS : Collections.emptyList();
+                                        }
+                                    });
                         });
             });
         });
     }
 
-    static class ImmutablesCommandLineArgumentProvider implements CommandLineArgumentProvider {
-        private final Provider<Set<ResolvedArtifactResult>> resolvedArtifacts;
-        private final ImmutableList<String> argsIfTrue;
-
-        ImmutablesCommandLineArgumentProvider(
-                Provider<Set<ResolvedArtifactResult>> resolvedArtifacts, ImmutableList<String> argsIfTrue) {
-            this.resolvedArtifacts = resolvedArtifacts;
-            this.argsIfTrue = argsIfTrue;
-        }
-
-        @Override
-        public Iterable<String> asArguments() {
-            boolean hasImmutables = resolvedArtifacts.get().stream().anyMatch(BaselineImmutables::isImmutablesValue);
-
-            return hasImmutables ? argsIfTrue : Collections.emptyList();
-        }
-    }
-
     private static boolean isImmutablesValue(ResolvedArtifactResult resolvedArtifact) {
         ComponentIdentifier id = resolvedArtifact.getId().getComponentIdentifier();
 
-        if (!(id instanceof ModuleComponentIdentifier)) {
+        if (!(id instanceof ModuleComponentIdentifier moduleId)) {
             return false;
         }
 
-        ModuleComponentIdentifier moduleId = (ModuleComponentIdentifier) id;
-
-        //        // The actual annotation processor jar has no classifier, we must make sure not to match on the
-        //        // `annotations` jar which has the `annotations` classifier
-        //        boolean noClassifier = resolvedArtifact.getClassifier() == null;
-
-        return Objects.equals(moduleId.getGroup(), "org.immutables") && Objects.equals(moduleId.getModule(), "value");
-        //                && noClassifier;
+        // Previously, we used the classifier to distinguish between the processor jar and the annotations jar.
+        // However, ResolvedArtifactResult does not expose a classifier property, so we now check the file name
+        // directly.
+        return Objects.equals(moduleId.getGroup(), "org.immutables")
+                && Objects.equals(moduleId.getModule(), "value")
+                && !resolvedArtifact.getFile().getName().contains("-annotations");
     }
 }
