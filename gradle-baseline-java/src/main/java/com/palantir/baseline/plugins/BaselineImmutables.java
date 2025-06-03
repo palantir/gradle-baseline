@@ -51,8 +51,6 @@ public final class BaselineImmutables implements Plugin<Project> {
                                     .stream()
                                     .anyMatch(BaselineImmutables::isImmutablesValue));
 
-                            javaCompileTask.getInputs().property("hasImmutables", hasImmutablesProvider);
-
                             javaCompileTask
                                     .getOptions()
                                     .getCompilerArgumentProviders()
