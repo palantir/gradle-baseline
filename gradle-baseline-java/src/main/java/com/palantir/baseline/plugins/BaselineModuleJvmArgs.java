@@ -33,11 +33,13 @@ import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import javax.annotation.Nullable;
+import javax.inject.Inject;
 import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
 import org.gradle.api.UnknownTaskException;
+import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.java.archives.Manifest;
 import org.gradle.api.logging.Logger;
@@ -62,7 +64,7 @@ import org.immutables.value.Value;
  * from transitive dependencies, and applies them to compilation (for annotation processors) and
  * execution (tests, javaExec, etc) for runtime dependencies.
  */
-public final class BaselineModuleJvmArgs implements Plugin<Project> {
+public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
     private static final Logger log = Logging.getLogger(BaselineModuleJvmArgs.class);
 
     private static final String EXTENSION_NAME = "moduleJvmArgs";
@@ -73,9 +75,12 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
     private static final Splitter ENTRY_SPLITTER =
             Splitter.on(' ').trimResults().omitEmptyStrings();
 
+    @Inject
+    protected abstract ConfigurationContainer getConfigurations();
+
     @Override
     @SuppressWarnings("checkstyle:MethodLength")
-    public void apply(Project project) {
+    public final void apply(Project project) {
         project.getPluginManager().withPlugin("java", unused -> {
             BaselineModuleJvmArgsExtension extension =
                     project.getExtensions().create(EXTENSION_NAME, BaselineModuleJvmArgsExtension.class, project);
@@ -107,15 +112,11 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                                                 taskProject);
                                         return ImmutableList.of();
                                     }
-                                    FileCollection annotationProcessorClasspath = taskProject
-                                            .getConfigurations()
-                                            .getByName(annotationProcessorConfigurationName.get());
+                                    FileCollection annotationProcessorClasspath =
+                                            getConfigurations().getByName(annotationProcessorConfigurationName.get());
 
                                     ImmutableList<String> arguments = collectClasspathArgs(
-                                            taskProject,
-                                            extension,
-                                            annotationProcessorClasspath,
-                                            OpensMode.COMPILATION);
+                                            extension, annotationProcessorClasspath, OpensMode.COMPILATION);
                                     log.debug(
                                             "BaselineModuleJvmArgs compiling {} on {} with exports: {}",
                                             javaCompile.getName(),
@@ -154,7 +155,7 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                                 MinimalJavadocOptions options = javadoc.getOptions();
                                 if (options instanceof CoreJavadocOptions coreOptions) {
                                     ImmutableList<JarManifestModuleInfo> info =
-                                            collectClasspathInfo(project, sourceSet);
+                                            collectClasspathInfoForSourceSet(sourceSet);
                                     List<String> exportValues = Stream.concat(
                                                     // Compilation only supports exports, so we union with opens.
                                                     Stream.concat(
@@ -275,8 +276,8 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
     }
 
     private static ImmutableList<String> collectClasspathArgs(
-            Project project, BaselineModuleJvmArgsExtension extension, FileCollection classpath, OpensMode mode) {
-        ImmutableList<JarManifestModuleInfo> classpathInfo = collectClasspathInfo(project, classpath);
+            BaselineModuleJvmArgsExtension extension, FileCollection classpath, OpensMode mode) {
+        ImmutableList<JarManifestModuleInfo> classpathInfo = collectClasspathInfo(classpath);
         Stream<String> allExports = Stream.concat(
                 extension.exports().get().stream(), classpathInfo.stream().flatMap(info -> info.exports().stream()));
         Stream<String> allOpens = Stream.concat(
@@ -296,13 +297,12 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
         throw new IllegalStateException("unknown mode: " + mode);
     }
 
-    private static ImmutableList<JarManifestModuleInfo> collectClasspathInfo(Project project, SourceSet sourceSet) {
-        return collectClasspathInfo(
-                project, project.getConfigurations().getByName(sourceSet.getAnnotationProcessorConfigurationName()));
+    private ImmutableList<JarManifestModuleInfo> collectClasspathInfoForSourceSet(SourceSet sourceSet) {
+        FileCollection classpath = getConfigurations().getByName(sourceSet.getAnnotationProcessorConfigurationName());
+        return collectClasspathInfo(classpath);
     }
 
-    private static ImmutableList<JarManifestModuleInfo> collectClasspathInfo(
-            Project project, FileCollection classpath) {
+    private static ImmutableList<JarManifestModuleInfo> collectClasspathInfo(FileCollection classpath) {
         return classpath.getFiles().stream()
                 .map(file -> {
                     try {
@@ -397,7 +397,7 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
 
         @Override
         public Iterable<String> asArguments() {
-            ImmutableList<JarManifestModuleInfo> classpathInfo = collectClasspathInfo(null, classpath);
+            ImmutableList<JarManifestModuleInfo> classpathInfo = collectClasspathInfo(classpath);
             Stream<String> allExports = Stream.concat(
                     exports.get().stream(), classpathInfo.stream().flatMap(info -> info.exports().stream()));
             Stream<String> allOpens =
