@@ -19,6 +19,7 @@ package com.palantir.baseline.plugins;
 import com.google.common.collect.ImmutableList;
 import java.util.Collections;
 import java.util.Objects;
+import java.util.Set;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.ResolvedArtifact;
@@ -40,17 +41,17 @@ public final class BaselineImmutables implements Plugin<Project> {
     public void apply(Project project) {
         project.getPluginManager().withPlugin("java", unused -> {
             project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
+                Provider<Set<ResolvedArtifact>> resolvedArtifactsProvider =
+                        project.provider(() -> project.getConfigurations()
+                                .getByName(sourceSet.getAnnotationProcessorConfigurationName())
+                                .getResolvedConfiguration()
+                                .getResolvedArtifacts());
+                Provider<Boolean> hasImmutablesProvider = resolvedArtifactsProvider.map(
+                        artifacts -> artifacts.stream().anyMatch(BaselineImmutables::isImmutablesValue));
+
                 project.getTasks()
                         .named(sourceSet.getCompileJavaTaskName(), JavaCompile.class)
                         .configure(javaCompileTask -> {
-                            Provider<Boolean> hasImmutablesProvider = project.provider(() -> project
-                                    .getConfigurations()
-                                    .getByName(sourceSet.getAnnotationProcessorConfigurationName())
-                                    .getResolvedConfiguration()
-                                    .getResolvedArtifacts()
-                                    .stream()
-                                    .anyMatch(BaselineImmutables::isImmutablesValue));
-
                             javaCompileTask
                                     .getOptions()
                                     .getCompilerArgumentProviders()
