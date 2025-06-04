@@ -22,9 +22,9 @@ import java.util.Objects;
 import java.util.Set;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
+import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.compile.JavaCompile;
@@ -41,17 +41,19 @@ public final class BaselineImmutables implements Plugin<Project> {
     public void apply(Project project) {
         project.getPluginManager().withPlugin("java", unused -> {
             project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
-                Provider<Set<ResolvedArtifact>> resolvedArtifactsProvider =
-                        project.provider(() -> project.getConfigurations()
-                                .getByName(sourceSet.getAnnotationProcessorConfigurationName())
-                                .getResolvedConfiguration()
-                                .getResolvedArtifacts());
-                Provider<Boolean> hasImmutablesProvider = resolvedArtifactsProvider.map(
-                        artifacts -> artifacts.stream().anyMatch(BaselineImmutables::isImmutablesValue));
-
                 project.getTasks()
                         .named(sourceSet.getCompileJavaTaskName(), JavaCompile.class)
                         .configure(javaCompileTask -> {
+                            Provider<Set<ResolvedArtifactResult>> resolvedArtifactsProvider =
+                                    project.getConfigurations()
+                                            .getByName(sourceSet.getAnnotationProcessorConfigurationName())
+                                            .getIncoming()
+                                            .getArtifacts()
+                                            .getResolvedArtifacts();
+
+                            Provider<Boolean> hasImmutablesProvider = resolvedArtifactsProvider.map(
+                                    artifacts -> artifacts.stream().anyMatch(BaselineImmutables::isImmutablesValue));
+
                             javaCompileTask
                                     .getOptions()
                                     .getCompilerArgumentProviders()
@@ -86,19 +88,18 @@ public final class BaselineImmutables implements Plugin<Project> {
         });
     }
 
-    private static boolean isImmutablesValue(ResolvedArtifact resolvedArtifact) {
+    private static boolean isImmutablesValue(ResolvedArtifactResult resolvedArtifact) {
         ComponentIdentifier id = resolvedArtifact.getId().getComponentIdentifier();
 
         if (!(id instanceof ModuleComponentIdentifier moduleId)) {
             return false;
         }
 
-        // The actual annotation processor jar has no classifier, we must make sure not to match on the
-        // `annotations` jar which has the `annotations` classifier
-        boolean noClassifier = resolvedArtifact.getClassifier() == null;
-
+        // Previously, we used the classifier to distinguish between the processor jar and the annotations jar.
+        // However, ResolvedArtifactResult does not expose a classifier property, so we now check the file name
+        // directly.
         return Objects.equals(moduleId.getGroup(), "org.immutables")
                 && Objects.equals(moduleId.getModule(), "value")
-                && noClassifier;
+                && !resolvedArtifact.getFile().getName().contains("-annotations");
     }
 }

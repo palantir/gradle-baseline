@@ -374,7 +374,9 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
         RUNTIME;
     }
 
-    public static final class ModuleJvmArgsArgumentProvider implements CommandLineArgumentProvider, Serializable {
+    private static final class ModuleJvmArgsArgumentProvider implements CommandLineArgumentProvider, Serializable {
+        private static final Logger log = Logging.getLogger(ModuleJvmArgsArgumentProvider.class);
+
         private static final long serialVersionUID = 1L;
 
         private final Provider<Set<String>> exports;
@@ -382,7 +384,7 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
         private final FileCollection classpath;
         private final String projectPath;
 
-        public ModuleJvmArgsArgumentProvider(
+        ModuleJvmArgsArgumentProvider(
                 Provider<Set<String>> exports,
                 Provider<Set<String>> opens,
                 FileCollection classpath,
