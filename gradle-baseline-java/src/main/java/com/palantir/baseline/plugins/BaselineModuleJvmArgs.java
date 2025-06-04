@@ -84,7 +84,6 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
             // https://github.com/gradle/gradle/issues/18824
             // However, we set sourceCompatibility in BaselineJavaVersion to opt out of the '--release' flag.
             project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
-                // Only capture the configuration name (String), not the SourceSet itself
                 Provider<String> annotationProcessorConfigurationName =
                         project.provider(sourceSet::getAnnotationProcessorConfigurationName);
 
@@ -396,7 +395,6 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
 
         @Override
         public Iterable<String> asArguments() {
-            // We don't need the project reference for the actual work, we can use the stored values directly
             ImmutableList<JarManifestModuleInfo> classpathInfo = collectClasspathInfo(null, classpath);
             Stream<String> allExports = Stream.concat(
                     exports.get().stream(), classpathInfo.stream().flatMap(info -> info.exports().stream()));
