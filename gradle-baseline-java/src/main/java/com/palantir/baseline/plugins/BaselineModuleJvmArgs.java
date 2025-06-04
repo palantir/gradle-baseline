@@ -98,33 +98,13 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                     javaCompile
                             .getOptions()
                             .getCompilerArgumentProviders()
-                            // Use an anonymous class because tasks with lambda inputs cannot be cached
-                            .add(new CommandLineArgumentProvider() {
-                                @Override
-                                public Iterable<String> asArguments() {
-                                    // The '--release' flag is set when BaselineJavaVersion is not used.
-                                    Project taskProject = javaCompile.getProject();
-                                    if (!taskProject.getPlugins().hasPlugin(BaselineJavaVersion.class)) {
-                                        log.debug(
-                                                "BaselineModuleJvmArgs not applying args to compilation task "
-                                                        + "{} on {} due to lack of BaselineJavaVersion",
-                                                javaCompile.getName(),
-                                                taskProject);
-                                        return ImmutableList.of();
-                                    }
-                                    FileCollection annotationProcessorClasspath =
-                                            getConfigurations().getByName(annotationProcessorConfigurationName.get());
-
-                                    ImmutableList<String> arguments = collectClasspathArgs(
-                                            extension, annotationProcessorClasspath, OpensMode.COMPILATION);
-                                    log.debug(
-                                            "BaselineModuleJvmArgs compiling {} on {} with exports: {}",
-                                            javaCompile.getName(),
-                                            taskProject,
-                                            arguments);
-                                    return arguments;
-                                }
-                            });
+                            .add(new ModuleJvmArgsArgumentProvider(
+                                    extension.exports(),
+                                    extension.opens(),
+                                    getConfigurations().getByName(annotationProcessorConfigurationName.get()),
+                                    javaCompile.getProject().getPath(),
+                                    OpensMode.COMPILATION,
+                                    javaCompile.getProject().getPlugins().hasPlugin(BaselineJavaVersion.class)));
 
                     setTaskInputsFromExtension(javaCompile, extension);
                 });
@@ -196,14 +176,24 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
             project.getTasks().withType(Test.class).configureEach(test -> {
                 test.getJvmArgumentProviders()
                         .add(new ModuleJvmArgsArgumentProvider(
-                                extension.exports(), extension.opens(), test.getClasspath(), project.getPath()));
+                                extension.exports(),
+                                extension.opens(),
+                                test.getClasspath(),
+                                project.getPath(),
+                                OpensMode.RUNTIME,
+                                true));
                 setTaskInputsFromExtension(test, extension);
             });
 
             project.getTasks().withType(JavaExec.class).configureEach(javaExec -> {
                 javaExec.getJvmArgumentProviders()
                         .add(new ModuleJvmArgsArgumentProvider(
-                                extension.exports(), extension.opens(), javaExec.getClasspath(), project.getPath()));
+                                extension.exports(),
+                                extension.opens(),
+                                javaExec.getClasspath(),
+                                project.getPath(),
+                                OpensMode.RUNTIME,
+                                true));
                 setTaskInputsFromExtension(javaExec, extension);
             });
 
@@ -273,28 +263,6 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                     jarTask.getName(),
                     project);
         }
-    }
-
-    private static ImmutableList<String> collectClasspathArgs(
-            BaselineModuleJvmArgsExtension extension, FileCollection classpath, OpensMode mode) {
-        ImmutableList<JarManifestModuleInfo> classpathInfo = collectClasspathInfo(classpath);
-        Stream<String> allExports = Stream.concat(
-                extension.exports().get().stream(), classpathInfo.stream().flatMap(info -> info.exports().stream()));
-        Stream<String> allOpens = Stream.concat(
-                extension.opens().get().stream(), classpathInfo.stream().flatMap(info -> info.opens().stream()));
-        switch (mode) {
-            case COMPILATION:
-                return Stream.concat(allExports, allOpens)
-                        .distinct()
-                        .sorted()
-                        .flatMap(BaselineModuleJvmArgs::addExportArg)
-                        .collect(ImmutableList.toImmutableList());
-            case RUNTIME:
-                Stream<String> exports = allExports.distinct().sorted().flatMap(BaselineModuleJvmArgs::addExportArg);
-                Stream<String> opens = allOpens.distinct().sorted().flatMap(BaselineModuleJvmArgs::addOpensArg);
-                return Stream.concat(exports, opens).collect(ImmutableList.toImmutableList());
-        }
-        throw new IllegalStateException("unknown mode: " + mode);
     }
 
     private ImmutableList<JarManifestModuleInfo> collectClasspathInfoForSourceSet(SourceSet sourceSet) {
@@ -383,33 +351,61 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
         private final Provider<Set<String>> opens;
         private final FileCollection classpath;
         private final String projectPath;
+        private final OpensMode mode;
+        private final boolean baselineJavaVersionEnabled;
 
         ModuleJvmArgsArgumentProvider(
                 Provider<Set<String>> exports,
                 Provider<Set<String>> opens,
                 FileCollection classpath,
-                String projectPath) {
+                String projectPath,
+                OpensMode mode,
+                boolean baselineJavaVersionEnabled) {
             this.exports = exports;
             this.opens = opens;
             this.classpath = classpath;
             this.projectPath = projectPath;
+            this.mode = mode;
+            this.baselineJavaVersionEnabled = baselineJavaVersionEnabled;
         }
 
         @Override
         public Iterable<String> asArguments() {
+            if (mode == OpensMode.COMPILATION && !baselineJavaVersionEnabled) {
+                log.debug(
+                        "BaselineModuleJvmArgs not applying args to compilation task on {} due to lack of "
+                                + "BaselineJavaVersion",
+                        projectPath);
+                return ImmutableList.of();
+            }
             ImmutableList<JarManifestModuleInfo> classpathInfo = collectClasspathInfo(classpath);
             Stream<String> allExports = Stream.concat(
                     exports.get().stream(), classpathInfo.stream().flatMap(info -> info.exports().stream()));
             Stream<String> allOpens =
                     Stream.concat(opens.get().stream(), classpathInfo.stream().flatMap(info -> info.opens().stream()));
 
-            Stream<String> exportsArgs = allExports.distinct().sorted().flatMap(BaselineModuleJvmArgs::addExportArg);
-            Stream<String> opensArgs = allOpens.distinct().sorted().flatMap(BaselineModuleJvmArgs::addOpensArg);
-
-            ImmutableList<String> arguments =
-                    Stream.concat(exportsArgs, opensArgs).collect(ImmutableList.toImmutableList());
-            log.debug("BaselineModuleJvmArgs executing task on project {} with exports: {}", projectPath, arguments);
-            return arguments;
+            switch (mode) {
+                case COMPILATION:
+                    ImmutableList<String> compilationArgs = Stream.concat(allExports, allOpens)
+                            .distinct()
+                            .sorted()
+                            .flatMap(BaselineModuleJvmArgs::addExportArg)
+                            .collect(ImmutableList.toImmutableList());
+                    log.debug("BaselineModuleJvmArgs compiling on {} with exports: {}", projectPath, compilationArgs);
+                    return compilationArgs;
+                case RUNTIME:
+                    Stream<String> exportsArgs =
+                            allExports.distinct().sorted().flatMap(BaselineModuleJvmArgs::addExportArg);
+                    Stream<String> opensArgs = allOpens.distinct().sorted().flatMap(BaselineModuleJvmArgs::addOpensArg);
+                    ImmutableList<String> runtimeArgs =
+                            Stream.concat(exportsArgs, opensArgs).collect(ImmutableList.toImmutableList());
+                    log.debug(
+                            "BaselineModuleJvmArgs executing task on project {} with exports: {}",
+                            projectPath,
+                            runtimeArgs);
+                    return runtimeArgs;
+            }
+            throw new IllegalStateException("unknown mode: " + mode);
         }
     }
 }
