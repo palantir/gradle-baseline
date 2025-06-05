@@ -83,13 +83,13 @@ public final class UnassociatedEndpointErrorV2 extends BugChecker implements Bug
         @Override
         public Void visitMethodInvocation(MethodInvocationTree node, VisitorState state) {
             // Analyze this specific method invocation expression using dataflow analysis
-            analyzeExpression(node, state);
+            // analyzeExpression(node, state);
             return super.visitMethodInvocation(node, state);
         }
 
         @Override
         public Void visitThrow(ThrowTree node, VisitorState state) {
-            // Analyze the throw expression using dataflow analysis
+            // Analyze the throw statement using dataflow analysis
             analyzeExpression(node.getExpression(), state);
             return super.visitThrow(node, state);
         }
@@ -97,7 +97,7 @@ public final class UnassociatedEndpointErrorV2 extends BugChecker implements Bug
         @Override
         public Void visitTry(TryTree node, VisitorState state) {
             // TODO: Handle try-catch blocks - exceptions caught in catch blocks
-            // should not be considered as propagating up to the method level
+            //  should not be considered as propagating up to the method level.
             return super.visitTry(node, state);
         }
 
@@ -107,7 +107,7 @@ public final class UnassociatedEndpointErrorV2 extends BugChecker implements Bug
             }
 
             try {
-                // Create a new path that points to this specific expression
+                // Create a new path that points to this specific expression/statement
                 TreePath exprPath = TreePath.getPath(originalState.getPath(), expr);
                 if (exprPath != null) {
                     VisitorState exprState = state.withPath(exprPath);

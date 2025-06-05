@@ -18,9 +18,11 @@ package com.palantir.baseline.errorprone;
 
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.annotations.CheckReturnValue;
+import com.google.errorprone.dataflow.AccessPath;
 import com.google.errorprone.dataflow.AccessPathStore;
 import com.google.errorprone.suppliers.Supplier;
 import com.google.errorprone.util.ASTHelpers;
+import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Symbol.MethodSymbol;
 import com.sun.tools.javac.code.Type;
 import java.io.Closeable;
@@ -124,8 +126,13 @@ public final class ExceptionPropagationTransfer
     }
 
     @Override
-    public AccessPathStore<ExceptionState> initialStore(UnderlyingAST _underlyingAst, List<LocalVariableNode> _list) {
-        return AccessPathStore.empty();
+    public AccessPathStore<ExceptionState> initialStore(UnderlyingAST _underlyingAst, List<LocalVariableNode> list) {
+        AccessPathStore.Builder<ExceptionState> result = AccessPathStore.<ExceptionState>empty().toBuilder();
+        for (LocalVariableNode localVariable : list) {
+            result.setInformation(
+                    AccessPath.fromLocalVariable(localVariable), ExceptionState.CAN_THROW_ENDPOINT_EXCEPTION);
+        }
+        return result.build();
     }
 
     public final class ClearVisitorState implements Closeable {
@@ -138,364 +145,364 @@ public final class ExceptionPropagationTransfer
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitShortLiteral(
             ShortLiteralNode shortLiteralNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(shortLiteralNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitIntegerLiteral(
             IntegerLiteralNode integerLiteralNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(integerLiteralNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitLongLiteral(
             LongLiteralNode longLiteralNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(longLiteralNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitFloatLiteral(
             FloatLiteralNode floatLiteralNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(floatLiteralNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitDoubleLiteral(
             DoubleLiteralNode doubleLiteralNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(doubleLiteralNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitBooleanLiteral(
             BooleanLiteralNode booleanLiteralNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(booleanLiteralNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitCharacterLiteral(
             CharacterLiteralNode characterLiteralNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(characterLiteralNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitStringLiteral(
             StringLiteralNode stringLiteralNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(stringLiteralNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitNullLiteral(
             NullLiteralNode nullLiteralNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(nullLiteralNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitNumericalMinus(
             NumericalMinusNode numericalMinusNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(numericalMinusNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitNumericalPlus(
             NumericalPlusNode numericalPlusNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(numericalPlusNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitBitwiseComplement(
             BitwiseComplementNode bitwiseComplementNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(bitwiseComplementNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitNullChk(
             NullChkNode nullChkNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(nullChkNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitStringConcatenate(
             StringConcatenateNode stringConcatenateNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(stringConcatenateNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitNumericalAddition(
             NumericalAdditionNode numericalAdditionNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(numericalAdditionNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitNumericalSubtraction(
             NumericalSubtractionNode numericalSubtractionNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(numericalSubtractionNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitNumericalMultiplication(
             NumericalMultiplicationNode numericalMultiplicationNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(numericalMultiplicationNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitIntegerDivision(
             IntegerDivisionNode integerDivisionNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(integerDivisionNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitFloatingDivision(
             FloatingDivisionNode floatingDivisionNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(floatingDivisionNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitIntegerRemainder(
             IntegerRemainderNode integerRemainderNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(integerRemainderNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitFloatingRemainder(
             FloatingRemainderNode floatingRemainderNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(floatingRemainderNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitLeftShift(
             LeftShiftNode leftShiftNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(leftShiftNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitSignedRightShift(
             SignedRightShiftNode signedRightShiftNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(signedRightShiftNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitUnsignedRightShift(
             UnsignedRightShiftNode unsignedRightShiftNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(unsignedRightShiftNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitBitwiseAnd(
             BitwiseAndNode bitwiseAndNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(bitwiseAndNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitBitwiseOr(
             BitwiseOrNode bitwiseOrNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(bitwiseOrNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitBitwiseXor(
             BitwiseXorNode bitwiseXorNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(bitwiseXorNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitLessThan(
             LessThanNode lessThanNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(lessThanNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitLessThanOrEqual(
             LessThanOrEqualNode lessThanOrEqualNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(lessThanOrEqualNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitGreaterThan(
             GreaterThanNode greaterThanNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(greaterThanNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitGreaterThanOrEqual(
             GreaterThanOrEqualNode greaterThanOrEqualNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(greaterThanOrEqualNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitEqualTo(
             EqualToNode equalToNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(equalToNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitNotEqual(
             NotEqualNode notEqualNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(notEqualNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitConditionalAnd(
             ConditionalAndNode conditionalAndNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(conditionalAndNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitConditionalOr(
             ConditionalOrNode conditionalOrNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(conditionalOrNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitConditionalNot(
             ConditionalNotNode conditionalNotNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(conditionalNotNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitTernaryExpression(
             TernaryExpressionNode ternaryExpressionNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(ternaryExpressionNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitSwitchExpressionNode(
             SwitchExpressionNode switchExpressionNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(switchExpressionNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitAssignment(
             AssignmentNode assignmentNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(assignmentNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitLocalVariable(
             LocalVariableNode localVariableNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(localVariableNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitVariableDeclaration(
             VariableDeclarationNode variableDeclarationNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(variableDeclarationNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitFieldAccess(
             FieldAccessNode fieldAccessNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(fieldAccessNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitMethodAccess(
             MethodAccessNode methodAccessNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(methodAccessNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitArrayAccess(
             ArrayAccessNode arrayAccessNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(arrayAccessNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitImplicitThis(
             ImplicitThisNode implicitThisNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(implicitThisNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitExplicitThis(
             ExplicitThisNode explicitThisNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(explicitThisNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitSuper(
             SuperNode superNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(superNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitReturn(
             ReturnNode returnNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(returnNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitLambdaResultExpression(
             LambdaResultExpressionNode lambdaResultExpressionNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(lambdaResultExpressionNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitStringConversion(
             StringConversionNode stringConversionNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(stringConversionNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitWideningConversion(
             WideningConversionNode wideningConversionNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(wideningConversionNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitNarrowingConversion(
             NarrowingConversionNode narrowingConversionNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(narrowingConversionNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitInstanceOf(
             InstanceOfNode instanceOfNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(instanceOfNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitTypeCast(
             TypeCastNode typeCastNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(typeCastNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitSynchronized(
             SynchronizedNode synchronizedNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(synchronizedNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitAssertionError(
             AssertionErrorNode assertionErrorNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(assertionErrorNode), input);
     }
 
     @Override
@@ -503,9 +510,13 @@ public final class ExceptionPropagationTransfer
             ThrowNode node, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
         // Check if the thrown exception is a subtype of EndpointServiceException
         Type thrownType = ASTHelpers.getType(node.getExpression().getTree());
-        Type targetType = endpointServiceExceptionSupplier.get(state);
+        // Type targetType = endpointServiceExceptionSupplier.get(state);
+        if (!(thrownType.tsym instanceof ClassSymbol classSymbol)) {
+            return noStoreChanges(input.getValueOfSubNode(node), input);
+        }
 
-        if (thrownType != null && targetType != null && state.getTypes().isSubtype(thrownType, targetType)) {
+        if (classSymbol.getSuperclass().tsym.getQualifiedName().toString().contains("EndpointServiceException")) {
+            // if (thrownType != null && targetType != null && state.getTypes().isSubtype(thrownType, targetType)) {
             // EndpointServiceException subtype is being thrown
             return noStoreChanges(ExceptionState.CAN_THROW_ENDPOINT_EXCEPTION, input);
         }
@@ -516,12 +527,13 @@ public final class ExceptionPropagationTransfer
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitCase(
             CaseNode caseNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(caseNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitMethodInvocation(
             MethodInvocationNode node, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
+        // TODO(pm): update this check to do a string check on getQualifiedName.
         // Check if any declared thrown types are EndpointServiceException subtypes
         MethodSymbol methodSymbol = ASTHelpers.getSymbol(node.getTree());
         if (methodSymbol != null) {
@@ -537,7 +549,7 @@ public final class ExceptionPropagationTransfer
         }
 
         // Default: propagate existing state
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(node), input);
     }
 
     @Override
@@ -545,80 +557,81 @@ public final class ExceptionPropagationTransfer
             ObjectCreationNode objectCreationNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
         // Default: propagate existing state
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(objectCreationNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitMemberReference(
             FunctionalInterfaceNode functionalInterfaceNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(functionalInterfaceNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitArrayCreation(
             ArrayCreationNode arrayCreationNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(arrayCreationNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitArrayType(
             ArrayTypeNode arrayTypeNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(arrayTypeNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitPrimitiveType(
             PrimitiveTypeNode primitiveTypeNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(primitiveTypeNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitClassName(
             ClassNameNode classNameNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(classNameNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitPackageName(
             PackageNameNode packageNameNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(packageNameNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitParameterizedType(
             ParameterizedTypeNode parameterizedTypeNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(parameterizedTypeNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitMarker(
             MarkerNode markerNode, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(markerNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitClassDeclaration(
             ClassDeclarationNode classDeclarationNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(classDeclarationNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitExpressionStatement(
             ExpressionStatementNode expressionStatementNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(expressionStatementNode), input);
     }
 
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitDeconstructorPattern(
             DeconstructorPatternNode deconstructorPatternNode,
             TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        return noStoreChanges(ExceptionState.NO_EXCEPTION, input);
+        return noStoreChanges(input.getValueOfSubNode(deconstructorPatternNode), input);
     }
 
+    // TODO(pm): look into exceptionalStores.
     @CheckReturnValue
     private static TransferResult<ExceptionState, AccessPathStore<ExceptionState>> noStoreChanges(
             ExceptionState value, TransferInput<?, AccessPathStore<ExceptionState>> input) {

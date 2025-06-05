@@ -36,8 +36,8 @@ public final class ExceptionAnalysis {
     public static boolean canThrowEndpointException(VisitorState state) {
         ExceptionPropagationTransfer propagation = instance(state.context);
         try (ClearVisitorState ignored = propagation.setVisitorState(state)) {
-            ExceptionState result = ExceptionState.nullToNoException(
-                    DataFlow.expressionDataflow(state.getPath(), state.context, propagation));
+            ExceptionState res = DataFlow.expressionDataflow(state.getPath(), state.context, propagation);
+            ExceptionState result = ExceptionState.nullToNoException(res);
             return result.canThrowEndpointException();
         }
     }
