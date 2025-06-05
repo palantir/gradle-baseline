@@ -16,6 +16,7 @@
 
 package com.palantir.baseline.errorprone;
 
+import com.google.common.collect.ImmutableSet;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.annotations.CheckReturnValue;
 import com.google.errorprone.dataflow.AccessPath;
@@ -129,8 +130,7 @@ public final class ExceptionPropagationTransfer
     public AccessPathStore<ExceptionState> initialStore(UnderlyingAST _underlyingAst, List<LocalVariableNode> list) {
         AccessPathStore.Builder<ExceptionState> result = AccessPathStore.<ExceptionState>empty().toBuilder();
         for (LocalVariableNode localVariable : list) {
-            result.setInformation(
-                    AccessPath.fromLocalVariable(localVariable), ExceptionState.CAN_THROW_ENDPOINT_EXCEPTION);
+            result.setInformation(AccessPath.fromLocalVariable(localVariable), ExceptionState.NO_EXCEPTION);
         }
         return result.build();
     }
@@ -510,15 +510,23 @@ public final class ExceptionPropagationTransfer
             ThrowNode node, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
         // Check if the thrown exception is a subtype of EndpointServiceException
         Type thrownType = ASTHelpers.getType(node.getExpression().getTree());
-        // Type targetType = endpointServiceExceptionSupplier.get(state);
+
         if (!(thrownType.tsym instanceof ClassSymbol classSymbol)) {
             return noStoreChanges(input.getValueOfSubNode(node), input);
         }
 
-        if (classSymbol.getSuperclass().tsym.getQualifiedName().toString().contains("EndpointServiceException")) {
-            // if (thrownType != null && targetType != null && state.getTypes().isSubtype(thrownType, targetType)) {
-            // EndpointServiceException subtype is being thrown
-            return noStoreChanges(ExceptionState.CAN_THROW_ENDPOINT_EXCEPTION, input);
+        // Check if this is an EndpointServiceException subtype
+        if (classSymbol.getSuperclass() != null
+                && classSymbol
+                        .getSuperclass()
+                        .tsym
+                        .getQualifiedName()
+                        .toString()
+                        .contains("EndpointServiceException")) {
+            // Get the qualified name of the thrown exception
+            String exceptionName = classSymbol.getQualifiedName().toString();
+            ExceptionState exceptionState = ExceptionState.withException(exceptionName);
+            return noStoreChanges(exceptionState, input);
         }
 
         return noStoreChanges(input.getValueOfSubNode(node.getExpression()), input);
@@ -533,17 +541,47 @@ public final class ExceptionPropagationTransfer
     @Override
     public TransferResult<ExceptionState, AccessPathStore<ExceptionState>> visitMethodInvocation(
             MethodInvocationNode node, TransferInput<ExceptionState, AccessPathStore<ExceptionState>> input) {
-        // TODO(pm): update this check to do a string check on getQualifiedName.
+        // Get the return tyep of the method invocation
+        Type returnType = ASTHelpers.getReturnType(node.getTree());
+        // Check if the return type is EndpointServiceException
+        if ((returnType.tsym instanceof ClassSymbol classSymbol)) {
+            // Check if this is an EndpointServiceException subtype
+            if (classSymbol.getSuperclass() != null
+                    && classSymbol
+                            .getSuperclass()
+                            .tsym
+                            .getQualifiedName()
+                            .toString()
+                            .contains("EndpointServiceException")) {
+                // Get the qualified name of the thrown exception
+                String exceptionName = classSymbol.getQualifiedName().toString();
+                ExceptionState exceptionState = ExceptionState.withException(exceptionName);
+                return noStoreChanges(exceptionState, input);
+            }
+        }
+
         // Check if any declared thrown types are EndpointServiceException subtypes
         MethodSymbol methodSymbol = ASTHelpers.getSymbol(node.getTree());
         if (methodSymbol != null) {
             Type targetType = endpointServiceExceptionSupplier.get(state);
             if (targetType != null) {
+                ImmutableSet.Builder<String> exceptionsBuilder = ImmutableSet.builder();
+
                 for (Type declaredThrownType : methodSymbol.getThrownTypes()) {
                     if (state.getTypes().isSubtype(declaredThrownType, targetType)) {
-                        // Method declares it can throw EndpointServiceException subtype
-                        return noStoreChanges(ExceptionState.CAN_THROW_ENDPOINT_EXCEPTION, input);
+                        // This is an EndpointServiceException subtype
+                        if (declaredThrownType.tsym instanceof ClassSymbol classSymbol) {
+                            String exceptionName =
+                                    classSymbol.getQualifiedName().toString();
+                            exceptionsBuilder.add(exceptionName);
+                        }
                     }
+                }
+
+                ImmutableSet<String> exceptions = exceptionsBuilder.build();
+                if (!exceptions.isEmpty()) {
+                    ExceptionState exceptionState = ExceptionState.withExceptions(exceptions);
+                    return noStoreChanges(exceptionState, input);
                 }
             }
         }

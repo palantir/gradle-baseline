@@ -21,6 +21,7 @@ import com.google.errorprone.dataflow.DataFlow;
 import com.palantir.baseline.errorprone.ExceptionPropagationTransfer.ClearVisitorState;
 import com.sun.source.util.TreePath;
 import com.sun.tools.javac.util.Context;
+import java.util.Set;
 
 /**
  * Helper class for analyzing exception propagation using dataflow analysis.
@@ -39,6 +40,19 @@ public final class ExceptionAnalysis {
             ExceptionState res = DataFlow.expressionDataflow(state.getPath(), state.context, propagation);
             ExceptionState result = ExceptionState.nullToNoException(res);
             return result.canThrowEndpointException();
+        }
+    }
+
+    /**
+     * Returns the set of EndpointServiceException subtype names that can be thrown from the current path.
+     * Callers may need to use {@link VisitorState#withPath(TreePath)} to provide a more specific path.
+     */
+    public static Set<String> getThrownExceptionNames(VisitorState state) {
+        ExceptionPropagationTransfer propagation = instance(state.context);
+        try (ClearVisitorState ignored = propagation.setVisitorState(state)) {
+            ExceptionState res = DataFlow.expressionDataflow(state.getPath(), state.context, propagation);
+            ExceptionState result = ExceptionState.nullToNoException(res);
+            return result.getThrownExceptions();
         }
     }
 

@@ -188,7 +188,7 @@ public abstract class EndpointServiceException extends RuntimeException implemen
                         import javax.annotation.processing.Generated;
                         @Generated("com.palantir.conjure.java.services.UndertowServiceInterfaceGenerator")
                         public interface UndertowService {
-                            void endpoint(AuthHeader authHeader) throws ServerErrors.MyErr;
+                            // void endpoint(AuthHeader authHeader) throws ServerErrors.MyErr;
                             void endpointTwo(AuthHeader authHeader) throws ServerErrors.MyErr;
                         }""")
                 .addSourceLines(
@@ -198,21 +198,18 @@ public abstract class EndpointServiceException extends RuntimeException implemen
                         import com.palantir.tokens.auth.AuthHeader;
                         import javax.annotation.processing.Generated;
                         public class UndertowServiceImpl implements UndertowService {
-                            @Override
-                            // BUG: Diagnostic contains: Endpoint throws unassociated exceptions: ServerErrors.MyErr
-                            public void endpoint(AuthHeader authHeader) {
-                                throw ServerErrors.myError("arg", null);
-                            }
+//                            @Override
+//                            public void endpoint(AuthHeader authHeader) {
+//                                throw ServerErrors.myError("arg", null);
+//                            }
+
                             @Override
                             public void endpointTwo(AuthHeader authHeader) {
                                 throwError();
                             }
+
                             private void throwError() {
-                               try {
-                                  throw ServerErrors.myError("arg", null);
-                               } catch (ServerErrors.MyErr e) {
-                                  // ignore
-                               }
+                               throw ServerErrors.myError("arg", null);
                             }
                         }
                         """)
