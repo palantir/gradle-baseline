@@ -147,7 +147,7 @@ public abstract class EndpointServiceException extends RuntimeException implemen
 
     @BeforeEach
     void beforeEach() {
-        compilationTestHelper = CompilationTestHelper.newInstance(UnassociatedEndpointError.class, getClass());
+        compilationTestHelper = CompilationTestHelper.newInstance(UnassociatedEndpointErrorV2.class, getClass());
     }
 
     @SuppressWarnings({"checkstyle:MethodLength", "MisformattedTestData"})
@@ -158,35 +158,39 @@ public abstract class EndpointServiceException extends RuntimeException implemen
                 .addSourceLines("EndpointServiceException.java", ENDPOINT_SERVICE_EXCEPTION)
                 .addSourceLines(
                         "ServerErrors.java",
-                        "import javax.annotation.processing.Generated;",
-                        "import com.palantir.logsafe.Safe;",
-                        "import javax.annotation.Nullable;",
-                        "import com.palantir.logsafe.SafeArg;",
-                        "import com.palantir.conjure.java.api.errors.ErrorType;",
-                        "@Generated(\"com.palantir.conjure.java.types.CheckedErrorGenerator\")",
-                        "public final class ServerErrors {",
-                        "   private ServerErrors() {}",
-                        "   public static final ErrorType MY_ERROR =",
-                        "            ErrorType.create(ErrorType.Code.INVALID_ARGUMENT, \"Errors:MyError\");",
-                        "   public static MyErr myError(@Safe String arg,@Nullable Throwable cause) {",
-                        "        return new MyErr(arg, cause);",
-                        "    }",
-                        "   public static final class MyErr extends EndpointServiceException {",
-                        "     private MyErr(",
-                        "       @Safe String arg, @Nullable Throwable cause) {",
-                        "         super(MY_ERROR, cause, SafeArg.of(\"arg\", arg));",
-                        "     }",
-                        "   }",
-                        "}")
+                        // language=java
+                        """
+                        import javax.annotation.processing.Generated;
+                        import com.palantir.logsafe.Safe;
+                        import javax.annotation.Nullable;
+                        import com.palantir.logsafe.SafeArg;
+                        import com.palantir.conjure.java.api.errors.ErrorType;
+                        @Generated("com.palantir.conjure.java.types.CheckedErrorGenerator")
+                        public final class ServerErrors {
+                           private ServerErrors() {}
+                           public static final ErrorType MY_ERROR =
+                                    ErrorType.create(ErrorType.Code.INVALID_ARGUMENT, "Errors:MyError");
+                           public static MyErr myError(@Safe String arg,@Nullable Throwable cause) {
+                                return new MyErr(arg, cause);
+                            }
+                           public static final class MyErr extends EndpointServiceException {
+                             private MyErr(
+                               @Safe String arg, @Nullable Throwable cause) {
+                                 super(MY_ERROR, cause, SafeArg.of("arg", arg));
+                             }
+                           }
+                        }""")
                 .addSourceLines(
                         "UndertowService.java",
-                        "import com.palantir.tokens.auth.AuthHeader;",
-                        "import javax.annotation.processing.Generated;",
-                        "@Generated(\"com.palantir.conjure.java.services.UndertowServiceInterfaceGenerator\")",
-                        "public interface UndertowService {",
-                        "    void endpoint(AuthHeader authHeader) throws ServerErrors.MyErr;",
-                        "    void endpointTwo(AuthHeader authHeader) throws ServerErrors.MyErr;",
-                        "}")
+                        // language=java
+                        """
+                        import com.palantir.tokens.auth.AuthHeader;
+                        import javax.annotation.processing.Generated;
+                        @Generated("com.palantir.conjure.java.services.UndertowServiceInterfaceGenerator")
+                        public interface UndertowService {
+                            void endpoint(AuthHeader authHeader) throws ServerErrors.MyErr;
+                            void endpointTwo(AuthHeader authHeader) throws ServerErrors.MyErr;
+                        }""")
                 .addSourceLines(
                         "UndertowServiceImpl.java",
                         // language=java
