@@ -36,10 +36,17 @@ class ConfigurationCacheTest extends IntegrationTestKitSpec {
         keepFiles = true
     }
 
-    def "build task runs with configuration cache"() {
+    def "build task runs with configuration cache without issues"() {
+        when: 'first run'
+        String result = createRunner('build', '--dry-run', '--configuration-cache').build().output
 
-        expect:
-        createRunner('build', '--dry-run', '--configuration-cache')
-                .build()
+        then: 'check stored'
+        result.contains('Configuration cache entry stored.')
+
+        when: 're-run task'
+        String rerun = createRunner('build', '--dry-run', '--configuration-cache').build().output
+
+        then: 'the cache is used'
+        rerun.contains("Configuration cache entry reused.")
     }
 }
