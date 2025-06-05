@@ -201,11 +201,11 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
             project.getPlugins().withType(BaselineJavaVersion.class, _unused -> {
                 BaselineJavaVersionExtension javaVersionsExtension =
                         project.getExtensions().getByType(BaselineJavaVersionExtension.class);
-                extension.setEnablePreview(javaVersionsExtension
-                        .runtime()
-                        .map(chosenJavaVersion -> chosenJavaVersion.enablePreview()
-                                ? Optional.of(chosenJavaVersion.javaLanguageVersion())
-                                : Optional.empty()));
+                extension.setEnablePreview(javaVersionsExtension.runtime().map(chosenJavaVersion -> {
+                    return chosenJavaVersion.enablePreview()
+                            ? Optional.of(chosenJavaVersion.javaLanguageVersion())
+                            : Optional.empty();
+                }));
             });
 
             project.getTasks().withType(Jar.class).configureEach(new Action<Jar>() {
