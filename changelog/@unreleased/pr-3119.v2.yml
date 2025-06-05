@@ -1,5 +1,5 @@
 type: improvement
 improvement:
-  description: Make `gradle-baseline` configuration-cache compatible
+  description: Make baseline configuration cacheable for compilation
   links:
   - https://github.com/palantir/gradle-baseline/pull/3119
