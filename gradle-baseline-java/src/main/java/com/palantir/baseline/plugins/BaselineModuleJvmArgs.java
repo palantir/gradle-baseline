@@ -93,16 +93,13 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
             // https://github.com/gradle/gradle/issues/18824
             // However, we set sourceCompatibility in BaselineJavaVersion to opt out of the '--release' flag.
             project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
-                Provider<String> annotationProcessorConfigurationName =
-                        project.provider(sourceSet::getAnnotationProcessorConfigurationName);
-
                 TaskProvider<JavaCompile> javaCompileProvider =
                         project.getTasks().named(sourceSet.getCompileJavaTaskName(), JavaCompile.class);
                 javaCompileProvider.configure(javaCompile -> {
                     ModuleJvmArgsArgumentProvider provider = newModuleJvmArgsArgumentProvider(
                             project,
                             extension,
-                            getConfigurations().getByName(annotationProcessorConfigurationName.get()));
+                            project.getConfigurations().named(sourceSet.getAnnotationProcessorConfigurationName()));
 
                     provider.getBaselineJavaVersionEnabled()
                             .set(project.provider(() -> project.getPlugins().hasPlugin(BaselineJavaVersion.class)));
@@ -231,7 +228,7 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
     }
 
     private static ModuleJvmArgsArgumentProvider newModuleJvmArgsArgumentProvider(
-            Project project, BaselineModuleJvmArgsExtension extension, FileCollection classpath) {
+            Project project, BaselineModuleJvmArgsExtension extension, Object classpath) {
         ModuleJvmArgsArgumentProvider provider = project.getObjects().newInstance(ModuleJvmArgsArgumentProvider.class);
 
         provider.getExports().set(extension.exports());
