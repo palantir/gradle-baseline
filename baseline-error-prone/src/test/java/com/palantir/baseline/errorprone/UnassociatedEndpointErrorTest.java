@@ -24,6 +24,7 @@ class UnassociatedEndpointErrorTest {
 
     private CompilationTestHelper compilationTestHelper;
     private static final String ENDPOINT_SERVICE_EXCEPTION =
+            // language=java
             """
 import com.palantir.conjure.java.api.errors.ErrorType;
 import com.palantir.conjure.java.api.errors.RemoteException;
@@ -149,7 +150,7 @@ public abstract class EndpointServiceException extends RuntimeException implemen
         compilationTestHelper = CompilationTestHelper.newInstance(UnassociatedEndpointError.class, getClass());
     }
 
-    @SuppressWarnings("checkstyle:MethodLength")
+    @SuppressWarnings({"checkstyle:MethodLength", "MisformattedTestData"})
     @Test
     // @Disabled
     void testFindsRuntimeException() {
@@ -188,23 +189,29 @@ public abstract class EndpointServiceException extends RuntimeException implemen
                         "}")
                 .addSourceLines(
                         "UndertowServiceImpl.java",
-                        "import com.palantir.tokens.auth.AuthHeader;",
-                        "import javax.annotation.processing.Generated;",
-                        "public class UndertowServiceImpl implements UndertowService {",
-                        "    @Override",
-                        "    // BUG: Diagnostic contains: Endpoint throws unassociated exceptions: ServerErrors.MyErr",
-                        "    public void endpoint(AuthHeader authHeader) {",
-                        "        throw ServerErrors.myError(\"arg\", null);",
-                        "    }",
-                        "    @Override",
-                        "    // BUG: Diagnostic contains: Endpoint throws unassociated exceptions: ServerErrors.MyErr",
-                        "    public void endpointTwo(AuthHeader authHeader) {",
-                        "        throwError();",
-                        "    }",
-                        "    private void throwError() {",
-                        "        throw ServerErrors.myError(\"arg\", null);",
-                        "    }",
-                        "}")
+                        // language=java
+                        """
+                        import com.palantir.tokens.auth.AuthHeader;
+                        import javax.annotation.processing.Generated;
+                        public class UndertowServiceImpl implements UndertowService {
+                            @Override
+                            // BUG: Diagnostic contains: Endpoint throws unassociated exceptions: ServerErrors.MyErr
+                            public void endpoint(AuthHeader authHeader) {
+                                throw ServerErrors.myError("arg", null);
+                            }
+                            @Override
+                            public void endpointTwo(AuthHeader authHeader) {
+                                throwError();
+                            }
+                            private void throwError() {
+                               try {
+                                  throw ServerErrors.myError("arg", null);
+                               } catch (ServerErrors.MyErr e) {
+                                  // ignore
+                               }
+                            }
+                        }
+                        """)
                 .doTest();
     }
 }
