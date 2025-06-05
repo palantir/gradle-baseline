@@ -47,8 +47,7 @@ import org.gradle.api.logging.Logging;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
-import org.gradle.api.tasks.Classpath;
-import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
@@ -333,20 +332,19 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
     public abstract static class ModuleJvmArgsArgumentProvider implements CommandLineArgumentProvider {
         private static final Logger log = Logging.getLogger(ModuleJvmArgsArgumentProvider.class);
 
-        @Input
+        @Internal
         public abstract SetProperty<String> getExports();
 
-        @Input
+        @Internal
         public abstract SetProperty<String> getOpens();
 
-        @Classpath
+        @Internal
         public abstract ConfigurableFileCollection getClasspath();
 
-        @Input
+        @Internal
         public abstract Property<String> getProjectPath();
 
-        @Input
-        @org.gradle.api.tasks.Optional
+        @Internal
         public abstract Property<Boolean> getBaselineJavaVersionEnabled();
 
         @Override
