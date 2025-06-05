@@ -100,14 +100,11 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                 TaskProvider<JavaCompile> javaCompileProvider =
                         project.getTasks().named(sourceSet.getCompileJavaTaskName(), JavaCompile.class);
                 javaCompileProvider.configure(javaCompile -> {
-                    ModuleJvmArgsArgumentProvider provider =
-                            project.getObjects().newInstance(ModuleJvmArgsArgumentProvider.class);
+                    ModuleJvmArgsArgumentProvider provider = newModuleJvmArgsArgumentProvider(
+                            project,
+                            extension,
+                            getConfigurations().getByName(annotationProcessorConfigurationName.get()));
 
-                    provider.getExports().set(extension.exports());
-                    provider.getOpens().set(extension.opens());
-                    provider.getClasspath()
-                            .from(getConfigurations().getByName(annotationProcessorConfigurationName.get()));
-                    provider.getProjectPath().set(project.getPath());
                     provider.getBaselineJavaVersionEnabled()
                             .set(project.provider(() -> project.getPlugins().hasPlugin(BaselineJavaVersion.class)));
 
