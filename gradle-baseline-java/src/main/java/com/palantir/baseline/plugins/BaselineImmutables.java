@@ -44,6 +44,9 @@ public final class BaselineImmutables implements Plugin<Project> {
                 project.getTasks()
                         .named(sourceSet.getCompileJavaTaskName(), JavaCompile.class)
                         .configure(javaCompileTask -> {
+                            // Previously the anonymous classes where capturing project thus breaking the configuration
+                            // cache, now we only supply a provider of ResolvedArtifactResults which is configuration
+                            // cache compatible
                             Provider<Set<ResolvedArtifactResult>> resolvedArtifactsProvider =
                                     project.getConfigurations()
                                             .getByName(sourceSet.getAnnotationProcessorConfigurationName())
