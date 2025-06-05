@@ -49,7 +49,6 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.Input;
-import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
@@ -343,7 +342,6 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
         @Input
         public abstract SetProperty<String> getOpens();
 
-        @InputFiles
         @Classpath
         public abstract ConfigurableFileCollection getClasspath();
 
