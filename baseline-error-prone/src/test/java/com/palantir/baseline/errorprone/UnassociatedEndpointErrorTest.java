@@ -204,12 +204,17 @@ public abstract class EndpointServiceException extends RuntimeException implemen
 //                            }
 
                             @Override
+                            // BUG: Diagnostic contains: Endpoint method can throw unassociated EndpointServiceException subtypes: ServerErrors.MyErr
                             public void endpointTwo(AuthHeader authHeader) {
                                 throwError();
                             }
 
                             private void throwError() {
-                               throw ServerErrors.myError("arg", null);
+                              try {
+                                throw ServerErrors.myError("arg", null);
+                               } catch (ServerErrors.MyErr e) {
+                                  // do nothing
+                               }
                             }
                         }
                         """)

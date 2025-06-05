@@ -29,7 +29,7 @@ import com.sun.source.tree.ThrowTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.TryTree;
 import com.sun.source.util.TreePath;
-import com.sun.source.util.TreeScanner;
+import com.sun.source.util.TreePathScanner;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Type;
 import java.util.Set;
@@ -54,8 +54,8 @@ public final class UnassociatedEndpointErrorV2 extends BugChecker implements Bug
         }
 
         // Use a TreeScanner to traverse the method body and analyze individual expressions
-        ExceptionAnalysisScanner scanner = new ExceptionAnalysisScanner(state);
-        scanner.scan(tree.getBody(), state);
+        ExceptionAnalysisScanner scanner = new ExceptionAnalysisScanner(state, tree);
+        scanner.scan(state.getPath().getCompilationUnit(), state);
 
         Set<String> thrownExceptions = scanner.getThrownExceptions();
         if (!thrownExceptions.isEmpty()) {
@@ -73,12 +73,14 @@ public final class UnassociatedEndpointErrorV2 extends BugChecker implements Bug
      * Scanner that traverses the method body and uses dataflow analysis on individual expressions
      * to detect if EndpointServiceException subtypes can be thrown.
      */
-    private static class ExceptionAnalysisScanner extends TreeScanner<Set<String>, VisitorState> {
+    private static class ExceptionAnalysisScanner extends TreePathScanner<Set<String>, VisitorState> {
         private final VisitorState originalState;
+        private final MethodTree targetMethod;
         private Set<String> thrownExceptions = new java.util.HashSet<>();
 
-        ExceptionAnalysisScanner(VisitorState state) {
+        ExceptionAnalysisScanner(VisitorState state, MethodTree targetMethod) {
             this.originalState = state;
+            this.targetMethod = targetMethod;
         }
 
         Set<String> getThrownExceptions() {
@@ -102,7 +104,7 @@ public final class UnassociatedEndpointErrorV2 extends BugChecker implements Bug
         @Override
         public Set<String> visitTry(TryTree node, VisitorState state) {
             Set<String> exceptionsThrown = super.visitBlock(node.getBlock(), state);
-            if (!exceptionsThrown.isEmpty()) {
+            if (exceptionsThrown != null && !exceptionsThrown.isEmpty()) {
                 for (CatchTree catchTree : node.getCatches()) {
                     // Get the exception types caught
 
@@ -113,10 +115,11 @@ public final class UnassociatedEndpointErrorV2 extends BugChecker implements Bug
 
         private void analyzeTree(Tree tree, VisitorState state) {
             try {
-                // Create a new path that points to this specific tree node
-                TreePath treePath = TreePath.getPath(originalState.getPath(), tree);
-                if (treePath != null) {
-                    VisitorState treeState = state.withPath(treePath);
+                // Use the current path from the TreePathScanner - this gives us the full path
+                // from the compilation unit down to the current tree node
+                TreePath currentPath = getCurrentPath();
+                if (currentPath != null && currentPath.getLeaf() == tree) {
+                    VisitorState treeState = state.withPath(currentPath);
                     Set<String> exceptions = ExceptionAnalysis.getThrownExceptionNames(treeState);
                     thrownExceptions.addAll(exceptions);
                 }
