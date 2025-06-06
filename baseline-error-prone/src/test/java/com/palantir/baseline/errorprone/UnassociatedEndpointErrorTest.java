@@ -152,7 +152,6 @@ public abstract class EndpointServiceException extends RuntimeException implemen
 
     @SuppressWarnings({"checkstyle:MethodLength", "MisformattedTestData"})
     @Test
-    // @Disabled
     void testFindsRuntimeException() {
         compilationTestHelper
                 .addSourceLines("EndpointServiceException.java", ENDPOINT_SERVICE_EXCEPTION)
@@ -188,8 +187,9 @@ public abstract class EndpointServiceException extends RuntimeException implemen
                         import javax.annotation.processing.Generated;
                         @Generated("com.palantir.conjure.java.services.UndertowServiceInterfaceGenerator")
                         public interface UndertowService {
-                            // void endpoint(AuthHeader authHeader) throws ServerErrors.MyErr;
+                            void endpoint(AuthHeader authHeader) throws ServerErrors.MyErr;
                             void endpointTwo(AuthHeader authHeader) throws ServerErrors.MyErr;
+                            void endpointThree(AuthHeader authHeader) throws ServerErrors.MyErr;
                         }""")
                 .addSourceLines(
                         "UndertowServiceImpl.java",
@@ -198,23 +198,29 @@ public abstract class EndpointServiceException extends RuntimeException implemen
                         import com.palantir.tokens.auth.AuthHeader;
                         import javax.annotation.processing.Generated;
                         public class UndertowServiceImpl implements UndertowService {
-//                            @Override
-//                            public void endpoint(AuthHeader authHeader) {
-//                                throw ServerErrors.myError("arg", null);
-//                            }
+                            @Override
+                            // BUG: Diagnostic contains: Endpoint method can throw unassociated EndpointServiceException subtypes: test
+                            public void endpoint(AuthHeader authHeader) {
+                                throw ServerErrors.myError("arg", null);
+                            }
 
                             @Override
-                            // BUG: Diagnostic contains: Endpoint method can throw unassociated EndpointServiceException subtypes: ServerErrors.MyErr
                             public void endpointTwo(AuthHeader authHeader) {
                                 throwError();
                             }
 
-                            private void throwError() {
-                              try {
+                            @Override
+                            // BUG: Diagnostic contains: Endpoint method can throw unassociated EndpointServiceException subtypes: test
+                            public void endpointThree(AuthHeader authHeader) {
                                 throw ServerErrors.myError("arg", null);
-                               } catch (ServerErrors.MyErr e) {
+                            }
+
+                            private void throwError() {
+                              //try {
+                                throw ServerErrors.myError("arg", null);
+                               // } catch (ServerErrors.MyErr e) {
                                   // do nothing
-                               }
+//                               }
                             }
                         }
                         """)

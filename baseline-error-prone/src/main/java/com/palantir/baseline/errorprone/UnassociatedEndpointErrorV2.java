@@ -31,10 +31,17 @@ import com.sun.source.tree.TryTree;
 import com.sun.source.util.TreePath;
 import com.sun.source.util.TreePathScanner;
 import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Type;
 import java.util.Set;
 import javax.lang.model.element.ElementKind;
 
+/**
+ * ideas:
+ * - get the conjure IR?
+ * - in a Gradle task, collect all the files that could be Conjure-generated interfaces, and write their names into a
+ *   file on disk.
+ */
 @AutoService(BugChecker.class)
 @BugPattern(
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
@@ -55,14 +62,15 @@ public final class UnassociatedEndpointErrorV2 extends BugChecker implements Bug
 
         // Use a TreeScanner to traverse the method body and analyze individual expressions
         ExceptionAnalysisScanner scanner = new ExceptionAnalysisScanner(state, tree);
-        scanner.scan(state.getPath().getCompilationUnit(), state);
+        // Get a subset of the compilationUnit that only contains the method body.
+        TreePath treePath = TreePath.getPath(state.getPath().getCompilationUnit(), tree);
+        scanner.scan(treePath, state);
 
-        Set<String> thrownExceptions = scanner.getThrownExceptions();
+        Set<ClassSymbol> thrownExceptions = scanner.getThrownExceptions();
         if (!thrownExceptions.isEmpty()) {
             return buildDescription(tree)
                     .setMessage(String.format(
-                            "Endpoint method can throw unassociated EndpointServiceException subtypes: %s",
-                            String.join(", ", thrownExceptions)))
+                            "Endpoint method can throw unassociated EndpointServiceException subtypes: %s", "test"))
                     .build();
         }
 
@@ -73,44 +81,73 @@ public final class UnassociatedEndpointErrorV2 extends BugChecker implements Bug
      * Scanner that traverses the method body and uses dataflow analysis on individual expressions
      * to detect if EndpointServiceException subtypes can be thrown.
      */
-    private static class ExceptionAnalysisScanner extends TreePathScanner<Set<String>, VisitorState> {
+    private static class ExceptionAnalysisScanner extends TreePathScanner<Set<ClassSymbol>, VisitorState> {
         private final VisitorState originalState;
         private final MethodTree targetMethod;
-        private Set<String> thrownExceptions = new java.util.HashSet<>();
+        private Set<ClassSymbol> thrownExceptions = new java.util.HashSet<>();
 
         ExceptionAnalysisScanner(VisitorState state, MethodTree targetMethod) {
             this.originalState = state;
             this.targetMethod = targetMethod;
         }
 
-        Set<String> getThrownExceptions() {
+        Set<ClassSymbol> getThrownExceptions() {
             return thrownExceptions;
         }
 
         @Override
-        public Set<String> visitMethodInvocation(MethodInvocationTree node, VisitorState state) {
+        public Set<ClassSymbol> reduce(Set<ClassSymbol> r1, Set<ClassSymbol> r2) {
+            if (r1 == null) {
+                return r2;
+            }
+            if (r2 == null) {
+                return r1;
+            }
+            r1.addAll(r2);
+            return r1;
+        }
+
+        @Override
+        public Set<ClassSymbol> visitMethodInvocation(MethodInvocationTree node, VisitorState state) {
             // Analyze this specific method invocation expression using dataflow analysis
             analyzeTree(node, state);
             return super.visitMethodInvocation(node, state);
         }
 
         @Override
-        public Set<String> visitThrow(ThrowTree node, VisitorState state) {
+        public Set<ClassSymbol> visitThrow(ThrowTree node, VisitorState state) {
+            super.visitThrow(node, state);
             // Analyze the entire throw statement using dataflow analysis
             analyzeTree(node, state);
-            return super.visitThrow(node, state);
+            return thrownExceptions;
         }
 
-        @Override
-        public Set<String> visitTry(TryTree node, VisitorState state) {
-            Set<String> exceptionsThrown = super.visitBlock(node.getBlock(), state);
-            if (exceptionsThrown != null && !exceptionsThrown.isEmpty()) {
-                for (CatchTree catchTree : node.getCatches()) {
-                    // Get the exception types caught
+        //        @Override
+        //        public Set<ClassSymbol> visitBlock(BlockTree node, VisitorState state) {
+        //            super.visitBlock(node, state);
+        //            // Analyze the entire block using dataflow analysis
+        //            analyzeTree(node, state);
+        //            return thrownExceptions;
+        //        }
 
+        @Override
+        public Set<ClassSymbol> visitTry(TryTree node, VisitorState state) {
+            super.visitTry(node, state);
+            Set<ClassSymbol> thrownExceptionsFromTryBlock = super.visitBlock(node.getBlock(), state);
+            thrownExceptions.addAll(thrownExceptionsFromTryBlock);
+            for (CatchTree catchTree : node.getCatches()) {
+                // Inspect the exceptions thrown in the try block, and remove any exceptions from the set that are
+                // subtypes of caught exceptions
+                Type caughtExceptionType = ASTHelpers.getType(catchTree.getParameter());
+                if (caughtExceptionType == null) {
+                    // This should not be possible, but could change in future java versions.
+                    // avoid failing noisily in this case.
+                    continue;
                 }
+                thrownExceptions.removeIf(type -> type.isSubClass(caughtExceptionType.tsym, state.getTypes()));
             }
-            return super.visitTry(node, state);
+
+            return thrownExceptions;
         }
 
         private void analyzeTree(Tree tree, VisitorState state) {
@@ -120,12 +157,11 @@ public final class UnassociatedEndpointErrorV2 extends BugChecker implements Bug
                 TreePath currentPath = getCurrentPath();
                 if (currentPath != null && currentPath.getLeaf() == tree) {
                     VisitorState treeState = state.withPath(currentPath);
-                    Set<String> exceptions = ExceptionAnalysis.getThrownExceptionNames(treeState);
+                    Set<ClassSymbol> exceptions = ExceptionAnalysis.getThrownExceptionNames(treeState);
                     thrownExceptions.addAll(exceptions);
                 }
             } catch (Exception e) {
-                // If dataflow analysis fails for this tree, continue with other trees
-                // This can happen for complex expressions or edge cases
+                // no-op
             }
         }
     }

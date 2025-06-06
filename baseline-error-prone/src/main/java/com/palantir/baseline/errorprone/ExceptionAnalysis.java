@@ -20,6 +20,7 @@ import com.google.errorprone.VisitorState;
 import com.google.errorprone.dataflow.DataFlow;
 import com.palantir.baseline.errorprone.ExceptionPropagationTransfer.ClearVisitorState;
 import com.sun.source.util.TreePath;
+import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.util.Context;
 import java.util.Set;
 
@@ -47,7 +48,7 @@ public final class ExceptionAnalysis {
      * Returns the set of EndpointServiceException subtype names that can be thrown from the current path.
      * Callers may need to use {@link VisitorState#withPath(TreePath)} to provide a more specific path.
      */
-    public static Set<String> getThrownExceptionNames(VisitorState state) {
+    public static Set<ClassSymbol> getThrownExceptionNames(VisitorState state) {
         ExceptionPropagationTransfer propagation = instance(state.context);
         try (ClearVisitorState ignored = propagation.setVisitorState(state)) {
             ExceptionState res = DataFlow.expressionDataflow(state.getPath(), state.context, propagation);

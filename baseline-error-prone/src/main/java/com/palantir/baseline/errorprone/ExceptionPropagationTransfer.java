@@ -524,8 +524,7 @@ public final class ExceptionPropagationTransfer
                         .toString()
                         .contains("EndpointServiceException")) {
             // Get the qualified name of the thrown exception
-            String exceptionName = classSymbol.getQualifiedName().toString();
-            ExceptionState exceptionState = ExceptionState.withException(exceptionName);
+            ExceptionState exceptionState = ExceptionState.withException(classSymbol);
             return noStoreChanges(exceptionState, input);
         }
 
@@ -554,8 +553,7 @@ public final class ExceptionPropagationTransfer
                             .toString()
                             .contains("EndpointServiceException")) {
                 // Get the qualified name of the thrown exception
-                String exceptionName = classSymbol.getQualifiedName().toString();
-                ExceptionState exceptionState = ExceptionState.withException(exceptionName);
+                ExceptionState exceptionState = ExceptionState.withException(classSymbol);
                 return noStoreChanges(exceptionState, input);
             }
         }
@@ -565,20 +563,18 @@ public final class ExceptionPropagationTransfer
         if (methodSymbol != null) {
             Type targetType = endpointServiceExceptionSupplier.get(state);
             if (targetType != null) {
-                ImmutableSet.Builder<String> exceptionsBuilder = ImmutableSet.builder();
+                ImmutableSet.Builder<ClassSymbol> exceptionsBuilder = ImmutableSet.builder();
 
                 for (Type declaredThrownType : methodSymbol.getThrownTypes()) {
                     if (state.getTypes().isSubtype(declaredThrownType, targetType)) {
                         // This is an EndpointServiceException subtype
                         if (declaredThrownType.tsym instanceof ClassSymbol classSymbol) {
-                            String exceptionName =
-                                    classSymbol.getQualifiedName().toString();
-                            exceptionsBuilder.add(exceptionName);
+                            exceptionsBuilder.add(classSymbol);
                         }
                     }
                 }
 
-                ImmutableSet<String> exceptions = exceptionsBuilder.build();
+                ImmutableSet<ClassSymbol> exceptions = exceptionsBuilder.build();
                 if (!exceptions.isEmpty()) {
                     ExceptionState exceptionState = ExceptionState.withExceptions(exceptions);
                     return noStoreChanges(exceptionState, input);

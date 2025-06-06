@@ -17,6 +17,7 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.common.collect.ImmutableSet;
+import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import java.util.Set;
 import org.checkerframework.errorprone.dataflow.analysis.AbstractValue;
 
@@ -30,30 +31,30 @@ public final class ExceptionState implements AbstractValue<ExceptionState> {
      */
     public static final ExceptionState NO_EXCEPTION = new ExceptionState(ImmutableSet.of());
 
-    private final ImmutableSet<String> thrownExceptions;
+    private final ImmutableSet<ClassSymbol> thrownExceptions;
 
-    private ExceptionState(Set<String> thrownExceptions) {
+    private ExceptionState(Set<ClassSymbol> thrownExceptions) {
         this.thrownExceptions = ImmutableSet.copyOf(thrownExceptions);
     }
 
     /**
      * Creates an ExceptionState with a single exception type.
      */
-    public static ExceptionState withException(String exceptionName) {
+    public static ExceptionState withException(ClassSymbol exceptionName) {
         return new ExceptionState(ImmutableSet.of(exceptionName));
     }
 
     /**
      * Creates an ExceptionState with multiple exception types.
      */
-    public static ExceptionState withExceptions(Set<String> exceptionNames) {
+    public static ExceptionState withExceptions(Set<ClassSymbol> exceptionNames) {
         return exceptionNames.isEmpty() ? NO_EXCEPTION : new ExceptionState(exceptionNames);
     }
 
     /**
      * Returns the set of exception names that can be thrown.
      */
-    public ImmutableSet<String> getThrownExceptions() {
+    public ImmutableSet<ClassSymbol> getThrownExceptions() {
         return thrownExceptions;
     }
 
@@ -71,7 +72,7 @@ public final class ExceptionState implements AbstractValue<ExceptionState> {
         }
 
         // Union of both sets of exceptions
-        ImmutableSet<String> combined = ImmutableSet.<String>builder()
+        ImmutableSet<ClassSymbol> combined = ImmutableSet.<ClassSymbol>builder()
                 .addAll(this.thrownExceptions)
                 .addAll(other.thrownExceptions)
                 .build();
