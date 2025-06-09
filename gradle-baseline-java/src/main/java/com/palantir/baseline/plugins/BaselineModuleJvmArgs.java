@@ -200,16 +200,30 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
             project.getTasks().withType(Jar.class).configureEach(new Action<Jar>() {
                 @Override
                 public void execute(Jar jar) {
+                    Provider<String> jarNameProvider = project.provider(jar::getName);
+                    Provider<String> projectPathProvider = project.provider(jar.getProject()::getPath);
+
                     jar.doFirst(new Action<Task>() {
                         @Override
                         public void execute(Task task) {
                             jar.manifest(new Action<Manifest>() {
                                 @Override
                                 public void execute(Manifest manifest) {
-                                    addManifestAttribute(jar, manifest, ADD_EXPORTS_ATTRIBUTE, extension.exports());
-                                    addManifestAttribute(jar, manifest, ADD_OPENS_ATTRIBUTE, extension.opens());
                                     addManifestAttribute(
-                                            jar,
+                                            jarNameProvider,
+                                            projectPathProvider,
+                                            manifest,
+                                            ADD_EXPORTS_ATTRIBUTE,
+                                            extension.exports());
+                                    addManifestAttribute(
+                                            jarNameProvider,
+                                            projectPathProvider,
+                                            manifest,
+                                            ADD_OPENS_ATTRIBUTE,
+                                            extension.opens());
+                                    addManifestAttribute(
+                                            jarNameProvider,
+                                            projectPathProvider,
                                             manifest,
                                             ENABLE_PREVIEW_ATTRIBUTE,
                                             extension.getEnablePreview().map(maybeVersion -> maybeVersion.stream()
@@ -244,24 +258,26 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
     }
 
     private static void addManifestAttribute(
-            Jar jarTask, Manifest manifest, String attributeName, Provider<Set<String>> valueProperty) {
-        Project project = jarTask.getProject();
-        // Only locally defined values are applied to jars
+            Provider<String> jarName,
+            Provider<String> projectPath,
+            Manifest manifest,
+            String attributeName,
+            Provider<Set<String>> valueProperty) {
         Set<String> values = valueProperty.get();
         if (!values.isEmpty()) {
             log.debug(
                     "BaselineModuleJvmArgs adding {} attribute to {} in {}: {}",
                     attributeName,
-                    jarTask.getName(),
-                    project,
+                    jarName.get(),
+                    projectPath.get(),
                     values);
             manifest.attributes(ImmutableMap.of(attributeName, String.join(" ", values)));
         } else {
             log.debug(
                     "BaselineModuleJvmArgs not adding {} attribute to {} in {}",
                     attributeName,
-                    jarTask.getName(),
-                    project);
+                    jarName.get(),
+                    projectPath.get());
         }
     }
 
