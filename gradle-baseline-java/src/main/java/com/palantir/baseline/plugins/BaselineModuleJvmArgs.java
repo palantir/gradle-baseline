@@ -203,14 +203,6 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                     String jarName = jar.getName();
                     String projectPath = jar.getProject().getPath();
 
-                    Provider<Set<String>> exportsProvider = extension.exports();
-                    Provider<Set<String>> opensProvider = extension.opens();
-                    Provider<Set<String>> enablePreviewProvider = extension
-                            .getEnablePreview()
-                            .map(maybeVersion -> maybeVersion.stream()
-                                    .map(v -> Integer.toString(v.asInt()))
-                                    .collect(Collectors.toSet()));
-
                     jar.doFirst(new Action<Task>() {
                         @Override
                         public void execute(Task task) {
@@ -218,15 +210,17 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                                 @Override
                                 public void execute(Manifest manifest) {
                                     addManifestAttribute(
-                                            jarName, projectPath, manifest, ADD_EXPORTS_ATTRIBUTE, exportsProvider);
+                                            jarName, projectPath, manifest, ADD_EXPORTS_ATTRIBUTE, extension.exports());
                                     addManifestAttribute(
-                                            jarName, projectPath, manifest, ADD_OPENS_ATTRIBUTE, opensProvider);
+                                            jarName, projectPath, manifest, ADD_OPENS_ATTRIBUTE, extension.opens());
                                     addManifestAttribute(
                                             jarName,
                                             projectPath,
                                             manifest,
                                             ENABLE_PREVIEW_ATTRIBUTE,
-                                            enablePreviewProvider);
+                                            extension.getEnablePreview().map(maybeVersion -> maybeVersion.stream()
+                                                    .map(v -> Integer.toString(v.asInt()))
+                                                    .collect(Collectors.toSet())));
                                 }
                             });
                         }
