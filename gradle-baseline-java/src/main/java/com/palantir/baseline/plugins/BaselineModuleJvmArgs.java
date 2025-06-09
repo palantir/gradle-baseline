@@ -200,8 +200,16 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
             project.getTasks().withType(Jar.class).configureEach(new Action<Jar>() {
                 @Override
                 public void execute(Jar jar) {
-                    Provider<String> jarNameProvider = project.provider(jar::getName);
-                    Provider<String> projectPathProvider = project.provider(jar.getProject()::getPath);
+                    String jarName = jar.getName();
+                    String projectPath = jar.getProject().getPath();
+
+                    Provider<Set<String>> exportsProvider = extension.exports();
+                    Provider<Set<String>> opensProvider = extension.opens();
+                    Provider<Set<String>> enablePreviewProvider = extension
+                            .getEnablePreview()
+                            .map(maybeVersion -> maybeVersion.stream()
+                                    .map(v -> Integer.toString(v.asInt()))
+                                    .collect(Collectors.toSet()));
 
                     jar.doFirst(new Action<Task>() {
                         @Override
@@ -210,25 +218,15 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                                 @Override
                                 public void execute(Manifest manifest) {
                                     addManifestAttribute(
-                                            jarNameProvider,
-                                            projectPathProvider,
-                                            manifest,
-                                            ADD_EXPORTS_ATTRIBUTE,
-                                            extension.exports());
+                                            jarName, projectPath, manifest, ADD_EXPORTS_ATTRIBUTE, exportsProvider);
                                     addManifestAttribute(
-                                            jarNameProvider,
-                                            projectPathProvider,
-                                            manifest,
-                                            ADD_OPENS_ATTRIBUTE,
-                                            extension.opens());
+                                            jarName, projectPath, manifest, ADD_OPENS_ATTRIBUTE, opensProvider);
                                     addManifestAttribute(
-                                            jarNameProvider,
-                                            projectPathProvider,
+                                            jarName,
+                                            projectPath,
                                             manifest,
                                             ENABLE_PREVIEW_ATTRIBUTE,
-                                            extension.getEnablePreview().map(maybeVersion -> maybeVersion.stream()
-                                                    .map(v -> Integer.toString(v.asInt()))
-                                                    .collect(Collectors.toSet())));
+                                            enablePreviewProvider);
                                 }
                             });
                         }
@@ -258,8 +256,8 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
     }
 
     private static void addManifestAttribute(
-            Provider<String> jarName,
-            Provider<String> projectPath,
+            String jarName,
+            String projectPath,
             Manifest manifest,
             String attributeName,
             Provider<Set<String>> valueProperty) {
@@ -268,16 +266,12 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
             log.debug(
                     "BaselineModuleJvmArgs adding {} attribute to {} in {}: {}",
                     attributeName,
-                    jarName.get(),
-                    projectPath.get(),
+                    jarName,
+                    projectPath,
                     values);
             manifest.attributes(ImmutableMap.of(attributeName, String.join(" ", values)));
         } else {
-            log.debug(
-                    "BaselineModuleJvmArgs not adding {} attribute to {} in {}",
-                    attributeName,
-                    jarName.get(),
-                    projectPath.get());
+            log.debug("BaselineModuleJvmArgs not adding {} attribute to {} in {}", attributeName, jarName, projectPath);
         }
     }
 
