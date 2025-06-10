@@ -59,13 +59,13 @@ public final class ImmutablesStyle extends BugChecker implements BugChecker.Clas
     public Description matchClass(ClassTree tree, VisitorState state) {
         if (STYLE_ANNOTATION.matches(tree, state)) {
             switch (tree.getKind()) {
-                case CLASS:
-                case INTERFACE:
+                case CLASS, INTERFACE -> {
                     return matchStyleAnnotatedType(tree, state);
-                case ANNOTATION_TYPE:
+                }
+                case ANNOTATION_TYPE -> {
                     return matchStyleMetaAnnotation(tree, state);
-                default:
-                    break;
+                }
+                default -> {}
             }
         }
         return Description.NO_MATCH;

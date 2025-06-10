@@ -51,6 +51,15 @@ allprojects {
         tasks.withType(JavaCompile) {
             options.compilerArgs += ['-Werror', '-Xlint:deprecation']
             options.errorprone {
+                // Temporarily disable some checks. Remove these line after upgrading Baseline.
+                disable("DangerousIdentityKey")
+                disable("ExecutorSubmitRunnableFutureIgnored")
+                disable("IllegalSafeLoggingArgument")
+                disable("ReadReturnValueIgnored")
+                disable("UnsafeGaugeRegistration")
+                disable("VarUsage")
+                // End temporary disabled checks.
+
                 disable("Slf4jLogsafeArgs")
                 disable("PreferSafeLoggableExceptions")
                 disable("PreferSafeLogger")

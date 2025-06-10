@@ -385,16 +385,12 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
     }
 
     private static String describeVariable(Symbol.VarSymbol symbol) {
-        switch (symbol.getKind()) {
-            case FIELD:
-                return "field";
-            case LOCAL_VARIABLE:
-                return "local variable";
-            case PARAMETER:
-                return "parameter";
-            default:
-                return "variable";
-        }
+        return switch (symbol.getKind()) {
+            case FIELD -> "field";
+            case LOCAL_VARIABLE -> "local variable";
+            case PARAMETER -> "parameter";
+            default -> "variable";
+        };
     }
 
     private static boolean hasNativeMethods(CompilationUnitTree tree) {
@@ -498,8 +494,8 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             } else if (statement.getKind() == Tree.Kind.EXPRESSION_STATEMENT) {
                 JCTree tree = (JCTree) ((ExpressionStatementTree) statement).getExpression();
 
-                if (tree instanceof CompoundAssignmentTree) {
-                    if (hasSideEffect(((CompoundAssignmentTree) tree).getExpression())) {
+                if (tree instanceof CompoundAssignmentTree compoundAssignmentTree) {
+                    if (hasSideEffect(compoundAssignmentTree.getExpression())) {
                         // If it's a compound assignment, there's no reason we'd want to remove the expression,
                         // so don't set `encounteredSideEffects` based on this usage.
                         SuggestedFix replacement = SuggestedFix.replace(
@@ -509,8 +505,8 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                         fix.merge(replacement);
                         continue;
                     }
-                } else if (tree instanceof AssignmentTree) {
-                    if (hasSideEffect(((AssignmentTree) tree).getExpression())) {
+                } else if (tree instanceof AssignmentTree assignmentTree) {
+                    if (hasSideEffect(assignmentTree.getExpression())) {
                         fix.replace(
                                 tree.getStartPosition(),
                                 ((JCTree.JCAssign) tree).getExpression().getStartPosition(),
@@ -531,11 +527,10 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
 
         for (UnusedSpec unusedSpec : values) {
             Tree leaf = unusedSpec.variableTree().getLeaf();
-            if (!(leaf instanceof VariableTree)) {
+            if (!(leaf instanceof VariableTree tree)) {
                 continue;
             }
 
-            VariableTree tree = (VariableTree) leaf;
             if (state.getEndPosition(tree.getType()) == -1) {
                 fix.replace(tree, "_" + tree.getName());
             } else {
@@ -659,7 +654,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
     private static boolean isEnhancedForLoopVar(TreePath variablePath) {
         Tree tree = variablePath.getLeaf();
         Tree parent = variablePath.getParentPath().getLeaf();
-        return parent instanceof EnhancedForLoopTree && ((EnhancedForLoopTree) parent).getVariable() == tree;
+        return parent instanceof EnhancedForLoopTree enhancedForLoopTree && enhancedForLoopTree.getVariable() == tree;
     }
 
     /**
@@ -722,18 +717,18 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                 return null;
             }
             switch (symbol.getKind()) {
-                case FIELD:
+                case FIELD -> {
                     // We are only interested in private fields and those which are not special.
                     if (isFieldEligibleForChecking(variableTree, symbol)) {
                         unusedElements.put(symbol, getCurrentPath());
                         usageSites.put(symbol, getCurrentPath());
                     }
-                    break;
-                case LOCAL_VARIABLE:
+                }
+                case LOCAL_VARIABLE -> {
                     unusedElements.put(symbol, getCurrentPath());
                     usageSites.put(symbol, getCurrentPath());
-                    break;
-                case PARAMETER:
+                }
+                case PARAMETER -> {
                     // ignore the receiver parameter
                     if (variableTree.getName().contentEquals("this")) {
                         return null;
@@ -742,9 +737,8 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                     if (!isParameterSubjectToAnalysis(symbol)) {
                         onlyCheckForReassignments.add(symbol);
                     }
-                    break;
-                default:
-                    break;
+                }
+                default -> {}
             }
             return null;
         }

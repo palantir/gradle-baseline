@@ -44,10 +44,9 @@ public final class RedundantMethodReference extends BugChecker implements BugChe
         if (tree.getMode() != MemberReferenceTree.ReferenceMode.INVOKE) {
             return Description.NO_MATCH;
         }
-        if (!(tree instanceof JCTree.JCMemberReference)) {
+        if (!(tree instanceof JCTree.JCMemberReference jcMemberReference)) {
             return Description.NO_MATCH;
         }
-        JCTree.JCMemberReference jcMemberReference = (JCTree.JCMemberReference) tree;
         // Only support expression::method, not static method references or unbound method references (e.g. List::add)
         if (jcMemberReference.kind != JCTree.JCMemberReference.ReferenceKind.BOUND) {
             return Description.NO_MATCH;

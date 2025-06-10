@@ -167,6 +167,7 @@ import org.checkerframework.errorprone.javacutil.TreePathUtil;
  * Heavily modified fork from error-prone NullnessPropagationTransfer (apache 2).
  * @see <a href="https://github.com/google/error-prone/blob/v2.11.0/check_api/src/main/java/com/google/errorprone/dataflow/nullnesspropagation/NullnessPropagationTransfer.java">NullnessPropagationTransfer</a>
  */
+@SuppressWarnings("PatternMatchingInstanceof")
 public final class SafetyPropagationTransfer implements ForwardTransferFunction<Safety, AccessPathStore<Safety>> {
 
     private static final Matcher<Tree> THROWABLE_SUBTYPE = Matchers.isSubtypeOf(Throwable.class);
@@ -549,12 +550,12 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
         void set(AccessPath path, Safety value);
 
         default void trySet(Node node, Safety value) {
-            if (node instanceof LocalVariableNode) {
-                set((LocalVariableNode) node, value);
-            } else if (node instanceof FieldAccessNode) {
-                set((FieldAccessNode) node, value);
-            } else if (node instanceof VariableDeclarationNode) {
-                set((VariableDeclarationNode) node, value);
+            if (node instanceof LocalVariableNode localVariableNode) {
+                set(localVariableNode, value);
+            } else if (node instanceof FieldAccessNode fieldAccessNode) {
+                set(fieldAccessNode, value);
+            } else if (node instanceof VariableDeclarationNode variableDeclarationNode) {
+                set(variableDeclarationNode, value);
             }
         }
 
@@ -877,13 +878,12 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
         Node target = node.getTarget();
         if (target instanceof LocalVariableNode) {
             updates.trySet(target, safety);
-        } else if (target instanceof ArrayAccessNode) {
-            Node arrayNode = ((ArrayAccessNode) target).getArray();
+        } else if (target instanceof ArrayAccessNode arrayAccessNode) {
+            Node arrayNode = arrayAccessNode.getArray();
             Safety arrayNodeSafety = getValueOfSubNode(input, arrayNode);
             safety = arrayNodeSafety == null ? safety : arrayNodeSafety.leastUpperBound(safety);
             updates.trySet(arrayNode, safety);
-        } else if (target instanceof FieldAccessNode) {
-            FieldAccessNode fieldAccess = (FieldAccessNode) target;
+        } else if (target instanceof FieldAccessNode fieldAccess) {
             updates.set(fieldAccess, safety);
         } else {
             throw new UnsupportedOperationException(
@@ -933,10 +933,9 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
 
     private Safety getCapturedLocalVariableSafety(LocalVariableNode node) {
         Symbol symbol = ASTHelpers.getSymbol(node.getTree());
-        if (!(symbol instanceof VarSymbol)) {
+        if (!(symbol instanceof VarSymbol variableSymbol)) {
             return Safety.UNKNOWN;
         }
-        VarSymbol variableSymbol = (VarSymbol) symbol;
         JavacProcessingEnvironment javacEnv = JavacProcessingEnvironment.instance(state.context);
         TreePath variableDefinition = Trees.instance(javacEnv).getPath(variableSymbol);
         if (variableDefinition == null) {
@@ -967,12 +966,12 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     private static UnderlyingAST createAst(TreePath path) {
         Tree tree = path.getLeaf();
         ClassTree enclosingClass = TreePathUtil.enclosingClass(path);
-        if (tree instanceof MethodTree) {
-            return new UnderlyingAST.CFGMethod((MethodTree) tree, enclosingClass);
+        if (tree instanceof MethodTree methodTree) {
+            return new UnderlyingAST.CFGMethod(methodTree, enclosingClass);
         }
-        if (tree instanceof LambdaExpressionTree) {
+        if (tree instanceof LambdaExpressionTree lambdaExpressionTree) {
             return new UnderlyingAST.CFGLambda(
-                    (LambdaExpressionTree) tree, enclosingClass, TreePathUtil.enclosingMethod(path));
+                    lambdaExpressionTree, enclosingClass, TreePathUtil.enclosingMethod(path));
         }
         return new CFGStatement(tree, enclosingClass);
     }
@@ -1382,8 +1381,7 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
     public TransferResult<Safety, AccessPathStore<Safety>> visitDeconstructorPattern(
             DeconstructorPatternNode node, TransferInput<Safety, AccessPathStore<Safety>> input) {
         TypeMirror type = node.getType();
-        if (type instanceof ClassType) {
-            ClassType classType = (ClassType) type;
+        if (type instanceof ClassType classType) {
             ClassSymbol symbol = (ClassSymbol) classType.tsym;
             if (symbol != null && symbol.isRecord()) {
                 List<? extends RecordComponent> recordComponents = symbol.getRecordComponents();

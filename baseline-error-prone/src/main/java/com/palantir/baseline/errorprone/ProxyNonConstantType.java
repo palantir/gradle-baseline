@@ -64,8 +64,7 @@ public final class ProxyNonConstantType extends BugChecker implements BugChecker
         }
         if (NEW_PROXY_INSTANCE_MATCHER.matches(tree, state)) {
             ExpressionTree interfaces = tree.getArguments().get(1);
-            if (interfaces instanceof NewArrayTree) {
-                NewArrayTree newArrayTree = (NewArrayTree) interfaces;
+            if (interfaces instanceof NewArrayTree newArrayTree) {
                 for (ExpressionTree element : newArrayTree.getInitializers()) {
                     if (!isDirectClassAccess(element) && !TestCheckUtils.isTestCode(state)) {
                         return describeMatchWithFix(interfaces, state);
@@ -84,7 +83,7 @@ public final class ProxyNonConstantType extends BugChecker implements BugChecker
     }
 
     private static boolean isDirectClassAccess(ExpressionTree expressionTree) {
-        return expressionTree instanceof MemberSelectTree
-                && ((MemberSelectTree) expressionTree).getIdentifier().contentEquals("class");
+        return expressionTree instanceof MemberSelectTree memberSelectTree
+                && memberSelectTree.getIdentifier().contentEquals("class");
     }
 }
