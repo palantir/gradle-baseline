@@ -64,9 +64,7 @@ public final class DangerousRecordArrayField extends BugChecker implements BugCh
 
     private static boolean hasArrayField(ClassTree classTree, VisitorState state) {
         for (Tree member : classTree.getMembers()) {
-            if (member instanceof VariableTree) {
-                VariableTree variableTree = (VariableTree) member;
-
+            if (member instanceof VariableTree variableTree) {
                 if (IS_ARRAY_VARIABLE.matches(variableTree, state)) {
                     return true;
                 }
@@ -80,9 +78,7 @@ public final class DangerousRecordArrayField extends BugChecker implements BugCh
         boolean hasEquals = false;
         boolean hasHashCode = false;
         for (Tree member : classTree.getMembers()) {
-            if (member instanceof MethodTree) {
-                MethodTree methodTree = (MethodTree) member;
-
+            if (member instanceof MethodTree methodTree) {
                 // We want to check if the equals & hashCode methods have actually been overridden (i.e. don't just
                 // call Object.equals)
                 hasEquals = hasEquals || EQUALS_MATCHER.matches(methodTree, state);

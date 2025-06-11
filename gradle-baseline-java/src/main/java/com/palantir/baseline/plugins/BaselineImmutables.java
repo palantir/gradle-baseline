@@ -92,11 +92,9 @@ public final class BaselineImmutables implements Plugin<Project> {
     private static boolean isImmutablesValue(ResolvedArtifact resolvedArtifact) {
         ComponentIdentifier id = resolvedArtifact.getId().getComponentIdentifier();
 
-        if (!(id instanceof ModuleComponentIdentifier)) {
+        if (!(id instanceof ModuleComponentIdentifier moduleId)) {
             return false;
         }
-
-        ModuleComponentIdentifier moduleId = (ModuleComponentIdentifier) id;
 
         // The actual annotation processor jar has no classifier, we must make sure not to match on the
         // `annotations` jar which has the `annotations` classifier

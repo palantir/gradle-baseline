@@ -101,8 +101,8 @@ public final class SafetyAnnotations {
         // Check the symbol itself:
         Symbol treeSymbol = ASTHelpers.getSymbol(tree);
         Safety symbolSafety = getSafety(treeSymbol, state);
-        Type treeType = tree instanceof ExpressionTree
-                ? ASTHelpers.getResultType((ExpressionTree) tree)
+        Type treeType = tree instanceof ExpressionTree expressionTree
+                ? ASTHelpers.getResultType(expressionTree)
                 : ASTHelpers.getType(tree);
         Safety treeTypeSafety = treeType == null
                 ? Safety.UNKNOWN
@@ -124,18 +124,16 @@ public final class SafetyAnnotations {
                 return direct;
             }
             // Check super-methods
-            if (symbol instanceof MethodSymbol) {
-                return getSuperMethodSafety((MethodSymbol) symbol, state);
+            if (symbol instanceof MethodSymbol methodSymbol) {
+                return getSuperMethodSafety(methodSymbol, state);
             }
-            if (symbol instanceof TypeVariableSymbol) {
-                return getTypeVariableSymbolSafety((TypeVariableSymbol) symbol);
+            if (symbol instanceof TypeVariableSymbol typeVariableSymbol) {
+                return getTypeVariableSymbolSafety(typeVariableSymbol);
             }
-            if (symbol instanceof VarSymbol) {
-                VarSymbol varSymbol = (VarSymbol) symbol;
+            if (symbol instanceof VarSymbol varSymbol) {
                 return getSuperMethodParameterSafety(varSymbol, state);
             }
-            if (symbol instanceof ClassSymbol) {
-                ClassSymbol classSymbol = (ClassSymbol) symbol;
+            if (symbol instanceof ClassSymbol classSymbol) {
                 Safety safety = getSafety(classSymbol.getSuperclass().tsym, state);
                 for (Type type : classSymbol.getInterfaces()) {
                     safety = Safety.mergeAssumingUnknownIsSame(safety, getSafety(type.tsym, state));
@@ -181,8 +179,8 @@ public final class SafetyAnnotations {
             } else if (JSON_SUBTYPES_MATCHER.matches(annotationTree, state)) {
                 ExpressionTree tree = AnnotationMatcherUtils.getArgument(annotationTree, "value");
                 for (ExpressionTree subtype : MoreASTHelpers.unwrapArray(tree)) {
-                    if (subtype instanceof AnnotationTree) {
-                        ExpressionTree value = AnnotationMatcherUtils.getArgument((AnnotationTree) subtype, "value");
+                    if (subtype instanceof AnnotationTree annotationTreeSubtype) {
+                        ExpressionTree value = AnnotationMatcherUtils.getArgument(annotationTreeSubtype, "value");
                         if (value != null) {
                             Safety subtypeSafety = SafetyAnnotations.getSafety(ASTHelpers.getReceiver(value), state);
                             safety = Safety.mergeAssumingUnknownIsSame(safety, subtypeSafety);
@@ -252,9 +250,9 @@ public final class SafetyAnnotations {
         Safety typeArgumentCombination = SAFETY_IS_COMBINATION_OF_TYPE_ARGUMENTS.getSafety(type, state, dejaVu);
         // Arrays are difficult to pipe through the above combiner without a large refactor, since the AST
         // is not quite a tree it stores its type information adjacent to the node.
-        if (type instanceof Type.ArrayType) {
+        if (type instanceof Type.ArrayType arrayType) {
             typeArgumentCombination = Safety.mergeAssumingUnknownIsSame(
-                    typeArgumentCombination, getSafety(((Type.ArrayType) type).elemtype.tsym, state));
+                    typeArgumentCombination, getSafety(arrayType.elemtype.tsym, state));
         }
         return ASTHelpers.isSubtype(type, throwableSupplier.get(state), state)
                 ? Safety.UNSAFE.leastUpperBound(typeArgumentCombination)
@@ -307,8 +305,7 @@ public final class SafetyAnnotations {
         }
 
         private static Type unwrapWildcard(Type type) {
-            if (type instanceof WildcardType) {
-                WildcardType wildcard = (WildcardType) type;
+            if (type instanceof WildcardType wildcard) {
                 Type ext = wildcard.getExtendsBound();
                 if (ext != null) {
                     return ext;

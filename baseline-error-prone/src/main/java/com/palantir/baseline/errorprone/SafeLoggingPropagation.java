@@ -196,8 +196,7 @@ public final class SafeLoggingPropagation extends BugChecker
     private static Safety scanSymbolMethods(ClassSymbol begin, VisitorState state, boolean usesJackson) {
         Safety safety = Safety.UNKNOWN;
         for (Symbol enclosed : ASTHelpers.getEnclosedElements(begin)) {
-            if (enclosed instanceof MethodSymbol) {
-                MethodSymbol methodSymbol = (MethodSymbol) enclosed;
+            if (enclosed instanceof MethodSymbol methodSymbol) {
                 if (isGetterMethod(begin, methodSymbol, state)) {
                     boolean redacted =
                             ASTHelpers.hasAnnotation(methodSymbol, "org.immutables.value.Value.Redacted", state);
@@ -224,14 +223,12 @@ public final class SafeLoggingPropagation extends BugChecker
             }
         }
         Type superClassType = begin.getSuperclass();
-        if (superClassType != null && superClassType.tsym instanceof ClassSymbol) {
-            ClassSymbol superClassSym = (ClassSymbol) superClassType.tsym;
+        if (superClassType != null && superClassType.tsym instanceof ClassSymbol superClassSym) {
             Safety superClassMethodSafety = scanSymbolMethods(superClassSym, state, usesJackson);
             safety = Safety.mergeAssumingUnknownIsSame(safety, superClassMethodSafety);
         }
         for (Type superIface : begin.getInterfaces()) {
-            if (superIface.tsym instanceof ClassSymbol) {
-                ClassSymbol superIfaceClassSymbol = (ClassSymbol) superIface.tsym;
+            if (superIface.tsym instanceof ClassSymbol superIfaceClassSymbol) {
                 Safety superClassMethodSafety = scanSymbolMethods(superIfaceClassSymbol, state, usesJackson);
                 safety = Safety.mergeAssumingUnknownIsSame(safety, superClassMethodSafety);
             }
@@ -275,19 +272,14 @@ public final class SafeLoggingPropagation extends BugChecker
             // Do not suggest promotion, this check is not exhaustive.
             return Description.NO_MATCH;
         }
-        switch (computedSafety) {
-            case UNKNOWN:
-                // Nothing to do
-                return Description.NO_MATCH;
-            case SAFE:
-                // Do not suggest promotion to safe, this check is not exhaustive.
-                return Description.NO_MATCH;
-            case DO_NOT_LOG:
-                return annotate(tree, treeModifiers, state, SafetyAnnotations.DO_NOT_LOG);
-            case UNSAFE:
-                return annotate(tree, treeModifiers, state, SafetyAnnotations.UNSAFE);
-        }
-        return Description.NO_MATCH;
+        return switch (computedSafety) {
+            // Nothing to do
+            case UNKNOWN -> Description.NO_MATCH;
+            // Do not suggest promotion to safe, this check is not exhaustive.
+            case SAFE -> Description.NO_MATCH;
+            case DO_NOT_LOG -> annotate(tree, treeModifiers, state, SafetyAnnotations.DO_NOT_LOG);
+            case UNSAFE -> annotate(tree, treeModifiers, state, SafetyAnnotations.UNSAFE);
+        };
     }
 
     private Description annotate(Tree tree, ModifiersTree treeModifiers, VisitorState state, String annotationName) {

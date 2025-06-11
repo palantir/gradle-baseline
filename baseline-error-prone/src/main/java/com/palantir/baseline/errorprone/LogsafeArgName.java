@@ -68,8 +68,8 @@ public final class LogsafeArgName extends BugChecker implements MethodInvocation
 
         List<? extends ExpressionTree> args = tree.getArguments();
         ExpressionTree argNameExpression = args.get(0);
-        if (argNameExpression instanceof JCTree.JCLiteral) {
-            String argName = (String) ((JCTree.JCLiteral) argNameExpression).getValue();
+        if (argNameExpression instanceof JCTree.JCLiteral jCLiteral) {
+            String argName = (String) jCLiteral.getValue();
             if (unsafeParamNames.stream().anyMatch(unsafeArgName -> unsafeArgName.equalsIgnoreCase(argName))) {
                 SuggestedFix.Builder builder = SuggestedFix.builder();
                 String unsafeArg = SuggestedFixes.qualifyType(state, builder, "com.palantir.logsafe.UnsafeArg");

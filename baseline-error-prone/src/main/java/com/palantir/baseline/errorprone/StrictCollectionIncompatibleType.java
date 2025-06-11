@@ -157,8 +157,7 @@ public final class StrictCollectionIncompatibleType extends BugChecker
     @Nullable
     private static Type getTargetType(MethodInvocationTree tree) {
         ExpressionTree methodSelect = tree.getMethodSelect();
-        if (methodSelect instanceof MemberSelectTree) {
-            MemberSelectTree memberSelectTree = (MemberSelectTree) methodSelect;
+        if (methodSelect instanceof MemberSelectTree memberSelectTree) {
             return ASTHelpers.getResultType(memberSelectTree.getExpression());
         }
         return null;

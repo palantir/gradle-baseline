@@ -85,6 +85,7 @@ public final class OptionalOrElseGetValue extends BugChecker implements MethodIn
     }
 
     private static boolean isTrivialSelect(ExpressionTree tree) {
-        return tree instanceof MemberSelectTree && isTrivialExpression(((MemberSelectTree) tree).getExpression());
+        return tree instanceof MemberSelectTree memberSelectTree
+                && isTrivialExpression(memberSelectTree.getExpression());
     }
 }

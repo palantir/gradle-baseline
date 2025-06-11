@@ -140,8 +140,7 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                                 Javadoc javadoc = (Javadoc) task;
 
                                 MinimalJavadocOptions options = javadoc.getOptions();
-                                if (options instanceof CoreJavadocOptions) {
-                                    CoreJavadocOptions coreOptions = (CoreJavadocOptions) options;
+                                if (options instanceof CoreJavadocOptions coreOptions) {
                                     ImmutableList<JarManifestModuleInfo> info =
                                             collectClasspathInfo(project, sourceSet);
                                     List<String> exportValues = Stream.concat(
@@ -318,16 +317,18 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
         Stream<String> allOpens = Stream.concat(
                 extension.opens().get().stream(), classpathInfo.stream().flatMap(info -> info.opens().stream()));
         switch (mode) {
-            case COMPILATION:
+            case COMPILATION -> {
                 return Stream.concat(allExports, allOpens)
                         .distinct()
                         .sorted()
                         .flatMap(BaselineModuleJvmArgs::addExportArg)
                         .collect(ImmutableList.toImmutableList());
-            case RUNTIME:
+            }
+            case RUNTIME -> {
                 Stream<String> exports = allExports.distinct().sorted().flatMap(BaselineModuleJvmArgs::addExportArg);
                 Stream<String> opens = allOpens.distinct().sorted().flatMap(BaselineModuleJvmArgs::addOpensArg);
                 return Stream.concat(exports, opens).collect(ImmutableList.toImmutableList());
+            }
         }
         throw new IllegalStateException("unknown mode: " + mode);
     }

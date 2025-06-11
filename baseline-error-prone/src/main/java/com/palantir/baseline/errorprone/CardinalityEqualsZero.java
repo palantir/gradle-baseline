@@ -83,27 +83,21 @@ public final class CardinalityEqualsZero extends BugChecker implements BugChecke
     }
 
     private static boolean isExpressionThis(ExpressionTree tree) {
-        switch (tree.getKind()) {
-            case IDENTIFIER:
-                return ((IdentifierTree) tree).getName().contentEquals("this");
-            case MEMBER_SELECT:
-                return ((MemberSelectTree) tree).getIdentifier().contentEquals("this");
-            default:
-                return false;
-        }
+        return switch (tree.getKind()) {
+            case IDENTIFIER -> ((IdentifierTree) tree).getName().contentEquals("this");
+            case MEMBER_SELECT -> ((MemberSelectTree) tree).getIdentifier().contentEquals("this");
+            default -> false;
+        };
     }
 
     private static Optional<EqualsZeroExpression> getEqualsZeroExpression(BinaryTree tree, VisitorState state) {
         ExpressionType ret;
         switch (tree.getKind()) {
-            case EQUAL_TO:
-                ret = ExpressionType.EQ;
-                break;
-            case NOT_EQUAL_TO:
-                ret = ExpressionType.NEQ;
-                break;
-            default:
+            case EQUAL_TO -> ret = ExpressionType.EQ;
+            case NOT_EQUAL_TO -> ret = ExpressionType.NEQ;
+            default -> {
                 return Optional.empty();
+            }
         }
         ExpressionTree leftOperand = tree.getLeftOperand();
         ExpressionTree rightOperand = tree.getRightOperand();

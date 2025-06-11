@@ -86,21 +86,20 @@ public final class OptionalFlatMapOfNullable extends BugChecker implements BugCh
     private Optional<ExpressionTree> finalExpression(LambdaExpressionTree lambdaExpressionTree) {
         Tree body = lambdaExpressionTree.getBody();
         switch (lambdaExpressionTree.getBodyKind()) {
-            case EXPRESSION:
+            case EXPRESSION -> {
                 return Optional.of((ExpressionTree) body);
-            case STATEMENT:
-                if (body instanceof BlockTree) {
-                    BlockTree block = (BlockTree) body;
+            }
+            case STATEMENT -> {
+                if (body instanceof BlockTree block) {
                     List<? extends StatementTree> statements = block.getStatements();
                     if (!statements.isEmpty()) {
                         StatementTree finalStatement = statements.get(statements.size() - 1);
-                        if (finalStatement instanceof ReturnTree) {
-                            ReturnTree returnTree = (ReturnTree) finalStatement;
+                        if (finalStatement instanceof ReturnTree returnTree) {
                             return Optional.ofNullable(returnTree.getExpression());
                         }
                     }
                 }
-                break;
+            }
         }
         // Don't break compilation when new language features are introduced.
         return Optional.empty();
