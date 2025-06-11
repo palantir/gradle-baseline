@@ -1,0 +1,10 @@
+type: fix
+fix:
+  description: |-
+    Disable some new low-value Google provided errorprone checks:
+    * `AndroidJdkLibsChecker`
+    * `IdentifierName`
+    * `Java8ApiChecker`
+    * `Var`
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/3123
