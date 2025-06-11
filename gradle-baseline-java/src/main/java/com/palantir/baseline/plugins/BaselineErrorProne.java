@@ -93,12 +93,19 @@ public final class BaselineErrorProne implements Plugin<Project> {
     private static void configureErrorProneOptions(ErrorProneOptions errorProneOptions) {
 
         errorProneOptions.disable(
+                // We don't use the Android SDK, so this check is unnecessary.
+                "AndroidJdkLibsChecker",
                 "AutoCloseableMustBeClosed",
                 "CatchSpecificity",
                 "CanIgnoreReturnValueSuggester",
                 // https://github.com/google/error-prone/issues/4544
                 "DistinctVarargsChecker",
+                // This does not allow underscore prefixed variables, which we use heavily.
+                // We have our checks for naming.
+                "IdentifierName",
                 "InlineMeSuggester",
+                // We are so far beyond needing to support Java 8 at Palantir. In fact we can't run it as it's EOL
+                "Java8ApiChecker",
                 // LambdaMethodReference is incredibly expensive, see #2997. We leave it
                 // here to employ as a cleanup, but don't execute it in most compilations.
                 "LambdaMethodReference",
@@ -107,6 +114,8 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 "PreferImmutableStreamExCollections",
                 "UnnecessaryTestMethodPrefix",
                 "UnusedVariable",
+                // Var seems low value. Forcing devs to add a dep for annotations is too much.
+                "Var",
                 // See VarUsage: The var keyword results in illegible code in most cases and should not be used.
                 "Varifier",
                 // Yoda style should not block baseline upgrades.
