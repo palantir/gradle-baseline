@@ -117,6 +117,7 @@ public final class ForbidJavaxParameterType extends BugChecker implements BugChe
 
             // this obviously fails if there is > 1 level of hierarchy where the JaxRS
             // annotations exist. Fortunately this should be fine for most use cases
+            @SuppressWarnings("for-rollout:PreferredInterfaceType")
             List<Type> thisAndParents = ImmutableList.<Type>builder()
                     .add(classType.type)
                     .addAll(classType.getInterfaces())

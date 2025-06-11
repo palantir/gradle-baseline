@@ -88,6 +88,7 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                             .getCompilerArgumentProviders()
                             // Use an anonymous class because tasks with lambda inputs cannot be cached
                             .add(new CommandLineArgumentProvider() {
+                                @SuppressWarnings("for-rollout:PreferredInterfaceType")
                                 @Override
                                 public Iterable<String> asArguments() {
                                     // The '--release' flag is set when BaselineJavaVersion is not used.
@@ -143,6 +144,7 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                                 if (options instanceof CoreJavadocOptions coreOptions) {
                                     ImmutableList<JarManifestModuleInfo> info =
                                             collectClasspathInfo(project, sourceSet);
+                                    @SuppressWarnings("for-rollout:PreferredInterfaceType")
                                     List<String> exportValues = Stream.concat(
                                                     // Compilation only supports exports, so we union with opens.
                                                     Stream.concat(
@@ -188,6 +190,7 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                 public void execute(Test test) {
                     test.getJvmArgumentProviders().add(new CommandLineArgumentProvider() {
 
+                        @SuppressWarnings("for-rollout:PreferredInterfaceType")
                         @Override
                         public Iterable<String> asArguments() {
                             ImmutableList<String> arguments =
@@ -212,6 +215,7 @@ public final class BaselineModuleJvmArgs implements Plugin<Project> {
                 public void execute(JavaExec javaExec) {
                     javaExec.getJvmArgumentProviders().add(new CommandLineArgumentProvider() {
 
+                        @SuppressWarnings("for-rollout:PreferredInterfaceType")
                         @Override
                         public Iterable<String> asArguments() {
                             ImmutableList<String> arguments = collectClasspathArgs(

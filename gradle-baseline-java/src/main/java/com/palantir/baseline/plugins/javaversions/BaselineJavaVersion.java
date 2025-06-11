@@ -274,6 +274,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
         private final Property<ChosenJavaVersion> targetVersion;
         private final Property<ChosenJavaVersion> runtimeVersion;
 
+        @SuppressWarnings("for-rollout:UnnecessarilyVisible")
         @Inject
         public CheckJavaVersionsTask() {
             setGroup("Verification");

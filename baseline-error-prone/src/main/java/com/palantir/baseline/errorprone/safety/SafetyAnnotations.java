@@ -55,13 +55,19 @@ public final class SafetyAnnotations {
     public static final String UNSAFE = "com.palantir.logsafe.Unsafe";
     public static final String DO_NOT_LOG = "com.palantir.logsafe.DoNotLog";
 
+    @SuppressWarnings("for-rollout:UnnecessarilyFullyQualified")
     private static final com.google.errorprone.suppliers.Supplier<Name> safeName =
             VisitorState.memoize(state -> state.getName(SAFE));
+
+    @SuppressWarnings("for-rollout:UnnecessarilyFullyQualified")
     private static final com.google.errorprone.suppliers.Supplier<Name> unsafeName =
             VisitorState.memoize(state -> state.getName(UNSAFE));
+
+    @SuppressWarnings("for-rollout:UnnecessarilyFullyQualified")
     private static final com.google.errorprone.suppliers.Supplier<Name> doNotLogName =
             VisitorState.memoize(state -> state.getName(DO_NOT_LOG));
 
+    @SuppressWarnings("for-rollout:UnnecessarilyFullyQualified")
     private static final com.google.errorprone.suppliers.Supplier<Type> throwableSupplier =
             Suppliers.typeFromClass(Throwable.class);
 
@@ -295,6 +301,7 @@ public final class SafetyAnnotations {
     }
 
     private static final class TypeArgumentHandler {
+        @SuppressWarnings("for-rollout:UnnecessarilyFullyQualified")
         private final com.google.errorprone.suppliers.Supplier<Type> typeSupplier;
 
         TypeArgumentHandler(Class<?> clazz) {

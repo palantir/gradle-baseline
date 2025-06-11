@@ -1068,6 +1068,7 @@ public final class SafetyPropagationTransfer implements ForwardTransferFunction<
             // the initializer expression tree but it avoids duplicating the logic from this transfer
             // function into a method that operates on Javac Nodes.
             TreePath initializerPath = TreePath.getPath(fieldDeclPath, initializer);
+            @SuppressWarnings("for-rollout:DifferentNameButSame")
             UnderlyingAST ast = new UnderlyingAST.CFGStatement(initializerPath.getLeaf(), classTree);
             ControlFlowGraph cfg = CFGBuilder.build(initializerPath, ast, false, false, javacEnv);
             Analysis<Safety, AccessPathStore<Safety>, SafetyPropagationTransfer> analysis =

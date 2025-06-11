@@ -48,6 +48,7 @@ public final class LogsafeArgName extends BugChecker implements MethodInvocation
     private static final Matcher<ExpressionTree> SAFE_ARG_OF =
             Matchers.staticMethod().onClass("com.palantir.logsafe.SafeArg").named("of");
 
+    @SuppressWarnings("for-rollout:PreferredInterfaceType")
     private final Set<String> unsafeParamNames;
 
     // Must have default constructor for service loading to work correctly
@@ -55,6 +56,7 @@ public final class LogsafeArgName extends BugChecker implements MethodInvocation
         this(ErrorProneFlags.empty());
     }
 
+    @SuppressWarnings("for-rollout:UnnecessarilyVisible")
     @Inject
     public LogsafeArgName(ErrorProneFlags flags) {
         this.unsafeParamNames = ImmutableSet.copyOf(flags.getListOrEmpty(UNSAFE_ARG_NAMES_FLAG));

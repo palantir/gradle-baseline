@@ -98,6 +98,7 @@ public final class BaselineImmutables implements Plugin<Project> {
 
         // The actual annotation processor jar has no classifier, we must make sure not to match on the
         // `annotations` jar which has the `annotations` classifier
+        @SuppressWarnings("for-rollout:NegativeBoolean")
         boolean noClassifier = resolvedArtifact.getClassifier() == null;
 
         return Objects.equals(moduleId.getGroup(), "org.immutables")

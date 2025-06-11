@@ -77,12 +77,15 @@ public final class SafeLoggingPropagation extends BugChecker
             Matchers.methodReturns(Matchers.isSameType(String.class)));
     private static final Matcher<MethodTree> METHOD_RETURNS_VOID = Matchers.methodReturns(Matchers.isVoidType());
 
+    @SuppressWarnings("for-rollout:UnnecessarilyFullyQualified")
     private static final com.google.errorprone.suppliers.Supplier<Name> TO_STRING_NAME =
             VisitorState.memoize(state -> state.getName("toString"));
 
+    @SuppressWarnings("for-rollout:UnnecessarilyFullyQualified")
     private static final com.google.errorprone.suppliers.Supplier<Name> IMMUTABLES_STYLE =
             VisitorState.memoize(state -> state.getName("org.immutables.value.Value.Style"));
 
+    @SuppressWarnings("for-rollout:UnnecessarilyFullyQualified")
     private static final com.google.errorprone.suppliers.Supplier<Name> JACKSON_ANNOTATION =
             VisitorState.memoize(state -> state.getName("com.fasterxml.jackson.annotation.JacksonAnnotation"));
 
