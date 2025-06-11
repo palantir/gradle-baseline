@@ -21,10 +21,25 @@ import nebula.test.IntegrationTestKitSpec
 class ConfigurationCacheTest extends IntegrationTestKitSpec {
 
     def setup() {
+        definePluginOutsideOfPluginBlock = true
+        keepFiles = true
         // language=Gradle
         buildFile << """
+             buildscript {
+                repositories {
+                    mavenCentral() { metadataSources { mavenPom(); ignoreGradleMetadataRedirection() } }
+                    gradlePluginPortal() { metadataSources { mavenPom(); ignoreGradleMetadataRedirection() } }
+                    mavenLocal()
+                }
+                 dependencies {
+                     classpath 'com.palantir.gradle.consistentversions:gradle-consistent-versions:2.34.0'
+                 }
+             }
+         
+            apply plugin: 'com.palantir.consistent-versions'
             apply plugin: 'com.palantir.baseline'
-            apply plugin: 'java-library'
+            apply plugin: 'com.palantir.java-format'
+            apply plugin: 'java'
         
             repositories {
                 mavenCentral()
@@ -32,8 +47,8 @@ class ConfigurationCacheTest extends IntegrationTestKitSpec {
             }
         """.stripIndent(true)
 
-        definePluginOutsideOfPluginBlock = true
-        keepFiles = true
+        file("versions.props")
+        file("versions.lock")
     }
 
     def "classes task runs with configuration cache without issues"() {
