@@ -49,6 +49,7 @@ public final class UnnecessaryLambdaArgumentParentheses extends BugChecker
             return Description.NO_MATCH;
         }
         // Avoid using getOffsetTokensForNode at this point because it's significantly more expensive
+        @SuppressWarnings("for-rollout:PreferredInterfaceType")
         List<ErrorProneToken> tokens = state.getTokensForNode(tree);
         int depth = 0;
         int identifiers = 0;
@@ -62,6 +63,7 @@ public final class UnnecessaryLambdaArgumentParentheses extends BugChecker
             } else if (token.kind() == Tokens.TokenKind.LPAREN) {
                 depth++;
             } else if (token.kind() == Tokens.TokenKind.RPAREN && --depth == 0) {
+                @SuppressWarnings("for-rollout:PreferredInterfaceType")
                 List<ErrorProneToken> offsetTokens = state.getOffsetTokensForNode(tree);
                 ErrorProneToken firstToken = offsetTokens.get(0);
                 ErrorProneToken offsetToken = offsetTokens.get(i);

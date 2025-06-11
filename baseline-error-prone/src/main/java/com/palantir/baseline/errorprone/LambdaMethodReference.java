@@ -170,6 +170,7 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
                 .orElse(Description.NO_MATCH);
     }
 
+    @SuppressWarnings("for-rollout:PreferredInterfaceType")
     private static List<Symbol> getSymbols(List<? extends Tree> params) {
         return params.stream()
                 .map(ASTHelpers::getSymbol)
@@ -203,6 +204,7 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
             if (classSymbol == null) {
                 return false;
             }
+            @SuppressWarnings("for-rollout:PreferredInterfaceType")
             Set<Symbol.MethodSymbol> matching = ASTHelpers.findMatchingMethods(
                     symbol.name,
                     sym -> sym != null && !sym.isStatic() && sym.getParameters().isEmpty(),
@@ -220,6 +222,7 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
             if (receiverType == null) {
                 return false;
             }
+            @SuppressWarnings("for-rollout:PreferredInterfaceType")
             Set<Symbol.MethodSymbol> matching = ASTHelpers.findMatchingMethods(
                     symbol.name,
                     sym -> sym != null

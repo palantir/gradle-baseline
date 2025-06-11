@@ -99,6 +99,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
         });
     }
 
+    @SuppressWarnings("for-rollout:ThrowSpecificExceptions")
     private static void configureBuildGradleFormatter(Project project, SpotlessExtension spotlessExtension) {
         Path buildDir = project.getRootProject().getBuildDir().toPath();
         Path configFile = buildDir.resolve("baseline-format").resolve("greclipse.properties");
@@ -145,6 +146,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
      * Computes all the copyright headers based on the files inside baseline's {@code copyright} directory. This list
      * is sorted lexicographically by the file names.
      */
+    @SuppressWarnings({"for-rollout:ThrowSpecificExceptions", "for-rollout:UnusedException"})
     private List<String> computeCopyrightHeaders(Project project) {
         File copyrightDir = project.getRootProject().file(getConfigDir() + "/copyright");
         Stream<Path> files;
@@ -157,6 +159,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
         return files.map(BaselineFormat::computeCopyrightComment).collect(Collectors.toList());
     }
 
+    @SuppressWarnings("for-rollout:ThrowSpecificExceptions")
     private static String computeCopyrightComment(Path copyrightFile) {
         try {
             return new String(Files.readAllBytes(copyrightFile), StandardCharsets.UTF_8);
@@ -224,6 +227,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
         return project.hasProperty(ECLIPSE_FORMATTING);
     }
 
+    @SuppressWarnings("for-rollout:ThrowSpecificExceptions")
     static FormatterState palantirJavaFormatterState(Project project) {
         if (!project.hasProperty(PJF_PROPERTY)) {
             return FormatterState.OFF;

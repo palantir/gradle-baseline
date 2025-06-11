@@ -561,6 +561,7 @@ public final class IllegalSafeLoggingArgument extends BugChecker
      * If the cast type says it accepts an UNSAFE parameter, but the reference needs a SAFE one, then this should break.
      * If the cast type accepts SAFE, and the reference needs UNSAFE, that's fine, since we're less permissive.
      */
+    @SuppressWarnings("for-rollout:DefaultLocale")
     private void handleMemberReferenceParameterTypes(
             MemberReferenceTree tree, Type castType, MethodSymbol methodSymbol, VisitorState state) {
         if (methodSymbol.getParameters().size() != castType.getParameterTypes().size()) {

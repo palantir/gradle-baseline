@@ -25,6 +25,7 @@ import org.gradle.util.GFileUtils;
 public final class GitUtils {
     private static final Pattern GIT_ORIGIN = Pattern.compile("url = git@([^:]+):([^.]+).git");
 
+    @SuppressWarnings("for-rollout:CatchingUnchecked")
     public static Optional<String> maybeGitHubUri() {
         try {
             String gitConfigContents = GFileUtils.readFile(new File(".git/config"));

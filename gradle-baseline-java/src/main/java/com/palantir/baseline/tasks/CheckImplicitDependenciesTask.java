@@ -62,6 +62,7 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
         suggestionConfigurationName = getProject().getObjects().property(String.class);
     }
 
+    @SuppressWarnings("for-rollout:DefaultLocale")
     @TaskAction
     public final void checkImplicitDependencies() {
         Set<ResolvedConfiguration> resolvedConfigurations = dependenciesConfigurations.get().stream()

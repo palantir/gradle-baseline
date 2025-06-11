@@ -57,6 +57,7 @@ public final class BaselineReleaseCompatibility extends AbstractBaselinePlugin {
             this.javaCompile = javaCompile;
         }
 
+        @SuppressWarnings("for-rollout:PreferredInterfaceType")
         @Override
         public Iterable<String> asArguments() {
             if (javaCompile.getProject().getPlugins().hasPlugin(BaselineJavaVersion.class)) {
