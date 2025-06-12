@@ -48,6 +48,7 @@ public class CheckExplicitSourceCompatibilityTask extends DefaultTask {
 
     private final Property<Boolean> shouldFix;
 
+    @SuppressWarnings("for-rollout:UnnecessarilyVisible")
     @Inject
     public CheckExplicitSourceCompatibilityTask(ObjectFactory objectFactory) {
         setGroup("Verification");
@@ -136,6 +137,7 @@ public class CheckExplicitSourceCompatibilityTask extends DefaultTask {
     }
 
     private JavaVersion getRawSourceCompat() {
+        @SuppressWarnings("for-rollout:UnnecessarilyFullyQualified")
         org.gradle.api.plugins.internal.DefaultJavaPluginExtension extension =
                 (org.gradle.api.plugins.internal.DefaultJavaPluginExtension)
                         getProject().getExtensions().getByType(JavaPluginExtension.class);

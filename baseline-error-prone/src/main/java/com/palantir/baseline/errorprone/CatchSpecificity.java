@@ -229,8 +229,8 @@ public final class CatchSpecificity extends BugChecker implements BugChecker.Try
 
         private boolean matchesInstanceOf(InstanceOfTree instanceOfNode, VisitorState state) {
             ExpressionTree expression = instanceOfNode.getExpression();
-            return expression instanceof IdentifierTree
-                    && ((IdentifierTree) expression).getName().contentEquals(exceptionName)
+            return expression instanceof IdentifierTree identifierTree
+                    && identifierTree.getName().contentEquals(exceptionName)
                     && !isTypeValid(ASTHelpers.getType(instanceOfNode.getType()), state);
         }
 
@@ -282,8 +282,8 @@ public final class CatchSpecificity extends BugChecker implements BugChecker.Try
         @Override
         public Void visitAssignment(AssignmentTree node, Void state) {
             ExpressionTree expression = node.getVariable();
-            if (expression instanceof IdentifierTree
-                    && ((IdentifierTree) expression).getName().contentEquals(exceptionName)) {
+            if (expression instanceof IdentifierTree identifierTree
+                    && identifierTree.getName().contentEquals(exceptionName)) {
                 variableWasAssigned = true;
             }
             return super.visitAssignment(node, null);

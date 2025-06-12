@@ -165,8 +165,8 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
         if (uninitializedFields.isEmpty()) {
             return ImmutableSet.of();
         }
-        if (tree instanceof MethodInvocationTree) {
-            MethodSymbol methodSymbol = ASTHelpers.getSymbol((MethodInvocationTree) tree);
+        if (tree instanceof MethodInvocationTree methodInvocationTree) {
+            MethodSymbol methodSymbol = ASTHelpers.getSymbol(methodInvocationTree);
             if (!Objects.equals(methodSymbol.enclClass(), builderClass)) {
                 // This method belongs to a class other than the builder, so we are at the end of the chain
                 // If the only thing this method does is construct and return the builder, we continue and require
@@ -190,8 +190,7 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
                     builderClass,
                     immutableClass,
                     interfaceClass);
-        } else if (tree instanceof NewClassTree) {
-            NewClassTree newClassTree = (NewClassTree) tree;
+        } else if (tree instanceof NewClassTree newClassTree) {
             if (newClassTree.getArguments().isEmpty()) {
                 // The constructor returned the builder (otherwise we would have bailed out in a previous iteration), so
                 // we should have seen all the field initializations
@@ -253,12 +252,10 @@ public final class ImmutablesBuilderMissingInitialization extends BugChecker imp
                     .flatMap(filterByType(ReturnTree.class))
                     .map(ReturnTree::getExpression)
                     .map(expressionTree -> {
-                        if (expressionTree instanceof NewClassTree) {
+                        if (expressionTree instanceof NewClassTree newClassTree) {
                             // To have got here, the return type must be compatible with ImmutableType, so we don't need
                             // to check the class being constructed
-                            return ((NewClassTree) expressionTree)
-                                    .getArguments()
-                                    .isEmpty();
+                            return newClassTree.getArguments().isEmpty();
                         } else if (expressionTree instanceof MethodInvocationTree) {
                             return Optional.ofNullable(ASTHelpers.getSymbol(expressionTree))
                                     .flatMap(filterByType(MethodSymbol.class))

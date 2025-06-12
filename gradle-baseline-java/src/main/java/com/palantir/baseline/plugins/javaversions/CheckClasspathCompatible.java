@@ -48,6 +48,7 @@ public abstract class CheckClasspathCompatible extends DefaultTask {
     @Classpath
     public abstract ConfigurableFileCollection getClasspath();
 
+    @SuppressWarnings({"for-rollout:DefaultLocale", "for-rollout:ThrowSpecificExceptions"})
     @TaskAction
     public final void action() {
         String exampleBadClassesPerJar = getClasspath().getFiles().stream()
@@ -74,6 +75,7 @@ public abstract class CheckClasspathCompatible extends DefaultTask {
                 exampleBadClassesPerJar));
     }
 
+    @SuppressWarnings("for-rollout:ThrowSpecificExceptions")
     private Optional<String> tooHighBytecodeMajorVersionInJar(File file) {
         try (JarInputStream jarInputStream = new JarInputStream(new BufferedInputStream(new FileInputStream(file)))) {
             JarEntry entry;

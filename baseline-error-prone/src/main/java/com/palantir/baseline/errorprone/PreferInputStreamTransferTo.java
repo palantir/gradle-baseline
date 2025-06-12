@@ -103,8 +103,8 @@ public final class PreferInputStreamTransferTo extends BugChecker implements Bug
                 }
 
                 // Avoid possible infinite recursion replacing with `this.transferTo(outputStream)`
-                if (maybeInputStreamArg instanceof IdentifierTree
-                        && ((IdentifierTree) maybeInputStreamArg).getName().contentEquals("this")) {
+                if (maybeInputStreamArg instanceof IdentifierTree identifierTree
+                        && identifierTree.getName().contentEquals("this")) {
                     inputStreamArg = "super";
                 }
 

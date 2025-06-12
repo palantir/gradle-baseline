@@ -97,6 +97,7 @@ public final class Slf4jLogsafeArgs extends BugChecker implements MethodInvocati
                 .build();
     }
 
+    @SuppressWarnings("for-rollout:PreferredInterfaceType")
     private List<Integer> getBadArgIndices(VisitorState state, List<? extends ExpressionTree> args, int from, int to) {
         ImmutableList.Builder<Integer> badArgsBuilder = ImmutableList.builder();
         for (int i = from; i <= to; i++) {

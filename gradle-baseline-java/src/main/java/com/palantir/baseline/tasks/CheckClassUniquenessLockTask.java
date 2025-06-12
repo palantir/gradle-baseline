@@ -241,10 +241,10 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
      * also use reflection to just find the getName method but this is a little more explicit as to why.
      */
     private static String getConfigurationName(Object config) {
-        if (config instanceof Named) {
-            return ((Named) config).getName();
-        } else if (config instanceof Configuration) {
-            return ((Configuration) config).getName();
+        if (config instanceof Named named) {
+            return named.getName();
+        } else if (config instanceof Configuration configuration) {
+            return configuration.getName();
         }
 
         throw new IllegalArgumentException("Unknown class for getting name: " + config.getClass());

@@ -21,9 +21,11 @@ import com.google.common.base.Preconditions;
 import com.google.common.io.ByteStreams;
 import com.google.common.io.CharStreams;
 import com.google.errorprone.BugPattern;
+import com.google.errorprone.ErrorProneFlags;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.AbstractReturnValueIgnored;
 import com.google.errorprone.bugpatterns.BugChecker;
+import com.google.errorprone.bugpatterns.threadsafety.ConstantExpressions;
 import com.google.errorprone.fixes.SuggestedFix;
 import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
@@ -38,6 +40,7 @@ import java.io.InputStream;
 import java.io.RandomAccessFile;
 import java.io.Reader;
 import java.util.List;
+import javax.inject.Inject;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -47,6 +50,15 @@ import java.util.List;
         summary = "The result of a read call must be checked to know if EOF has been reached or the expected number "
                 + "of bytes have been consumed.")
 public final class ReadReturnValueIgnored extends AbstractReturnValueIgnored {
+
+    public ReadReturnValueIgnored() {
+        super(ConstantExpressions.fromFlags(ErrorProneFlags.empty()));
+    }
+
+    @Inject
+    ReadReturnValueIgnored(ConstantExpressions constantExpressions) {
+        super(constantExpressions);
+    }
 
     // MethodMatchers does not support matching arrays
     private static final Matcher<ExpressionTree> INPUT_STREAM_BUFFER_READ_MATCHER = Matchers.allOf(
@@ -129,14 +141,13 @@ public final class ReadReturnValueIgnored extends AbstractReturnValueIgnored {
     private static SuggestedFix replaceWithStatic(
             MethodInvocationTree tree, VisitorState state, String fullyQualifiedReplacement) {
         Tree methodSelect = tree.getMethodSelect();
-        if (!(methodSelect instanceof MemberSelectTree)) {
+        if (!(methodSelect instanceof MemberSelectTree memberSelectTree)) {
             return SuggestedFix.emptyFix();
         }
         CharSequence sourceCode = state.getSourceCode();
         if (sourceCode == null) {
             return SuggestedFix.emptyFix();
         }
-        MemberSelectTree memberSelectTree = (MemberSelectTree) methodSelect;
         SuggestedFix.Builder fix = SuggestedFix.builder();
         String qualifiedReference = SuggestedFixes.qualifyType(state, fix, fullyQualifiedReplacement);
         CharSequence args = sourceCode.subSequence(

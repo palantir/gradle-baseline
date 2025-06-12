@@ -26,7 +26,7 @@ import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
-import com.google.errorprone.util.ASTHelpers.TargetType;
+import com.google.errorprone.util.TargetType;
 import com.palantir.baseline.errorprone.safety.Safety;
 import com.palantir.baseline.errorprone.safety.SafetyAnalysis;
 import com.palantir.baseline.errorprone.safety.SafetyAnnotations;
@@ -92,8 +92,7 @@ public final class IllegalSafeLoggingArgument extends BugChecker
 
     private static Type resolveParameterType(Type input, ExpressionTree tree, VisitorState state) {
         // Important not to call getReceiver/getReceiverType on a NewClassTree, which throws.
-        if (input instanceof TypeVar && tree instanceof MethodInvocationTree) {
-            TypeVar typeVar = (TypeVar) input;
+        if (input instanceof TypeVar typeVar && tree instanceof MethodInvocationTree) {
 
             Type receiver = ASTHelpers.getReceiverType(tree);
             if (receiver == null) {
@@ -472,13 +471,13 @@ public final class IllegalSafeLoggingArgument extends BugChecker
 
         Safety resultSafety = Safety.UNKNOWN;
         switch (tree.getBodyKind()) {
-            case EXPRESSION:
+            case EXPRESSION ->
                 resultSafety = SafetyAnalysis.of(state.withPath(new TreePath(state.getPath(), tree.getBody())));
-                break;
-            case STATEMENT:
+            case STATEMENT -> {
                 // Shortcut - statement lambdas get their return type checked in the return statement matcher
                 // This also allows us to indicate which return statement is bad (if any) rather than the lambda itself
                 return Description.NO_MATCH;
+            }
         }
 
         if (requiredReturnSafety.allowsValueWith(resultSafety)) {
@@ -493,7 +492,7 @@ public final class IllegalSafeLoggingArgument extends BugChecker
     }
 
     private Safety getLambdaRequiredReturnSafety(LambdaExpressionTree tree, VisitorState state) {
-        TargetType returnType = ASTHelpers.targetType(state.withPath(new TreePath(state.getPath(), tree)));
+        TargetType returnType = TargetType.targetType(state.withPath(new TreePath(state.getPath(), tree)));
         if (returnType == null) {
             return Safety.UNKNOWN;
         }
@@ -562,6 +561,7 @@ public final class IllegalSafeLoggingArgument extends BugChecker
      * If the cast type says it accepts an UNSAFE parameter, but the reference needs a SAFE one, then this should break.
      * If the cast type accepts SAFE, and the reference needs UNSAFE, that's fine, since we're less permissive.
      */
+    @SuppressWarnings("for-rollout:DefaultLocale")
     private void handleMemberReferenceParameterTypes(
             MemberReferenceTree tree, Type castType, MethodSymbol methodSymbol, VisitorState state) {
         if (methodSymbol.getParameters().size() != castType.getParameterTypes().size()) {

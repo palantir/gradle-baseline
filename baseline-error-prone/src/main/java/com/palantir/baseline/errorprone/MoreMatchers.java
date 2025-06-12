@@ -63,8 +63,8 @@ final class MoreMatchers {
             TreePath currentPath = state.getPath().getParentPath();
             while (currentPath != null) {
                 Tree leaf = currentPath.getLeaf();
-                if (leaf instanceof ClassTree) {
-                    return matcher.matches((ClassTree) leaf, state);
+                if (leaf instanceof ClassTree leafClassTree) {
+                    return matcher.matches(leafClassTree, state);
                 }
                 currentPath = currentPath.getParentPath();
             }
@@ -79,14 +79,14 @@ final class MoreMatchers {
      */
     static <T extends Tree> Matcher<T> hasExplicitModifier(Modifier modifier) {
         return (Matcher<T>) (tree, state) -> {
-            if (tree instanceof ClassTree) {
-                return containsModifier(((ClassTree) tree).getModifiers(), state, modifier);
+            if (tree instanceof ClassTree classTree) {
+                return containsModifier(classTree.getModifiers(), state, modifier);
             }
-            if (tree instanceof MethodTree) {
-                return containsModifier(((MethodTree) tree).getModifiers(), state, modifier);
+            if (tree instanceof MethodTree methodTree) {
+                return containsModifier(methodTree.getModifiers(), state, modifier);
             }
-            if (tree instanceof VariableTree) {
-                return containsModifier(((VariableTree) tree).getModifiers(), state, modifier);
+            if (tree instanceof VariableTree variableTree) {
+                return containsModifier(variableTree.getModifiers(), state, modifier);
             }
             return false;
         };

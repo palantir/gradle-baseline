@@ -47,6 +47,7 @@ public final class LoggerInterpolationConsumesThrowable extends BugChecker imple
     private static final Matcher<ExpressionTree> MARKER = MoreMatchers.isSubtypeOf("org.slf4j.Marker");
     private static final Matcher<ExpressionTree> THROWABLE = MoreMatchers.isSubtypeOf(Throwable.class);
 
+    @SuppressWarnings("for-rollout:DefaultLocale")
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
         if (!LOG_METHOD.matches(tree, state)) {

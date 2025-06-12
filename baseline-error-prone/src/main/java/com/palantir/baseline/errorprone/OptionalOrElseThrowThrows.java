@@ -63,10 +63,9 @@ public final class OptionalOrElseThrowThrows extends BugChecker implements BugCh
             return Description.NO_MATCH;
         }
         ExpressionTree argument = Iterables.getOnlyElement(tree.getArguments());
-        if (!(argument instanceof LambdaExpressionTree)) {
+        if (!(argument instanceof LambdaExpressionTree lambdaArgument)) {
             return Description.NO_MATCH;
         }
-        LambdaExpressionTree lambdaArgument = (LambdaExpressionTree) argument;
         if (!lambdaArgument.getBody().accept(ThrowsPredicateVisitor.INSTANCE, null)) {
             return Description.NO_MATCH;
         }

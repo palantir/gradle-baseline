@@ -18,9 +18,11 @@ package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
+import com.google.errorprone.ErrorProneFlags;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.AbstractReturnValueIgnored;
 import com.google.errorprone.bugpatterns.BugChecker;
+import com.google.errorprone.bugpatterns.threadsafety.ConstantExpressions;
 import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
@@ -28,6 +30,7 @@ import com.google.errorprone.matchers.method.MethodMatchers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import java.util.concurrent.ExecutorService;
+import javax.inject.Inject;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -44,6 +47,15 @@ public final class ExecutorSubmitRunnableFutureIgnored extends AbstractReturnVal
             .onDescendantOf(ExecutorService.class.getName())
             .named("submit")
             .withParameters(Runnable.class.getName());
+
+    public ExecutorSubmitRunnableFutureIgnored() {
+        super(ConstantExpressions.fromFlags(ErrorProneFlags.empty()));
+    }
+
+    @Inject
+    ExecutorSubmitRunnableFutureIgnored(ConstantExpressions constantExpressions) {
+        super(constantExpressions);
+    }
 
     @Override
     public Matcher<? super ExpressionTree> specializedMatcher() {
