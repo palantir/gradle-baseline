@@ -118,7 +118,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 // We often use javadoc comments without javadoc parameter information.
                 "NotJavadoc",
                 "PreferImmutableStreamExCollections",
-                "PreferImmutableCollection",
                 // We prefer to use List<...> instead of ImmutableList<...>. This way we don't expose the
                 // underlying implementation to the user.
                 "PreferredInterfaceType",
