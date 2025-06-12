@@ -130,7 +130,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 // This forces Foo.Builder -> Builder, even when you may want to use Foo.Builder, apart from
                 // some allowlist. Let's leave it up to dev's discretion. Most people don't like fully qualified
                 // types anyway.
-                "UnnecessaryFullyQualified",
+                "UnnecessarilyFullyQualified",
                 // This one isn't even correct for eg Gradle, which needs to be public.
                 "UnnecessarilyVisible",
                 "UnnecessaryTestMethodPrefix",
