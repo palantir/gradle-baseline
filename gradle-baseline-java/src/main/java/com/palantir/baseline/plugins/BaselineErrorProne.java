@@ -97,7 +97,13 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 "AndroidJdkLibsChecker",
                 "AutoCloseableMustBeClosed",
                 "CatchSpecificity",
+                // This might be worth re-evaluating later and auto-patching. But removing it for now to remove some
+                // auto-suppression noise.
+                "CatchingUnchecked",
                 "CanIgnoreReturnValueSuggester",
+                // This might be worth re-evaluating later - but removing it for now to remove some
+                // auto-suppression noise.
+                "DifferentNameButSame",
                 // https://github.com/google/error-prone/issues/4544
                 "DistinctVarargsChecker",
                 // This does not allow underscore prefixed variables, which we use heavily.
@@ -112,6 +118,22 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 // We often use javadoc comments without javadoc parameter information.
                 "NotJavadoc",
                 "PreferImmutableStreamExCollections",
+                "PreferImmutableCollection",
+                // We prefer to use List<...> instead of ImmutableList<...>. This way we don't expose the
+                // underlying implementation to the user.
+                "PreferredInterfaceType",
+                // This is so common we're not going to enforce it. Personally, I don't think it matters too much
+                // for RuntimeExceptions, as they are not supposed to be caught
+                "ThrowSpecificExceptions",
+                // This check is low value - an extra final doesn't really hurt anyone. It's very spammy when
+                // auto-suppressed though.
+                "UnnecessaryFinal",
+                // This forces Foo.Builder -> Builder, even when you may want to use Foo.Builder, apart from
+                // some allowlist. Let's leave it up to dev's discretion. Most people don't like fully qualified
+                // types anyway.
+                "UnnecessaryFullyQualified",
+                // This one isn't even correct for eg Gradle, which needs to be public.
+                "UnnecessarilyVisible",
                 "UnnecessaryTestMethodPrefix",
                 "UnusedVariable",
                 // Var seems low value. Forcing devs to add a dep for annotations is too much.
