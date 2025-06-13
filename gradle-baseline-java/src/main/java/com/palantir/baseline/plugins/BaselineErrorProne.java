@@ -128,6 +128,10 @@ public final class BaselineErrorProne implements Plugin<Project> {
         // to be enabled by default. So we're disabling them here until error-prone is fixed, then these can all
         // be removed.
         // See https://github.com/google/error-prone/issues/4943
+        // Some of the checks in the original file:
+        // https://github.com/google/error-prone/blob/v2.38.0/core/src/main/java/
+        // com/google/errorprone/scanner/BuiltInCheckerSuppliers.java#L1168-L1307
+        // no longer exist and have been removed, so it's not the same.
         errorProneOptions.disable(
                 "AddNullMarkedToPackageInfo",
                 "AndroidJdkLibsChecker",
@@ -158,7 +162,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 "DefaultLocale",
                 "DepAnn",
                 "DifferentNameButSame",
-                "EmptyIfStatement",
                 "EqualsBrokenForNull",
                 "EqualsMissingNullable",
                 "ExpectedExceptionChecker",
@@ -197,12 +200,10 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 "MissingRuntimeRetention",
                 "MixedArrayDimensions",
                 "MockitoDoSetup",
-                "MoreThanOneQualifier",
                 "MultiVariableDeclaration",
                 "MultipleTopLevelClasses",
                 "MutableGuiceModule",
                 "NegativeBoolean",
-                "NoAllocationChecker",
                 "NonCanonicalStaticMemberImport",
                 "NonFinalStaticField",
                 "PackageLocation",
@@ -264,7 +265,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 "UseCorrectAssertInTests",
                 "UseEnumSwitch",
                 "UsingJsr305CheckReturnValue",
-                "VarChecker",
                 "Varifier",
                 "VoidMissingNullable",
                 "WildcardImport",
