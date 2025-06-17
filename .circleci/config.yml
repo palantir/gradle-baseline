@@ -21,7 +21,7 @@ jobs:
 
   check:
     docker: [{ image: 'cimg/openjdk:17.0.10-node' }]
-    resource_class: large
+    resource_class: xlarge
     environment:
       CIRCLE_TEST_REPORTS: /home/circleci/junit
       CIRCLE_ARTIFACTS: /home/circleci/artifacts
