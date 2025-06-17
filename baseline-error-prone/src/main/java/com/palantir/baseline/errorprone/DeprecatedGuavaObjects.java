@@ -43,12 +43,10 @@ public final class DeprecatedGuavaObjects extends BugChecker implements BugCheck
     private static final String GUAVA_OBJECTS_HASH_CODE = GUAVA_OBJECTS_NAME + ".hashCode";
     private static final String JAVA_OBJECTS_NAME = "java.util.Objects";
 
-    @SuppressWarnings("for-rollout:DeduplicateConstants")
     private static final Matcher<ExpressionTree> EQUAL_MATCHER = MethodMatchers.staticMethod()
             .onClass("com.google.common.base.Objects")
             .named("equal");
 
-    @SuppressWarnings("for-rollout:DeduplicateConstants")
     private static final Matcher<ExpressionTree> HASH_CODE_MATCHER = MethodMatchers.staticMethod()
             .onClass("com.google.common.base.Objects")
             .named("hashCode");

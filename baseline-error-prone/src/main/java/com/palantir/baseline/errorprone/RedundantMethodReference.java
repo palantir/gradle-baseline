@@ -68,7 +68,6 @@ public final class RedundantMethodReference extends BugChecker implements BugChe
         }
         // Make sure the same method is being overridden, it's important not to change method invocations on types
         // that also happen to implement the resulting functional interface.
-        @SuppressWarnings("for-rollout:PreferredInterfaceType")
         Set<Symbol.MethodSymbol> matching = ASTHelpers.findMatchingMethods(
                 methodSymbol.name,
                 symbol -> symbol.getModifiers().contains(Modifier.ABSTRACT)

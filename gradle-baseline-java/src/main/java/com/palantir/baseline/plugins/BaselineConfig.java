@@ -82,7 +82,6 @@ class BaselineConfig extends AbstractBaselinePlugin {
             this.rootProject = rootProject;
         }
 
-        @SuppressWarnings("for-rollout:ThrowSpecificExceptions")
         @Override
         public void execute(Task task) {
             if (configuration.getFiles().size() != 1) {

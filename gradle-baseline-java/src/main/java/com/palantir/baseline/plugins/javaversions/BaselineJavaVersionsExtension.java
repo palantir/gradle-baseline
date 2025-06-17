@@ -38,7 +38,6 @@ public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtens
             jdks = new LazilyConfiguredMapping<>(AtomicReference::new);
     private final Property<Boolean> setupJdkToolchains;
 
-    @SuppressWarnings("for-rollout:UnnecessarilyVisible")
     @Inject
     public BaselineJavaVersionsExtension(Project project) {
         this.libraryTarget = project.getObjects().property(JavaLanguageVersion.class);

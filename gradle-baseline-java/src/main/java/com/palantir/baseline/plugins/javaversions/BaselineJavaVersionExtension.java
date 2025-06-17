@@ -31,7 +31,6 @@ public class BaselineJavaVersionExtension {
 
     private final Property<Boolean> overrideLibraryAutoDetection;
 
-    @SuppressWarnings("for-rollout:UnnecessarilyVisible")
     @Inject
     public BaselineJavaVersionExtension(Project project) {
         target = project.getObjects().property(ChosenJavaVersion.class);

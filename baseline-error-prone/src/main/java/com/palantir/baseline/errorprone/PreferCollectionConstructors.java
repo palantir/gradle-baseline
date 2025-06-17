@@ -204,7 +204,6 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
             .onClass("com.google.common.collect.Maps")
             .named("newIdentityHashMap");
 
-    @SuppressWarnings("for-rollout:PreferredInterfaceType")
     private static final Map<Matcher<ExpressionTree>, Class<?>> classMap =
             ImmutableMap.<Matcher<ExpressionTree>, Class<?>>builder()
                     .put(NEW_ARRAY_LIST, ArrayList.class)
@@ -237,7 +236,6 @@ public final class PreferCollectionConstructors extends BugChecker implements Bu
                     .put(NEW_IDENTITY_HASH_MAP, IdentityHashMap.class)
                     .buildOrThrow();
 
-    @SuppressWarnings("for-rollout:PreferredInterfaceType")
     private static final Set<Matcher<ExpressionTree>> requiresCollectionArg = ImmutableSet.of(
             NEW_ARRAY_LIST_WITH_ITERABLE,
             NEW_LINKED_LIST_WITH_ITERABLE,
