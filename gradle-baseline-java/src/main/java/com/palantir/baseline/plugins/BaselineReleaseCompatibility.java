@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.Optional;
 import org.gradle.api.JavaVersion;
 import org.gradle.api.Project;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.jvm.toolchain.JavaCompiler;
 import org.gradle.jvm.toolchain.JavaInstallationMetadata;
@@ -53,18 +54,25 @@ public final class BaselineReleaseCompatibility extends AbstractBaselinePlugin {
     private static final class ReleaseFlagProvider implements CommandLineArgumentProvider {
         private final JavaCompile javaCompile;
 
+        private final Provider<Boolean> hasBaselineJavaVersionPlugin;
+        private final String projectPath;
+
         private ReleaseFlagProvider(JavaCompile javaCompile) {
             this.javaCompile = javaCompile;
+            Project project = javaCompile.getProject();
+            this.hasBaselineJavaVersionPlugin =
+                    project.provider(() -> project.getPlugins().hasPlugin(BaselineJavaVersion.class));
+            this.projectPath = project.getPath();
         }
 
         @SuppressWarnings("for-rollout:PreferredInterfaceType")
         @Override
         public Iterable<String> asArguments() {
-            if (javaCompile.getProject().getPlugins().hasPlugin(BaselineJavaVersion.class)) {
+            if (hasBaselineJavaVersionPlugin.get()) {
                 log.debug(
                         "BaselineReleaseCompatibility is a no-op for {} in {} because the {} plugin is present",
                         javaCompile.getName(),
-                        javaCompile.getProject(),
+                        projectPath,
                         BaselineJavaVersion.class);
                 return Collections.emptyList();
             }
@@ -73,7 +81,7 @@ public final class BaselineReleaseCompatibility extends AbstractBaselinePlugin {
                 log.debug(
                         "BaselineReleaseCompatibility is a no-op for {} in {} as {} doesn't support --release",
                         javaCompile.getName(),
-                        javaCompile.getProject(),
+                        projectPath,
                         compilerVersion);
                 return Collections.emptyList();
             }
@@ -83,18 +91,18 @@ public final class BaselineReleaseCompatibility extends AbstractBaselinePlugin {
                 log.debug(
                         "BaselineReleaseCompatibility is a no-op for {} in {} as --add-exports flag is also used",
                         javaCompile.getName(),
-                        javaCompile.getProject());
+                        projectPath);
                 return Collections.emptyList();
             }
 
             Optional<JavaVersion> taskTarget =
                     Optional.ofNullable(javaCompile.getTargetCompatibility()).map(JavaVersion::toVersion);
 
-            if (!taskTarget.isPresent()) {
+            if (taskTarget.isEmpty()) {
                 log.debug(
                         "BaselineReleaseCompatibility is a no-op for {} in {} as no targetCompatibility is set",
                         javaCompile.getName(),
-                        javaCompile.getProject());
+                        projectPath);
                 return Collections.emptyList();
             }
             JavaVersion target = taskTarget.get();
@@ -104,7 +112,7 @@ public final class BaselineReleaseCompatibility extends AbstractBaselinePlugin {
                 log.debug(
                         "BaselineReleaseCompatibility is a no-op for {} in {} as targetCompatibility is higher",
                         javaCompile.getName(),
-                        javaCompile.getProject());
+                        projectPath);
                 return Collections.emptyList();
             }
 

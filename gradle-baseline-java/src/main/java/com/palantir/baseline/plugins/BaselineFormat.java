@@ -215,11 +215,10 @@ class BaselineFormat extends AbstractBaselinePlugin {
                 TaskProvider<Task> spotlessJava = project.getTasks().named("spotlessJava");
                 spotlessJava.configure(t -> t.dependsOn(":baselineUpdateConfig"));
             }
+        });
 
-            project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
-                Task spotlessJava = project.getTasks().getByName("spotlessJava");
-                spotlessJava.mustRunAfter(javaCompile);
-            });
+        project.getTasks().named("spotlessJava", spotlessJava -> {
+            spotlessJava.mustRunAfter(project.getTasks().withType(JavaCompile.class));
         });
     }
 

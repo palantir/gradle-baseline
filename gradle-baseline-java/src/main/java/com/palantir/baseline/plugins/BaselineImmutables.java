@@ -19,12 +19,13 @@ package com.palantir.baseline.plugins;
 import com.google.common.collect.ImmutableList;
 import java.util.Collections;
 import java.util.Objects;
+import java.util.Set;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
-import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
 import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
-import org.gradle.api.tasks.SourceSet;
+import org.gradle.api.artifacts.result.ResolvedArtifactResult;
+import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSetContainer;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.process.CommandLineArgumentProvider;
@@ -43,6 +44,19 @@ public final class BaselineImmutables implements Plugin<Project> {
                 project.getTasks()
                         .named(sourceSet.getCompileJavaTaskName(), JavaCompile.class)
                         .configure(javaCompileTask -> {
+                            // Previously the anonymous classes where capturing project thus breaking the configuration
+                            // cache, now we only supply a provider of ResolvedArtifactResults which is configuration
+                            // cache compatible
+                            Provider<Set<ResolvedArtifactResult>> resolvedArtifactsProvider =
+                                    project.getConfigurations()
+                                            .getByName(sourceSet.getAnnotationProcessorConfigurationName())
+                                            .getIncoming()
+                                            .getArtifacts()
+                                            .getResolvedArtifacts();
+
+                            Provider<Boolean> hasImmutablesProvider = resolvedArtifactsProvider.map(
+                                    artifacts -> artifacts.stream().anyMatch(BaselineImmutables::isImmutablesValue));
+
                             javaCompileTask
                                     .getOptions()
                                     .getCompilerArgumentProviders()
@@ -50,7 +64,7 @@ public final class BaselineImmutables implements Plugin<Project> {
                                     .add(new CommandLineArgumentProvider() {
                                         @Override
                                         public Iterable<String> asArguments() {
-                                            return hasImmutablesProcessor(project, sourceSet)
+                                            return hasImmutablesProvider.get()
                                                     ? GRADLE_INCREMENTAL
                                                     : Collections.emptyList();
                                         }
@@ -69,9 +83,7 @@ public final class BaselineImmutables implements Plugin<Project> {
                                     .add(new CommandLineArgumentProvider() {
                                         @Override
                                         public Iterable<String> asArguments() {
-                                            return hasImmutablesProcessor(project, sourceSet)
-                                                    ? EXPORTS
-                                                    : Collections.emptyList();
+                                            return hasImmutablesProvider.get() ? EXPORTS : Collections.emptyList();
                                         }
                                     });
                         });
@@ -79,30 +91,18 @@ public final class BaselineImmutables implements Plugin<Project> {
         });
     }
 
-    private static boolean hasImmutablesProcessor(Project project, SourceSet sourceSet) {
-        return project
-                .getConfigurations()
-                .getByName(sourceSet.getAnnotationProcessorConfigurationName())
-                .getResolvedConfiguration()
-                .getResolvedArtifacts()
-                .stream()
-                .anyMatch(BaselineImmutables::isImmutablesValue);
-    }
-
-    private static boolean isImmutablesValue(ResolvedArtifact resolvedArtifact) {
+    private static boolean isImmutablesValue(ResolvedArtifactResult resolvedArtifact) {
         ComponentIdentifier id = resolvedArtifact.getId().getComponentIdentifier();
 
         if (!(id instanceof ModuleComponentIdentifier moduleId)) {
             return false;
         }
 
-        // The actual annotation processor jar has no classifier, we must make sure not to match on the
-        // `annotations` jar which has the `annotations` classifier
-        @SuppressWarnings("for-rollout:NegativeBoolean")
-        boolean noClassifier = resolvedArtifact.getClassifier() == null;
-
+        // Previously, we used the classifier to distinguish between the processor jar and the annotations jar.
+        // However, ResolvedArtifactResult does not expose a classifier property, so we now check the file name
+        // directly.
         return Objects.equals(moduleId.getGroup(), "org.immutables")
                 && Objects.equals(moduleId.getModule(), "value")
-                && noClassifier;
+                && !resolvedArtifact.getFile().getName().contains("-annotations");
     }
 }
