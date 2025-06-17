@@ -104,7 +104,6 @@ public final class ClassUniquenessAnalyzer {
      * Any groups jars that all contain some identically named classes. Note: may contain non-scary duplicates - class
      * files which are 100% identical, so their clashing name doesn't have any effect.
      */
-    @SuppressWarnings("for-rollout:PreferredInterfaceType")
     private Collection<Set<ClassUniquenessArtifactIdentifier>> getProblemJars() {
         return jarsToClasses.keySet();
     }
@@ -115,7 +114,6 @@ public final class ClassUniquenessAnalyzer {
     }
 
     /** Jars which contain identically named classes with non-identical implementations. */
-    @SuppressWarnings("for-rollout:PreferredInterfaceType")
     public Collection<Set<ClassUniquenessArtifactIdentifier>> getDifferingProblemJars() {
         return getProblemJars().stream()
                 .filter(jars -> getDifferingSharedClassesInProblemJars(jars).size() > 0)

@@ -34,7 +34,6 @@ public class BaselineModuleJvmArgsExtension {
     private final SetProperty<String> opens;
     private final SetProperty<JavaLanguageVersion> enablePreview; // stores a singleton version or the empty set
 
-    @SuppressWarnings("for-rollout:UnnecessarilyVisible")
     @Inject
     public BaselineModuleJvmArgsExtension(Project project) {
         exports = project.getObjects().setProperty(String.class);

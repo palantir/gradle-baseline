@@ -408,7 +408,6 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
     }
 
     // https://docs.oracle.com/javase/specs/jls/se11/html/jls-14.html#jls-ExpressionStatement
-    @SuppressWarnings("for-rollout:DifferentNameButSame")
     private static final ImmutableSet<Tree.Kind> TOP_LEVEL_EXPRESSIONS = ImmutableSet.of(
             Tree.Kind.ASSIGNMENT,
             Tree.Kind.PREFIX_INCREMENT,
@@ -450,7 +449,6 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
         return firstNonNull(path.getParentPath().getLeaf().accept(new Visitor(), null), false);
     }
 
-    @SuppressWarnings("for-rollout:DifferentNameButSame")
     private static ImmutableList<SuggestedFix> buildUnusedVarFixes(
             Symbol varSymbol, List<TreePath> usagePaths, VisitorState state) {
         // Don't suggest a fix for fields annotated @Inject: we can warn on them, but they *could* be
@@ -832,7 +830,6 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
             this.declarationSites = ImmutableMap.copyOf(unusedElements);
         }
 
-        @SuppressWarnings("for-rollout:DifferentNameButSame")
         private boolean isInExpressionStatementTree() {
             Tree parent = getCurrentPath().getParentPath().getLeaf();
             return parent != null && parent.getKind() == Tree.Kind.EXPRESSION_STATEMENT;
@@ -912,7 +909,6 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
          * Deals with assignment trees; works out if the assignment definitely overwrites the variable in all ways that
          * could be observed as we scan forwards.
          */
-        @SuppressWarnings("for-rollout:DifferentNameButSame")
         private void handleReassignment(AssignmentTree tree) {
             Tree parent = getCurrentPath().getParentPath().getLeaf();
             if (!(parent instanceof StatementTree)) {
@@ -1103,7 +1099,6 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                 TreePath variableTree,
                 Iterable<TreePath> treePaths,
                 @Nullable AssignmentTree assignmentTree) {
-            @SuppressWarnings("for-rollout:UnnecessaryFinal")
             final ImmutableList<TreePath> treePaths1 = ImmutableList.copyOf(treePaths);
             return new UnusedSpec() {
                 @Override

@@ -23,7 +23,6 @@ import org.gradle.api.Project;
 public class SubprojectBaselineJavaVersionsExtension implements BaselineJavaVersionsExtensionSetters {
     private final Project project;
 
-    @SuppressWarnings("for-rollout:UnnecessarilyVisible")
     @Inject
     public SubprojectBaselineJavaVersionsExtension(Project project) {
         this.project = project;

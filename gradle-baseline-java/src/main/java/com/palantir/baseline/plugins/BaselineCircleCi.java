@@ -49,7 +49,6 @@ public final class BaselineCircleCi implements Plugin<Project> {
                         + " checkout dir ('project') will be used instead.");
     }
 
-    @SuppressWarnings("for-rollout:ThrowSpecificExceptions")
     private void configurePluginsForArtifacts(Project project, EnvironmentVariables environmentVariables) {
         String circleArtifactsDir = environmentVariables
                 .envVarOrFromTestingProperty("CIRCLE_ARTIFACTS")
@@ -73,7 +72,6 @@ public final class BaselineCircleCi implements Plugin<Project> {
                 }));
     }
 
-    @SuppressWarnings("for-rollout:ThrowSpecificExceptions")
     private void configurePluginsForReports(Project project, EnvironmentVariables environmentVariables) {
         String circleReportsDir = environmentVariables
                 .envVarOrFromTestingProperty("CIRCLE_TEST_REPORTS")

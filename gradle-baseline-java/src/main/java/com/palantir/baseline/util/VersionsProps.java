@@ -66,7 +66,6 @@ public final class VersionsProps {
         class Builder extends VersionsProps_VersionForce_Builder {}
     }
 
-    @SuppressWarnings("for-rollout:ThrowSpecificExceptions")
     public static ParsedVersionsProps readVersionsProps(File propsFile) {
         Preconditions.checkArgument(propsFile.exists(), "No " + propsFile.toPath() + " file found");
         try (Stream<String> lines = Files.lines(propsFile.toPath())) {
@@ -120,7 +119,6 @@ public final class VersionsProps {
      * @throws NullPointerException if any of the {@code forcesToRemove} weren't found in
      *     {@link ParsedVersionsProps#namesToLocationMap}.
      */
-    @SuppressWarnings("for-rollout:ThrowSpecificExceptions")
     public static void writeVersionsProps(
             ParsedVersionsProps parsedVersionsProps, Stream<String> forcesToRemove, File propsFile) {
         List<String> lines = parsedVersionsProps.lines();

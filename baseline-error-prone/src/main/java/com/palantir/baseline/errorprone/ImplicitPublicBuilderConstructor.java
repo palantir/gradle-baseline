@@ -98,7 +98,6 @@ public final class ImplicitPublicBuilderConstructor extends BugChecker implement
 
     private static boolean hasStaticBuilderFactory(
             ClassSymbol classSymbol, ClassTree builderClassTree, VisitorState state) {
-        @SuppressWarnings("for-rollout:PreferredInterfaceType")
         Set<MethodSymbol> matching = ASTHelpers.findMatchingMethods(
                 BUILDER.get(state),
                 methodSymbol -> methodSymbol != null
