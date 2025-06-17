@@ -147,6 +147,7 @@ public final class CatchBlockLogException extends BugChecker implements BugCheck
             return super.visitMethodInvocation(node, state);
         }
 
+        @SuppressWarnings("for-rollout:PreferredInterfaceType")
         @Override
         public List<MethodInvocationTree> visitCatch(CatchTree node, VisitorState state) {
             // Do not flag logging from a nested catch, it's handled separately

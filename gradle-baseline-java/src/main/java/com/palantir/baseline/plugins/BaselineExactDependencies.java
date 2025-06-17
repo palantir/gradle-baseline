@@ -237,6 +237,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
         return StringUtils.uncapitalize(baseName + StringUtils.capitalize("compile"));
     }
 
+    @SuppressWarnings("for-rollout:PreferredInterfaceType")
     private static Map<String, String> excludeRuleAsMap(ExcludeRule rule) {
         // Both 'ExcludeRule#getGroup' and 'ExcludeRule#getModule' can return null.
         Builder<String, String> excludeRule = ImmutableMap.builder();
@@ -250,6 +251,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     }
 
     /** Given a {@code com/palantir/product/Foo.class} file, what other classes does it import/reference. */
+    @SuppressWarnings("for-rollout:ThrowSpecificExceptions")
     public static Stream<String> referencedClasses(File classFile) {
         try {
             return BaselineExactDependencies.CLASS_FILE_ANALYZER
@@ -282,8 +284,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
 
     private static String asDependencyString(ResolvedArtifact artifact, boolean withName) {
         ComponentIdentifier componentId = artifact.getId().getComponentIdentifier();
-        if (componentId instanceof ProjectComponentIdentifier) {
-            ProjectComponentIdentifier projectComponentId = (ProjectComponentIdentifier) componentId;
+        if (componentId instanceof ProjectComponentIdentifier projectComponentId) {
             StringBuilder builder = new StringBuilder()
                     .append("project('")
                     .append(projectComponentId.getProjectPath())
@@ -301,6 +302,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     public static final class Indexes {
         private final Map<String, Set<ResolvedArtifact>> classToArtifacts = new ConcurrentHashMap<>();
 
+        @SuppressWarnings("for-rollout:ThrowSpecificExceptions")
         public void populateIndexes(Set<ResolvedConfiguration> configurations) {
             configurations.stream()
                     .flatMap(configuration -> configuration.getResolvedArtifacts().stream())

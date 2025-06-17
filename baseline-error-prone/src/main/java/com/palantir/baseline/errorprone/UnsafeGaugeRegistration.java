@@ -18,9 +18,11 @@ package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
+import com.google.errorprone.ErrorProneFlags;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.AbstractReturnValueIgnored;
 import com.google.errorprone.bugpatterns.BugChecker;
+import com.google.errorprone.bugpatterns.threadsafety.ConstantExpressions;
 import com.google.errorprone.fixes.SuggestedFixes;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
@@ -30,6 +32,7 @@ import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.tools.javac.code.Symbol;
+import javax.inject.Inject;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -54,6 +57,15 @@ public final class UnsafeGaugeRegistration extends AbstractReturnValueIgnored {
     private static final Supplier<Symbol> TAGGED_METRIC_REGISTRY =
             VisitorState.memoize(state -> state.getSymbolFromString(TAGGED_REGISTRY));
 
+    public UnsafeGaugeRegistration() {
+        super(ConstantExpressions.fromFlags(ErrorProneFlags.empty()));
+    }
+
+    @Inject
+    UnsafeGaugeRegistration(ConstantExpressions constantExpressions) {
+        super(constantExpressions);
+    }
+
     @Override
     public Matcher<? super ExpressionTree> specializedMatcher() {
         return MATCHER;
@@ -76,13 +88,11 @@ public final class UnsafeGaugeRegistration extends AbstractReturnValueIgnored {
     /** TaggedMetricRegistry.registerWithReplacement was added in Tritium 0.16.1, avoid flagging older versions. */
     private static boolean hasRegisterWithReplacement(VisitorState state) {
         Symbol symbol = TAGGED_METRIC_REGISTRY.get(state);
-        if (!(symbol instanceof Symbol.ClassSymbol)) {
+        if (!(symbol instanceof Symbol.ClassSymbol classSymbol)) {
             return false;
         }
-        Symbol.ClassSymbol classSymbol = (Symbol.ClassSymbol) symbol;
         for (Symbol enclosed : ASTHelpers.getEnclosedElements(classSymbol)) {
-            if (enclosed instanceof Symbol.MethodSymbol) {
-                Symbol.MethodSymbol enclosedMethod = (Symbol.MethodSymbol) enclosed;
+            if (enclosed instanceof Symbol.MethodSymbol enclosedMethod) {
                 if (enclosedMethod.name.contentEquals(REGISTER_WITH_REPLACEMENT)) {
                     return true;
                 }

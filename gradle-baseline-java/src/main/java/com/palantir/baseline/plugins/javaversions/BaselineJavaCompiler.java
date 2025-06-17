@@ -57,6 +57,7 @@ final class BaselineJavaCompiler extends DefaultToolchainJavaCompiler {
         log.info(
                 "Compiling with toolchain '{}'.",
                 javaInstallationMetadata.getInstallationPath().getAsFile());
+        @SuppressWarnings("for-rollout:UnnecessaryFinal")
         final Class<T> specType = (Class<T>) spec.getClass();
         return compilerFactory.create(specType).execute(spec);
     }

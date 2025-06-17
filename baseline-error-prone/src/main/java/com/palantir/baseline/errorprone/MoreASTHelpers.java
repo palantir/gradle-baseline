@@ -121,8 +121,8 @@ public final class MoreASTHelpers {
     }
 
     public static Type getResultType(Tree tree) {
-        return tree instanceof ExpressionTree
-                ? ASTHelpers.getResultType((ExpressionTree) tree)
+        return tree instanceof ExpressionTree expressionTree
+                ? ASTHelpers.getResultType(expressionTree)
                 : ASTHelpers.getType(tree);
     }
 
@@ -130,8 +130,7 @@ public final class MoreASTHelpers {
         if (expressionTree == null) {
             return Collections.emptyList();
         }
-        if (expressionTree instanceof NewArrayTree) {
-            NewArrayTree tree = (NewArrayTree) expressionTree;
+        if (expressionTree instanceof NewArrayTree tree) {
             return tree.getInitializers();
         }
         return Collections.singletonList(expressionTree);

@@ -65,29 +65,29 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
         // that we can fix the most basic problems correctly, not to take risks and produce code
         // that may not compile.
         switch (bodyKind) {
-            case EXPRESSION:
-                if (!(body instanceof MethodInvocationTree)) {
+            case EXPRESSION -> {
+                if (!(body instanceof MethodInvocationTree methodInvocationTree)) {
                     return Description.NO_MATCH;
                 }
-                return checkMethodInvocation((MethodInvocationTree) body, tree, state);
-            case STATEMENT:
-                if (!(body instanceof BlockTree)) {
+                return checkMethodInvocation(methodInvocationTree, tree, state);
+            }
+            case STATEMENT -> {
+                if (!(body instanceof BlockTree block)) {
                     return Description.NO_MATCH;
                 }
-                BlockTree block = (BlockTree) body;
                 if (block.getStatements().size() != 1) {
                     return Description.NO_MATCH;
                 }
                 StatementTree statement = block.getStatements().get(0);
-                if (!(statement instanceof ReturnTree)) {
+                if (!(statement instanceof ReturnTree returnStatement)) {
                     return Description.NO_MATCH;
                 }
-                ReturnTree returnStatement = (ReturnTree) statement;
                 ExpressionTree returnExpression = returnStatement.getExpression();
-                if (!(returnExpression instanceof MethodInvocationTree)) {
+                if (!(returnExpression instanceof MethodInvocationTree methodInvocationTree)) {
                     return Description.NO_MATCH;
                 }
-                return checkMethodInvocation((MethodInvocationTree) returnExpression, tree, state);
+                return checkMethodInvocation(methodInvocationTree, tree, state);
+            }
         }
         throw new IllegalStateException("Unexpected BodyKind: " + bodyKind);
     }
@@ -170,6 +170,7 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
                 .orElse(Description.NO_MATCH);
     }
 
+    @SuppressWarnings("for-rollout:PreferredInterfaceType")
     private static List<Symbol> getSymbols(List<? extends Tree> params) {
         return params.stream()
                 .map(ASTHelpers::getSymbol)
@@ -203,6 +204,7 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
             if (classSymbol == null) {
                 return false;
             }
+            @SuppressWarnings("for-rollout:PreferredInterfaceType")
             Set<Symbol.MethodSymbol> matching = ASTHelpers.findMatchingMethods(
                     symbol.name,
                     sym -> sym != null && !sym.isStatic() && sym.getParameters().isEmpty(),
@@ -220,6 +222,7 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
             if (receiverType == null) {
                 return false;
             }
+            @SuppressWarnings("for-rollout:PreferredInterfaceType")
             Set<Symbol.MethodSymbol> matching = ASTHelpers.findMatchingMethods(
                     symbol.name,
                     sym -> sym != null
@@ -291,8 +294,8 @@ public final class LambdaMethodReference extends BugChecker implements BugChecke
     private static boolean isLocal(MethodInvocationTree methodInvocationTree) {
         ExpressionTree receiver = ASTHelpers.getReceiver(methodInvocationTree);
         return receiver == null
-                || (receiver instanceof IdentifierTree
-                        && "this".equals(((IdentifierTree) receiver).getName().toString()));
+                || (receiver instanceof IdentifierTree identifierTree
+                        && "this".equals(identifierTree.getName().toString()));
     }
 
     private static boolean isFinal(Symbol symbol) {

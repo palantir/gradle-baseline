@@ -56,10 +56,9 @@ public final class ThrowError extends BugChecker implements BugChecker.ThrowTree
     @Override
     public Description matchThrow(ThrowTree tree, VisitorState state) {
         ExpressionTree expression = tree.getExpression();
-        if (!(expression instanceof NewClassTree)) {
+        if (!(expression instanceof NewClassTree newClassTree)) {
             return Description.NO_MATCH;
         }
-        NewClassTree newClassTree = (NewClassTree) expression;
         if (!ERROR.matches(newClassTree.getIdentifier(), state)
                 // Don't discourage developers from testing edge cases involving Errors.
                 // It's also fine for tests throw AssertionError internally in test objects.
