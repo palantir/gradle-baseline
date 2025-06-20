@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
+import java.util.concurrent.Callable;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -98,8 +99,8 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                     ModuleJvmArgsArgumentProvider provider = newModuleJvmArgsArgumentProvider(
                             project,
                             extension,
-                            project.getConfigurations().named(sourceSet.getAnnotationProcessorConfigurationName()));
-
+                            project.getConfigurations().named(sourceSet.getAnnotationProcessorConfigurationName()),
+                            javaCompile.getName());
                     provider.getBaselineJavaVersionEnabled()
                             .set(project.provider(() -> project.getPlugins().hasPlugin(BaselineJavaVersion.class)));
 
@@ -122,10 +123,10 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                                 // The '--release' flag is set when BaselineJavaVersion is not used.
                                 if (!project.getPlugins().hasPlugin(BaselineJavaVersion.class)) {
                                     log.debug(
-                                            "BaselineModuleJvmArgs not applying args to compilation task "
-                                                    + "{} on {} due to lack of BaselineJavaVersion",
+                                            "BaselineModuleJvmArgs not applying args to compilation task {} on {} "
+                                                    + "due to lack of BaselineJavaVersion",
                                             task.getName(),
-                                            project);
+                                            project.getPath());
                                     return;
                                 }
 
@@ -148,9 +149,9 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                                             .map(item -> item + "=ALL-UNNAMED")
                                             .collect(ImmutableList.toImmutableList());
                                     log.debug(
-                                            "BaselineModuleJvmArgs building {} on {} " + "with exports: {}",
+                                            "BaselineModuleJvmArgs building {} on {} with exports: {}",
                                             javadoc.getName(),
-                                            project,
+                                            project.getPath(),
                                             exportValues);
                                     if (!exportValues.isEmpty()) {
                                         coreOptions
@@ -173,15 +174,15 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
             });
 
             project.getTasks().withType(Test.class).configureEach(test -> {
-                ModuleJvmArgsArgumentProvider provider =
-                        newModuleJvmArgsArgumentProvider(project, extension, test.getClasspath());
+                ModuleJvmArgsArgumentProvider provider = newModuleJvmArgsArgumentProvider(
+                        project, extension, (Callable<FileCollection>) test::getClasspath, test.getName());
                 test.getJvmArgumentProviders().add(provider);
                 setTaskInputsFromExtension(test, extension);
             });
 
             project.getTasks().withType(JavaExec.class).configureEach(javaExec -> {
-                ModuleJvmArgsArgumentProvider provider =
-                        newModuleJvmArgsArgumentProvider(project, extension, javaExec.getClasspath());
+                ModuleJvmArgsArgumentProvider provider = newModuleJvmArgsArgumentProvider(
+                        project, extension, (Callable<FileCollection>) javaExec::getClasspath, javaExec.getName());
                 javaExec.getJvmArgumentProviders().add(provider);
                 setTaskInputsFromExtension(javaExec, extension);
             });
@@ -233,13 +234,13 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
     }
 
     private static ModuleJvmArgsArgumentProvider newModuleJvmArgsArgumentProvider(
-            Project project, BaselineModuleJvmArgsExtension extension, Object classpath) {
+            Project project, BaselineModuleJvmArgsExtension extension, Object classpath, String taskName) {
         ModuleJvmArgsArgumentProvider provider = project.getObjects().newInstance(ModuleJvmArgsArgumentProvider.class);
-
         provider.getExports().set(extension.exports());
         provider.getOpens().set(extension.opens());
         provider.getClasspath().from(classpath);
         provider.getProjectPath().set(project.getPath());
+        provider.getTaskName().set(taskName);
         return provider;
     }
 
@@ -351,6 +352,9 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
         @Internal
         public abstract Property<Boolean> getBaselineJavaVersionEnabled();
 
+        @Internal
+        public abstract Property<String> getTaskName();
+
         @Override
         public final Iterable<String> asArguments() {
             boolean isCompilation = getBaselineJavaVersionEnabled().isPresent();
@@ -359,9 +363,10 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
 
             if (isCompilation && !isBaselineJavaVersionEnabled) {
                 log.debug(
-                        "BaselineModuleJvmArgs not applying args to compilation task on {} due to lack of "
+                        "BaselineModuleJvmArgs not applying args to compilation task {} on project {} due to lack of "
                                 + "BaselineJavaVersion",
-                        getProjectPath());
+                        getTaskName().getOrNull(),
+                        getProjectPath().getOrNull());
                 return ImmutableList.of();
             }
 
@@ -376,9 +381,10 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
 
             log.debug(
                     isCompilation
-                            ? "BaselineModuleJvmArgs compiling on {} with exports: {}"
-                            : "BaselineModuleJvmArgs executing task on project {} with exports: {}",
-                    getProjectPath(),
+                            ? "BaselineModuleJvmArgs compiling {} on project {} with exports: {}"
+                            : "BaselineModuleJvmArgs executing {} on project {} with exports: {}",
+                    getTaskName().getOrNull(),
+                    getProjectPath().getOrNull(),
                     args);
             return args;
         }
