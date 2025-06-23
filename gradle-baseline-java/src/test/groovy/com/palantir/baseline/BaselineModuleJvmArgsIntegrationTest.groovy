@@ -30,6 +30,7 @@ import java.util.zip.ZipOutputStream
 
 @Unroll
 class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
+    // language=Gradle
     def standardBuildFile = '''
     plugins {
         id 'java-library'
@@ -40,8 +41,9 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
     apply plugin: 'com.palantir.baseline-module-jvm-args'
     
     javaVersions {
-        libraryTarget = 11
-        runtime = 17
+        // Use the same version at the current test runtime so that we definitely have a JDK of this
+        // version available for Gradle's built in java toolchains
+        libraryTarget = Runtime.version().version().get(0)
     }
 
     repositories {
@@ -536,6 +538,54 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
         resultBeforeChange.wasExecuted('jar')
         !resultAfterChange.wasUpToDate('jar')
         resultAfterChange.wasExecuted('jar')
+
+        where:
+        gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
+    }
+
+    def '#gradleVersionNumber: Test task picks up Add-Exports from jars added to classpath after configuration'() {
+        buildFile << '''
+        dependencies {
+            testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
+            testRuntimeOnly 'org.junit.jupiter:junit-jupiter-engine:5.10.2'
+        }
+    '''.stripIndent(true)
+
+        writeJavaSourceFile('''
+            package com;
+            import org.junit.jupiter.api.Test;
+            public class ExampleTest {
+                @Test
+                public void test() {
+                    System.out.println(java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments());
+                }
+            }
+        '''.stripIndent(true), 'src/test/java/com/ExampleTest.java')
+
+        // Create a jar with Add-Exports in the manifest
+        Manifest manifest = new Manifest()
+        manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0")
+        manifest.getMainAttributes().putValue('Add-Exports', 'java.management/sun.management')
+        File testJar = new File(getProjectDir(),"test.jar");
+        testJar.withOutputStream { fos ->
+            new JarOutputStream(fos, manifest).close()
+        }
+
+        // Mutate classpath after configuration
+        buildFile << """
+            tasks.named('test').configure {
+                classpath += files('test.jar')
+                useJUnitPlatform()
+                testLogging.showStandardStreams = true
+            }
+        """.stripIndent(true)
+
+        when:
+        def result = runTasksSuccessfully('test')
+
+        then:
+        // The test JVM should include the --add-exports argument from the manifest of test-addon.jar
+        result.standardOutput.contains('--add-exports=java.management/sun.management=ALL-UNNAMED')
 
         where:
         gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
