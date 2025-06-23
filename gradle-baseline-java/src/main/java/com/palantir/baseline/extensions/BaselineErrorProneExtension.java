@@ -42,6 +42,7 @@ public abstract class BaselineErrorProneExtension {
             "ExecutorSubmitRunnableFutureIgnored",
             "ExtendsErrorOrThrowable",
             "FinalClass",
+            "GradleExceptionUsage",
             "IllegalSafeLoggingArgument",
             "ImmutableMapDuplicateKeyStrategy",
             "ImmutablesStyle",
@@ -99,6 +100,7 @@ public abstract class BaselineErrorProneExtension {
 
     /**
      * .
+     *
      * @deprecated Interact with SuppressibleErrorProneExtension instead. This only provided for backcompat.
      */
     @Deprecated

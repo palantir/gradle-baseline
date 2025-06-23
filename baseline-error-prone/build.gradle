@@ -7,6 +7,7 @@ javaVersion {
 }
 
 dependencies {
+    implementation gradleApi()
     implementation 'com.google.code.findbugs:jsr305'
     implementation 'com.google.errorprone:error_prone_core'
     // Ensure a new enough version of dataflow-errorprone is available
