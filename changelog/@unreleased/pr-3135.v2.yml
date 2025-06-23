@@ -1,0 +1,6 @@
+type: feature
+feature:
+  description: Implement Error Prone `GradleExceptionUsage` to discourage throwing
+    `GradleException`s in production code
+  links:
+  - https://github.com/palantir/gradle-baseline/pull/3135
