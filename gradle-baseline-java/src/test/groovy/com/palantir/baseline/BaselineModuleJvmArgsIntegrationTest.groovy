@@ -30,6 +30,7 @@ import java.util.zip.ZipOutputStream
 
 @Unroll
 class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
+    // language=Gradle
     def standardBuildFile = '''
     plugins {
         id 'java-library'
@@ -40,8 +41,9 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
     apply plugin: 'com.palantir.baseline-module-jvm-args'
     
     javaVersions {
-        libraryTarget = 17
-        runtime = 21
+        // Use the same version at the current test runtime so that we definitely have a JDK of this
+        // version available for Gradle's built in java toolchains
+        libraryTarget = Runtime.version().version().get(0)
     }
 
     repositories {
