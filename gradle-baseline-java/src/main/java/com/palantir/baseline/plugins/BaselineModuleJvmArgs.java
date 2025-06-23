@@ -372,8 +372,8 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                 log.debug(
                         "BaselineModuleJvmArgs not applying args to compilation task {} on project {} due to lack of "
                                 + "BaselineJavaVersion",
-                        getTaskName().getOrNull(),
-                        getProjectPath().getOrNull());
+                        getTaskName().get(),
+                        getProjectPath().get());
                 return ImmutableList.of();
             }
 
