@@ -40,8 +40,8 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
     apply plugin: 'com.palantir.baseline-module-jvm-args'
     
     javaVersions {
-        libraryTarget = 11
-        runtime = 17
+        libraryTarget = 17
+        runtime = 21
     }
 
     repositories {
