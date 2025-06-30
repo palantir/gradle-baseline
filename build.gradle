@@ -23,7 +23,6 @@ buildscript {
 
 plugins {
 id 'com.palantir.git-version' version '4.0.0'
-id 'org.inferred.processors' version '3.7.0'
 }
 
 apply plugin: 'com.palantir.external-publish'
@@ -69,7 +68,6 @@ allprojects {
         }
     }
 
-    apply plugin: 'org.inferred.processors'
     apply plugin: 'com.palantir.java-format'
     apply plugin: 'com.palantir.jakarta-package-alignment'
 
