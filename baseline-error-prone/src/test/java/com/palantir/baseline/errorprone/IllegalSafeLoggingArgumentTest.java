@@ -411,6 +411,32 @@ class IllegalSafeLoggingArgumentTest {
     }
 
     @Test
+    public void testUnsafeMethodTypeParameter() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+                        import java.util.*;
+
+                        @Unsafe
+                        interface UnsafeType {}
+
+                        class Test {
+                          static <T extends UnsafeType> void f(T value) {
+                            // BUG: Diagnostic contains: Dangerous argument value:
+                            // arg is 'UNSAFE' but the parameter requires 'SAFE'.
+                            fun(value);
+                          }
+
+                          static void fun(@Safe Object in) {}
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
     public void testTypeParamsDifferFromBase() {
         helper().addSourceLines(
                         "Test.java",

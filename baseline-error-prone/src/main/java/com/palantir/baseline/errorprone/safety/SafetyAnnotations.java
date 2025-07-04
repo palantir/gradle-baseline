@@ -37,6 +37,7 @@ import com.sun.tools.javac.code.Symbol.VarSymbol;
 import com.sun.tools.javac.code.SymbolMetadata;
 import com.sun.tools.javac.code.TargetType;
 import com.sun.tools.javac.code.Type;
+import com.sun.tools.javac.code.Type.TypeVar;
 import com.sun.tools.javac.code.Type.WildcardType;
 import com.sun.tools.javac.util.List;
 import java.util.HashSet;
@@ -107,6 +108,15 @@ public final class SafetyAnnotations {
         Safety treeTypeSafety = treeType == null
                 ? Safety.UNKNOWN
                 : Safety.mergeAssumingUnknownIsSame(getSafety(treeType, state), getSafety(treeType.tsym, state));
+        if (treeType instanceof TypeVar) {
+            // If the type is a type variable, we can also merge with the safety of the upper bound of the type variable
+            Type upperBound = treeType.getUpperBound();
+            Safety upperBoundSafety = upperBound == null
+                    ? Safety.UNKNOWN
+                    : Safety.mergeAssumingUnknownIsSame(
+                            getSafety(upperBound, state), getSafety(upperBound.tsym, state));
+            treeTypeSafety = Safety.mergeAssumingUnknownIsSame(treeTypeSafety, upperBoundSafety);
+        }
         Type symbolType = treeSymbol == null ? null : treeSymbol.type;
         // If the type extracted from the symbol matches the type extracted from the tree, avoid duplicate work.
         // However, in some cases type parameter information is excluded from one, but not the other.
