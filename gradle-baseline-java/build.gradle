@@ -212,3 +212,7 @@ task writeCheckstyleVersion() {
 if (gradle.startParameter.isWriteDependencyLocks()) {
     gradle.startParameter.taskNames += 'writeCheckstyleVersion'
 }
+
+gradleTestUtils {
+    gradleVersions = ['8.14.2']
+}
