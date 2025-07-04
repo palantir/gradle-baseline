@@ -17,7 +17,7 @@ com.google.code.findbugs:jsr305 = 3.0.2
 com.google.errorprone:error_prone_* = 2.38.0
 com.googlecode.java-diff-utils:diffutils = 1.3.0
 com.puppycrawl.tools:checkstyle = 10.25.1
-com.palantir.gradle.utils:* = 0.11.0
+com.palantir.gradle.utils:* = 0.13.0
 com.uber.nullaway:nullaway = 0.12.7
 com.palantir.gradle.failure-reports:* = 1.2.0
 com.palantir.gradle.idea-configuration:gradle-idea-configuration = 0.4.0
@@ -51,7 +51,7 @@ org.unbroken-dome.gradle-plugins:gradle-testsets-plugin = 4.1.0
 # dependency-upgrader:OFF
 # Don't upgrade, we will remove this in a future release.
 # Users should depend on this plugin directly such that it will get updated by excavator.
-com.palantir.javaformat:gradle-palantir-java-format = 2.69.0
+com.palantir.javaformat:gradle-palantir-java-format = 2.70.0
 # Newer spotless versions have issues resolving dependencies at configuration time
 com.diffplug.spotless:spotless-plugin-gradle = 6.22.0
 # Groovy versions must be compatible with gradle
