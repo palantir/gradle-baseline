@@ -17,6 +17,8 @@ dependencies {
     implementation 'com.github.ben-manes.caffeine:caffeine'
     implementation 'com.google.guava:guava'
     implementation 'net.ltgt.gradle:gradle-errorprone-plugin'
+    // implementation 'com.github.sgtsilvio.gradle.proguard:com.github.sgtsilvio.gradle.proguard.gradle.plugin'
+    implementation 'io.github.sgtsilvio.gradle:gradle-proguard'
     implementation 'org.apache.maven.shared:maven-dependency-analyzer', {
         // Use maven-core rather than the legacy maven-project component
         exclude group: 'org.apache.maven', module: 'maven-project'
@@ -163,6 +165,11 @@ gradlePlugin {
             implementationClass = 'com.palantir.baseline.plugins.BaselinePreferProjectModules'
             description = 'Baseline Java is a collection of Gradle plugins for configuring code quality tools in builds.'
             tags.set(['java', 'checkstyle', 'code quality'])
+        }
+        baselineDeadCode {
+            id = 'com.palantir.baseline-dead-code'
+            displayName = 'Palantir Baseline Dead Code Plugin'
+            implementationClass = 'com.palantir.baseline.plugins.BaselineDeadCode'
         }
     }
 }
