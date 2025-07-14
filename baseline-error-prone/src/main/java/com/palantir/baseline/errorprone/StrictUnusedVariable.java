@@ -464,7 +464,7 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
                 if (getSymbol(statement).getKind() == ElementKind.PARAMETER) {
                     continue;
                 }
-                
+
                 ExpressionTree initializer = variableTree.getInitializer();
                 if (hasSideEffect(initializer) && TOP_LEVEL_EXPRESSIONS.contains(initializer.getKind())) {
                     if (varKind == ElementKind.FIELD) {

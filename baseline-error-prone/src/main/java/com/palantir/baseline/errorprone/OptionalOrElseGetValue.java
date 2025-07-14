@@ -33,7 +33,6 @@ import com.sun.source.tree.LambdaExpressionTree;
 import com.sun.source.tree.LiteralTree;
 import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.MethodInvocationTree;
-import com.sun.source.tree.Tree;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -59,7 +58,6 @@ public final class OptionalOrElseGetValue extends BugChecker implements MethodIn
             return Description.NO_MATCH;
         }
 
-        
         LambdaExpressionTree.BodyKind bodyKind = lambdaExpressionTree.getBodyKind();
 
         if (bodyKind != LambdaExpressionTree.BodyKind.EXPRESSION) {

@@ -64,7 +64,7 @@ public final class OptionalFlatMapOfNullable extends BugChecker implements BugCh
         if (!(functionParameter instanceof LambdaExpressionTree lambdaExpressionTree)) {
             return Description.NO_MATCH;
         }
-        
+
         Optional<ExpressionTree> maybeExpression = finalExpression(lambdaExpressionTree);
         if (!maybeExpression.isPresent()) {
             return Description.NO_MATCH;

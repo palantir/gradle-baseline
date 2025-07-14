@@ -257,7 +257,7 @@ public final class CatchSpecificity extends BugChecker implements BugChecker.Try
                 if (source == null) {
                     return null;
                 }
-                
+
                 List<? extends StatementTree> statements = blockStatement.getStatements();
                 if (statements.isEmpty()) {
                     return "";
