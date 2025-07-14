@@ -252,12 +252,12 @@ public final class CatchSpecificity extends BugChecker implements BugChecker.Try
 
         @Nullable
         private static String unwrapBlock(StatementTree statement, VisitorState state) {
-            if (statement.getKind() == Tree.Kind.BLOCK) {
+            if (statement instanceof BlockTree blockStatement) {
                 CharSequence source = state.getSourceCode();
                 if (source == null) {
                     return null;
                 }
-                BlockTree blockStatement = (BlockTree) statement;
+
                 List<? extends StatementTree> statements = blockStatement.getStatements();
                 if (statements.isEmpty()) {
                     return "";

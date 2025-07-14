@@ -61,10 +61,10 @@ public final class OptionalFlatMapOfNullable extends BugChecker implements BugCh
         }
         ExpressionTree functionParameter =
                 ASTHelpers.stripParentheses(tree.getArguments().get(0));
-        if (functionParameter.getKind() != Tree.Kind.LAMBDA_EXPRESSION) {
+        if (!(functionParameter instanceof LambdaExpressionTree lambdaExpressionTree)) {
             return Description.NO_MATCH;
         }
-        LambdaExpressionTree lambdaExpressionTree = (LambdaExpressionTree) functionParameter;
+
         Optional<ExpressionTree> maybeExpression = finalExpression(lambdaExpressionTree);
         if (!maybeExpression.isPresent()) {
             return Description.NO_MATCH;

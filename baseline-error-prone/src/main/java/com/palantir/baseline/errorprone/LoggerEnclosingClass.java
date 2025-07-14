@@ -27,9 +27,9 @@ import com.google.errorprone.matchers.Matchers;
 import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
+import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.MethodInvocationTree;
-import com.sun.source.tree.Tree;
 import com.sun.source.tree.VariableTree;
 import com.sun.tools.javac.code.Symbol;
 
@@ -72,7 +72,7 @@ public final class LoggerEnclosingClass extends BugChecker implements BugChecker
             return Description.NO_MATCH;
         }
         if (!memberSelectTree.getIdentifier().contentEquals("class")
-                || memberSelectTree.getExpression().getKind() != Tree.Kind.IDENTIFIER) {
+                || !(memberSelectTree.getExpression() instanceof IdentifierTree)) {
             return Description.NO_MATCH;
         }
 

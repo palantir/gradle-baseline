@@ -33,7 +33,6 @@ import com.sun.source.tree.LambdaExpressionTree;
 import com.sun.source.tree.LiteralTree;
 import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.MethodInvocationTree;
-import com.sun.source.tree.Tree;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -55,11 +54,10 @@ public final class OptionalOrElseGetValue extends BugChecker implements MethodIn
 
         ExpressionTree orElseGetArg = tree.getArguments().get(0);
 
-        if (orElseGetArg.getKind() != Tree.Kind.LAMBDA_EXPRESSION) {
+        if (!(orElseGetArg instanceof LambdaExpressionTree lambdaExpressionTree)) {
             return Description.NO_MATCH;
         }
 
-        LambdaExpressionTree lambdaExpressionTree = (LambdaExpressionTree) orElseGetArg;
         LambdaExpressionTree.BodyKind bodyKind = lambdaExpressionTree.getBodyKind();
 
         if (bodyKind != LambdaExpressionTree.BodyKind.EXPRESSION) {

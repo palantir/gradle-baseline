@@ -65,7 +65,7 @@ public final class ThrowSpecificity extends BugChecker implements BugChecker.Met
             return Description.NO_MATCH;
         }
         Types types = state.getTypes();
-        if (ASTHelpers.findSuperMethod(ASTHelpers.getSymbol(tree), types).isPresent()) {
+        if (!ASTHelpers.findSuperMethods(ASTHelpers.getSymbol(tree), types).isEmpty()) {
             return Description.NO_MATCH;
         }
         ExpressionTree throwsExpression = Iterables.getOnlyElement(throwsExpressions);

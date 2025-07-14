@@ -84,14 +84,17 @@ public abstract class BaselineErrorProneExtension {
             // Built-in checks
             "ArrayEquals",
             "BadImport",
+            "BooleanLiteral",
             "LongDoubleConversion",
             "LoopOverCharArray",
             "MissingBraces",
             "MissingOverride",
             "NarrowCalculation",
             "ObjectsHashCodePrimitive",
+            "PreferInstanceofOverGetKind",
             "ProtectedMembersInFinalClass",
             "PatternMatchingInstanceof",
+            "UnnecessaryQualifier",
             "UnnecessaryParentheses",
             "ZoneIdOfZ");
 
