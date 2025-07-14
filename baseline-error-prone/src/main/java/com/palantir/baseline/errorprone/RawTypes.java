@@ -105,8 +105,8 @@ public final class RawTypes extends BugChecker
                             + "where necessary, such as when interacting with older library code.")
                     .build();
         }
-        if (type.getKind() == Tree.Kind.PARAMETERIZED_TYPE) {
-            return testTypes(((ParameterizedTypeTree) type).getTypeArguments(), state);
+        if (type instanceof ParameterizedTypeTree parameterizedTypeTree) {
+            return testTypes(parameterizedTypeTree.getTypeArguments(), state);
         }
         return Description.NO_MATCH;
     }
