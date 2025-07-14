@@ -48,7 +48,6 @@ dependencies {
     compileOnly 'com.google.auto.service:auto-service'
 }
 
-
 // Incorrectly identifies tests as junit4 usage
 tasks.checkJUnitDependencies.enabled = false
 tasks.withType(JavaCompile) {
