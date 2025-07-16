@@ -37,7 +37,8 @@ import java.io.UncheckedIOException;
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
-        summary = "Prefer UncheckedIOException or SafeUncheckedIoException when wrapping IOException")
+        summary = "Prefer UncheckedIOException or SafeUncheckedIoException when wrapping IOException so consumers can"
+                + " more accurately categorize errors")
 public final class PreferUncheckedIoException extends BugChecker implements NewClassTreeMatcher {
 
     private static final Matcher<ExpressionTree> STRING_MATCHER = Matchers.isSameType(String.class);
