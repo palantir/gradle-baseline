@@ -159,6 +159,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
     -com.google.common.base.Preconditions.checkNotNull(variable, "message");
     +com.palantir.logsafe.Preconditions.checkNotNull(variable, "message"); // equivalent functionality is available in the safe-logging variant
     ```
+- `PreferUncheckedIoExcepetion`: Prefer UncheckedIOException or SafeUncheckedIoException when wrapping IOException.
 - `ShutdownHook`: Applications should not use `Runtime#addShutdownHook`.
 - `GradleCacheableTaskAction`: Gradle plugins should not call `Task.doFirst` or `Task.doLast` with a lambda, as that is not cacheable. See [gradle/gradle#5510](https://github.com/gradle/gradle/issues/5510) for more details.
 - `PreferBuiltInConcurrentKeySet`: Discourage relying on Guava's `com.google.common.collect.Sets.newConcurrentHashSet()`, when Java's `java.util.concurrent.ConcurrentHashMap.newKeySet()` serves the same purpose.
