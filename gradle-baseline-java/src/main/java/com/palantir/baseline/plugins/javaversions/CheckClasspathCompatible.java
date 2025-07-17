@@ -74,6 +74,7 @@ public abstract class CheckClasspathCompatible extends DefaultTask {
                 exampleBadClassesPerJar));
     }
 
+    @SuppressWarnings("for-rollout:PreferUncheckedIoException")
     private Optional<String> tooHighBytecodeMajorVersionInJar(File file) {
         try (JarInputStream jarInputStream = new JarInputStream(new BufferedInputStream(new FileInputStream(file)))) {
             JarEntry entry;

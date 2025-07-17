@@ -59,6 +59,7 @@ public abstract class JarClassHasher implements BuildService<BuildServiceParamet
         }
     }
 
+    @SuppressWarnings("for-rollout:PreferUncheckedIoException")
     public final Result hashClasses(ResolvedArtifact resolvedArtifact, Logger logger) {
         ClassUniquenessArtifactIdentifier key = ImmutableClassUniquenessArtifactIdentifier.builder()
                 .moduleVersionIdentifier(resolvedArtifact.getModuleVersion().getId())
