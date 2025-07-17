@@ -21,6 +21,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.StandardOpenOption;
 import java.util.List;
@@ -66,13 +67,12 @@ public final class VersionsProps {
         class Builder extends VersionsProps_VersionForce_Builder {}
     }
 
-    @SuppressWarnings("for-rollout:PreferUncheckedIoException")
     public static ParsedVersionsProps readVersionsProps(File propsFile) {
         Preconditions.checkArgument(propsFile.exists(), "No " + propsFile.toPath() + " file found");
         try (Stream<String> lines = Files.lines(propsFile.toPath())) {
             return readVersionsProps(lines);
         } catch (IOException e) {
-            throw new RuntimeException("Error reading " + propsFile.toPath() + " file", e);
+            throw new UncheckedIOException("Error reading " + propsFile.toPath() + " file", e);
         }
     }
 
@@ -120,7 +120,6 @@ public final class VersionsProps {
      * @throws NullPointerException if any of the {@code forcesToRemove} weren't found in
      *     {@link ParsedVersionsProps#namesToLocationMap}.
      */
-    @SuppressWarnings("for-rollout:PreferUncheckedIoException")
     public static void writeVersionsProps(
             ParsedVersionsProps parsedVersionsProps, Stream<String> forcesToRemove, File propsFile) {
         List<String> lines = parsedVersionsProps.lines();
@@ -137,7 +136,7 @@ public final class VersionsProps {
                 }
             }
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new UncheckedIOException(e);
         }
     }
 }

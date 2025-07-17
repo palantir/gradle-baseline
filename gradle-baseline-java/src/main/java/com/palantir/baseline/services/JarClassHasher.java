@@ -28,6 +28,7 @@ import com.google.common.io.ByteStreams;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.List;
 import java.util.Map;
 import java.util.jar.JarEntry;
@@ -59,7 +60,6 @@ public abstract class JarClassHasher implements BuildService<BuildServiceParamet
         }
     }
 
-    @SuppressWarnings("for-rollout:PreferUncheckedIoException")
     public final Result hashClasses(ResolvedArtifact resolvedArtifact, Logger logger) {
         ClassUniquenessArtifactIdentifier key = ImmutableClassUniquenessArtifactIdentifier.builder()
                 .moduleVersionIdentifier(resolvedArtifact.getModuleVersion().getId())
@@ -91,7 +91,7 @@ public abstract class JarClassHasher implements BuildService<BuildServiceParamet
                     hashesByClassName.put(className, inputStream.hash());
                 }
             } catch (IOException e) {
-                throw new RuntimeException(e);
+                throw new UncheckedIOException(e);
             }
 
             ImmutableListMultimap<String, HashCode> builtHashesByClassName = hashesByClassName.build();

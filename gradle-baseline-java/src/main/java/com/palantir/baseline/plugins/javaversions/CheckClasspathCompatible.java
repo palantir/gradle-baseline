@@ -24,6 +24,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UncheckedIOException;
 import java.util.Optional;
 import java.util.jar.JarEntry;
 import java.util.jar.JarInputStream;
@@ -74,7 +75,6 @@ public abstract class CheckClasspathCompatible extends DefaultTask {
                 exampleBadClassesPerJar));
     }
 
-    @SuppressWarnings("for-rollout:PreferUncheckedIoException")
     private Optional<String> tooHighBytecodeMajorVersionInJar(File file) {
         try (JarInputStream jarInputStream = new JarInputStream(new BufferedInputStream(new FileInputStream(file)))) {
             JarEntry entry;
@@ -99,7 +99,7 @@ public abstract class CheckClasspathCompatible extends DefaultTask {
                 }
             }
         } catch (IOException e) {
-            throw new RuntimeException("Failed when checking classpath compatibility of: " + file, e);
+            throw new UncheckedIOException("Failed when checking classpath compatibility of: " + file, e);
         }
 
         return Optional.empty();

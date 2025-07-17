@@ -19,6 +19,7 @@ package com.palantir.baseline.plugins;
 import com.google.common.base.Preconditions;
 import com.google.common.io.Resources;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Paths;
@@ -80,14 +81,13 @@ public final class BaselineCheckstyle extends AbstractBaselinePlugin {
     }
 
     // The idea is the checkstyle.version file can be more easily updated by excavator
-    @SuppressWarnings("for-rollout:PreferUncheckedIoException")
     private static String getCheckstyleVersionFromResource() {
         URL url = Resources.getResource(BaselineCheckstyle.class, "/checkstyle.version");
         Preconditions.checkNotNull(url, "Unable to find 'checkstyle.version' resource");
         try {
             return Resources.toString(url, StandardCharsets.UTF_8).trim();
         } catch (IOException e) {
-            throw new RuntimeException("Unable to lookup checkstyle version", e);
+            throw new UncheckedIOException("Unable to lookup checkstyle version", e);
         }
     }
 }
