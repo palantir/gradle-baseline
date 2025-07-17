@@ -99,6 +99,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
         });
     }
 
+    @SuppressWarnings("for-rollout:PreferUncheckedIoException")
     private static void configureBuildGradleFormatter(Project project, SpotlessExtension spotlessExtension) {
         Path buildDir = project.getRootProject().getBuildDir().toPath();
         Path configFile = buildDir.resolve("baseline-format").resolve("greclipse.properties");
@@ -157,6 +158,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
         return files.map(BaselineFormat::computeCopyrightComment).collect(Collectors.toList());
     }
 
+    @SuppressWarnings("for-rollout:PreferUncheckedIoException")
     private static String computeCopyrightComment(Path copyrightFile) {
         try {
             return new String(Files.readAllBytes(copyrightFile), StandardCharsets.UTF_8);

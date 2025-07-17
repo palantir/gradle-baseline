@@ -80,6 +80,7 @@ public final class BaselineCheckstyle extends AbstractBaselinePlugin {
     }
 
     // The idea is the checkstyle.version file can be more easily updated by excavator
+    @SuppressWarnings("for-rollout:PreferUncheckedIoException")
     private static String getCheckstyleVersionFromResource() {
         URL url = Resources.getResource(BaselineCheckstyle.class, "/checkstyle.version");
         Preconditions.checkNotNull(url, "Unable to find 'checkstyle.version' resource");

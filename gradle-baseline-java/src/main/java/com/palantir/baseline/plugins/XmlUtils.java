@@ -47,6 +47,7 @@ final class XmlUtils {
                 configurationFile, configure, () -> new Node(null, "project", ImmutableMap.of("version", "4")));
     }
 
+    @SuppressWarnings("for-rollout:PreferUncheckedIoException")
     static void createOrUpdateXmlFile(
             File configurationFile, Consumer<Node> configure, Supplier<Node> defaultRootNode) {
         Node rootNode;

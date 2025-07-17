@@ -250,6 +250,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     }
 
     /** Given a {@code com/palantir/product/Foo.class} file, what other classes does it import/reference. */
+    @SuppressWarnings("for-rollout:PreferUncheckedIoException")
     public static Stream<String> referencedClasses(File classFile) {
         try {
             return BaselineExactDependencies.CLASS_FILE_ANALYZER
@@ -300,6 +301,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     public static final class Indexes {
         private final Map<String, Set<ResolvedArtifact>> classToArtifacts = new ConcurrentHashMap<>();
 
+        @SuppressWarnings("for-rollout:PreferUncheckedIoException")
         public void populateIndexes(Set<ResolvedConfiguration> configurations) {
             configurations.stream()
                     .flatMap(configuration -> configuration.getResolvedArtifacts().stream())
