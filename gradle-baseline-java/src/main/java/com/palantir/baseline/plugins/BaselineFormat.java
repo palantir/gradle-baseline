@@ -22,6 +22,7 @@ import com.google.common.base.Preconditions;
 import com.google.common.io.Resources;
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -99,7 +100,6 @@ class BaselineFormat extends AbstractBaselinePlugin {
         });
     }
 
-    @SuppressWarnings("for-rollout:PreferUncheckedIoException")
     private static void configureBuildGradleFormatter(Project project, SpotlessExtension spotlessExtension) {
         Path buildDir = project.getRootProject().getBuildDir().toPath();
         Path configFile = buildDir.resolve("baseline-format").resolve("greclipse.properties");
@@ -111,7 +111,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
             // yes this will overwrite it for each subproject, maybe that's fine???
             Files.write(configFile, Resources.toByteArray(url), StandardOpenOption.CREATE);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to copy greclipse.properties resource to " + configFile, e);
+            throw new UncheckedIOException("Failed to copy greclipse.properties resource to " + configFile, e);
         }
 
         spotlessExtension.groovyGradle(ext -> {
@@ -158,12 +158,11 @@ class BaselineFormat extends AbstractBaselinePlugin {
         return files.map(BaselineFormat::computeCopyrightComment).collect(Collectors.toList());
     }
 
-    @SuppressWarnings("for-rollout:PreferUncheckedIoException")
     private static String computeCopyrightComment(Path copyrightFile) {
         try {
             return new String(Files.readAllBytes(copyrightFile), StandardCharsets.UTF_8);
         } catch (IOException e) {
-            throw new RuntimeException("Couldn't read copyright file " + copyrightFile, e);
+            throw new UncheckedIOException("Couldn't read copyright file " + copyrightFile, e);
         }
     }
 

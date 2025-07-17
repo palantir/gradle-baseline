@@ -25,6 +25,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.io.UncheckedIOException;
 import java.nio.charset.StandardCharsets;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -47,7 +48,6 @@ final class XmlUtils {
                 configurationFile, configure, () -> new Node(null, "project", ImmutableMap.of("version", "4")));
     }
 
-    @SuppressWarnings("for-rollout:PreferUncheckedIoException")
     static void createOrUpdateXmlFile(
             File configurationFile, Consumer<Node> configure, Supplier<Node> defaultRootNode) {
         Node rootNode;
@@ -71,7 +71,7 @@ final class XmlUtils {
             nodePrinter.setPreserveWhitespace(true);
             nodePrinter.print(rootNode);
         } catch (IOException e) {
-            throw new RuntimeException("Failed to write back to configuration file: " + configurationFile, e);
+            throw new UncheckedIOException("Failed to write back to configuration file: " + configurationFile, e);
         }
     }
 }

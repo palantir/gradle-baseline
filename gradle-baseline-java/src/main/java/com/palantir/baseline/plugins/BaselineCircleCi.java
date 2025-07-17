@@ -21,6 +21,7 @@ import com.google.common.base.Splitter;
 import com.palantir.gradle.utils.environmentvariables.EnvironmentVariables;
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -49,7 +50,6 @@ public final class BaselineCircleCi implements Plugin<Project> {
                         + " checkout dir ('project') will be used instead.");
     }
 
-    @SuppressWarnings("for-rollout:PreferUncheckedIoException")
     private void configurePluginsForArtifacts(Project project, EnvironmentVariables environmentVariables) {
         String circleArtifactsDir = environmentVariables
                 .envVarOrFromTestingProperty("CIRCLE_ARTIFACTS")
@@ -63,7 +63,7 @@ public final class BaselineCircleCi implements Plugin<Project> {
         try {
             createDirectories(Paths.get(circleArtifactsDir));
         } catch (IOException e) {
-            throw new RuntimeException("failed to create CIRCLE_ARTIFACTS directory", e);
+            throw new UncheckedIOException("failed to create CIRCLE_ARTIFACTS directory", e);
         }
 
         project.getRootProject()
@@ -73,7 +73,6 @@ public final class BaselineCircleCi implements Plugin<Project> {
                 }));
     }
 
-    @SuppressWarnings("for-rollout:PreferUncheckedIoException")
     private void configurePluginsForReports(Project project, EnvironmentVariables environmentVariables) {
         String circleReportsDir = environmentVariables
                 .envVarOrFromTestingProperty("CIRCLE_TEST_REPORTS")
@@ -86,7 +85,7 @@ public final class BaselineCircleCi implements Plugin<Project> {
         try {
             createDirectories(Paths.get(circleReportsDir));
         } catch (IOException e) {
-            throw new RuntimeException("failed to create CIRCLE_TEST_REPORTS directory", e);
+            throw new UncheckedIOException("failed to create CIRCLE_TEST_REPORTS directory", e);
         }
 
         project.getRootProject()

@@ -26,6 +26,7 @@ import com.palantir.baseline.tasks.CheckUnusedDependenciesParentTask;
 import com.palantir.baseline.tasks.CheckUnusedDependenciesTask;
 import java.io.File;
 import java.io.IOException;
+import java.io.UncheckedIOException;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
@@ -250,14 +251,13 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     }
 
     /** Given a {@code com/palantir/product/Foo.class} file, what other classes does it import/reference. */
-    @SuppressWarnings("for-rollout:PreferUncheckedIoException")
     public static Stream<String> referencedClasses(File classFile) {
         try {
             return BaselineExactDependencies.CLASS_FILE_ANALYZER
                     .analyze(classFile.toURI().toURL())
                     .stream();
         } catch (IOException e) {
-            throw new RuntimeException("Unable to analyze " + classFile, e);
+            throw new UncheckedIOException("Unable to analyze " + classFile, e);
         }
     }
 
@@ -301,7 +301,6 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     public static final class Indexes {
         private final Map<String, Set<ResolvedArtifact>> classToArtifacts = new ConcurrentHashMap<>();
 
-        @SuppressWarnings("for-rollout:PreferUncheckedIoException")
         public void populateIndexes(Set<ResolvedConfiguration> configurations) {
             configurations.stream()
                     .flatMap(configuration -> configuration.getResolvedArtifacts().stream())
@@ -315,7 +314,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                                     .computeIfAbsent(clazz, _ignored -> ConcurrentHashMap.newKeySet())
                                     .add(artifact));
                         } catch (IOException e) {
-                            throw new RuntimeException("Unable to analyze artifact", e);
+                            throw new UncheckedIOException("Unable to analyze artifact", e);
                         }
                     });
         }
