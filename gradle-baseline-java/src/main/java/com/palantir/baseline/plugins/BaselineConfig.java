@@ -52,6 +52,7 @@ class BaselineConfig extends AbstractBaselinePlugin {
                     BaselineConfig.class.getCanonicalName() + " plugin can only be applied to the root project.");
         }
 
+        @SuppressWarnings("for-rollout:ConfigurationAvoidanceRegistration")
         Configuration configuration = rootProject.getConfigurations().create("baseline");
 
         // users can still override this default dependency, it just reduces boilerplate
@@ -82,6 +83,7 @@ class BaselineConfig extends AbstractBaselinePlugin {
             this.rootProject = rootProject;
         }
 
+        @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
         @Override
         public void execute(Task task) {
             if (configuration.getFiles().size() != 1) {

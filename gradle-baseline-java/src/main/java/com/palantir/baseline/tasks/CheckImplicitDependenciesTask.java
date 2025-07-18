@@ -41,14 +41,22 @@ import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
 
+@SuppressWarnings("for-rollout:NonAbstractGradleType")
 public class CheckImplicitDependenciesTask extends DefaultTask {
 
     private static final Comparator<ResolvedArtifact> ARTIFACT_COMPARATOR =
             Comparator.comparing(artifact -> artifact.getId().getDisplayName());
 
+    @SuppressWarnings("for-rollout:GradleTypesAsFields")
     private final ListProperty<Configuration> dependenciesConfigurations;
+
+    @SuppressWarnings("for-rollout:GradleTypesAsFields")
     private final Property<FileCollection> sourceClasses;
+
+    @SuppressWarnings("for-rollout:GradleTypesAsFields")
     private final SetProperty<String> ignore;
+
+    @SuppressWarnings("for-rollout:GradleTypesAsFields")
     private final Property<String> suggestionConfigurationName;
 
     public CheckImplicitDependenciesTask() {

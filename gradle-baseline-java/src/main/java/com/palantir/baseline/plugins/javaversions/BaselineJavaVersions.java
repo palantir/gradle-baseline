@@ -43,6 +43,7 @@ public final class BaselineJavaVersions implements Plugin<Project> {
             "com.palantir.publish-dist",
             "com.palantir.sls-java-service-distribution");
 
+    @SuppressWarnings("for-rollout:NonAbstractGradleType")
     @Override
     public void apply(Project project) {
         if (!Objects.equals(project, project.getRootProject())) {
@@ -53,6 +54,7 @@ public final class BaselineJavaVersions implements Plugin<Project> {
             throw new GradleException(String.format(
                     "BaselineJavaVersions requires %s. %s is not supported", MIN_GRADLE_VERSION, currentGradleVersion));
         }
+        @SuppressWarnings({"for-rollout:GradleTypesAsFields", "for-rollout:NonAbstractGradleType"})
         BaselineJavaVersionsExtension rootExtension =
                 project.getExtensions().create(EXTENSION_NAME, BaselineJavaVersionsExtension.class, project);
         project.subprojects(proj ->
