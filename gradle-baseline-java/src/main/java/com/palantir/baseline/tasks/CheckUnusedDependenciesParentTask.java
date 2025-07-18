@@ -24,7 +24,9 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.Internal;
 
+@SuppressWarnings("for-rollout:NonAbstractGradleType")
 public class CheckUnusedDependenciesParentTask extends DefaultTask {
+    @SuppressWarnings("for-rollout:GradleTypesAsFields")
     private final SetProperty<String> ignore;
 
     public CheckUnusedDependenciesParentTask() {

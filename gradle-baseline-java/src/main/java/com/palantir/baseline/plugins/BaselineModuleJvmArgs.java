@@ -86,6 +86,7 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
     @SuppressWarnings("checkstyle:MethodLength")
     public final void apply(Project project) {
         project.getPluginManager().withPlugin("java", unused -> {
+            @SuppressWarnings({"for-rollout:GradleTypesAsFields", "for-rollout:NonAbstractGradleType"})
             BaselineModuleJvmArgsExtension extension =
                     project.getExtensions().create(EXTENSION_NAME, BaselineModuleJvmArgsExtension.class, project);
 

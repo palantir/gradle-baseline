@@ -56,6 +56,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
 
     @Override
     public void apply(Project project) {
+        @SuppressWarnings({"for-rollout:GradleTypesAsFields", "for-rollout:NonAbstractGradleType"})
         BaselineJavaVersionExtension extension =
                 project.getExtensions().create(EXTENSION_NAME, BaselineJavaVersionExtension.class, project);
 
@@ -268,10 +269,13 @@ public final class BaselineJavaVersion implements Plugin<Project> {
     }
 
     @CacheableTask
-    @SuppressWarnings("checkstyle:DesignForExtension")
+    @SuppressWarnings({"checkstyle:DesignForExtension", "for-rollout:NonAbstractGradleType"})
     public static class CheckJavaVersionsTask extends DefaultTask {
 
+        @SuppressWarnings("for-rollout:GradleTypesAsFields")
         private final Property<ChosenJavaVersion> targetVersion;
+
+        @SuppressWarnings("for-rollout:GradleTypesAsFields")
         private final Property<ChosenJavaVersion> runtimeVersion;
 
         @Inject
@@ -293,6 +297,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             return runtimeVersion;
         }
 
+        @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
         @TaskAction
         public final void checkJavaVersions() {
             ChosenJavaVersion target = getTargetVersion().get();

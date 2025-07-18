@@ -49,6 +49,7 @@ import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.options.Option;
 import org.gradle.util.GFileUtils;
 
+@SuppressWarnings("for-rollout:NonAbstractGradleType")
 @CacheableTask
 public class CheckClassUniquenessLockTask extends DefaultTask {
 
@@ -57,13 +58,13 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
             + "# Run ./gradlew checkClassUniqueness --fix to update this file\n\n";
 
     // not marking this as an Input, because we want to re-run if the *contents* of a configuration changes
-    @SuppressWarnings("VisibilityModifier")
+    @SuppressWarnings({"VisibilityModifier", "for-rollout:GradleTypesAsFields"})
     public final SetProperty<Configuration> configurations;
 
-    @SuppressWarnings("VisibilityModifier")
+    @SuppressWarnings({"VisibilityModifier", "for-rollout:GradleTypesAsFields"})
     public final Property<JarClassHasher> jarClassHasher;
 
-    @SuppressWarnings("VisibilityModifier")
+    @SuppressWarnings({"VisibilityModifier", "for-rollout:GradleTypesAsFields"})
     public final Property<Boolean> shouldFix;
 
     private final File lockFile;
@@ -113,6 +114,7 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
                         Comparator.naturalOrder(),
                         CheckClassUniquenessLockTask::getConfigurationName,
                         configuration -> {
+                            @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
                             ClassUniquenessAnalyzer analyzer = new ClassUniquenessAnalyzer(
                                     jarClassHasher.get(), getProject().getLogger());
                             analyzer.analyzeConfiguration(configuration);

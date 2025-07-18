@@ -40,11 +40,19 @@ import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
 
+@SuppressWarnings("for-rollout:NonAbstractGradleType")
 public class CheckUnusedDependenciesTask extends DefaultTask {
 
+    @SuppressWarnings("for-rollout:GradleTypesAsFields")
     private final ListProperty<Configuration> dependenciesConfigurations;
+
+    @SuppressWarnings("for-rollout:GradleTypesAsFields")
     private final ListProperty<Configuration> sourceOnlyConfigurations;
+
+    @SuppressWarnings("for-rollout:GradleTypesAsFields")
     private final Property<FileCollection> sourceClasses;
+
+    @SuppressWarnings("for-rollout:GradleTypesAsFields")
     private final SetProperty<String> ignore;
 
     public CheckUnusedDependenciesTask() {

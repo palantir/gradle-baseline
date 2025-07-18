@@ -44,8 +44,10 @@ import org.gradle.jvm.toolchain.JavaToolchainSpec;
  *
  * Better to just require everyone to specify sourceCompatibility explicitly!
  */
+@SuppressWarnings("for-rollout:NonAbstractGradleType")
 public class CheckExplicitSourceCompatibilityTask extends DefaultTask {
 
+    @SuppressWarnings("for-rollout:GradleTypesAsFields")
     private final Property<Boolean> shouldFix;
 
     @Inject
@@ -104,6 +106,7 @@ public class CheckExplicitSourceCompatibilityTask extends DefaultTask {
         shouldFix.set(value);
     }
 
+    @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
     @TaskAction
     public final void taskAction() throws IOException {
         if (getRawSourceCompat() != null) {
