@@ -68,6 +68,7 @@ public abstract class BaselineErrorProneExtension {
             "Slf4jLevelCheck",
             "Slf4jLogsafeArgs",
             "Slf4jThrowable",
+            "StatementSwitchToExpressionSwitch",
             "StreamOfEmpty",
             "StreamFlatMapOptional",
             "StrictUnusedVariable",
