@@ -97,6 +97,7 @@ public abstract class BaselineErrorProneExtension {
             "PatternMatchingInstanceof",
             "UnnecessaryQualifier",
             "UnnecessaryParentheses",
+            "UnusedException",
             "ZoneIdOfZ");
 
     private final SuppressibleErrorProneExtension suppressibleErrorProneExtension;

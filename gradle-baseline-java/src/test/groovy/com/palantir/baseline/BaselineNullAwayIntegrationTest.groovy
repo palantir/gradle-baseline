@@ -18,6 +18,10 @@ package com.palantir.baseline
 
 import nebula.test.IntegrationSpec
 import nebula.test.functional.ExecutionResult
+import com.palantir.gradle.plugintesting.GradleTestVersions
+import spock.lang.Unroll
+
+@Unroll
 
 class BaselineNullAwayIntegrationTest extends IntegrationSpec {
 
@@ -60,15 +64,20 @@ class BaselineNullAwayIntegrationTest extends IntegrationSpec {
         }
         '''.stripIndent()
 
-    def 'Can apply plugin'() {
+    def '#gradleVersionNumber: Can apply plugin'() {
+        gradleVersion = gradleVersionNumber
         when:
         buildFile << standardBuildFile
 
         then:
         runTasksSuccessfully('compileJava', '--info')
+    
+        where:
+        gradleVersionNumber << GradleTestVersions.getGradleVersionsForTests()
     }
 
-    def 'compileJava fails when null-away finds errors'() {
+    def '#gradleVersionNumber: compileJava fails when null-away finds errors'() {
+        gradleVersion = gradleVersionNumber
         when:
         buildFile << standardBuildFile
         writeJavaSourceFile(invalidJavaFile)
@@ -76,18 +85,26 @@ class BaselineNullAwayIntegrationTest extends IntegrationSpec {
         then:
         ExecutionResult result = runTasksWithFailure('compileJava')
         result.standardError.contains("[NullAway] dereferenced expression throwable.getMessage() is @Nullable")
+    
+        where:
+        gradleVersionNumber << GradleTestVersions.getGradleVersionsForTests()
     }
 
-    def 'Test tasks are not impacted by null-away'() {
+    def '#gradleVersionNumber: Test tasks are not impacted by null-away'() {
+        gradleVersion = gradleVersionNumber
         when:
         buildFile << standardBuildFile
         writeJavaSourceFile(invalidJavaFile, "src/test/java")
 
         then:
         runTasksSuccessfully('compileTestJava')
+    
+        where:
+        gradleVersionNumber << GradleTestVersions.getGradleVersionsForTests()
     }
 
-    def 'Integration test tasks are not impacted by null-away'() {
+    def '#gradleVersionNumber: Integration test tasks are not impacted by null-away'() {
+        gradleVersion = gradleVersionNumber
         when:
         buildFile << '''
             apply plugin: 'org.unbroken-dome.test-sets'
@@ -102,14 +119,21 @@ class BaselineNullAwayIntegrationTest extends IntegrationSpec {
 
         then:
         runTasksSuccessfully('compileIntegrationTestJava')
+    
+        where:
+        gradleVersionNumber << GradleTestVersions.getGradleVersionsForTests()
     }
 
-    def 'compileJava succeeds when null-away finds no errors'() {
+    def '#gradleVersionNumber: compileJava succeeds when null-away finds no errors'() {
+        gradleVersion = gradleVersionNumber
         when:
         buildFile << standardBuildFile
         writeJavaSourceFile(validJavaFile)
 
         then:
         runTasksSuccessfully('compileJava')
+    
+        where:
+        gradleVersionNumber << GradleTestVersions.getGradleVersionsForTests()
     }
 }
