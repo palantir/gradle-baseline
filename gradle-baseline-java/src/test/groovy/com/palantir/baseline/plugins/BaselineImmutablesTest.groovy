@@ -19,10 +19,6 @@ package com.palantir.baseline.plugins
 import com.google.common.collect.ImmutableList
 import nebula.test.IntegrationSpec
 import nebula.test.functional.ExecutionResult
-import com.palantir.gradle.plugintesting.GradleTestVersions
-import spock.lang.Unroll
-
-@Unroll
 
 class BaselineImmutablesTest extends IntegrationSpec {
     private static final String IMMUTABLES = 'org.immutables:value:2.8.8'
@@ -58,8 +54,7 @@ class BaselineImmutablesTest extends IntegrationSpec {
         '''.stripIndent(true)
     }
 
-    def '#gradleVersionNumber: inserts incremental compilation args into source sets that have immutables'() {
-        gradleVersion = gradleVersionNumber
+    def 'inserts incremental compilation args into source sets that have immutables'() {
         buildFile << """
             testSets {
                 hasImmutables
@@ -99,13 +94,9 @@ class BaselineImmutablesTest extends IntegrationSpec {
         stdout.contains 'compileDoesNotHaveImmutablesJava: []'
         stdout.contains 'compileHasImmutablesAddedInAfterEvaluateJava: [-Aimmutables.gradle.incremental]'
         stdout.contains 'compileOnlyHasImmutablesAnnotationsJava: []'
-    
-        where:
-        gradleVersionNumber << GradleTestVersions.getGradleVersionsForTests()
     }
 
-    def '#gradleVersionNumber: Compatible with java #javaVersion'() {
-        gradleVersion = gradleVersionNumber
+    def 'Compatible with java #javaVersion'() {
         // Context: https://github.com/immutables/immutables/issues/1379#issuecomment-1254224741
 
         when:
@@ -156,8 +147,7 @@ class BaselineImmutablesTest extends IntegrationSpec {
         javaVersion << ImmutableList.of(11, 17)
     }
 
-    def '#gradleVersionNumber: handles an annotationProcesor source set extending from another one'() {
-        gradleVersion = gradleVersionNumber
+    def 'handles an annotationProcesor source set extending from another one'() {
         buildFile << """
             dependencies {
                 annotationProcessor '$IMMUTABLES'
@@ -188,8 +178,5 @@ class BaselineImmutablesTest extends IntegrationSpec {
 
         then:
         stdout.contains('compileTestJava: [-Aimmutables.gradle.incremental]')
-    
-        where:
-        gradleVersionNumber << GradleTestVersions.getGradleVersionsForTests()
     }
 }

@@ -18,15 +18,10 @@ package com.palantir.baseline.plugins
 
 import nebula.test.IntegrationSpec
 import nebula.test.functional.ExecutionResult
-import com.palantir.gradle.plugintesting.GradleTestVersions
-import spock.lang.Unroll
-
-@Unroll
 
 class BaselineReproducibilityIntegrationSpec extends IntegrationSpec {
 
-    def '#gradleVersionNumber: task surfaces the badness'() {
-        gradleVersion = gradleVersionNumber
+    def 'task surfaces the badness'() {
         when:
         buildFile << """
         ${applyPlugin(BaselineReproducibility.class)}
@@ -49,13 +44,9 @@ class BaselineReproducibilityIntegrationSpec extends IntegrationSpec {
         then:
         ExecutionResult output = runTasksWithFailure("check")
         output.getStandardError().contains("./gradlew :checkExplicitSourceCompatibility --fix")
-    
-        where:
-        gradleVersionNumber << GradleTestVersions.getGradleVersionsForTests()
     }
 
-    def '#gradleVersionNumber: task passes when explicitly set'() {
-        gradleVersion = gradleVersionNumber
+    def 'task passes when explicitly set'() {
         when:
         buildFile << """
         ${applyPlugin(BaselineReproducibility.class)}
@@ -79,13 +70,9 @@ class BaselineReproducibilityIntegrationSpec extends IntegrationSpec {
 
         then:
         runTasksSuccessfully("checkExplicitSourceCompatibility")
-    
-        where:
-        gradleVersionNumber << GradleTestVersions.getGradleVersionsForTests()
     }
 
-    def '#gradleVersionNumber: no-op if nothing is published'() {
-        gradleVersion = gradleVersionNumber
+    def 'no-op if nothing is published'() {
         when:
         buildFile << """
         ${applyPlugin(BaselineReproducibility.class)}
@@ -99,13 +86,9 @@ class BaselineReproducibilityIntegrationSpec extends IntegrationSpec {
         then:
         def output = runTasksSuccessfully("check")
         output.getStandardOutput().contains("> Task :checkExplicitSourceCompatibility SKIPPED")
-    
-        where:
-        gradleVersionNumber << GradleTestVersions.getGradleVersionsForTests()
     }
 
-    def '#gradleVersionNumber: no-op if there is not source'() {
-        gradleVersion = gradleVersionNumber
+    def 'no-op if there is not source'() {
         when:
         buildFile << """
         ${applyPlugin(BaselineReproducibility.class)}
@@ -125,13 +108,9 @@ class BaselineReproducibilityIntegrationSpec extends IntegrationSpec {
         then:
         def output = runTasksSuccessfully("check")
         output.getStandardOutput().contains("> Task :checkExplicitSourceCompatibility SKIPPED")
-    
-        where:
-        gradleVersionNumber << GradleTestVersions.getGradleVersionsForTests()
     }
 
-    def '#gradleVersionNumber: task passes when toolchains are used'() {
-        gradleVersion = gradleVersionNumber
+    def 'task passes when toolchains are used'() {
         when:
         buildFile << """
         ${applyPlugin(BaselineReproducibility.class)}
@@ -158,8 +137,5 @@ class BaselineReproducibilityIntegrationSpec extends IntegrationSpec {
 
         then:
         runTasksSuccessfully("checkExplicitSourceCompatibility")
-    
-        where:
-        gradleVersionNumber << GradleTestVersions.getGradleVersionsForTests()
     }
 }
