@@ -186,7 +186,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 "ImplementAssertionWithChaining",
                 "InconsistentOverloads",
                 "InitializeInline",
-                "InsecureCipherMode",
+                "InsecureCryptoUsage",
                 "InterfaceWithOnlyStatics",
                 "InterruptedExceptionSwallowed",
                 "Interruption",
