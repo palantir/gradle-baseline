@@ -260,7 +260,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 "UnnecessaryStaticImport",
                 "UnnecessaryTestMethodPrefix",
                 "UnsafeLocaleUsage",
-                "UnusedException",
                 "UrlInSee",
                 "UseCorrectAssertInTests",
                 "UseEnumSwitch",
