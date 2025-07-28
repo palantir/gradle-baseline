@@ -17,7 +17,6 @@
 package com.palantir.baseline
 
 import com.palantir.gradle.plugintesting.ConfigurationCacheSpec
-import nebula.test.IntegrationTestKitSpec
 
 class ConfigurationCacheTest extends ConfigurationCacheSpec {
 
