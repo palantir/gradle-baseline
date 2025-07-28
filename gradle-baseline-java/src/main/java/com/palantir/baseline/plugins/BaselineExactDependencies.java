@@ -88,7 +88,8 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                 .register(
                         checkUnusedDependenciesNameForSourceSet(sourceSet), CheckUnusedDependenciesTask.class, task -> {
                             task.dependsOn(sourceSet.getClassesTaskName());
-                            task.getSourceClasses().setFrom(sourceSet.getOutput().getClassesDirs());
+                            task.getSourceClasses()
+                                    .setFrom(sourceSet.getOutput().getClassesDirs());
                             task.getDependenciesConfigurations().add(compileClasspath);
                             task.withDeclaredDependenciesFrom(implementation);
 
