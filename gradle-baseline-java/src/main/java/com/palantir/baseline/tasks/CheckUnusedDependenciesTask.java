@@ -46,6 +46,7 @@ import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.TaskAction;
 import org.jetbrains.annotations.NotNull;
 import org.jspecify.annotations.Nullable;
@@ -62,6 +63,7 @@ public abstract class CheckUnusedDependenciesTask extends DefaultTask {
     protected abstract SetProperty<ExplicitDependency> getExplicitDependencies();
 
     @Classpath
+    @InputFiles
     public abstract ConfigurableFileCollection getSourceClasses();
 
     @Inject
