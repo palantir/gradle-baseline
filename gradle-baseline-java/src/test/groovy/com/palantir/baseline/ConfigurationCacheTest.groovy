@@ -16,9 +16,10 @@
 
 package com.palantir.baseline
 
+import com.palantir.gradle.plugintesting.ConfigurationCacheSpec
 import nebula.test.IntegrationTestKitSpec
 
-class ConfigurationCacheTest extends IntegrationTestKitSpec {
+class ConfigurationCacheTest extends ConfigurationCacheSpec {
 
     def setup() {
         definePluginOutsideOfPluginBlock = true
@@ -52,16 +53,7 @@ class ConfigurationCacheTest extends IntegrationTestKitSpec {
     }
 
     def "classes task runs with configuration cache without issues"() {
-        when: 'first run'
-        String result = createRunner('classes', '--configuration-cache').build().output
-
-        then: 'check stored'
-        result.contains('Configuration cache entry stored.')
-
-        when: 're-run task'
-        String rerun = createRunner('classes', '--configuration-cache').build().output
-
-        then: 'the cache is used'
-        rerun.contains("Configuration cache entry reused.")
+        expect:
+        runTasksWithConfigurationCacheAndCheck("classes")
     }
 }
