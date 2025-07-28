@@ -16,76 +16,87 @@
 
 package com.palantir.baseline.tasks;
 
-import com.google.common.base.Preconditions;
 import com.google.common.collect.Streams;
 import com.palantir.baseline.plugins.BaselineExactDependencies;
 import com.palantir.gradle.failurereports.exceptions.ExceptionWithSuggestion;
+import java.io.Serializable;
 import java.nio.file.Path;
-import java.util.Collections;
 import java.util.Comparator;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
+import javax.inject.Inject;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.artifacts.Configuration;
+import org.gradle.api.artifacts.DependencyArtifact;
+import org.gradle.api.artifacts.ModuleDependency;
+import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedConfiguration;
+import org.gradle.api.attributes.Usage;
+import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.ListProperty;
-import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
+import org.jetbrains.annotations.NotNull;
+import org.jspecify.annotations.Nullable;
 
-@SuppressWarnings("for-rollout:NonAbstractGradleType")
-public class CheckUnusedDependenciesTask extends DefaultTask {
+public abstract class CheckUnusedDependenciesTask extends DefaultTask {
 
-    @SuppressWarnings("for-rollout:GradleTypesAsFields")
-    private final ListProperty<Configuration> dependenciesConfigurations;
+    @Input
+    public abstract SetProperty<String> getIgnored();
 
-    @SuppressWarnings("for-rollout:GradleTypesAsFields")
-    private final ListProperty<Configuration> sourceOnlyConfigurations;
+    @Classpath
+    public abstract ListProperty<Configuration> getDependenciesConfigurations();
 
-    @SuppressWarnings("for-rollout:GradleTypesAsFields")
-    private final Property<FileCollection> sourceClasses;
+    @Input
+    protected abstract SetProperty<ExplicitDependency> getExplicitDependencies();
 
-    @SuppressWarnings("for-rollout:GradleTypesAsFields")
-    private final SetProperty<String> ignore;
+    @Classpath
+    public abstract ConfigurableFileCollection getSourceClasses();
+
+    @Inject
+    protected abstract ObjectFactory getObjectFactory();
+
+    private final Usage consistentVersionsUsage;
 
     public CheckUnusedDependenciesTask() {
         setGroup("Verification");
         setDescription("Ensures no extraneous dependencies are declared");
-        dependenciesConfigurations = getProject().getObjects().listProperty(Configuration.class);
-        dependenciesConfigurations.set(Collections.emptyList());
-        sourceOnlyConfigurations = getProject().getObjects().listProperty(Configuration.class);
-        sourceOnlyConfigurations.set(Collections.emptyList());
-        sourceClasses = getProject().getObjects().property(FileCollection.class);
-        ignore = getProject().getObjects().setProperty(String.class);
-        ignore.set(Collections.emptySet());
+        consistentVersionsUsage = getObjectFactory().newInstance(Usage.class, "consistent-versions-usage");
         getOutputs().upToDateWhen(_task -> true);
     }
 
     @TaskAction
     public final void checkUnusedDependencies() {
-        Set<ResolvedConfiguration> resolvedConfigurations = dependenciesConfigurations.get().stream()
+        Set<ResolvedConfiguration> resolvedConfigurations = getDependenciesConfigurations().get().stream()
                 .map(Configuration::getResolvedConfiguration)
                 .collect(Collectors.toSet());
         BaselineExactDependencies.INDEXES.populateIndexes(resolvedConfigurations);
 
+        Set<ExplicitDependency> explicitlyDeclaredDependencies =
+                getExplicitDependencies().get();
         Set<ResolvedArtifact> declaredArtifacts = resolvedConfigurations.stream()
                 .flatMap(resolved -> resolved.getFirstLevelModuleDependencies().stream())
+                .filter(resolvedDependency -> resolvedDependency.getModuleArtifacts().stream()
+                        .map(ExplicitDependency::from)
+                        .anyMatch(explicitlyDeclaredDependencies::contains))
                 .flatMap(dependency -> dependency.getModuleArtifacts().stream())
                 .filter(dependency ->
                         BaselineExactDependencies.VALID_ARTIFACT_EXTENSIONS.contains(dependency.getExtension()))
                 .collect(Collectors.toSet());
 
-        excludeSourceOnlyDependencies();
-
         Set<String> necessaryArtifactsDeclaration = Streams.stream(
-                        sourceClasses.get().iterator())
+                        getSourceClasses().iterator())
                 .flatMap(BaselineExactDependencies::referencedClasses)
                 .flatMap(BaselineExactDependencies.INDEXES::classToArtifacts)
                 .map(BaselineExactDependencies::asString)
@@ -105,7 +116,7 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
         List<ResolvedArtifact> unusedArtifacts = possiblyUnusedArtifacts.stream()
                 .filter(artifact -> !shouldIgnore(artifact))
                 .sorted(Comparator.comparing(BaselineExactDependencies::asString))
-                .collect(Collectors.toList());
+                .toList();
         if (!unusedArtifacts.isEmpty()) {
             // TODO(dfox): don't print warnings for jars that define service loaded classes (e.g. meta-inf)
             StringBuilder builder = new StringBuilder();
@@ -119,26 +130,6 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
         }
     }
 
-    /**
-     * Excludes any source only dependencies configured by the user, as they would be incorrectly flagged as unused by
-     * this task due to BaselineExactDependencies use of
-     * {@link org.apache.maven.shared.dependency.analyzer.asm.ASMDependencyAnalyzer} which only looks at the
-     * dependencies of the generated byte-code, not the union of compile + runtime dependencies.
-     */
-    private void excludeSourceOnlyDependencies() {
-        sourceOnlyConfigurations
-                .get()
-                .forEach(config -> config.getResolvedConfiguration().getFirstLevelModuleDependencies().stream()
-                        .flatMap(dependency -> dependency.getModuleArtifacts().stream())
-                        .forEach(artifact -> ignoreDependency(config, artifact)));
-    }
-
-    private void ignoreDependency(Configuration config, ResolvedArtifact artifact) {
-        String dependencyId = BaselineExactDependencies.asString(artifact);
-        getLogger().info("Ignoring {} dependency: {}", config.getName(), dependencyId);
-        ignore.add(dependencyId);
-    }
-
     private Path buildFile() {
         return getProject()
                 .getRootDir()
@@ -146,59 +137,67 @@ public class CheckUnusedDependenciesTask extends DefaultTask {
                 .relativize(getProject().getBuildFile().toPath());
     }
 
-    private boolean shouldIgnore(ResolvedArtifact artifact) {
-        return ignore.get().contains(BaselineExactDependencies.asString(artifact));
+    private boolean isNotGcvDependency(ModuleDependency dependency) {
+        return !consistentVersionsUsage.equals(dependency.getAttributes().getAttribute(Usage.USAGE_ATTRIBUTE));
     }
 
-    @Classpath
-    public final ListProperty<Configuration> getDependenciesConfigurations() {
-        return dependenciesConfigurations;
+    private boolean shouldIgnore(ResolvedArtifact artifact) {
+        return getIgnored().get().contains(BaselineExactDependencies.asString(artifact));
     }
 
     public final void dependenciesConfiguration(Configuration dependenciesConfiguration) {
-        this.dependenciesConfigurations.add(Objects.requireNonNull(dependenciesConfiguration));
-    }
-
-    @Input
-    public final Provider<List<Configuration>> getSourceOnlyConfigurations() {
-        return sourceOnlyConfigurations;
-    }
-
-    /**
-     * Don't use this unless this configuration is resolvable.
-     *
-     * @deprecated This task only looks at <em>directly declared</em> compile dependencies that also appear in the
-     * runtime classpath, so there's no need to exclude anything like {@code compileOnly} anymore.
-     */
-    @Deprecated
-    public final void sourceOnlyConfiguration(Configuration configuration) {
-        Preconditions.checkNotNull(configuration, "This method requires a non-null configuration");
-        Preconditions.checkArgument(
-                configuration.isCanBeResolved(),
-                "May only add sourceOnlyConfiguration if it is resolvable: %s",
-                configuration);
-        this.sourceOnlyConfigurations.add(Objects.requireNonNull(configuration));
-    }
-
-    @Classpath
-    public final Provider<FileCollection> getSourceClasses() {
-        return sourceClasses;
+        getDependenciesConfigurations().add(Objects.requireNonNull(dependenciesConfiguration));
     }
 
     public final void setSourceClasses(FileCollection newClasses) {
-        this.sourceClasses.set(getProject().files(newClasses));
+        getSourceClasses().setFrom(newClasses);
     }
 
     public final void ignore(Provider<Set<String>> value) {
-        ignore.addAll(value);
+        getIgnored().addAll(value);
     }
 
     public final void ignore(String group, String name) {
-        ignore.add(BaselineExactDependencies.ignoreCoordinate(group, name));
+        getIgnored().add(BaselineExactDependencies.ignoreCoordinate(group, name));
     }
 
-    @Input
-    public final Provider<Set<String>> getIgnored() {
-        return ignore;
+    public final void withDeclaredDependenciesFrom(Provider<Configuration> configuration) {
+        Predicate<ModuleDependency> isNotGcvDependency = this::isNotGcvDependency;
+        getExplicitDependencies().addAll(configuration.map(conf -> new Iterable<ExplicitDependency>() {
+            @Override
+            public @NotNull Iterator<ExplicitDependency> iterator() {
+                return conf.getDependencies().withType(ModuleDependency.class).stream()
+                        .filter(isNotGcvDependency)
+                        .flatMap(ExplicitDependency::from)
+                        .iterator();
+            }
+        }));
+    }
+
+    protected record ExplicitDependency(
+            String group, String name, @Nullable String classifier, @Nullable String extension)
+            implements Serializable {
+
+        private static Stream<ExplicitDependency> from(ModuleDependency dependency) {
+            if (!dependency.getArtifacts().isEmpty()) {
+                return dependency.getArtifacts().stream()
+                        .map(artifact -> new ExplicitDependency(
+                                dependency.getGroup(),
+                                dependency.getName(),
+                                artifact.getClassifier(),
+                                artifact.getExtension()));
+            }
+
+            return Stream.of(
+                    new ExplicitDependency(
+                            dependency.getGroup(), dependency.getName(), null, DependencyArtifact.DEFAULT_TYPE),
+                    new ExplicitDependency(dependency.getGroup(), dependency.getName(), null, ""));
+        }
+
+        private static ExplicitDependency from(ResolvedArtifact resolvedArtifact) {
+            ModuleVersionIdentifier id = resolvedArtifact.getModuleVersion().getId();
+            return new ExplicitDependency(
+                    id.getGroup(), id.getName(), resolvedArtifact.getClassifier(), resolvedArtifact.getExtension());
+        }
     }
 }
