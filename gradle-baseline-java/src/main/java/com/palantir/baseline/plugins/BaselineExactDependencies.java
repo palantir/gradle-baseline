@@ -156,14 +156,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
     public static String asDependencyStringWithName(ResolvedArtifact artifact) {
         ComponentIdentifier componentId = artifact.getId().getComponentIdentifier();
         if (componentId instanceof ProjectComponentIdentifier projectComponentId) {
-            StringBuilder builder = new StringBuilder()
-                    .append("project('")
-                    .append(projectComponentId.getProjectPath())
-                    .append("')");
-            if (true) {
-                builder.append(" <-- ").append(artifact.getName());
-            }
-            return builder.toString();
+            return "project('%s') <-- %s".formatted(projectComponentId.getProjectPath(), artifact.getName());
         }
 
         return asString(artifact);
