@@ -39,7 +39,6 @@ import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedConfiguration;
 import org.gradle.api.attributes.Usage;
 import org.gradle.api.file.ConfigurableFileCollection;
-import org.gradle.api.file.FileCollection;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Provider;
@@ -149,10 +148,6 @@ public abstract class CheckUnusedDependenciesTask extends DefaultTask {
 
     public final void dependenciesConfiguration(Configuration dependenciesConfiguration) {
         getDependenciesConfigurations().add(Objects.requireNonNull(dependenciesConfiguration));
-    }
-
-    public final void setSourceClasses(FileCollection newClasses) {
-        getSourceClasses().setFrom(newClasses);
     }
 
     public final void ignore(Provider<Set<String>> value) {
