@@ -56,4 +56,13 @@ class LazyFormatterStep implements FormatterStep {
         FormatterStep serialized = (FormatterStep) input.readObject();
         delegate = () -> serialized;
     }
+
+    @Override
+    public void close() throws Exception {
+        // Since delegate is memoized, getting it will not create a new instance if it already exists
+        FormatterStep formatterStep = delegate.get();
+        if (formatterStep != null) {
+            formatterStep.close();
+        }
+    }
 }
