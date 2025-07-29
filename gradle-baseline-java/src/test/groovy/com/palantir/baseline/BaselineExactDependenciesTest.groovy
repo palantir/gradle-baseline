@@ -17,6 +17,7 @@
 package com.palantir.baseline
 
 import com.palantir.gradle.plugintesting.GradleTestVersions
+import nebula.test.multiproject.MultiProjectIntegrationInfo
 
 import java.nio.file.Files
 import org.gradle.testkit.runner.BuildResult
@@ -31,7 +32,7 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
             id 'java'
             id 'com.palantir.baseline-exact-dependencies'
             id 'com.palantir.baseline' apply false
-            id 'com.palantir.consistent-versions' version '2.31.0' apply false
+            id 'com.palantir.consistent-versions' version '2.36.0' apply false
         }
     '''.stripIndent(true)
 
@@ -343,6 +344,72 @@ class BaselineExactDependenciesTest extends AbstractPluginTest {
 
         where:
         gradleVersion << GradleTestVersions.gradleVersionsForTests
+    }
+
+    def "Ensure checkUnusedDependencies works with GCV when project is excluded from GCV locks"() {
+        given: 'we set up a build file where GCV is disabled for that project but the plugin is still applied'
+        buildFile << standardBuildFile
+
+        // language=Gradle
+        buildFile << """
+            apply plugin: 'com.palantir.consistent-versions'
+            apply plugin: 'java'
+            apply plugin: 'com.palantir.baseline-exact-dependencies'
+            
+            repositories {
+                mavenCentral()
+            }
+            
+            // ensure compileClasspath is not locked in this project *but* GCV is still enabled
+            versionsLock {
+                disableJavaPluginDefaults()
+            }
+            
+            dependencies {
+                implementation 'com.google.guava:guava', {
+                  version { strictly '33.4.7-jre' }
+                }
+                
+                // pre #3194, this would fail to resolve for `compileClasspath` because 
+                // `baseline-exact-dependencies-main` (a copy of `implementation`) would "steal" the 
+                // `withDependenciesAction` that adds the constraints from `versions.props` to `implementation` for 
+                // itself.  
+                implementation 'com.palantir.tokens:auth-tokens'
+            }
+        """.stripIndent(true)
+
+        file("versions.props") << """
+            com.google.guava:guava = 33.4.8-jre
+            com.palantir.tokens:* = 3.18.0
+        """.stripIndent(true)
+
+        file("src/main/java/com/p1/TestClassNoDeps.java") << """
+            package com.p1;
+
+            import java.util.Set;
+            import com.google.common.collect.Iterables;
+            import com.palantir.tokens.auth.BearerToken;
+            
+            class TestClassNoDeps {
+                public void bla() {
+                    Iterables.filter(Set.of(1, 2, 3), integer -> integer % 2 == 0);
+                    BearerToken.valueOf("asdf");
+                }
+            }
+        """
+
+        with("writeVersionsLock").withGradleVersion(gradleVersion).build()
+
+        when: 'we run checkUnusedDependencies'
+        def result = with('checkUnusedDependencies', '--stacktrace', "--debug")
+                .withGradleVersion(gradleVersion)
+                .build()
+
+        then: 'we do not see any failures'
+        result.tasks(TaskOutcome.FAILED).isEmpty()
+
+        where:
+        gradleVersion << (["8.12.1", "8.14.3"] + GradleTestVersions.getGradleVersionsForTests()).unique()
     }
 
     /**
