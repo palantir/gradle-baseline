@@ -152,7 +152,7 @@ class BaselineFormat extends AbstractBaselinePlugin {
         try {
             files = Files.list(copyrightDir.toPath()).sorted(Comparator.comparing(Path::getFileName));
         } catch (IOException e) {
-            throw new RuntimeException("Couldn't list copyright directory: " + copyrightDir);
+            throw new UncheckedIOException("Couldn't list copyright directory: " + copyrightDir, e);
         }
 
         return files.map(BaselineFormat::computeCopyrightComment).collect(Collectors.toList());
