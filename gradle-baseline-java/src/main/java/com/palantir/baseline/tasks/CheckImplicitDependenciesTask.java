@@ -59,6 +59,7 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
     @SuppressWarnings("for-rollout:GradleTypesAsFields")
     private final Property<String> suggestionConfigurationName;
 
+    @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
     public CheckImplicitDependenciesTask() {
         setGroup("Verification");
         setDescription("Ensures all dependencies are explicitly declared, not just transitively provided");
@@ -133,6 +134,7 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
     /**
      * Return true if the resolved artifact is derived from a project in the current build rather than an external jar.
      */
+    @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
     private boolean isArtifactFromCurrentProject(ResolvedArtifact artifact) {
         if (!isProjectArtifact(artifact)) {
             return false;
@@ -149,6 +151,7 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
                 .collect(Collectors.toSet());
     }
 
+    @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
     private Path buildFile() {
         return getProject()
                 .getRootDir()
@@ -174,6 +177,7 @@ public class CheckImplicitDependenciesTask extends DefaultTask {
         return sourceClasses;
     }
 
+    @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
     public final void setSourceClasses(FileCollection newClasses) {
         this.sourceClasses.set(getProject().files(newClasses));
     }
