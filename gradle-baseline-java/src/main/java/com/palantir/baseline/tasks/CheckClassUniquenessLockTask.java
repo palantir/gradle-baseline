@@ -69,6 +69,7 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
 
     private final File lockFile;
 
+    @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
     public CheckClassUniquenessLockTask() {
         this.configurations = getProject().getObjects().setProperty(Configuration.class);
         this.jarClassHasher = getProject().getObjects().property(JarClassHasher.class);
@@ -177,6 +178,7 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
                 .collect(Collectors.joining(", ", "[", "]"));
     }
 
+    @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
     private void ensureLockfileContains(String expected) {
         if (shouldFix.get()) {
             GFileUtils.writeFile(expected, lockFile);
@@ -221,6 +223,7 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
         }
     }
 
+    @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
     private void ensureLockfileDoesNotExist() {
         if (lockFile.exists()) {
             if (shouldFix.get()) {
