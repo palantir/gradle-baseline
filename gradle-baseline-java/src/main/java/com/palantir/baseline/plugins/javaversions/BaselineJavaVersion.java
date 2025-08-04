@@ -278,7 +278,6 @@ public final class BaselineJavaVersion implements Plugin<Project> {
         @SuppressWarnings("for-rollout:GradleTypesAsFields")
         private final Property<ChosenJavaVersion> runtimeVersion;
 
-        @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
         @Inject
         public CheckJavaVersionsTask() {
             setGroup("Verification");

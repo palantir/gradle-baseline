@@ -83,7 +83,6 @@ class BaselineConfig extends AbstractBaselinePlugin {
             this.rootProject = rootProject;
         }
 
-        @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
         @Override
         public void execute(Task task) {
             if (configuration.getFiles().size() != 1) {

@@ -69,7 +69,6 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
 
     private final File lockFile;
 
-    @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
     public CheckClassUniquenessLockTask() {
         this.configurations = getProject().getObjects().setProperty(Configuration.class);
         this.jarClassHasher = getProject().getObjects().property(JarClassHasher.class);
@@ -115,7 +114,6 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
                         Comparator.naturalOrder(),
                         CheckClassUniquenessLockTask::getConfigurationName,
                         configuration -> {
-                            @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
                             ClassUniquenessAnalyzer analyzer = new ClassUniquenessAnalyzer(
                                     jarClassHasher.get(), getProject().getLogger());
                             analyzer.analyzeConfiguration(configuration);

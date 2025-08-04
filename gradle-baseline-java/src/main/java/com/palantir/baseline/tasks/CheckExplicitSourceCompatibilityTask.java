@@ -59,7 +59,6 @@ public class CheckExplicitSourceCompatibilityTask extends DefaultTask {
         this.shouldFix.set(false);
 
         onlyIf(new Spec<Task>() {
-            @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
             @Override
             public boolean isSatisfiedBy(Task task) {
                 return !getProject().getPlugins().hasPlugin(BaselineJavaVersion.class);
@@ -71,7 +70,6 @@ public class CheckExplicitSourceCompatibilityTask extends DefaultTask {
                 // sometimes people apply the 'java' plugin to projects that doesn't actually have any java code in it
                 // (e.g. the root project), so if they're not publishing anything, then we don't bother enforcing the
                 // sourceCompat thing. Also they might apply the publishing plugin just to get the 'publish' task.
-                @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
                 PublishingExtension publishing = getProject().getExtensions().findByType(PublishingExtension.class);
                 if (publishing == null) {
                     return false;
@@ -81,7 +79,6 @@ public class CheckExplicitSourceCompatibilityTask extends DefaultTask {
             }
         });
         onlyIf(new Spec<Task>() {
-            @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
             @Override
             public boolean isSatisfiedBy(Task task) {
                 return getProject().getExtensions().getByType(SourceSetContainer.class).stream()
@@ -92,7 +89,6 @@ public class CheckExplicitSourceCompatibilityTask extends DefaultTask {
         onlyIf(new Spec<Task>() {
             @Override
             public boolean isSatisfiedBy(Task task) {
-                @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
                 JavaPluginExtension maybeExtension =
                         getProject().getExtensions().findByType(JavaPluginExtension.class);
                 if (maybeExtension != null) {
