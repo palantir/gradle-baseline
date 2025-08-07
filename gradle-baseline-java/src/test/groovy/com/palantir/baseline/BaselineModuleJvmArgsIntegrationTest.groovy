@@ -562,14 +562,7 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
             }
         '''.stripIndent(true), 'src/test/java/com/ExampleTest.java')
 
-        // Create a jar with Add-Exports in the manifest
-        Manifest manifest = new Manifest()
-        manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0")
-        manifest.getMainAttributes().putValue('Add-Exports', 'java.management/sun.management')
-        File testJar = new File(getProjectDir(),"test.jar");
-        testJar.withOutputStream { fos ->
-            new JarOutputStream(fos, manifest).close()
-        }
+        createJarWithExport('test.jar')
 
         // Mutate classpath after configuration
         buildFile << """
@@ -589,5 +582,51 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
 
         where:
         gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
+    }
+
+    def '#gradleVersionNumber: JavaExec task picks up Add-Exports from jars added to classpath after configuration'() {
+        writeJavaSourceFile('''
+            package com;
+            public class ExampleMain {
+                public static void main(String[] args) {
+                    System.out.println(java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments());
+                }
+            }
+        '''.stripIndent(true))
+
+        createJarWithExport('addon.jar')
+
+        // Create a JavaExec task and mutate its classpath after configuration
+        //language=gradle
+        buildFile << """
+            tasks.register('runExample', JavaExec) {
+                mainClass = 'com.ExampleMain'
+                classpath = sourceSets.main.runtimeClasspath
+            }
+            
+            // Mutate classpath after configuration
+            tasks.named('runExample').configure {
+                classpath += files('addon.jar')
+            }
+        """.stripIndent(true)
+
+        when:
+        def result = runTasksSuccessfully('runExample')
+
+        then:
+        result.standardOutput.contains('--add-exports=java.management/sun.management=ALL-UNNAMED')
+
+        where:
+        gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
+    }
+
+    def createJarWithExport(String jarName) {
+        Manifest manifest = new Manifest()
+        manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0")
+        manifest.getMainAttributes().putValue('Add-Exports', 'java.management/sun.management')
+        File jar = file(jarName)
+        jar.withOutputStream { fos ->
+            new JarOutputStream(fos, manifest).close()
+        }
     }
 }
