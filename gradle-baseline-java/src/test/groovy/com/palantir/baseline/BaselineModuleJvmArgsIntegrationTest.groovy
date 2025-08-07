@@ -562,14 +562,7 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
             }
         '''.stripIndent(true), 'src/test/java/com/ExampleTest.java')
 
-        // Create a jar with Add-Exports in the manifest
-        Manifest manifest = new Manifest()
-        manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0")
-        manifest.getMainAttributes().putValue('Add-Exports', 'java.management/sun.management')
-        File testJar = new File(getProjectDir(),"test.jar");
-        testJar.withOutputStream { fos ->
-            new JarOutputStream(fos, manifest).close()
-        }
+        createJarWithExport('test.jar')
 
         // Mutate classpath after configuration
         buildFile << """
@@ -601,14 +594,7 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
             }
         '''.stripIndent(true))
 
-        // Create a jar with Add-Exports in the manifest
-        Manifest manifest = new Manifest()
-        manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0")
-        manifest.getMainAttributes().putValue('Add-Exports', 'java.management/sun.management')
-        File testJar = new File(getProjectDir(), "addon.jar")
-        testJar.withOutputStream { fos ->
-            new JarOutputStream(fos, manifest).close()
-        }
+        createJarWithExport('addon.jar')
 
         // Create a JavaExec task and mutate its classpath after configuration
         //language=gradle
@@ -632,5 +618,15 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
 
         where:
         gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
+    }
+
+    def createJarWithExport(String jarName) {
+        Manifest manifest = new Manifest()
+        manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0")
+        manifest.getMainAttributes().putValue('Add-Exports', 'java.management/sun.management')
+        File jar = file(jarName)
+        jar.withOutputStream { fos ->
+            new JarOutputStream(fos, manifest).close()
+        }
     }
 }
