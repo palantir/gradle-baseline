@@ -187,7 +187,10 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
 
             project.getTasks().withType(JavaExec.class).configureEach(javaExec -> {
                 ModuleJvmArgsArgumentProvider provider = newModuleJvmArgsArgumentProvider(
-                        project, extension, project.files(javaExec.getClasspath()), javaExec.getName());
+                        project,
+                        extension,
+                        project.files((Callable<FileCollection>) javaExec::getClasspath),
+                        javaExec.getName());
                 javaExec.getJvmArgumentProviders().add(provider);
                 setTaskInputsFromExtension(javaExec, extension);
             });
