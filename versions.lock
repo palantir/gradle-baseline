@@ -46,7 +46,7 @@ com.palantir.suppressible-error-prone:gradle-suppressible-error-prone:1.5.0 (1 c
 com.squareup.okhttp3:okhttp:4.12.0 (1 constraints: f6093eb3)
 com.squareup.okio:okio:3.6.0 (1 constraints: 530c38fd)
 com.squareup.okio:okio-jvm:3.6.0 (1 constraints: 500ad3b9)
-com.uber.nullaway:nullaway:0.12.8 (1 constraints: 3d05313b)
+com.uber.nullaway:nullaway:0.12.9 (1 constraints: 3e05323b)
 commons-codec:commons-codec:1.17.1 (2 constraints: 1b1ee786)
 commons-lang:commons-lang:2.6 (1 constraints: ac04232c)
 dev.equo.ide:solstice:1.8.1 (1 constraints: 771167da)
