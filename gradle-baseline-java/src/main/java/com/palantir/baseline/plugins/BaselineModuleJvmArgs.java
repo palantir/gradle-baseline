@@ -20,10 +20,12 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Lists;
 import com.palantir.baseline.extensions.BaselineModuleJvmArgsExtension;
 import com.palantir.baseline.plugins.javaversions.BaselineJavaVersion;
 import com.palantir.baseline.plugins.javaversions.BaselineJavaVersionExtension;
 import java.io.IOException;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -45,6 +47,8 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.java.archives.Manifest;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
+import org.gradle.api.plugins.ApplicationPlugin;
+import org.gradle.api.plugins.JavaApplication;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.SetProperty;
@@ -61,6 +65,7 @@ import org.gradle.external.javadoc.MinimalJavadocOptions;
 import org.gradle.jvm.tasks.Jar;
 import org.gradle.process.CommandLineArgumentProvider;
 import org.immutables.value.Value;
+import org.jetbrains.annotations.NotNull;
 
 /**
  * This plugin reuses the {@code Add-Exports} manifest entry defined in
@@ -184,6 +189,30 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                 setTaskInputsFromExtension(test, extension);
             });
 
+            project.afterEvaluate(p -> {
+                p.getPluginManager().withPlugin(ApplicationPlugin.APPLICATION_PLUGIN_NAME, unused2 -> {
+                    JavaApplication javaApplication = p.getExtensions().getByType(JavaApplication.class);
+
+                    javaApplication.setApplicationDefaultJvmArgs(new Iterable<String>() {
+                        @Override
+                        public @NotNull Iterator<String> iterator() {
+                            List<String> defaultJvmArgs =
+                                    Lists.newArrayList(javaApplication.getApplicationDefaultJvmArgs());
+                            Iterable<String> args = newModuleJvmArgsArgumentProvider(
+                                            project,
+                                            extension,
+                                            project.getConfigurations()
+                                                    .named("runtimeClasspath")
+                                                    .get(),
+                                            "application")
+                                    .asArguments();
+                            defaultJvmArgs.addAll(Lists.newArrayList(args));
+                            return defaultJvmArgs.iterator();
+                        }
+                    });
+                });
+            });
+
             project.getTasks().withType(JavaExec.class).configureEach(javaExec -> {
                 ModuleJvmArgsArgumentProvider provider = newModuleJvmArgsArgumentProvider(
                         project, extension, project.files(javaExec.getClasspath()), javaExec.getName());
@@ -238,10 +267,7 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
     }
 
     private static ModuleJvmArgsArgumentProvider newModuleJvmArgsArgumentProvider(
-            Project project,
-            BaselineModuleJvmArgsExtension extension,
-            ConfigurableFileCollection classpath,
-            String taskName) {
+            Project project, BaselineModuleJvmArgsExtension extension, FileCollection classpath, String taskName) {
         ModuleJvmArgsArgumentProvider provider = project.getObjects().newInstance(ModuleJvmArgsArgumentProvider.class);
         provider.getExports().set(extension.exports());
         provider.getOpens().set(extension.opens());

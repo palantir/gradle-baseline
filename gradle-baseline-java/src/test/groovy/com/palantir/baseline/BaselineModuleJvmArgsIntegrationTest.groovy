@@ -285,6 +285,74 @@ class BaselineModuleJvmArgsIntegrationTest extends IntegrationSpec {
         where:
         gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
+    
+    def '#gradleVersionNumber: Application task creates start scripts with locally defined exports'() {
+        gradleVersion = gradleVersionNumber
+
+        when:
+        buildFile << '''
+        application {
+            mainClass = 'com.Example'
+        }
+        
+        moduleJvmArgs {
+           exports = ['java.management/sun.management']
+        }
+        '''.stripIndent(true)
+        writeJavaSourceFile('''
+        package com;
+        public class Example {
+            public static void main(String[] args) {
+                System.out.println(String.join(
+                    " ",
+                    java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments()));
+            }
+        }
+        '''.stripIndent(true))
+
+        then:
+        runTasksSuccessfully('startScripts')
+
+        def startScriptText = new File(projectDir, 'build/scripts/' + projectDir.getName()).text
+        startScriptText.contains('"--add-exports" "java.management/sun.management=ALL-UNNAMED"')
+
+        where:
+        gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
+    }
+    
+    def '#gradleVersionNumber: Application task creates start scripts with locally defined opens'() {
+        gradleVersion = gradleVersionNumber
+
+        when:
+        buildFile << '''
+        application {
+            mainClass = 'com.Example'
+        }
+        
+        moduleJvmArgs {
+           opens = ['java.management/sun.management']
+        }
+        '''.stripIndent(true)
+        writeJavaSourceFile('''
+        package com;
+        public class Example {
+            public static void main(String[] args) {
+                System.out.println(String.join(
+                    " ",
+                    java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments()));
+            }
+        }
+        '''.stripIndent(true))
+
+        then:
+        runTasksSuccessfully('startScripts')
+
+        def startScriptText = new File(projectDir, 'build/scripts/' + projectDir.getName()).text
+        startScriptText.contains('"--add-exports" "java.management/sun.management=ALL-UNNAMED"')
+
+        where:
+        gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
+    }
 
     def '#gradleVersionNumber: Adds locally defined exports to the jar manifest'() {
         gradleVersion = gradleVersionNumber
