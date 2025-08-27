@@ -29,7 +29,7 @@ import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
-import com.sun.tools.javac.code.Symbol;
+import javax.lang.model.element.Name;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -50,64 +50,36 @@ public final class ResourceIdentifierGetEqualsUsage extends BugChecker
             .onExactClass("com.palantir.ri.ResourceIdentifier")
             .namedAnyOf("getInstance", "getLocator", "getService", "getType");
 
-    private static final Matcher<MethodInvocationTree> INVOCATION_TREE_MATCHER = Matchers.anyOf(
-            Matchers.allOf(EQUALS_MATCHER, Matchers.receiverOfInvocation(GET_MATCHER)),
-            EQUALS_MATCHER,
-            Matchers.allOf(Matchers.receiverOfInvocation(GET_MATCHER), EQUALS_MATCHER));
+    private static final Matcher<MethodInvocationTree> GET_RECEIVER_MATCHER =
+            Matchers.receiverOfInvocation(GET_MATCHER);
+    private static final Matcher<MethodInvocationTree> GET_ARGUMENT_MATCHER = Matchers.argument(0, GET_MATCHER);
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
-        if (!INVOCATION_TREE_MATCHER.matches(tree, state)) {
+        if (!EQUALS_MATCHER.matches(tree, state)) {
             return Description.NO_MATCH;
         }
 
-        String source = state.getSourceForNode(tree);
-        if (source == null) {
+        if (GET_RECEIVER_MATCHER.matches(tree, state)) {
+            ExpressionTree ridTree = ASTHelpers.getReceiver(tree);
+            ExpressionTree valueTree = tree.getArguments().get(0);
+            return fix(tree, state, ridTree, valueTree);
+        } else if (GET_ARGUMENT_MATCHER.matches(tree, state)) {
+            ExpressionTree ridTree = tree.getArguments().get(0);
+            ExpressionTree valueTree = ASTHelpers.getReceiver(tree);
+            return fix(tree, state, ridTree, valueTree);
+        } else {
             return Description.NO_MATCH;
         }
-
-        ExpressionTree receiverTree = ASTHelpers.getReceiver(tree);
-        if (receiverTree == null) {
-            return Description.NO_MATCH;
-        }
-
-        if (EQUALS_MATCHER.matches(tree, state)) {
-            ExpressionTree argument = tree.getArguments().get(0);
-            ExpressionTree ridTree;
-            String component;
-            if (GET_MATCHER.matches(receiverTree, state)) {
-                ridTree = receiverTree;
-                component = state.getSourceForNode(argument);
-            } else {
-                ridTree = argument;
-                component = state.getSourceForNode(receiverTree);
-            }
-
-            ExpressionTree rid = ASTHelpers.getReceiver(ridTree);
-            if (rid == null) {
-                return Description.NO_MATCH;
-            }
-
-            Symbol getMethodSymbol = ASTHelpers.getSymbol(ridTree);
-            if (getMethodSymbol == null) {
-                return Description.NO_MATCH;
-            }
-
-            return fix(tree, state, rid, getMethodSymbol, component);
-        }
-
-        return Description.NO_MATCH;
     }
 
     private Description fix(
-            MethodInvocationTree tree,
-            VisitorState state,
-            ExpressionTree rid,
-            Symbol getMethodSymbol,
-            String component) {
-        String getMethod = getMethodSymbol.getSimpleName().toString();
-        String hasMethod = getMethod.replace("get", "has");
-        String replacement = state.getSourceForNode(rid) + "." + hasMethod + "(" + component + ")";
+            MethodInvocationTree tree, VisitorState state, ExpressionTree getTree, ExpressionTree valueTree) {
+        ExpressionTree ridTree = ASTHelpers.getReceiver(getTree);
+        Name methodName = ASTHelpers.getSymbol(getTree).getSimpleName();
+        String replacement = state.getSourceForNode(ridTree) + ".has"
+                + methodName.subSequence(3, methodName.length()) + "("
+                + state.getSourceForNode(valueTree) + ")";
         return buildDescription(tree)
                 .addFix(SuggestedFix.builder().replace(tree, replacement).build())
                 .build();
