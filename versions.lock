@@ -98,8 +98,6 @@ com.uber.nullaway:nullaway:0.12.9 (1 constraints: 3e05323b)
 
 commons-codec:commons-codec:1.17.1 (2 constraints: 1b1ee786)
 
-commons-lang:commons-lang:2.6 (1 constraints: ac04232c)
-
 dev.equo.ide:solstice:1.8.1 (1 constraints: 771167da)
 
 io.github.eisop:dataflow-errorprone:3.41.0-eisop1 (3 constraints: 3e40ddde)

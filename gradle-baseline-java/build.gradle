@@ -23,7 +23,6 @@ dependencies {
     }
     runtimeOnly 'org.apache.maven:maven-core'
 
-    implementation 'commons-lang:commons-lang'
     implementation 'com.palantir.javaformat:palantir-java-format-spi'
     // Add an explicit dependency to ensure consumers can use JDK14 source compat
     implementation 'org.ow2.asm:asm'
