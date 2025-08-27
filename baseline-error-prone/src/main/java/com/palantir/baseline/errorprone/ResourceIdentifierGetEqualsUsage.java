@@ -29,7 +29,7 @@ import com.google.errorprone.matchers.method.MethodMatchers;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.MethodInvocationTree;
-import java.util.regex.Pattern;
+import com.sun.tools.javac.code.Symbol;
 
 @AutoService(BugChecker.class)
 @BugPattern(
@@ -49,10 +49,6 @@ public final class ResourceIdentifierGetEqualsUsage extends BugChecker
     private static final Matcher<ExpressionTree> GET_MATCHER = MethodMatchers.instanceMethod()
             .onExactClass("com.palantir.ri.ResourceIdentifier")
             .namedAnyOf("getInstance", "getLocator", "getService", "getType");
-    private static final Pattern SOURCE_GET_EQUALS_PATTERN =
-            Pattern.compile("get(Instance|Locator|Service|Type)\\(\\)\\.equals\\(");
-    private static final Pattern SOURCE_EQUALS_GET_PATTERN =
-            Pattern.compile("(.*)\\.equals\\((.*)\\.get(Instance|Locator|Service|Type)\\(\\)");
 
     private static final Matcher<MethodInvocationTree> INVOCATION_TREE_MATCHER = Matchers.anyOf(
             Matchers.allOf(EQUALS_MATCHER, Matchers.receiverOfInvocation(GET_MATCHER)),
@@ -76,20 +72,44 @@ public final class ResourceIdentifierGetEqualsUsage extends BugChecker
         }
 
         if (EQUALS_MATCHER.matches(tree, state)) {
+            ExpressionTree argument = tree.getArguments().get(0);
+            ExpressionTree ridTree;
+            String component;
             if (GET_MATCHER.matches(receiverTree, state)) {
-                String replacement = SOURCE_GET_EQUALS_PATTERN.matcher(source).replaceAll("has$1(");
-                return buildDescription(tree)
-                        .addFix(SuggestedFix.builder()
-                                .replace(tree, replacement)
-                                .build())
-                        .build();
+                ridTree = receiverTree;
+                component = state.getSourceForNode(argument);
+            } else {
+                ridTree = argument;
+                component = state.getSourceForNode(receiverTree);
             }
 
-            String replacement = SOURCE_EQUALS_GET_PATTERN.matcher(source).replaceAll("$2.has$3($1");
-            SuggestedFix fix = SuggestedFix.builder().replace(tree, replacement).build();
-            return buildDescription(tree).addFix(fix).build();
+            ExpressionTree rid = ASTHelpers.getReceiver(ridTree);
+            if (rid == null) {
+                return Description.NO_MATCH;
+            }
+
+            Symbol getMethodSymbol = ASTHelpers.getSymbol(ridTree);
+            if (getMethodSymbol == null) {
+                return Description.NO_MATCH;
+            }
+
+            return fix(tree, state, rid, getMethodSymbol, component);
         }
 
         return Description.NO_MATCH;
+    }
+
+    private Description fix(
+            MethodInvocationTree tree,
+            VisitorState state,
+            ExpressionTree rid,
+            Symbol getMethodSymbol,
+            String component) {
+        String getMethod = getMethodSymbol.getSimpleName().toString();
+        String hasMethod = getMethod.replace("get", "has");
+        String replacement = state.getSourceForNode(rid) + "." + hasMethod + "(" + component + ")";
+        return buildDescription(tree)
+                .addFix(SuggestedFix.builder().replace(tree, replacement).build())
+                .build();
     }
 }
