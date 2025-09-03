@@ -90,6 +90,34 @@ public class DeprecatedApiUsageTest {
     }
 
     @Test
+    public void testDeprecationMessageContainsExpectedCanonicalCheckName() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+                        import java.util.*;
+
+                        class Helper {
+                          @Deprecated
+                          public void deprecatedMethod() {}
+                        }
+
+                        class Test {
+                          public void fun() {
+                            // We should be showing [deprecation] here rather than [DeprecatedApiUsage]
+                            //   to incentivize devs to use the backwards-compatible @SuppressWarnings("deprecation")
+                            //   to manually suppress the check.
+                            // BUG: Diagnostic contains: [deprecation] Helper#deprecatedMethod is deprecated
+                            new Helper().deprecatedMethod();
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
     // Error-prone wants to inline the Deprecated annotation, which looks worse
     @SuppressWarnings("MisformattedTestData")
     public void testDeprecatedFieldAccess() {
