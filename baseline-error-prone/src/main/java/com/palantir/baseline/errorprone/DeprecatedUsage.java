@@ -30,10 +30,17 @@ import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.Symbol;
 
+/**
+ * This check is meant to replace usage of the `-Werror` and `-Xlint:deprecation` compiler flags, which cannot be
+ *   automatically suppressed by suppressible-error-prone and therefore block library upgrades as soon as a deprecation
+ *   is introduced that is being relied upon.
+ * Instead, this check is meant to be auto-suppressed upon upgrades and prevent backsliding by unintentionally relying
+ *   upon deprecated APIs.
+ */
 @AutoService(BugChecker.class)
 @BugPattern(
         severity = BugPattern.SeverityLevel.ERROR,
-        summary = "",
+        summary = "Deprecated APIs should not be relied upon as they may be removed in a future release.",
         altNames = {"deprecation", "removal"})
 public final class DeprecatedUsage extends BugChecker
         implements BugChecker.MethodInvocationTreeMatcher,
