@@ -137,7 +137,7 @@ public class DeprecatedApiUsageTest {
                         }
 
                         class Test {
-                          @SuppressWarnings("DeprecatedUsage")
+                          @SuppressWarnings("DeprecatedApiUsage")
                           public void fun() {
                             new Helper().deprecatedMethod();
                           }
