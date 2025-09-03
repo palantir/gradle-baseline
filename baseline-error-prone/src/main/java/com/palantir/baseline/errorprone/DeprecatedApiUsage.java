@@ -28,7 +28,7 @@ import com.sun.source.tree.MemberReferenceTree;
 import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.Tree;
-import com.sun.tools.javac.code.Symbol;
+import java.util.Optional;
 
 /**
  * This check is meant to replace usage of the `-Werror` and `-Xlint:deprecation` compiler flags, which cannot be
@@ -73,16 +73,14 @@ public final class DeprecatedApiUsage extends BugChecker
             return Description.NO_MATCH;
         }
 
-        Symbol symbol = ASTHelpers.getSymbol(tree);
-        String qualifiedName = symbol == null
-                ? null
-                : symbol.owner.getQualifiedName() + "#"
-                        + symbol.getQualifiedName().toString();
-        String description = qualifiedName == null
-                ? "Deprecated API usage - this is dangerous as it may be removed in a future release."
-                : String.format(
-                        "%s is deprecated - this is dangerous as it may be removed in a future release.",
-                        qualifiedName);
+        Optional<String> qualifiedName = Optional.ofNullable(ASTHelpers.getSymbol(tree))
+                .map(s ->
+                        s.owner.getQualifiedName() + "#" + s.getQualifiedName().toString());
+        String description = qualifiedName
+                .map(name -> String.format(
+                        "%s is deprecated - this may be removed in a future release and prevent library upgrades.",
+                        name))
+                .orElse("Deprecated API usage - this may be removed in a future release and prevent library upgrades.");
         return buildDescription(tree).setMessage(description).build();
     }
 }

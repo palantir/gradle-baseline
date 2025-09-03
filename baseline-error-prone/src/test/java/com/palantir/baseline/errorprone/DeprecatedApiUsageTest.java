@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 public class DeprecatedApiUsageTest {
 
     @Test
-    public void testNotDeprecatedMethodCall() {
+    public void does_not_throw_on_non_deprecated_api_usage() {
         helper().addSourceLines(
                         "Test.java",
                         // language=Java
@@ -55,7 +55,7 @@ public class DeprecatedApiUsageTest {
     }
 
     @Test
-    public void testDeprecatedMethodCall() {
+    public void throws_on_deprecated_method_usage() {
         helper().addSourceLines(
                         "Test.java",
                         // language=Java
@@ -90,7 +90,7 @@ public class DeprecatedApiUsageTest {
     }
 
     @Test
-    public void testDeprecationMessageContainsExpectedCanonicalCheckName() {
+    public void check_message_contains_expected_check_name() {
         helper().addSourceLines(
                         "Test.java",
                         // language=Java
@@ -120,7 +120,7 @@ public class DeprecatedApiUsageTest {
     @Test
     // Error-prone wants to inline the Deprecated annotation, which looks worse
     @SuppressWarnings("MisformattedTestData")
-    public void testDeprecatedFieldAccess() {
+    public void throws_on_deprecated_field_access() {
         helper().addSourceLines(
                         "Test.java",
                         // language=Java
@@ -150,7 +150,7 @@ public class DeprecatedApiUsageTest {
     }
 
     @Test
-    public void testSuppressThroughCheckName() {
+    public void can_suppress_through_check_name() {
         helper().addSourceLines(
                         "Test.java",
                         // language=Java
@@ -175,7 +175,7 @@ public class DeprecatedApiUsageTest {
     }
 
     @Test
-    public void testSuppressThroughJavaCompilerDeprecation() {
+    public void can_suppress_through_java_compiler_deprecation_suppression() {
         helper().addSourceLines(
                         "Test.java",
                         // language=Java
@@ -200,7 +200,7 @@ public class DeprecatedApiUsageTest {
     }
 
     @Test
-    public void testSuppressThroughJavaCompilerRemoval() {
+    public void can_suppress_through_java_compiler_removal_suppression() {
         helper().addSourceLines(
                         "Test.java",
                         // language=Java
@@ -225,7 +225,7 @@ public class DeprecatedApiUsageTest {
     }
 
     @Test
-    public void testSuppressCombinedWithCompilerDeprecationFlag() {
+    public void can_suppress_through_deprecation_even_with_deprecation_compiler_flag() {
         helper().setArgs("-Werror", "-Xlint:deprecation")
                 .addSourceLines(
                         "Test.java",
@@ -251,7 +251,7 @@ public class DeprecatedApiUsageTest {
     }
 
     @Test
-    public void testSuppressRemovalCombinedWithCompilerDeprecationFlag() {
+    public void can_suppress_through_removal_even_with_deprecation_compiler_flag() {
         helper().setArgs("-Werror", "-Xlint:deprecation")
                 .addSourceLines(
                         "Test.java",
