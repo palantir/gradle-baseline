@@ -37,11 +37,14 @@ import com.sun.tools.javac.code.Symbol;
  * Instead, this check is meant to be auto-suppressed upon upgrades and prevent backsliding by unintentionally relying
  *   upon deprecated APIs.
  */
+@SuppressWarnings("BugPatternNaming")
 @AutoService(BugChecker.class)
 @BugPattern(
         severity = BugPattern.SeverityLevel.ERROR,
         summary = "Deprecated APIs should not be relied upon as they may be removed in a future release.",
-        altNames = {"deprecation", "removal"})
+        // Use deprecation as the main name for the check, for familiarity with the javac flag.
+        name = "deprecation",
+        altNames = {"DeprecatedApiUsage", "removal"})
 public final class DeprecatedApiUsage extends BugChecker
         implements BugChecker.MethodInvocationTreeMatcher,
                 BugChecker.MemberReferenceTreeMatcher,
