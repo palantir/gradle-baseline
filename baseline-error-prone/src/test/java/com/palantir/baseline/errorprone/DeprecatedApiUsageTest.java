@@ -251,6 +251,37 @@ public class DeprecatedApiUsageTest {
     }
 
     @Test
+    public void compiler_can_warn_with_deprecation_flag_even_with_check() {
+        helper().setArgs("-Werror", "-Xlint:deprecation")
+                // In this case, we check that the compiler is the one warning us
+                .matchAllDiagnostics()
+                .addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+                        import java.util.*;
+
+                        class Helper {
+                          @Deprecated
+                          public void deprecatedMethod() {}
+                        }
+
+                        class Test {
+                          public void fun() {
+                            // This is the regular compiler warning, not our custom one
+                            // Somehow it doesn't detect [deprecation] in the output, presumably because it's a
+                            //   separate part of the compiler output.
+                            // BUG: Diagnostic contains: deprecatedMethod() in Helper has been deprecated
+                            new Helper().deprecatedMethod();
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
     public void can_suppress_through_removal_even_with_deprecation_compiler_flag() {
         helper().setArgs("-Werror", "-Xlint:deprecation")
                 .addSourceLines(
