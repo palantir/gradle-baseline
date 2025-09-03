@@ -27,10 +27,6 @@ public class DeprecatedApiUsageTest {
                         "Test.java",
                         // language=Java
                         """
-                        import com.palantir.logsafe.*;
-                        import java.util.function.*;
-                        import java.util.*;
-
                         class Helper {
                           public static final String CONSTANT = "not deprecated";
                           public String field = "not deprecated";
@@ -60,10 +56,6 @@ public class DeprecatedApiUsageTest {
                         "Test.java",
                         // language=Java
                         """
-                        import com.palantir.logsafe.*;
-                        import java.util.function.*;
-                        import java.util.*;
-
                         class Helper {
                           @Deprecated
                           public void deprecatedMethod() {}
@@ -95,10 +87,6 @@ public class DeprecatedApiUsageTest {
                         "Test.java",
                         // language=Java
                         """
-                        import com.palantir.logsafe.*;
-                        import java.util.function.*;
-                        import java.util.*;
-
                         class Helper {
                           @Deprecated
                           public void deprecatedMethod() {}
@@ -125,10 +113,6 @@ public class DeprecatedApiUsageTest {
                         "Test.java",
                         // language=Java
                         """
-                        import com.palantir.logsafe.*;
-                        import java.util.function.*;
-                        import java.util.*;
-
                         class Helper {
                           @Deprecated
                           public static final String DEPRECATED_CONSTANT = "constant";
@@ -155,10 +139,6 @@ public class DeprecatedApiUsageTest {
                         "Test.java",
                         // language=Java
                         """
-                        import com.palantir.logsafe.*;
-                        import java.util.function.*;
-                        import java.util.*;
-
                         class Helper {
                           @Deprecated
                           public void deprecatedMethod() {}
@@ -180,10 +160,6 @@ public class DeprecatedApiUsageTest {
                         "Test.java",
                         // language=Java
                         """
-                        import com.palantir.logsafe.*;
-                        import java.util.function.*;
-                        import java.util.*;
-
                         class Helper {
                           @Deprecated
                           public void deprecatedMethod() {}
@@ -205,10 +181,6 @@ public class DeprecatedApiUsageTest {
                         "Test.java",
                         // language=Java
                         """
-                        import com.palantir.logsafe.*;
-                        import java.util.function.*;
-                        import java.util.*;
-
                         class Helper {
                           @Deprecated
                           public void deprecatedMethod() {}
@@ -231,10 +203,6 @@ public class DeprecatedApiUsageTest {
                         "Test.java",
                         // language=Java
                         """
-                        import com.palantir.logsafe.*;
-                        import java.util.function.*;
-                        import java.util.*;
-
                         class Helper {
                           @Deprecated
                           public void deprecatedMethod() {}
@@ -259,10 +227,6 @@ public class DeprecatedApiUsageTest {
                         "Test.java",
                         // language=Java
                         """
-                        import com.palantir.logsafe.*;
-                        import java.util.function.*;
-                        import java.util.*;
-
                         class Helper {
                           @Deprecated
                           public void deprecatedMethod() {}
@@ -288,10 +252,6 @@ public class DeprecatedApiUsageTest {
                         "Test.java",
                         // language=Java
                         """
-                        import com.palantir.logsafe.*;
-                        import java.util.function.*;
-                        import java.util.*;
-
                         class Helper {
                           @Deprecated(forRemoval = true)
                           public void deprecatedMethod() {}
