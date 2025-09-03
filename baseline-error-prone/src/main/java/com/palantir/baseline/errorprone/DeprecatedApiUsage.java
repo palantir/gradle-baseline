@@ -42,7 +42,7 @@ import com.sun.tools.javac.code.Symbol;
         severity = BugPattern.SeverityLevel.ERROR,
         summary = "Deprecated APIs should not be relied upon as they may be removed in a future release.",
         altNames = {"deprecation", "removal"})
-public final class DeprecatedUsage extends BugChecker
+public final class DeprecatedApiUsage extends BugChecker
         implements BugChecker.MethodInvocationTreeMatcher,
                 BugChecker.MemberReferenceTreeMatcher,
                 BugChecker.MemberSelectTreeMatcher {

@@ -19,7 +19,7 @@ package com.palantir.baseline.errorprone;
 import com.google.errorprone.CompilationTestHelper;
 import org.junit.jupiter.api.Test;
 
-public class DeprecatedUsageTest {
+public class DeprecatedApiUsageTest {
 
     @Test
     public void testNotDeprecatedMethodCall() {
@@ -249,6 +249,6 @@ public class DeprecatedUsageTest {
     }
 
     private CompilationTestHelper helper() {
-        return CompilationTestHelper.newInstance(DeprecatedUsage.class, getClass());
+        return CompilationTestHelper.newInstance(DeprecatedApiUsage.class, getClass());
     }
 }
