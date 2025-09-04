@@ -20,13 +20,8 @@ import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
 import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
-import com.google.errorprone.matchers.Description;
 import com.google.errorprone.matchers.Matcher;
 import com.google.errorprone.matchers.Matchers;
-import com.google.errorprone.util.ASTHelpers;
-import com.sun.source.tree.MemberReferenceTree;
-import com.sun.source.tree.MemberSelectTree;
-import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.Tree;
 import java.util.Optional;
 
@@ -48,10 +43,7 @@ import java.util.Optional;
         // Use removal as the main name for the check, for familiarity with the javac flag.
         name = "removal",
         altNames = "DeprecatedForRemovalApiUsage")
-public final class DeprecatedForRemovalApiUsage extends BugChecker
-        implements BugChecker.MethodInvocationTreeMatcher,
-                BugChecker.MemberReferenceTreeMatcher,
-                BugChecker.MemberSelectTreeMatcher {
+public final class DeprecatedForRemovalApiUsage extends AbstractDeprecatedApiCheck {
 
     private static final String MESSAGE_DETAILS =
             " - this will be removed in a future release and prevent library upgrades. Note: This error comes from "
@@ -62,32 +54,15 @@ public final class DeprecatedForRemovalApiUsage extends BugChecker
             Matchers.symbolMatcher((symbol, state) -> symbol.isDeprecatedForRemoval());
 
     @Override
-    public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
-        return checkTree(tree, state);
+    protected boolean isDeprecationWarning(Tree tree, VisitorState state) {
+        return DEPRECATED_FOR_REMOVAL_SYMBOL.matches(tree, state);
     }
 
     @Override
-    public Description matchMemberReference(MemberReferenceTree tree, VisitorState state) {
-        return checkTree(tree, state);
-    }
-
-    @Override
-    public Description matchMemberSelect(MemberSelectTree tree, VisitorState state) {
-        return checkTree(tree, state);
-    }
-
-    private Description checkTree(Tree tree, VisitorState state) {
-        if (!DEPRECATED_FOR_REMOVAL_SYMBOL.matches(tree, state)) {
-            return Description.NO_MATCH;
-        }
-
-        Optional<String> qualifiedName = Optional.ofNullable(ASTHelpers.getSymbol(tree))
-                .map(s ->
-                        s.owner.getQualifiedName() + "#" + s.getQualifiedName().toString());
-        String description = qualifiedName
+    protected String getErrorDescription(Optional<String> qualifiedName) {
+        return qualifiedName
                         .map(name -> String.format("%s is deprecated for removal", name))
                         .orElse("Deprecated-for-removal API usage")
                 + MESSAGE_DETAILS;
-        return buildDescription(tree).setMessage(description).build();
     }
 }
