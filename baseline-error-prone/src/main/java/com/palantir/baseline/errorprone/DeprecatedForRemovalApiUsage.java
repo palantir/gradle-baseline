@@ -38,6 +38,8 @@ import java.util.Optional;
 @SuppressWarnings("BugPatternNaming")
 @AutoService(BugChecker.class)
 @BugPattern(
+        link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
+        linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.ERROR,
         summary = "Deprecated-for-removal APIs should not be relied upon as they will be removed in a future release.",
         // Use removal as the main name for the check, for familiarity with the javac flag.

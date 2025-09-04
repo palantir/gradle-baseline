@@ -38,6 +38,8 @@ import java.util.Optional;
 @SuppressWarnings("BugPatternNaming")
 @AutoService(BugChecker.class)
 @BugPattern(
+        link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
+        linkType = BugPattern.LinkType.CUSTOM,
         severity = BugPattern.SeverityLevel.ERROR,
         summary = "Deprecated APIs should not be relied upon as they may be removed in a future release.",
         // Use deprecation as the main name for the check, for familiarity with the javac flag.
