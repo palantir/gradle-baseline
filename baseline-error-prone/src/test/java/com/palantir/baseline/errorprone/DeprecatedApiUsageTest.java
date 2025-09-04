@@ -295,6 +295,28 @@ public class DeprecatedApiUsageTest {
                 .doTest();
     }
 
+    @Test
+    public void do_not_warn_on_importing_deprecated_class() {
+        helper().addSourceLines(
+                        "Helper.java",
+                        // language=Java
+                        """
+                        package com;
+
+                        @Deprecated
+                        public class Helper {}
+                        """)
+                .addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.Helper;
+
+                        class Test {}
+                        """)
+                .doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(DeprecatedApiUsage.class, getClass());
     }

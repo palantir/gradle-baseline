@@ -26,6 +26,7 @@ import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.Symbol;
+import com.sun.tools.javac.code.Symbol.PackageSymbol;
 import java.util.Optional;
 import javax.lang.model.element.Name;
 
@@ -56,6 +57,12 @@ public abstract class AbstractDeprecatedApiCheck extends BugChecker
 
     @Override
     public final Description matchMemberSelect(MemberSelectTree tree, VisitorState state) {
+        Symbol symbol = ASTHelpers.getSymbol(tree);
+        if (symbol != null && symbol.owner instanceof PackageSymbol) {
+            // This is an import statement, which we don't want to flag
+            return Description.NO_MATCH;
+        }
+
         return checkTree(tree, state);
     }
 
