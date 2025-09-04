@@ -250,6 +250,51 @@ public class DeprecatedApiUsageTest {
                 .doTest();
     }
 
+    @Test
+    public void does_not_warn_on_deprecation_from_same_class() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        class Test {
+                          @Deprecated
+                          public void deprecatedMethod() {}
+
+                          public void fun() {
+                            deprecatedMethod();
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
+    public void warns_on_deprecation_from_other_class_with_same_simple_name() {
+        helper().addSourceLines(
+                        "com/Test.java", // Note: different package
+                        // language=Java
+                        """
+                        package com;
+
+                        public class Test {
+                          @Deprecated
+                          public void deprecatedMethod() {}
+                        }
+                        """)
+                .addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        class Test {
+                          public void fun() {
+                            // BUG: Diagnostic contains: com.Test#deprecatedMethod is deprecated
+                            (new com.Test()).deprecatedMethod();
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(DeprecatedApiUsage.class, getClass());
     }

@@ -20,11 +20,14 @@ import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.util.ASTHelpers;
+import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.MemberReferenceTree;
 import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.Tree;
+import com.sun.tools.javac.code.Symbol;
 import java.util.Optional;
+import javax.lang.model.element.Name;
 
 /**
  * This is an abstract base class for checks meant to replace the `-Xlint:deprecation` and `-Xlint:removal` compiler
@@ -61,10 +64,26 @@ public abstract class AbstractDeprecatedApiCheck extends BugChecker
             return Description.NO_MATCH;
         }
 
-        Optional<String> qualifiedName = Optional.ofNullable(ASTHelpers.getSymbol(tree))
-                .map(s ->
-                        s.owner.getQualifiedName() + "#" + s.getQualifiedName().toString());
+        Optional<Symbol> symbol = Optional.ofNullable(ASTHelpers.getSymbol(tree));
+
+        if (symbol.isPresent()) {
+            Optional<Name> currentClass = getCurrentClass(state);
+            if (currentClass.isPresent()
+                    && currentClass.get().equals(symbol.get().owner.getQualifiedName())) {
+                // Don't complain about deprecated APIs used within the same class
+                return Description.NO_MATCH;
+            }
+        }
+
+        Optional<String> qualifiedName = symbol.map(
+                s -> s.owner.getQualifiedName() + "#" + s.getQualifiedName().toString());
         String description = getErrorDescription(qualifiedName);
         return buildDescription(tree).setMessage(description).build();
+    }
+
+    private Optional<Name> getCurrentClass(VisitorState state) {
+        return Optional.ofNullable(ASTHelpers.findEnclosingNode(state.getPath(), ClassTree.class))
+                .map(ASTHelpers::getSymbol)
+                .map(Symbol::getQualifiedName);
     }
 }
