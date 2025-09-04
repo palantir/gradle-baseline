@@ -19,7 +19,7 @@ package com.palantir.baseline.errorprone;
 import com.google.errorprone.CompilationTestHelper;
 import org.junit.jupiter.api.Test;
 
-public class DeprecatedApiUsageTest {
+public class DeprecatedForRemovalApiUsageTest {
 
     @Test
     public void does_not_throw_on_non_deprecated_api_usage() {
@@ -51,33 +51,55 @@ public class DeprecatedApiUsageTest {
     }
 
     @Test
-    public void throws_on_deprecated_method_usage() {
-        // Explicitly disable -Xlint:-removal to ensure we only catch regular deprecations
-        helper().setArgs("-Xlint:-removal")
-                .addSourceLines(
+    // Error-prone wants to inline the Deprecated annotation, which looks worse
+    @SuppressWarnings("MisformattedTestData")
+    public void does_not_throw_on_deprecated_not_for_removal_api_usage() {
+        helper().addSourceLines(
                         "Test.java",
                         // language=Java
                         """
                         class Helper {
                           @Deprecated
-                          public void deprecatedMethod() {}
+                          public static final String CONSTANT = "not deprecated";
+                          @Deprecated
+                          public String field = "not deprecated";
 
-                          @Deprecated(forRemoval = true)
-                          public void deprecatedForRemovalMethod() {}
+                          @Deprecated
+                          public static void notDeprecatedStaticMethod() {}
 
-                          @Deprecated(forRemoval = false)
-                          public void deprecatedNotForRemovalMethod() {}
+                          @Deprecated
+                          public void notDeprecatedMethod() {}
                         }
 
                         class Test {
                           public void fun() {
-                            // BUG: Diagnostic contains: Helper#deprecatedMethod is deprecated
-                            new Helper().deprecatedMethod();
-                            // This should NOT be flagged, as it's deprecated but for removal, which is caught
-                            //   by the compiler with -Xlint:removal -Werror
+                            Helper.notDeprecatedStaticMethod();
+                            System.out.println(Helper.CONSTANT);
+
+                            Helper helper = new Helper();
+                            helper.notDeprecatedMethod();
+                            System.out.println(helper.field);
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
+    public void throws_on_deprecated_for_removal_method_usage() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        class Helper {
+                          @Deprecated(forRemoval = true)
+                          public void deprecatedForRemovalMethod() {}
+                        }
+
+                        class Test {
+                          public void fun() {
+                            // BUG: Diagnostic contains: Helper#deprecatedForRemovalMethod is deprecated for removal
                             new Helper().deprecatedForRemovalMethod();
-                            // BUG: Diagnostic contains: Helper#deprecatedNotForRemovalMethod is deprecated
-                            new Helper().deprecatedNotForRemovalMethod();
                           }
                         }
                         """)
@@ -91,16 +113,16 @@ public class DeprecatedApiUsageTest {
                         // language=Java
                         """
                         class Helper {
-                          @Deprecated
+                          @Deprecated(forRemoval = true)
                           public void deprecatedMethod() {}
                         }
 
                         class Test {
                           public void fun() {
-                            // We should be showing [deprecation] here rather than [DeprecatedApiUsage]
-                            //   to incentivize devs to use the backwards-compatible @SuppressWarnings("deprecation")
+                            // We should be showing [removal] here rather than [DeprecatedForRemovalApiUsage]
+                            //   to incentivize devs to use the backwards-compatible @SuppressWarnings("removal")
                             //   to manually suppress the check.
-                            // BUG: Diagnostic contains: [deprecation] Helper#deprecatedMethod is deprecated
+                            // BUG: Diagnostic contains: [removal] Helper#deprecatedMethod is deprecated for removal
                             new Helper().deprecatedMethod();
                           }
                         }
@@ -117,18 +139,18 @@ public class DeprecatedApiUsageTest {
                         // language=Java
                         """
                         class Helper {
-                          @Deprecated
+                          @Deprecated(forRemoval = true)
                           public static final String DEPRECATED_CONSTANT = "constant";
 
-                          @Deprecated
+                          @Deprecated(forRemoval = true)
                           public final String deprecatedField = "deprecated";
                         }
 
                         class Test {
                           public void fun() {
-                            // BUG: Diagnostic contains: Helper#DEPRECATED_CONSTANT is deprecated
+                            // BUG: Diagnostic contains: Helper#DEPRECATED_CONSTANT is deprecated for removal
                             System.out.println(Helper.DEPRECATED_CONSTANT);
-                            // BUG: Diagnostic contains: Helper#deprecatedField is deprecated
+                            // BUG: Diagnostic contains: Helper#deprecatedField is deprecated for removal
                             System.out.println(new Helper().deprecatedField);
                           }
                         }
@@ -138,17 +160,18 @@ public class DeprecatedApiUsageTest {
 
     @Test
     public void can_suppress_through_check_name() {
-        helper().addSourceLines(
+        helper().setArgs("-Xlint:-removal")
+                .addSourceLines(
                         "Test.java",
                         // language=Java
                         """
                         class Helper {
-                          @Deprecated
+                          @Deprecated(forRemoval = true)
                           public void deprecatedMethod() {}
                         }
 
                         class Test {
-                          @SuppressWarnings("DeprecatedApiUsage")
+                          @SuppressWarnings("DeprecatedForRemovalApiUsage")
                           public void fun() {
                             new Helper().deprecatedMethod();
                           }
@@ -164,12 +187,12 @@ public class DeprecatedApiUsageTest {
                         // language=Java
                         """
                         class Helper {
-                          @Deprecated
+                          @Deprecated(forRemoval = true)
                           public void deprecatedMethod() {}
                         }
 
                         class Test {
-                          @SuppressWarnings("deprecation")
+                          @SuppressWarnings("removal")
                           public void fun() {
                             new Helper().deprecatedMethod();
                           }
@@ -179,21 +202,21 @@ public class DeprecatedApiUsageTest {
     }
 
     @Test
-    public void does_not_suppress_through_java_compiler_removal_suppression() {
+    public void does_not_suppress_through_java_compiler_deprecation_suppression() {
         helper().addSourceLines(
                         "Test.java",
                         // language=Java
                         """
                         class Helper {
-                          @Deprecated
+                          @Deprecated(forRemoval = true)
                           public void deprecatedMethod() {}
                         }
 
                         class Test {
                           // This should not work, because the error-prone check only targets regular deprecation
-                          @SuppressWarnings("removal")
+                          @SuppressWarnings("deprecation")
                           public void fun() {
-                            // BUG: Diagnostic contains: Helper#deprecatedMethod is deprecated
+                            // BUG: Diagnostic contains: Helper#deprecatedMethod is deprecated for removal
                             new Helper().deprecatedMethod();
                           }
                         }
@@ -202,19 +225,19 @@ public class DeprecatedApiUsageTest {
     }
 
     @Test
-    public void can_suppress_through_deprecation_even_with_deprecation_compiler_flag() {
-        helper().setArgs("-Werror", "-Xlint:deprecation")
+    public void can_suppress_through_deprecation_even_with_removal_compiler_flag_disabled() {
+        helper().setArgs("-Xlint:-removal")
                 .addSourceLines(
                         "Test.java",
                         // language=Java
                         """
                         class Helper {
-                          @Deprecated
+                          @Deprecated(forRemoval = true)
                           public void deprecatedMethod() {}
                         }
 
                         class Test {
-                          @SuppressWarnings("deprecation")
+                          @SuppressWarnings("removal")
                           public void fun() {
                             new Helper().deprecatedMethod();
                           }
@@ -225,7 +248,7 @@ public class DeprecatedApiUsageTest {
 
     @Test
     public void compiler_can_warn_with_deprecation_flag_even_with_check() {
-        helper().setArgs("-Werror", "-Xlint:deprecation")
+        helper().setArgs("-Werror", "-Xlint:removal")
                 // In this case, we check that the compiler is the one warning us
                 .matchAllDiagnostics()
                 .addSourceLines(
@@ -233,7 +256,7 @@ public class DeprecatedApiUsageTest {
                         // language=Java
                         """
                         class Helper {
-                          @Deprecated
+                          @Deprecated(forRemoval = true)
                           public void deprecatedMethod() {}
                         }
 
@@ -251,6 +274,6 @@ public class DeprecatedApiUsageTest {
     }
 
     private CompilationTestHelper helper() {
-        return CompilationTestHelper.newInstance(DeprecatedApiUsage.class, getClass());
+        return CompilationTestHelper.newInstance(DeprecatedForRemovalApiUsage.class, getClass());
     }
 }

@@ -26,6 +26,7 @@ import net.ltgt.gradle.errorprone.ErrorProneOptions;
 import net.ltgt.gradle.errorprone.ErrorPronePlugin;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.tasks.compile.JavaCompile;
 
 public final class BaselineErrorProne implements Plugin<Project> {
     public static final String EXTENSION_NAME = "baselineErrorProne";
@@ -62,6 +63,11 @@ public final class BaselineErrorProne implements Plugin<Project> {
                                 "PreferSafeLoggableExceptions"),
                         new ConditionalPatchCheck(
                                 new IfModuleIsUsed("com.palantir.safe-logging", "logger"), "PreferSafeLogger"));
+
+        project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
+            // This is superseded by the DeprecatedForRemovalApiUsage error-prone check
+            javaCompile.getOptions().getCompilerArgs().add("-Xlint:-removal");
+        });
 
         suppressibleErrorProneExtension.configureEachErrorProneOptions(BaselineErrorProne::configureErrorProneOptions);
 

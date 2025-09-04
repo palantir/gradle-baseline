@@ -93,6 +93,40 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         result.output.contains("[ArrayEquals] Reference equality used to compare arrays")
     }
 
+    def 'compileJava succeeds when using deprecated-for-removal APIs, even with -Werror, if check is disabled'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << '''
+            tasks.withType(JavaCompile) {
+                options.compilerArgs += ['-Werror']
+                options.errorprone {
+                    check 'DeprecatedForRemovalApiUsage', net.ltgt.gradle.errorprone.CheckSeverity.OFF
+                }
+            }
+        '''.stripIndent()
+
+        file('src/main/java/test/DeprecatedClass.java') << '''
+        package test;
+        public class DeprecatedClass {
+            @Deprecated(forRemoval = true)
+            static void deprecated() {}
+        }
+        '''.stripIndent()
+
+        file('src/main/java/test/Test.java') << '''
+        package test;
+        public class Test {
+            void test() {
+                DeprecatedClass.deprecated();
+            }
+        }
+        '''.stripIndent()
+
+        then:
+        BuildResult result = with('compileJava').build()
+        result.task(":compileJava").outcome == TaskOutcome.SUCCESS
+    }
+
     def 'compileJava fails when StrictUnusedVariable finds errors'() {
         when:
         buildFile << standardBuildFile

@@ -31,35 +31,35 @@ import com.sun.source.tree.Tree;
 import java.util.Optional;
 
 /**
- * This check is meant to replace usage of the `-Werror` and `-Xlint:deprecation` compiler flags, which cannot be
- *   automatically suppressed by suppressible-error-prone and therefore block library upgrades as soon as a deprecation
- *   is introduced that is being relied upon.
+ * This check is meant to replace usage of the `-Werror` and `-Xlint:removal` compiler flags (the latter being default),
+ *   which cannot be automatically suppressed by suppressible-error-prone and therefore block library upgrades as soon
+ *   as a deprecation-for-removal is introduced that is being relied upon.
  * Instead, this check is meant to be auto-suppressed upon upgrades and prevent backsliding by unintentionally relying
  *   upon deprecated APIs.
  *
- * Note that it explicitly does not handle APIs that are deprecated for removal, as those should be handled by
- *   {@link DeprecatedForRemovalApiUsage}.
+ * Note that it explicitly does not handle APIs that are deprecated, but not for removal, as those should be handled by
+ *   {@link DeprecatedApiUsage}.
  */
 @SuppressWarnings("BugPatternNaming")
 @AutoService(BugChecker.class)
 @BugPattern(
         severity = BugPattern.SeverityLevel.ERROR,
-        summary = "Deprecated APIs should not be relied upon as they may be removed in a future release.",
-        // Use deprecation as the main name for the check, for familiarity with the javac flag.
-        name = "deprecation",
-        altNames = "DeprecatedApiUsage")
-public final class DeprecatedApiUsage extends BugChecker
+        summary = "Deprecated-for-removal APIs should not be relied upon as they will be removed in a future release.",
+        // Use removal as the main name for the check, for familiarity with the javac flag.
+        name = "removal",
+        altNames = "DeprecatedForRemovalApiUsage")
+public final class DeprecatedForRemovalApiUsage extends BugChecker
         implements BugChecker.MethodInvocationTreeMatcher,
                 BugChecker.MemberReferenceTreeMatcher,
                 BugChecker.MemberSelectTreeMatcher {
 
     private static final String MESSAGE_DETAILS =
-            " - this may be removed in a future release and prevent library upgrades. Note: This error comes from "
-                    + "the DeprecatedApiUsage error-prone check, replacing the java compiler flag '-Xlint:deprecation.'"
-                    + " Use @SuppressWarnings(\"deprecation\") to suppress this error.";
+            " - this will be removed in a future release and prevent library upgrades. Note: This error comes from "
+                    + "the DeprecatedForRemovalApiUsage error-prone check, replacing the default-on java compiler flag "
+                    + " '-Xlint:removal'. Use @SuppressWarnings(\"removal\") to suppress this error.";
 
-    private static final Matcher<Tree> DEPRECATED_SYMBOL =
-            Matchers.symbolMatcher((symbol, state) -> symbol.isDeprecated() && !symbol.isDeprecatedForRemoval());
+    private static final Matcher<Tree> DEPRECATED_FOR_REMOVAL_SYMBOL =
+            Matchers.symbolMatcher((symbol, state) -> symbol.isDeprecatedForRemoval());
 
     @Override
     public Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
@@ -77,7 +77,7 @@ public final class DeprecatedApiUsage extends BugChecker
     }
 
     private Description checkTree(Tree tree, VisitorState state) {
-        if (!DEPRECATED_SYMBOL.matches(tree, state)) {
+        if (!DEPRECATED_FOR_REMOVAL_SYMBOL.matches(tree, state)) {
             return Description.NO_MATCH;
         }
 
@@ -85,8 +85,8 @@ public final class DeprecatedApiUsage extends BugChecker
                 .map(s ->
                         s.owner.getQualifiedName() + "#" + s.getQualifiedName().toString());
         String description = qualifiedName
-                        .map(name -> String.format("%s is deprecated", name))
-                        .orElse("Deprecated API usage")
+                        .map(name -> String.format("%s is deprecated for removal", name))
+                        .orElse("Deprecated-for-removal API usage")
                 + MESSAGE_DETAILS;
         return buildDescription(tree).setMessage(description).build();
     }
