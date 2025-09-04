@@ -24,7 +24,7 @@ public class DeprecatedApiUsageTest {
     @Test
     public void does_not_throw_on_non_deprecated_api_usage() {
         helper().addSourceLines(
-                        "Test.java",
+                        "Helper.java",
                         // language=Java
                         """
                         class Helper {
@@ -35,7 +35,11 @@ public class DeprecatedApiUsageTest {
 
                           public void notDeprecatedMethod() {}
                         }
-
+                        """)
+                .addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
                         class Test {
                           public void fun() {
                             Helper.notDeprecatedStaticMethod();
@@ -55,7 +59,7 @@ public class DeprecatedApiUsageTest {
         // Explicitly disable -Xlint:-removal to ensure we only catch regular deprecations
         helper().setArgs("-Xlint:-removal")
                 .addSourceLines(
-                        "Test.java",
+                        "Helper.java",
                         // language=Java
                         """
                         class Helper {
@@ -68,7 +72,11 @@ public class DeprecatedApiUsageTest {
                           @Deprecated(forRemoval = false)
                           public void deprecatedNotForRemovalMethod() {}
                         }
-
+                        """)
+                .addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
                         class Test {
                           public void fun() {
                             // BUG: Diagnostic contains: Helper#deprecatedMethod is deprecated
@@ -87,14 +95,18 @@ public class DeprecatedApiUsageTest {
     @Test
     public void check_message_contains_expected_check_name() {
         helper().addSourceLines(
-                        "Test.java",
+                        "Helper.java",
                         // language=Java
                         """
                         class Helper {
                           @Deprecated
                           public void deprecatedMethod() {}
                         }
-
+                        """)
+                .addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
                         class Test {
                           public void fun() {
                             // We should be showing [deprecation] here rather than [DeprecatedApiUsage]
@@ -113,7 +125,7 @@ public class DeprecatedApiUsageTest {
     @SuppressWarnings("MisformattedTestData")
     public void throws_on_deprecated_field_access() {
         helper().addSourceLines(
-                        "Test.java",
+                        "Helper.java",
                         // language=Java
                         """
                         class Helper {
@@ -123,7 +135,11 @@ public class DeprecatedApiUsageTest {
                           @Deprecated
                           public final String deprecatedField = "deprecated";
                         }
-
+                        """)
+                .addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
                         class Test {
                           public void fun() {
                             // BUG: Diagnostic contains: Helper#DEPRECATED_CONSTANT is deprecated
@@ -139,14 +155,18 @@ public class DeprecatedApiUsageTest {
     @Test
     public void can_suppress_through_check_name() {
         helper().addSourceLines(
-                        "Test.java",
+                        "Helper.java",
                         // language=Java
                         """
                         class Helper {
                           @Deprecated
                           public void deprecatedMethod() {}
                         }
-
+                        """)
+                .addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
                         class Test {
                           @SuppressWarnings("DeprecatedApiUsage")
                           public void fun() {
@@ -160,14 +180,18 @@ public class DeprecatedApiUsageTest {
     @Test
     public void can_suppress_through_java_compiler_deprecation_suppression() {
         helper().addSourceLines(
-                        "Test.java",
+                        "Helper.java",
                         // language=Java
                         """
                         class Helper {
                           @Deprecated
                           public void deprecatedMethod() {}
                         }
-
+                        """)
+                .addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
                         class Test {
                           @SuppressWarnings("deprecation")
                           public void fun() {
@@ -181,14 +205,18 @@ public class DeprecatedApiUsageTest {
     @Test
     public void does_not_suppress_through_java_compiler_removal_suppression() {
         helper().addSourceLines(
-                        "Test.java",
+                        "Helper.java",
                         // language=Java
                         """
                         class Helper {
                           @Deprecated
                           public void deprecatedMethod() {}
                         }
-
+                        """)
+                .addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
                         class Test {
                           // This should not work, because the error-prone check only targets regular deprecation
                           @SuppressWarnings("removal")
@@ -205,14 +233,18 @@ public class DeprecatedApiUsageTest {
     public void can_suppress_through_deprecation_even_with_deprecation_compiler_flag() {
         helper().setArgs("-Werror", "-Xlint:deprecation")
                 .addSourceLines(
-                        "Test.java",
+                        "Helper.java",
                         // language=Java
                         """
                         class Helper {
                           @Deprecated
                           public void deprecatedMethod() {}
                         }
-
+                        """)
+                .addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
                         class Test {
                           @SuppressWarnings("deprecation")
                           public void fun() {
@@ -229,14 +261,18 @@ public class DeprecatedApiUsageTest {
                 // In this case, we check that the compiler is the one warning us
                 .matchAllDiagnostics()
                 .addSourceLines(
-                        "Test.java",
+                        "Helper.java",
                         // language=Java
                         """
                         class Helper {
                           @Deprecated
                           public void deprecatedMethod() {}
                         }
-
+                        """)
+                .addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
                         class Test {
                           public void fun() {
                             // This is the regular compiler warning, not our custom one
