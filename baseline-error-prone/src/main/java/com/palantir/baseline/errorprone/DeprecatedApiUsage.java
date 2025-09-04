@@ -61,8 +61,8 @@ public final class DeprecatedApiUsage extends AbstractDeprecatedApiCheck {
     @Override
     protected String getErrorDescription(Optional<String> qualifiedName) {
         return qualifiedName
-                .map(name -> String.format("%s is deprecated", name))
-                .orElse("Deprecated API usage")
+                        .map(name -> String.format("%s is deprecated", name))
+                        .orElse("Deprecated API usage")
                 + MESSAGE_DETAILS;
     }
 }
