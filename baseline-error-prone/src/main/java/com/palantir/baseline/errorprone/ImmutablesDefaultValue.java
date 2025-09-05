@@ -40,6 +40,8 @@ import javax.lang.model.element.Modifier;
 
 @AutoService(BugChecker.class)
 @BugPattern(
+        link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
+        linkType = BugPattern.LinkType.CUSTOM,
         summary = "`default` methods in immutable interfaces need to be annotated with @Value.Default to ensure the "
                 + "generated class includes them as fields. This check can be suppressed if the method is simply "
                 + "an auxiliary method and not meant to be a field.",
