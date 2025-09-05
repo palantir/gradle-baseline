@@ -210,7 +210,7 @@ Safe Logging can be found at [github.com/palantir/safe-logging](https://github.c
 - `LogsafeArgName`: Prevent certain named arguments as being logged as safe. Specify unsafe argument names using `LogsafeArgName:UnsafeArgNames` errorProne flag.
 - `ImplicitPublicBuilderConstructor`: Prevent builders from unintentionally leaking public constructors.
 - `ImmutablesBuilderMissingInitialization`: Prevent building Immutables.org builders when not all fields have been populated.
-- `ImmutablesDefaultValue`: `default` methods in immutable interfaces need to be annotated with `@Value.Default` to ensure the generated class includes them as fields. This check can be suppressed if the method is simply an auxiliary method and not meant to be a field.
+- `ImmutablesDefaultValue`: `default` methods in immutable interfaces need to be annotated with `@Value.Default` to ensure the generated class includes them as fields. This check is automatically disabled when `@Value.Style(defaultAsDefault = true)` is present (either directly on the interface or via meta-annotations). This check can be suppressed if the method is simply an auxiliary method and not meant to be a field.
 - `UnnecessarilyQualified`: Types should not be qualified if they are also imported.
 - `DeprecatedGuavaObjects`: `com.google.common.base.Objects` has been obviated by `java.util.Objects`.
 - `JavaTimeSystemDefaultTimeZone`: Avoid using the system default time zone.
