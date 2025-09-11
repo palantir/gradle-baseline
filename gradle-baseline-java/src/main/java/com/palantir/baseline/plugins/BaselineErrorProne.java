@@ -21,11 +21,14 @@ import com.palantir.gradle.suppressibleerrorprone.ConditionalPatchCheck;
 import com.palantir.gradle.suppressibleerrorprone.IfModuleIsUsed;
 import com.palantir.gradle.suppressibleerrorprone.SuppressibleErrorProneExtension;
 import com.palantir.gradle.suppressibleerrorprone.SuppressibleErrorPronePlugin;
+import java.util.Collections;
 import java.util.Optional;
 import net.ltgt.gradle.errorprone.ErrorProneOptions;
 import net.ltgt.gradle.errorprone.ErrorPronePlugin;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.tasks.compile.JavaCompile;
+import org.gradle.process.CommandLineArgumentProvider;
 
 public final class BaselineErrorProne implements Plugin<Project> {
     public static final String EXTENSION_NAME = "baselineErrorProne";
@@ -62,6 +65,11 @@ public final class BaselineErrorProne implements Plugin<Project> {
                                 "PreferSafeLoggableExceptions"),
                         new ConditionalPatchCheck(
                                 new IfModuleIsUsed("com.palantir.safe-logging", "logger"), "PreferSafeLogger"));
+
+        project.getTasks().withType(JavaCompile.class).configureEach(javaCompile -> {
+            // This is superseded by the DeprecatedForRemovalApiUsage error-prone check
+            javaCompile.getOptions().getCompilerArgumentProviders().add(new DisableXlintRemoval());
+        });
 
         suppressibleErrorProneExtension.configureEachErrorProneOptions(BaselineErrorProne::configureErrorProneOptions);
 
@@ -281,6 +289,18 @@ public final class BaselineErrorProne implements Plugin<Project> {
         // Relax some checks for test code
         if (errorProneOptions.getCompilingTestOnlyCode().get()) {
             errorProneOptions.disable("UnnecessaryLambda");
+        }
+    }
+
+    private static class DisableXlintRemoval implements CommandLineArgumentProvider {
+
+        public static final String FLAG = "-Xlint:-removal";
+
+        private DisableXlintRemoval() {}
+
+        @Override
+        public Iterable<String> asArguments() {
+            return Collections.singletonList(FLAG);
         }
     }
 }
