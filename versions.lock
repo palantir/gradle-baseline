@@ -38,13 +38,13 @@ com.google.auto.value:auto-value-annotations:1.10.4 (3 constraints: ac2df2f5)
 
 com.google.code.findbugs:jsr305:3.0.2 (2 constraints: 9e14e59e)
 
-com.google.errorprone:error_prone_annotation:2.40.0 (3 constraints: be384fec)
+com.google.errorprone:error_prone_annotation:2.41.0 (3 constraints: c138f8ec)
 
-com.google.errorprone:error_prone_annotations:2.40.0 (13 constraints: 68cd2827)
+com.google.errorprone:error_prone_annotations:2.41.0 (13 constraints: 6ccd5d2c)
 
-com.google.errorprone:error_prone_check_api:2.40.0 (2 constraints: ae25a0fe)
+com.google.errorprone:error_prone_check_api:2.41.0 (2 constraints: b025defe)
 
-com.google.errorprone:error_prone_core:2.40.0 (1 constraints: 38053b3b)
+com.google.errorprone:error_prone_core:2.41.0 (1 constraints: 38053b3b)
 
 com.google.googlejavaformat:google-java-format:1.27.0 (2 constraints: b6258eff)
 
@@ -212,7 +212,7 @@ com.github.stefanbirkner:system-rules:1.19.0 (1 constraints: 3d05443b)
 
 com.google.auto.value:auto-value:1.10 (1 constraints: e711f8e8)
 
-com.google.errorprone:error_prone_test_helpers:2.40.0 (1 constraints: 38053b3b)
+com.google.errorprone:error_prone_test_helpers:2.41.0 (1 constraints: 38053b3b)
 
 com.google.jimfs:jimfs:1.3.0 (1 constraints: 5a141061)
 
@@ -272,13 +272,13 @@ com.palantir.sls.versions:sls-versions:1.5.0 (1 constraints: 531bd145)
 
 com.palantir.tokens:auth-tokens:3.18.0 (2 constraints: 611537db)
 
-com.palantir.tritium:tritium-ids:0.104.0 (1 constraints: f80f86a6)
+com.palantir.tritium:tritium-ids:0.106.0 (1 constraints: f80f86a6)
 
-com.palantir.tritium:tritium-registry:0.104.0 (1 constraints: 67059440)
+com.palantir.tritium:tritium-registry:0.106.0 (1 constraints: 69059a40)
 
 commons-io:commons-io:2.20.0 (3 constraints: 6b240aec)
 
-io.dropwizard.metrics:metrics-core:4.2.33 (1 constraints: c61053b6)
+io.dropwizard.metrics:metrics-core:4.2.36 (1 constraints: c91056b6)
 
 io.r2dbc:r2dbc-spi:1.0.0.RELEASE (1 constraints: ea08e898)
 
