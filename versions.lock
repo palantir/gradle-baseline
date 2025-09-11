@@ -314,7 +314,7 @@ org.hamcrest:hamcrest-library:2.2 (1 constraints: fc138e38)
 
 org.immutables:serial:2.11.3 (1 constraints: 74113fef)
 
-org.jooq:jooq:3.20.6 (1 constraints: 3d053f3b)
+org.jooq:jooq:3.20.7 (1 constraints: 3e05403b)
 
 org.junit.jupiter:junit-jupiter:5.13.4 (1 constraints: 7e074077)
 
