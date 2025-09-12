@@ -272,9 +272,9 @@ com.palantir.sls.versions:sls-versions:1.5.0 (1 constraints: 531bd145)
 
 com.palantir.tokens:auth-tokens:3.18.0 (2 constraints: 611537db)
 
-com.palantir.tritium:tritium-ids:0.106.0 (1 constraints: f80f86a6)
+com.palantir.tritium:tritium-ids:0.107.0 (1 constraints: f80f86a6)
 
-com.palantir.tritium:tritium-registry:0.106.0 (1 constraints: 69059a40)
+com.palantir.tritium:tritium-registry:0.107.0 (1 constraints: 6a059d40)
 
 commons-io:commons-io:2.20.0 (3 constraints: 6b240aec)
 
