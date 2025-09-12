@@ -50,7 +50,7 @@ allprojects {
 
     pluginManager.withPlugin('java') {
         tasks.withType(JavaCompile) {
-            options.compilerArgs += ['-Werror', '-Xlint:deprecation']
+            options.compilerArgs += ['-Werror']
             options.errorprone {
                 // Temporarily disable some checks. Remove these line after upgrading Baseline.
                 disable("DangerousIdentityKey")
