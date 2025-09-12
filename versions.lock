@@ -44,7 +44,7 @@ com.google.errorprone:error_prone_annotations:2.41.0 (13 constraints: 6ccd5d2c)
 
 com.google.errorprone:error_prone_check_api:2.41.0 (2 constraints: b025defe)
 
-com.google.errorprone:error_prone_core:2.41.0 (1 constraints: 38053b3b)
+com.google.errorprone:error_prone_core:2.41.0 (1 constraints: 39053e3b)
 
 com.google.googlejavaformat:google-java-format:1.27.0 (2 constraints: b6258eff)
 
@@ -212,7 +212,7 @@ com.github.stefanbirkner:system-rules:1.19.0 (1 constraints: 3d05443b)
 
 com.google.auto.value:auto-value:1.10 (1 constraints: e711f8e8)
 
-com.google.errorprone:error_prone_test_helpers:2.41.0 (1 constraints: 38053b3b)
+com.google.errorprone:error_prone_test_helpers:2.41.0 (1 constraints: 39053e3b)
 
 com.google.jimfs:jimfs:1.3.0 (1 constraints: 5a141061)
 
