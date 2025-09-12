@@ -329,6 +329,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
 
     private static class EnablePreviewArgumentProvider implements CommandLineArgumentProvider {
 
+        @SuppressWarnings("for-rollout:EffectivelyPrivate")
         public static final String FLAG = "--enable-preview";
 
         private final Provider<ChosenJavaVersion> provider;

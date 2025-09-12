@@ -294,6 +294,7 @@ public final class BaselineErrorProne implements Plugin<Project> {
 
     private static class DisableXlintRemoval implements CommandLineArgumentProvider {
 
+        @SuppressWarnings("for-rollout:EffectivelyPrivate")
         public static final String FLAG = "-Xlint:-removal";
 
         private DisableXlintRemoval() {}
