@@ -50,7 +50,7 @@ public final class DeprecatedForRemovalApiUsage extends AbstractDeprecatedApiChe
     private static final String MESSAGE_DETAILS =
             " - this will be removed in a future release and prevent library upgrades. Note: This error comes from "
                     + "the DeprecatedForRemovalApiUsage error-prone check, replacing the default-on java compiler flag "
-                    + " '-Xlint:removal'. Use @SuppressWarnings(\"removal\") to suppress this error.";
+                    + "'-Xlint:removal'. Use @SuppressWarnings(\"removal\") to suppress this error.";
 
     private static final Matcher<Tree> DEPRECATED_FOR_REMOVAL_SYMBOL =
             Matchers.symbolMatcher((symbol, state) -> symbol.isDeprecatedForRemoval());
