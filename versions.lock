@@ -16,11 +16,11 @@ com.diffplug.spotless:spotless-lib-extra:3.3.1 (1 constraints: 1713d42d)
 
 com.diffplug.spotless:spotless-plugin-gradle:7.2.1 (1 constraints: 0c051536)
 
-com.fasterxml.jackson.core:jackson-annotations:2.19.2 (11 constraints: e6bab235)
+com.fasterxml.jackson.core:jackson-annotations:2.19.2 (11 constraints: ebbac135)
 
 com.fasterxml.jackson.core:jackson-core:2.19.2 (6 constraints: b57e67ba)
 
-com.fasterxml.jackson.core:jackson-databind:2.19.2 (13 constraints: a80dec0a)
+com.fasterxml.jackson.core:jackson-databind:2.19.2 (13 constraints: ad0dfb0a)
 
 com.fasterxml.jackson.datatype:jackson-datatype-guava:2.19.2 (2 constraints: 73280093)
 
@@ -192,7 +192,7 @@ org.ow2.asm:asm:9.8 (5 constraints: 684f29ac)
 
 org.pcollections:pcollections:4.0.1 (1 constraints: f21028b8)
 
-org.slf4j:slf4j-api:2.0.17 (10 constraints: a39132a7)
+org.slf4j:slf4j-api:2.0.17 (10 constraints: 9c91609e)
 
 org.tukaani:xz:1.9 (1 constraints: 6b09e995)
 
@@ -250,13 +250,13 @@ com.palantir.gradle.plugintesting:plugin-testing-core:0.11.0 (1 constraints: 340
 
 com.palantir.ri:resource-identifier:2.11.0 (2 constraints: 511589d9)
 
-com.palantir.safe-logging:logger:3.9.0 (4 constraints: fc318375)
+com.palantir.safe-logging:logger:3.9.0 (4 constraints: 01325f76)
 
 com.palantir.safe-logging:logger-slf4j:3.9.0 (1 constraints: 070e6e42)
 
 com.palantir.safe-logging:logger-spi:3.9.0 (2 constraints: 1d1e0c7c)
 
-com.palantir.safe-logging:preconditions:3.9.0 (12 constraints: dfc9f192)
+com.palantir.safe-logging:preconditions:3.9.0 (12 constraints: e4c9b394)
 
 com.palantir.safe-logging:preconditions-assertj:3.9.0 (1 constraints: 0e051536)
 
@@ -270,11 +270,11 @@ com.palantir.sls-packaging:gradle-sls-packaging-api:7.77.0 (1 constraints: f1133
 
 com.palantir.sls.versions:sls-versions:1.5.0 (1 constraints: 531bd145)
 
-com.palantir.tokens:auth-tokens:3.18.0 (2 constraints: 611537db)
+com.palantir.tokens:auth-tokens:3.19.0 (2 constraints: 621569db)
 
-com.palantir.tritium:tritium-ids:0.107.0 (1 constraints: f80f86a6)
+com.palantir.tritium:tritium-ids:0.108.0 (1 constraints: f80f86a6)
 
-com.palantir.tritium:tritium-registry:0.107.0 (1 constraints: 6a059d40)
+com.palantir.tritium:tritium-registry:0.108.0 (1 constraints: 6b05a040)
 
 commons-io:commons-io:2.20.0 (3 constraints: 6b240aec)
 
