@@ -272,13 +272,13 @@ com.palantir.sls.versions:sls-versions:1.5.0 (1 constraints: 531bd145)
 
 com.palantir.tokens:auth-tokens:3.19.0 (2 constraints: 621569db)
 
-com.palantir.tritium:tritium-ids:0.108.0 (1 constraints: f80f86a6)
+com.palantir.tritium:tritium-ids:0.109.0 (1 constraints: f80f86a6)
 
-com.palantir.tritium:tritium-registry:0.108.0 (1 constraints: 6b05a040)
+com.palantir.tritium:tritium-registry:0.109.0 (1 constraints: 6c05a340)
 
 commons-io:commons-io:2.20.0 (3 constraints: 6b240aec)
 
-io.dropwizard.metrics:metrics-core:4.2.36 (1 constraints: c91056b6)
+io.dropwizard.metrics:metrics-core:4.2.37 (1 constraints: ca1057b6)
 
 io.r2dbc:r2dbc-spi:1.0.0.RELEASE (1 constraints: ea08e898)
 
