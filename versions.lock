@@ -20,7 +20,7 @@ com.fasterxml.jackson.core:jackson-annotations:2.19.2 (11 constraints: ebbac135)
 
 com.fasterxml.jackson.core:jackson-core:2.19.2 (6 constraints: b57e67ba)
 
-com.fasterxml.jackson.core:jackson-databind:2.19.2 (13 constraints: ad0dfb0a)
+com.fasterxml.jackson.core:jackson-databind:2.19.2 (13 constraints: ae0d2b0c)
 
 com.fasterxml.jackson.datatype:jackson-datatype-guava:2.19.2 (2 constraints: 73280093)
 
@@ -40,7 +40,7 @@ com.google.code.findbugs:jsr305:3.0.2 (2 constraints: 9e14e59e)
 
 com.google.errorprone:error_prone_annotation:2.41.0 (3 constraints: c138f8ec)
 
-com.google.errorprone:error_prone_annotations:2.41.0 (13 constraints: 6ccd5d2c)
+com.google.errorprone:error_prone_annotations:2.41.0 (13 constraints: 68cdc626)
 
 com.google.errorprone:error_prone_check_api:2.41.0 (2 constraints: b025defe)
 
@@ -50,13 +50,13 @@ com.google.googlejavaformat:google-java-format:1.27.0 (2 constraints: b6258eff)
 
 com.google.guava:failureaccess:1.0.3 (2 constraints: f3154f13)
 
-com.google.guava:guava:33.4.8-jre (21 constraints: 5188b0c9)
+com.google.guava:guava:33.5.0-jre (21 constraints: 4a88acab)
 
 com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava (1 constraints: bd17c918)
 
 com.google.inject:guice:5.1.0 (1 constraints: e20b61f3)
 
-com.google.j2objc:j2objc-annotations:3.0.0 (1 constraints: 150aeab4)
+com.google.j2objc:j2objc-annotations:3.1 (1 constraints: b809f1a0)
 
 com.google.protobuf:protobuf-java:3.25.5 (1 constraints: 2c1160c9)
 
@@ -242,7 +242,7 @@ com.palantir.gradle.jdks:gradle-jdks-setup:0.68.0 (1 constraints: 970f6092)
 
 com.palantir.gradle.jdks:gradle-jdks-setup-common:0.68.0 (3 constraints: 293b3846)
 
-com.palantir.gradle.jdkslatest:gradle-jdks-latest:0.21.0 (1 constraints: 35052a3b)
+com.palantir.gradle.jdkslatest:gradle-jdks-latest:0.22.0 (1 constraints: 36052d3b)
 
 com.palantir.gradle.plugintesting:configuration-cache-spec:0.11.0 (1 constraints: 3405263b)
 
