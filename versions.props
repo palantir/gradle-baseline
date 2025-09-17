@@ -1,6 +1,6 @@
 com.github.ben-manes.caffeine:caffeine = 3.2.2
 com.google.auto.service:auto-service = 1.1.1
-com.google.guava:guava = 33.4.8-jre
+com.google.guava:guava = 33.5.0-jre
 com.palantir.safe-logging:* = 3.9.0
 com.palantir.suppressible-error-prone:* = 1.5.0
 commons-lang:commons-lang = 2.6
@@ -45,7 +45,7 @@ org.junit.vintage:* = 5.13.4
 org.junit.platform:* = 1.13.4
 org.mockito:* = 5.19.0
 com.palantir.sls-packaging:gradle-sls-packaging = 7.77.0
-com.palantir.gradle.jdkslatest:gradle-jdks-latest = 0.21.0
+com.palantir.gradle.jdkslatest:gradle-jdks-latest = 0.22.0
 org.unbroken-dome.gradle-plugins:gradle-testsets-plugin = 4.1.0
 
 # dependency-upgrader:OFF
