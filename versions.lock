@@ -288,7 +288,7 @@ junit:junit:4.13.2 (8 constraints: 1e723e1a)
 
 junit:junit-dep:4.11 (1 constraints: ba1063b3)
 
-net.bytebuddy:byte-buddy:1.17.6 (2 constraints: c716ff4f)
+net.bytebuddy:byte-buddy:1.17.7 (2 constraints: 9e161a3f)
 
 net.lingala.zip4j:zip4j:1.3.2 (1 constraints: 0805fb35)
 
@@ -298,7 +298,7 @@ org.apache.commons:commons-compress:1.27.1 (1 constraints: 940f5492)
 
 org.apiguardian:apiguardian-api:1.1.2 (8 constraints: e08b1baf)
 
-org.assertj:assertj-core:3.27.4 (3 constraints: f82a9ca3)
+org.assertj:assertj-core:3.27.5 (3 constraints: f92a08a4)
 
 org.codehaus.groovy:groovy:3.0.25 (3 constraints: 14347add)
 
