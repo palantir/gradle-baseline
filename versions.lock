@@ -20,9 +20,9 @@ com.fasterxml.jackson.core:jackson-annotations:2.19.2 (11 constraints: ebbac135)
 
 com.fasterxml.jackson.core:jackson-core:2.19.2 (6 constraints: b57e67ba)
 
-com.fasterxml.jackson.core:jackson-databind:2.19.2 (13 constraints: ae0d2b0c)
+com.fasterxml.jackson.core:jackson-databind:2.19.2 (13 constraints: ae0d310c)
 
-com.fasterxml.jackson.datatype:jackson-datatype-guava:2.19.2 (2 constraints: 73280093)
+com.fasterxml.jackson.datatype:jackson-datatype-guava:2.19.2 (2 constraints: 73280293)
 
 com.github.ben-manes.caffeine:caffeine:3.2.2 (2 constraints: eb175357)
 
@@ -202,9 +202,9 @@ org.tukaani:xz:1.9 (1 constraints: 6b09e995)
 
 cglib:cglib-nodep:3.2.2 (1 constraints: 490ded24)
 
-com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.19.2 (1 constraints: ea130770)
+com.fasterxml.jackson.dataformat:jackson-dataformat-yaml:2.19.2 (1 constraints: ea130970)
 
-com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.19.2 (1 constraints: ea130770)
+com.fasterxml.jackson.datatype:jackson-datatype-jdk8:2.19.2 (1 constraints: ea130970)
 
 com.fasterxml.jackson.module:jackson-module-afterburner:2.19.2 (1 constraints: 40054c3b)
 
@@ -222,9 +222,9 @@ com.google.truth:truth:1.4.0 (2 constraints: 72265a6a)
 
 com.netflix.nebula:nebula-test:10.6.2 (2 constraints: d61de72d)
 
-com.palantir.conjure.java:conjure-lib:8.55.0 (1 constraints: 4405723b)
+com.palantir.conjure.java:conjure-lib:8.56.0 (1 constraints: 4505753b)
 
-com.palantir.conjure.java.api:errors:2.65.0 (2 constraints: 732142b1)
+com.palantir.conjure.java.api:errors:2.65.0 (2 constraints: 7521acb1)
 
 com.palantir.conjure.java.api:test-utils:2.65.0 (1 constraints: 3f05523b)
 
@@ -262,15 +262,15 @@ com.palantir.safe-logging:preconditions-assertj:3.9.0 (1 constraints: 0e051536)
 
 com.palantir.safe-logging:safe-logging:3.9.0 (10 constraints: 139876ee)
 
-com.palantir.sls-packaging:gradle-recommended-product-dependencies:7.77.0 (1 constraints: f1133770)
+com.palantir.sls-packaging:gradle-recommended-product-dependencies:7.78.0 (1 constraints: f2133a70)
 
-com.palantir.sls-packaging:gradle-sls-packaging:7.77.0 (1 constraints: 47057a3b)
+com.palantir.sls-packaging:gradle-sls-packaging:7.78.0 (1 constraints: 48057d3b)
 
-com.palantir.sls-packaging:gradle-sls-packaging-api:7.77.0 (1 constraints: f1133770)
+com.palantir.sls-packaging:gradle-sls-packaging-api:7.78.0 (1 constraints: f2133a70)
 
 com.palantir.sls.versions:sls-versions:1.5.0 (1 constraints: 531bd145)
 
-com.palantir.tokens:auth-tokens:3.19.0 (2 constraints: 621569db)
+com.palantir.tokens:auth-tokens:3.19.0 (2 constraints: 63156cdb)
 
 com.palantir.tritium:tritium-ids:0.109.0 (1 constraints: f80f86a6)
 
