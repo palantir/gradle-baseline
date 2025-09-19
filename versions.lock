@@ -262,11 +262,11 @@ com.palantir.safe-logging:preconditions-assertj:3.9.0 (1 constraints: 0e051536)
 
 com.palantir.safe-logging:safe-logging:3.9.0 (10 constraints: 139876ee)
 
-com.palantir.sls-packaging:gradle-recommended-product-dependencies:7.78.0 (1 constraints: f2133a70)
+com.palantir.sls-packaging:gradle-recommended-product-dependencies:7.79.0 (1 constraints: f3133d70)
 
-com.palantir.sls-packaging:gradle-sls-packaging:7.78.0 (1 constraints: 48057d3b)
+com.palantir.sls-packaging:gradle-sls-packaging:7.79.0 (1 constraints: 4905803b)
 
-com.palantir.sls-packaging:gradle-sls-packaging-api:7.78.0 (1 constraints: f2133a70)
+com.palantir.sls-packaging:gradle-sls-packaging-api:7.79.0 (1 constraints: f3133d70)
 
 com.palantir.sls.versions:sls-versions:1.5.0 (1 constraints: 531bd145)
 

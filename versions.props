@@ -44,7 +44,7 @@ org.junit.jupiter:* = 5.13.4
 org.junit.vintage:* = 5.13.4
 org.junit.platform:* = 1.13.4
 org.mockito:* = 5.19.0
-com.palantir.sls-packaging:gradle-sls-packaging = 7.78.0
+com.palantir.sls-packaging:gradle-sls-packaging = 7.79.0
 com.palantir.gradle.jdkslatest:gradle-jdks-latest = 0.22.0
 org.unbroken-dome.gradle-plugins:gradle-testsets-plugin = 4.1.0
 
