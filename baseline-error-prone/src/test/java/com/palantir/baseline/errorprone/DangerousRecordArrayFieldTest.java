@@ -119,4 +119,19 @@ public final class DangerousRecordArrayFieldTest {
                         "}")
                 .doTest();
     }
+
+    @Test
+    public void testStaticFieldInRecord() {
+        compilationHelper
+                .addSourceLines(
+                        "Test.java",
+                        "import java.util.*;",
+                        "import java.util.regex.Pattern;",
+                        "class Test {",
+                        "    private record MyRecord(String name) {",
+                        "        public static byte[] PAYLOAD = new byte[0];",
+                        "    }",
+                        "}")
+                .doTest();
+    }
 }
