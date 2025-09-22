@@ -30,6 +30,7 @@ import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.Tree;
 import com.sun.source.tree.VariableTree;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
+import javax.lang.model.element.Modifier;
 
 /**
  * Warns that users should not have a {@link java.util.regex.Pattern} as a key to a Set or Map.
@@ -65,7 +66,8 @@ public final class DangerousRecordArrayField extends BugChecker implements BugCh
     private static boolean hasArrayField(ClassTree classTree, VisitorState state) {
         for (Tree member : classTree.getMembers()) {
             if (member instanceof VariableTree variableTree) {
-                if (IS_ARRAY_VARIABLE.matches(variableTree, state)) {
+                if (IS_ARRAY_VARIABLE.matches(variableTree, state)
+                        && !variableTree.getModifiers().getFlags().contains(Modifier.STATIC)) {
                     return true;
                 }
             }
