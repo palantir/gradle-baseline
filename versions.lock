@@ -228,7 +228,7 @@ com.palantir.conjure.java.api:errors:2.65.0 (2 constraints: 7521acb1)
 
 com.palantir.conjure.java.api:test-utils:2.65.0 (1 constraints: 3f05523b)
 
-com.palantir.conjure.java.runtime:conjure-java-annotations:8.24.0 (1 constraints: 4005633b)
+com.palantir.conjure.java.runtime:conjure-java-annotations:8.25.0 (1 constraints: 4105663b)
 
 com.palantir.gradle.jdks:gradle-jdks:0.68.0 (1 constraints: de1441a2)
 
@@ -298,7 +298,7 @@ org.apache.commons:commons-compress:1.27.1 (1 constraints: 940f5492)
 
 org.apiguardian:apiguardian-api:1.1.2 (8 constraints: e08b1baf)
 
-org.assertj:assertj-core:3.27.5 (3 constraints: f92a08a4)
+org.assertj:assertj-core:3.27.6 (3 constraints: fa2a74a4)
 
 org.codehaus.groovy:groovy:3.0.25 (3 constraints: 14347add)
 
