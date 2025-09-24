@@ -371,6 +371,33 @@ public class DeprecatedApiUsageTest {
                 .doTest();
     }
 
+    @Test
+    public void throws_on_deprecated_class_usage() {
+        helper().addSourceLines(
+                        "Helper.java",
+                        // language=Java
+                        """
+                        @Deprecated
+                        class Helper {}
+                        """)
+                .addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import java.util.stream.Stream;
+
+                        class Test {
+                          public void fun() {
+                            // BUG: Diagnostic contains: Helper is deprecated
+                            Stream.of(new Helper())
+                                // BUG: Diagnostic contains: Helper is deprecated
+                                .forEach((Helper c) -> c.toString());
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(DeprecatedApiUsage.class, getClass());
     }

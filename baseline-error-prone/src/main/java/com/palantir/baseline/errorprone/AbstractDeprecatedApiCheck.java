@@ -21,6 +21,7 @@ import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.util.ASTHelpers;
 import com.sun.source.tree.ClassTree;
+import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.ImportTree;
 import com.sun.source.tree.MemberReferenceTree;
 import com.sun.source.tree.MemberSelectTree;
@@ -39,7 +40,8 @@ import javax.lang.model.element.Name;
 public abstract class AbstractDeprecatedApiCheck extends BugChecker
         implements BugChecker.MethodInvocationTreeMatcher,
                 BugChecker.MemberReferenceTreeMatcher,
-                BugChecker.MemberSelectTreeMatcher {
+                BugChecker.MemberSelectTreeMatcher,
+                BugChecker.IdentifierTreeMatcher {
 
     protected abstract boolean isDeprecationWarning(Tree tree, VisitorState state);
 
@@ -56,16 +58,21 @@ public abstract class AbstractDeprecatedApiCheck extends BugChecker
     }
 
     @Override
+    public final Description matchIdentifier(IdentifierTree tree, VisitorState state) {
+        return checkTree(tree, state);
+    }
+
+    @Override
     public final Description matchMemberSelect(MemberSelectTree tree, VisitorState state) {
+        return checkTree(tree, state);
+    }
+
+    private Description checkTree(Tree tree, VisitorState state) {
         if (isImportStatement(state)) {
             // We don't want to flag import statements, as those cannot be suppressed.
             return Description.NO_MATCH;
         }
 
-        return checkTree(tree, state);
-    }
-
-    private Description checkTree(Tree tree, VisitorState state) {
         if (!isDeprecationWarning(tree, state)) {
             return Description.NO_MATCH;
         }
