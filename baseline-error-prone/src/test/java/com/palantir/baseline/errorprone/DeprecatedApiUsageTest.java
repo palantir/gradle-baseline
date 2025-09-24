@@ -374,16 +374,20 @@ public class DeprecatedApiUsageTest {
     @Test
     public void throws_on_deprecated_class_usage() {
         helper().addSourceLines(
-                        "Helper.java",
+                        "app/Helper.java",
                         // language=Java
                         """
+                        package app;
+
                         @Deprecated
-                        class Helper {}
+                        public class Helper {}
                         """)
                 .addSourceLines(
                         "Test.java",
                         // language=Java
                         """
+                        // This import should not get flagged
+                        import app.Helper;
                         import java.util.stream.Stream;
 
                         class Test {
