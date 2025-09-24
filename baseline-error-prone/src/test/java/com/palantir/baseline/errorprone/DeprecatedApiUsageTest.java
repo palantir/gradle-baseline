@@ -332,7 +332,9 @@ public class DeprecatedApiUsageTest {
     }
 
     @Test
-    public void do_not_warn_on_importing_deprecated_class() {
+    // Error-prone wants to inline the Deprecated annotation, which looks worse
+    @SuppressWarnings("MisformattedTestData")
+    public void do_not_warn_on_import_statements() {
         helper().addSourceLines(
                         "Helper.java",
                         // language=Java
@@ -343,10 +345,26 @@ public class DeprecatedApiUsageTest {
                         public class Helper {}
                         """)
                 .addSourceLines(
+                        "Parent.java",
+                        // language=Java
+                        """
+                        package com;
+
+                        public class Parent {
+                            @Deprecated
+                            public static String CONSTANT = "constant";
+
+                            @Deprecated
+                            public static class Nested {}
+                        }
+                        """)
+                .addSourceLines(
                         "Test.java",
                         // language=Java
                         """
                         import com.Helper;
+                        import com.Parent.Nested;
+                        import static com.Parent.CONSTANT;
 
                         class Test {}
                         """)
