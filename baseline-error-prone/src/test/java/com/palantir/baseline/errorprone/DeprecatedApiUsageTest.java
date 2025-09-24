@@ -123,6 +123,44 @@ public class DeprecatedApiUsageTest {
     @Test
     // Error-prone wants to inline the Deprecated annotation, which looks worse
     @SuppressWarnings("MisformattedTestData")
+    public void check_deprecated_methods_inside_lambda() {
+        helper().addSourceLines(
+                        "Helper.java",
+                        // language=Java
+                        """
+                        import java.util.Set;
+
+                        class Helper {
+
+                            public Set<VersionLocale> versions;
+
+                            static class VersionLocale {
+
+                               @Deprecated
+                               public void version() {}
+                          }
+                        }
+                        """)
+                .addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        class Test {
+                          public void fun() {
+                            new Helper()
+                                .versions
+                                .stream()
+                                .forEach(v -> // BUG: Diagnostic contains: Helper.VersionLocale#version is deprecated
+                                    v.version());
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
+    // Error-prone wants to inline the Deprecated annotation, which looks worse
+    @SuppressWarnings("MisformattedTestData")
     public void throws_on_deprecated_field_access() {
         helper().addSourceLines(
                         "Helper.java",
