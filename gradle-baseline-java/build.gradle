@@ -176,7 +176,6 @@ tasks.withType(Test) {
 // and so none of these checks were active until we switched to the java compiler.
 pluginManager.withPlugin('java') {
     tasks.withType(JavaCompile) {
-        options.compilerArgs = (options.compilerArgs - '-Xlint:deprecation')
         options.errorprone {
             disable("BadImport")
             disable("DefaultCharset")
