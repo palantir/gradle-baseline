@@ -276,6 +276,8 @@ com.palantir.tritium:tritium-registry:0.104.0 (1 constraints: 67059440)
 
 commons-io:commons-io:2.20.0 (3 constraints: 6b240aec)
 
+commons-lang:commons-lang:2.6 (1 constraints: ac04232c)
+
 io.dropwizard.metrics:metrics-core:4.2.33 (1 constraints: c61053b6)
 
 io.r2dbc:r2dbc-spi:1.0.0.RELEASE (1 constraints: ea08e898)

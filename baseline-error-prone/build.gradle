@@ -25,6 +25,7 @@ dependencies {
     testImplementation 'com.palantir.tokens:auth-tokens'
     testImplementation 'com.palantir.tritium:tritium-registry'
     testImplementation 'commons-io:commons-io'
+    testImplementation 'commons-lang:commons-lang'
     testImplementation 'javax.ws.rs:javax.ws.rs-api'
     testImplementation 'org.apache.commons:commons-lang3'
     testImplementation 'org.assertj:assertj-core'
