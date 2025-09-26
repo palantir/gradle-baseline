@@ -98,8 +98,6 @@ com.uber.nullaway:nullaway:0.12.10 (1 constraints: 66059040)
 
 commons-codec:commons-codec:1.17.1 (2 constraints: 1b1ee786)
 
-commons-lang:commons-lang:2.6 (1 constraints: ac04232c)
-
 dev.equo.ide:solstice:1.8.1 (1 constraints: 771167da)
 
 io.github.eisop:dataflow-errorprone:3.41.0-eisop1 (3 constraints: 3e40ddde)
@@ -277,6 +275,8 @@ com.palantir.tritium:tritium-ids:0.109.0 (1 constraints: f80f86a6)
 com.palantir.tritium:tritium-registry:0.109.0 (1 constraints: 6c05a340)
 
 commons-io:commons-io:2.20.0 (3 constraints: 6b240aec)
+
+commons-lang:commons-lang:2.6 (1 constraints: ac04232c)
 
 io.dropwizard.metrics:metrics-core:4.2.37 (1 constraints: ca1057b6)
 
