@@ -102,7 +102,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
                 // CheckedServiceException constructors are deprecated for removal in this version
                 implementation 'com.palantir.conjure.java.api:errors:2.65.0'
             }
-        '''.stripIndent()
+        '''.stripIndent(true)
 
         file('src/main/java/test/Test.java') << '''
         package test;
@@ -115,7 +115,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
                 super(ErrorType.CONFLICT);
             }
         }
-        '''.stripIndent()
+        '''.stripIndent(true)
 
         then:
         BuildResult result = with('compileJava').buildAndFail()
@@ -137,7 +137,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
                     check 'DeprecatedForRemovalApiUsage', net.ltgt.gradle.errorprone.CheckSeverity.OFF
                 }
             }
-        '''.stripIndent()
+        '''.stripIndent(true)
 
         file('src/main/java/test/Test.java') << '''
         package test;
@@ -150,7 +150,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
                 super(ErrorType.CONFLICT);
             }
         }
-        '''.stripIndent()
+        '''.stripIndent(true)
 
         then:
         BuildResult result = with('compileJava').build()
@@ -164,7 +164,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
             tasks.withType(JavaCompile) {
                 options.compilerArgs += ['-Werror']
             }
-        '''.stripIndent()
+        '''.stripIndent(true)
 
         file('src/main/java/test/DeprecatedClass.java') << '''
         package test;
@@ -172,7 +172,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
             @Deprecated(forRemoval = true)
             static void deprecated() {}
         }
-        '''.stripIndent()
+        '''.stripIndent(true)
 
         file('src/main/java/test/Test.java') << '''
         package test;
@@ -181,7 +181,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
                 DeprecatedClass.deprecated();
             }
         }
-        '''.stripIndent()
+        '''.stripIndent(true)
 
         then:
         BuildResult result = with('compileJava').build()
@@ -195,7 +195,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
             tasks.withType(JavaCompile) {
                 options.compilerArgs += ['-Werror']
             }
-        '''.stripIndent()
+        '''.stripIndent(true)
 
         def standardBuildFileForLibrary = standardBuildFile.replace("'java'", "'java-library'")
         multiProject.addSubproject("lib", standardBuildFileForLibrary)
@@ -203,7 +203,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
             dependencies {
                 implementation project(':lib')
             }
-        '''.stripIndent())
+        '''.stripIndent(true))
 
         file('lib/src/main/java/test/DeprecatedClass.java') << '''
         package test;
@@ -211,7 +211,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
             @Deprecated(forRemoval = true)
             static void deprecated() {}
         }
-        '''.stripIndent()
+        '''.stripIndent(true)
 
         file('app/src/main/java/test/Test.java') << '''
         package test;
@@ -220,7 +220,7 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
                 DeprecatedClass.deprecated();
             }
         }
-        '''.stripIndent()
+        '''.stripIndent(true)
 
         then:
         BuildResult result = with('compileJava').build()

@@ -34,6 +34,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import javax.annotation.Nullable;
 import javax.tools.FileObject;
 
 /**
@@ -78,7 +79,7 @@ public abstract class AbstractDeprecatedApiCheck extends BugChecker
 
         Optional<Symbol> symbol = Optional.ofNullable(ASTHelpers.getSymbol(tree));
 
-        Optional<ClassSymbol> owningClass = getOwningClass(symbol);
+        Optional<ClassSymbol> owningClass = symbol.map(this::getOwningClass);
         Optional<URI> sourceFileUri = owningClass.map(c -> c.sourcefile).map(FileObject::toUri);
         if (sourceFileUri.isPresent() && isRegularFileOnSystem(sourceFileUri.get())) {
             // If the source file is a regular file on the local file system, this means we're calling a deprecated API
@@ -94,13 +95,13 @@ public abstract class AbstractDeprecatedApiCheck extends BugChecker
         //   jar file itself, which makes it particularly tricky to distinguish from just regular jar dependencies.
         // This should however be good enough for well-behaved repositories.
         Optional<URI> classFileUri = owningClass.map(c -> c.classfile).map(FileObject::toUri);
-        if (classFileUri.isPresent() && isRegularFileOnSystem(classFileUri.get())) {
-            if (classFileUri.get().getPath().contains("/classes")) {
-                // If the class file is a regular file on the local file system, and is within a /classes/ directory,
-                //   this means we're calling a deprecated API within the same repository, even though maybe not the
-                //   same project. We don't need to flag these usages, as breaks would be caught at compile time anyway.
-                return Description.NO_MATCH;
-            }
+        if (classFileUri.isPresent()
+                && isRegularFileOnSystem(classFileUri.get())
+                && classFileUri.get().getPath().contains("/classes")) {
+            // If the class file is a regular file on the local file system, and is within a /classes/ directory,
+            //   this means we're calling a deprecated API within the same repository, even though maybe not the
+            //   same project. We don't need to flag these usages, as breaks would be caught at compile time anyway.
+            return Description.NO_MATCH;
         }
 
         Optional<String> qualifiedName = symbol.map(
@@ -113,15 +114,13 @@ public abstract class AbstractDeprecatedApiCheck extends BugChecker
         return ASTHelpers.findEnclosingNode(state.getPath(), ImportTree.class) != null;
     }
 
-    private Optional<ClassSymbol> getOwningClass(Optional<Symbol> symbol) {
-        if (symbol.isEmpty()) {
-            return Optional.empty();
-        }
-        Symbol owner = symbol.get().owner;
+    @Nullable
+    private ClassSymbol getOwningClass(Symbol symbol) {
+        Symbol owner = symbol.owner;
         while (owner != null && !(owner instanceof ClassSymbol)) {
             owner = owner.owner;
         }
-        return Optional.ofNullable((ClassSymbol) owner);
+        return (ClassSymbol) owner;
     }
 
     /**
