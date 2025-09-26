@@ -106,6 +106,8 @@ public final class BaselineErrorProne implements Plugin<Project> {
                 "CanIgnoreReturnValueSuggester",
                 // https://github.com/google/error-prone/issues/4544
                 "DistinctVarargsChecker",
+                // This is a pretty low value fix
+                "EffectivelyPrivate",
                 "InlineMeSuggester",
                 // LambdaMethodReference is incredibly expensive, see #2997. We leave it
                 // here to employ as a cleanup, but don't execute it in most compilations.

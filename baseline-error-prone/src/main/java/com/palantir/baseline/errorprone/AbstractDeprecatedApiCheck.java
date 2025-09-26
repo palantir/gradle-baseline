@@ -20,13 +20,13 @@ import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.util.ASTHelpers;
+import com.sun.source.tree.ImportTree;
 import com.sun.source.tree.MemberReferenceTree;
 import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.MethodInvocationTree;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
-import com.sun.tools.javac.code.Symbol.PackageSymbol;
 import java.net.URI;
 import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
@@ -63,9 +63,8 @@ public abstract class AbstractDeprecatedApiCheck extends BugChecker
 
     @Override
     public final Description matchMemberSelect(MemberSelectTree tree, VisitorState state) {
-        Symbol symbol = ASTHelpers.getSymbol(tree);
-        if (symbol != null && symbol.owner instanceof PackageSymbol) {
-            // This is an import statement, which we don't want to flag
+        if (isImportStatement(state)) {
+            // We don't want to flag import statements, as those cannot be suppressed.
             return Description.NO_MATCH;
         }
 
@@ -108,6 +107,10 @@ public abstract class AbstractDeprecatedApiCheck extends BugChecker
                 s -> s.owner.getQualifiedName() + "#" + s.getQualifiedName().toString());
         String description = getErrorDescription(qualifiedName);
         return buildDescription(tree).setMessage(description).build();
+    }
+
+    private boolean isImportStatement(VisitorState state) {
+        return ASTHelpers.findEnclosingNode(state.getPath(), ImportTree.class) != null;
     }
 
     private Optional<ClassSymbol> getOwningClass(Optional<Symbol> symbol) {
