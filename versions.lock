@@ -220,7 +220,7 @@ com.google.truth:truth:1.4.0 (2 constraints: 72265a6a)
 
 com.netflix.nebula:nebula-test:10.6.2 (2 constraints: d61de72d)
 
-com.palantir.conjure.java:conjure-lib:8.56.0 (1 constraints: 4505753b)
+com.palantir.conjure.java:conjure-lib:8.57.0 (1 constraints: 4605783b)
 
 com.palantir.conjure.java.api:errors:2.65.0 (2 constraints: 7521acb1)
 
