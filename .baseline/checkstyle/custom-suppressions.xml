@@ -8,4 +8,6 @@
 <suppressions>
     <!-- Do not lint class which is mostly copied -->
     <suppress files=".*StrictUnusedVariable.java" checks="." />
+    <!-- The baseline-error-prone module is run within the compiler and can only use the main Java logger -->
+    <suppress message="Use SLF4J instead of a logging framework directly" files="baseline-error-prone[/\\]src[/\\].*.java" />
 </suppressions>
