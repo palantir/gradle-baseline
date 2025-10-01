@@ -176,7 +176,7 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
                 .collect(Collectors.joining(", ", "[", "]"));
     }
 
-    @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
+    @SuppressWarnings({"for-rollout:IllegalMethodCalledDuringTaskExecution", "for-rollout:deprecation"})
     private void ensureLockfileContains(String expected) {
         if (shouldFix.get()) {
             GFileUtils.writeFile(expected, lockFile);
@@ -193,6 +193,7 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
                     "./gradlew checkClassUniqueness --fix");
         }
 
+        @SuppressWarnings("for-rollout:deprecation")
         String onDisk = GFileUtils.readFile(lockFile);
         if (!onDisk.equals(expected)) {
             List<String> onDiskLines = Splitter.on('\n').splitToList(onDisk);
@@ -221,7 +222,7 @@ public class CheckClassUniquenessLockTask extends DefaultTask {
         }
     }
 
-    @SuppressWarnings("for-rollout:IllegalMethodCalledDuringTaskExecution")
+    @SuppressWarnings({"for-rollout:IllegalMethodCalledDuringTaskExecution", "for-rollout:deprecation"})
     private void ensureLockfileDoesNotExist() {
         if (lockFile.exists()) {
             if (shouldFix.get()) {
