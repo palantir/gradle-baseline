@@ -48,6 +48,7 @@ final class XmlUtils {
                 configurationFile, configure, () -> new Node(null, "project", ImmutableMap.of("version", "4")));
     }
 
+    @SuppressWarnings("for-rollout:deprecation")
     static void createOrUpdateXmlFile(
             File configurationFile, Consumer<Node> configure, Supplier<Node> defaultRootNode) {
         Node rootNode;
@@ -67,6 +68,7 @@ final class XmlUtils {
 
         try (BufferedWriter writer = Files.newWriter(configurationFile, StandardCharsets.UTF_8);
                 PrintWriter printWriter = new PrintWriter(writer)) {
+            @SuppressWarnings("for-rollout:deprecation")
             XmlNodePrinter nodePrinter = new XmlNodePrinter(printWriter);
             nodePrinter.setPreserveWhitespace(true);
             nodePrinter.print(rootNode);

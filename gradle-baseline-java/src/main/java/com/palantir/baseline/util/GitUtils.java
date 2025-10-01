@@ -27,6 +27,7 @@ public final class GitUtils {
 
     public static Optional<String> maybeGitHubUri() {
         try {
+            @SuppressWarnings("for-rollout:deprecation")
             String gitConfigContents = GFileUtils.readFile(new File(".git/config"));
             Matcher matcher = GIT_ORIGIN.matcher(gitConfigContents);
             if (matcher.find()) {
