@@ -287,24 +287,6 @@ public class DeprecatedApiUsageTest {
     }
 
     @Test
-    public void does_not_warn_on_deprecation_from_same_class() {
-        helper().addSourceLines(
-                        "Test.java",
-                        // language=Java
-                        """
-                        class Test {
-                          @Deprecated
-                          public void deprecatedMethod() {}
-
-                          public void fun() {
-                            deprecatedMethod();
-                          }
-                        }
-                        """)
-                .doTest();
-    }
-
-    @Test
     public void warns_on_deprecation_from_other_class_with_same_simple_name() {
         helper().addSourceLines(
                         "com/Test.java", // Note: different package

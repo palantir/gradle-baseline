@@ -43,6 +43,7 @@ public abstract class BaselineErrorProneExtension {
             "ExtendsErrorOrThrowable",
             "FinalClass",
             "IllegalSafeLoggingArgument",
+            "InlineMeInliner",
             "ImmutableMapDuplicateKeyStrategy",
             "ImmutablesStyle",
             "ImplicitPublicBuilderConstructor",

@@ -18,6 +18,7 @@ package com.palantir.baseline
 
 import org.gradle.testkit.runner.BuildResult
 import org.gradle.testkit.runner.TaskOutcome
+import org.junit.jupiter.api.Disabled
 import spock.lang.Unroll
 /**
  * This test depends on ./gradlew :baseline-error-prone:publishToMavenLocal
@@ -93,38 +94,138 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         result.output.contains("[ArrayEquals] Reference equality used to compare arrays")
     }
 
+    def 'compileJava fails when using deprecated APIs'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << '''
+            dependencies {
+                // CheckedServiceException constructors are deprecated for removal in this version
+                implementation 'com.palantir.conjure.java.api:errors:2.65.0'
+            }
+        '''.stripIndent(true)
+
+        file('src/main/java/test/Test.java') << '''
+            package test;
+    
+            import com.palantir.conjure.java.api.errors.CheckedServiceException;
+            import com.palantir.conjure.java.api.errors.ErrorType;
+    
+            public class Test extends CheckedServiceException {
+                public Test() {
+                    super(ErrorType.CONFLICT);
+                }
+            }
+        '''.stripIndent(true)
+
+        then:
+        BuildResult result = with('compileJava').buildAndFail()
+        result.task(":compileJava").outcome == TaskOutcome.FAILED
+        result.output.contains("CheckedServiceException#<init> is deprecated for removal")
+    }
+
     def 'compileJava succeeds when using deprecated-for-removal APIs, even with -Werror, if check is disabled'() {
         when:
         buildFile << standardBuildFile
         buildFile << '''
+            dependencies {
+                // CheckedServiceException constructors are deprecated for removal in this version
+                implementation 'com.palantir.conjure.java.api:errors:2.65.0'
+            }
             tasks.withType(JavaCompile) {
                 options.compilerArgs += ['-Werror']
                 options.errorprone {
                     check 'DeprecatedForRemovalApiUsage', net.ltgt.gradle.errorprone.CheckSeverity.OFF
                 }
             }
-        '''.stripIndent()
-
-        file('src/main/java/test/DeprecatedClass.java') << '''
-        package test;
-        public class DeprecatedClass {
-            @Deprecated(forRemoval = true)
-            static void deprecated() {}
-        }
-        '''.stripIndent()
+        '''.stripIndent(true)
 
         file('src/main/java/test/Test.java') << '''
-        package test;
-        public class Test {
-            void test() {
-                DeprecatedClass.deprecated();
+            package test;
+    
+            import com.palantir.conjure.java.api.errors.CheckedServiceException;
+            import com.palantir.conjure.java.api.errors.ErrorType;
+    
+            public class Test extends CheckedServiceException {
+                public Test() {
+                    super(ErrorType.CONFLICT);
+                }
             }
-        }
-        '''.stripIndent()
+        '''.stripIndent(true)
 
         then:
         BuildResult result = with('compileJava').build()
         result.task(":compileJava").outcome == TaskOutcome.SUCCESS
+    }
+
+    def 'compileJava succeeds when using deprecated if deprecated API is in the same project'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << '''
+            tasks.withType(JavaCompile) {
+                options.compilerArgs += ['-Werror']
+            }
+        '''.stripIndent(true)
+
+        file('src/main/java/test/DeprecatedClass.java') << '''
+            package test;
+            public class DeprecatedClass {
+                @Deprecated(forRemoval = true)
+                static void deprecated() {}
+            }
+        '''.stripIndent(true)
+
+        file('src/main/java/test/Test.java') << '''
+            package test;
+            public class Test {
+                void test() {
+                    DeprecatedClass.deprecated();
+                }
+            }
+        '''.stripIndent(true)
+
+        then:
+        BuildResult result = with('compileJava').build()
+        result.task(":compileJava").outcome == TaskOutcome.SUCCESS
+    }
+
+    def 'compileJava succeeds when using deprecated if deprecated API is in the same repo, in different subprojects'() {
+        when:
+        buildFile << standardBuildFile
+        buildFile << '''
+            tasks.withType(JavaCompile) {
+                options.compilerArgs += ['-Werror']
+            }
+        '''.stripIndent(true)
+
+        def standardBuildFileForLibrary = standardBuildFile.replace("'java'", "'java-library'")
+        multiProject.addSubproject("lib", standardBuildFileForLibrary)
+        multiProject.addSubproject("app", standardBuildFile + '''
+            dependencies {
+                implementation project(':lib')
+            }
+        '''.stripIndent(true))
+
+        file('lib/src/main/java/test/DeprecatedClass.java') << '''
+            package test;
+            public class DeprecatedClass {
+                @Deprecated(forRemoval = true)
+                static void deprecated() {}
+            }
+        '''.stripIndent(true)
+
+        file('app/src/main/java/test/Test.java') << '''
+            package test;
+            public class Test {
+                void test() {
+                    DeprecatedClass.deprecated();
+                }
+            }
+        '''.stripIndent(true)
+
+        then:
+        BuildResult result = with('compileJava').build()
+        result.task(":lib:compileJava").outcome == TaskOutcome.SUCCESS
+        result.task(":app:compileJava").outcome == TaskOutcome.SUCCESS
     }
 
     def 'compileJava fails when StrictUnusedVariable finds errors'() {
