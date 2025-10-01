@@ -34,6 +34,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.annotation.Nullable;
 import javax.tools.FileObject;
 
@@ -47,6 +49,8 @@ public abstract class AbstractDeprecatedApiCheck extends BugChecker
         implements BugChecker.MethodInvocationTreeMatcher,
                 BugChecker.MemberReferenceTreeMatcher,
                 BugChecker.MemberSelectTreeMatcher {
+
+    private static final Logger log = Logger.getLogger(AbstractDeprecatedApiCheck.class.getName());
 
     protected abstract boolean isDeprecationWarning(Tree tree, VisitorState state);
 
@@ -144,6 +148,7 @@ public abstract class AbstractDeprecatedApiCheck extends BugChecker
             // Check if it exists and is a regular file
             return Files.exists(path) && Files.isRegularFile(path);
         } catch (Exception e) {
+            log.log(Level.WARNING, "Failed to check if URI is a regular file on the system: " + uri, e);
             return false;
         }
     }

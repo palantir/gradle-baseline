@@ -105,16 +105,16 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         '''.stripIndent(true)
 
         file('src/main/java/test/Test.java') << '''
-        package test;
-
-        import com.palantir.conjure.java.api.errors.CheckedServiceException;
-        import com.palantir.conjure.java.api.errors.ErrorType;
-
-        public class Test extends CheckedServiceException {
-            public Test() {
-                super(ErrorType.CONFLICT);
+            package test;
+    
+            import com.palantir.conjure.java.api.errors.CheckedServiceException;
+            import com.palantir.conjure.java.api.errors.ErrorType;
+    
+            public class Test extends CheckedServiceException {
+                public Test() {
+                    super(ErrorType.CONFLICT);
+                }
             }
-        }
         '''.stripIndent(true)
 
         then:
@@ -140,16 +140,16 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         '''.stripIndent(true)
 
         file('src/main/java/test/Test.java') << '''
-        package test;
-
-        import com.palantir.conjure.java.api.errors.CheckedServiceException;
-        import com.palantir.conjure.java.api.errors.ErrorType;
-
-        public class Test extends CheckedServiceException {
-            public Test() {
-                super(ErrorType.CONFLICT);
+            package test;
+    
+            import com.palantir.conjure.java.api.errors.CheckedServiceException;
+            import com.palantir.conjure.java.api.errors.ErrorType;
+    
+            public class Test extends CheckedServiceException {
+                public Test() {
+                    super(ErrorType.CONFLICT);
+                }
             }
-        }
         '''.stripIndent(true)
 
         then:
@@ -167,20 +167,20 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         '''.stripIndent(true)
 
         file('src/main/java/test/DeprecatedClass.java') << '''
-        package test;
-        public class DeprecatedClass {
-            @Deprecated(forRemoval = true)
-            static void deprecated() {}
-        }
+            package test;
+            public class DeprecatedClass {
+                @Deprecated(forRemoval = true)
+                static void deprecated() {}
+            }
         '''.stripIndent(true)
 
         file('src/main/java/test/Test.java') << '''
-        package test;
-        public class Test {
-            void test() {
-                DeprecatedClass.deprecated();
+            package test;
+            public class Test {
+                void test() {
+                    DeprecatedClass.deprecated();
+                }
             }
-        }
         '''.stripIndent(true)
 
         then:
@@ -206,20 +206,20 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         '''.stripIndent(true))
 
         file('lib/src/main/java/test/DeprecatedClass.java') << '''
-        package test;
-        public class DeprecatedClass {
-            @Deprecated(forRemoval = true)
-            static void deprecated() {}
-        }
+            package test;
+            public class DeprecatedClass {
+                @Deprecated(forRemoval = true)
+                static void deprecated() {}
+            }
         '''.stripIndent(true)
 
         file('app/src/main/java/test/Test.java') << '''
-        package test;
-        public class Test {
-            void test() {
-                DeprecatedClass.deprecated();
+            package test;
+            public class Test {
+                void test() {
+                    DeprecatedClass.deprecated();
+                }
             }
-        }
         '''.stripIndent(true)
 
         then:
