@@ -168,18 +168,27 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
 
         file('src/main/java/test/DeprecatedClass.java') << '''
             package test;
+            @Deprecated(forRemoval = true)
             public class DeprecatedClass {
                 @Deprecated(forRemoval = true)
                 static void deprecated() {}
+                
+                // Testing nested classes too
+                @Deprecated(forRemoval = true)
+                public static class Inner {}
             }
         '''.stripIndent(true)
 
         file('src/main/java/test/Test.java') << '''
             package test;
             public class Test {
-                void test() {
-                    DeprecatedClass.deprecated();
+                // The object parameter is to ensure that we also notice classes
+                //   marked as deprecated in the same project/repo
+                void test(DeprecatedClass obj) {
+                    obj.deprecated();
                 }
+                
+                void testInner(DeprecatedClass.Inner _obj) {}
             }
         '''.stripIndent(true)
 
@@ -207,18 +216,27 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
 
         file('lib/src/main/java/test/DeprecatedClass.java') << '''
             package test;
+            @Deprecated(forRemoval = true)
             public class DeprecatedClass {
                 @Deprecated(forRemoval = true)
                 static void deprecated() {}
+                
+                // Testing nested classes too
+                @Deprecated(forRemoval = true)
+                public static class Inner {}
             }
         '''.stripIndent(true)
 
         file('app/src/main/java/test/Test.java') << '''
             package test;
             public class Test {
-                void test() {
-                    DeprecatedClass.deprecated();
+                // The object parameter is to ensure that we also notice classes
+                //   marked as deprecated in the same project/repo
+                void test(DeprecatedClass obj) {
+                    obj.deprecated();
                 }
+                
+                void testInner(DeprecatedClass.Inner _obj) {}
             }
         '''.stripIndent(true)
 

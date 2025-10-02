@@ -127,7 +127,8 @@ public abstract class AbstractDeprecatedApiCheck extends BugChecker
 
     @Nullable
     private ClassSymbol getOwningClass(Symbol symbol) {
-        Symbol owner = symbol.owner;
+        // The symbol itself may be a class symbol, in which case, there might not even be an owner.
+        Symbol owner = symbol;
         while (owner != null && !(owner instanceof ClassSymbol)) {
             owner = owner.owner;
         }
