@@ -384,6 +384,41 @@ public class DeprecatedApiUsageTest {
                 .doTest();
     }
 
+    @Test
+    // Error-prone wants to inline the Deprecated annotation, which looks worse
+    @SuppressWarnings("MisformattedTestData")
+    public void throws_on_deprecated_nested_class_usage() {
+        helper().addSourceLines(
+                        "app/Helper.java",
+                        // language=Java
+                        """
+                        package app;
+
+                        public class Helper {
+                            @Deprecated
+                            public static class Nested {}
+                        }
+                        """)
+                .addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        // This import should not get flagged
+                        import app.Helper;
+                        import java.util.stream.Stream;
+
+                        class Test {
+                          public void fun() {
+                            // BUG: Diagnostic contains: Helper.Nested is deprecated
+                            Stream.of(new Helper.Nested())
+                                // BUG: Diagnostic contains: Helper.Nested is deprecated
+                                .forEach((Helper.Nested c) -> c.toString());
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(DeprecatedApiUsage.class, getClass());
     }
