@@ -171,8 +171,10 @@ public abstract class CheckUnusedDependenciesTask extends DefaultTask {
     }
 
     protected record ExplicitDependency(
-            String group, String name, @Nullable String classifier, @Nullable String extension)
-            implements Serializable {
+            String group,
+            String name,
+            @Nullable String classifier,
+            @Nullable String extension) implements Serializable {
 
         private static Stream<ExplicitDependency> from(ModuleDependency dependency) {
             if (!dependency.getArtifacts().isEmpty()) {
