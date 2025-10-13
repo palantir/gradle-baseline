@@ -430,7 +430,9 @@
             <property name="allowMissingReturnTag" value="true"/>
             <property name="allowedAnnotations" value="Override, Test"/>
         </module>
-        <module name="JavadocStyle"/> <!-- Java Style Guide: Javadoc -->
+        <module name="JavadocStyle"><!-- Java Style Guide: Javadoc -->
+            <property name="checkFirstSentence" value="false" />
+        </module>
         <module name="JavadocTagContinuationIndentation"> <!-- Java Style Guide: At-clauses -->
             <property name="offset" value="0"/>
         </module>
