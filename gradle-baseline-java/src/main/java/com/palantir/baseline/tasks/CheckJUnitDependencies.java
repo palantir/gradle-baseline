@@ -108,68 +108,56 @@ public abstract class CheckJUnitDependencies extends DefaultTask {
         if (options instanceof JUnitPlatformOptions) {
             if (usesJUnit4) {
                 Preconditions.checkState(
-                        hasVintageEngine,
-                        """
+                        hasVintageEngine, """
                         Some tests use JUnit4, but the '%s' task is not using the JUnit Vintage engine. \
                         To ensure your JUnit4 tests are run, add the following dependency:
 
                         %s 'org.junit.vintage:junit-vintage-engine'
 
-                        """,
-                        task.getName(),
-                        sourceSet.getRuntimeOnlyConfigurationName());
+                        """, task.getName(), sourceSet.getRuntimeOnlyConfigurationName());
             }
 
             if (usesJUnit5) {
                 Preconditions.checkState(
-                        hasJunitJupiter,
-                        """
+                        hasJunitJupiter, """
                         Some tests use JUnit5, but the '%s' task is not using the JUnit Jupiter engine. \
                         To ensure your JUnit5 tests are run, add the following dependency:
 
                         %s 'org.junit.jupiter:junit-jupiter'
 
-                        """,
-                        task.getName(),
-                        sourceSet.getRuntimeOnlyConfigurationName());
+                        """, task.getName(), sourceSet.getRuntimeOnlyConfigurationName());
             }
 
             if (usesJqwik) {
                 Preconditions.checkState(
-                        hasJqwikEngine,
-                        """
+                        hasJqwikEngine, """
                         Some tests use Jqwik, but the '%s' task is not using the Jqwik engine. \
                         To ensure your Jqwik tests are run, add the following dependency:
 
                         %s 'net.jqwik:jqwik-engine'
 
-                        """,
-                        task.getName(),
-                        sourceSet.getRuntimeOnlyConfigurationName());
+                        """, task.getName(), sourceSet.getRuntimeOnlyConfigurationName());
             }
         } else {
             if (usesJUnit5) {
-                throw new IllegalStateException(String.format(
-                        """
-                        Some tests use JUnit5, but the '%s' task is not using using the JUnit Platform test \
-                        framework.""",
-                        task.getName()));
+                throw new IllegalStateException(String.format("""
+                    Some tests use JUnit5, but the '%s' task is not using using the JUnit Platform test \
+                    framework.\
+                    """, task.getName()));
             }
 
             if (usesJqwik) {
-                throw new IllegalStateException(String.format(
-                        """
-                        Some tests use Jqwik, but the '%s' task is not using using the JUnit Platform test \
-                        framework.""",
-                        task.getName()));
+                throw new IllegalStateException(String.format("""
+                    Some tests use Jqwik, but the '%s' task is not using using the JUnit Platform test \
+                    framework.\
+                    """, task.getName()));
             }
 
             if (hasSpock) {
-                throw new IllegalStateException(String.format(
-                        """
-                        Some tests use Spock, but the '%s' task is not using using the JUnit Platform test \
-                        framework.""",
-                        task.getName()));
+                throw new IllegalStateException(String.format("""
+                    Some tests use Spock, but the '%s' task is not using using the JUnit Platform test \
+                    framework.\
+                    """, task.getName()));
             }
         }
     }

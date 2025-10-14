@@ -42,12 +42,10 @@ public class BaselineCircleCiJavaIntegrationTests {
         reportsDir = new File(projectDir.getRoot(), "circle/reports");
 
         java.nio.file.Files.writeString(
-                projectDir.newFile("gradle.properties").toPath(),
-                """
-                __TESTING=true
-                __TESTING_CIRCLE_TEST_REPORTS=%s
-                """
-                        .formatted(reportsDir.toString()));
+                projectDir.newFile("gradle.properties").toPath(), """
+                    __TESTING=true
+                    __TESTING_CIRCLE_TEST_REPORTS=%s
+                    """.formatted(reportsDir.toString()));
 
         copyTestFile("build.gradle", projectDir, "build.gradle");
         copyTestFile("subproject.gradle", projectDir, "subproject/build.gradle");
