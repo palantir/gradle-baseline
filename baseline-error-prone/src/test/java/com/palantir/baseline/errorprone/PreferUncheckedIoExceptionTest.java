@@ -26,153 +26,136 @@ class PreferUncheckedIoExceptionTest {
 
     @Test
     void wrapRuntimeException() {
-        fix().addInputLines(
-                        "Test.java",
-                        """
-                        import com.palantir.logsafe.exceptions.SafeRuntimeException;
+        fix().addInputLines("Test.java", """
+            import com.palantir.logsafe.exceptions.SafeRuntimeException;
 
-                        class Test {
-                            Throwable wrap1(RuntimeException e) {
-                                return new RuntimeException(e);
-                            }
+            class Test {
+                Throwable wrap1(RuntimeException e) {
+                    return new RuntimeException(e);
+                }
 
-                            Throwable wrap2(RuntimeException e) {
-                                return new RuntimeException("message", e);
-                            }
+                Throwable wrap2(RuntimeException e) {
+                    return new RuntimeException("message", e);
+                }
 
-                            Throwable wrap3(RuntimeException e) {
-                                return new SafeRuntimeException(e);
-                            }
+                Throwable wrap3(RuntimeException e) {
+                    return new SafeRuntimeException(e);
+                }
 
-                            Throwable wrap4(RuntimeException e) {
-                                return new SafeRuntimeException("message", e);
-                            }
-                        }
-                        """
-                                .split("\n"))
-                .expectUnchanged()
-                .doTest();
+                Throwable wrap4(RuntimeException e) {
+                    return new SafeRuntimeException("message", e);
+                }
+            }
+            """.split("\n")).expectUnchanged().doTest();
     }
 
     @Test
     void wrapIoException() {
-        fix().addInputLines(
-                        "Test.java",
-                        """
-                        import com.palantir.logsafe.SafeArg;
-                        import com.palantir.logsafe.exceptions.SafeRuntimeException;
-                        import java.io.IOException;
+        fix().addInputLines("Test.java", """
+            import com.palantir.logsafe.SafeArg;
+            import com.palantir.logsafe.exceptions.SafeRuntimeException;
+            import java.io.IOException;
 
-                        class Test {
-                            Throwable wrap1(IOException e) {
-                                return new RuntimeException(e);
-                            }
+            class Test {
+                Throwable wrap1(IOException e) {
+                    return new RuntimeException(e);
+                }
 
-                            Throwable wrap2(IOException e) {
-                                return new RuntimeException("message", e);
-                            }
+                Throwable wrap2(IOException e) {
+                    return new RuntimeException("message", e);
+                }
 
-                            Throwable wrap3(IOException e) {
-                                return new SafeRuntimeException(e);
-                            }
+                Throwable wrap3(IOException e) {
+                    return new SafeRuntimeException(e);
+                }
 
-                            Throwable wrap4(IOException e) {
-                                return new SafeRuntimeException("message", e, SafeArg.of("name", "value"));
-                            }
+                Throwable wrap4(IOException e) {
+                    return new SafeRuntimeException("message", e, SafeArg.of("name", "value"));
+                }
+            }
+            """.split("\n"))
+                .addOutputLines("Test.java", """
+                    import com.palantir.logsafe.SafeArg;
+                    import com.palantir.logsafe.exceptions.SafeRuntimeException;
+                    import com.palantir.logsafe.exceptions.SafeUncheckedIoException;
+                    import java.io.IOException;
+                    import java.io.UncheckedIOException;
+
+                    class Test {
+                        Throwable wrap1(IOException e) {
+                            return new UncheckedIOException(e);
                         }
-                        """
-                                .split("\n"))
-                .addOutputLines(
-                        "Test.java",
-                        """
-                        import com.palantir.logsafe.SafeArg;
-                        import com.palantir.logsafe.exceptions.SafeRuntimeException;
-                        import com.palantir.logsafe.exceptions.SafeUncheckedIoException;
-                        import java.io.IOException;
-                        import java.io.UncheckedIOException;
 
-                        class Test {
-                            Throwable wrap1(IOException e) {
-                                return new UncheckedIOException(e);
-                            }
-
-                            Throwable wrap2(IOException e) {
-                                return new UncheckedIOException("message", e);
-                            }
-
-                            Throwable wrap3(IOException e) {
-                                return new SafeUncheckedIoException(e);
-                            }
-
-                            Throwable wrap4(IOException e) {
-                                return new SafeUncheckedIoException("message", e, SafeArg.of("name", "value"));
-                            }
+                        Throwable wrap2(IOException e) {
+                            return new UncheckedIOException("message", e);
                         }
-                        """
-                                .split("\n"))
+
+                        Throwable wrap3(IOException e) {
+                            return new SafeUncheckedIoException(e);
+                        }
+
+                        Throwable wrap4(IOException e) {
+                            return new SafeUncheckedIoException("message", e, SafeArg.of("name", "value"));
+                        }
+                    }
+                    """.split("\n"))
                 .doTest();
     }
 
     @Test
     void wrapCustomIoException() {
-        fix().addInputLines(
-                        "Test.java",
-                        """
-                        import com.palantir.logsafe.SafeArg;
-                        import com.palantir.logsafe.exceptions.SafeRuntimeException;
-                        import java.io.IOException;
+        fix().addInputLines("Test.java", """
+            import com.palantir.logsafe.SafeArg;
+            import com.palantir.logsafe.exceptions.SafeRuntimeException;
+            import java.io.IOException;
 
-                        class Test {
-                            class CustomIoException extends IOException {}
+            class Test {
+                class CustomIoException extends IOException {}
 
-                            Throwable wrap1(CustomIoException e) {
-                                return new RuntimeException(e);
-                            }
+                Throwable wrap1(CustomIoException e) {
+                    return new RuntimeException(e);
+                }
 
-                            Throwable wrap2(CustomIoException e) {
-                                return new RuntimeException("message", e);
-                            }
+                Throwable wrap2(CustomIoException e) {
+                    return new RuntimeException("message", e);
+                }
 
-                            Throwable wrap3(CustomIoException e) {
-                                return new SafeRuntimeException(e);
-                            }
+                Throwable wrap3(CustomIoException e) {
+                    return new SafeRuntimeException(e);
+                }
 
-                            Throwable wrap4(CustomIoException e) {
-                                return new SafeRuntimeException("message", e, SafeArg.of("name", "value"));
-                            }
+                Throwable wrap4(CustomIoException e) {
+                    return new SafeRuntimeException("message", e, SafeArg.of("name", "value"));
+                }
+            }
+            """.split("\n"))
+                .addOutputLines("Test.java", """
+                    import com.palantir.logsafe.SafeArg;
+                    import com.palantir.logsafe.exceptions.SafeRuntimeException;
+                    import com.palantir.logsafe.exceptions.SafeUncheckedIoException;
+                    import java.io.IOException;
+                    import java.io.UncheckedIOException;
+
+                    class Test {
+                        class CustomIoException extends IOException {}
+
+                        Throwable wrap1(CustomIoException e) {
+                            return new UncheckedIOException(e);
                         }
-                        """
-                                .split("\n"))
-                .addOutputLines(
-                        "Test.java",
-                        """
-                        import com.palantir.logsafe.SafeArg;
-                        import com.palantir.logsafe.exceptions.SafeRuntimeException;
-                        import com.palantir.logsafe.exceptions.SafeUncheckedIoException;
-                        import java.io.IOException;
-                        import java.io.UncheckedIOException;
 
-                        class Test {
-                            class CustomIoException extends IOException {}
-
-                            Throwable wrap1(CustomIoException e) {
-                                return new UncheckedIOException(e);
-                            }
-
-                            Throwable wrap2(CustomIoException e) {
-                                return new UncheckedIOException("message", e);
-                            }
-
-                            Throwable wrap3(CustomIoException e) {
-                                return new SafeUncheckedIoException(e);
-                            }
-
-                            Throwable wrap4(CustomIoException e) {
-                                return new SafeUncheckedIoException("message", e, SafeArg.of("name", "value"));
-                            }
+                        Throwable wrap2(CustomIoException e) {
+                            return new UncheckedIOException("message", e);
                         }
-                        """
-                                .split("\n"))
+
+                        Throwable wrap3(CustomIoException e) {
+                            return new SafeUncheckedIoException(e);
+                        }
+
+                        Throwable wrap4(CustomIoException e) {
+                            return new SafeUncheckedIoException("message", e, SafeArg.of("name", "value"));
+                        }
+                    }
+                    """.split("\n"))
                 .doTest();
     }
 }
