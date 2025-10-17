@@ -50,7 +50,7 @@ com.google.googlejavaformat:google-java-format:1.27.0 (2 constraints: b6258eff)
 
 com.google.guava:failureaccess:1.0.3 (2 constraints: f3154f13)
 
-com.google.guava:guava:33.5.0-jre (21 constraints: 4a88acab)
+com.google.guava:guava:33.5.0-jre (22 constraints: 8aa3934f)
 
 com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava (1 constraints: bd17c918)
 
@@ -174,7 +174,7 @@ org.immutables:value:2.11.4 (3 constraints: 762609e1)
 
 org.inferred:freebuilder:1.14.6 (1 constraints: 3e053b3b)
 
-org.jetbrains:annotations:26.0.2 (3 constraints: e02f6235)
+org.jetbrains:annotations:26.0.2 (4 constraints: b8499fa6)
 
 org.jetbrains.kotlin:kotlin-stdlib:1.9.10 (2 constraints: c2210fe1)
 
@@ -242,9 +242,11 @@ com.palantir.gradle.jdks:gradle-jdks-setup-common:0.68.0 (3 constraints: 293b384
 
 com.palantir.gradle.jdkslatest:gradle-jdks-latest:0.22.0 (1 constraints: 36052d3b)
 
-com.palantir.gradle.plugintesting:configuration-cache-spec:0.11.0 (1 constraints: 3405263b)
+com.palantir.gradle.plugintesting:configuration-cache-spec:0.13.0 (1 constraints: 36052c3b)
 
-com.palantir.gradle.plugintesting:plugin-testing-core:0.11.0 (1 constraints: 3405263b)
+com.palantir.gradle.plugintesting:gradle-plugin-testing-junit:0.13.0 (1 constraints: 36052c3b)
+
+com.palantir.gradle.plugintesting:plugin-testing-core:0.13.0 (1 constraints: 36052c3b)
 
 com.palantir.ri:resource-identifier:2.11.0 (2 constraints: 511589d9)
 
@@ -274,7 +276,7 @@ com.palantir.tritium:tritium-ids:0.109.0 (1 constraints: f80f86a6)
 
 com.palantir.tritium:tritium-registry:0.109.0 (1 constraints: 6c05a340)
 
-commons-io:commons-io:2.20.0 (3 constraints: 6b240aec)
+commons-io:commons-io:2.20.0 (4 constraints: 453e941a)
 
 commons-lang:commons-lang:2.6 (1 constraints: ac04232c)
 
@@ -298,9 +300,9 @@ org.apache.commons:commons-compress:1.27.1 (1 constraints: 940f5492)
 
 org.apiguardian:apiguardian-api:1.1.2 (8 constraints: e08b1baf)
 
-org.assertj:assertj-core:3.27.6 (3 constraints: fa2a74a4)
+org.assertj:assertj-core:3.27.6 (4 constraints: d744198a)
 
-org.codehaus.groovy:groovy:3.0.25 (3 constraints: 14347add)
+org.codehaus.groovy:groovy:3.0.24 (3 constraints: 133429dd)
 
 org.eclipse.collections:eclipse-collections:13.0.0 (1 constraints: 1c1091a9)
 
@@ -318,7 +320,7 @@ org.jooq:jooq:3.20.7 (1 constraints: 3e05403b)
 
 org.junit.jupiter:junit-jupiter:5.13.4 (1 constraints: 7e074077)
 
-org.junit.jupiter:junit-jupiter-api:5.13.4 (5 constraints: 0b5c945f)
+org.junit.jupiter:junit-jupiter-api:5.13.4 (6 constraints: e675ef4e)
 
 org.junit.jupiter:junit-jupiter-engine:5.13.4 (1 constraints: 3a0e0a4a)
 
