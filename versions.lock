@@ -50,7 +50,7 @@ com.google.googlejavaformat:google-java-format:1.27.0 (2 constraints: b6258eff)
 
 com.google.guava:failureaccess:1.0.3 (2 constraints: f3154f13)
 
-com.google.guava:guava:33.5.0-jre (22 constraints: 8aa3934f)
+com.google.guava:guava:33.5.0-jre (22 constraints: 7ca3b649)
 
 com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava (1 constraints: bd17c918)
 
@@ -170,7 +170,7 @@ org.eclipse.sisu:org.eclipse.sisu.inject:0.3.5 (3 constraints: 852caa93)
 
 org.eclipse.sisu:org.eclipse.sisu.plexus:0.3.5 (2 constraints: 141abc34)
 
-org.immutables:value:2.11.4 (3 constraints: 762609e1)
+org.immutables:value:2.11.6 (3 constraints: 7826cde1)
 
 org.inferred:freebuilder:1.14.6 (1 constraints: 3e053b3b)
 
@@ -184,9 +184,9 @@ org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.10 (1 constraints: e210ffd2)
 
 org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.10 (2 constraints: 8118c1c5)
 
-org.jspecify:jspecify:1.0.0 (8 constraints: 017e544f)
+org.jspecify:jspecify:1.0.0 (16 constraints: d70964e9)
 
-org.ow2.asm:asm:9.8 (5 constraints: 684f29ac)
+org.ow2.asm:asm:9.9 (5 constraints: 694ffaac)
 
 org.pcollections:pcollections:4.0.1 (1 constraints: f21028b8)
 
@@ -220,7 +220,7 @@ com.google.truth:truth:1.4.0 (2 constraints: 72265a6a)
 
 com.netflix.nebula:nebula-test:10.6.2 (2 constraints: d61de72d)
 
-com.palantir.conjure.java:conjure-lib:8.57.0 (1 constraints: 4605783b)
+com.palantir.conjure.java:conjure-lib:8.58.0 (1 constraints: 47057b3b)
 
 com.palantir.conjure.java.api:errors:2.65.0 (2 constraints: 7521acb1)
 
@@ -262,19 +262,19 @@ com.palantir.safe-logging:preconditions-assertj:3.9.0 (1 constraints: 0e051536)
 
 com.palantir.safe-logging:safe-logging:3.9.0 (10 constraints: 139876ee)
 
-com.palantir.sls-packaging:gradle-recommended-product-dependencies:7.79.0 (1 constraints: f3133d70)
+com.palantir.sls-packaging:gradle-recommended-product-dependencies:7.80.0 (1 constraints: eb132670)
 
-com.palantir.sls-packaging:gradle-sls-packaging:7.79.0 (1 constraints: 4905803b)
+com.palantir.sls-packaging:gradle-sls-packaging:7.80.0 (1 constraints: 4105693b)
 
-com.palantir.sls-packaging:gradle-sls-packaging-api:7.79.0 (1 constraints: f3133d70)
+com.palantir.sls-packaging:gradle-sls-packaging-api:7.80.0 (1 constraints: eb132670)
 
 com.palantir.sls.versions:sls-versions:1.5.0 (1 constraints: 531bd145)
 
 com.palantir.tokens:auth-tokens:3.19.0 (2 constraints: 63156cdb)
 
-com.palantir.tritium:tritium-ids:0.109.0 (1 constraints: f80f86a6)
+com.palantir.tritium:tritium-ids:0.111.0 (1 constraints: f80f86a6)
 
-com.palantir.tritium:tritium-registry:0.109.0 (1 constraints: 6c05a340)
+com.palantir.tritium:tritium-registry:0.111.0 (1 constraints: 65058f40)
 
 commons-io:commons-io:2.20.0 (4 constraints: 453e941a)
 
@@ -314,27 +314,27 @@ org.hamcrest:hamcrest-core:3.0 (4 constraints: 2a2bcb9d)
 
 org.hamcrest:hamcrest-library:2.2 (1 constraints: fc138e38)
 
-org.immutables:serial:2.11.4 (1 constraints: 74113fef)
+org.immutables:serial:2.11.6 (1 constraints: 74113fef)
 
-org.jooq:jooq:3.20.7 (1 constraints: 3e05403b)
+org.jooq:jooq:3.20.8 (1 constraints: 3f05413b)
 
-org.junit.jupiter:junit-jupiter:5.13.4 (1 constraints: 7e074077)
+org.junit.jupiter:junit-jupiter:6.0.0 (1 constraints: 47070770)
 
-org.junit.jupiter:junit-jupiter-api:5.13.4 (6 constraints: e675ef4e)
+org.junit.jupiter:junit-jupiter-api:6.0.0 (6 constraints: 0a7573a4)
 
-org.junit.jupiter:junit-jupiter-engine:5.13.4 (1 constraints: 3a0e0a4a)
+org.junit.jupiter:junit-jupiter-engine:6.0.0 (1 constraints: 030eca3b)
 
-org.junit.jupiter:junit-jupiter-migrationsupport:5.13.4 (1 constraints: 3f054e3b)
+org.junit.jupiter:junit-jupiter-migrationsupport:6.0.0 (1 constraints: 08050936)
 
-org.junit.jupiter:junit-jupiter-params:5.13.4 (2 constraints: f82423fc)
+org.junit.jupiter:junit-jupiter-params:6.0.0 (2 constraints: c12425d7)
 
-org.junit.platform:junit-platform-commons:1.13.4 (2 constraints: 39219184)
+org.junit.platform:junit-platform-commons:6.0.0 (2 constraints: d320144a)
 
-org.junit.platform:junit-platform-engine:1.13.4 (4 constraints: 3441687d)
+org.junit.platform:junit-platform-engine:6.0.0 (4 constraints: 9b40c1e1)
 
-org.junit.platform:junit-platform-launcher:1.13.4 (1 constraints: 3b05363b)
+org.junit.platform:junit-platform-launcher:6.0.0 (1 constraints: 08050936)
 
-org.junit.vintage:junit-vintage-engine:5.13.4 (1 constraints: 3f054e3b)
+org.junit.vintage:junit-vintage-engine:6.0.0 (1 constraints: 08050936)
 
 org.mockito:mockito-core:5.20.0 (1 constraints: 5311c5e0)
 
