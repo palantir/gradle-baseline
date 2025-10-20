@@ -113,24 +113,21 @@ public final class BaselineJavaVersions implements Plugin<Project> {
         }
 
         PublishingExtension publishing = project.getExtensions().findByType(PublishingExtension.class);
-        if (publishing == null) {
-            return new IsLibraryWithReason(false, "doesn't have any publishing extensions defined");
+        if (publishing != null) {
+            return new IsLibraryWithReason(
+                    true,
+                    String.format(
+                            "has publishing extensions with publications %s",
+                            publishing.getPublications().getNames()));
         }
 
-        // Better to be conservative with the java version rather than release something that is too high to be used.
         return new IsLibraryWithReason(
-                true,
+                false,
                 String.join(
                         "\n",
-                        "didn't match any other conditions that would indicate it was a distribution:",
-                        "  * It did not have a distribution plugin: " + DISTRIBUTION_PLUGINS,
-                        "  * It had a publishing extension, indicating *something* that isn't a known "
-                                + "distribution type is being published. The publications in this extensions are "
-                                + publishing.getPublications().getNames(),
-                        String.format(
-                                "Despite not having any library publish plugins (%s), this is conservatively "
-                                        + "regarded as a library for safety.",
-                                LIBRARY_PLUGINS)));
+                        "didn't match any other conditions that would indicate it was a library:",
+                        "  * It did not have a library plugin: " + LIBRARY_PLUGINS,
+                        "  * It did not have any publishing extensions"));
     }
 
     private record IsLibraryWithReason(boolean isLibrary, String reason) {
