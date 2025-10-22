@@ -41,8 +41,7 @@ import org.gradle.api.tasks.Classpath;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.TaskAction;
 
-@SuppressWarnings("for-rollout:NonAbstractGradleType")
-public class CheckImplicitDependenciesTask extends DefaultTask {
+public abstract class CheckImplicitDependenciesTask extends DefaultTask {
 
     private static final Comparator<ResolvedArtifact> ARTIFACT_COMPARATOR =
             Comparator.comparing(artifact -> artifact.getId().getDisplayName());

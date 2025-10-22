@@ -49,9 +49,8 @@ import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.options.Option;
 import org.gradle.util.GFileUtils;
 
-@SuppressWarnings("for-rollout:NonAbstractGradleType")
 @CacheableTask
-public class CheckClassUniquenessLockTask extends DefaultTask {
+public abstract class CheckClassUniquenessLockTask extends DefaultTask {
 
     private static final String HEADER = "# Danger! Multiple jars contain identically named classes. This may "
             + "cause different behaviour depending on classpath ordering.\n"
