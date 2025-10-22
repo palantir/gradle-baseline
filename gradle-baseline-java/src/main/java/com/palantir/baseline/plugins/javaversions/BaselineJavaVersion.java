@@ -269,8 +269,8 @@ public final class BaselineJavaVersion implements Plugin<Project> {
     }
 
     @CacheableTask
-    @SuppressWarnings({"checkstyle:DesignForExtension", "for-rollout:NonAbstractGradleType"})
-    public static class CheckJavaVersionsTask extends DefaultTask {
+    @SuppressWarnings("checkstyle:DesignForExtension")
+    public abstract static class CheckJavaVersionsTask extends DefaultTask {
 
         @SuppressWarnings("for-rollout:GradleTypesAsFields")
         private final Property<ChosenJavaVersion> targetVersion;

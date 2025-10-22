@@ -44,8 +44,7 @@ import org.gradle.jvm.toolchain.JavaToolchainSpec;
  *
  * Better to just require everyone to specify sourceCompatibility explicitly!
  */
-@SuppressWarnings("for-rollout:NonAbstractGradleType")
-public class CheckExplicitSourceCompatibilityTask extends DefaultTask {
+public abstract class CheckExplicitSourceCompatibilityTask extends DefaultTask {
 
     @SuppressWarnings("for-rollout:GradleTypesAsFields")
     private final Property<Boolean> shouldFix;
