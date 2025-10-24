@@ -90,6 +90,8 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
             BaselineModuleJvmArgsExtension extension =
                     project.getExtensions().create(EXTENSION_NAME, BaselineModuleJvmArgsExtension.class, project);
 
+            Provider<String> projectPath = project.provider(project::getPath);
+
             // javac isn't provided `--add-exports` args for the time being due to
             // https://github.com/gradle/gradle/issues/18824
             // However, we set sourceCompatibility in BaselineJavaVersion to opt out of the '--release' flag.
@@ -111,6 +113,11 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                     setTaskInputsFromExtension(javaCompile, extension);
                 });
 
+                Provider<ImmutableList<JarManifestModuleInfo>> classpathInfo =
+                        project.provider(() -> collectClasspathInfoForSourceSet(sourceSet));
+                Provider<Boolean> hasBaselineJavaVersion =
+                        project.provider(() -> project.getPlugins().hasPlugin(BaselineJavaVersion.class));
+
                 TaskProvider<Task> javadocTaskProvider = null;
                 try {
                     javadocTaskProvider = project.getTasks().named(sourceSet.getJavadocTaskName());
@@ -123,12 +130,12 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                             @Override
                             public void execute(Task task) {
                                 // The '--release' flag is set when BaselineJavaVersion is not used.
-                                if (!project.getPlugins().hasPlugin(BaselineJavaVersion.class)) {
+                                if (!hasBaselineJavaVersion.get()) {
                                     log.debug(
                                             "BaselineModuleJvmArgs not applying args to compilation task {} on {} "
                                                     + "due to lack of BaselineJavaVersion",
                                             task.getName(),
-                                            project.getPath());
+                                            projectPath.get());
                                     return;
                                 }
 
@@ -136,14 +143,12 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
 
                                 MinimalJavadocOptions options = javadoc.getOptions();
                                 if (options instanceof CoreJavadocOptions coreOptions) {
-                                    ImmutableList<JarManifestModuleInfo> info =
-                                            collectClasspathInfoForSourceSet(sourceSet);
                                     List<String> exportValues = Stream.concat(
                                                     // Compilation only supports exports, so we union with opens.
                                                     Stream.concat(
                                                             extension.exports().get().stream(),
                                                             extension.opens().get().stream()),
-                                                    info.stream()
+                                                    classpathInfo.get().stream()
                                                             .flatMap(item -> Stream.concat(
                                                                     item.exports().stream(), item.opens().stream())))
                                             .distinct()
@@ -153,7 +158,7 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                                     log.debug(
                                             "BaselineModuleJvmArgs building {} on {} with exports: {}",
                                             javadoc.getName(),
-                                            project.getPath(),
+                                            projectPath.get(),
                                             exportValues);
                                     if (!exportValues.isEmpty()) {
                                         coreOptions
@@ -199,18 +204,17 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
             project.getPlugins().withType(BaselineJavaVersion.class, _unused -> {
                 BaselineJavaVersionExtension javaVersionsExtension =
                         project.getExtensions().getByType(BaselineJavaVersionExtension.class);
-                extension.setEnablePreview(javaVersionsExtension.runtime().map(chosenJavaVersion -> {
-                    return chosenJavaVersion.enablePreview()
-                            ? Optional.of(chosenJavaVersion.javaLanguageVersion())
-                            : Optional.empty();
-                }));
+                extension.setEnablePreview(javaVersionsExtension
+                        .runtime()
+                        .map(chosenJavaVersion -> chosenJavaVersion.enablePreview()
+                                ? Optional.of(chosenJavaVersion.javaLanguageVersion())
+                                : Optional.empty()));
             });
 
             project.getTasks().withType(Jar.class).configureEach(new Action<Jar>() {
                 @Override
                 public void execute(Jar jar) {
                     String jarName = jar.getName();
-                    String projectPath = jar.getProject().getPath();
 
                     jar.doFirst(new Action<Task>() {
                         @Override
@@ -219,12 +223,20 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                                 @Override
                                 public void execute(Manifest manifest) {
                                     addManifestAttribute(
-                                            jarName, projectPath, manifest, ADD_EXPORTS_ATTRIBUTE, extension.exports());
-                                    addManifestAttribute(
-                                            jarName, projectPath, manifest, ADD_OPENS_ATTRIBUTE, extension.opens());
+                                            jarName,
+                                            projectPath.get(),
+                                            manifest,
+                                            ADD_EXPORTS_ATTRIBUTE,
+                                            extension.exports());
                                     addManifestAttribute(
                                             jarName,
-                                            projectPath,
+                                            projectPath.get(),
+                                            manifest,
+                                            ADD_OPENS_ATTRIBUTE,
+                                            extension.opens());
+                                    addManifestAttribute(
+                                            jarName,
+                                            projectPath.get(),
                                             manifest,
                                             ENABLE_PREVIEW_ATTRIBUTE,
                                             extension.getEnablePreview().map(maybeVersion -> maybeVersion.stream()
