@@ -630,6 +630,78 @@ class IllegalSafeLoggingLambdaTest {
                 .doTest();
     }
 
+    @Test
+    public void testUnsafeLambdaSwitchStatement() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+
+                        enum MyEnum {
+                          ONE,
+                          TWO
+                        }
+
+                        class Test {
+                          void f(MyEnum myEnum, @Unsafe Object unsafeValue) {
+                            @Safe
+                            Object result =
+                                switch (myEnum) {
+                                    // BUG: Diagnostic contains: Dangerous
+                                  case ONE -> unsafeValue;
+                                  case TWO -> "safe";
+                                };
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
+    void testOverrideArgumentSafety() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+
+                        interface MyInterface {
+                          @Safe
+                          String safeMethod(@Unsafe String safeArg);
+                        }
+
+                        class MyClass implements MyInterface {
+                          @Override
+                          @Safe
+                          // BUG: Diagnostic contains: Dangerous
+                          public String safeMethod(@Safe String safeArg) {
+                            return "unsafe";
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
+    void testFunctionIdentityLambda() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+
+                        class Test {
+                          // BUG: Diagnostic contains: Dangerous
+                          Function<@Unsafe String, @Safe String> func = Function.identity();
+                        }
+                        """)
+                .doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(IllegalSafeLoggingArgument.class, getClass());
     }

@@ -1414,6 +1414,49 @@ class IllegalSafeLoggingArgumentTest {
     }
 
     @Test
+    public void testDisagreeingSafetyAnnotations_argument() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+
+                        @Unsafe
+                        class MyObject {}
+
+                        class Test {
+                          // BUG: Diagnostic contains: Dangerous
+                          void f(@Safe Object o) {}
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
+    public void testDisagreeingSafetyAnnotations_return() {
+        helper().addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        import com.palantir.logsafe.*;
+                        import java.util.function.*;
+
+                        @Unsafe
+                        class MyObject {}
+
+                        class Test {
+                          // BUG: Diagnostic contains: Dangerous
+                          @Safe
+                          MyObject g() {
+                            return null;
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
     public void testOptionalUnwrapping() {
         helper().addSourceLines(
                         "Test.java",
