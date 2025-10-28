@@ -144,7 +144,6 @@ public final class BaselineErrorProne implements Plugin<Project> {
         // no longer exist and have been removed, so it's not the same.
         errorProneOptions.disable(
                 "AddNullMarkedToPackageInfo",
-                "AndroidJdkLibsChecker",
                 "AnnotationMirrorToString",
                 "AnnotationPosition",
                 "AnnotationValueToString",

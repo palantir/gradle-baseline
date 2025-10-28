@@ -27,7 +27,6 @@ import org.gradle.api.Task;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.plugins.JavaPluginExtension;
-import org.gradle.api.plugins.quality.Checkstyle;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
@@ -35,7 +34,6 @@ import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.JavaExec;
 import org.gradle.api.tasks.TaskAction;
 import org.gradle.api.tasks.TaskProvider;
-import org.gradle.api.tasks.compile.AbstractCompile;
 import org.gradle.api.tasks.compile.GroovyCompile;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.api.tasks.javadoc.Javadoc;
@@ -47,7 +45,6 @@ import org.gradle.jvm.toolchain.JavaLauncher;
 import org.gradle.jvm.toolchain.JavaToolchainService;
 import org.gradle.jvm.toolchain.JavaToolchainSpec;
 import org.gradle.process.CommandLineArgumentProvider;
-import org.gradle.util.GradleVersion;
 
 public final class BaselineJavaVersion implements Plugin<Project> {
 
@@ -84,7 +81,12 @@ public final class BaselineJavaVersion implements Plugin<Project> {
 
             // Compilation tasks (using target version)
             configureCompilationTasks(
-                    project, extension.target(), baselineConfiguredJavaToolchains, rootExtension, toolchainService);
+                    project,
+                    extension.runtime(),
+                    extension.target(),
+                    baselineConfiguredJavaToolchains,
+                    rootExtension,
+                    toolchainService);
 
             // Execution tasks (using the runtime version)
             configureExecutionTasks(
@@ -112,20 +114,21 @@ public final class BaselineJavaVersion implements Plugin<Project> {
 
     private static void configureCompilationTasks(
             Project project,
+            Property<ChosenJavaVersion> runtime,
             Property<ChosenJavaVersion> target,
             JavaToolchains baselineConfiguredJavaToolchains,
             BaselineJavaVersionsExtension rootExtension,
             JavaToolchainService javaToolchainService) {
-
         project.getTasks().withType(JavaCompile.class).configureEach(javaCompileTask -> {
             setJavaCompiler(
-                    javaCompileTask, rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, target);
+                    javaCompileTask, rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, runtime);
+            javaCompileTask.getOptions().getRelease().set(target.map(v -> v.javaLanguageVersion()
+                    .asInt()));
             javaCompileTask.getOptions().getCompilerArgumentProviders().add(new EnablePreviewArgumentProvider(target));
-            optOutOfReleaseFlagForGradle7(javaCompileTask, target);
         });
 
         project.getTasks().withType(Javadoc.class).configureEach(javadocTask -> {
-            setJavaDocTool(javadocTask, rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, target);
+            setJavaDocTool(javadocTask, rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, runtime);
 
             // javadocTask doesn't allow us to add a CommandLineArgumentProvider, so we do it just in time
             javadocTask.doFirst(new Action<Task>() {
@@ -140,55 +143,35 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                 }
             });
         });
-        // checkstyle.getJavaLauncher() was added in Gradle 7.5
-        if (GradleVersion.current().compareTo(GradleVersion.version("7.5")) >= 0) {
-            project.getTasks().withType(Checkstyle.class).configureEach(checkstyle -> checkstyle
-                    .getJavaLauncher()
-                    .set(getJavaLauncher(
-                            rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, target)));
-        }
 
         project.getTasks().withType(GroovyCompile.class).configureEach(groovyCompileTask -> {
             groovyCompileTask
                     .getJavaLauncher()
                     .set(getJavaLauncher(
-                            rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, target));
+                            rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, runtime));
+            groovyCompileTask.getOptions().getRelease().set(target.map(v -> v.javaLanguageVersion()
+                    .asInt()));
             groovyCompileTask
                     .getOptions()
                     .getCompilerArgumentProviders()
                     .add(new EnablePreviewArgumentProvider(target));
-
-            optOutOfReleaseFlagForGradle7(groovyCompileTask, target);
         });
 
         project.getTasks().withType(ScalaCompile.class).configureEach(scalaCompileTask -> {
             scalaCompileTask
                     .getJavaLauncher()
                     .set(getJavaLauncher(
-                            rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, target));
+                            rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, runtime));
+            scalaCompileTask.getOptions().getRelease().set(target.map(v -> v.javaLanguageVersion()
+                    .asInt()));
             scalaCompileTask.getOptions().getCompilerArgumentProviders().add(new EnablePreviewArgumentProvider(target));
-
-            optOutOfReleaseFlagForGradle7(scalaCompileTask, target);
         });
 
-        project.getTasks().withType(ScalaDoc.class).configureEach(scalaDoc -> scalaDoc.getJavaLauncher()
-                .set(getJavaLauncher(rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, target)));
-    }
-
-    private static void optOutOfReleaseFlagForGradle7(AbstractCompile compileTask, Provider<ChosenJavaVersion> target) {
-        if (GradleVersion.current().compareTo(GradleVersion.version("8.0")) >= 0) {
-            return;
-        }
-
-        // In Gradle <8, we need to set sourceCompatibility to opt out of '-release', allowing opens/exports to be used.
-        // https://github.com/gradle/gradle/issues/18824#issuecomment-1026909824
-        compileTask.doFirst(new Action<Task>() {
-            @Override
-            public void execute(Task task) {
-                ((AbstractCompile) task)
-                        .setSourceCompatibility(
-                                target.get().javaLanguageVersion().toString());
-            }
+        project.getTasks().withType(ScalaDoc.class).configureEach(scalaDocTask -> {
+            scalaDocTask
+                    .getJavaLauncher()
+                    .set(getJavaLauncher(
+                            rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, runtime));
         });
     }
 
@@ -198,7 +181,6 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             JavaToolchains baselineConfiguredJavaToolchains,
             BaselineJavaVersionsExtension rootExtension,
             JavaToolchainService javaToolchainService) {
-
         project.getTasks().withType(JavaExec.class).configureEach(javaExec -> {
             javaExec.getJavaLauncher()
                     .set(getJavaLauncher(
