@@ -39,7 +39,7 @@ import org.junit.jupiter.api.Test;
 class BaselineModuleJvmArgsIntegrationTest {
 
     @BeforeEach
-    void setup(RootProject rootProject) {
+    void beforeEach(RootProject rootProject) {
         rootProject.buildGradle().append("""
             plugins {
                 id 'java-library'
