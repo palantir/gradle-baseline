@@ -48,6 +48,10 @@ class BaselineModuleJvmArgsIntegrationTest {
                 id 'com.palantir.baseline-module-jvm-args'
             }
 
+            application {
+                mainClass = 'com.Example'
+            }
+
             javaVersions {
                 libraryTarget = Runtime.version().version().get(0)
             }
@@ -188,23 +192,17 @@ class BaselineModuleJvmArgsIntegrationTest {
     @Test
     void runs_with_locally_defined_exports_with_the_release_plugin_not_toolchains(
             GradleInvoker gradle, RootProject rootProject) {
-        rootProject.buildGradle().overwrite("""
+        rootProject.buildGradle().prepend("""
             plugins {
-                id 'java-library'
-                id 'application'
                 id 'com.palantir.baseline-release-compatibility'
-                id 'com.palantir.baseline-module-jvm-args'
             }
-            sourceCompatibility = 11
-            repositories {
-                mavenCentral()
-            }
-            application {
-                mainClass = 'com.Example'
-            }
+            """);
+
+        rootProject.buildGradle().append("""
             moduleJvmArgs {
                exports = ['java.management/sun.management']
             }
+            sourceCompatibility = 11
             """);
 
         rootProject.mainSourceSet().java().writeClass("""
@@ -225,9 +223,6 @@ class BaselineModuleJvmArgsIntegrationTest {
     @Test
     void runs_with_locally_defined_opens(GradleInvoker gradle, RootProject rootProject) {
         rootProject.buildGradle().append("""
-            application {
-                mainClass = 'com.Example'
-            }
 
             moduleJvmArgs {
                opens 'java.management/sun.management'
@@ -253,9 +248,6 @@ class BaselineModuleJvmArgsIntegrationTest {
     void adds_locally_defined_exports_to_the_jar_manifest(GradleInvoker gradle, RootProject rootProject)
             throws IOException {
         rootProject.buildGradle().append("""
-            application {
-                mainClass = 'com.Example'
-            }
 
             moduleJvmArgs {
                exports = ['java.management/sun.management']
@@ -334,9 +326,6 @@ class BaselineModuleJvmArgsIntegrationTest {
         createJarWithExport(rootProject, "test.jar");
 
         rootProject.buildGradle().append("""
-            application {
-                mainClass = 'com.Example'
-            }
             dependencies {
                 implementation files('test.jar')
             }
@@ -365,9 +354,6 @@ class BaselineModuleJvmArgsIntegrationTest {
         }
 
         rootProject.buildGradle().append("""
-            application {
-                mainClass = 'com.Example'
-            }
             dependencies {
                 implementation files('test.jar')
             }
@@ -394,9 +380,6 @@ class BaselineModuleJvmArgsIntegrationTest {
         createJarWithExport(rootProject, "test.jar");
 
         rootProject.buildGradle().append("""
-            application {
-                mainClass = 'com.Example'
-            }
             dependencies {
                 implementation files('test.jar')
             }
@@ -434,9 +417,6 @@ class BaselineModuleJvmArgsIntegrationTest {
     @Test
     void validates_exports(GradleInvoker gradle, RootProject rootProject) {
         rootProject.buildGradle().append("""
-            application {
-                mainClass = 'com.Example'
-            }
 
             moduleJvmArgs {
                exports = ['java.management']
@@ -450,9 +430,6 @@ class BaselineModuleJvmArgsIntegrationTest {
     @Test
     void task_not_up_to_date_when_extension_value_changes(GradleInvoker gradle, RootProject rootProject) {
         rootProject.buildGradle().append("""
-            application {
-                mainClass = 'com.Example'
-            }
 
             moduleJvmArgs {
                exports = ['java.management/sun.management']
@@ -486,9 +463,6 @@ class BaselineModuleJvmArgsIntegrationTest {
 
             repositories {
                 mavenCentral()
-            }
-            application {
-                mainClass = 'com.Example'
             }
 
             moduleJvmArgs {
