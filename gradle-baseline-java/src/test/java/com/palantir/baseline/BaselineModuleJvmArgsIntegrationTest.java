@@ -105,6 +105,55 @@ class BaselineModuleJvmArgsIntegrationTest {
     }
 
     @Test
+    void externally_defined_exports_on_annotationProcessor_path_end_up_in_fork_options_not_compiler_options(
+            GradleInvoker gradle, RootProject rootProject) {
+
+        createJarWithExport(rootProject, "test.jar");
+
+        rootProject.buildGradle().append("""
+            dependencies {
+                annotationProcessor files('test.jar')
+            }
+
+            tasks.register('printCompilerArgs') {
+                TaskProvider<JavaCompile> compileJava = tasks.named('compileJava', JavaCompile)
+
+                mustRunAfter compileJava
+
+                inputs.property('forkJvmArgs', compileJava.map { it.options.forkOptions.allJvmArgs })
+                inputs.property('compilerArgs', compileJava.map { it.options.allCompilerArgs })
+
+                doLast {
+                    println "forkJvmArgs: ${inputs.properties.forkJvmArgs}"
+                    println "compilerArgs: ${inputs.properties.compilerArgs}"
+                }
+            }
+            """);
+
+        InvocationResult invocationResult =
+                gradle.withArgs("compileJava", "printCompilerArgs").buildsSuccessfully();
+
+        assertThat(invocationResult.output().lines())
+                .as("Expected the export to be on forkOptions args but it was not. The "
+                        + "annotationProcessor dep is code running in the compiler, so the *compiler process* "
+                        + "needs the --add-exports.")
+                .anySatisfy(line -> {
+                    assertThat(line).startsWith("forkJvmArgs:");
+                    assertThat(line).contains("--add-exports, java.management/sun.management");
+                });
+
+        assertThat(invocationResult.output().lines())
+                .as("Expected the export to not be on the compilerArgs but it was. The "
+                        + "annotationProcessor dep is code running in the compiler, where as exports on "
+                        + "compilerArgs change which modules the code under compilation can access. "
+                        + "tl;dr it's the wrong place for annotationProcessor deps.")
+                .noneSatisfy(line -> {
+                    assertThat(line).startsWith("compilerArgs:");
+                    assertThat(line).contains("--add-exports, java.management/sun.management");
+                });
+    }
+
+    @Test
     void builds_javadoc_with_locally_defined_exports(GradleInvoker gradle, RootProject rootProject) {
         rootProject.buildGradle().append("""
             moduleJvmArgs {

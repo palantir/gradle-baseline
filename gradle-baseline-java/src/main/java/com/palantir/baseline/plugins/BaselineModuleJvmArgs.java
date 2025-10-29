@@ -96,17 +96,30 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
             project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
                 TaskProvider<JavaCompile> javaCompileProvider =
                         project.getTasks().named(sourceSet.getCompileJavaTaskName(), JavaCompile.class);
+
                 javaCompileProvider.configure(javaCompile -> {
-                    ModuleJvmArgsArgumentProvider provider = newModuleJvmArgsArgumentProvider(
+                    ModuleJvmArgsArgumentProvider forkOptionsArgProvider = newModuleJvmArgsArgumentProvider(
                             project,
-                            extension,
-                            project.files(project.getConfigurations()
-                                    .named(sourceSet.getAnnotationProcessorConfigurationName())),
+                            Optional.empty(),
+                            Optional.of(project.files(project.getConfigurations()
+                                    .named(sourceSet.getAnnotationProcessorConfigurationName()))),
                             javaCompile.getName());
-                    provider.getBaselineJavaVersionEnabled()
+
+                    forkOptionsArgProvider
+                            .getBaselineJavaVersionEnabled()
                             .set(project.provider(() -> project.getPlugins().hasPlugin(BaselineJavaVersion.class)));
 
-                    javaCompile.getOptions().getCompilerArgumentProviders().add(provider);
+                    javaCompile
+                            .getOptions()
+                            .getForkOptions()
+                            .getJvmArgumentProviders()
+                            .add(forkOptionsArgProvider);
+
+                    javaCompile
+                            .getOptions()
+                            .getCompilerArgumentProviders()
+                            .add(newModuleJvmArgsArgumentProvider(
+                                    project, Optional.of(extension), Optional.empty(), javaCompile.getName()));
 
                     setTaskInputsFromExtension(javaCompile, extension);
                 });
@@ -250,6 +263,24 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
         provider.getExports().set(extension.exports());
         provider.getOpens().set(extension.opens());
         provider.getClasspath().from(classpath);
+        provider.getProjectPath().set(project.getPath());
+        provider.getTaskName().set(taskName);
+        return provider;
+    }
+
+    private static ModuleJvmArgsArgumentProvider newModuleJvmArgsArgumentProvider(
+            Project project,
+            Optional<BaselineModuleJvmArgsExtension> useExportsOpensFromExtension,
+            Optional<ConfigurableFileCollection> useExportsOpensFromClasspath,
+            String taskName) {
+        ModuleJvmArgsArgumentProvider provider = project.getObjects().newInstance(ModuleJvmArgsArgumentProvider.class);
+        useExportsOpensFromExtension.ifPresent(extension -> {
+            provider.getExports().set(extension.exports());
+            provider.getOpens().set(extension.opens());
+        });
+        useExportsOpensFromClasspath.ifPresent(classpath -> {
+            provider.getClasspath().from(classpath);
+        });
         provider.getProjectPath().set(project.getPath());
         provider.getTaskName().set(taskName);
         return provider;
