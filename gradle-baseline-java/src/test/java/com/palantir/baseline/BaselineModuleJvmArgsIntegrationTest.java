@@ -32,7 +32,6 @@ import java.util.jar.Attributes;
 import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
-import java.util.zip.ZipOutputStream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
@@ -316,7 +315,7 @@ class BaselineModuleJvmArgsIntegrationTest {
     }
 
     @Test
-    void executes_with_externally_defined_exports(GradleInvoker gradle, RootProject rootProject) throws IOException {
+    void executes_with_externally_defined_exports(GradleInvoker gradle, RootProject rootProject) {
         createJarWithExport(rootProject, "test.jar");
 
         rootProject.buildGradle().append("""
@@ -344,11 +343,9 @@ class BaselineModuleJvmArgsIntegrationTest {
     }
 
     @Test
-    void handles_jars_with_no_manifest(GradleInvoker gradle, RootProject rootProject) throws IOException {
-        File testJar = rootProject.path().resolve("test.jar").toFile();
-        try (ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(testJar))) {
-            // Empty jar
-        }
+    void handles_jars_with_no_manifest(GradleInvoker gradle, RootProject rootProject) {
+        String jarName = "test.jar";
+        createEmptyJar(rootProject, jarName);
 
         rootProject.buildGradle().append("""
             dependencies {
@@ -462,7 +459,7 @@ class BaselineModuleJvmArgsIntegrationTest {
 
     @Test
     void test_task_picks_up_add_exports_from_jars_added_to_classpath_after_configuration(
-            GradleInvoker gradle, RootProject rootProject) throws IOException {
+            GradleInvoker gradle, RootProject rootProject) {
 
         rootProject.buildGradle().append("""
             dependencies {
@@ -501,7 +498,7 @@ class BaselineModuleJvmArgsIntegrationTest {
 
     @Test
     void javaexec_task_picks_up_add_exports_from_jars_added_to_classpath_after_configuration(
-            GradleInvoker gradle, RootProject rootProject) throws IOException {
+            GradleInvoker gradle, RootProject rootProject) {
 
         rootProject.mainSourceSet().java().writeClass("""
             package com;
@@ -531,13 +528,23 @@ class BaselineModuleJvmArgsIntegrationTest {
         assertThat(result.output()).contains("--add-exports=java.management/sun.management=ALL-UNNAMED");
     }
 
-    private void createJarWithExport(RootProject rootProject, String jarName) throws IOException {
+    private static void createEmptyJar(RootProject rootProject, String jarName) {
+        createEmptyJarWithManifest(rootProject, jarName, new Manifest());
+    }
+
+    private void createJarWithExport(RootProject rootProject, String jarName) {
         Manifest manifest = new Manifest();
         manifest.getMainAttributes().put(Attributes.Name.MANIFEST_VERSION, "1.0");
         manifest.getMainAttributes().putValue("Add-Exports", "java.management/sun.management");
-        File jar = rootProject.path().resolve(jarName).toFile();
-        try (JarOutputStream jos = new JarOutputStream(new FileOutputStream(jar), manifest)) {
-            // Empty jar with manifest
+        createEmptyJarWithManifest(rootProject, jarName, manifest);
+    }
+
+    private static void createEmptyJarWithManifest(RootProject rootProject, String jarName, Manifest manifest) {
+        File testJar = rootProject.path().resolve(jarName).toFile();
+        try (JarOutputStream jos = new JarOutputStream(new FileOutputStream(testJar), manifest)) {
+            // Empty jar
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
         }
     }
 }
