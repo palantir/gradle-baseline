@@ -67,9 +67,6 @@ class BaselineModuleJvmArgsIntegrationTest {
     @Test
     void compiles_with_locally_defined_exports(GradleInvoker gradle, RootProject rootProject) {
         rootProject.buildGradle().append("""
-            application {
-                mainClass = 'com.Example'
-            }
             moduleJvmArgs {
                exports = ['jdk.compiler/com.sun.tools.javac.code']
             }
@@ -90,9 +87,6 @@ class BaselineModuleJvmArgsIntegrationTest {
     @Test
     void compiles_with_locally_defined_opens(GradleInvoker gradle, RootProject rootProject) {
         rootProject.buildGradle().append("""
-            application {
-                mainClass = 'com.Example'
-            }
             moduleJvmArgs {
                opens = ['jdk.compiler/com.sun.tools.javac.code']
             }
@@ -113,9 +107,6 @@ class BaselineModuleJvmArgsIntegrationTest {
     @Test
     void builds_javadoc_with_locally_defined_exports(GradleInvoker gradle, RootProject rootProject) {
         rootProject.buildGradle().append("""
-            application {
-                mainClass = 'com.Example'
-            }
             moduleJvmArgs {
                exports = ['jdk.compiler/com.sun.tools.javac.code']
             }
@@ -140,9 +131,6 @@ class BaselineModuleJvmArgsIntegrationTest {
     @Test
     void builds_javadoc_with_locally_defined_opens(GradleInvoker gradle, RootProject rootProject) {
         rootProject.buildGradle().append("""
-            application {
-                mainClass = 'com.Example'
-            }
             moduleJvmArgs {
                opens = ['jdk.compiler/com.sun.tools.javac.code']
             }
@@ -167,10 +155,6 @@ class BaselineModuleJvmArgsIntegrationTest {
     @Test
     void runs_with_locally_defined_exports(GradleInvoker gradle, RootProject rootProject) {
         rootProject.buildGradle().append("""
-            application {
-                mainClass = 'com.Example'
-            }
-
             moduleJvmArgs {
                exports = ['java.management/sun.management']
             }
@@ -232,7 +216,6 @@ class BaselineModuleJvmArgsIntegrationTest {
     @Test
     void runs_with_locally_defined_opens(GradleInvoker gradle, RootProject rootProject) {
         rootProject.buildGradle().append("""
-
             moduleJvmArgs {
                opens 'java.management/sun.management'
             }
@@ -258,7 +241,6 @@ class BaselineModuleJvmArgsIntegrationTest {
             throws IOException {
 
         rootProject.buildGradle().append("""
-
             moduleJvmArgs {
                exports = ['java.management/sun.management']
             }
