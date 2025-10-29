@@ -20,6 +20,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.palantir.gradle.testing.execution.GradleInvoker;
 import com.palantir.gradle.testing.execution.InvocationResult;
+import com.palantir.gradle.testing.execution.TaskOutcome;
 import com.palantir.gradle.testing.junit.GradlePluginTests;
 import com.palantir.gradle.testing.project.RootProject;
 import java.io.File;
@@ -451,8 +452,12 @@ class BaselineModuleJvmArgsIntegrationTest {
 
         InvocationResult resultAfterChange = gradle.withArgs("jar").buildsSuccessfully();
 
-        assertThat(resultBeforeChange.task(":jar")).isPresent();
-        assertThat(resultAfterChange.task(":jar")).isPresent();
+        assertThat(resultBeforeChange.task(":jar")).hasValueSatisfying(task -> {
+            assertThat(task.outcome()).isEqualTo(TaskOutcome.SUCCESS);
+        });
+        assertThat(resultAfterChange.task(":jar")).hasValueSatisfying(task -> {
+            assertThat(task.outcome()).isEqualTo(TaskOutcome.SUCCESS);
+        });
     }
 
     @Test
@@ -479,6 +484,7 @@ class BaselineModuleJvmArgsIntegrationTest {
 
         createJarWithExport(rootProject, "test.jar");
 
+        // Mutate classpath after configuration
         rootProject.buildGradle().append("""
             tasks.named('test').configure {
                 classpath += files('test.jar')
@@ -515,6 +521,7 @@ class BaselineModuleJvmArgsIntegrationTest {
                 classpath = sourceSets.main.runtimeClasspath
             }
 
+            // Mutate classpath after configuration
             tasks.named('runExample').configure {
                 classpath += files('addon.jar')
             }
