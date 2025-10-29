@@ -417,7 +417,6 @@ class BaselineModuleJvmArgsIntegrationTest {
     @Test
     void validates_exports(GradleInvoker gradle, RootProject rootProject) {
         rootProject.buildGradle().append("""
-
             moduleJvmArgs {
                exports = ['java.management']
             }
@@ -430,7 +429,6 @@ class BaselineModuleJvmArgsIntegrationTest {
     @Test
     void task_not_up_to_date_when_extension_value_changes(GradleInvoker gradle, RootProject rootProject) {
         rootProject.buildGradle().append("""
-
             moduleJvmArgs {
                exports = ['java.management/sun.management']
             }
@@ -449,26 +447,10 @@ class BaselineModuleJvmArgsIntegrationTest {
 
         InvocationResult resultBeforeChange = gradle.withArgs("jar").buildsSuccessfully();
 
-        rootProject.buildGradle().overwrite("""
-            plugins {
-                id 'java-library'
-                id 'application'
-                id 'com.palantir.baseline-java-versions'
-                id 'com.palantir.baseline-module-jvm-args'
-            }
-
-            javaVersions {
-                libraryTarget = Runtime.version().version().get(0)
-            }
-
-            repositories {
-                mavenCentral()
-            }
-
-            moduleJvmArgs {
-               exports = ['java.management/sun.management123']
-            }
-            """);
+        rootProject
+                .buildGradle()
+                .edit(content ->
+                        content.replace("java.management/sun.management", "java.management/sun.management123"));
 
         InvocationResult resultAfterChange = gradle.withArgs("jar").buildsSuccessfully();
 
@@ -489,9 +471,9 @@ class BaselineModuleJvmArgsIntegrationTest {
         rootProject.testSourceSet().java().writeClass("""
             package com;
             import org.junit.jupiter.api.Test;
-            public class ExampleTest {
+            class ExampleTest {
                 @Test
-                public void test() {
+                void test() {
                     System.out.println(java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments());
                 }
             }
