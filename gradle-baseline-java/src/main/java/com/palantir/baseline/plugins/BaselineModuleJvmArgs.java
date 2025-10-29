@@ -98,6 +98,9 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                         project.getTasks().named(sourceSet.getCompileJavaTaskName(), JavaCompile.class);
 
                 javaCompileProvider.configure(javaCompile -> {
+                    Provider<Boolean> baselineJavaVersionsEnabled =
+                            project.provider(() -> project.getPlugins().hasPlugin(BaselineJavaVersion.class));
+
                     ModuleJvmArgsArgumentProvider forkOptionsArgProvider = newModuleJvmArgsArgumentProvider(
                             project,
                             Optional.empty(),
@@ -105,9 +108,7 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                                     .named(sourceSet.getAnnotationProcessorConfigurationName()))),
                             javaCompile.getName());
 
-                    forkOptionsArgProvider
-                            .getBaselineJavaVersionEnabled()
-                            .set(project.provider(() -> project.getPlugins().hasPlugin(BaselineJavaVersion.class)));
+                    forkOptionsArgProvider.getBaselineJavaVersionEnabled().set(baselineJavaVersionsEnabled);
 
                     javaCompile
                             .getOptions()
@@ -115,11 +116,12 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                             .getJvmArgumentProviders()
                             .add(forkOptionsArgProvider);
 
-                    javaCompile
-                            .getOptions()
-                            .getCompilerArgumentProviders()
-                            .add(newModuleJvmArgsArgumentProvider(
-                                    project, Optional.of(extension), Optional.empty(), javaCompile.getName()));
+                    ModuleJvmArgsArgumentProvider compilerArgsProvider = newModuleJvmArgsArgumentProvider(
+                            project, Optional.of(extension), Optional.empty(), javaCompile.getName());
+
+                    compilerArgsProvider.getBaselineJavaVersionEnabled().set(baselineJavaVersionsEnabled);
+
+                    javaCompile.getOptions().getCompilerArgumentProviders().add(compilerArgsProvider);
 
                     setTaskInputsFromExtension(javaCompile, extension);
                 });
