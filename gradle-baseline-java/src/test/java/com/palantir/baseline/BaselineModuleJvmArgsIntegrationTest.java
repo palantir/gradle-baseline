@@ -192,6 +192,7 @@ class BaselineModuleJvmArgsIntegrationTest {
     @Test
     void runs_with_locally_defined_exports_with_the_release_plugin_not_toolchains(
             GradleInvoker gradle, RootProject rootProject) {
+
         rootProject.buildGradle().prepend("""
             plugins {
                 id 'com.palantir.baseline-release-compatibility'
@@ -247,6 +248,7 @@ class BaselineModuleJvmArgsIntegrationTest {
     @Test
     void adds_locally_defined_exports_to_the_jar_manifest(GradleInvoker gradle, RootProject rootProject)
             throws IOException {
+
         rootProject.buildGradle().append("""
 
             moduleJvmArgs {
@@ -289,6 +291,7 @@ class BaselineModuleJvmArgsIntegrationTest {
     @Test
     void adds_baseline_enable_preview_attribute_to_jar_manifest(GradleInvoker gradle, RootProject rootProject)
             throws IOException {
+
         rootProject.buildGradle().append("""
             javaVersions {
                 runtime = '11_PREVIEW'
@@ -377,6 +380,7 @@ class BaselineModuleJvmArgsIntegrationTest {
     @Test
     void does_not_add_externally_defined_exports_to_the_jar_manifest(GradleInvoker gradle, RootProject rootProject)
             throws IOException {
+
         createJarWithExport(rootProject, "test.jar");
 
         rootProject.buildGradle().append("""
@@ -461,6 +465,7 @@ class BaselineModuleJvmArgsIntegrationTest {
     @Test
     void test_task_picks_up_add_exports_from_jars_added_to_classpath_after_configuration(
             GradleInvoker gradle, RootProject rootProject) throws IOException {
+
         rootProject.buildGradle().append("""
             dependencies {
                 testImplementation 'org.junit.jupiter:junit-jupiter-api:5.10.2'
@@ -496,6 +501,7 @@ class BaselineModuleJvmArgsIntegrationTest {
     @Test
     void javaexec_task_picks_up_add_exports_from_jars_added_to_classpath_after_configuration(
             GradleInvoker gradle, RootProject rootProject) throws IOException {
+
         rootProject.mainSourceSet().java().writeClass("""
             package com;
             public class ExampleMain {
