@@ -53,6 +53,8 @@ class BaselineModuleJvmArgsIntegrationTest {
             }
 
             javaVersions {
+                // Use the same version at the current test runtime so that we definitely have a JDK of this
+                // version available for Gradle's built in java toolchains
                 libraryTarget = Runtime.version().version().get(0)
             }
 
@@ -186,6 +188,9 @@ class BaselineModuleJvmArgsIntegrationTest {
             """);
 
         InvocationResult result = gradle.withArgs("run").buildsSuccessfully();
+
+        // Gradle appears to normalize args, joining '--add-exports java.management/sun.management=ALL-UNNAMED'
+        // with an equals.
         assertThat(result.output()).contains("--add-exports=java.management/sun.management=ALL-UNNAMED");
     }
 
@@ -218,6 +223,9 @@ class BaselineModuleJvmArgsIntegrationTest {
             """);
 
         InvocationResult result = gradle.withArgs("run").buildsSuccessfully();
+
+        // Gradle appears to normalize args, joining '--add-exports java.management/sun.management=ALL-UNNAMED'
+        // with an equals.
         assertThat(result.output()).contains("--add-exports=java.management/sun.management=ALL-UNNAMED");
     }
 
@@ -346,6 +354,9 @@ class BaselineModuleJvmArgsIntegrationTest {
             """);
 
         InvocationResult result = gradle.withArgs("run").buildsSuccessfully();
+
+        // Gradle appears to normalize args, joining '--add-exports java.management/sun.management=ALL-UNNAMED'
+        // with an equals.
         assertThat(result.output()).contains("--add-exports=java.management/sun.management=ALL-UNNAMED");
     }
 
@@ -495,6 +506,8 @@ class BaselineModuleJvmArgsIntegrationTest {
             """);
 
         InvocationResult result = gradle.withArgs("test").buildsSuccessfully();
+
+        // The test JVM should include the --add-exports argument from the manifest of test-addon.jar
         assertThat(result.output()).contains("--add-exports=java.management/sun.management=ALL-UNNAMED");
     }
 
@@ -513,6 +526,7 @@ class BaselineModuleJvmArgsIntegrationTest {
 
         createJarWithExport(rootProject, "addon.jar");
 
+        // Create a JavaExec task and mutate its classpath after configuration
         rootProject.buildGradle().append("""
             tasks.register('runExample', JavaExec) {
                 mainClass = 'com.ExampleMain'
