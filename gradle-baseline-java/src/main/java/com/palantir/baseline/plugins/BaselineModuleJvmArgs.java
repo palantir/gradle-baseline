@@ -86,193 +86,169 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
     @SuppressWarnings("checkstyle:MethodLength")
     public final void apply(Project project) {
         project.getPluginManager().withPlugin("java", unused -> {
-            @SuppressWarnings({"for-rollout:GradleTypesAsFields", "for-rollout:NonAbstractGradleType"})
-            BaselineModuleJvmArgsExtension extension =
-                    project.getExtensions().create(EXTENSION_NAME, BaselineModuleJvmArgsExtension.class, project);
+            applyToJavaProject(project);
+        });
+    }
 
-            String version = Optional.ofNullable(
-                            (String) project.findProperty("baselineModuleJvmArgsCompilerPluginsVersion"))
-                    .or(() -> Optional.ofNullable(
-                            BaselineErrorProne.class.getPackage().getImplementationVersion()))
-                    .orElseThrow(() -> new RuntimeException(
-                            "baseline-module-jvm-args-compiler-plugins implementation version not found"));
+    private void applyToJavaProject(Project project) {
+        @SuppressWarnings({"for-rollout:GradleTypesAsFields", "for-rollout:NonAbstractGradleType"})
+        BaselineModuleJvmArgsExtension extension =
+                project.getExtensions().create(EXTENSION_NAME, BaselineModuleJvmArgsExtension.class, project);
 
-            project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
-                project.getDependencies()
-                        .add(
-                                sourceSet.getAnnotationProcessorConfigurationName(),
-                                "com.palantir.baseline:baseline-module-jvm-args-compiler-plugins:" + version);
+        // Derive this plugin's `enablePreview` property from BaselineJavaVersion's extension
+        project.getPlugins().withType(BaselineJavaVersion.class, _unused -> {
+            BaselineJavaVersionExtension javaVersionsExtension =
+                    project.getExtensions().getByType(BaselineJavaVersionExtension.class);
+            extension.setEnablePreview(javaVersionsExtension.runtime().map(chosenJavaVersion -> {
+                return chosenJavaVersion.enablePreview()
+                        ? Optional.of(chosenJavaVersion.javaLanguageVersion())
+                        : Optional.empty();
+            }));
+        });
 
-                TaskProvider<JavaCompile> javaCompileProvider =
-                        project.getTasks().named(sourceSet.getCompileJavaTaskName(), JavaCompile.class);
+        project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
+            configureSourceSet(project, sourceSet, extension);
+        });
 
-                javaCompileProvider.configure(javaCompile -> {
-                    javaCompile.getOptions().getCompilerArgumentProviders().add(new CommandLineArgumentProvider() {
-                        private static final String COMPILER_PLUGIN_NAME = "-Xplugin:"
-                                + "AllowReleaseAndAddExportsToBeUsedTogetherByChangingCompilerInternalsUsingReflection";
+        project.getTasks().withType(Test.class).configureEach(test -> {
+            ModuleJvmArgsArgumentProvider provider = newModuleJvmArgsArgumentProvider(
+                    project, extension, project.files((Callable<FileCollection>) test::getClasspath), test.getName());
+            test.getJvmArgumentProviders().add(provider);
+            setTaskInputsFromExtension(test, extension);
+        });
 
+        project.getTasks().withType(JavaExec.class).configureEach(javaExec -> {
+            ModuleJvmArgsArgumentProvider provider = newModuleJvmArgsArgumentProvider(
+                    project,
+                    extension,
+                    project.files((Callable<FileCollection>) javaExec::getClasspath),
+                    javaExec.getName());
+            javaExec.getJvmArgumentProviders().add(provider);
+            setTaskInputsFromExtension(javaExec, extension);
+        });
+
+        project.getTasks().withType(Jar.class).configureEach(jar -> {
+            String jarName = jar.getName();
+            String projectPath = jar.getProject().getPath();
+
+            jar.doFirst(new Action<Task>() {
+                @Override
+                public void execute(Task task) {
+                    jar.manifest(new Action<Manifest>() {
                         @Override
-                        public Iterable<String> asArguments() {
-                            return List.of(COMPILER_PLUGIN_NAME);
+                        public void execute(Manifest manifest) {
+                            addManifestAttribute(
+                                    jarName, projectPath, manifest, ADD_EXPORTS_ATTRIBUTE, extension.exports());
+                            addManifestAttribute(
+                                    jarName, projectPath, manifest, ADD_OPENS_ATTRIBUTE, extension.opens());
+                            addManifestAttribute(
+                                    jarName,
+                                    projectPath,
+                                    manifest,
+                                    ENABLE_PREVIEW_ATTRIBUTE,
+                                    extension.getEnablePreview().map(maybeVersion -> maybeVersion.stream()
+                                            .map(v -> Integer.toString(v.asInt()))
+                                            .collect(Collectors.toSet())));
                         }
                     });
+                }
+            });
 
-                    Provider<Boolean> baselineJavaVersionsEnabled =
-                            project.provider(() -> project.getPlugins().hasPlugin(BaselineJavaVersion.class));
+            setTaskInputsFromExtension(jar, extension);
+        });
+    }
 
-                    ModuleJvmArgsArgumentProvider forkOptionsArgProvider = newModuleJvmArgsArgumentProvider(
-                            project,
-                            Optional.empty(),
-                            Optional.of(project.files(project.getConfigurations()
-                                    .named(sourceSet.getAnnotationProcessorConfigurationName()))),
-                            javaCompile.getName());
-
-                    forkOptionsArgProvider.getBaselineJavaVersionEnabled().set(baselineJavaVersionsEnabled);
-
-                    javaCompile
-                            .getOptions()
-                            .getForkOptions()
-                            .getJvmArgumentProviders()
-                            .add(forkOptionsArgProvider);
-
-                    ModuleJvmArgsArgumentProvider compilerArgsProvider = newModuleJvmArgsArgumentProvider(
-                            project, Optional.of(extension), Optional.empty(), javaCompile.getName());
-
-                    compilerArgsProvider.getBaselineJavaVersionEnabled().set(baselineJavaVersionsEnabled);
-
-                    javaCompile.getOptions().getCompilerArgumentProviders().add(compilerArgsProvider);
-
-                    setTaskInputsFromExtension(javaCompile, extension);
+    private void configureSourceSet(Project project, SourceSet sourceSet, BaselineModuleJvmArgsExtension extension) {
+        project.getTasks()
+                .named(sourceSet.getCompileJavaTaskName(), JavaCompile.class)
+                .configure(javaCompile -> {
+                    configureJavaCompile(project, sourceSet, extension, javaCompile);
                 });
 
-                TaskProvider<Task> javadocTaskProvider = null;
-                try {
-                    javadocTaskProvider = project.getTasks().named(sourceSet.getJavadocTaskName());
-                } catch (UnknownTaskException e) {
-                    // skip
-                }
-                if (javadocTaskProvider != null) {
-                    javadocTaskProvider.configure(javadocTask -> {
-                        javadocTask.doFirst(new Action<Task>() {
-                            @Override
-                            public void execute(Task task) {
-                                // The '--release' flag is set when BaselineJavaVersion is not used.
-                                if (!project.getPlugins().hasPlugin(BaselineJavaVersion.class)) {
-                                    log.debug(
-                                            "BaselineModuleJvmArgs not applying args to compilation task {} on {} "
-                                                    + "due to lack of BaselineJavaVersion",
-                                            task.getName(),
-                                            project.getPath());
-                                    return;
-                                }
+        configureJavadoc(project, sourceSet, extension);
+    }
 
-                                Javadoc javadoc = (Javadoc) task;
+    private static void configureJavaCompile(
+            Project project, SourceSet sourceSet, BaselineModuleJvmArgsExtension extension, JavaCompile javaCompile) {
 
-                                MinimalJavadocOptions options = javadoc.getOptions();
-                                if (options instanceof CoreJavadocOptions coreOptions) {
-                                    ImmutableList<JarManifestModuleInfo> info =
-                                            collectClasspathInfoForSourceSet(sourceSet);
-                                    List<String> exportValues = Stream.concat(
-                                                    // Compilation only supports exports, so we union with opens.
-                                                    Stream.concat(
-                                                            extension.exports().get().stream(),
-                                                            extension.opens().get().stream()),
-                                                    info.stream()
-                                                            .flatMap(item -> Stream.concat(
-                                                                    item.exports().stream(), item.opens().stream())))
-                                            .distinct()
-                                            .sorted()
-                                            .map(item -> item + "=ALL-UNNAMED")
-                                            .collect(ImmutableList.toImmutableList());
-                                    log.debug(
-                                            "BaselineModuleJvmArgs building {} on {} with exports: {}",
-                                            javadoc.getName(),
-                                            project.getPath(),
-                                            exportValues);
-                                    if (!exportValues.isEmpty()) {
-                                        coreOptions
-                                                // options are automatically prefixed with '-' internally
-                                                .addMultilineStringsOption("-add-exports")
-                                                .setValue(exportValues);
-                                    }
-                                } else {
-                                    log.error(
-                                            "MinimalJavadocOptions implementation was "
-                                                    + "not CoreJavadocOptions, rather '{}'",
-                                            options.getClass().getName());
-                                }
-                            }
-                        });
+        // javac isn't provided `--add-exports` args for the time being due to
+        // https://github.com/gradle/gradle/issues/18824
+        // However, we set sourceCompatibility in BaselineJavaVersion to opt out of the '--release' flag.
 
-                        setTaskInputsFromExtension(javadocTask, extension);
-                    });
-                }
-            });
+        ModuleJvmArgsArgumentProvider provider = newModuleJvmArgsArgumentProvider(
+                project,
+                extension,
+                project.files(project.getConfigurations().named(sourceSet.getAnnotationProcessorConfigurationName())),
+                javaCompile.getName());
+        provider.getBaselineJavaVersionEnabled()
+                .set(project.provider(() -> project.getPlugins().hasPlugin(BaselineJavaVersion.class)));
 
-            project.getTasks().withType(Test.class).configureEach(test -> {
-                ModuleJvmArgsArgumentProvider provider = newModuleJvmArgsArgumentProvider(
-                        project,
-                        extension,
-                        project.files((Callable<FileCollection>) test::getClasspath),
-                        test.getName());
-                test.getJvmArgumentProviders().add(provider);
-                setTaskInputsFromExtension(test, extension);
-            });
+        javaCompile.getOptions().getCompilerArgumentProviders().add(provider);
 
-            project.getTasks().withType(JavaExec.class).configureEach(javaExec -> {
-                ModuleJvmArgsArgumentProvider provider = newModuleJvmArgsArgumentProvider(
-                        project,
-                        extension,
-                        project.files((Callable<FileCollection>) javaExec::getClasspath),
-                        javaExec.getName());
-                javaExec.getJvmArgumentProviders().add(provider);
-                setTaskInputsFromExtension(javaExec, extension);
-            });
+        setTaskInputsFromExtension(javaCompile, extension);
+    }
 
-            // Derive this plugin's `enablePreview` property from BaselineJavaVersion's extension
-            project.getPlugins().withType(BaselineJavaVersion.class, _unused -> {
-                BaselineJavaVersionExtension javaVersionsExtension =
-                        project.getExtensions().getByType(BaselineJavaVersionExtension.class);
-                extension.setEnablePreview(javaVersionsExtension.runtime().map(chosenJavaVersion -> {
-                    return chosenJavaVersion.enablePreview()
-                            ? Optional.of(chosenJavaVersion.javaLanguageVersion())
-                            : Optional.empty();
-                }));
-            });
-
-            project.getTasks().withType(Jar.class).configureEach(new Action<Jar>() {
-                @Override
-                public void execute(Jar jar) {
-                    String jarName = jar.getName();
-                    String projectPath = jar.getProject().getPath();
-
-                    jar.doFirst(new Action<Task>() {
-                        @Override
-                        public void execute(Task task) {
-                            jar.manifest(new Action<Manifest>() {
-                                @Override
-                                public void execute(Manifest manifest) {
-                                    addManifestAttribute(
-                                            jarName, projectPath, manifest, ADD_EXPORTS_ATTRIBUTE, extension.exports());
-                                    addManifestAttribute(
-                                            jarName, projectPath, manifest, ADD_OPENS_ATTRIBUTE, extension.opens());
-                                    addManifestAttribute(
-                                            jarName,
-                                            projectPath,
-                                            manifest,
-                                            ENABLE_PREVIEW_ATTRIBUTE,
-                                            extension.getEnablePreview().map(maybeVersion -> maybeVersion.stream()
-                                                    .map(v -> Integer.toString(v.asInt()))
-                                                    .collect(Collectors.toSet())));
-                                }
-                            });
+    private void configureJavadoc(Project project, SourceSet sourceSet, BaselineModuleJvmArgsExtension extension) {
+        TaskProvider<Task> javadocTaskProvider = null;
+        try {
+            javadocTaskProvider = project.getTasks().named(sourceSet.getJavadocTaskName());
+        } catch (UnknownTaskException e) {
+            // skip
+        }
+        if (javadocTaskProvider != null) {
+            javadocTaskProvider.configure(javadocTask -> {
+                javadocTask.doFirst(new Action<Task>() {
+                    @Override
+                    public void execute(Task task) {
+                        // The '--release' flag is set when BaselineJavaVersion is not used.
+                        if (!project.getPlugins().hasPlugin(BaselineJavaVersion.class)) {
+                            log.debug(
+                                    "BaselineModuleJvmArgs not applying args to compilation task {} on {} "
+                                            + "due to lack of BaselineJavaVersion",
+                                    task.getName(),
+                                    project.getPath());
+                            return;
                         }
-                    });
 
-                    setTaskInputsFromExtension(jar, extension);
-                }
+                        Javadoc javadoc = (Javadoc) task;
+
+                        MinimalJavadocOptions options = javadoc.getOptions();
+                        if (options instanceof CoreJavadocOptions coreOptions) {
+                            ImmutableList<JarManifestModuleInfo> info = collectClasspathInfoForSourceSet(sourceSet);
+                            List<String> exportValues = Stream.concat(
+                                            // Compilation only supports exports, so we union with opens.
+                                            Stream.concat(
+                                                    extension.exports().get().stream(),
+                                                    extension.opens().get().stream()),
+                                            info.stream()
+                                                    .flatMap(item -> Stream.concat(
+                                                            item.exports().stream(), item.opens().stream())))
+                                    .distinct()
+                                    .sorted()
+                                    .map(item -> item + "=ALL-UNNAMED")
+                                    .collect(ImmutableList.toImmutableList());
+                            log.debug(
+                                    "BaselineModuleJvmArgs building {} on {} with exports: {}",
+                                    javadoc.getName(),
+                                    project.getPath(),
+                                    exportValues);
+                            if (!exportValues.isEmpty()) {
+                                coreOptions
+                                        // options are automatically prefixed with '-' internally
+                                        .addMultilineStringsOption("-add-exports")
+                                        .setValue(exportValues);
+                            }
+                        } else {
+                            log.error(
+                                    "MinimalJavadocOptions implementation was " + "not CoreJavadocOptions, rather '{}'",
+                                    options.getClass().getName());
+                        }
+                    }
+                });
+
+                setTaskInputsFromExtension(javadocTask, extension);
             });
-        });
+        }
     }
 
     private static ModuleJvmArgsArgumentProvider newModuleJvmArgsArgumentProvider(
@@ -284,24 +260,6 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
         provider.getExports().set(extension.exports());
         provider.getOpens().set(extension.opens());
         provider.getClasspath().from(classpath);
-        provider.getProjectPath().set(project.getPath());
-        provider.getTaskName().set(taskName);
-        return provider;
-    }
-
-    private static ModuleJvmArgsArgumentProvider newModuleJvmArgsArgumentProvider(
-            Project project,
-            Optional<BaselineModuleJvmArgsExtension> useExportsOpensFromExtension,
-            Optional<ConfigurableFileCollection> useExportsOpensFromClasspath,
-            String taskName) {
-        ModuleJvmArgsArgumentProvider provider = project.getObjects().newInstance(ModuleJvmArgsArgumentProvider.class);
-        useExportsOpensFromExtension.ifPresent(extension -> {
-            provider.getExports().set(extension.exports());
-            provider.getOpens().set(extension.opens());
-        });
-        useExportsOpensFromClasspath.ifPresent(classpath -> {
-            provider.getClasspath().from(classpath);
-        });
         provider.getProjectPath().set(project.getPath());
         provider.getTaskName().set(taskName);
         return provider;

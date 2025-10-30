@@ -23,7 +23,6 @@ import com.palantir.gradle.testing.execution.InvocationResult;
 import com.palantir.gradle.testing.execution.TaskOutcome;
 import com.palantir.gradle.testing.junit.GradlePluginTests;
 import com.palantir.gradle.testing.project.RootProject;
-import com.palantir.gradle.testing.project.SubProject;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -34,6 +33,7 @@ import java.util.jar.JarFile;
 import java.util.jar.JarOutputStream;
 import java.util.jar.Manifest;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 @GradlePluginTests
@@ -59,504 +59,367 @@ class BaselineModuleJvmArgsIntegrationTest {
                 libraryTarget = Runtime.version().version().get(0)
             }
 
-            allprojects {
-                repositories {
-                    mavenCentral()
-                    mavenLocal()
-                }
+            repositories {
+                mavenCentral()
             }
             """);
     }
 
-    @Test
-    void compiles_with_locally_defined_exports(GradleInvoker gradle, RootProject rootProject) {
-        rootProject.buildGradle().append("""
-            moduleJvmArgs {
-               exports = ['jdk.compiler/com.sun.tools.javac.code']
-            }
-            """);
-
-        rootProject.mainSourceSet().java().writeClass("""
-            package com;
-            public class Example {
-                public static void main(String[] args) {
-                    com.sun.tools.javac.code.Symbol.class.toString();
-                }
-            }
-            """);
-
-        gradle.withArgs("compileJava").buildsSuccessfully();
-    }
-
-    @Test
-    void compiles_with_locally_defined_opens(GradleInvoker gradle, RootProject rootProject) {
-        rootProject.buildGradle().append("""
-            moduleJvmArgs {
-               opens = ['jdk.compiler/com.sun.tools.javac.code']
-            }
-            """);
-
-        rootProject.mainSourceSet().java().writeClass("""
-            package com;
-            public class Example {
-                public static void main(String[] args) {
-                    com.sun.tools.javac.code.Symbol.class.toString();
-                }
-            }
-            """);
-
-        gradle.withArgs("compileJava").buildsSuccessfully();
-    }
-
-    @Test
-    void externally_defined_exports_on_annotationProcessor_path_end_up_in_fork_options_not_compiler_options(
-            GradleInvoker gradle, RootProject rootProject) {
-
-        createJarWithExport(rootProject, "test.jar");
-
-        rootProject.buildGradle().append("""
-            dependencies {
-                annotationProcessor files('test.jar')
-            }
-
-            tasks.register('printCompilerArgs') {
-                TaskProvider<JavaCompile> compileJava = tasks.named('compileJava', JavaCompile)
-
-                mustRunAfter compileJava
-
-                inputs.property('forkJvmArgs', compileJava.map { it.options.forkOptions.allJvmArgs })
-                inputs.property('compilerArgs', compileJava.map { it.options.allCompilerArgs })
-
-                doLast {
-                    println "forkJvmArgs: ${inputs.properties.forkJvmArgs}"
-                    println "compilerArgs: ${inputs.properties.compilerArgs}"
-                }
-            }
-            """);
-
-        InvocationResult invocationResult =
-                gradle.withArgs("compileJava", "printCompilerArgs").buildsSuccessfully();
-
-        assertThat(invocationResult.output().lines())
-                .as("Expected the export to be on forkOptions args but it was not. The "
-                        + "annotationProcessor dep is code running in the compiler, so the *compiler process* "
-                        + "needs the --add-exports.")
-                .anySatisfy(line -> {
-                    assertThat(line).startsWith("forkJvmArgs:");
-                    assertThat(line).contains("--add-exports, java.management/sun.management");
-                });
-
-        assertThat(invocationResult.output().lines())
-                .as("Expected the export to not be on the compilerArgs but it was. The "
-                        + "annotationProcessor dep is code running in the compiler, where as exports on "
-                        + "compilerArgs change which modules the code under compilation can access. "
-                        + "tl;dr it's the wrong place for annotationProcessor deps.")
-                .noneSatisfy(line -> {
-                    assertThat(line).startsWith("compilerArgs:");
-                    assertThat(line).contains("--add-exports, java.management/sun.management");
-                });
-    }
-
-    @Test
-    void compiles_using_a_compiler_plugin_that_requires_access_to_system_modules_at_the_same_time_as_the_release_args(
-            GradleInvoker gradle, RootProject rootProject, SubProject compilerPlugin) {
-
-        compilerPlugin.buildGradle().append("""
-                plugins {
-                    id 'java-library'
-                    id 'com.palantir.baseline-module-jvm-args'
-                }
-
-                dependencies {
-                    annotationProcessor 'com.google.auto.service:auto-service:1.1.1'
-                    compileOnly 'com.google.auto.service:auto-service:1.1.1'
-                }
-
+    @Nested
+    class Compilation {
+        @Test
+        void compiles_with_locally_defined_exports(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
                 moduleJvmArgs {
-                    exports = ['jdk.compiler/com.sun.tools.javac.code']
+                   exports = ['jdk.compiler/com.sun.tools.javac.code']
                 }
-            """);
+                """);
 
-        compilerPlugin.mainSourceSet().java().writeClass("""
-            package com;
-            import com.sun.source.util.JavacTask;
-            import com.sun.source.util.Plugin;
-            import com.google.auto.service.AutoService;
-
-            @AutoService(Plugin.class)
-            public final class SomePlugin implements Plugin {
-                public String getName() {
-                    return "SomePlugin";
-                }
-
-                public void init(JavacTask task, String... args) {
-                    com.sun.tools.javac.code.Symbol.class.toString();
-                }
-            }
-            """);
-
-        rootProject.buildGradle().append("""
-            dependencies {
-                annotationProcessor project(':compilerPlugin')
-            }
-
-            tasks.named('compileJava', JavaCompile) {
-                // The compiler plugin requires --add-exports to access types in the compiler module
-                // Previously, this plugin incorrectly put --add-exports on the compilerArgs (rather than
-                // the forkOptions that would apply to the compiler plugin in the compiler context).
-                // --add-exports is by default incompatible with `--release`.
-                options.compilerArgumentProviders.add({ ['--release', '11'] } as CommandLineArgumentProvider)
-                options.compilerArgumentProviders.add({ ['-Xplugin:SomePlugin'] } as CommandLineArgumentProvider)
-            }
-            """);
-
-        gradle.withArgs("compileJava").buildsSuccessfully();
-    }
-
-    @Test
-    void compiling_using_the_release_and_add_exports_compiler_args_at_the_same_time_works(
-            GradleInvoker gradle, RootProject rootProject) {
-
-        // By default, using the `--release` (added here in the test) and `--add-exports` (added by the
-        // plugin under test because we've added asked for a module export in moduleJvmArgs) arguments
-        // in compilerArgs will cause a compiler error as it stops you using them together for no real reason.
-        //
-        // The error we're trying to avoid is:
-        //     error: exporting a package from system module jdk.compiler is not allowed with --release
-        //
-        // This test is checking that we can use them together, with the application of some hackery.
-
-        rootProject.buildGradle().append("""
-            moduleJvmArgs {
-               exports = ['jdk.compiler/com.sun.tools.javac.code']
-            }
-
-            tasks.named('compileJava', JavaCompile) {
-                options.fork = true
-                options.compilerArgumentProviders.add({ ['--release', '11'] } as CommandLineArgumentProvider)
-
-                doFirst {
-                    println "Fork args: ${options.forkOptions.allJvmArgs}"
-                    println "Compiler args: ${options.allCompilerArgs}"
-                }
-            }
-            """);
-
-        rootProject.mainSourceSet().java().writeClass("""
-            package com;
-            public class Example {
-                public static void main(String[] args) {
-                    com.sun.tools.javac.code.Symbol.class.toString();
-                }
-            }
-            """);
-
-        gradle.withArgs("compileJava").buildsSuccessfully();
-    }
-
-    @Test
-    void builds_javadoc_with_locally_defined_exports(GradleInvoker gradle, RootProject rootProject) {
-        rootProject.buildGradle().append("""
-            moduleJvmArgs {
-               exports = ['jdk.compiler/com.sun.tools.javac.code']
-            }
-            """);
-
-        rootProject.mainSourceSet().java().writeClass("""
-            package com;
-            public class Example {
-                /**
-                 * Javadoc {@link com.sun.tools.javac.code.Symbol}.
-                 * @param args Program arguments
-                 */
-                public static void main(String[] args) {
-                    com.sun.tools.javac.code.Symbol.class.toString();
-                }
-            }
-            """);
-
-        gradle.withArgs("javadoc").buildsSuccessfully();
-    }
-
-    @Test
-    void builds_javadoc_with_locally_defined_opens(GradleInvoker gradle, RootProject rootProject) {
-        rootProject.buildGradle().append("""
-            moduleJvmArgs {
-               opens = ['jdk.compiler/com.sun.tools.javac.code']
-            }
-            """);
-
-        rootProject.mainSourceSet().java().writeClass("""
-            package com;
-            public class Example {
-                /**
-                 * Javadoc {@link com.sun.tools.javac.code.Symbol}.
-                 * @param args Program arguments
-                 */
-                public static void main(String[] args) {
-                    com.sun.tools.javac.code.Symbol.class.toString();
-                }
-            }
-            """);
-
-        gradle.withArgs("javadoc").buildsSuccessfully();
-    }
-
-    @Test
-    void runs_with_locally_defined_exports(GradleInvoker gradle, RootProject rootProject) {
-        rootProject.buildGradle().append("""
-            moduleJvmArgs {
-               exports = ['java.management/sun.management']
-            }
-            """);
-
-        rootProject.mainSourceSet().java().writeClass("""
-            package com;
-            public class Example {
-                public static void main(String[] args) {
-                    System.out.println(String.join(
-                        " ",
-                        java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments()));
-                }
-            }
-            """);
-
-        InvocationResult result = gradle.withArgs("run").buildsSuccessfully();
-
-        // Gradle appears to normalize args, joining '--add-exports java.management/sun.management=ALL-UNNAMED'
-        // with an equals.
-        assertThat(result.output()).contains("--add-exports=java.management/sun.management=ALL-UNNAMED");
-    }
-
-    @Test
-    void runs_with_locally_defined_exports_with_the_release_plugin_not_toolchains(
-            GradleInvoker gradle, RootProject rootProject) {
-
-        rootProject.buildGradle().prepend("""
-            plugins {
-                id 'com.palantir.baseline-release-compatibility'
-            }
-            """);
-
-        rootProject.buildGradle().append("""
-            moduleJvmArgs {
-               exports = ['java.management/sun.management']
-            }
-            sourceCompatibility = 11
-            """);
-
-        rootProject.mainSourceSet().java().writeClass("""
-            package com;
-            public class Example {
-                public static void main(String[] args) {
-                    System.out.println(String.join(
-                        " ",
-                        java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments()));
-                }
-            }
-            """);
-
-        InvocationResult result = gradle.withArgs("run").buildsSuccessfully();
-
-        // Gradle appears to normalize args, joining '--add-exports java.management/sun.management=ALL-UNNAMED'
-        // with an equals.
-        assertThat(result.output()).contains("--add-exports=java.management/sun.management=ALL-UNNAMED");
-    }
-
-    @Test
-    void runs_with_locally_defined_opens(GradleInvoker gradle, RootProject rootProject) {
-        rootProject.buildGradle().append("""
-            moduleJvmArgs {
-               opens 'java.management/sun.management'
-            }
-            """);
-
-        rootProject.mainSourceSet().java().writeClass("""
-            package com;
-            public class Example {
-                public static void main(String[] args) {
-                    System.out.println(String.join(
-                        " ",
-                        java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments()));
-                }
-            }
-            """);
-
-        InvocationResult result = gradle.withArgs("run").buildsSuccessfully();
-        assertThat(result.output()).contains("--add-opens=java.management/sun.management=ALL-UNNAMED");
-    }
-
-    @Test
-    void adds_locally_defined_exports_to_the_jar_manifest(GradleInvoker gradle, RootProject rootProject)
-            throws IOException {
-
-        rootProject.buildGradle().append("""
-            moduleJvmArgs {
-               exports = ['java.management/sun.management']
-            }
-            """);
-
-        rootProject.mainSourceSet().java().writeClass("""
-            package com;
-            public class Example {
-                public static void main(String[] args) {
-                    System.out.println(String.join(
-                        " ",
-                        java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments()));
-                }
-            }
-            """);
-
-        gradle.withArgs("jar").buildsSuccessfully();
-
-        File libsDir = rootProject.buildDir().path().resolve("libs").toFile();
-        JarFile jarFile = Arrays.stream(libsDir.listFiles())
-                .filter(file -> file.getName().endsWith(".jar"))
-                .map(file -> {
-                    try {
-                        return new JarFile(file);
-                    } catch (IOException e) {
-                        throw new UncheckedIOException(e);
+            rootProject.mainSourceSet().java().writeClass("""
+                package com;
+                public class Example {
+                    public static void main(String[] args) {
+                        com.sun.tools.javac.code.Symbol.class.toString();
                     }
-                })
-                .findFirst()
-                .orElseThrow();
-        String manifestValue = jarFile.getManifest().getMainAttributes().getValue("Add-Exports");
-        assertThat(manifestValue).isEqualTo("java.management/sun.management");
-
-        assertThat(jarFile.getManifest().getMainAttributes().containsKey("Baseline-Enable-Preview"))
-                .isFalse();
-    }
-
-    @Test
-    void adds_baseline_enable_preview_attribute_to_jar_manifest(GradleInvoker gradle, RootProject rootProject)
-            throws IOException {
-
-        rootProject.buildGradle().append("""
-            javaVersions {
-                runtime = '11_PREVIEW'
-            }
-            """);
-
-        rootProject.mainSourceSet().java().writeClass("""
-            package com;
-            public class Example {
-                public static void main(String[] args) {
                 }
-            }
-            """);
+                """);
 
-        gradle.withArgs("jar").buildsSuccessfully();
+            gradle.withArgs("compileJava").buildsSuccessfully();
+        }
 
-        File libsDir = rootProject.buildDir().path().resolve("libs").toFile();
-        JarFile jarFile = Arrays.stream(libsDir.listFiles())
-                .filter(file -> file.getName().endsWith(".jar"))
-                .map(file -> {
-                    try {
-                        return new JarFile(file);
-                    } catch (IOException e) {
-                        throw new UncheckedIOException(e);
+        @Test
+        void compiles_with_locally_defined_opens(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                moduleJvmArgs {
+                   opens = ['jdk.compiler/com.sun.tools.javac.code']
+                }
+                """);
+
+            rootProject.mainSourceSet().java().writeClass("""
+                package com;
+                public class Example {
+                    public static void main(String[] args) {
+                        com.sun.tools.javac.code.Symbol.class.toString();
                     }
-                })
-                .findFirst()
-                .orElseThrow();
-        String manifestValue = jarFile.getManifest().getMainAttributes().getValue("Baseline-Enable-Preview");
-        assertThat(manifestValue).isEqualTo("11");
+                }
+                """);
+
+            gradle.withArgs("compileJava").buildsSuccessfully();
+        }
     }
 
-    @Test
-    void executes_with_externally_defined_exports(GradleInvoker gradle, RootProject rootProject) {
-        createJarWithExport(rootProject, "test.jar");
-
-        rootProject.buildGradle().append("""
-            dependencies {
-                implementation files('test.jar')
-            }
-            """);
-
-        rootProject.mainSourceSet().java().writeClass("""
-            package com;
-            public class Example {
-                public static void main(String[] args) {
-                    System.out.println(String.join(
-                        " ",
-                        java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments()));
+    @Nested
+    class Javadoc {
+        @Test
+        void builds_javadoc_with_locally_defined_exports(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                moduleJvmArgs {
+                   exports = ['jdk.compiler/com.sun.tools.javac.code']
                 }
-            }
-            """);
+                """);
 
-        InvocationResult result = gradle.withArgs("run").buildsSuccessfully();
-
-        // Gradle appears to normalize args, joining '--add-exports java.management/sun.management=ALL-UNNAMED'
-        // with an equals.
-        assertThat(result.output()).contains("--add-exports=java.management/sun.management=ALL-UNNAMED");
-    }
-
-    @Test
-    void handles_jars_with_no_manifest(GradleInvoker gradle, RootProject rootProject) {
-        String jarName = "test.jar";
-        createEmptyJar(rootProject, jarName);
-
-        rootProject.buildGradle().append("""
-            dependencies {
-                implementation files('test.jar')
-            }
-            """);
-
-        rootProject.mainSourceSet().java().writeClass("""
-            package com;
-            public class Example {
-                public static void main(String[] args) {
-                    System.out.println(String.join(
-                        " ",
-                        java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments()));
-                }
-            }
-            """);
-
-        InvocationResult result = gradle.withArgs("run").buildsSuccessfully();
-        assertThat(result.output()).doesNotContain("--add-exports");
-    }
-
-    @Test
-    void does_not_add_externally_defined_exports_to_the_jar_manifest(GradleInvoker gradle, RootProject rootProject)
-            throws IOException {
-
-        createJarWithExport(rootProject, "test.jar");
-
-        rootProject.buildGradle().append("""
-            dependencies {
-                implementation files('test.jar')
-            }
-            """);
-
-        rootProject.mainSourceSet().java().writeClass("""
-            package com;
-            public class Example {
-                public static void main(String[] args) {
-                    System.out.println(String.join(
-                        " ",
-                        java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments()));
-                }
-            }
-            """);
-
-        gradle.withArgs("jar").buildsSuccessfully();
-
-        File libsDir = rootProject.buildDir().path().resolve("libs").toFile();
-        JarFile jarFile = Arrays.stream(libsDir.listFiles())
-                .filter(file -> file.getName().endsWith(".jar"))
-                .map(file -> {
-                    try {
-                        return new JarFile(file);
-                    } catch (IOException e) {
-                        throw new UncheckedIOException(e);
+            rootProject.mainSourceSet().java().writeClass("""
+                package com;
+                public class Example {
+                    /**
+                     * Javadoc {@link com.sun.tools.javac.code.Symbol}.
+                     * @param args Program arguments
+                     */
+                    public static void main(String[] args) {
+                        com.sun.tools.javac.code.Symbol.class.toString();
                     }
-                })
-                .findFirst()
-                .orElseThrow();
-        String manifestValue = jarFile.getManifest().getMainAttributes().getValue("Add-Exports");
-        assertThat(manifestValue).isNull();
+                }
+                """);
+
+            gradle.withArgs("javadoc").buildsSuccessfully();
+        }
+
+        @Test
+        void builds_javadoc_with_locally_defined_opens(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                moduleJvmArgs {
+                   opens = ['jdk.compiler/com.sun.tools.javac.code']
+                }
+                """);
+
+            rootProject.mainSourceSet().java().writeClass("""
+                package com;
+                public class Example {
+                    /**
+                     * Javadoc {@link com.sun.tools.javac.code.Symbol}.
+                     * @param args Program arguments
+                     */
+                    public static void main(String[] args) {
+                        com.sun.tools.javac.code.Symbol.class.toString();
+                    }
+                }
+                """);
+
+            gradle.withArgs("javadoc").buildsSuccessfully();
+        }
+    }
+
+    @Nested
+    class ApplicationRun {
+        @Test
+        void runs_with_locally_defined_exports(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                moduleJvmArgs {
+                   exports = ['java.management/sun.management']
+                }
+                """);
+
+            rootProject.mainSourceSet().java().writeClass("""
+                package com;
+                public class Example {
+                    public static void main(String[] args) {
+                        System.out.println(String.join(
+                            " ",
+                            java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments()));
+                    }
+                }
+                """);
+
+            InvocationResult result = gradle.withArgs("run").buildsSuccessfully();
+
+            // Gradle appears to normalize args, joining '--add-exports java.management/sun.management=ALL-UNNAMED'
+            // with an equals.
+            assertThat(result.output()).contains("--add-exports=java.management/sun.management=ALL-UNNAMED");
+        }
+
+        @Test
+        void runs_with_locally_defined_exports_with_the_release_plugin_not_toolchains(
+                GradleInvoker gradle, RootProject rootProject) {
+
+            rootProject.buildGradle().prepend("""
+                plugins {
+                    id 'com.palantir.baseline-release-compatibility'
+                }
+                """);
+
+            rootProject.buildGradle().append("""
+                moduleJvmArgs {
+                   exports = ['java.management/sun.management']
+                }
+                sourceCompatibility = 11
+                """);
+
+            rootProject.mainSourceSet().java().writeClass("""
+                package com;
+                public class Example {
+                    public static void main(String[] args) {
+                        System.out.println(String.join(
+                            " ",
+                            java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments()));
+                    }
+                }
+                """);
+
+            InvocationResult result = gradle.withArgs("run").buildsSuccessfully();
+
+            // Gradle appears to normalize args, joining '--add-exports java.management/sun.management=ALL-UNNAMED'
+            // with an equals.
+            assertThat(result.output()).contains("--add-exports=java.management/sun.management=ALL-UNNAMED");
+        }
+
+        @Test
+        void runs_with_locally_defined_opens(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                moduleJvmArgs {
+                   opens 'java.management/sun.management'
+                }
+                """);
+
+            rootProject.mainSourceSet().java().writeClass("""
+                package com;
+                public class Example {
+                    public static void main(String[] args) {
+                        System.out.println(String.join(
+                            " ",
+                            java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments()));
+                    }
+                }
+                """);
+
+            InvocationResult result = gradle.withArgs("run").buildsSuccessfully();
+            assertThat(result.output()).contains("--add-opens=java.management/sun.management=ALL-UNNAMED");
+        }
+
+        @Test
+        void executes_with_externally_defined_exports(GradleInvoker gradle, RootProject rootProject) {
+            createJarWithExport(rootProject, "test.jar");
+
+            rootProject.buildGradle().append("""
+                dependencies {
+                    implementation files('test.jar')
+                }
+                """);
+
+            rootProject.mainSourceSet().java().writeClass("""
+                package com;
+                public class Example {
+                    public static void main(String[] args) {
+                        System.out.println(String.join(
+                            " ",
+                            java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments()));
+                    }
+                }
+                """);
+
+            InvocationResult result = gradle.withArgs("run").buildsSuccessfully();
+
+            // Gradle appears to normalize args, joining '--add-exports java.management/sun.management=ALL-UNNAMED'
+            // with an equals.
+            assertThat(result.output()).contains("--add-exports=java.management/sun.management=ALL-UNNAMED");
+        }
+    }
+
+    @Nested
+    class JarManifest {
+        @Test
+        void adds_locally_defined_exports_to_the_jar_manifest(GradleInvoker gradle, RootProject rootProject)
+                throws IOException {
+
+            rootProject.buildGradle().append("""
+                moduleJvmArgs {
+                   exports = ['java.management/sun.management']
+                }
+                """);
+
+            rootProject.mainSourceSet().java().writeClass("""
+                package com;
+                public class Example {
+                    public static void main(String[] args) {
+                        System.out.println(String.join(
+                            " ",
+                            java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments()));
+                    }
+                }
+                """);
+
+            gradle.withArgs("jar").buildsSuccessfully();
+
+            File libsDir = rootProject.buildDir().path().resolve("libs").toFile();
+            JarFile jarFile = Arrays.stream(libsDir.listFiles())
+                    .filter(file -> file.getName().endsWith(".jar"))
+                    .map(file -> {
+                        try {
+                            return new JarFile(file);
+                        } catch (IOException e) {
+                            throw new UncheckedIOException(e);
+                        }
+                    })
+                    .findFirst()
+                    .orElseThrow();
+            String manifestValue = jarFile.getManifest().getMainAttributes().getValue("Add-Exports");
+            assertThat(manifestValue).isEqualTo("java.management/sun.management");
+
+            assertThat(jarFile.getManifest().getMainAttributes().containsKey("Baseline-Enable-Preview"))
+                    .isFalse();
+        }
+
+        @Test
+        void adds_baseline_enable_preview_attribute_to_jar_manifest(GradleInvoker gradle, RootProject rootProject)
+                throws IOException {
+
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    runtime = '11_PREVIEW'
+                }
+                """);
+
+            rootProject.mainSourceSet().java().writeClass("""
+                package com;
+                public class Example {
+                    public static void main(String[] args) {
+                    }
+                }
+                """);
+
+            gradle.withArgs("jar").buildsSuccessfully();
+
+            File libsDir = rootProject.buildDir().path().resolve("libs").toFile();
+            JarFile jarFile = Arrays.stream(libsDir.listFiles())
+                    .filter(file -> file.getName().endsWith(".jar"))
+                    .map(file -> {
+                        try {
+                            return new JarFile(file);
+                        } catch (IOException e) {
+                            throw new UncheckedIOException(e);
+                        }
+                    })
+                    .findFirst()
+                    .orElseThrow();
+            String manifestValue = jarFile.getManifest().getMainAttributes().getValue("Baseline-Enable-Preview");
+            assertThat(manifestValue).isEqualTo("11");
+        }
+
+        @Test
+        void handles_jars_with_no_manifest(GradleInvoker gradle, RootProject rootProject) {
+            String jarName = "test.jar";
+            createEmptyJar(rootProject, jarName);
+
+            rootProject.buildGradle().append("""
+                dependencies {
+                    implementation files('test.jar')
+                }
+                """);
+
+            rootProject.mainSourceSet().java().writeClass("""
+                package com;
+                public class Example {
+                    public static void main(String[] args) {
+                        System.out.println(String.join(
+                            " ",
+                            java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments()));
+                    }
+                }
+                """);
+
+            InvocationResult result = gradle.withArgs("run").buildsSuccessfully();
+            assertThat(result.output()).doesNotContain("--add-exports");
+        }
+
+        @Test
+        void does_not_add_externally_defined_exports_to_the_jar_manifest(GradleInvoker gradle, RootProject rootProject)
+                throws IOException {
+
+            createJarWithExport(rootProject, "test.jar");
+
+            rootProject.buildGradle().append("""
+                dependencies {
+                    implementation files('test.jar')
+                }
+                """);
+
+            rootProject.mainSourceSet().java().writeClass("""
+                package com;
+                public class Example {
+                    public static void main(String[] args) {
+                        System.out.println(String.join(
+                            " ",
+                            java.lang.management.ManagementFactory.getRuntimeMXBean().getInputArguments()));
+                    }
+                }
+                """);
+
+            gradle.withArgs("jar").buildsSuccessfully();
+
+            File libsDir = rootProject.buildDir().path().resolve("libs").toFile();
+            JarFile jarFile = Arrays.stream(libsDir.listFiles())
+                    .filter(file -> file.getName().endsWith(".jar"))
+                    .map(file -> {
+                        try {
+                            return new JarFile(file);
+                        } catch (IOException e) {
+                            throw new UncheckedIOException(e);
+                        }
+                    })
+                    .findFirst()
+                    .orElseThrow();
+            String manifestValue = jarFile.getManifest().getMainAttributes().getValue("Add-Exports");
+            assertThat(manifestValue).isNull();
+        }
     }
 
     @Test
