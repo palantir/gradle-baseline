@@ -65,10 +65,11 @@ dependencies {
 
 // Baseline errorprone needs to give jars to the compilation process to enable testing, so we publish to maven
 // local first then they are available to the test process.
-tasks.test.dependsOn tasks.findByPath(':gradle-baseline-java-config:publishToMavenLocal')
-tasks.test.dependsOn tasks.findByPath(':baseline-error-prone:publishToMavenLocal')
-tasks.test.dependsOn tasks.findByPath(':baseline-null-away:publishToMavenLocal')
-tasks.test.dependsOn tasks.publishToMavenLocal
+tasks.test.dependsOn ':gradle-baseline-java-config:publishToMavenLocal'
+tasks.test.dependsOn ':baseline-error-prone:publishToMavenLocal'
+tasks.test.dependsOn ':baseline-module-jvm-args-compiler-plugins:publishToMavenLocal'
+tasks.test.dependsOn ':baseline-null-away:publishToMavenLocal'
+tasks.test.dependsOn tasks.named('publishToMavenLocal')
 
 test {
     environment 'CIRCLE_ARTIFACTS', "${buildDir}/artifacts"
@@ -77,6 +78,7 @@ test {
     // This sets the baselineErrorProneGradle property so that the tests know which version of baseline-error-prone
     // to request from mavenLocal()
     environment 'ORG_GRADLE_PROJECT_baselineErrorProneVersion', project.version
+    environment 'ORG_GRADLE_PROJECT_baselineModuleJvmArgsCompilerPluginsVersion', project.version
 
     systemProperty 'ignoreDeprecations', 'true'
 }

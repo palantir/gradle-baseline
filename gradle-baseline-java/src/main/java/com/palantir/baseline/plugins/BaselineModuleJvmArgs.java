@@ -90,14 +90,33 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
             BaselineModuleJvmArgsExtension extension =
                     project.getExtensions().create(EXTENSION_NAME, BaselineModuleJvmArgsExtension.class, project);
 
-            // javac isn't provided `--add-exports` args for the time being due to
-            // https://github.com/gradle/gradle/issues/18824
-            // However, we set sourceCompatibility in BaselineJavaVersion to opt out of the '--release' flag.
+            String version = Optional.ofNullable(
+                            (String) project.findProperty("baselineModuleJvmArgsCompilerPluginsVersion"))
+                    .or(() -> Optional.ofNullable(
+                            BaselineErrorProne.class.getPackage().getImplementationVersion()))
+                    .orElseThrow(() -> new RuntimeException(
+                            "baseline-module-jvm-args-compiler-plugins implementation version not found"));
+
             project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
+                project.getDependencies()
+                        .add(
+                                sourceSet.getAnnotationProcessorConfigurationName(),
+                                "com.palantir.baseline:baseline-module-jvm-args-compiler-plugins:" + version);
+
                 TaskProvider<JavaCompile> javaCompileProvider =
                         project.getTasks().named(sourceSet.getCompileJavaTaskName(), JavaCompile.class);
 
                 javaCompileProvider.configure(javaCompile -> {
+                    javaCompile.getOptions().getCompilerArgumentProviders().add(new CommandLineArgumentProvider() {
+                        private static final String COMPILER_PLUGIN_NAME = "-Xplugin:"
+                                + "AllowReleaseAndAddExportsToBeUsedTogetherByChangingCompilerInternalsUsingReflection";
+
+                        @Override
+                        public Iterable<String> asArguments() {
+                            return List.of(COMPILER_PLUGIN_NAME);
+                        }
+                    });
+
                     Provider<Boolean> baselineJavaVersionsEnabled =
                             project.provider(() -> project.getPlugins().hasPlugin(BaselineJavaVersion.class));
 
