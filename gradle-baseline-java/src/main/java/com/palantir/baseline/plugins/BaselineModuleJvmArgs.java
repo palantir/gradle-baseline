@@ -232,6 +232,9 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
         }
 
         project.getTasks().named(sourceSet.getJavadocTaskName(), Javadoc.class, javadoc -> {
+            // Javadoc task is horrible. There's no lazy properties/CommandLineArgumentProviders, so we have to
+            // resort to this fresh hell of changing its configuration in a task action before it runs. Once
+            // Gradle have made this lazy, this should be rewritten.
             javadoc.doFirst(new Action<Task>() {
                 @Override
                 public void execute(Task _task) {

@@ -25,7 +25,24 @@ import com.sun.tools.javac.util.Context;
 import java.lang.reflect.Field;
 
 /**
- * The name is intentionally long to instil the appropriate level of fear.
+ * The JDK devs arbitrarily decided that you cannot use the `--release` arg along with `--add-exports`
+ * if it's exporting a "system module" ie one that is shipped with the JDK. This is problematic, as if
+ * we want to use `--release` to use a higher JDK to compile against a lower version of the Java
+ * standard library, when someone uses BaselineModuleJvmArgs to add an exports or opens arg to
+ * access system modules, they will immediately face this error and be unable to compile. A good example
+ * of something that needs extra exports are compiler plugin eg any sort error-prone code, including
+ * custom BugCheckers. Or even this very compiler plugin (see build.gradle)!
+ * <br><br>
+ * This is a problem I, frankly, just don't want to have. So we "fix" it with this Javac plugin that
+ * will force the field
+ * <a href="https://github.com/openjdk/jdk/blame/a33aa65fbc70a91fe21e9016c393bb5a764cd75a/src/jdk.compiler/share/classes/com/sun/tools/javac/comp/Modules.java#L150">allowAccessIntoSystem</a>
+ * in Javac's Modules component to be true. We are very fortunate that the error does not actually get
+ * created until after Plugin initialisation occurs
+ * (<a href="https://github.com/openjdk/jdk/blame/a33aa65fbc70a91fe21e9016c393bb5a764cd75a/src/jdk.compiler/share/classes/com/sun/tools/javac/comp/Modules.java#L1676">here</a>)
+ * meaning we can change what we need to change during within a self-contained Plugin.
+ * <br><br>
+ * The name is intentionally long to instil the appropriate level of fear and make it obvious there is
+ * serious customisation happening to the compiler.
  */
 @AutoService(Plugin.class)
 public final class AllowReleaseAndAddExportsToBeUsedTogetherByChangingCompilerInternalsUsingReflection
