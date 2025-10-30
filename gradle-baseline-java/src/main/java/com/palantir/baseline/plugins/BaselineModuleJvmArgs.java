@@ -95,6 +95,8 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
         BaselineModuleJvmArgsExtension extension =
                 project.getExtensions().create(EXTENSION_NAME, BaselineModuleJvmArgsExtension.class, project);
 
+        addReleaseAndAddExportsArgsFixingCompilerPlugin(project);
+
         // Derive this plugin's `enablePreview` property from BaselineJavaVersion's extension
         project.getPlugins().withType(BaselineJavaVersion.class, _unused -> {
             BaselineJavaVersionExtension javaVersionsExtension =
@@ -158,6 +160,34 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
         });
     }
 
+    private void addReleaseAndAddExportsArgsFixingCompilerPlugin(Project project) {
+        String version = Optional.ofNullable(
+                        (String) project.findProperty("baselineModuleJvmArgsCompilerPluginsVersion"))
+                .or(() -> Optional.ofNullable(
+                        BaselineErrorProne.class.getPackage().getImplementationVersion()))
+                .orElseThrow(() -> new RuntimeException(
+                        "baseline-module-jvm-args-compiler-plugins implementation version not found"));
+
+        project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
+            project.getDependencies()
+                    .add(
+                            sourceSet.getAnnotationProcessorConfigurationName(),
+                            "com.palantir.baseline:baseline-module-jvm-args-compiler-plugins:" + version);
+
+            project.getTasks().named(sourceSet.getCompileJavaTaskName(), JavaCompile.class, javaCompile -> {
+                javaCompile.getOptions().getCompilerArgumentProviders().add(new CommandLineArgumentProvider() {
+                    private static final String COMPILER_PLUGIN_NAME =
+                            "AllowReleaseAndAddExportsToBeUsedTogetherByChangingCompilerInternalsUsingReflection";
+
+                    @Override
+                    public Iterable<String> asArguments() {
+                        return List.of("-Xplugin:" + COMPILER_PLUGIN_NAME);
+                    }
+                });
+            });
+        });
+    }
+
     private void configureSourceSet(Project project, SourceSet sourceSet, BaselineModuleJvmArgsExtension extension) {
         project.getTasks()
                 .named(sourceSet.getCompileJavaTaskName(), JavaCompile.class)
@@ -171,19 +201,26 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
     private static void configureJavaCompile(
             Project project, SourceSet sourceSet, BaselineModuleJvmArgsExtension extension, JavaCompile javaCompile) {
 
-        // javac isn't provided `--add-exports` args for the time being due to
-        // https://github.com/gradle/gradle/issues/18824
-        // However, we set sourceCompatibility in BaselineJavaVersion to opt out of the '--release' flag.
+        Provider<Boolean> baselineJavaVersionsEnabled =
+                project.provider(() -> project.getPlugins().hasPlugin(BaselineJavaVersion.class));
 
-        ModuleJvmArgsArgumentProvider provider = newModuleJvmArgsArgumentProvider(
+        ModuleJvmArgsArgumentProvider forkOptionsArgProvider = newModuleJvmArgsArgumentProvider(
                 project,
-                extension,
-                project.files(project.getConfigurations().named(sourceSet.getAnnotationProcessorConfigurationName())),
+                Optional.empty(),
+                Optional.of(project.files(
+                        project.getConfigurations().named(sourceSet.getAnnotationProcessorConfigurationName()))),
                 javaCompile.getName());
-        provider.getBaselineJavaVersionEnabled()
-                .set(project.provider(() -> project.getPlugins().hasPlugin(BaselineJavaVersion.class)));
 
-        javaCompile.getOptions().getCompilerArgumentProviders().add(provider);
+        forkOptionsArgProvider.getBaselineJavaVersionEnabled().set(baselineJavaVersionsEnabled);
+
+        javaCompile.getOptions().getForkOptions().getJvmArgumentProviders().add(forkOptionsArgProvider);
+
+        ModuleJvmArgsArgumentProvider compilerArgsProvider = newModuleJvmArgsArgumentProvider(
+                project, Optional.of(extension), Optional.empty(), javaCompile.getName());
+
+        compilerArgsProvider.getBaselineJavaVersionEnabled().set(baselineJavaVersionsEnabled);
+
+        javaCompile.getOptions().getCompilerArgumentProviders().add(compilerArgsProvider);
 
         setTaskInputsFromExtension(javaCompile, extension);
     }
@@ -256,10 +293,22 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
             BaselineModuleJvmArgsExtension extension,
             ConfigurableFileCollection classpath,
             String taskName) {
+        return newModuleJvmArgsArgumentProvider(project, Optional.of(extension), Optional.of(classpath), taskName);
+    }
+
+    private static ModuleJvmArgsArgumentProvider newModuleJvmArgsArgumentProvider(
+            Project project,
+            Optional<BaselineModuleJvmArgsExtension> useExportsOpensFromExtension,
+            Optional<ConfigurableFileCollection> useExportsOpensFromClasspath,
+            String taskName) {
         ModuleJvmArgsArgumentProvider provider = project.getObjects().newInstance(ModuleJvmArgsArgumentProvider.class);
-        provider.getExports().set(extension.exports());
-        provider.getOpens().set(extension.opens());
-        provider.getClasspath().from(classpath);
+        useExportsOpensFromExtension.ifPresent(extension -> {
+            provider.getExports().set(extension.exports());
+            provider.getOpens().set(extension.opens());
+        });
+        useExportsOpensFromClasspath.ifPresent(classpath -> {
+            provider.getClasspath().from(classpath);
+        });
         provider.getProjectPath().set(project.getPath());
         provider.getTaskName().set(taskName);
         return provider;
