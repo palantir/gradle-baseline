@@ -307,21 +307,13 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
             BaselineModuleJvmArgsExtension extension,
             ConfigurableFileCollection classpath,
             String taskName) {
-        return newModuleJvmArgsArgumentProvider(project, Optional.of(extension), Optional.of(classpath), taskName);
-    }
-
-    private static ModuleJvmArgsArgumentProvider newModuleJvmArgsArgumentProvider(
-            Project project,
-            Optional<BaselineModuleJvmArgsExtension> useExportsOpensFromExtension,
-            Optional<ConfigurableFileCollection> useExportsOpensFromClasspath,
-            String taskName) {
         ModuleJvmArgsArgumentProvider provider = project.getObjects().newInstance(ModuleJvmArgsArgumentProvider.class);
-        useExportsOpensFromExtension.ifPresent(extension -> {
-            provider.getExports().set(extension.exports());
-            provider.getOpens().set(extension.opens());
+        Optional.of(extension).ifPresent(extension1 -> {
+            provider.getExports().set(extension1.exports());
+            provider.getOpens().set(extension1.opens());
         });
-        useExportsOpensFromClasspath.ifPresent(classpath -> {
-            provider.getClasspath().from(classpath);
+        Optional.of(classpath).ifPresent(classpath1 -> {
+            provider.getClasspath().from(classpath1);
         });
         provider.getProjectPath().set(project.getPath());
         provider.getTaskName().set(taskName);
