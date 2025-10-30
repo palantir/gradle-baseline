@@ -201,6 +201,19 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
     private static void configureJavaCompile(
             Project project, SourceSet sourceSet, BaselineModuleJvmArgsExtension extension, JavaCompile javaCompile) {
 
+        // We will *always* fork the compiler - for both consistency and correctness:
+        // Consistency: when fork=false, Gradle will sometimes still make a forked Gradle worker daemon
+        //              for compilation! If the main Gradle daemon is running on the correct JDK major version,
+        //              Gradle will just use the current daemon. However, if the main Gradle daemon is
+        //              running with a different JDK Gradle will fork off a worker daemon to do the compilation.
+        //              There are material differences in behaviour when it is forked vs not forked, so
+        //              we always for consistency.
+        // Correctness: If fork=false and Gradle thinks it can reuse the main Gradle daemon as it's running
+        //              with the correct JDK major version, the main daemon will not necessarily have
+        //              the required --add-exports/--add-opens set on the process running the compilations,
+        //              *even if* we've specified them in forkOptions. Forking stops this from happening.
+        javaCompile.getOptions().setFork(true);
+
         Provider<Boolean> baselineJavaVersionsEnabled =
                 project.provider(() -> project.getPlugins().hasPlugin(BaselineJavaVersion.class));
 
