@@ -23,6 +23,7 @@ import com.palantir.gradle.testing.execution.InvocationResult;
 import com.palantir.gradle.testing.execution.TaskOutcome;
 import com.palantir.gradle.testing.junit.GradlePluginTests;
 import com.palantir.gradle.testing.project.RootProject;
+import com.palantir.gradle.testing.project.SubProject;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -58,8 +59,10 @@ class BaselineModuleJvmArgsIntegrationTest {
                 libraryTarget = Runtime.version().version().get(0)
             }
 
-            repositories {
-                mavenCentral()
+            allprojects {
+                repositories {
+                    mavenCentral()
+                }
             }
             """);
     }
@@ -151,6 +154,62 @@ class BaselineModuleJvmArgsIntegrationTest {
                     assertThat(line).startsWith("compilerArgs:");
                     assertThat(line).contains("--add-exports, java.management/sun.management");
                 });
+    }
+
+    @Test
+    void can_use_a_compiler_plugin_that_requires_access_to_system_modules_at_the_same_time_as_the_release_args(
+            GradleInvoker gradle, RootProject rootProject, SubProject compilerPlugin) {
+
+        compilerPlugin.buildGradle().append("""
+                plugins {
+                    id 'java-library'
+                    id 'com.palantir.baseline-module-jvm-args'
+                }
+
+                dependencies {
+                    annotationProcessor 'com.google.auto.service:auto-service:1.1.1'
+                    compileOnly 'com.google.auto.service:auto-service:1.1.1'
+                }
+
+                moduleJvmArgs {
+                    exports = ['jdk.compiler/com.sun.tools.javac.code']
+                }
+            """);
+
+        compilerPlugin.mainSourceSet().java().writeClass("""
+            package com;
+            import com.sun.source.util.JavacTask;
+            import com.sun.source.util.Plugin;
+            import com.google.auto.service.AutoService;
+
+            @AutoService(Plugin.class)
+            public final class SomePlugin implements Plugin {
+                public String getName() {
+                    return "SomePlugin";
+                }
+
+                public void init(JavacTask task, String... args) {
+                    com.sun.tools.javac.code.Symbol.class.toString();
+                }
+            }
+            """);
+
+        rootProject.buildGradle().append("""
+            dependencies {
+                annotationProcessor project(':compilerPlugin')
+            }
+
+            tasks.named('compileJava', JavaCompile) {
+                // The compiler plugin requires --add-exports to access types in the compiler module
+                // Previously, this plugin incorrectly put --add-exports on the compilerArgs (rather than
+                // the forkOptions that would apply to the compiler plugin in the compiler context).
+                // --add-exports is by default incompatible with `--release`.
+                options.compilerArgumentProviders.add({ ['--release', '11'] })
+                options.compilerArgumentProviders.add({ ['-Xplugin:SomePlugin'] })
+            }
+            """);
+
+        gradle.withArgs("compileJava").buildsSuccessfully();
     }
 
     @Test
