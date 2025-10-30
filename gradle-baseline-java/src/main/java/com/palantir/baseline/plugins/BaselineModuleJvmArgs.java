@@ -214,24 +214,25 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
         //              *even if* we've specified them in forkOptions. Forking stops this from happening.
         javaCompile.getOptions().setFork(true);
 
-        Provider<Boolean> baselineJavaVersionsEnabled =
-                project.provider(() -> project.getPlugins().hasPlugin(BaselineJavaVersion.class));
-
-        ModuleJvmArgsArgumentProvider forkOptionsArgProvider = newModuleJvmArgsArgumentProvider(
-                project,
-                Optional.empty(),
-                Optional.of(project.files(
-                        project.getConfigurations().named(sourceSet.getAnnotationProcessorConfigurationName()))),
-                javaCompile.getName());
-
-        forkOptionsArgProvider.getBaselineJavaVersionEnabled().set(baselineJavaVersionsEnabled);
+        CompilerForkArgsArgumentProvider forkOptionsArgProvider =
+                project.getObjects().newInstance(CompilerForkArgsArgumentProvider.class);
+        forkOptionsArgProvider.getProjectPath().set(project.getPath());
+        forkOptionsArgProvider.getTaskName().set(javaCompile.getName());
+        forkOptionsArgProvider
+                .getClasspath()
+                .from(project.files(
+                        project.getConfigurations().named(sourceSet.getAnnotationProcessorConfigurationName())));
 
         javaCompile.getOptions().getForkOptions().getJvmArgumentProviders().add(forkOptionsArgProvider);
 
-        ModuleJvmArgsArgumentProvider compilerArgsProvider = newModuleJvmArgsArgumentProvider(
-                project, Optional.of(extension), Optional.empty(), javaCompile.getName());
-
-        compilerArgsProvider.getBaselineJavaVersionEnabled().set(baselineJavaVersionsEnabled);
+        CompilerArgsArgumentProvider compilerArgsProvider =
+                project.getObjects().newInstance(CompilerArgsArgumentProvider.class);
+        compilerArgsProvider.getExports().set(extension.exports());
+        compilerArgsProvider.getOpens().set(extension.opens());
+        compilerArgsProvider.getProjectPath().set(project.getPath());
+        compilerArgsProvider.getTaskName().set(javaCompile.getName());
+        compilerArgsProvider.getBaselineJavaVersionEnabled().set(project.provider(() -> project.getPlugins()
+                .hasPlugin(BaselineJavaVersion.class)));
 
         javaCompile.getOptions().getCompilerArgumentProviders().add(compilerArgsProvider);
 
@@ -433,34 +434,17 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
         public abstract Property<String> getProjectPath();
 
         @Internal
-        public abstract Property<Boolean> getBaselineJavaVersionEnabled();
-
-        @Internal
         public abstract Property<String> getTaskName();
 
         @Override
         public final Iterable<String> asArguments() {
-            boolean isCompilation = getBaselineJavaVersionEnabled().isPresent();
-            boolean isBaselineJavaVersionEnabled =
-                    getBaselineJavaVersionEnabled().getOrElse(false);
-
-            if (isCompilation && !isBaselineJavaVersionEnabled) {
-                log.debug(
-                        "BaselineModuleJvmArgs not applying args to compilation task {} on project {} due to lack of "
-                                + "BaselineJavaVersion",
-                        getTaskName().get(),
-                        getProjectPath().get());
-                return ImmutableList.of();
-            }
-
             ImmutableList<JarManifestModuleInfo> classpathInfo = collectClasspathInfo(getClasspath());
             Stream<String> allExports = Stream.concat(
                     getExports().get().stream(), classpathInfo.stream().flatMap(info -> info.exports().stream()));
             Stream<String> allOpens = Stream.concat(
                     getOpens().get().stream(), classpathInfo.stream().flatMap(info -> info.opens().stream()));
 
-            ImmutableList<String> args =
-                    isCompilation ? compilationArgs(allExports, allOpens) : runtimeArgs(allExports, allOpens);
+            ImmutableList<String> args = runtimeArgs(allExports, allOpens);
 
             log.debug(
                     "BaselineModuleJvmArgs executing {} on project {} with exports: {}",
@@ -468,14 +452,6 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                     getProjectPath().getOrNull(),
                     args);
             return args;
-        }
-
-        private static ImmutableList<String> compilationArgs(Stream<String> allExports, Stream<String> allOpens) {
-            return Stream.concat(allExports, allOpens)
-                    .distinct()
-                    .sorted()
-                    .flatMap(ModuleJvmArgsArgumentProvider::addExportArg)
-                    .collect(ImmutableList.toImmutableList());
         }
 
         private static ImmutableList<String> runtimeArgs(Stream<String> allExports, Stream<String> allOpens) {
@@ -491,6 +467,106 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
 
         private static Stream<String> addOpensArg(String modulePackagePair) {
             return Stream.of("--add-opens", modulePackagePair + "=ALL-UNNAMED");
+        }
+    }
+
+    public abstract static class CompilerForkArgsArgumentProvider implements CommandLineArgumentProvider {
+        private static final Logger log = Logging.getLogger(ModuleJvmArgsArgumentProvider.class);
+
+        @Internal
+        public abstract ConfigurableFileCollection getClasspath();
+
+        @Internal
+        public abstract Property<String> getProjectPath();
+
+        @Internal
+        public abstract Property<String> getTaskName();
+
+        @Override
+        public final Iterable<String> asArguments() {
+            ImmutableList<JarManifestModuleInfo> classpathInfo = collectClasspathInfo(getClasspath());
+            Stream<String> allExports = classpathInfo.stream().flatMap(info -> info.exports().stream());
+            Stream<String> allOpens = classpathInfo.stream().flatMap(info -> info.opens().stream());
+
+            ImmutableList<String> args = runtimeArgs(allExports, allOpens);
+
+            log.debug(
+                    "BaselineModuleJvmArgs executing {} on project {} with exports: {}",
+                    getTaskName().getOrNull(),
+                    getProjectPath().getOrNull(),
+                    args);
+            return args;
+        }
+
+        private static ImmutableList<String> runtimeArgs(Stream<String> allExports, Stream<String> allOpens) {
+            Stream<String> exportsArgs =
+                    allExports.distinct().sorted().flatMap(CompilerForkArgsArgumentProvider::addExportArg);
+            Stream<String> opensArgs =
+                    allOpens.distinct().sorted().flatMap(CompilerForkArgsArgumentProvider::addOpensArg);
+            return Stream.concat(exportsArgs, opensArgs).collect(ImmutableList.toImmutableList());
+        }
+
+        private static Stream<String> addExportArg(String modulePackagePair) {
+            return Stream.of("--add-exports", modulePackagePair + "=ALL-UNNAMED");
+        }
+
+        private static Stream<String> addOpensArg(String modulePackagePair) {
+            return Stream.of("--add-opens", modulePackagePair + "=ALL-UNNAMED");
+        }
+    }
+
+    public abstract static class CompilerArgsArgumentProvider implements CommandLineArgumentProvider {
+        private static final Logger log = Logging.getLogger(ModuleJvmArgsArgumentProvider.class);
+
+        @Internal
+        public abstract SetProperty<String> getExports();
+
+        @Internal
+        public abstract SetProperty<String> getOpens();
+
+        @Internal
+        public abstract Property<String> getProjectPath();
+
+        @Internal
+        public abstract Property<Boolean> getBaselineJavaVersionEnabled();
+
+        @Internal
+        public abstract Property<String> getTaskName();
+
+        @Override
+        public final Iterable<String> asArguments() {
+            boolean isBaselineJavaVersionEnabled =
+                    getBaselineJavaVersionEnabled().getOrElse(false);
+
+            if (!isBaselineJavaVersionEnabled) {
+                log.debug(
+                        "BaselineModuleJvmArgs not applying args to compilation task {} on project {} due to lack of "
+                                + "BaselineJavaVersion",
+                        getTaskName().get(),
+                        getProjectPath().get());
+                return ImmutableList.of();
+            }
+
+            ImmutableList<String> args = compilationArgs(getExports().get().stream(), getOpens().get().stream());
+
+            log.debug(
+                    "BaselineModuleJvmArgs executing {} on project {} with exports: {}",
+                    getTaskName().getOrNull(),
+                    getProjectPath().getOrNull(),
+                    args);
+            return args;
+        }
+
+        private static ImmutableList<String> compilationArgs(Stream<String> allExports, Stream<String> allOpens) {
+            return Stream.concat(allExports, allOpens)
+                    .distinct()
+                    .sorted()
+                    .flatMap(CompilerArgsArgumentProvider::addExportArg)
+                    .collect(ImmutableList.toImmutableList());
+        }
+
+        private static Stream<String> addExportArg(String modulePackagePair) {
+            return Stream.of("--add-exports", modulePackagePair + "=ALL-UNNAMED");
         }
     }
 }
