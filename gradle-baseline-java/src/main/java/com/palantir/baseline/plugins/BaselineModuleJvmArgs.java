@@ -115,14 +115,13 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
 
         project.getTasks().withType(Test.class).configureEach(test -> {
             test.getJvmArgumentProviders()
-                    .add(ModuleJvmArgsArgumentProvider.fromClasspathAndExtensionExportOpens(test, test::getClasspath));
+                    .add(ModuleJvmArgsArgumentProvider.fromClasspathAndExtension(test, test::getClasspath));
             setTaskInputsFromExtension(test, extension);
         });
 
         project.getTasks().withType(JavaExec.class).configureEach(javaExec -> {
             javaExec.getJvmArgumentProviders()
-                    .add(ModuleJvmArgsArgumentProvider.fromClasspathAndExtensionExportOpens(
-                            javaExec, javaExec::getClasspath));
+                    .add(ModuleJvmArgsArgumentProvider.fromClasspathAndExtension(javaExec, javaExec::getClasspath));
             setTaskInputsFromExtension(javaExec, extension);
         });
 
@@ -221,7 +220,7 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
         javaCompile
                 .getOptions()
                 .getCompilerArgumentProviders()
-                .add(ModuleJvmArgsArgumentProvider.fromJustExtensionExportsOpens(javaCompile));
+                .add(ModuleJvmArgsArgumentProvider.fromJustExtensionForCompilation(javaCompile));
 
         setTaskInputsFromExtension(javaCompile, extension);
     }
@@ -402,13 +401,19 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
             return create(task).configureWithClasspath(classpathCallable);
         }
 
-        public static CommandLineArgumentProvider fromJustExtensionExportsOpens(Task task) {
-            return create(task).configureWithExtension(task);
+        public static CommandLineArgumentProvider fromJustExtensionForCompilation(Task task) {
+            ModuleJvmArgsArgumentProvider argumentProvider = create(task);
+            argumentProvider.getExports().addAll(extension(task).exports());
+            argumentProvider.getExports().addAll(extension(task).opens());
+            return argumentProvider;
         }
 
-        public static CommandLineArgumentProvider fromClasspathAndExtensionExportOpens(
+        public static CommandLineArgumentProvider fromClasspathAndExtension(
                 Task task, Callable<FileCollection> classpathCallable) {
-            return create(task).configureWithClasspath(classpathCallable).configureWithExtension(task);
+            ModuleJvmArgsArgumentProvider argumentProvider = create(task).configureWithClasspath(classpathCallable);
+            argumentProvider.getExports().addAll(extension(task).exports());
+            argumentProvider.getExports().addAll(extension(task).opens());
+            return argumentProvider;
         }
 
         private static ModuleJvmArgsArgumentProvider create(Task task) {
@@ -420,12 +425,8 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
             return provider;
         }
 
-        private ModuleJvmArgsArgumentProvider configureWithExtension(Task task) {
-            BaselineModuleJvmArgsExtension extension =
-                    task.getProject().getExtensions().getByType(BaselineModuleJvmArgsExtension.class);
-            getExports().set(extension.exports());
-            getOpens().set(extension.opens());
-            return this;
+        private static BaselineModuleJvmArgsExtension extension(Task task) {
+            return task.getProject().getExtensions().getByType(BaselineModuleJvmArgsExtension.class);
         }
 
         // The `getClasspath()` methods on many task types are not as lazy as you'd hope.
