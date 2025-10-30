@@ -42,6 +42,7 @@ import org.gradle.api.UnknownTaskException;
 import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
+import org.gradle.api.file.ProjectLayout;
 import org.gradle.api.java.archives.Manifest;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
@@ -113,14 +114,15 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
         });
 
         project.getTasks().withType(Test.class).configureEach(test -> {
-            RuntimeArgumentProvider provider = newModuleJvmArgsArgumentProvider(test, test::getClasspath);
-            test.getJvmArgumentProviders().add(provider);
+            test.getJvmArgumentProviders()
+                    .add(ModuleJvmArgsArgumentProvider.fromClasspathAndExtensionExportOpens(test, test::getClasspath));
             setTaskInputsFromExtension(test, extension);
         });
 
         project.getTasks().withType(JavaExec.class).configureEach(javaExec -> {
-            RuntimeArgumentProvider provider = newModuleJvmArgsArgumentProvider(javaExec, javaExec::getClasspath);
-            javaExec.getJvmArgumentProviders().add(provider);
+            javaExec.getJvmArgumentProviders()
+                    .add(ModuleJvmArgsArgumentProvider.fromClasspathAndExtensionExportOpens(
+                            javaExec, javaExec::getClasspath));
             setTaskInputsFromExtension(javaExec, extension);
         });
 
@@ -209,25 +211,17 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
         //              *even if* we've specified them in forkOptions. Forking stops this from happening.
         javaCompile.getOptions().setFork(true);
 
-        RuntimeArgumentProvider forkOptionsArgProvider =
-                project.getObjects().newInstance(RuntimeArgumentProvider.class);
-        forkOptionsArgProvider.getTaskPath().set(javaCompile.getPath());
-        forkOptionsArgProvider
-                .getClasspath()
-                .from(project.files(
-                        project.getConfigurations().named(sourceSet.getAnnotationProcessorConfigurationName())));
+        javaCompile
+                .getOptions()
+                .getForkOptions()
+                .getJvmArgumentProviders()
+                .add(ModuleJvmArgsArgumentProvider.fromJustClasspath(
+                        javaCompile, sourceSet::getAnnotationProcessorPath));
 
-        javaCompile.getOptions().getForkOptions().getJvmArgumentProviders().add(forkOptionsArgProvider);
-
-        CompilerArgsArgumentProvider compilerArgsProvider =
-                project.getObjects().newInstance(CompilerArgsArgumentProvider.class);
-        compilerArgsProvider.getExports().set(extension.exports());
-        compilerArgsProvider.getOpens().set(extension.opens());
-        compilerArgsProvider.getTaskPath().set(javaCompile.getPath());
-        compilerArgsProvider.getBaselineJavaVersionEnabled().set(project.provider(() -> project.getPlugins()
-                .hasPlugin(BaselineJavaVersion.class)));
-
-        javaCompile.getOptions().getCompilerArgumentProviders().add(compilerArgsProvider);
+        javaCompile
+                .getOptions()
+                .getCompilerArgumentProviders()
+                .add(ModuleJvmArgsArgumentProvider.fromJustExtensionExportsOpens(javaCompile));
 
         setTaskInputsFromExtension(javaCompile, extension);
     }
@@ -293,25 +287,6 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                 setTaskInputsFromExtension(javadocTask, extension);
             });
         }
-    }
-
-    /**
-     * @param classpathCallable The `getClasspath()` methods on many task types are not as lazy as you'd hope.
-     *                          Taking a Callable prevents the mistake of forcing the classpath too early.
-     */
-    private static RuntimeArgumentProvider newModuleJvmArgsArgumentProvider(
-            Task task, Callable<FileCollection> classpathCallable) {
-
-        BaselineModuleJvmArgsExtension extension =
-                task.getProject().getExtensions().getByType(BaselineModuleJvmArgsExtension.class);
-
-        RuntimeArgumentProvider provider = task.getProject().getObjects().newInstance(RuntimeArgumentProvider.class);
-        provider.getExports().set(extension.exports());
-        provider.getOpens().set(extension.opens());
-        provider.getClasspath().from(task.getProject().files(classpathCallable));
-        provider.getTaskPath().set(task.getPath());
-
-        return provider;
     }
 
     private static void setTaskInputsFromExtension(Task task, BaselineModuleJvmArgsExtension extension) {
@@ -404,8 +379,8 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
         class Builder extends ImmutableJarManifestModuleInfo.Builder {}
     }
 
-    public abstract static class RuntimeArgumentProvider implements CommandLineArgumentProvider {
-        private static final Logger log = Logging.getLogger(RuntimeArgumentProvider.class);
+    public abstract static class ModuleJvmArgsArgumentProvider implements CommandLineArgumentProvider {
+        private static final Logger log = Logging.getLogger(ModuleJvmArgsArgumentProvider.class);
 
         @Internal
         public abstract SetProperty<String> getExports();
@@ -418,6 +393,47 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
 
         @Internal
         public abstract Property<String> getTaskPath();
+
+        @Inject
+        protected abstract ProjectLayout getProjectLayout();
+
+        public static CommandLineArgumentProvider fromJustClasspath(
+                Task task, Callable<FileCollection> classpathCallable) {
+            return create(task).configureWithClasspath(classpathCallable);
+        }
+
+        public static CommandLineArgumentProvider fromJustExtensionExportsOpens(Task task) {
+            return create(task).configureWithExtension(task);
+        }
+
+        public static CommandLineArgumentProvider fromClasspathAndExtensionExportOpens(
+                Task task, Callable<FileCollection> classpathCallable) {
+            return create(task).configureWithClasspath(classpathCallable).configureWithExtension(task);
+        }
+
+        private static ModuleJvmArgsArgumentProvider create(Task task) {
+            ModuleJvmArgsArgumentProvider provider =
+                    task.getProject().getObjects().newInstance(ModuleJvmArgsArgumentProvider.class);
+
+            provider.getTaskPath().set(task.getPath());
+
+            return provider;
+        }
+
+        private ModuleJvmArgsArgumentProvider configureWithExtension(Task task) {
+            BaselineModuleJvmArgsExtension extension =
+                    task.getProject().getExtensions().getByType(BaselineModuleJvmArgsExtension.class);
+            getExports().set(extension.exports());
+            getOpens().set(extension.opens());
+            return this;
+        }
+
+        // The `getClasspath()` methods on many task types are not as lazy as you'd hope.
+        // Taking a Callable prevents the mistake of forcing the classpath too early.
+        private ModuleJvmArgsArgumentProvider configureWithClasspath(Callable<FileCollection> classpathCallable) {
+            getClasspath().from(getProjectLayout().files(classpathCallable));
+            return this;
+        }
 
         @Override
         public final Iterable<String> asArguments() {
@@ -438,8 +454,9 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
         }
 
         private static List<String> runtimeArgs(Stream<String> allExports, Stream<String> allOpens) {
-            Stream<String> exportsArgs = allExports.distinct().sorted().flatMap(RuntimeArgumentProvider::addExportArg);
-            Stream<String> opensArgs = allOpens.distinct().sorted().flatMap(RuntimeArgumentProvider::addOpensArg);
+            Stream<String> exportsArgs =
+                    allExports.distinct().sorted().flatMap(ModuleJvmArgsArgumentProvider::addExportArg);
+            Stream<String> opensArgs = allOpens.distinct().sorted().flatMap(ModuleJvmArgsArgumentProvider::addOpensArg);
             return Stream.concat(exportsArgs, opensArgs).toList();
         }
 
@@ -449,55 +466,6 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
 
         private static Stream<String> addOpensArg(String modulePackagePair) {
             return Stream.of("--add-opens", modulePackagePair + "=ALL-UNNAMED");
-        }
-    }
-
-    public abstract static class CompilerArgsArgumentProvider implements CommandLineArgumentProvider {
-        private static final Logger log = Logging.getLogger(RuntimeArgumentProvider.class);
-
-        @Internal
-        public abstract SetProperty<String> getExports();
-
-        @Internal
-        public abstract SetProperty<String> getOpens();
-
-        @Internal
-        public abstract Property<Boolean> getBaselineJavaVersionEnabled();
-
-        @Internal
-        public abstract Property<String> getTaskPath();
-
-        @Override
-        public final Iterable<String> asArguments() {
-            boolean isBaselineJavaVersionEnabled =
-                    getBaselineJavaVersionEnabled().getOrElse(false);
-
-            if (!isBaselineJavaVersionEnabled) {
-                log.debug(
-                        "BaselineModuleJvmArgs not applying args to compilation task {} due to lack of "
-                                + "BaselineJavaVersion",
-                        getTaskPath().get());
-                return ImmutableList.of();
-            }
-
-            // For compilation, `--add-opens` does nothing at all. Instead, each of the `opens` needs to
-            // become an export for compilation to work
-            List<String> args = Stream.concat(getExports().get().stream(), getOpens().get().stream())
-                    .distinct()
-                    .sorted()
-                    .flatMap(CompilerArgsArgumentProvider::addExportArg)
-                    .toList();
-
-            log.debug(
-                    "BaselineModuleJvmArgs configuring {} with exports: {}",
-                    getTaskPath().get(),
-                    args);
-
-            return args;
-        }
-
-        private static Stream<String> addExportArg(String modulePackagePair) {
-            return Stream.of("--add-exports", modulePackagePair + "=ALL-UNNAMED");
         }
     }
 }
