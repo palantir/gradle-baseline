@@ -226,7 +226,7 @@ class BaselineModuleJvmArgsIntegrationTest {
                 }
                 tasks.named('compileJava', JavaCompile) {
                     options.fork = true
-                    options.compilerArgumentProviders.add({ ['--release', '11'] } as CommandLineArgumentProvider)
+                    options.compilerArgumentProviders.add({ ['--release', '17'] } as CommandLineArgumentProvider)
                     doFirst {
                         println "Fork args: ${options.forkOptions.allJvmArgs}"
                         println "Compiler args: ${options.allCompilerArgs}"
