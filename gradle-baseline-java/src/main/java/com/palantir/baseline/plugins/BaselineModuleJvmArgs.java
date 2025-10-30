@@ -397,6 +397,39 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
         @Inject
         protected abstract ProjectLayout getProjectLayout();
 
+        @Override
+        public final Iterable<String> asArguments() {
+            List<JarManifestModuleInfo> classpathInfo = collectClasspathInfo(getClasspath());
+            Stream<String> allExports = Stream.concat(
+                    getExports().get().stream(), classpathInfo.stream().flatMap(info -> info.exports().stream()));
+            Stream<String> allOpens = Stream.concat(
+                    getOpens().get().stream(), classpathInfo.stream().flatMap(info -> info.opens().stream()));
+
+            List<String> args = runtimeArgs(allExports, allOpens);
+
+            log.debug(
+                    "BaselineModuleJvmArgs configuring {} with exports: {}",
+                    getTaskPath().get(),
+                    args);
+
+            return args;
+        }
+
+        private static List<String> runtimeArgs(Stream<String> allExports, Stream<String> allOpens) {
+            Stream<String> exportsArgs =
+                    allExports.distinct().sorted().flatMap(ModuleJvmArgsArgumentProvider::addExportArg);
+            Stream<String> opensArgs = allOpens.distinct().sorted().flatMap(ModuleJvmArgsArgumentProvider::addOpensArg);
+            return Stream.concat(exportsArgs, opensArgs).toList();
+        }
+
+        private static Stream<String> addExportArg(String modulePackagePair) {
+            return Stream.of("--add-exports", modulePackagePair + "=ALL-UNNAMED");
+        }
+
+        private static Stream<String> addOpensArg(String modulePackagePair) {
+            return Stream.of("--add-opens", modulePackagePair + "=ALL-UNNAMED");
+        }
+
         public static CommandLineArgumentProvider fromJustClasspath(
                 Task task, Callable<FileCollection> classpathCallable) {
             return create(task).configureWithClasspath(classpathCallable);
@@ -443,48 +476,17 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
             return provider;
         }
 
-        private static BaselineModuleJvmArgsExtension extension(Task task) {
-            return task.getProject().getExtensions().getByType(BaselineModuleJvmArgsExtension.class);
-        }
-
-        // The `getClasspath()` methods on many task types are not as lazy as you'd hope.
-        // Taking a Callable prevents the mistake of forcing the classpath too early.
+        /**
+         * The `getClasspath()` methods on many task types are not as lazy as you'd hope.
+         * Taking a Callable prevents the mistake of forcing the classpath too early.
+         */
         private ModuleJvmArgsArgumentProvider configureWithClasspath(Callable<FileCollection> classpathCallable) {
             getClasspath().from(getProjectLayout().files(classpathCallable));
             return this;
         }
 
-        @Override
-        public final Iterable<String> asArguments() {
-            List<JarManifestModuleInfo> classpathInfo = collectClasspathInfo(getClasspath());
-            Stream<String> allExports = Stream.concat(
-                    getExports().get().stream(), classpathInfo.stream().flatMap(info -> info.exports().stream()));
-            Stream<String> allOpens = Stream.concat(
-                    getOpens().get().stream(), classpathInfo.stream().flatMap(info -> info.opens().stream()));
-
-            List<String> args = runtimeArgs(allExports, allOpens);
-
-            log.debug(
-                    "BaselineModuleJvmArgs configuring {} with exports: {}",
-                    getTaskPath().get(),
-                    args);
-
-            return args;
-        }
-
-        private static List<String> runtimeArgs(Stream<String> allExports, Stream<String> allOpens) {
-            Stream<String> exportsArgs =
-                    allExports.distinct().sorted().flatMap(ModuleJvmArgsArgumentProvider::addExportArg);
-            Stream<String> opensArgs = allOpens.distinct().sorted().flatMap(ModuleJvmArgsArgumentProvider::addOpensArg);
-            return Stream.concat(exportsArgs, opensArgs).toList();
-        }
-
-        private static Stream<String> addExportArg(String modulePackagePair) {
-            return Stream.of("--add-exports", modulePackagePair + "=ALL-UNNAMED");
-        }
-
-        private static Stream<String> addOpensArg(String modulePackagePair) {
-            return Stream.of("--add-opens", modulePackagePair + "=ALL-UNNAMED");
+        private static BaselineModuleJvmArgsExtension extension(Task task) {
+            return task.getProject().getExtensions().getByType(BaselineModuleJvmArgsExtension.class);
         }
     }
 }
