@@ -157,7 +157,7 @@ class BaselineModuleJvmArgsIntegrationTest {
     }
 
     @Test
-    void can_use_a_compiler_plugin_that_requires_access_to_system_modules_at_the_same_time_as_the_release_args(
+    void compiles_using_a_compiler_plugin_that_requires_access_to_system_modules_at_the_same_time_as_the_release_args(
             GradleInvoker gradle, RootProject rootProject, SubProject compilerPlugin) {
 
         compilerPlugin.buildGradle().append("""
@@ -204,8 +204,42 @@ class BaselineModuleJvmArgsIntegrationTest {
                 // Previously, this plugin incorrectly put --add-exports on the compilerArgs (rather than
                 // the forkOptions that would apply to the compiler plugin in the compiler context).
                 // --add-exports is by default incompatible with `--release`.
-                options.compilerArgumentProviders.add({ ['--release', '11'] })
-                options.compilerArgumentProviders.add({ ['-Xplugin:SomePlugin'] })
+                options.compilerArgumentProviders.add({ ['--release', '11'] } as CommandLineArgumentProvider)
+                options.compilerArgumentProviders.add({ ['-Xplugin:SomePlugin'] } as CommandLineArgumentProvider)
+            }
+            """);
+
+        gradle.withArgs("compileJava").buildsSuccessfully();
+    }
+
+    @Test
+    void compiling_using_the_release_and_add_exports_compiler_args_at_the_same_time_works(
+            GradleInvoker gradle, RootProject rootProject) {
+
+        rootProject.buildGradle().append("""
+            moduleJvmArgs {
+               exports = ['jdk.compiler/com.sun.tools.javac.code']
+            }
+
+            tasks.named('compileJava', JavaCompile) {
+                // By default, using the `--release` (added here in the test) and `--add-exports` (added by the
+                // plugin under test because we've added asked for a module export in moduleJvmArgs) arguments
+                // in compilerArgs will cause a compiler error as it stops you using them together for no real reason.
+                //
+                // The error we're trying to avoid is:
+                //     error: exporting a package from system module jdk.compiler is not allowed with --release
+                //
+                // This test is checking that we can use them together, with the application of some hackery.
+                options.compilerArgumentProviders.add({ ['--release', '11'] } as CommandLineArgumentProvider)
+            }
+            """);
+
+        rootProject.mainSourceSet().java().writeClass("""
+            package com;
+            public class Example {
+                public static void main(String[] args) {
+                    com.sun.tools.javac.code.Symbol.class.toString();
+                }
             }
             """);
 
