@@ -412,7 +412,7 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                 Task task, Callable<FileCollection> classpathCallable) {
             ModuleJvmArgsArgumentProvider argumentProvider = create(task).configureWithClasspath(classpathCallable);
             argumentProvider.getExports().addAll(extension(task).exports());
-            argumentProvider.getExports().addAll(extension(task).opens());
+            argumentProvider.getOpens().addAll(extension(task).opens());
             return argumentProvider;
         }
 
