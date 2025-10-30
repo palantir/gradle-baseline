@@ -454,6 +454,8 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
             };
 
             argumentProvider.getExports().addAll(extension(task).exports().map(handleJavaVersionsNotBeingApplied));
+            // For compilation, `--add-opens` does nothing at all. Instead, each of the `opens` needs to
+            // become an export for compilation to work.
             argumentProvider.getExports().addAll(extension(task).opens().map(handleJavaVersionsNotBeingApplied));
 
             return argumentProvider;
