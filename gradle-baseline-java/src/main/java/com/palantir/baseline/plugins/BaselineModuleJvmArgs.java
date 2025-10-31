@@ -115,14 +115,13 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
 
         project.getTasks().withType(Test.class).configureEach(test -> {
             test.getJvmArgumentProviders()
-                    .add(ModuleJvmArgsArgumentProvider.forRuntimeUsingExtensionWithClasspath(test, test::getClasspath));
+                    .add(ModuleJvmArgsArgumentProvider.fromClasspathAndExtension(test, test::getClasspath));
             setTaskInputsFromExtension(test, extension);
         });
 
         project.getTasks().withType(JavaExec.class).configureEach(javaExec -> {
             javaExec.getJvmArgumentProviders()
-                    .add(ModuleJvmArgsArgumentProvider.forRuntimeUsingExtensionWithClasspath(
-                            javaExec, javaExec::getClasspath));
+                    .add(ModuleJvmArgsArgumentProvider.fromClasspathAndExtension(javaExec, javaExec::getClasspath));
             setTaskInputsFromExtension(javaExec, extension);
         });
 
@@ -231,8 +230,8 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                 .getOptions()
                 .getForkOptions()
                 .getJvmArgumentProviders()
-                .add(ModuleJvmArgsArgumentProvider.forRuntime(javaCompile)
-                        .withClasspath(sourceSet::getAnnotationProcessorPath));
+                .add(ModuleJvmArgsArgumentProvider.fromJustClasspath(
+                        javaCompile, sourceSet::getAnnotationProcessorPath));
 
         // For the compiler args, we do not want any --add-exports/--add-opens:
         //   1. From the annotationProcessor classpath. These are for *compiler plugins* like errorprone,
@@ -244,7 +243,7 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
         javaCompile
                 .getOptions()
                 .getCompilerArgumentProviders()
-                .add(ModuleJvmArgsArgumentProvider.forCompilation(javaCompile).usingExtensionFor(javaCompile));
+                .add(ModuleJvmArgsArgumentProvider.fromJustExtensionForCompilation(javaCompile));
 
         setTaskInputsFromExtension(javaCompile, extension);
     }
@@ -271,14 +270,15 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                         return;
                     }
 
-                    Iterable<String> addExportsAndOpensArgs = ModuleJvmArgsArgumentProvider.forCompilation(javadoc)
-                            // Technically this will have `--add-opens` which are not used in compilation
-                            // (they need to changed to --add-exports), but we're going to strip out
-                            // `--add-opens`/`-add-exports` in the next step anyway due to Javadoc
-                            // task's weird `addMultilineStringsOption` method, so they will all
-                            // effectively become --add-exports
-                            .withClasspath(sourceSet::getAnnotationProcessorPath)
-                            .asArguments();
+                    Iterable<String> addExportsAndOpensArgs =
+                            ModuleJvmArgsArgumentProvider.fromJustExtensionForCompilation(javadoc)
+                                    // Technically this will have `--add-opens` which are not used in compilation
+                                    // (they need to changed to --add-exports), but we're going to strip out
+                                    // `--add-opens`/`-add-exports` in the next step anyway due to Javadoc
+                                    // task's weird `addMultilineStringsOption` method, so they will all
+                                    // effectively become --add-exports
+                                    .configureWithClasspath(sourceSet::getAnnotationProcessorPath)
+                                    .asArguments();
 
                     List<String> exportValues = StreamSupport.stream(addExportsAndOpensArgs.spliterator(), false)
                             .filter(option -> !option.startsWith("--add"))
@@ -397,23 +397,20 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
         @Internal
         public abstract Property<String> getTaskPath();
 
-        @Internal
-        public abstract Property<Boolean> getForCompilation();
-
         @Inject
         protected abstract ProviderFactory getProviderFactory();
 
         @Override
         public final Iterable<String> asArguments() {
-            List<String> exportsArgs = getExports().get().stream()
+            Stream<String> exportsArgs = getExports().get().stream()
                     .distinct()
                     .sorted()
-                    .flatMap(ModuleJvmArgsArgumentProvider::addExportArg).toList();
+                    .flatMap(ModuleJvmArgsArgumentProvider::addExportArg);
 
-            List<String> opensArgs =
-                    getOpens().get().stream().distinct().sorted().flatMap(ModuleJvmArgsArgumentProvider::addOpensArg).toList();
+            Stream<String> opensArgs =
+                    getOpens().get().stream().distinct().sorted().flatMap(ModuleJvmArgsArgumentProvider::addOpensArg);
 
-            List<String> args = Stream.concat(exportsArgs, getForCompilation().get() ? opensArgs).toList();
+            List<String> args = Stream.concat(exportsArgs, opensArgs).toList();
 
             log.debug(
                     "BaselineModuleJvmArgs configuring {} with exports: {}",
@@ -431,20 +428,27 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
             return Stream.of("--add-opens", modulePackagePair + "=ALL-UNNAMED");
         }
 
-        public static ModuleJvmArgsArgumentProvider forRuntimeUsingExtensionWithClasspath(
+        public static ModuleJvmArgsArgumentProvider fromJustClasspath(
                 Task task, Callable<FileCollection> classpathCallable) {
-            return forRuntime(task).usingExtensionFor(task).withClasspath(classpathCallable);
+            return create(task).configureWithClasspath(classpathCallable);
         }
 
-        public static ModuleJvmArgsArgumentProvider forRuntime(Task task) {
+        public static ModuleJvmArgsArgumentProvider fromJustExtensionForCompilation(Task task) {
             ModuleJvmArgsArgumentProvider argumentProvider = create(task);
-            argumentProvider.getForCompilation().set(false);
+
+            argumentProvider.getExports().addAll(extension(task).exports());
+            // For compilation, `--add-opens` does nothing at all. Instead, each of the `opens` needs to
+            // become an export for compilation to work.
+            argumentProvider.getExports().addAll(extension(task).opens());
+
             return argumentProvider;
         }
 
-        public static ModuleJvmArgsArgumentProvider forCompilation(Task task) {
-            ModuleJvmArgsArgumentProvider argumentProvider = create(task);
-            argumentProvider.getForCompilation().set(true);
+        public static ModuleJvmArgsArgumentProvider fromClasspathAndExtension(
+                Task task, Callable<FileCollection> classpathCallable) {
+            ModuleJvmArgsArgumentProvider argumentProvider = create(task).configureWithClasspath(classpathCallable);
+            argumentProvider.getExports().addAll(extension(task).exports());
+            argumentProvider.getOpens().addAll(extension(task).opens());
             return argumentProvider;
         }
 
@@ -457,18 +461,11 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
             return provider;
         }
 
-        public final ModuleJvmArgsArgumentProvider usingExtensionFor(Task task) {
-            getExports().addAll(extension(task).exports());
-            getOpens().addAll(extension(task).opens());
-
-            return this;
-        }
-
         /**
          * The `getClasspath()` methods on many task types are not as lazy as you'd hope.
          * Taking a Callable prevents the mistake of forcing the classpath too early.
          */
-        public final ModuleJvmArgsArgumentProvider withClasspath(Callable<FileCollection> classpathCallable) {
+        private ModuleJvmArgsArgumentProvider configureWithClasspath(Callable<FileCollection> classpathCallable) {
             Provider<List<JarManifestModuleInfo>> jarManifestModuleInfos =
                     getProviderFactory().provider(classpathCallable).map(BaselineModuleJvmArgs::collectClasspathInfo);
 
