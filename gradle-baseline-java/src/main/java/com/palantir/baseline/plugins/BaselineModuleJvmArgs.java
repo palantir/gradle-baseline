@@ -230,8 +230,8 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                 .getOptions()
                 .getForkOptions()
                 .getJvmArgumentProviders()
-                .add(ModuleJvmArgsArgumentProvider.fromJustClasspath(
-                        javaCompile, sourceSet::getAnnotationProcessorPath));
+                .add(ModuleJvmArgsArgumentProvider.fromJustClasspath(javaCompile, sourceSet::getAnnotationProcessorPath)
+                        .withExtraDescription("forkArgs"));
 
         // For the compiler args, we do not want any --add-exports/--add-opens:
         //   1. From the annotationProcessor classpath. These are for *compiler plugins* like errorprone,
@@ -243,7 +243,8 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
         javaCompile
                 .getOptions()
                 .getCompilerArgumentProviders()
-                .add(ModuleJvmArgsArgumentProvider.fromJustExtensionForCompilation(javaCompile));
+                .add(ModuleJvmArgsArgumentProvider.fromJustExtensionForCompilation(javaCompile)
+                        .withExtraDescription("compilerArgs"));
 
         setTaskInputsFromExtension(javaCompile, extension);
     }
@@ -394,7 +395,7 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
         public abstract SetProperty<String> getOpens();
 
         @Internal
-        public abstract Property<String> getTaskPath();
+        public abstract Property<String> getDescription();
 
         @Inject
         protected abstract ProviderFactory getProviderFactory();
@@ -413,7 +414,7 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
 
             log.debug(
                     "BaselineModuleJvmArgs configuring {} with exports: {}",
-                    getTaskPath().get(),
+                    getDescription().get(),
                     args);
 
             return args;
@@ -461,11 +462,16 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
             return argumentProvider;
         }
 
+        public final ModuleJvmArgsArgumentProvider withExtraDescription(String description) {
+            getDescription().set(getDescription().get() + " " + description);
+            return this;
+        }
+
         private static ModuleJvmArgsArgumentProvider create(Task task) {
             ModuleJvmArgsArgumentProvider provider =
                     task.getProject().getObjects().newInstance(ModuleJvmArgsArgumentProvider.class);
 
-            provider.getTaskPath().set(task.getPath());
+            provider.getDescription().set(task.getPath());
 
             return provider;
         }
