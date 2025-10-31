@@ -41,6 +41,11 @@ import java.lang.reflect.Field;
  * (<a href="https://github.com/openjdk/jdk/blame/a33aa65fbc70a91fe21e9016c393bb5a764cd75a/src/jdk.compiler/share/classes/com/sun/tools/javac/comp/Modules.java#L1676">here</a>)
  * meaning we can change what we need to change during within a self-contained Plugin.
  * <br><br>
+ * The risk here is that the compiler changes such that we can no longer do this hack, particularly
+ * if the timing of the error changes and happens to early before we can prevent it. However, the code
+ * has not changed yet since it was introduced 8 years ago (at time of writing) so is hopefully
+ * unlikely to change.
+ * <br><br>
  * The name is intentionally long to instil the appropriate level of fear and make it obvious there is
  * serious customisation happening to the compiler.
  */

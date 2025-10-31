@@ -157,6 +157,17 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
     }
 
     private void addReleaseAndAddExportsArgsFixingCompilerPlugin(Project project) {
+        // There is more info about the plugin in its implementation class.
+        // The gist is we change the compiler internals using reflection to allow the `--release`
+        // and `--add-exports` args to be used together with compiler errors.
+
+        // We always apply the plugin even if it's not necessary for two reasons:
+        //   1. There's no way to lazily add an arg based on the values of other args without forcing
+        //      the arg values, which might be too early.
+        //   2. I think it's better to always apply the plugin, so when it starts going wrong on a JDK
+        //      update, it fails very obviously everywhere and forces us to fix it rather than silently
+        //      failing on the low percentage of repos that add exports/opens.
+
         String version = Optional.ofNullable(
                         (String) project.findProperty("baselineModuleJvmArgsCompilerPluginsVersion"))
                 .or(() -> Optional.ofNullable(
@@ -188,14 +199,14 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
         project.getTasks()
                 .named(sourceSet.getCompileJavaTaskName(), JavaCompile.class)
                 .configure(javaCompile -> {
-                    configureJavaCompile(project, sourceSet, extension, javaCompile);
+                    configureJavaCompile(sourceSet, extension, javaCompile);
                 });
 
         configureJavadoc(project, sourceSet, extension);
     }
 
     private static void configureJavaCompile(
-            Project project, SourceSet sourceSet, BaselineModuleJvmArgsExtension extension, JavaCompile javaCompile) {
+            SourceSet sourceSet, BaselineModuleJvmArgsExtension extension, JavaCompile javaCompile) {
 
         // We will *always* fork the compiler - for both consistency and correctness:
         // Consistency: when fork=false, Gradle will sometimes still make a forked Gradle worker daemon
@@ -210,6 +221,11 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
         //              *even if* we've specified them in forkOptions. Forking stops this from happening.
         javaCompile.getOptions().setFork(true);
 
+        // For the fork options, we want just the --add-exports/--add-opens from the annotationProcessor
+        // classpath. These are to enable compiler plugins like errorprone and other code that runs inside
+        // the compiler to run in a process with the correct jvm args. We explicitly *do not want* the
+        // exports/opens from the extension; these are for the code actually being compiled, not for
+        // compiler plugins!
         javaCompile
                 .getOptions()
                 .getForkOptions()
@@ -217,6 +233,13 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                 .add(ModuleJvmArgsArgumentProvider.fromJustClasspath(
                         javaCompile, sourceSet::getAnnotationProcessorPath));
 
+        // For the compiler args, we do not want any --add-exports/--add-opens:
+        //   1. From the annotationProcessor classpath. These are for *compiler plugins* like errorprone,
+        //      not for the code actually being compiled.
+        //   2. From the dependencies of the code being compiled - these have already been compiled and
+        //      we don't need to have the compiler --add-exports for them
+        // We just need the exports/opens from the extension. --add-opens does nothing during compilation
+        // so the argument provider below will change them to --add-exports.
         javaCompile
                 .getOptions()
                 .getCompilerArgumentProviders()
@@ -261,7 +284,8 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                                     // Technically this will have `--add-opens` which are not used in compilation
                                     // (they need to changed to --add-exports), but we're going to strip out
                                     // `--add-opens`/`-add-exports` in the next step anyway due to Javadoc
-                                    // task's weird `addMultilineStringsOption` method.
+                                    // task's weird `addMultilineStringsOption` method, so they will all
+                                    // effectively become --add-exports
                                     .configureWithClasspath(sourceSet::getAnnotationProcessorPath)
                                     .asArguments();
 
