@@ -469,13 +469,13 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
             Provider<List<JarManifestModuleInfo>> jarManifestModuleInfos =
                     getProviderFactory().provider(classpathCallable).map(BaselineModuleJvmArgs::collectClasspathInfo);
 
-            getExports().addAll(jarManifestModuleInfos.map(extract(JarManifestModuleInfo::exports)));
-            getOpens().addAll(jarManifestModuleInfos.map(extract(JarManifestModuleInfo::opens)));
+            getExports().addAll(jarManifestModuleInfos.map(extractArgType(JarManifestModuleInfo::exports)));
+            getOpens().addAll(jarManifestModuleInfos.map(extractArgType(JarManifestModuleInfo::opens)));
 
             return this;
         }
 
-        private Transformer<List<String>, List<JarManifestModuleInfo>> extract(
+        private Transformer<List<String>, List<JarManifestModuleInfo>> extractArgType(
                 Function<JarManifestModuleInfo, List<String>> extractor) {
             return jarManifestModuleInfos -> jarManifestModuleInfos.stream()
                     .flatMap(info -> extractor.apply(info).stream())
