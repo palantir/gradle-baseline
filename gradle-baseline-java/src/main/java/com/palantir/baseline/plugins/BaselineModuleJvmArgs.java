@@ -29,6 +29,7 @@ import java.util.Objects;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.Callable;
+import java.util.function.Function;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -39,15 +40,15 @@ import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
+import org.gradle.api.Transformer;
 import org.gradle.api.artifacts.ConfigurationContainer;
-import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
-import org.gradle.api.file.ProjectLayout;
 import org.gradle.api.java.archives.Manifest;
 import org.gradle.api.logging.Logger;
 import org.gradle.api.logging.Logging;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.provider.ProviderFactory;
 import org.gradle.api.provider.SetProperty;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.JavaExec;
@@ -394,23 +395,22 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
         public abstract SetProperty<String> getOpens();
 
         @Internal
-        public abstract ConfigurableFileCollection getClasspath();
-
-        @Internal
         public abstract Property<String> getTaskPath();
 
         @Inject
-        protected abstract ProjectLayout getProjectLayout();
+        protected abstract ProviderFactory getProviderFactory();
 
         @Override
         public final Iterable<String> asArguments() {
-            List<JarManifestModuleInfo> classpathInfo = collectClasspathInfo(getClasspath());
-            Stream<String> allExports = Stream.concat(
-                    getExports().get().stream(), classpathInfo.stream().flatMap(info -> info.exports().stream()));
-            Stream<String> allOpens = Stream.concat(
-                    getOpens().get().stream(), classpathInfo.stream().flatMap(info -> info.opens().stream()));
+            Stream<String> exportsArgs = getExports().get().stream()
+                    .distinct()
+                    .sorted()
+                    .flatMap(ModuleJvmArgsArgumentProvider::addExportArg);
 
-            List<String> args = runtimeArgs(allExports, allOpens);
+            Stream<String> opensArgs =
+                    getOpens().get().stream().distinct().sorted().flatMap(ModuleJvmArgsArgumentProvider::addOpensArg);
+
+            List<String> args = Stream.concat(exportsArgs, opensArgs).toList();
 
             log.debug(
                     "BaselineModuleJvmArgs configuring {} with exports: {}",
@@ -418,13 +418,6 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                     args);
 
             return args;
-        }
-
-        private static List<String> runtimeArgs(Stream<String> allExports, Stream<String> allOpens) {
-            Stream<String> exportsArgs =
-                    allExports.distinct().sorted().flatMap(ModuleJvmArgsArgumentProvider::addExportArg);
-            Stream<String> opensArgs = allOpens.distinct().sorted().flatMap(ModuleJvmArgsArgumentProvider::addOpensArg);
-            return Stream.concat(exportsArgs, opensArgs).toList();
         }
 
         private static Stream<String> addExportArg(String modulePackagePair) {
@@ -473,8 +466,20 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
          * Taking a Callable prevents the mistake of forcing the classpath too early.
          */
         private ModuleJvmArgsArgumentProvider configureWithClasspath(Callable<FileCollection> classpathCallable) {
-            getClasspath().from(getProjectLayout().files(classpathCallable));
+            Provider<List<JarManifestModuleInfo>> jarManifestModuleInfos =
+                    getProviderFactory().provider(classpathCallable).map(BaselineModuleJvmArgs::collectClasspathInfo);
+
+            getExports().addAll(jarManifestModuleInfos.map(extract(JarManifestModuleInfo::exports)));
+            getOpens().addAll(jarManifestModuleInfos.map(extract(JarManifestModuleInfo::opens)));
+
             return this;
+        }
+
+        private Transformer<List<String>, List<JarManifestModuleInfo>> extract(
+                Function<JarManifestModuleInfo, List<String>> extractor) {
+            return jarManifestModuleInfos -> jarManifestModuleInfos.stream()
+                    .flatMap(info -> extractor.apply(info).stream())
+                    .toList();
         }
 
         private static BaselineModuleJvmArgsExtension extension(Task task) {
