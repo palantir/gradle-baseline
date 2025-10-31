@@ -272,7 +272,7 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
 
                     Set<String> exportValuesRaw = ModuleJvmArgsArgumentProvider.fromJustExtensionForCompilation(javadoc)
                             .configureWithClasspath(sourceSet::getAnnotationProcessorPath)
-                            // Javadoc runs as *compilation* which means that everything that is normall an
+                            // Javadoc runs as *compilation* which means that everything that is normally an
                             // opens at runtime needs to be exports. Since we need to use the horrible
                             // addMultilineStringsOption, we just get all the arg fragments eg
                             // jdk.compiler/some.package=ALL-UNNAMED
