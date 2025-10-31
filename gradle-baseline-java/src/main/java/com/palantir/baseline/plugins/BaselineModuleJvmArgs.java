@@ -39,7 +39,6 @@ import org.gradle.api.Action;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
-import org.gradle.api.Transformer;
 import org.gradle.api.artifacts.ConfigurationContainer;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.FileCollection;
@@ -261,15 +260,6 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
             javadoc.doFirst(new Action<Task>() {
                 @Override
                 public void execute(Task _task) {
-                    // The '--release' flag is set when BaselineJavaVersion is not used.
-                    if (!project.getPlugins().hasPlugin(BaselineJavaVersion.class)) {
-                        log.debug(
-                                "BaselineModuleJvmArgs not applying args to compilation task {} "
-                                        + "due to lack of BaselineJavaVersion",
-                                javadoc.getPath());
-                        return;
-                    }
-
                     MinimalJavadocOptions options = javadoc.getOptions();
                     if (!(options instanceof CoreJavadocOptions coreOptions)) {
                         log.error(
@@ -453,25 +443,10 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
         public static ModuleJvmArgsArgumentProvider fromJustExtensionForCompilation(Task task) {
             ModuleJvmArgsArgumentProvider argumentProvider = create(task);
 
-            // javac isn't provided `--add-exports` args for the time being due to
-            // https://github.com/gradle/gradle/issues/18824
-            // However, we set sourceCompatibility in BaselineJavaVersion to opt out of the '--release' flag.
-            Transformer<Set<String>, Set<String>> handleJavaVersionsNotBeingApplied = inputs -> {
-                if (!task.getProject().getPlugins().hasPlugin(BaselineJavaVersion.class)) {
-                    log.debug(
-                            "BaselineModuleJvmArgs not applying args to compilation task {} due to lack of "
-                                    + "BaselineJavaVersion",
-                            task.getPath());
-                    return Set.of();
-                }
-
-                return inputs;
-            };
-
-            argumentProvider.getExports().addAll(extension(task).exports().map(handleJavaVersionsNotBeingApplied));
+            argumentProvider.getExports().addAll(extension(task).exports());
             // For compilation, `--add-opens` does nothing at all. Instead, each of the `opens` needs to
             // become an export for compilation to work.
-            argumentProvider.getExports().addAll(extension(task).opens().map(handleJavaVersionsNotBeingApplied));
+            argumentProvider.getExports().addAll(extension(task).opens());
 
             return argumentProvider;
         }
