@@ -20,6 +20,7 @@ import com.google.common.base.Splitter;
 import com.google.common.base.Strings;
 import com.google.common.collect.ImmutableList;
 import com.google.common.collect.ImmutableMap;
+import com.google.common.collect.Sets;
 import com.palantir.baseline.extensions.BaselineModuleJvmArgsExtension;
 import com.palantir.baseline.plugins.javaversions.BaselineJavaVersion;
 import com.palantir.baseline.plugins.javaversions.BaselineJavaVersionExtension;
@@ -33,7 +34,6 @@ import java.util.function.Function;
 import java.util.jar.JarFile;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
-import java.util.stream.StreamSupport;
 import javax.annotation.Nullable;
 import javax.inject.Inject;
 import org.gradle.api.Action;
@@ -270,28 +270,27 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
                         return;
                     }
 
-                    Iterable<String> addExportsAndOpensArgs =
-                            ModuleJvmArgsArgumentProvider.fromJustExtensionForCompilation(javadoc)
-                                    // Technically this will have `--add-opens` which are not used in compilation
-                                    // (they need to changed to --add-exports), but we're going to strip out
-                                    // `--add-opens`/`-add-exports` in the next step anyway due to Javadoc
-                                    // task's weird `addMultilineStringsOption` method, so they will all
-                                    // effectively become --add-exports
-                                    .configureWithClasspath(sourceSet::getAnnotationProcessorPath)
-                                    .asArguments();
+                    Set<String> exportValuesRaw = ModuleJvmArgsArgumentProvider.fromJustExtensionForCompilation(javadoc)
+                            .configureWithClasspath(sourceSet::getAnnotationProcessorPath)
+                            // Javadoc runs as *compilation* which means that everything that is normall an
+                            // opens at runtime needs to be exports. Since we need to use the horrible
+                            // addMultilineStringsOption, we just get all the arg fragments eg
+                            // jdk.compiler/some.package=ALL-UNNAMED
+                            .allModulesPackagePairUnnamed();
 
-                    List<String> exportValues = StreamSupport.stream(addExportsAndOpensArgs.spliterator(), false)
-                            .filter(option -> !option.startsWith("--add"))
-                            .distinct()
-                            .sorted()
-                            .toList();
+                    List<String> exportValuesSorted =
+                            exportValuesRaw.stream().sorted().toList();
 
-                    log.debug("BaselineModuleJvmArgs building {} with exports: {}", javadoc.getPath(), exportValues);
-                    if (!exportValues.isEmpty()) {
+                    log.debug(
+                            "BaselineModuleJvmArgs building {} with exports: {}",
+                            javadoc.getPath(),
+                            exportValuesSorted);
+
+                    if (!exportValuesSorted.isEmpty()) {
                         coreOptions
                                 // options are automatically prefixed with '-' internally
                                 .addMultilineStringsOption("-add-exports")
-                                .setValue(exportValues);
+                                .setValue(exportValuesSorted);
                     }
                 }
             });
@@ -420,12 +419,22 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
             return args;
         }
 
+        public final Set<String> allModulesPackagePairUnnamed() {
+            return Sets.union(getExports().get(), getOpens().get()).stream()
+                    .map(ModuleJvmArgsArgumentProvider::appendAllUnnamed)
+                    .collect(Collectors.toSet());
+        }
+
         private static Stream<String> addExportArg(String modulePackagePair) {
-            return Stream.of("--add-exports", modulePackagePair + "=ALL-UNNAMED");
+            return Stream.of("--add-exports", appendAllUnnamed(modulePackagePair));
         }
 
         private static Stream<String> addOpensArg(String modulePackagePair) {
-            return Stream.of("--add-opens", modulePackagePair + "=ALL-UNNAMED");
+            return Stream.of("--add-opens", appendAllUnnamed(modulePackagePair));
+        }
+
+        private static String appendAllUnnamed(String modulePackagePair) {
+            return modulePackagePair + "=ALL-UNNAMED";
         }
 
         public static ModuleJvmArgsArgumentProvider fromJustClasspath(
