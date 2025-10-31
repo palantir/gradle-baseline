@@ -159,7 +159,7 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
     private void addReleaseAndAddExportsArgsFixingCompilerPlugin(Project project) {
         // There is more info about the plugin in its implementation class.
         // The gist is we change the compiler internals using reflection to allow the `--release`
-        // and `--add-exports` args to be used together with compiler errors.
+        // and `--add-exports` args to be used together without compiler errors.
 
         // We always apply the plugin even if it's not necessary for two reasons:
         //   1. There's no way to lazily add an arg based on the values of other args without forcing
