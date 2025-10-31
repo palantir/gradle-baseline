@@ -97,7 +97,11 @@ public abstract class BaselineErrorProneExtension {
             "ObjectsHashCodePrimitive",
             "PreferInstanceofOverGetKind",
             "ProtectedMembersInFinalClass",
-            "PatternMatchingInstanceof",
+            // 2025-10-31
+            // This rule can generate bad code and code that fails checkstyle.  Disable until upstream fixes.
+            // See https://github.com/google/error-prone/issues/5158 - fixed in 2.43.0, but that release requires jdk 21
+            // https://github.com/google/error-prone/issues/4922 - creates names that conflict with existing variables
+            // "PatternMatchingInstanceof",
             "UnnecessaryQualifier",
             "UnnecessaryParentheses",
             "UnusedException",
