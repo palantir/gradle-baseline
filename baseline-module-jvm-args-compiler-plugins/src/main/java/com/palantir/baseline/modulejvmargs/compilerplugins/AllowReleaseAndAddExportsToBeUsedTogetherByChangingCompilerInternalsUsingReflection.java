@@ -25,9 +25,9 @@ import com.sun.tools.javac.util.Context;
 import java.lang.reflect.Field;
 
 /**
- * The JDK devs arbitrarily decided that you cannot use the `--release` arg along with `--add-exports`
+ * The JDK devs arbitrarily decided that you cannot use the {@code --release} arg along with {@code --add-exports}
  * if it's exporting a "system module" ie one that is shipped with the JDK. This is problematic, as if
- * we want to use `--release` to use a higher JDK to compile against a lower version of the Java
+ * we want to use {@code --release} to use a higher JDK to compile against a lower version of the Java
  * standard library, when someone uses BaselineModuleJvmArgs to add an exports or opens arg to
  * access system modules, they will immediately face this error and be unable to compile. A good example
  * of something that needs extra exports are compiler plugin eg any sort error-prone code, including
@@ -39,7 +39,7 @@ import java.lang.reflect.Field;
  * in Javac's Modules component to be true. We are very fortunate that the error does not actually get
  * created until after Plugin initialisation occurs
  * (<a href="https://github.com/openjdk/jdk/blame/a33aa65fbc70a91fe21e9016c393bb5a764cd75a/src/jdk.compiler/share/classes/com/sun/tools/javac/comp/Modules.java#L1676">here</a>)
- * meaning we can change what we need to change during within a self-contained Plugin.
+ * meaning we can change what we need to change during within a self-contained {@code Plugin}.
  * <br><br>
  * The risk here is that the compiler changes such that we can no longer do this hack, particularly
  * if the timing of the error changes and happens to early before we can prevent it. However, the code
@@ -70,9 +70,16 @@ public final class AllowReleaseAndAddExportsToBeUsedTogetherByChangingCompilerIn
             // We can but pray that it does not change in the future.
             Field allowAccessIntoSystem = Modules.class.getDeclaredField("allowAccessIntoSystem");
             allowAccessIntoSystem.setAccessible(true);
+            // This requires --add-opens on jdk.compiler/com.sun.tools.javac.comp as it is
+            // reflectively changing code in that module
             allowAccessIntoSystem.setBoolean(modules, true);
         } catch (NoSuchFieldException | IllegalAccessException e) {
-            throw new RuntimeException(e);
+            throw new RuntimeException(
+                    "Failed to allow the `--add-exports` and `--release` options to be used together by reflectively"
+                            + " changing the compiler internals. This likely means the compiler"
+                            + " implementation has changed the code that makes this work need to be updated in "
+                            + "https://github.com/palantir/gradle-baseline",
+                    e);
         }
     }
 }

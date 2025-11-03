@@ -214,7 +214,7 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
         //              Gradle will just use the current daemon. However, if the main Gradle daemon is
         //              running with a different JDK Gradle will fork off a worker daemon to do the compilation.
         //              There are material differences in behaviour when it is forked vs not forked, so
-        //              we always for consistency.
+        //              we always fork for consistency.
         // Correctness: If fork=false and Gradle thinks it can reuse the main Gradle daemon as it's running
         //              with the correct JDK major version, the main daemon will not necessarily have
         //              the required --add-exports/--add-opens set on the process running the compilations,
@@ -447,8 +447,10 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
             ModuleJvmArgsArgumentProvider argumentProvider = create(task);
 
             argumentProvider.getExports().addAll(extension(task).exports());
-            // For compilation, `--add-opens` does nothing at all. Instead, each of the `opens` needs to
-            // become an export for compilation to work.
+            // At runtime, `--add-opens` implies `--add-exports`. But during compilation `--add-opens` does nothing
+            // at all and is ignored (`--add-opens` is for reflectively changing code in a module, which makes no
+            // sense during compilation). People may still use the types in the module that is `--add-opens`d, so
+            // we need to convert all `--add-opens` to `--add-exports` just for compilation.
             argumentProvider.getExports().addAll(extension(task).opens());
 
             return argumentProvider;
@@ -477,8 +479,8 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
         }
 
         /**
-         * The `getClasspath()` methods on many task types are not as lazy as you'd hope.
-         * Taking a Callable prevents the mistake of forcing the classpath too early.
+         * The {@code getClasspath()} methods on many task types are not as lazy as you'd hope.
+         * Taking a {@link Callable} prevents the mistake of forcing the classpath too early.
          */
         private ModuleJvmArgsArgumentProvider configureWithClasspath(Callable<FileCollection> classpathCallable) {
             Provider<List<JarManifestModuleInfo>> jarManifestModuleInfos =
