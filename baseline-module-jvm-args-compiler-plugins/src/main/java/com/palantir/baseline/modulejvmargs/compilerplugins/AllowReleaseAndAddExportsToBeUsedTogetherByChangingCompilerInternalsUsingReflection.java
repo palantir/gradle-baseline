@@ -1,0 +1,85 @@
+/*
+ * (c) Copyright 2025 Palantir Technologies Inc. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+package com.palantir.baseline.modulejvmargs.compilerplugins;
+
+import com.google.auto.service.AutoService;
+import com.sun.source.util.JavacTask;
+import com.sun.source.util.Plugin;
+import com.sun.tools.javac.api.BasicJavacTask;
+import com.sun.tools.javac.comp.Modules;
+import com.sun.tools.javac.util.Context;
+import java.lang.reflect.Field;
+
+/**
+ * The JDK devs arbitrarily decided that you cannot use the {@code --release} arg along with {@code --add-exports}
+ * if it's exporting a "system module" ie one that is shipped with the JDK. This is problematic, as if
+ * we want to use {@code --release} to use a higher JDK to compile against a lower version of the Java
+ * standard library, when someone uses BaselineModuleJvmArgs to add an exports or opens arg to
+ * access system modules, they will immediately face this error and be unable to compile. A good example
+ * of something that needs extra exports are compiler plugin eg any sort error-prone code, including
+ * custom BugCheckers. Or even this very compiler plugin (see build.gradle)!
+ * <br><br>
+ * This is a problem I, frankly, just don't want to have. So we "fix" it with this Javac plugin that
+ * will force the field
+ * <a href="https://github.com/openjdk/jdk/blame/a33aa65fbc70a91fe21e9016c393bb5a764cd75a/src/jdk.compiler/share/classes/com/sun/tools/javac/comp/Modules.java#L150">allowAccessIntoSystem</a>
+ * in Javac's Modules component to be true. We are very fortunate that the error does not actually get
+ * created until after Plugin initialisation occurs
+ * (<a href="https://github.com/openjdk/jdk/blame/a33aa65fbc70a91fe21e9016c393bb5a764cd75a/src/jdk.compiler/share/classes/com/sun/tools/javac/comp/Modules.java#L1676">here</a>)
+ * meaning we can change what we need to change during within a self-contained {@code Plugin}.
+ * <br><br>
+ * The risk here is that the compiler changes such that we can no longer do this hack, particularly
+ * if the timing of the error changes and happens to early before we can prevent it. However, the code
+ * has not changed yet since it was introduced 8 years ago (at time of writing) so is hopefully
+ * unlikely to change.
+ * <br><br>
+ * The name is intentionally long to instil the appropriate level of fear and make it obvious there is
+ * serious customisation happening to the compiler.
+ */
+@AutoService(Plugin.class)
+public final class AllowReleaseAndAddExportsToBeUsedTogetherByChangingCompilerInternalsUsingReflection
+        implements Plugin {
+
+    @Override
+    public String getName() {
+        return getClass().getSimpleName();
+    }
+
+    @Override
+    public void init(JavacTask task, String... _args) {
+        Context context = ((BasicJavacTask) task).getContext();
+        Modules modules = Modules.instance(context);
+
+        try {
+            // As of writing, this field has not been changed in 8 years:
+            // https://github.com/openjdk/jdk/blame/a33aa65fbc70a91fe21e9016c393bb5a764cd75a/
+            //      src/jdk.compiler/share/classes/com/sun/tools/javac/comp/Modules.java#L150
+            // We can but pray that it does not change in the future.
+            Field allowAccessIntoSystem = Modules.class.getDeclaredField("allowAccessIntoSystem");
+            allowAccessIntoSystem.setAccessible(true);
+            // This requires --add-opens on jdk.compiler/com.sun.tools.javac.comp as it is
+            // reflectively changing code in that module
+            allowAccessIntoSystem.setBoolean(modules, true);
+        } catch (NoSuchFieldException | IllegalAccessException e) {
+            throw new RuntimeException(
+                    "Failed to allow the `--add-exports` and `--release` options to be used together by reflectively"
+                            + " changing the compiler internals. This likely means the compiler"
+                            + " implementation has changed the code that makes this work need to be updated in "
+                            + "https://github.com/palantir/gradle-baseline",
+                    e);
+        }
+    }
+}

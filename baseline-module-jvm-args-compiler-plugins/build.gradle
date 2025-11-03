@@ -1,0 +1,17 @@
+apply plugin: 'java-library'
+apply plugin: 'com.palantir.external-publish-jar'
+
+dependencies {
+    annotationProcessor 'com.google.auto.service:auto-service'
+    compileOnly 'com.google.auto.service:auto-service'
+}
+
+moduleJvmArgs {
+    exports = [
+        'jdk.compiler/com.sun.source.util',
+        'jdk.compiler/com.sun.tools.javac.api',
+        'jdk.compiler/com.sun.tools.javac.comp',
+        'jdk.compiler/com.sun.tools.javac.util'
+    ]
+    opens = ['jdk.compiler/com.sun.tools.javac.comp']
+}
