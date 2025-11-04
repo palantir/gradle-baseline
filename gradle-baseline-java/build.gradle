@@ -201,6 +201,7 @@ configurations {
 
 dependencies {
     checkstyleVersion 'com.puppycrawl.tools:checkstyle'
+    testImplementation 'com.palantir.gradle.plugintesting:gradle-plugin-testing-junit'
 }
 
 task writeCheckstyleVersion() {
