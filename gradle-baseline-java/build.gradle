@@ -8,6 +8,11 @@ apply plugin: 'com.palantir.gradle-plugin-testing'
 import org.gradle.api.internal.classpath.ModuleRegistry
 import org.gradle.api.internal.project.ProjectInternal
 
+configurations {
+    testGradlePlugin {
+       //extendsFrom configurations.runtimeClasspath
+    }
+}
 dependencies {
     implementation gradleApi()
     implementation 'com.palantir.gradle.idea-configuration:gradle-idea-configuration'
@@ -45,9 +50,12 @@ dependencies {
     testRuntimeOnly 'org.junit.vintage:junit-vintage-engine', {
         because 'allows JUnit 3 and JUnit 4 tests to run'
     }
-    testRuntimeOnly 'com.palantir.sls-packaging:gradle-sls-packaging'
-    testRuntimeOnly 'com.palantir.gradle.jdkslatest:gradle-jdks-latest'
-    testRuntimeOnly 'org.unbroken-dome.gradle-plugins:gradle-testsets-plugin'
+    testGradlePlugin 'com.palantir.sls-packaging:gradle-sls-packaging'
+    testGradlePlugin 'com.palantir.gradle.jdkslatest:gradle-jdks-latest'
+    //before
+    //testRuntimeOnly 'org.unbroken-dome.gradle-plugins:gradle-testsets-plugin'
+    // now
+    testGradlePlugin 'org.unbroken-dome.gradle-plugins:gradle-testsets-plugin'
 
     // necessary because of https://github.com/gradle/gradle/issues/16774
     def toolingApiBuildersJar = (project as ProjectInternal).services.get(ModuleRegistry.class)
@@ -216,4 +224,9 @@ if (gradle.startParameter.isWriteDependencyLocks()) {
 
 gradleTestUtils {
     gradleVersions = ['8.14.3']
+}
+
+
+tasks.named("pluginUnderTestMetadata", PluginUnderTestMetadata) {
+    it.pluginClasspath.from(configurations.named("testGradlePlugin"))
 }

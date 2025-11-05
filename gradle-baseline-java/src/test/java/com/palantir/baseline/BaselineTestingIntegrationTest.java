@@ -185,7 +185,7 @@ class BaselineTestingIntegrationTest {
     void runs_test_sets_tests(GradleInvoker gradle, RootProject project) {
         project.buildGradle().append("""
             plugins {
-                id 'org.unbroken-dome.test-sets'
+                id 'org.unbroken-dome.test-sets
             }
 
             testSets {

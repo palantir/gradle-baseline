@@ -100,9 +100,10 @@ class BaselineNullAwayIntegrationTest {
 
     @Test
     void integration_test_tasks_are_not_impacted_by_null_away(GradleInvoker gradle, RootProject project) {
+        // adding smth like: project.buildGradle().plugins().add("org.unbroken-dome.test-sets")
         project.buildGradle().append("""
             plugins {
-                id 'org.unbroken-dome.test-sets'
+                id 'org.unbroken-dome.test-sets' //1. option: adding version '...'
             }
             """);
 
