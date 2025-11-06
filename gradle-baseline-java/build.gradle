@@ -46,8 +46,11 @@ dependencies {
         because 'allows JUnit 3 and JUnit 4 tests to run'
     }
     testRuntimeOnly 'com.palantir.sls-packaging:gradle-sls-packaging'
+    gradlePluginForTesting 'com.palantir.sls-packaging:gradle-sls-packaging'
     testRuntimeOnly 'com.palantir.gradle.jdkslatest:gradle-jdks-latest'
+    gradlePluginForTesting 'com.palantir.gradle.jdkslatest:gradle-jdks-latest'
     testRuntimeOnly 'org.unbroken-dome.gradle-plugins:gradle-testsets-plugin'
+    gradlePluginForTesting 'org.unbroken-dome.gradle-plugins:gradle-testsets-plugin'
 
     // necessary because of https://github.com/gradle/gradle/issues/16774
     def toolingApiBuildersJar = (project as ProjectInternal).services.get(ModuleRegistry.class)
@@ -201,6 +204,7 @@ configurations {
 
 dependencies {
     checkstyleVersion 'com.puppycrawl.tools:checkstyle'
+    testImplementation 'com.palantir.gradle.plugintesting:gradle-plugin-testing-junit'
 }
 
 task writeCheckstyleVersion() {
