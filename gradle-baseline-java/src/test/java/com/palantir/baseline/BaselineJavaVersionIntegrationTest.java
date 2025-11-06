@@ -37,6 +37,7 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.assertj.core.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 @GradlePluginTests
@@ -125,6 +126,80 @@ class BaselineJavaVersionIntegrationTest {
         gradle.withArgs("compileJava").buildsWithFailure();
     }
 
+    @Nested
+    class Preview {
+        @Test
+        void java_17_preview_compilation_works(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    libraryTarget = 11
+                    distributionTarget = '17_PREVIEW'
+                }
+                """);
+
+            mainJava.overwrite(JAVA_17_PREVIEW_CODE);
+
+            gradle.withArgs("compileJava", "-i").buildsSuccessfully();
+
+            File compiledClass = rootProject
+                    .buildDir()
+                    .path()
+                    .resolve("classes/java/main/Main.class")
+                    .toFile();
+            assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, ENABLE_PREVIEW_BYTECODE);
+        }
+
+        @Test
+        void java_17_preview_on_single_project_works(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                javaVersion {
+                    runtime = '17_PREVIEW'
+                    target = '17_PREVIEW'
+                }
+                """);
+
+            mainJava.overwrite(JAVA_17_PREVIEW_CODE);
+
+            gradle.withArgs("compileJava", "-i").buildsSuccessfully();
+
+            File compiledClass = rootProject
+                    .buildDir()
+                    .path()
+                    .resolve("classes/java/main/Main.class")
+                    .toFile();
+            assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, ENABLE_PREVIEW_BYTECODE);
+        }
+
+        @Test
+        void java_17_preview_javadoc_works(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    libraryTarget = 11
+                    distributionTarget = '17_PREVIEW'
+                }
+                """);
+
+            mainJava.overwrite(JAVA_17_PREVIEW_CODE);
+
+            gradle.withArgs("javadoc", "-i").buildsSuccessfully();
+        }
+
+        @Test
+        void setting_library_target_to_preview_version_fails(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    libraryTarget = '17_PREVIEW'
+                }
+                """);
+
+            mainJava.overwrite(JAVA_17_PREVIEW_CODE);
+
+            InvocationResult result = gradle.withArgs("compileJava", "-i").buildsWithFailure();
+
+            assertThat(result).output().contains("cannot be run on newer JVMs");
+        }
+    }
+
     @Test
     void distribution_target_is_used_when_no_artifacts_are_published(GradleInvoker gradle, RootProject rootProject) {
         rootProject.buildGradle().append("""
@@ -144,77 +219,6 @@ class BaselineJavaVersionIntegrationTest {
                 .resolve("classes/java/main/Main.class")
                 .toFile();
         assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
-    }
-
-    @Test
-    void java_17_preview_compilation_works(GradleInvoker gradle, RootProject rootProject) {
-        rootProject.buildGradle().append("""
-            javaVersions {
-                libraryTarget = 11
-                distributionTarget = '17_PREVIEW'
-            }
-            """);
-
-        mainJava.overwrite(JAVA_17_PREVIEW_CODE);
-
-        gradle.withArgs("compileJava", "-i").buildsSuccessfully();
-
-        File compiledClass = rootProject
-                .buildDir()
-                .path()
-                .resolve("classes/java/main/Main.class")
-                .toFile();
-        assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, ENABLE_PREVIEW_BYTECODE);
-    }
-
-    @Test
-    void setting_library_target_to_preview_version_fails(GradleInvoker gradle, RootProject rootProject) {
-        rootProject.buildGradle().append("""
-            javaVersions {
-                libraryTarget = '17_PREVIEW'
-            }
-            """);
-
-        mainJava.overwrite(JAVA_17_PREVIEW_CODE);
-
-        InvocationResult result = gradle.withArgs("compileJava", "-i").buildsWithFailure();
-
-        assertThat(result).output().contains("cannot be run on newer JVMs");
-    }
-
-    @Test
-    void java_17_preview_on_single_project_works(GradleInvoker gradle, RootProject rootProject) {
-        rootProject.buildGradle().append("""
-            javaVersion {
-                runtime = '17_PREVIEW'
-                target = '17_PREVIEW'
-            }
-            """);
-
-        mainJava.overwrite(JAVA_17_PREVIEW_CODE);
-
-        gradle.withArgs("compileJava", "-i").buildsSuccessfully();
-
-        File compiledClass = rootProject
-                .buildDir()
-                .path()
-                .resolve("classes/java/main/Main.class")
-                .toFile();
-        assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, ENABLE_PREVIEW_BYTECODE);
-    }
-
-    @Test
-    void java_17_preview_javadoc_works(GradleInvoker gradle, RootProject rootProject) {
-        rootProject.buildGradle().append("""
-            javaVersions {
-                libraryTarget = 11
-                distributionTarget = '17_PREVIEW'
-            }
-            """);
-
-        mainJava.overwrite(JAVA_17_PREVIEW_CODE);
-
-        gradle.withArgs("javadoc", "-i").buildsSuccessfully();
     }
 
     @Test
@@ -331,90 +335,6 @@ class BaselineJavaVersionIntegrationTest {
     }
 
     @Test
-    void when_setupJdkToolchains_true_toolchains_are_configured_by_jdks_latest(
-            GradleInvoker gradle, RootProject rootProject) {
-
-        rootProject.buildGradle().append("""
-            javaVersions {
-                libraryTarget = 11
-                runtime = 21
-                setupJdkToolchains = true
-            }
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(11)
-                    vendor = JvmVendorSpec.ADOPTIUM
-                }
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                    vendor = JvmVendorSpec.ADOPTIUM
-                }
-            }
-            """);
-
-        mainJava.overwrite(JAVA_11_COMPATIBLE_CODE);
-
-        InvocationResult compileJavaResult =
-                gradle.withArgs("compileJava", "--info").buildsSuccessfully();
-
-        assertThat(extractCompileToolchain(compileJavaResult.output())).contains("amazon-corretto-11");
-
-        File compiledClass = rootProject
-                .buildDir()
-                .path()
-                .resolve("classes/java/main/Main.class")
-                .toFile();
-        assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
-
-        InvocationResult runResult = gradle.withArgs("runMainClass", "--info").buildsSuccessfully();
-
-        assertThat(runResult).task(":compileJava").upToDate();
-        assertThat(extractRunJavaCommand(runResult.output())).contains("amazon-corretto-21.");
-
-        gradle.withArgs(
-                        "compileJava",
-                        "run",
-                        "-Porg.gradle.java.installations.auto-detect=false",
-                        "-Porg.gradle.java.installations.auto-download=false")
-                .buildsSuccessfully();
-    }
-
-    @Test
-    void when_setupJdkToolchains_false_no_toolchains_are_configured_by_gradle_baseline(
-            GradleInvoker gradle, RootProject rootProject) {
-
-        rootProject.buildGradle().append("""
-            apply plugin: 'com.palantir.jdks.latest'
-
-            javaVersions {
-                libraryTarget = 11
-                runtime = 21
-                setupJdkToolchains = false
-            }
-
-            java {
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(11)
-                    vendor = JvmVendorSpec.ADOPTIUM
-                }
-                toolchain {
-                    languageVersion = JavaLanguageVersion.of(21)
-                    vendor = JvmVendorSpec.ADOPTIUM
-                }
-            }
-            """);
-
-        mainJava.overwrite(JAVA_11_COMPATIBLE_CODE);
-
-        gradle.withArgs(
-                        "compileJava",
-                        "run",
-                        "-Porg.gradle.java.installations.auto-detect=false",
-                        "-Porg.gradle.java.installations.auto-download=false")
-                .buildsWithFailure();
-    }
-
-    @Test
     void java_8_execution_succeeds_on_java_8(GradleInvoker gradle, RootProject rootProject) {
         Assumptions.assumeThat(System.getProperty("os.arch"))
                 .describedAs(
@@ -487,206 +407,300 @@ class BaselineJavaVersionIntegrationTest {
         assertThat(result).output().contains("[[[17]]]");
     }
 
-    @Test
-    void verification_should_fail_when_target_exceeds_the_runtime_version(
-            GradleInvoker gradle, RootProject rootProject) {
+    @Nested
+    class Toolchains {
+        @Test
+        void when_setupJdkToolchains_true_toolchains_are_configured_by_jdks_latest(
+                GradleInvoker gradle, RootProject rootProject) {
 
-        rootProject.buildGradle().append("""
-            javaVersions {
-                libraryTarget = 17
-                runtime = 11
-            }
-            """);
-
-        InvocationResult result = gradle.withArgs("checkJavaVersions").buildsWithFailure();
-
-        assertThat(result).output().contains("The requested compilation target");
-    }
-
-    @Test
-    void verification_should_fail_when_enable_preview_is_on_but_versions_differ(
-            GradleInvoker gradle, RootProject rootProject) {
-
-        rootProject.buildGradle().append("""
-            javaVersions {
-                distributionTarget = '11_PREVIEW'
-                runtime = '15_PREVIEW'
-            }
-            """);
-
-        InvocationResult result = gradle.withArgs("checkJavaVersions").buildsWithFailure();
-
-        assertThat(result)
-                .output()
-                .contains("Runtime Java version (15_PREVIEW) must be exactly the same as the compilation target"
-                        + " (11_PREVIEW)");
-    }
-
-    @Test
-    void verification_should_fail_when_runtime_does_not_use_enable_preview_but_compilation_does(
-            GradleInvoker gradle, RootProject rootProject) {
-
-        rootProject.buildGradle().append("""
-            javaVersions {
-                distributionTarget = '17_PREVIEW'
-                runtime = '17'
-            }
-            """);
-
-        InvocationResult result = gradle.withArgs("checkJavaVersions").buildsWithFailure();
-
-        assertThat(result)
-                .output()
-                .contains("Runtime Java version (17) must be exactly the same as the compilation target (17_PREVIEW)");
-    }
-
-    @Test
-    void verification_should_succeed_when_target_and_runtime_versions_match(
-            GradleInvoker gradle, RootProject rootProject) {
-
-        rootProject.buildGradle().append("""
-            javaVersions {
-                libraryTarget = 17
-                runtime = 17
-            }
-            """);
-
-        gradle.withArgs("checkJavaVersions").buildsSuccessfully();
-    }
-
-    @Test
-    void can_configure_a_jdk_path_to_be_used(GradleInvoker gradle, RootProject rootProject) {
-        Assumptions.assumeThat(System.getenv("CI"))
-                .describedAs("This test deletes a directory locally, you don't want to run it on your mac")
-                .isNotNull();
-
-        Path newJavaHome;
-        try {
-            newJavaHome = Files.createSymbolicLink(
-                    rootProject.path().resolve("jdk"), Paths.get(System.getProperty("java.home")));
-        } catch (IOException e) {
-            throw new UncheckedIOException(e);
-        }
-
-        rootProject.buildGradle().append("""
-            javaVersions {
-                libraryTarget = 11
-
-                jdk JavaLanguageVersion.of(11), new JavaInstallationMetadata() {
-                    @Override
-                    JavaLanguageVersion getLanguageVersion() {
-                        return JavaLanguageVersion.of(11)
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    libraryTarget = 11
+                    runtime = 21
+                    setupJdkToolchains = true
+                }
+                java {
+                    toolchain {
+                        languageVersion = JavaLanguageVersion.of(11)
+                        vendor = JvmVendorSpec.ADOPTIUM
                     }
-                    @Override
-                    String getJavaRuntimeVersion() {
-                        return '11.0.222'
-                    }
-                    @Override
-                    String getJvmVersion() {
-                        return '11.33.44'
-                    }
-                    @Override
-                    String getVendor() {
-                        return 'vendor'
-                    }
-                    @Override
-                    Directory getInstallationPath() {
-                        return layout.dir(provider { new File('%s') }).get()
-                    }
-                    @Override
-                    boolean isCurrentJvm() {
-                        return false
+                    toolchain {
+                        languageVersion = JavaLanguageVersion.of(21)
+                        vendor = JvmVendorSpec.ADOPTIUM
                     }
                 }
+                """);
+
+            mainJava.overwrite(JAVA_11_COMPATIBLE_CODE);
+
+            InvocationResult compileJavaResult =
+                    gradle.withArgs("compileJava", "--info").buildsSuccessfully();
+
+            assertThat(extractCompileToolchain(compileJavaResult.output())).contains("amazon-corretto-11");
+
+            File compiledClass = rootProject
+                    .buildDir()
+                    .path()
+                    .resolve("classes/java/main/Main.class")
+                    .toFile();
+            assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
+
+            InvocationResult runResult =
+                    gradle.withArgs("runMainClass", "--info").buildsSuccessfully();
+
+            assertThat(runResult).task(":compileJava").upToDate();
+            assertThat(extractRunJavaCommand(runResult.output())).contains("amazon-corretto-21.");
+
+            gradle.withArgs(
+                            "compileJava",
+                            "run",
+                            "-Porg.gradle.java.installations.auto-detect=false",
+                            "-Porg.gradle.java.installations.auto-download=false")
+                    .buildsSuccessfully();
+        }
+
+        @Test
+        void when_setupJdkToolchains_false_no_toolchains_are_configured_by_gradle_baseline(
+                GradleInvoker gradle, RootProject rootProject) {
+
+            rootProject.buildGradle().append("""
+                apply plugin: 'com.palantir.jdks.latest'
+
+                javaVersions {
+                    libraryTarget = 11
+                    runtime = 21
+                    setupJdkToolchains = false
+                }
+
+                java {
+                    toolchain {
+                        languageVersion = JavaLanguageVersion.of(11)
+                        vendor = JvmVendorSpec.ADOPTIUM
+                    }
+                    toolchain {
+                        languageVersion = JavaLanguageVersion.of(21)
+                        vendor = JvmVendorSpec.ADOPTIUM
+                    }
+                }
+                """);
+
+            mainJava.overwrite(JAVA_11_COMPATIBLE_CODE);
+
+            gradle.withArgs(
+                            "compileJava",
+                            "run",
+                            "-Porg.gradle.java.installations.auto-detect=false",
+                            "-Porg.gradle.java.installations.auto-download=false")
+                    .buildsWithFailure();
+        }
+
+        @Test
+        void can_configure_a_jdk_path_to_be_used(GradleInvoker gradle, RootProject rootProject) {
+            Assumptions.assumeThat(System.getenv("CI"))
+                    .describedAs("This test deletes a directory locally, you don't want to run it on your mac")
+                    .isNotNull();
+
+            Path newJavaHome;
+            try {
+                newJavaHome = Files.createSymbolicLink(
+                        rootProject.path().resolve("jdk"), Paths.get(System.getProperty("java.home")));
+            } catch (IOException e) {
+                throw new UncheckedIOException(e);
             }
-            """, newJavaHome);
 
-        rootProject.mainSourceSet().java().fileByPath("Main.java").overwrite(JAVA_11_COMPATIBLE_CODE);
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    libraryTarget = 11
 
-        InvocationResult result =
-                gradle.withArgs("compileJava", "--stacktrace", "--info").buildsSuccessfully();
+                    jdk JavaLanguageVersion.of(11), new JavaInstallationMetadata() {
+                        @Override
+                        JavaLanguageVersion getLanguageVersion() {
+                            return JavaLanguageVersion.of(11)
+                        }
+                        @Override
+                        String getJavaRuntimeVersion() {
+                            return '11.0.222'
+                        }
+                        @Override
+                        String getJvmVersion() {
+                            return '11.33.44'
+                        }
+                        @Override
+                        String getVendor() {
+                            return 'vendor'
+                        }
+                        @Override
+                        Directory getInstallationPath() {
+                            return layout.dir(provider { new File('%s') }).get()
+                        }
+                        @Override
+                        boolean isCurrentJvm() {
+                            return false
+                        }
+                    }
+                }
+                """, newJavaHome);
 
-        assertThat(result).output().contains(newJavaHome.toString());
+            rootProject.mainSourceSet().java().fileByPath("Main.java").overwrite(JAVA_11_COMPATIBLE_CODE);
+
+            InvocationResult result =
+                    gradle.withArgs("compileJava", "--stacktrace", "--info").buildsSuccessfully();
+
+            assertThat(result).output().contains(newJavaHome.toString());
+        }
     }
 
-    @Test
-    void checkRuntimeClasspathCompatible_fails_when_there_is_a_17_jar_on_the_runtimeClasspath_but_runtime_is_11(
-            GradleInvoker gradle, RootProject rootProject) {
+    @Nested
+    class Verification {
+        @Test
+        void verification_should_fail_when_target_exceeds_the_runtime_version(
+                GradleInvoker gradle, RootProject rootProject) {
 
-        rootProject.buildGradle().append("""
-            javaVersions {
-                libraryTarget = 11
-                runtime = 11
-            }
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    libraryTarget = 17
+                    runtime = 11
+                }
+                """);
 
-            configurations {
-                java17jar
-            }
+            InvocationResult result = gradle.withArgs("checkJavaVersions").buildsWithFailure();
 
-            dependencies {
-                // This has java 17 class files and is a multi-release jar with java 21 class files
-                java17jar 'org.springframework:spring-core:6.1.5'
-                implementation files(configurations.java17jar)
-            }
-            """);
+            assertThat(result).output().contains("The requested compilation target");
+        }
 
-        InvocationResult result =
-                gradle.withArgs("checkRuntimeClasspathCompatible").buildsWithFailure();
+        @Test
+        void verification_should_fail_when_enable_preview_is_on_but_versions_differ(
+                GradleInvoker gradle, RootProject rootProject) {
 
-        assertThat(result).output().contains("spring-core-6.1.5.jar");
-        assertThat(result).output().contains("spring-jcl-6.1.5.jar");
-        assertThat(result).output().contains("bytecode major version 61");
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    distributionTarget = '11_PREVIEW'
+                    runtime = '15_PREVIEW'
+                }
+                """);
+
+            InvocationResult result = gradle.withArgs("checkJavaVersions").buildsWithFailure();
+
+            assertThat(result)
+                    .output()
+                    .contains("Runtime Java version (15_PREVIEW) must be exactly the same as the compilation target"
+                            + " (11_PREVIEW)");
+        }
+
+        @Test
+        void verification_should_fail_when_runtime_does_not_use_enable_preview_but_compilation_does(
+                GradleInvoker gradle, RootProject rootProject) {
+
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    distributionTarget = '17_PREVIEW'
+                    runtime = '17'
+                }
+                """);
+
+            InvocationResult result = gradle.withArgs("checkJavaVersions").buildsWithFailure();
+
+            assertThat(result)
+                    .output()
+                    .contains("Runtime Java version (17) must be exactly the same as the compilation target"
+                            + " (17_PREVIEW)");
+        }
+
+        @Test
+        void verification_should_succeed_when_target_and_runtime_versions_match(
+                GradleInvoker gradle, RootProject rootProject) {
+
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    libraryTarget = 17
+                    runtime = 17
+                }
+                """);
+
+            gradle.withArgs("checkJavaVersions").buildsSuccessfully();
+        }
     }
 
-    @Test
-    void checkRuntimeClasspathCompatible_succeeds_when_all_runtimeClasspath_jars_are_compatible(
-            GradleInvoker gradle, RootProject rootProject) {
+    @Nested
+    class CheckRuntimeClasspathCompatible {
+        @Test
+        void fails_when_there_is_a_17_jar_on_the_runtimeClasspath_but_runtime_is_11(
+                GradleInvoker gradle, RootProject rootProject) {
 
-        rootProject.buildGradle().append("""
-            javaVersions {
-                libraryTarget = 8
-                runtime = 8
-            }
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    libraryTarget = 11
+                    runtime = 11
+                }
 
-            dependencies {
-                implementation 'com.fasterxml.jackson.core:jackson-core:2.16.1'
-            }
-            """);
+                configurations {
+                    java17jar
+                }
 
-        gradle.withArgs("checkRuntimeClasspathCompatible").buildsSuccessfully();
-    }
+                dependencies {
+                    // This has java 17 class files and is a multi-release jar with java 21 class files
+                    java17jar 'org.springframework:spring-core:6.1.5'
+                    implementation files(configurations.java17jar)
+                }
+                """);
 
-    @Test
-    void checkRuntimeClasspathCompatible_handles_gradleApi(GradleInvoker gradle, RootProject rootProject) {
-        rootProject.buildGradle().append("""
-            javaVersions {
-                libraryTarget = 8
-                runtime = 8
-            }
+            InvocationResult result =
+                    gradle.withArgs("checkRuntimeClasspathCompatible").buildsWithFailure();
 
-            dependencies {
-                // this has relocated multi-version jar classes that have not been put in the right place (at least
-                // for the versions of gradle used when tested). eg:
-                // gradle-api-7.5.1.jar: org/gradle/internal/impldep/META-INF/versions/9/module-info.class has bytecode major version 53
-                implementation gradleApi()
-            }
-            """);
+            assertThat(result).output().contains("spring-core-6.1.5.jar");
+            assertThat(result).output().contains("spring-jcl-6.1.5.jar");
+            assertThat(result).output().contains("bytecode major version 61");
+        }
 
-        gradle.withArgs("checkRuntimeClasspathCompatible", "--write-locks").buildsSuccessfully();
-    }
+        @Test
+        void succeeds_when_all_runtimeClasspath_jars_are_compatible(GradleInvoker gradle, RootProject rootProject) {
 
-    @Test
-    void checkRuntimeClasspathCompatible_is_a_dependency_of_check(GradleInvoker gradle, RootProject rootProject) {
-        rootProject.buildGradle().append("""
-            javaVersions {
-                libraryTarget = 11
-                runtime = 11
-            }
-            """);
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    libraryTarget = 8
+                    runtime = 8
+                }
 
-        InvocationResult result = gradle.withArgs("check", "--dry-run").buildsSuccessfully();
+                dependencies {
+                    implementation 'com.fasterxml.jackson.core:jackson-core:2.16.1'
+                }
+                """);
 
-        assertThat(result).output().contains(":checkRuntimeClasspathCompatible");
+            gradle.withArgs("checkRuntimeClasspathCompatible").buildsSuccessfully();
+        }
+
+        @Test
+        void handles_gradleApi(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    libraryTarget = 8
+                    runtime = 8
+                }
+
+                dependencies {
+                    // this has relocated multi-version jar classes that have not been put in the right place (at least
+                    // for the versions of gradle used when tested). eg:
+                    // gradle-api-7.5.1.jar: org/gradle/internal/impldep/META-INF/versions/9/module-info.class has bytecode major version 53
+                    implementation gradleApi()
+                }
+                """);
+
+            gradle.withArgs("checkRuntimeClasspathCompatible", "--write-locks").buildsSuccessfully();
+        }
+
+        @Test
+        void is_a_dependency_of_check(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    libraryTarget = 11
+                    runtime = 11
+                }
+                """);
+
+            InvocationResult result = gradle.withArgs("check", "--dry-run").buildsSuccessfully();
+
+            assertThat(result).output().contains(":checkRuntimeClasspathCompatible");
+        }
     }
 
     @Test
