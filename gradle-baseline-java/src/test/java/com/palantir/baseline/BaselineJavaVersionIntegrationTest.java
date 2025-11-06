@@ -638,9 +638,8 @@ class BaselineJavaVersionIntegrationTest {
     }
 
     @Test
-    void
-            checkRuntimeClasspathCompatible_succeeds_when_there_is_only_jars_of_the_compatible_java_runtime_versions_on_the_runtimeClasspath(
-                    GradleInvoker gradle, RootProject rootProject) {
+    void checkRuntimeClasspathCompatible_succeeds_when_all_runtimeClasspath_jars_are_compatible(
+            GradleInvoker gradle, RootProject rootProject) {
 
         rootProject.buildGradle().append("""
             javaVersions {
