@@ -19,6 +19,7 @@ package com.palantir.baseline.plugins.javaversions;
 import javax.inject.Inject;
 import org.gradle.api.Project;
 import org.gradle.api.provider.Property;
+import org.gradle.jvm.toolchain.JavaLanguageVersion;
 
 /**
  * Extension named {@code javaVersion} used to set the
@@ -26,6 +27,7 @@ import org.gradle.api.provider.Property;
  */
 public class BaselineJavaVersionExtension {
 
+    private final Property<JavaLanguageVersion> compiler;
     private final Property<ChosenJavaVersion> target;
     private final Property<ChosenJavaVersion> runtime;
 
@@ -33,13 +35,23 @@ public class BaselineJavaVersionExtension {
 
     @Inject
     public BaselineJavaVersionExtension(Project project) {
+        compiler = project.getObjects().property(JavaLanguageVersion.class);
         target = project.getObjects().property(ChosenJavaVersion.class);
         runtime = project.getObjects().property(ChosenJavaVersion.class);
         overrideLibraryAutoDetection = project.getObjects().property(Boolean.class);
 
+        compiler.finalizeValueOnRead();
         target.finalizeValueOnRead();
         runtime.finalizeValueOnRead();
         overrideLibraryAutoDetection.finalizeValueOnRead();
+    }
+
+    public final Property<JavaLanguageVersion> compiler() {
+        return compiler;
+    }
+
+    public final void setCompiler(int value) {
+        compiler.set(JavaLanguageVersion.of(value));
     }
 
     /**

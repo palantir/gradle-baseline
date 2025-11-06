@@ -31,6 +31,7 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion;
  * with consistent java toolchains.
  */
 public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtensionSetters {
+    private final Property<JavaLanguageVersion> compiler;
     private final Property<JavaLanguageVersion> libraryTarget;
     private final Property<ChosenJavaVersion> distributionTarget;
     private final Property<ChosenJavaVersion> runtime;
@@ -40,6 +41,7 @@ public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtens
 
     @Inject
     public BaselineJavaVersionsExtension(Project project) {
+        this.compiler = project.getObjects().property(JavaLanguageVersion.class);
         this.libraryTarget = project.getObjects().property(JavaLanguageVersion.class);
         this.distributionTarget = project.getObjects().property(ChosenJavaVersion.class);
         this.runtime = project.getObjects().property(ChosenJavaVersion.class);
@@ -54,6 +56,14 @@ public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtens
         libraryTarget.finalizeValueOnRead();
         distributionTarget.finalizeValueOnRead();
         runtime.finalizeValueOnRead();
+    }
+
+    public final Property<JavaLanguageVersion> compiler() {
+        return compiler;
+    }
+
+    public final void setCompiler(int value) {
+        compiler.set(JavaLanguageVersion.of(value));
     }
 
     /** Target {@link JavaLanguageVersion} for compilation of libraries that are published. */
