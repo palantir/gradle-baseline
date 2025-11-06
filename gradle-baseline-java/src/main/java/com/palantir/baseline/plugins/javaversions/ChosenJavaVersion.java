@@ -56,6 +56,10 @@ public final class ChosenJavaVersion implements Serializable {
         return enablePreview;
     }
 
+    public int asMajorVersion() {
+        return javaLanguageVersion.asInt();
+    }
+
     public String asIdeaLanguageLevel() {
         return "JDK_" + javaLanguageVersion.toString() + (enablePreview ? "_PREVIEW" : "");
     }
