@@ -39,10 +39,6 @@ import org.assertj.core.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
-/**
- * This test exercises both the root-plugin {@code BaselineJavaVersions} AND the subproject
- * specific plugin, {@code BaselineJavaVersion}.
- */
 @GradlePluginTests
 class BaselineJavaVersionIntegrationTest {
     private static final int JAVA_8_BYTECODE = 52;
@@ -90,18 +86,10 @@ class BaselineJavaVersionIntegrationTest {
     @BeforeEach
     void beforeEach(RootProject rootProject) {
         rootProject.buildGradle().append("""
-            buildscript {
-                repositories {
-                    mavenCentral()
-                }
-                dependencies {
-                    classpath 'com.palantir.sls-packaging:gradle-sls-packaging'
-                    classpath 'com.palantir.gradle.jdkslatest:gradle-jdks-latest'
-                }
-            }
-
             plugins {
                 id 'java'
+                id 'com.palantir.baseline-java-versions'
+                id 'com.palantir.jdks.latest'
             }
 
             allprojects {
@@ -109,9 +97,6 @@ class BaselineJavaVersionIntegrationTest {
                     mavenCentral()
                 }
             }
-
-            apply plugin: 'com.palantir.baseline-java-versions'
-            apply plugin: 'com.palantir.jdks.latest'
 
             task runMainClass(type: JavaExec) {
                 mainClass = 'Main'
@@ -369,7 +354,8 @@ class BaselineJavaVersionIntegrationTest {
 
         mainJava.overwrite(JAVA_11_COMPATIBLE_CODE);
 
-        InvocationResult compileJavaResult = gradle.withArgs("compileJava").buildsSuccessfully();
+        InvocationResult compileJavaResult =
+                gradle.withArgs("compileJava", "--info").buildsSuccessfully();
 
         assertThat(extractCompileToolchain(compileJavaResult.output())).contains("amazon-corretto-11");
 
@@ -380,7 +366,7 @@ class BaselineJavaVersionIntegrationTest {
                 .toFile();
         assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
 
-        InvocationResult runResult = gradle.withArgs("runMainClass").buildsSuccessfully();
+        InvocationResult runResult = gradle.withArgs("runMainClass", "--info").buildsSuccessfully();
 
         assertThat(runResult).task(":compileJava").upToDate();
         assertThat(extractRunJavaCommand(runResult.output())).contains("amazon-corretto-21.");
