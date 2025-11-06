@@ -603,7 +603,8 @@ class BaselineJavaVersionIntegrationTest {
 
         rootProject.mainSourceSet().java().fileByPath("Main.java").overwrite(JAVA_11_COMPATIBLE_CODE);
 
-        InvocationResult result = gradle.withArgs("compileJava", "--stacktrace").buildsSuccessfully();
+        InvocationResult result =
+                gradle.withArgs("compileJava", "--stacktrace", "--info").buildsSuccessfully();
 
         assertThat(result).output().contains(newJavaHome.toString());
     }
