@@ -244,7 +244,7 @@ com.palantir.gradle.jdkslatest:gradle-jdks-latest:0.22.0 (1 constraints: 36052d3
 
 com.palantir.gradle.plugintesting:configuration-cache-spec:0.26.0 (1 constraints: 3a05393b)
 
-com.palantir.gradle.plugintesting:gradle-plugin-testing-junit:0.26.0 (1 constraints: 3a05393b)
+com.palantir.gradle.plugintesting:gradle-plugin-testing-junit:0.26.0 (1 constraints: a0071a7e)
 
 com.palantir.gradle.plugintesting:plugin-testing-core:0.26.0 (1 constraints: 3a05393b)
 
