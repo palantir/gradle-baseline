@@ -307,6 +307,57 @@ class BaselineJavaVersionIntegrationTest {
     }
 
     @Nested
+    class Javadoc {
+        @Test
+        void javadoc_works_when_compiler_is_same_version_as_target(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                javaVersion {
+                    compiler = 21
+                    target = 21
+                }
+                """);
+
+            rootProject.mainSourceSet().java().writeClass("""
+                package app;
+
+                public class Main {
+                    /**
+                    * Some {@code javadoc}
+                    */
+                    public Main() {}
+                }
+                """);
+
+            gradle.withArgs("javadoc").buildsSuccessfully();
+        }
+
+        @Test
+        void javadoc_works_when_compiler_is_a_higher_version_than_the_target(
+                GradleInvoker gradle, RootProject rootProject) {
+
+            rootProject.buildGradle().append("""
+                javaVersion {
+                    compiler = 21
+                    target = 17
+                }
+                """);
+
+            rootProject.mainSourceSet().java().writeClass("""
+                package app;
+
+                public class Main {
+                    /**
+                    * Some {@code javadoc}
+                    */
+                    public Main() {}
+                }
+                """);
+
+            gradle.withArgs("javadoc").buildsSuccessfully();
+        }
+    }
+
+    @Nested
     class GradleJavaConfigurationSetup {
         @Test
         void javaPluginConvention_getTargetCompatibility_produces_the_runtime_java_version(
@@ -369,7 +420,7 @@ class BaselineJavaVersionIntegrationTest {
 
             rootProject.mainSourceSet().java().writeClass(JAVA_17_PREVIEW_CODE);
 
-            gradle.withArgs("javadoc", "-i").buildsSuccessfully();
+            gradle.withArgs("javadoc").buildsSuccessfully();
         }
     }
 
