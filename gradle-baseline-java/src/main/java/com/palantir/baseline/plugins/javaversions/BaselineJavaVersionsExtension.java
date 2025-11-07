@@ -41,7 +41,10 @@ public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtens
 
     @Inject
     public BaselineJavaVersionsExtension(Project project) {
-        this.compiler = project.getObjects().property(JavaLanguageVersion.class);
+        this.compiler = project.getObjects().property(JavaLanguageVersion.class).convention(project.provider(() -> {
+            throw new RuntimeException(
+                    "The `compiler` property inside `javaVersions` in the root project must be set with a value");
+        }));
         this.libraryTarget = project.getObjects().property(JavaLanguageVersion.class);
         this.distributionTarget = project.getObjects().property(ChosenJavaVersion.class);
         this.runtime = project.getObjects().property(ChosenJavaVersion.class);

@@ -175,6 +175,7 @@ class BaselineJavaVersionsIntegrationTest {
 
             rootProject.buildGradle().append("""
                 javaVersions {
+                    compiler = 11
                     libraryTarget = 11
                     runtime = 21
                 }
@@ -216,6 +217,7 @@ class BaselineJavaVersionsIntegrationTest {
                 apply plugin: 'com.palantir.jdks.latest'
 
                 javaVersions {
+                    compiler = 11
                     libraryTarget = 11
                     runtime = 21
                     setupJdkToolchains = false
@@ -305,6 +307,7 @@ class BaselineJavaVersionsIntegrationTest {
         void explainJavaVersions_prints_the_java_version_used(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersions {
+                    compiler = 11
                     libraryTarget = 11
                     runtime = 17
                 }

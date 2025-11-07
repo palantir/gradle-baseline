@@ -97,6 +97,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             // Validation
             TaskProvider<CheckJavaVersionsTask> checkJavaVersions = project.getTasks()
                     .register("checkJavaVersions", CheckJavaVersionsTask.class, task -> {
+                        task.getCompilerVersion().set(extension.compiler());
                         task.getTargetVersion().set(extension.target());
                         task.getRuntimeVersion().set(extension.runtime());
                     });

@@ -35,7 +35,10 @@ public class BaselineJavaVersionExtension {
 
     @Inject
     public BaselineJavaVersionExtension(Project project) {
-        compiler = project.getObjects().property(JavaLanguageVersion.class);
+        compiler = project.getObjects().property(JavaLanguageVersion.class).convention(project.provider(() -> {
+            throw new RuntimeException(
+                    "The `compiler` property inside %s must be set with a value".formatted(project.getDisplayName()));
+        }));
         target = project.getObjects().property(ChosenJavaVersion.class);
         runtime = project.getObjects().property(ChosenJavaVersion.class);
         overrideLibraryAutoDetection = project.getObjects().property(Boolean.class);
