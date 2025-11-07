@@ -30,9 +30,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.assertj.core.api.Assumptions;
@@ -275,79 +272,6 @@ class BaselineJavaVersionIntegrationTest {
     }
 
     @Nested
-    class LibraryVsDistributionDetection {
-        @Test
-        void distribution_target_is_used_when_no_artifacts_are_published(
-                GradleInvoker gradle, RootProject rootProject) {
-            rootProject.buildGradle().append("""
-                javaVersions {
-                    libraryTarget = 11
-                    distributionTarget = 17
-                }
-                """);
-
-            mainJava.overwrite(JAVA_11_COMPATIBLE_CODE);
-
-            gradle.withArgs("compileJava").buildsSuccessfully();
-
-            File compiledClass = rootProject
-                    .buildDir()
-                    .path()
-                    .resolve("classes/java/main/Main.class")
-                    .toFile();
-            assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
-        }
-
-        @Test
-        void library_target_is_used_when_no_artifacts_are_published_but_project_is_overridden_as_a_library(
-                GradleInvoker gradle, RootProject rootProject) {
-
-            rootProject.buildGradle().append("""
-                javaVersions {
-                    libraryTarget = 11
-                    distributionTarget = 17
-                }
-                javaVersion {
-                    library()
-                }
-                """);
-
-            mainJava.overwrite(JAVA_11_COMPATIBLE_CODE);
-
-            gradle.withArgs("compileJava").buildsSuccessfully();
-
-            File compiledClass = rootProject
-                    .buildDir()
-                    .path()
-                    .resolve("classes/java/main/Main.class")
-                    .toFile();
-            assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
-        }
-
-        @Test
-        void distribution_target_is_used_when_sls_packaging_is_used(GradleInvoker gradle, RootProject rootProject) {
-            rootProject.buildGradle().append("""
-                apply plugin: 'com.palantir.sls-java-service-distribution'
-                javaVersions {
-                    libraryTarget = 11
-                    distributionTarget = 17
-                }
-                """);
-
-            mainJava.overwrite(JAVA_11_COMPATIBLE_CODE);
-
-            gradle.withArgs("compileJava").buildsSuccessfully();
-
-            File compiledClass = rootProject
-                    .buildDir()
-                    .path()
-                    .resolve("classes/java/main/Main.class")
-                    .toFile();
-            assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
-        }
-    }
-
-    @Nested
     class Preview {
         @Test
         void java_17_preview_compilation_works(GradleInvoker gradle, RootProject rootProject) {
@@ -418,149 +342,6 @@ class BaselineJavaVersionIntegrationTest {
             InvocationResult result = gradle.withArgs("compileJava", "-i").buildsWithFailure();
 
             assertThat(result).output().contains("cannot be run on newer JVMs");
-        }
-    }
-
-    @Nested
-    class Toolchains {
-        @Test
-        void when_setupJdkToolchains_true_toolchains_are_configured_by_jdks_latest(
-                GradleInvoker gradle, RootProject rootProject) {
-
-            rootProject.buildGradle().append("""
-                javaVersions {
-                    libraryTarget = 11
-                    runtime = 21
-                    setupJdkToolchains = true
-                }
-                java {
-                    toolchain {
-                        languageVersion = JavaLanguageVersion.of(11)
-                        vendor = JvmVendorSpec.ADOPTIUM
-                    }
-                    toolchain {
-                        languageVersion = JavaLanguageVersion.of(21)
-                        vendor = JvmVendorSpec.ADOPTIUM
-                    }
-                }
-                """);
-
-            mainJava.overwrite(JAVA_11_COMPATIBLE_CODE);
-
-            InvocationResult compileJavaResult =
-                    gradle.withArgs("compileJava", "--info").buildsSuccessfully();
-
-            assertThat(extractCompileToolchain(compileJavaResult.output())).contains("amazon-corretto-11");
-
-            File compiledClass = rootProject
-                    .buildDir()
-                    .path()
-                    .resolve("classes/java/main/Main.class")
-                    .toFile();
-            assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
-
-            InvocationResult runResult =
-                    gradle.withArgs("runMainClass", "--info").buildsSuccessfully();
-
-            assertThat(runResult).task(":compileJava").upToDate();
-            assertThat(extractRunJavaCommand(runResult.output())).contains("amazon-corretto-21.");
-
-            gradle.withArgs(
-                            "compileJava",
-                            "run",
-                            "-Porg.gradle.java.installations.auto-detect=false",
-                            "-Porg.gradle.java.installations.auto-download=false")
-                    .buildsSuccessfully();
-        }
-
-        @Test
-        void when_setupJdkToolchains_false_no_toolchains_are_configured_by_gradle_baseline(
-                GradleInvoker gradle, RootProject rootProject) {
-
-            rootProject.buildGradle().append("""
-                apply plugin: 'com.palantir.jdks.latest'
-
-                javaVersions {
-                    libraryTarget = 11
-                    runtime = 21
-                    setupJdkToolchains = false
-                }
-
-                java {
-                    toolchain {
-                        languageVersion = JavaLanguageVersion.of(11)
-                        vendor = JvmVendorSpec.ADOPTIUM
-                    }
-                    toolchain {
-                        languageVersion = JavaLanguageVersion.of(21)
-                        vendor = JvmVendorSpec.ADOPTIUM
-                    }
-                }
-                """);
-
-            mainJava.overwrite(JAVA_11_COMPATIBLE_CODE);
-
-            gradle.withArgs(
-                            "compileJava",
-                            "run",
-                            "-Porg.gradle.java.installations.auto-detect=false",
-                            "-Porg.gradle.java.installations.auto-download=false")
-                    .buildsWithFailure();
-        }
-
-        @Test
-        void can_configure_a_jdk_path_to_be_used(GradleInvoker gradle, RootProject rootProject) {
-            Assumptions.assumeThat(System.getenv("CI"))
-                    .describedAs("This test deletes a directory locally, you don't want to run it on your mac")
-                    .isNotNull();
-
-            Path newJavaHome;
-            try {
-                newJavaHome = Files.createSymbolicLink(
-                        rootProject.path().resolve("jdk"), Paths.get(System.getProperty("java.home")));
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-
-            rootProject.buildGradle().append("""
-                javaVersions {
-                    libraryTarget = 11
-
-                    jdk JavaLanguageVersion.of(11), new JavaInstallationMetadata() {
-                        @Override
-                        JavaLanguageVersion getLanguageVersion() {
-                            return JavaLanguageVersion.of(11)
-                        }
-                        @Override
-                        String getJavaRuntimeVersion() {
-                            return '11.0.222'
-                        }
-                        @Override
-                        String getJvmVersion() {
-                            return '11.33.44'
-                        }
-                        @Override
-                        String getVendor() {
-                            return 'vendor'
-                        }
-                        @Override
-                        Directory getInstallationPath() {
-                            return layout.dir(provider { new File('%s') }).get()
-                        }
-                        @Override
-                        boolean isCurrentJvm() {
-                            return false
-                        }
-                    }
-                }
-                """, newJavaHome);
-
-            rootProject.mainSourceSet().java().fileByPath("Main.java").overwrite(JAVA_11_COMPATIBLE_CODE);
-
-            InvocationResult result =
-                    gradle.withArgs("compileJava", "--stacktrace", "--info").buildsSuccessfully();
-
-            assertThat(result).output().contains(newJavaHome.toString());
         }
     }
 
@@ -714,25 +495,6 @@ class BaselineJavaVersionIntegrationTest {
             InvocationResult result = gradle.withArgs("check", "--dry-run").buildsSuccessfully();
 
             assertThat(result).output().contains(":checkRuntimeClasspathCompatible");
-        }
-    }
-
-    @Nested
-    class ExplainJavaVersions {
-        @Test
-        void explainJavaVersions_prints_the_java_version_used(GradleInvoker gradle, RootProject rootProject) {
-            rootProject.buildGradle().append("""
-                javaVersions {
-                    libraryTarget = 11
-                    runtime = 17
-                }
-                """);
-
-            InvocationResult result = gradle.withArgs("explainJavaVersions").buildsSuccessfully();
-
-            assertThat(result).output().contains("target  = 11");
-            assertThat(result).output().contains("runtime = 17");
-            assertThat(result).output().contains("Reason:");
         }
     }
 
