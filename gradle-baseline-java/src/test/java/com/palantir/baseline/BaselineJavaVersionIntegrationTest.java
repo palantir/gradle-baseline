@@ -126,80 +126,6 @@ class BaselineJavaVersionIntegrationTest {
         gradle.withArgs("compileJava").buildsWithFailure();
     }
 
-    @Nested
-    class Preview {
-        @Test
-        void java_17_preview_compilation_works(GradleInvoker gradle, RootProject rootProject) {
-            rootProject.buildGradle().append("""
-                javaVersions {
-                    libraryTarget = 11
-                    distributionTarget = '17_PREVIEW'
-                }
-                """);
-
-            mainJava.overwrite(JAVA_17_PREVIEW_CODE);
-
-            gradle.withArgs("compileJava", "-i").buildsSuccessfully();
-
-            File compiledClass = rootProject
-                    .buildDir()
-                    .path()
-                    .resolve("classes/java/main/Main.class")
-                    .toFile();
-            assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, ENABLE_PREVIEW_BYTECODE);
-        }
-
-        @Test
-        void java_17_preview_on_single_project_works(GradleInvoker gradle, RootProject rootProject) {
-            rootProject.buildGradle().append("""
-                javaVersion {
-                    runtime = '17_PREVIEW'
-                    target = '17_PREVIEW'
-                }
-                """);
-
-            mainJava.overwrite(JAVA_17_PREVIEW_CODE);
-
-            gradle.withArgs("compileJava", "-i").buildsSuccessfully();
-
-            File compiledClass = rootProject
-                    .buildDir()
-                    .path()
-                    .resolve("classes/java/main/Main.class")
-                    .toFile();
-            assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, ENABLE_PREVIEW_BYTECODE);
-        }
-
-        @Test
-        void java_17_preview_javadoc_works(GradleInvoker gradle, RootProject rootProject) {
-            rootProject.buildGradle().append("""
-                javaVersions {
-                    libraryTarget = 11
-                    distributionTarget = '17_PREVIEW'
-                }
-                """);
-
-            mainJava.overwrite(JAVA_17_PREVIEW_CODE);
-
-            gradle.withArgs("javadoc", "-i").buildsSuccessfully();
-        }
-
-        @Test
-        void setting_library_target_to_preview_version_fails(GradleInvoker gradle, RootProject rootProject) {
-            rootProject.buildGradle().append("""
-                javaVersions {
-                    libraryTarget = '17_PREVIEW'
-                }
-                """);
-
-            mainJava.overwrite(JAVA_17_PREVIEW_CODE);
-
-            InvocationResult result = gradle.withArgs("compileJava", "-i").buildsWithFailure();
-
-            assertThat(result).output().contains("cannot be run on newer JVMs");
-        }
-    }
-
     @Test
     void distribution_target_is_used_when_no_artifacts_are_published(GradleInvoker gradle, RootProject rootProject) {
         rootProject.buildGradle().append("""
@@ -405,6 +331,80 @@ class BaselineJavaVersionIntegrationTest {
         InvocationResult result = gradle.withArgs("printTargetCompatibility").buildsSuccessfully();
 
         assertThat(result).output().contains("[[[17]]]");
+    }
+
+    @Nested
+    class Preview {
+        @Test
+        void java_17_preview_compilation_works(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    libraryTarget = 11
+                    distributionTarget = '17_PREVIEW'
+                }
+                """);
+
+            mainJava.overwrite(JAVA_17_PREVIEW_CODE);
+
+            gradle.withArgs("compileJava", "-i").buildsSuccessfully();
+
+            File compiledClass = rootProject
+                    .buildDir()
+                    .path()
+                    .resolve("classes/java/main/Main.class")
+                    .toFile();
+            assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, ENABLE_PREVIEW_BYTECODE);
+        }
+
+        @Test
+        void java_17_preview_on_single_project_works(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                javaVersion {
+                    runtime = '17_PREVIEW'
+                    target = '17_PREVIEW'
+                }
+                """);
+
+            mainJava.overwrite(JAVA_17_PREVIEW_CODE);
+
+            gradle.withArgs("compileJava", "-i").buildsSuccessfully();
+
+            File compiledClass = rootProject
+                    .buildDir()
+                    .path()
+                    .resolve("classes/java/main/Main.class")
+                    .toFile();
+            assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, ENABLE_PREVIEW_BYTECODE);
+        }
+
+        @Test
+        void java_17_preview_javadoc_works(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    libraryTarget = 11
+                    distributionTarget = '17_PREVIEW'
+                }
+                """);
+
+            mainJava.overwrite(JAVA_17_PREVIEW_CODE);
+
+            gradle.withArgs("javadoc", "-i").buildsSuccessfully();
+        }
+
+        @Test
+        void setting_library_target_to_preview_version_fails(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    libraryTarget = '17_PREVIEW'
+                }
+                """);
+
+            mainJava.overwrite(JAVA_17_PREVIEW_CODE);
+
+            InvocationResult result = gradle.withArgs("compileJava", "-i").buildsWithFailure();
+
+            assertThat(result).output().contains("cannot be run on newer JVMs");
+        }
     }
 
     @Nested
