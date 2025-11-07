@@ -397,12 +397,6 @@ checkImplicitDependencies {
 
 This plugin sets the encoding for JavaCompile tasks to `UTF-8`.
 
-## com.palantir.baseline-release-compatibility
-
-This plugin adds the `--release <number>` flag to JavaCompile tasks (when the compiler [supports it](https://openjdk.java.net/jeps/247)), so that published jars will only use methods available in the target JRE.  Relying on `sourceCompatibility = 1.8` and `targetCompatibility = 1.8` is insufficient because you run the risk of using method that have been added in newer JREs, e.g. `Optional#isEmpty`.
-
-This plugin may become redundant if this functionality is implemented upstream [in Gradle](https://github.com/gradle/gradle/issues/2510).
-
 ## com.palantir.baseline-testing
 
 Configures some sensible defaults:
