@@ -163,10 +163,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             groovyCompileTask
                     .getJavaLauncher()
                     .set(getJavaLauncher(
-                            rootExtension,
-                            baselineConfiguredJavaToolchains,
-                            javaToolchainService,
-                            compiler.map(ChosenJavaVersion::of)));
+                            rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, target));
 
             groovyCompileTask
                     .getOptions()

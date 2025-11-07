@@ -435,10 +435,8 @@ class BaselineJavaVersionIntegrationTest {
 
     @Nested
     class GroovyCompile {
-        @Test
-        void targeting_17_and_running_the_groovy_compiler_with_17_jdk_outputs_17_bytecode(
-                GradleInvoker gradle, RootProject rootProject) {
-
+        @BeforeEach
+        void beforeEach(RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
                     compiler = 17
@@ -449,6 +447,21 @@ class BaselineJavaVersionIntegrationTest {
 
                 dependencies {
                     implementation localGroovy()
+                }
+                """);
+        }
+
+        @Test
+        void targeting_17_and_setting_compiler_to_17_jdk_outputs_17_bytecode(
+                GradleInvoker gradle, RootProject rootProject) {
+
+            // The groovy compiler needs to run with the JDK it's targeting, not with
+            // whatever we're setting for `compiler` (a Java concept).
+
+            rootProject.buildGradle().append("""
+                javaVersion {
+                    compiler = 17
+                    target = 17
                 }
                 """);
 
@@ -468,19 +481,16 @@ class BaselineJavaVersionIntegrationTest {
         }
 
         @Test
-        void targeting_17_and_running_the_groovy_compiler_with_21_jdk_outputs_17_bytecode(
+        void targeting_17_and_setting_compiler_to_21_outputs_17_bytecode(
                 GradleInvoker gradle, RootProject rootProject) {
+
+            // The groovy compiler needs to run with the JDK it's targeting, not with
+            // whatever we're setting for `compiler` (a Java concept).
 
             rootProject.buildGradle().append("""
                 javaVersion {
                     compiler = 21
                     target = 17
-                }
-
-                apply plugin: 'groovy'
-
-                dependencies {
-                    implementation localGroovy()
                 }
                 """);
 
@@ -497,6 +507,37 @@ class BaselineJavaVersionIntegrationTest {
                     .toFile();
 
             assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
+        }
+
+        @Test
+        void targeting_17_and_setting_compiler_to_21_does_let_you_use_21_jdk_apis(
+                GradleInvoker gradle, RootProject rootProject) {
+
+            // The groovy compiler needs to run with the JDK it's targeting, not with
+            // whatever we're setting for `compiler` (a Java concept).
+
+            rootProject.buildGradle().append("""
+                javaVersion {
+                    compiler = 21
+                    target = 17
+                }
+                """);
+
+            rootProject.mainSourceSet().srcDir("groovy").file("app/Main.groovy").overwrite("""
+                import groovy.transform.CompileStatic
+                import java.lang.Thread
+
+                @CompileStatic
+                class Main {
+                    void main() {
+                        Thread.currentThread().isVirtual();
+                    }
+                }
+                """);
+
+            InvocationResult result = gradle.withArgs("compileGroovy").buildsWithFailure();
+
+            result.assertThat().output().contains("Cannot find matching method java.lang.Thread#isVirtual()");
         }
     }
 
