@@ -103,8 +103,8 @@ class BaselineJavaVersionIntegrationTest {
         @Test
         void java_11_compilation_fails_targeting_java_8(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
-                javaVersions {
-                    libraryTarget = 8
+                javaVersion {
+                    target = 8
                     runtime = 11
                 }
                 """);
@@ -117,8 +117,9 @@ class BaselineJavaVersionIntegrationTest {
         @Test
         void java_11_compilation_succeeds_targeting_java_11(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
-                javaVersions {
-                    libraryTarget = '11'
+                javaVersion {
+                    target = '11'
+                    runtime = '11'
                 }
                 """);
 
@@ -140,8 +141,9 @@ class BaselineJavaVersionIntegrationTest {
         @Test
         void java_11_execution_succeeds_on_java_11(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
-                javaVersions {
-                    libraryTarget = 11
+                javaVersion {
+                    target = 11
+                    runtime = 11
                 }
                 """);
 
@@ -162,8 +164,8 @@ class BaselineJavaVersionIntegrationTest {
         @Test
         void java_11_execution_succeeds_on_java_17(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
-                javaVersions {
-                    libraryTarget = 11
+                javaVersion {
+                    target = 11
                     runtime = 17
                 }
                 """);
@@ -191,8 +193,8 @@ class BaselineJavaVersionIntegrationTest {
                     .isNotEqualTo("aarch64");
 
             rootProject.buildGradle().append("""
-                javaVersions {
-                    libraryTarget = 8
+                javaVersion {
+                    target = 8
                 }
                 """);
 
@@ -212,8 +214,8 @@ class BaselineJavaVersionIntegrationTest {
                     .isNotEqualTo("aarch64");
 
             rootProject.buildGradle().append("""
-                javaVersions {
-                    libraryTarget = 8
+                javaVersion {
+                    target = 8
                     runtime = 11
                 }
                 """);
@@ -240,8 +242,8 @@ class BaselineJavaVersionIntegrationTest {
                 GradleInvoker gradle, RootProject rootProject) {
 
             rootProject.buildGradle().append("""
-                javaVersions {
-                    libraryTarget = 11
+                javaVersion {
+                    target = 11
                     runtime = 17
                 }
                 task printTargetCompatibility() {
@@ -265,30 +267,9 @@ class BaselineJavaVersionIntegrationTest {
         @Test
         void java_17_preview_compilation_works(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
-                javaVersions {
-                    libraryTarget = 11
-                    distributionTarget = '17_PREVIEW'
-                }
-                """);
-
-            rootProject.mainSourceSet().java().writeClass(JAVA_17_PREVIEW_CODE);
-
-            gradle.withArgs("compileJava", "-i").buildsSuccessfully();
-
-            File compiledClass = rootProject
-                    .buildDir()
-                    .path()
-                    .resolve("classes/java/main/Main.class")
-                    .toFile();
-            assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, ENABLE_PREVIEW_BYTECODE);
-        }
-
-        @Test
-        void java_17_preview_on_single_project_works(GradleInvoker gradle, RootProject rootProject) {
-            rootProject.buildGradle().append("""
                 javaVersion {
-                    runtime = '17_PREVIEW'
                     target = '17_PREVIEW'
+                    runtime = '17_PREVIEW'
                 }
                 """);
 
@@ -307,30 +288,14 @@ class BaselineJavaVersionIntegrationTest {
         @Test
         void java_17_preview_javadoc_works(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
-                javaVersions {
-                    libraryTarget = 11
-                    distributionTarget = '17_PREVIEW'
+                javaVersion {
+                    target = '17_PREVIEW'
                 }
                 """);
 
             rootProject.mainSourceSet().java().writeClass(JAVA_17_PREVIEW_CODE);
 
             gradle.withArgs("javadoc", "-i").buildsSuccessfully();
-        }
-
-        @Test
-        void setting_library_target_to_preview_version_fails(GradleInvoker gradle, RootProject rootProject) {
-            rootProject.buildGradle().append("""
-                javaVersions {
-                    libraryTarget = '17_PREVIEW'
-                }
-                """);
-
-            rootProject.mainSourceSet().java().writeClass(JAVA_17_PREVIEW_CODE);
-
-            InvocationResult result = gradle.withArgs("compileJava", "-i").buildsWithFailure();
-
-            assertThat(result).output().contains("cannot be run on newer JVMs");
         }
     }
 
@@ -341,8 +306,8 @@ class BaselineJavaVersionIntegrationTest {
                 GradleInvoker gradle, RootProject rootProject) {
 
             rootProject.buildGradle().append("""
-                javaVersions {
-                    libraryTarget = 17
+                javaVersion {
+                    target = 17
                     runtime = 11
                 }
                 """);
@@ -357,8 +322,8 @@ class BaselineJavaVersionIntegrationTest {
                 GradleInvoker gradle, RootProject rootProject) {
 
             rootProject.buildGradle().append("""
-                javaVersions {
-                    distributionTarget = '11_PREVIEW'
+                javaVersion {
+                    target = '11_PREVIEW'
                     runtime = '15_PREVIEW'
                 }
                 """);
@@ -376,8 +341,8 @@ class BaselineJavaVersionIntegrationTest {
                 GradleInvoker gradle, RootProject rootProject) {
 
             rootProject.buildGradle().append("""
-                javaVersions {
-                    distributionTarget = '17_PREVIEW'
+                javaVersion {
+                    target = '17_PREVIEW'
                     runtime = '17'
                 }
                 """);
@@ -395,8 +360,8 @@ class BaselineJavaVersionIntegrationTest {
                 GradleInvoker gradle, RootProject rootProject) {
 
             rootProject.buildGradle().append("""
-                javaVersions {
-                    libraryTarget = 17
+                javaVersion {
+                    target = 17
                     runtime = 17
                 }
                 """);
@@ -412,8 +377,8 @@ class BaselineJavaVersionIntegrationTest {
                 GradleInvoker gradle, RootProject rootProject) {
 
             rootProject.buildGradle().append("""
-                javaVersions {
-                    libraryTarget = 11
+                javaVersion {
+                    target = 11
                     runtime = 11
                 }
 
@@ -438,10 +403,9 @@ class BaselineJavaVersionIntegrationTest {
 
         @Test
         void succeeds_when_all_runtimeClasspath_jars_are_compatible(GradleInvoker gradle, RootProject rootProject) {
-
             rootProject.buildGradle().append("""
-                javaVersions {
-                    libraryTarget = 8
+                javaVersion {
+                    target = 8
                     runtime = 8
                 }
 
@@ -456,8 +420,8 @@ class BaselineJavaVersionIntegrationTest {
         @Test
         void handles_gradleApi(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
-                javaVersions {
-                    libraryTarget = 8
+                javaVersion {
+                    target = 8
                     runtime = 8
                 }
 
@@ -475,8 +439,8 @@ class BaselineJavaVersionIntegrationTest {
         @Test
         void is_a_dependency_of_check(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
-                javaVersions {
-                    libraryTarget = 11
+                javaVersion {
+                    target = 11
                     runtime = 11
                 }
                 """);

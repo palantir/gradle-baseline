@@ -318,6 +318,22 @@ class BaselineJavaVersionsIntegrationTest {
         }
     }
 
+    @Nested
+    class Verification {
+        @Test
+        void setting_library_target_to_preview_version_fails(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    libraryTarget = '17_PREVIEW'
+                }
+                """);
+
+            InvocationResult result = gradle.withArgs("compileJava").buildsWithFailure();
+
+            assertThat(result).output().contains("cannot be run on newer JVMs");
+        }
+    }
+
     private static final int BYTECODE_IDENTIFIER = 0xCAFEBABE;
 
     // See http://illegalargumentexception.blogspot.com/2009/07/java-finding-class-versions.html
