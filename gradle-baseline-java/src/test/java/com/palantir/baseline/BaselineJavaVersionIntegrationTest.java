@@ -717,20 +717,23 @@ class BaselineJavaVersionIntegrationTest {
         }
     }
 
-    @Test
-    void explainJavaVersions_prints_the_java_version_used(GradleInvoker gradle, RootProject rootProject) {
-        rootProject.buildGradle().append("""
-            javaVersions {
-                libraryTarget = 11
-                runtime = 17
-            }
-            """);
+    @Nested
+    class ExplainJavaVersions {
+        @Test
+        void explainJavaVersions_prints_the_java_version_used(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    libraryTarget = 11
+                    runtime = 17
+                }
+                """);
 
-        InvocationResult result = gradle.withArgs("explainJavaVersions").buildsSuccessfully();
+            InvocationResult result = gradle.withArgs("explainJavaVersions").buildsSuccessfully();
 
-        assertThat(result).output().contains("target  = 11");
-        assertThat(result).output().contains("runtime = 17");
-        assertThat(result).output().contains("Reason:");
+            assertThat(result).output().contains("target  = 11");
+            assertThat(result).output().contains("runtime = 17");
+            assertThat(result).output().contains("Reason:");
+        }
     }
 
     private static final int BYTECODE_IDENTIFIER = 0xCAFEBABE;
