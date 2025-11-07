@@ -21,7 +21,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.palantir.gradle.testing.execution.GradleInvoker;
 import com.palantir.gradle.testing.execution.InvocationResult;
-import com.palantir.gradle.testing.files.java.JavaFile;
 import com.palantir.gradle.testing.junit.GradlePluginTests;
 import com.palantir.gradle.testing.project.RootProject;
 import java.io.DataInputStream;
@@ -42,8 +41,6 @@ class BaselineJavaVersionIntegrationTest {
     private static final int JAVA_17_BYTECODE = 61;
     private static final int ENABLE_PREVIEW_BYTECODE = 65535;
     private static final int NOT_ENABLE_PREVIEW_BYTECODE = 0;
-
-    private JavaFile mainJava;
 
     private static final String JAVA_8_COMPATIBLE_CODE = """
         public class Main {
@@ -99,8 +96,6 @@ class BaselineJavaVersionIntegrationTest {
                 classpath = sourceSets.main.runtimeClasspath
             }
             """);
-
-        mainJava = rootProject.mainSourceSet().java().fileByClassName("Main");
     }
 
     @Nested
@@ -114,7 +109,7 @@ class BaselineJavaVersionIntegrationTest {
                 }
                 """);
 
-            mainJava.overwrite(JAVA_11_COMPATIBLE_CODE);
+            rootProject.mainSourceSet().java().writeClass(JAVA_11_COMPATIBLE_CODE);
 
             gradle.withArgs("compileJava").buildsWithFailure();
         }
@@ -127,7 +122,7 @@ class BaselineJavaVersionIntegrationTest {
                 }
                 """);
 
-            mainJava.overwrite(JAVA_11_COMPATIBLE_CODE);
+            rootProject.mainSourceSet().java().writeClass(JAVA_11_COMPATIBLE_CODE);
 
             gradle.withArgs("compileJava").buildsSuccessfully();
 
@@ -150,7 +145,7 @@ class BaselineJavaVersionIntegrationTest {
                 }
                 """);
 
-            mainJava.overwrite(JAVA_11_COMPATIBLE_CODE);
+            rootProject.mainSourceSet().java().writeClass(JAVA_11_COMPATIBLE_CODE);
 
             InvocationResult result = gradle.withArgs("runMainClass").buildsSuccessfully();
 
@@ -173,7 +168,7 @@ class BaselineJavaVersionIntegrationTest {
                 }
                 """);
 
-            mainJava.overwrite(JAVA_11_COMPATIBLE_CODE);
+            rootProject.mainSourceSet().java().writeClass(JAVA_11_COMPATIBLE_CODE);
 
             InvocationResult result = gradle.withArgs("runMainClass").buildsSuccessfully();
 
@@ -201,7 +196,7 @@ class BaselineJavaVersionIntegrationTest {
                 }
                 """);
 
-            mainJava.overwrite(JAVA_8_COMPATIBLE_CODE);
+            rootProject.mainSourceSet().java().writeClass(JAVA_8_COMPATIBLE_CODE);
 
             InvocationResult result = gradle.withArgs("runMainClass").buildsSuccessfully();
 
@@ -223,7 +218,7 @@ class BaselineJavaVersionIntegrationTest {
                 }
                 """);
 
-            mainJava.overwrite(JAVA_8_COMPATIBLE_CODE);
+            rootProject.mainSourceSet().java().writeClass(JAVA_8_COMPATIBLE_CODE);
 
             InvocationResult result = gradle.withArgs("runMainClass").buildsSuccessfully();
 
@@ -276,7 +271,7 @@ class BaselineJavaVersionIntegrationTest {
                 }
                 """);
 
-            mainJava.overwrite(JAVA_17_PREVIEW_CODE);
+            rootProject.mainSourceSet().java().writeClass(JAVA_17_PREVIEW_CODE);
 
             gradle.withArgs("compileJava", "-i").buildsSuccessfully();
 
@@ -297,7 +292,7 @@ class BaselineJavaVersionIntegrationTest {
                 }
                 """);
 
-            mainJava.overwrite(JAVA_17_PREVIEW_CODE);
+            rootProject.mainSourceSet().java().writeClass(JAVA_17_PREVIEW_CODE);
 
             gradle.withArgs("compileJava", "-i").buildsSuccessfully();
 
@@ -318,7 +313,7 @@ class BaselineJavaVersionIntegrationTest {
                 }
                 """);
 
-            mainJava.overwrite(JAVA_17_PREVIEW_CODE);
+            rootProject.mainSourceSet().java().writeClass(JAVA_17_PREVIEW_CODE);
 
             gradle.withArgs("javadoc", "-i").buildsSuccessfully();
         }
@@ -331,7 +326,7 @@ class BaselineJavaVersionIntegrationTest {
                 }
                 """);
 
-            mainJava.overwrite(JAVA_17_PREVIEW_CODE);
+            rootProject.mainSourceSet().java().writeClass(JAVA_17_PREVIEW_CODE);
 
             InvocationResult result = gradle.withArgs("compileJava", "-i").buildsWithFailure();
 
