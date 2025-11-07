@@ -21,7 +21,6 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.palantir.gradle.testing.execution.GradleInvoker;
 import com.palantir.gradle.testing.execution.InvocationResult;
-import com.palantir.gradle.testing.files.java.JavaFile;
 import com.palantir.gradle.testing.junit.GradlePluginTests;
 import com.palantir.gradle.testing.project.RootProject;
 import com.palantir.gradle.testing.project.SubProject;
@@ -43,21 +42,8 @@ import org.junit.jupiter.api.Test;
 
 @GradlePluginTests
 class BaselineJavaVersionsIntegrationTest {
-    private static final int JAVA_8_BYTECODE = 52;
     private static final int JAVA_11_BYTECODE = 55;
-    private static final int JAVA_17_BYTECODE = 61;
-    private static final int ENABLE_PREVIEW_BYTECODE = 65535;
     private static final int NOT_ENABLE_PREVIEW_BYTECODE = 0;
-
-    private JavaFile mainJava;
-
-    private static final String JAVA_8_COMPATIBLE_CODE = """
-        public class Main {
-            public static void main(String[] args) {
-                System.out.println("jdk8 features on runtime " + System.getProperty("java.specification.version"));
-            }
-        }
-        """;
 
     private static final String JAVA_11_COMPATIBLE_CODE = """
         import java.util.Optional;
@@ -66,21 +52,6 @@ class BaselineJavaVersionsIntegrationTest {
             public static void main(String[] args) {
                 Optional.of(args).isEmpty();
                 System.out.println("jdk11 features on runtime " + System.getProperty("java.specification.version"));
-            }
-        }
-        """;
-
-    private static final String JAVA_17_PREVIEW_CODE = """
-        public class Main {
-            sealed interface MyUnion {
-                record Foo(int number) implements MyUnion {}
-            }
-
-            public static void main(String[] args) {
-                MyUnion myUnion = new MyUnion.Foo(1234);
-                switch (myUnion) {
-                    case MyUnion.Foo foo -> System.out.println("Java 17 pattern matching switch: " + foo.number);
-                }
             }
         }
         """;
@@ -122,8 +93,6 @@ class BaselineJavaVersionsIntegrationTest {
                 }
             }
             """);
-
-        mainJava = rootProject.mainSourceSet().java().fileByClassName("Main");
     }
 
     @Nested
@@ -208,21 +177,10 @@ class BaselineJavaVersionsIntegrationTest {
                 javaVersions {
                     libraryTarget = 11
                     runtime = 21
-                    setupJdkToolchains = true
-                }
-                java {
-                    toolchain {
-                        languageVersion = JavaLanguageVersion.of(11)
-                        vendor = JvmVendorSpec.ADOPTIUM
-                    }
-                    toolchain {
-                        languageVersion = JavaLanguageVersion.of(21)
-                        vendor = JvmVendorSpec.ADOPTIUM
-                    }
                 }
                 """);
 
-            mainJava.overwrite(JAVA_11_COMPATIBLE_CODE);
+            rootProject.mainSourceSet().java().writeClass(JAVA_11_COMPATIBLE_CODE);
 
             InvocationResult compileJavaResult =
                     gradle.withArgs("compileJava", "--info").buildsSuccessfully();
@@ -275,7 +233,7 @@ class BaselineJavaVersionsIntegrationTest {
                 }
                 """);
 
-            mainJava.overwrite(JAVA_11_COMPATIBLE_CODE);
+            rootProject.mainSourceSet().java().writeClass(JAVA_11_COMPATIBLE_CODE);
 
             gradle.withArgs(
                             "compileJava",
