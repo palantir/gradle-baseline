@@ -190,10 +190,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             scalaCompileTask
                     .getJavaLauncher()
                     .set(getJavaLauncher(
-                            rootExtension,
-                            baselineConfiguredJavaToolchains,
-                            javaToolchainService,
-                            compiler.map(ChosenJavaVersion::of)));
+                            rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, target));
 
             scalaCompileTask.getOptions().getCompilerArgumentProviders().add(new EnablePreviewArgumentProvider(target));
         });
