@@ -105,10 +105,6 @@ class BaselineJavaVersionsIntegrationTest {
             }
             """);
 
-        // Fork needed or build fails on circleci with "SystemInfo is not supported on this operating system."
-        // Comment out locally in order to get debugging to work
-        rootProject.gradlePropertiesFile().append("org.gradle.jvmargs=-Xmx2g\norg.gradle.daemon=true\n");
-
         mainJava = rootProject.mainSourceSet().java().fileByClassName("Main");
     }
 

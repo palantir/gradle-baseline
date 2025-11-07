@@ -30,8 +30,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
 import org.assertj.core.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
@@ -101,10 +99,6 @@ class BaselineJavaVersionIntegrationTest {
                 classpath = sourceSets.main.runtimeClasspath
             }
             """);
-
-        // Fork needed or build fails on circleci with "SystemInfo is not supported on this operating system."
-        // Comment out locally in order to get debugging to work
-        rootProject.gradlePropertiesFile().append("org.gradle.jvmargs=-Xmx2g\norg.gradle.daemon=true\n");
 
         mainJava = rootProject.mainSourceSet().java().fileByClassName("Main");
     }
@@ -517,23 +511,5 @@ class BaselineJavaVersionIntegrationTest {
         } catch (IOException e) {
             throw new UncheckedIOException(e);
         }
-    }
-
-    private static String extractCompileToolchain(String output) {
-        Matcher compileMatcher = Pattern.compile("^Compiling with toolchain '([^']*)'", Pattern.MULTILINE)
-                .matcher(output);
-        if (!compileMatcher.find()) {
-            throw new IllegalStateException("Could not find compile toolchain in output");
-        }
-        return compileMatcher.group(1);
-    }
-
-    private static String extractRunJavaCommand(String output) {
-        Matcher matcher = Pattern.compile("^Starting process 'command '([^']*)/bin/java''.*Main", Pattern.MULTILINE)
-                .matcher(output);
-        if (!matcher.find()) {
-            throw new IllegalStateException("Could not find run java command in output");
-        }
-        return matcher.group(1);
     }
 }
