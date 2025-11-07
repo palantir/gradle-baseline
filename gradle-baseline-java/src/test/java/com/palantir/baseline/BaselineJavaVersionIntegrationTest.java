@@ -127,75 +127,6 @@ class BaselineJavaVersionIntegrationTest {
     }
 
     @Test
-    void distribution_target_is_used_when_no_artifacts_are_published(GradleInvoker gradle, RootProject rootProject) {
-        rootProject.buildGradle().append("""
-            javaVersions {
-                libraryTarget = 11
-                distributionTarget = 17
-            }
-            """);
-
-        mainJava.overwrite(JAVA_11_COMPATIBLE_CODE);
-
-        gradle.withArgs("compileJava").buildsSuccessfully();
-
-        File compiledClass = rootProject
-                .buildDir()
-                .path()
-                .resolve("classes/java/main/Main.class")
-                .toFile();
-        assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
-    }
-
-    @Test
-    void library_target_is_used_when_no_artifacts_are_published_but_project_is_overridden_as_a_library(
-            GradleInvoker gradle, RootProject rootProject) {
-
-        rootProject.buildGradle().append("""
-            javaVersions {
-                libraryTarget = 11
-                distributionTarget = 17
-            }
-            javaVersion {
-                library()
-            }
-            """);
-
-        mainJava.overwrite(JAVA_11_COMPATIBLE_CODE);
-
-        gradle.withArgs("compileJava").buildsSuccessfully();
-
-        File compiledClass = rootProject
-                .buildDir()
-                .path()
-                .resolve("classes/java/main/Main.class")
-                .toFile();
-        assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
-    }
-
-    @Test
-    void distribution_target_is_used_when_sls_packaging_is_used(GradleInvoker gradle, RootProject rootProject) {
-        rootProject.buildGradle().append("""
-            apply plugin: 'com.palantir.sls-java-service-distribution'
-            javaVersions {
-                libraryTarget = 11
-                distributionTarget = 17
-            }
-            """);
-
-        mainJava.overwrite(JAVA_11_COMPATIBLE_CODE);
-
-        gradle.withArgs("compileJava").buildsSuccessfully();
-
-        File compiledClass = rootProject
-                .buildDir()
-                .path()
-                .resolve("classes/java/main/Main.class")
-                .toFile();
-        assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
-    }
-
-    @Test
     void java_11_compilation_succeeds_targeting_java_11(GradleInvoker gradle, RootProject rootProject) {
         rootProject.buildGradle().append("""
             javaVersions {
@@ -331,6 +262,79 @@ class BaselineJavaVersionIntegrationTest {
         InvocationResult result = gradle.withArgs("printTargetCompatibility").buildsSuccessfully();
 
         assertThat(result).output().contains("[[[17]]]");
+    }
+
+    @Nested
+    class LibraryVsDistributionDetection {
+        @Test
+        void distribution_target_is_used_when_no_artifacts_are_published(
+                GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    libraryTarget = 11
+                    distributionTarget = 17
+                }
+                """);
+
+            mainJava.overwrite(JAVA_11_COMPATIBLE_CODE);
+
+            gradle.withArgs("compileJava").buildsSuccessfully();
+
+            File compiledClass = rootProject
+                    .buildDir()
+                    .path()
+                    .resolve("classes/java/main/Main.class")
+                    .toFile();
+            assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
+        }
+
+        @Test
+        void library_target_is_used_when_no_artifacts_are_published_but_project_is_overridden_as_a_library(
+                GradleInvoker gradle, RootProject rootProject) {
+
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    libraryTarget = 11
+                    distributionTarget = 17
+                }
+                javaVersion {
+                    library()
+                }
+                """);
+
+            mainJava.overwrite(JAVA_11_COMPATIBLE_CODE);
+
+            gradle.withArgs("compileJava").buildsSuccessfully();
+
+            File compiledClass = rootProject
+                    .buildDir()
+                    .path()
+                    .resolve("classes/java/main/Main.class")
+                    .toFile();
+            assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
+        }
+
+        @Test
+        void distribution_target_is_used_when_sls_packaging_is_used(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                apply plugin: 'com.palantir.sls-java-service-distribution'
+                javaVersions {
+                    libraryTarget = 11
+                    distributionTarget = 17
+                }
+                """);
+
+            mainJava.overwrite(JAVA_11_COMPATIBLE_CODE);
+
+            gradle.withArgs("compileJava").buildsSuccessfully();
+
+            File compiledClass = rootProject
+                    .buildDir()
+                    .path()
+                    .resolve("classes/java/main/Main.class")
+                    .toFile();
+            assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
+        }
     }
 
     @Nested
