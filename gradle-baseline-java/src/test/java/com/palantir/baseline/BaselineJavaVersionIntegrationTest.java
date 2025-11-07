@@ -86,7 +86,7 @@ class BaselineJavaVersionIntegrationTest {
             public static void main(String[] args) {
                 MyUnion myUnion = new MyUnion.Foo(1234);
                 int ignored = switch (myUnion) {
-                    case MyUnion.Foo foo -> foo;
+                    case MyUnion.Foo foo -> foo.number;
                 };
                 System.out.println("jdk21 features on runtime " + System.getProperty("java.specification.version"));
             }
@@ -375,16 +375,7 @@ class BaselineJavaVersionIntegrationTest {
                 }
                 """);
 
-            rootProject.mainSourceSet().java().writeClass("""
-                package app;
-
-                public class Main {
-                    /**
-                    * Some {@code javadoc}
-                    */
-                    public Main() {}
-                }
-                """);
+            rootProject.mainSourceSet().java().writeClass(JAVA_21_SOURCE_FEATURE_CODE);
 
             gradle.withArgs("javadoc").buildsSuccessfully();
         }
@@ -400,16 +391,7 @@ class BaselineJavaVersionIntegrationTest {
                 }
                 """);
 
-            rootProject.mainSourceSet().java().writeClass("""
-                package app;
-
-                public class Main {
-                    /**
-                    * Some {@code javadoc}
-                    */
-                    public Main() {}
-                }
-                """);
+            rootProject.mainSourceSet().java().writeClass(JAVA_17_COMPATIBLE_CODE);
 
             gradle.withArgs("javadoc").buildsSuccessfully();
         }
