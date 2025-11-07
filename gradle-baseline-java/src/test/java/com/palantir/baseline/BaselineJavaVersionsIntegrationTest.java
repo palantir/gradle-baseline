@@ -335,6 +335,23 @@ class BaselineJavaVersionsIntegrationTest {
 
             assertThat(result).output().contains("cannot be run on newer JVMs");
         }
+
+        @Test
+        void good_error_message_when_compiler_is_not_set(
+                GradleInvoker gradle, RootProject rootProject, SubProject subProject) {
+
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    libraryTarget = 21
+                }
+                """);
+
+            subProject.mainSourceSet().java().writeClass(JAVA_11_COMPATIBLE_CODE);
+
+            InvocationResult result = gradle.withArgs("compileJava").buildsWithFailure();
+
+            result.assertThat().output().contains("`compiler` property inside `javaVersions`");
+        }
     }
 
     private static final int BYTECODE_IDENTIFIER = 0xCAFEBABE;
