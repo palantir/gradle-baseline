@@ -77,6 +77,22 @@ class BaselineJavaVersionIntegrationTest {
         }
         """;
 
+    private static final String JAVA_21_COMPATIBLE_CODE = """
+        public class Main {
+            sealed interface MyUnion {
+                record Foo(int number) implements MyUnion {}
+            }
+
+            public static void main(String[] args) {
+                MyUnion myUnion = new MyUnion.Foo(1234);
+                int ignored = switch (myUnion) {
+                    case MyUnion.Foo foo -> foo;
+                };
+                System.out.println("jdk21 features on runtime " + System.getProperty("java.specification.version"));
+            }
+        }
+        """;
+
     @BeforeEach
     void beforeEach(RootProject rootProject) {
         rootProject.buildGradle().append("""
@@ -86,13 +102,17 @@ class BaselineJavaVersionIntegrationTest {
                 id 'com.palantir.jdks.latest'
             }
 
-            allprojects {
-                repositories {
-                    mavenCentral()
-                }
+            repositories {
+                mavenCentral()
             }
 
-            task runMainClass(type: JavaExec) {
+            tasks.withType(JavaCompile) {
+                // baseline-module-jvm-args forces all compiler processes to fork, do the same here
+                // for representative testing
+                options.fork = true
+            }
+
+            tasks.register('runMainClass', JavaExec) {
                 mainClass = 'Main'
                 classpath = sourceSets.main.runtimeClasspath
             }
@@ -101,19 +121,43 @@ class BaselineJavaVersionIntegrationTest {
 
     @Nested
     class JavaCompilation {
+        @BeforeEach
+        void beforeEach(RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                repositories {
+                    mavenLocal()
+                }
+
+                dependencies {
+                    annotationProcessor "com.palantir.baseline:test-compiler-plugins:${baselineTestCompilerPluginsVersion}"
+                }
+
+                tasks.named('compileJava', JavaCompile) {
+                    options.compilerArgumentProviders.add({ ['-Xplugin:LogCompilerInfo'] } as CommandLineArgumentProvider)
+                }
+                """);
+        }
+
         @Test
-        void java_17_compilation_fails_targeting_java_11(GradleInvoker gradle, RootProject rootProject) {
+        void java_21_compilation_fails_targeting_java_17(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
-                    compiler = 11
-                    target = 11
-                    runtime = 17
+                    compiler = 17
+                    target = 17
+                    runtime = 21
                 }
                 """);
 
-            rootProject.mainSourceSet().java().writeClass(JAVA_17_COMPATIBLE_CODE);
+            rootProject.mainSourceSet().java().writeClass(JAVA_21_COMPATIBLE_CODE);
 
-            gradle.withArgs("compileJava").buildsWithFailure();
+            InvocationResult result = gradle.withArgs("compileJava").buildsWithFailure();
+
+            result.assertThat().output().contains("error: patterns in switch statements are a preview feature");
+
+            result.assertThat().output().contains("Compiler Java Version: 17");
+            result.assertThat().output().contains("Compiler Arg: --release=17");
+            result.assertThat().output().contains("Compiler Arg: --source=17");
+            result.assertThat().output().contains("Compiler Arg: --target=17");
         }
 
         @Test
@@ -128,7 +172,38 @@ class BaselineJavaVersionIntegrationTest {
 
             rootProject.mainSourceSet().java().writeClass(JAVA_17_COMPATIBLE_CODE);
 
-            gradle.withArgs("compileJava").buildsSuccessfully();
+            InvocationResult result = gradle.withArgs("compileJava").buildsSuccessfully();
+
+            result.assertThat().output().contains("Compiler Java Version: 17");
+            result.assertThat().output().contains("Compiler Arg: --release=17");
+            result.assertThat().output().contains("Compiler Arg: --source=17");
+            result.assertThat().output().contains("Compiler Arg: --target=17");
+
+            File compiledClass = rootProject
+                    .buildDir()
+                    .path()
+                    .resolve("classes/java/main/Main.class")
+                    .toFile();
+            assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
+        }
+
+        @Test
+        void can_use_a_higher_compiler_to_target_a_lower_language_level(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                javaVersion {
+                    compiler = 21
+                    target = 17
+                }
+                """);
+
+            rootProject.mainSourceSet().java().writeClass(JAVA_17_COMPATIBLE_CODE);
+
+            InvocationResult result = gradle.withArgs("compileJava").buildsSuccessfully();
+
+            result.assertThat().output().contains("Compiler Java Version: 21");
+            result.assertThat().output().contains("Compiler Arg: --release=17");
+            result.assertThat().output().contains("Compiler Arg: --source=17");
+            result.assertThat().output().contains("Compiler Arg: --target=17");
 
             File compiledClass = rootProject
                     .buildDir()
