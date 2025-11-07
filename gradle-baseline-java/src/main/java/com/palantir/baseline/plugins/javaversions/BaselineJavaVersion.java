@@ -199,8 +199,6 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                             compiler.map(ChosenJavaVersion::of)));
 
             scalaCompileTask.getOptions().getCompilerArgumentProviders().add(new EnablePreviewArgumentProvider(target));
-
-            scalaCompileTask.getOptions().getRelease().set(target.map(ChosenJavaVersion::asMajorVersion));
         });
 
         project.getTasks().withType(ScalaDoc.class).configureEach(scalaDoc -> scalaDoc.getJavaLauncher()
