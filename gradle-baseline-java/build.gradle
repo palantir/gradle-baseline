@@ -49,6 +49,7 @@ dependencies {
     gradlePluginForTesting 'com.palantir.sls-packaging:gradle-sls-packaging'
     testRuntimeOnly 'com.palantir.gradle.jdkslatest:gradle-jdks-latest'
     gradlePluginForTesting 'com.palantir.gradle.jdkslatest:gradle-jdks-latest'
+    gradlePluginForTesting 'com.palantir.gradle.jdks:gradle-jdks'
     testRuntimeOnly 'org.unbroken-dome.gradle-plugins:gradle-testsets-plugin'
     gradlePluginForTesting 'org.unbroken-dome.gradle-plugins:gradle-testsets-plugin'
 
