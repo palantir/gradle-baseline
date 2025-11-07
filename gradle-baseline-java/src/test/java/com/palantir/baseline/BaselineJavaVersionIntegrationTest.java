@@ -224,7 +224,7 @@ class BaselineJavaVersionIntegrationTest {
         }
 
         @Test
-        void cannot_use_higher_version_source_features_than_the_target_even_if_the_compiler_is_that_version(
+        void cannot_use_higher_version_source_features_than_the_target_even_if_the_compiler_is_that_higher_version(
                 GradleInvoker gradle, RootProject rootProject) {
 
             rootProject.buildGradle().append("""
@@ -248,7 +248,7 @@ class BaselineJavaVersionIntegrationTest {
         }
 
         @Test
-        void cannot_use_higher_version_jdk_api_than_the_target_even_if_the_compiler_is_that_version(
+        void cannot_use_higher_version_jdk_api_than_the_target_even_if_the_compiler_is_that_higher_version(
                 GradleInvoker gradle, RootProject rootProject) {
 
             rootProject.buildGradle().append("""
