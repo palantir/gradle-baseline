@@ -409,7 +409,7 @@ class BaselineJavaVersionIntegrationTest {
             assertThat(result)
                     .output()
                     .contains("Runtime Java version (15_PREVIEW) must be exactly the same as the compilation target"
-                            + " (11_PREVIEW)");
+                            + " (11_PREVIEW) in root project");
         }
 
         @Test
@@ -429,7 +429,27 @@ class BaselineJavaVersionIntegrationTest {
             assertThat(result)
                     .output()
                     .contains("Runtime Java version (17) must be exactly the same as the compilation target"
-                            + " (17_PREVIEW)");
+                            + " (17_PREVIEW) in root project");
+        }
+
+        @Test
+        void verification_should_fail_when_compiler_is_lower_than_target(
+                GradleInvoker gradle, RootProject rootProject) {
+
+            rootProject.buildGradle().append("""
+                javaVersion {
+                    compiler = 17
+                    target = 21
+                    runtime = 21
+                }
+                """);
+
+            InvocationResult result = gradle.withArgs("checkJavaVersions").buildsWithFailure();
+
+            result.assertThat()
+                    .output()
+                    .contains("The requested compilation target Java version (21) must not exceed the compiler Java"
+                            + " version (17) in root project");
         }
 
         @Test
@@ -439,6 +459,21 @@ class BaselineJavaVersionIntegrationTest {
             rootProject.buildGradle().append("""
                 javaVersion {
                     compiler = 17
+                    target = 17
+                    runtime = 17
+                }
+                """);
+
+            gradle.withArgs("checkJavaVersions").buildsSuccessfully();
+        }
+
+        @Test
+        void verification_should_succeed_when_compilation_is_higher_than_target(
+                GradleInvoker gradle, RootProject rootProject) {
+
+            rootProject.buildGradle().append("""
+                javaVersion {
+                    compiler = 21
                     target = 17
                     runtime = 17
                 }
