@@ -29,26 +29,16 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-import org.assertj.core.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 @GradlePluginTests
 class BaselineJavaVersionIntegrationTest {
-    private static final int JAVA_8_BYTECODE = 52;
     private static final int JAVA_11_BYTECODE = 55;
     private static final int JAVA_17_BYTECODE = 61;
     private static final int ENABLE_PREVIEW_BYTECODE = 65535;
     private static final int NOT_ENABLE_PREVIEW_BYTECODE = 0;
-
-    private static final String JAVA_8_COMPATIBLE_CODE = """
-        public class Main {
-            public static void main(String[] args) {
-                System.out.println("jdk8 features on runtime " + System.getProperty("java.specification.version"));
-            }
-        }
-        """;
 
     private static final String JAVA_11_COMPATIBLE_CODE = """
         import java.util.Optional;
@@ -57,6 +47,17 @@ class BaselineJavaVersionIntegrationTest {
             public static void main(String[] args) {
                 Optional.of(args).isEmpty();
                 System.out.println("jdk11 features on runtime " + System.getProperty("java.specification.version"));
+            }
+        }
+        """;
+
+    private static final String JAVA_17_COMPATIBLE_CODE = """
+        public class Main {
+            sealed interface SealedInterface permits Implementation {}
+            record Implementation() implements SealedInterface {}
+
+            public static void main(String[] args) {
+                System.out.println("jdk17 features on runtime " + System.getProperty("java.specification.version"));
             }
         }
         """;
@@ -101,29 +102,29 @@ class BaselineJavaVersionIntegrationTest {
     @Nested
     class JavaCompilation {
         @Test
-        void java_11_compilation_fails_targeting_java_8(GradleInvoker gradle, RootProject rootProject) {
+        void java_17_compilation_fails_targeting_java_11(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
-                    target = 8
-                    runtime = 11
+                    target = 11
+                    runtime = 17
                 }
                 """);
 
-            rootProject.mainSourceSet().java().writeClass(JAVA_11_COMPATIBLE_CODE);
+            rootProject.mainSourceSet().java().writeClass(JAVA_17_COMPATIBLE_CODE);
 
             gradle.withArgs("compileJava").buildsWithFailure();
         }
 
         @Test
-        void java_11_compilation_succeeds_targeting_java_11(GradleInvoker gradle, RootProject rootProject) {
+        void java_17_compilation_succeeds_targeting_java_17(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
-                    target = '11'
-                    runtime = '11'
+                    target = '17'
+                    runtime = '17'
                 }
                 """);
 
-            rootProject.mainSourceSet().java().writeClass(JAVA_11_COMPATIBLE_CODE);
+            rootProject.mainSourceSet().java().writeClass(JAVA_17_COMPATIBLE_CODE);
 
             gradle.withArgs("compileJava").buildsSuccessfully();
 
@@ -132,7 +133,7 @@ class BaselineJavaVersionIntegrationTest {
                     .path()
                     .resolve("classes/java/main/Main.class")
                     .toFile();
-            assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
+            assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
         }
     }
 
@@ -185,53 +186,42 @@ class BaselineJavaVersionIntegrationTest {
         }
 
         @Test
-        void java_8_execution_succeeds_on_java_8(GradleInvoker gradle, RootProject rootProject) {
-            Assumptions.assumeThat(System.getProperty("os.arch"))
-                    .describedAs(
-                            "On an M1 mac, this test will fail to download"
-                                + " https://api.adoptopenjdk.net/v3/binary/latest/8/ga/mac/aarch64/jdk/hotspot/normal/adoptopenjdk")
-                    .isNotEqualTo("aarch64");
-
+        void java_17_execution_succeeds_on_java_17(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
-                    target = 8
+                    target = 17
+                    runtime = 17
                 }
                 """);
 
-            rootProject.mainSourceSet().java().writeClass(JAVA_8_COMPATIBLE_CODE);
+            rootProject.mainSourceSet().java().writeClass(JAVA_17_COMPATIBLE_CODE);
 
             InvocationResult result = gradle.withArgs("runMainClass").buildsSuccessfully();
 
-            assertThat(result).output().contains("jdk8 features on runtime 1.8");
+            assertThat(result).output().contains("jdk17 features on runtime 17");
         }
 
         @Test
-        void java_8_execution_succeeds_on_java_11(GradleInvoker gradle, RootProject rootProject) {
-            Assumptions.assumeThat(System.getProperty("os.arch"))
-                    .describedAs(
-                            "On an M1 mac, this test will fail to download"
-                                + " https://api.adoptopenjdk.net/v3/binary/latest/8/ga/mac/aarch64/jdk/hotspot/normal/adoptopenjdk")
-                    .isNotEqualTo("aarch64");
-
+        void java_17_execution_succeeds_on_java_21(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
-                    target = 8
-                    runtime = 11
+                    target = 17
+                    runtime = 21
                 }
                 """);
 
-            rootProject.mainSourceSet().java().writeClass(JAVA_8_COMPATIBLE_CODE);
+            rootProject.mainSourceSet().java().writeClass(JAVA_17_COMPATIBLE_CODE);
 
             InvocationResult result = gradle.withArgs("runMainClass").buildsSuccessfully();
 
-            assertThat(result).output().contains("jdk8 features on runtime 11");
+            assertThat(result).output().contains("jdk17 features on runtime 21");
 
             File compiledClass = rootProject
                     .buildDir()
                     .path()
                     .resolve("classes/java/main/Main.class")
                     .toFile();
-            assertBytecodeVersion(compiledClass, JAVA_8_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
+            assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
         }
     }
 
