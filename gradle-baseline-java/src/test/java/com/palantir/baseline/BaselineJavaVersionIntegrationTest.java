@@ -434,6 +434,73 @@ class BaselineJavaVersionIntegrationTest {
     }
 
     @Nested
+    class GroovyCompile {
+        @Test
+        void targeting_17_and_running_the_groovy_compiler_with_17_jdk_outputs_17_bytecode(
+                GradleInvoker gradle, RootProject rootProject) {
+
+            rootProject.buildGradle().append("""
+                javaVersion {
+                    compiler = 17
+                    target = 17
+                }
+
+                apply plugin: 'groovy'
+
+                dependencies {
+                    implementation localGroovy()
+                }
+                """);
+
+            rootProject.mainSourceSet().srcDir("groovy").file("app/Main.groovy").append("""
+                println 'hi'
+                """);
+
+            gradle.withArgs("compileGroovy").buildsSuccessfully();
+
+            File compiledClass = rootProject
+                    .buildDir()
+                    .path()
+                    .resolve("classes/groovy/main/Main.class")
+                    .toFile();
+
+            assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
+        }
+
+        @Test
+        void targeting_17_and_running_the_groovy_compiler_with_21_jdk_outputs_17_bytecode(
+                GradleInvoker gradle, RootProject rootProject) {
+
+            rootProject.buildGradle().append("""
+                javaVersion {
+                    compiler = 21
+                    target = 17
+                }
+
+                apply plugin: 'groovy'
+
+                dependencies {
+                    implementation localGroovy()
+                }
+                """);
+
+            rootProject.mainSourceSet().srcDir("groovy").file("app/Main.groovy").append("""
+                println 'hi'
+                """);
+
+            gradle.withArgs("compileGroovy").buildsSuccessfully();
+
+            File compiledClass = rootProject
+                    .buildDir()
+                    .path()
+                    .resolve("classes/groovy/main/Main.class")
+                    .toFile();
+
+            assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
+        }
+    }
+
+    @Nested
     class GradleJavaConfigurationSetup {
         @Test
         void javaPluginConvention_getTargetCompatibility_produces_the_runtime_java_version(

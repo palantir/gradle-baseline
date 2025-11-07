@@ -173,7 +173,20 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                     .getCompilerArgumentProviders()
                     .add(new EnablePreviewArgumentProvider(target));
 
-            groovyCompileTask.getOptions().getRelease().set(target.map(ChosenJavaVersion::asMajorVersion));
+            // `--release` and `--source` are not really relevant to GroovyCompiles - only
+            // `--target` matters which is the bytecode version that Groovy outputs.
+            // Beware: `getOptions().setRelease(...)` does nothing at all (it does not set
+            // `--source` and `--target` like in `JavaCompile`) and is just bad API
+            // reuse from `JavaCompile`'s `CompileOptions`.
+            // As of writing, there is no lazy way to set the target compatibility, so we
+            // are forced to do this:
+            groovyCompileTask.doFirst(new Action<Task>() {
+                @Override
+                public void execute(Task _task) {
+                    groovyCompileTask.setTargetCompatibility(
+                            target.get().javaLanguageVersion().toString());
+                }
+            });
         });
 
         project.getTasks().withType(ScalaCompile.class).configureEach(scalaCompileTask -> {
