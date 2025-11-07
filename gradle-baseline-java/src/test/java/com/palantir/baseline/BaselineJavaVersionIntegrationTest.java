@@ -77,7 +77,7 @@ class BaselineJavaVersionIntegrationTest {
         }
         """;
 
-    private static final String JAVA_21_COMPATIBLE_CODE = """
+    private static final String JAVA_21_SOURCE_FEATURE_CODE = """
         public class Main {
             sealed interface MyUnion {
                 record Foo(int number) implements MyUnion {}
@@ -89,6 +89,16 @@ class BaselineJavaVersionIntegrationTest {
                     case MyUnion.Foo foo -> foo;
                 };
                 System.out.println("jdk21 features on runtime " + System.getProperty("java.specification.version"));
+            }
+        }
+        """;
+
+    private static final String JAVA_21_API_USAGE = """
+        import java.lang.Thread;
+        public class Main {
+            public static void main(String[] args) {
+                // Introduced in JDK 21
+                Thread.currentThread().isVirtual();
             }
         }
         """;
@@ -106,7 +116,7 @@ class BaselineJavaVersionIntegrationTest {
                 mavenCentral()
             }
 
-            tasks.withType(JavaCompile) {
+            tasks.withType(JavaCompile).configureEach {
                 // baseline-module-jvm-args forces all compiler processes to fork, do the same here
                 // for representative testing
                 options.fork = true
@@ -148,7 +158,7 @@ class BaselineJavaVersionIntegrationTest {
                 }
                 """);
 
-            rootProject.mainSourceSet().java().writeClass(JAVA_21_COMPATIBLE_CODE);
+            rootProject.mainSourceSet().java().writeClass(JAVA_21_SOURCE_FEATURE_CODE);
 
             InvocationResult result = gradle.withArgs("compileJava").buildsWithFailure();
 
@@ -211,6 +221,54 @@ class BaselineJavaVersionIntegrationTest {
                     .resolve("classes/java/main/Main.class")
                     .toFile();
             assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
+        }
+
+        @Test
+        void cannot_use_higher_version_source_features_than_the_target_even_if_the_compiler_is_that_version(
+                GradleInvoker gradle, RootProject rootProject) {
+
+            rootProject.buildGradle().append("""
+                javaVersion {
+                    compiler = 21
+                    target = 17
+                    runtime = 21
+                }
+                """);
+
+            rootProject.mainSourceSet().java().writeClass(JAVA_21_SOURCE_FEATURE_CODE);
+
+            InvocationResult result = gradle.withArgs("compileJava").buildsWithFailure();
+
+            result.assertThat().output().contains("not supported in -source 17");
+
+            result.assertThat().output().contains("Compiler Java Version: 21");
+            result.assertThat().output().contains("Compiler Arg: --release=17");
+            result.assertThat().output().contains("Compiler Arg: --source=17");
+            result.assertThat().output().contains("Compiler Arg: --target=17");
+        }
+
+        @Test
+        void cannot_use_higher_version_jdk_api_than_the_target_even_if_the_compiler_is_that_version(
+                GradleInvoker gradle, RootProject rootProject) {
+
+            rootProject.buildGradle().append("""
+                javaVersion {
+                    compiler = 21
+                    target = 17
+                    runtime = 21
+                }
+                """);
+
+            rootProject.mainSourceSet().java().writeClass(JAVA_21_API_USAGE);
+
+            InvocationResult result = gradle.withArgs("compileJava").buildsWithFailure();
+
+            result.assertThat().output().contains("cannot find symbol");
+
+            result.assertThat().output().contains("Compiler Java Version: 21");
+            result.assertThat().output().contains("Compiler Arg: --release=17");
+            result.assertThat().output().contains("Compiler Arg: --source=17");
+            result.assertThat().output().contains("Compiler Arg: --target=17");
         }
     }
 
