@@ -24,6 +24,7 @@ import com.palantir.gradle.testing.execution.InvocationResult;
 import com.palantir.gradle.testing.files.java.JavaFile;
 import com.palantir.gradle.testing.junit.GradlePluginTests;
 import com.palantir.gradle.testing.project.RootProject;
+import com.palantir.gradle.testing.project.SubProject;
 import java.io.DataInputStream;
 import java.io.File;
 import java.io.FileInputStream;
@@ -85,7 +86,7 @@ class BaselineJavaVersionsIntegrationTest {
         """;
 
     @BeforeEach
-    void beforeEach(RootProject rootProject) {
+    void beforeEach(RootProject rootProject, SubProject subProject) {
         rootProject.buildGradle().append("""
             plugins {
                 id 'java'
@@ -105,6 +106,23 @@ class BaselineJavaVersionsIntegrationTest {
             }
             """);
 
+        subProject.buildGradle().append("""
+            plugins {
+                id 'java'
+            }
+
+            tasks.register('printJavaVersionExtension') {
+                def extension = project.extensions.javaVersion
+                inputs.property 'target', extension.target()
+                inputs.property 'runtime', extension.runtime()
+
+                doFirst {
+                    println "javaVersion target: ${inputs.properties.target}"
+                    println "javaVersion runtime: ${inputs.properties.runtime}"
+                }
+            }
+            """);
+
         mainJava = rootProject.mainSourceSet().java().fileByClassName("Main");
     }
 
@@ -113,71 +131,70 @@ class BaselineJavaVersionsIntegrationTest {
         @Test
         void distribution_target_is_used_when_no_artifacts_are_published(
                 GradleInvoker gradle, RootProject rootProject) {
+
             rootProject.buildGradle().append("""
                 javaVersions {
                     libraryTarget = 11
                     distributionTarget = 17
+                    runtime = 21
                 }
                 """);
 
-            mainJava.overwrite(JAVA_11_COMPATIBLE_CODE);
+            InvocationResult result =
+                    gradle.withArgs("printJavaVersionExtension").buildsSuccessfully();
 
-            gradle.withArgs("compileJava").buildsSuccessfully();
-
-            File compiledClass = rootProject
-                    .buildDir()
-                    .path()
-                    .resolve("classes/java/main/Main.class")
-                    .toFile();
-            assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
+            result.assertThat().output().contains("javaVersion target: 17");
+            result.assertThat().output().contains("javaVersion runtime: 21");
         }
 
         @Test
         void library_target_is_used_when_no_artifacts_are_published_but_project_is_overridden_as_a_library(
-                GradleInvoker gradle, RootProject rootProject) {
+                GradleInvoker gradle, RootProject rootProject, SubProject subProject) {
 
             rootProject.buildGradle().append("""
                 javaVersions {
                     libraryTarget = 11
                     distributionTarget = 17
+                    runtime = 21
                 }
+                """);
+
+            subProject.buildGradle().append("""
                 javaVersion {
                     library()
                 }
                 """);
 
-            mainJava.overwrite(JAVA_11_COMPATIBLE_CODE);
+            InvocationResult result =
+                    gradle.withArgs("printJavaVersionExtension").buildsSuccessfully();
 
-            gradle.withArgs("compileJava").buildsSuccessfully();
-
-            File compiledClass = rootProject
-                    .buildDir()
-                    .path()
-                    .resolve("classes/java/main/Main.class")
-                    .toFile();
-            assertBytecodeVersion(compiledClass, JAVA_11_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
+            result.assertThat().output().contains("javaVersion target: 11");
+            result.assertThat().output().contains("javaVersion runtime: 21");
         }
 
         @Test
-        void distribution_target_is_used_when_sls_packaging_is_used(GradleInvoker gradle, RootProject rootProject) {
+        void distribution_target_is_used_when_sls_packaging_is_used(
+                GradleInvoker gradle, RootProject rootProject, SubProject subProject) {
+
             rootProject.buildGradle().append("""
-                apply plugin: 'com.palantir.sls-java-service-distribution'
                 javaVersions {
                     libraryTarget = 11
                     distributionTarget = 17
+                    runtime = 21
                 }
                 """);
 
-            mainJava.overwrite(JAVA_11_COMPATIBLE_CODE);
+            subProject.buildGradle().prepend("""
+                plugins {
+                    id 'com.palantir.sls-java-service-distribution'
+                }
+                """);
 
-            gradle.withArgs("compileJava").buildsSuccessfully();
+            InvocationResult result =
+                    gradle.withArgs("printJavaVersionExtension").buildsSuccessfully();
 
-            File compiledClass = rootProject
-                    .buildDir()
-                    .path()
-                    .resolve("classes/java/main/Main.class")
-                    .toFile();
-            assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
+            result.assertThat().output().contains("javaVersion target: 17");
+            result.assertThat().output().contains("javaVersion runtime: 21");
         }
     }
 
