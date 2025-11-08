@@ -155,6 +155,10 @@ public final class BaselineJavaVersion implements Plugin<Project> {
         }
 
         project.getTasks().withType(GroovyCompile.class).configureEach(groovyCompileTask -> {
+            // sourceCompatibility/targetCompatibility/getOptions().setRelease(...) do nothing for
+            // Groovy (poor API sharing of JavaCompile's CompileOptions with GroovyCompile). In order
+            // to output classfiles with bytecode version of $target, we have to use a $target JDK to
+            // run Groovy (in contrast to Java's use of `--release`.
             groovyCompileTask
                     .getJavaLauncher()
                     .set(getJavaLauncher(
