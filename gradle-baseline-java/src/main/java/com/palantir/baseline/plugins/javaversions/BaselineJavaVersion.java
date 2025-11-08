@@ -84,7 +84,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             // Compilation tasks (using compiler version for the compiler, but the targeting the target)
             configureCompilationTasks(
                     project,
-                    extension.compiler(),
+                    extension.javaCompiler(),
                     extension.target(),
                     baselineConfiguredJavaToolchains,
                     rootExtension,
@@ -97,7 +97,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             // Validation
             TaskProvider<CheckJavaVersionsTask> checkJavaVersions = project.getTasks()
                     .register("checkJavaVersions", CheckJavaVersionsTask.class, task -> {
-                        task.getCompilerVersion().set(extension.compiler());
+                        task.getJavaCompilerVersion().set(extension.javaCompiler());
                         task.getTargetVersion().set(extension.target());
                         task.getRuntimeVersion().set(extension.runtime());
                     });
@@ -269,7 +269,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
         }
 
         @Input
-        public abstract Property<JavaLanguageVersion> getCompilerVersion();
+        public abstract Property<JavaLanguageVersion> getJavaCompilerVersion();
 
         @Input
         public abstract Property<ChosenJavaVersion> getTargetVersion();
@@ -282,16 +282,16 @@ public final class BaselineJavaVersion implements Plugin<Project> {
 
         @TaskAction
         public final void checkJavaVersions() {
-            JavaLanguageVersion compiler = getCompilerVersion().get();
+            JavaLanguageVersion javaCompiler = getJavaCompilerVersion().get();
             ChosenJavaVersion target = getTargetVersion().get();
             ChosenJavaVersion runtime = getRuntimeVersion().get();
 
             getLogger()
                     .debug(
-                            "BaselineJavaVersion configured {} with compiler version {}, target version {} and runtime"
-                                    + " version {}",
+                            "BaselineJavaVersion configured {} with javaCompiler version {}, target version {} and"
+                                    + " runtime version {}",
                             getProjectDisplayName().get(),
-                            compiler,
+                            javaCompiler,
                             target,
                             runtime);
 
@@ -311,11 +311,11 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                         target, runtime, getProjectDisplayName().get()));
             }
 
-            if (target.javaLanguageVersion().asInt() > compiler.asInt()) {
+            if (target.javaLanguageVersion().asInt() > javaCompiler.asInt()) {
                 throw new RuntimeException(String.format(
                         "The requested compilation target Java version (%s) must not "
-                                + "exceed the compiler Java version (%s) in %s",
-                        target, compiler, getProjectDisplayName().get()));
+                                + "exceed the javaCompiler Java version (%s) in %s",
+                        target, javaCompiler, getProjectDisplayName().get()));
             }
         }
     }

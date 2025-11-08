@@ -152,7 +152,7 @@ class BaselineJavaVersionIntegrationTest {
         void java_21_compilation_fails_targeting_java_17(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
-                    compiler = 17
+                    javaCompiler = 17
                     target = 17
                     runtime = 21
                 }
@@ -174,7 +174,7 @@ class BaselineJavaVersionIntegrationTest {
         void java_17_compilation_succeeds_targeting_java_17(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
-                    compiler = 17
+                    javaCompiler = 17
                     target = '17'
                     runtime = '17'
                 }
@@ -201,7 +201,7 @@ class BaselineJavaVersionIntegrationTest {
         void can_use_a_higher_compiler_to_target_a_lower_language_level(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
-                    compiler = 21
+                    javaCompiler = 21
                     target = 17
                 }
                 """);
@@ -229,7 +229,7 @@ class BaselineJavaVersionIntegrationTest {
 
             rootProject.buildGradle().append("""
                 javaVersion {
-                    compiler = 21
+                    javaCompiler = 21
                     target = 17
                     runtime = 21
                 }
@@ -253,7 +253,7 @@ class BaselineJavaVersionIntegrationTest {
 
             rootProject.buildGradle().append("""
                 javaVersion {
-                    compiler = 21
+                    javaCompiler = 21
                     target = 17
                     runtime = 21
                 }
@@ -278,7 +278,7 @@ class BaselineJavaVersionIntegrationTest {
         void java_11_execution_succeeds_on_java_11(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
-                    compiler = 11
+                    javaCompiler = 11
                     target = 11
                     runtime = 11
                 }
@@ -302,7 +302,7 @@ class BaselineJavaVersionIntegrationTest {
         void java_11_execution_succeeds_on_java_17(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
-                    compiler = 11
+                    javaCompiler = 11
                     target = 11
                     runtime = 17
                 }
@@ -326,7 +326,7 @@ class BaselineJavaVersionIntegrationTest {
         void java_17_execution_succeeds_on_java_17(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
-                    compiler = 17
+                    javaCompiler = 17
                     target = 17
                     runtime = 17
                 }
@@ -343,7 +343,7 @@ class BaselineJavaVersionIntegrationTest {
         void java_17_execution_succeeds_on_java_21(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
-                    compiler = 17
+                    javaCompiler = 17
                     target = 17
                     runtime = 21
                 }
@@ -370,7 +370,7 @@ class BaselineJavaVersionIntegrationTest {
         void javadoc_works_when_compiler_is_same_version_as_target(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
-                    compiler = 21
+                    javaCompiler = 21
                     target = 21
                 }
                 """);
@@ -386,7 +386,7 @@ class BaselineJavaVersionIntegrationTest {
 
             rootProject.buildGradle().append("""
                 javaVersion {
-                    compiler = 21
+                    javaCompiler = 21
                     target = 17
                 }
                 """);
@@ -402,7 +402,7 @@ class BaselineJavaVersionIntegrationTest {
 
             rootProject.buildGradle().append("""
                 javaVersion {
-                    compiler = 21
+                    javaCompiler = 21
                     target = 17
                 }
                 """);
@@ -420,7 +420,7 @@ class BaselineJavaVersionIntegrationTest {
 
             rootProject.buildGradle().append("""
                 javaVersion {
-                    compiler = 21
+                    javaCompiler = 21
                     target = 17
                 }
                 """);
@@ -439,7 +439,7 @@ class BaselineJavaVersionIntegrationTest {
         void beforeEach(RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
-                    compiler = 17
+                    javaCompiler = 17
                     target = 17
                 }
 
@@ -460,7 +460,7 @@ class BaselineJavaVersionIntegrationTest {
 
             rootProject.buildGradle().append("""
                 javaVersion {
-                    compiler = 17
+                    javaCompiler = 17
                     target = 17
                 }
                 """);
@@ -489,7 +489,7 @@ class BaselineJavaVersionIntegrationTest {
 
             rootProject.buildGradle().append("""
                 javaVersion {
-                    compiler = 21
+                    javaCompiler = 21
                     target = 17
                 }
                 """);
@@ -518,7 +518,7 @@ class BaselineJavaVersionIntegrationTest {
 
             rootProject.buildGradle().append("""
                 javaVersion {
-                    compiler = 21
+                    javaCompiler = 21
                     target = 17
                 }
                 """);
@@ -549,7 +549,7 @@ class BaselineJavaVersionIntegrationTest {
 
             rootProject.buildGradle().append("""
                 javaVersion {
-                    compiler = 11
+                    javaCompiler = 11
                     target = 11
                     runtime = 17
                 }
@@ -575,7 +575,7 @@ class BaselineJavaVersionIntegrationTest {
         void java_17_preview_compilation_works(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
-                    compiler = 17
+                    javaCompiler = 17
                     target = '17_PREVIEW'
                     runtime = '17_PREVIEW'
                 }
@@ -597,7 +597,7 @@ class BaselineJavaVersionIntegrationTest {
         void java_17_preview_javadoc_works(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
-                    compiler = 17
+                    javaCompiler = 17
                     target = '17_PREVIEW'
                 }
                 """);
@@ -616,7 +616,7 @@ class BaselineJavaVersionIntegrationTest {
 
             rootProject.buildGradle().append("""
                 javaVersion {
-                    compiler = 17
+                    javaCompiler = 17
                     target = 17
                     runtime = 11
                 }
@@ -633,7 +633,7 @@ class BaselineJavaVersionIntegrationTest {
 
             rootProject.buildGradle().append("""
                 javaVersion {
-                    compiler = 11
+                    javaCompiler = 11
                     target = '11_PREVIEW'
                     runtime = '15_PREVIEW'
                 }
@@ -653,7 +653,7 @@ class BaselineJavaVersionIntegrationTest {
 
             rootProject.buildGradle().append("""
                 javaVersion {
-                    compiler = 17
+                    javaCompiler = 17
                     target = '17_PREVIEW'
                     runtime = '17'
                 }
@@ -673,7 +673,7 @@ class BaselineJavaVersionIntegrationTest {
 
             rootProject.buildGradle().append("""
                 javaVersion {
-                    compiler = 17
+                    javaCompiler = 17
                     target = 21
                     runtime = 21
                 }
@@ -683,7 +683,7 @@ class BaselineJavaVersionIntegrationTest {
 
             result.assertThat()
                     .output()
-                    .contains("The requested compilation target Java version (21) must not exceed the compiler Java"
+                    .contains("The requested compilation target Java version (21) must not exceed the javaCompiler Java"
                             + " version (17) in root project");
         }
 
@@ -693,7 +693,7 @@ class BaselineJavaVersionIntegrationTest {
 
             rootProject.buildGradle().append("""
                 javaVersion {
-                    compiler = 17
+                    javaCompiler = 17
                     target = 17
                     runtime = 17
                 }
@@ -708,7 +708,7 @@ class BaselineJavaVersionIntegrationTest {
 
             rootProject.buildGradle().append("""
                 javaVersion {
-                    compiler = 21
+                    javaCompiler = 21
                     target = 17
                     runtime = 17
                 }
@@ -726,7 +726,7 @@ class BaselineJavaVersionIntegrationTest {
 
             rootProject.buildGradle().append("""
                 javaVersion {
-                    compiler = 11
+                    javaCompiler = 11
                     target = 11
                     runtime = 11
                 }
@@ -754,7 +754,7 @@ class BaselineJavaVersionIntegrationTest {
         void succeeds_when_all_runtimeClasspath_jars_are_compatible(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
-                    compiler = 8
+                    javaCompiler = 8
                     target = 8
                     runtime = 8
                 }
@@ -771,7 +771,7 @@ class BaselineJavaVersionIntegrationTest {
         void handles_gradleApi(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
-                    compiler = 8
+                    javaCompiler = 8
                     target = 8
                     runtime = 8
                 }
@@ -791,7 +791,7 @@ class BaselineJavaVersionIntegrationTest {
         void is_a_dependency_of_check(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
-                    compiler = 11
+                    javaCompiler = 11
                     target = 11
                     runtime = 11
                 }

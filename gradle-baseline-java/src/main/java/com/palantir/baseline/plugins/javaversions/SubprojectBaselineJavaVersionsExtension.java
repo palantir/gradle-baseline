@@ -29,7 +29,7 @@ public class SubprojectBaselineJavaVersionsExtension implements BaselineJavaVers
     }
 
     @Override
-    public final void setCompiler(int value) {
+    public final void setJavaCompiler(int value) {
         throwCannotSetFromSubproject();
     }
 

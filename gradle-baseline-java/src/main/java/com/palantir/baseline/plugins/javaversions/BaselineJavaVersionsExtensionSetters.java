@@ -23,7 +23,7 @@ package com.palantir.baseline.plugins.javaversions;
  * on by other Gradle plugins.
  */
 public interface BaselineJavaVersionsExtensionSetters {
-    void setCompiler(int value);
+    void setJavaCompiler(int value);
 
     void setLibraryTarget(int value);
 

@@ -438,7 +438,7 @@ The plugin is currently used on an opt-in basis. To use it, apply the plugin and
 apply plugin: 'com.palantir.baseline-java-versions'
 
 javaVersions {
-    compiler = 25
+    javaCompiler = 25
     libraryTarget = 11
     distributionTarget = 17
     runtime = 21
@@ -446,7 +446,7 @@ javaVersions {
 ```
 
 The configurable fields of the `javaVersions` extension are:
-* `compiler`: (required) The version of the Java compiler used. 
+* `javaCompiler`: (required) The version of the Java compiler used. 
 * `libraryTarget`: (required) The Java version targeted for compilation of libraries that are published.
 * `distributionTarget`: (optional) The Java version targeted for compilation of code used within distributions, but not published externally. Defaults to the `libraryTarget` version.
 * `runtime`: (optional) Runtime Java version for testing and packaging distributions. Defaults to the `distributionTarget` version.
@@ -477,13 +477,14 @@ A sub-project can also explicitly override the default Java versions, but doing 
 ```gradle
 // In a sub-project's build.gradle
 javaVersion {
-    compiler = 17
+    javaCompiler = 17
     target = 11
     runtime = 11
 }
 ```
 
 The optionally configurable fields of the `javaVersion` extension are:
+* `javaCompiler`: The version of the Java compiler used.
 * `target`: The target version used for compilation.
 * `runtime`: The runtime version used for testing and distributions.
 

@@ -27,7 +27,7 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion;
  */
 public class BaselineJavaVersionExtension {
 
-    private final Property<JavaLanguageVersion> compiler;
+    private final Property<JavaLanguageVersion> javaCompiler;
     private final Property<ChosenJavaVersion> target;
     private final Property<ChosenJavaVersion> runtime;
 
@@ -35,23 +35,23 @@ public class BaselineJavaVersionExtension {
 
     @Inject
     public BaselineJavaVersionExtension(Project project) {
-        compiler = project.getObjects().property(JavaLanguageVersion.class);
+        javaCompiler = project.getObjects().property(JavaLanguageVersion.class);
         target = project.getObjects().property(ChosenJavaVersion.class);
         runtime = project.getObjects().property(ChosenJavaVersion.class);
         overrideLibraryAutoDetection = project.getObjects().property(Boolean.class);
 
-        compiler.finalizeValueOnRead();
+        javaCompiler.finalizeValueOnRead();
         target.finalizeValueOnRead();
         runtime.finalizeValueOnRead();
         overrideLibraryAutoDetection.finalizeValueOnRead();
     }
 
-    public final Property<JavaLanguageVersion> compiler() {
-        return compiler;
+    public final Property<JavaLanguageVersion> javaCompiler() {
+        return javaCompiler;
     }
 
-    public final void setCompiler(int value) {
-        compiler.set(JavaLanguageVersion.of(value));
+    public final void setJavaCompiler(int value) {
+        javaCompiler.set(JavaLanguageVersion.of(value));
     }
 
     /**
