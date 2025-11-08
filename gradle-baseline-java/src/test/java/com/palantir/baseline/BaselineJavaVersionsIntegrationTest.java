@@ -337,7 +337,7 @@ class BaselineJavaVersionsIntegrationTest {
         }
 
         @Test
-        void good_error_message_when_compiler_is_not_set(
+        void good_error_message_when_java_compiler_is_not_set(
                 GradleInvoker gradle, RootProject rootProject, SubProject subProject) {
 
             rootProject.buildGradle().append("""

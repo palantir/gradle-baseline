@@ -44,7 +44,7 @@ public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtens
         this.javaCompiler = project.getObjects()
                 .property(JavaLanguageVersion.class)
                 .convention(project.provider(() -> {
-                    // This effectively makes the `compiler` property required. If it isn't required, the empty
+                    // This effectively makes the `javaCompiler` property required. If it isn't required, the empty
                     // properties are propagated to setting the --release on JavaCompiles, which then use the
                     // version of Gradle daemon for the compiler rather than something explicit (spooky). I
                     // really don't want daemon upgrades or downgrades affecting Java compilation, they should

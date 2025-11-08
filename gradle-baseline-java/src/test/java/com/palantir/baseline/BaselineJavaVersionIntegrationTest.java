@@ -198,7 +198,8 @@ class BaselineJavaVersionIntegrationTest {
         }
 
         @Test
-        void can_use_a_higher_compiler_to_target_a_lower_language_level(GradleInvoker gradle, RootProject rootProject) {
+        void can_use_a_higher_java_compiler_to_target_a_lower_language_level(
+                GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
                     javaCompiler = 21
@@ -224,7 +225,7 @@ class BaselineJavaVersionIntegrationTest {
         }
 
         @Test
-        void cannot_use_higher_version_source_features_than_the_target_even_if_the_compiler_is_that_higher_version(
+        void cannot_use_higher_version_source_features_than_the_target_even_if_the_java_compiler_is_that_higher_version(
                 GradleInvoker gradle, RootProject rootProject) {
 
             rootProject.buildGradle().append("""
@@ -248,7 +249,7 @@ class BaselineJavaVersionIntegrationTest {
         }
 
         @Test
-        void cannot_use_higher_version_jdk_api_than_the_target_even_if_the_compiler_is_that_higher_version(
+        void cannot_use_higher_version_jdk_api_than_the_target_even_if_the_java_compiler_is_that_higher_version(
                 GradleInvoker gradle, RootProject rootProject) {
 
             rootProject.buildGradle().append("""
@@ -367,7 +368,7 @@ class BaselineJavaVersionIntegrationTest {
     @Nested
     class Javadoc {
         @Test
-        void javadoc_works_when_compiler_is_same_version_as_target(GradleInvoker gradle, RootProject rootProject) {
+        void javadoc_works_when_java_compiler_is_same_version_as_target(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
                     javaCompiler = 21
@@ -381,7 +382,7 @@ class BaselineJavaVersionIntegrationTest {
         }
 
         @Test
-        void javadoc_works_when_compiler_is_a_higher_version_than_the_target(
+        void javadoc_works_when_java_compiler_is_a_higher_version_than_the_target(
                 GradleInvoker gradle, RootProject rootProject) {
 
             rootProject.buildGradle().append("""
@@ -397,7 +398,7 @@ class BaselineJavaVersionIntegrationTest {
         }
 
         @Test
-        void javadoc_errors_on_source_features_higher_than_the_target_version_even_with_higher_compiler_version(
+        void javadoc_errors_on_source_features_higher_than_the_target_version_even_with_higher_java_compiler_version(
                 GradleInvoker gradle, RootProject rootProject) {
 
             rootProject.buildGradle().append("""
@@ -415,7 +416,7 @@ class BaselineJavaVersionIntegrationTest {
         }
 
         @Test
-        void javadoc_errors_on_jdk_api_higher_than_the_target_version_even_with_higher_compiler_version(
+        void javadoc_errors_on_jdk_api_higher_than_the_target_version_even_with_higher_java_compiler_version(
                 GradleInvoker gradle, RootProject rootProject) {
 
             rootProject.buildGradle().append("""
@@ -452,11 +453,11 @@ class BaselineJavaVersionIntegrationTest {
         }
 
         @Test
-        void targeting_17_and_setting_compiler_to_17_jdk_outputs_17_bytecode(
+        void targeting_17_and_setting_java_compiler_to_17_jdk_outputs_17_bytecode(
                 GradleInvoker gradle, RootProject rootProject) {
 
             // The groovy compiler needs to run with the JDK it's targeting, not with
-            // whatever we're setting for `compiler` (a Java concept).
+            // whatever we're setting for `javaCompiler` (a Java concept).
 
             rootProject.buildGradle().append("""
                 javaVersion {
@@ -481,11 +482,11 @@ class BaselineJavaVersionIntegrationTest {
         }
 
         @Test
-        void targeting_17_and_setting_compiler_to_21_outputs_17_bytecode(
+        void targeting_17_and_setting_java_compiler_to_21_outputs_17_bytecode(
                 GradleInvoker gradle, RootProject rootProject) {
 
             // The groovy compiler needs to run with the JDK it's targeting, not with
-            // whatever we're setting for `compiler` (a Java concept).
+            // whatever we're setting for `javaCompiler` (a Java concept).
 
             rootProject.buildGradle().append("""
                 javaVersion {
@@ -510,11 +511,11 @@ class BaselineJavaVersionIntegrationTest {
         }
 
         @Test
-        void targeting_17_and_setting_compiler_to_21_does_let_you_use_21_jdk_apis(
+        void targeting_17_and_setting_java_compiler_to_21_does_let_you_use_21_jdk_apis(
                 GradleInvoker gradle, RootProject rootProject) {
 
             // The groovy compiler needs to run with the JDK it's targeting, not with
-            // whatever we're setting for `compiler` (a Java concept).
+            // whatever we're setting for `javaCompiler` (a Java concept).
 
             rootProject.buildGradle().append("""
                 javaVersion {
@@ -668,7 +669,7 @@ class BaselineJavaVersionIntegrationTest {
         }
 
         @Test
-        void verification_should_fail_when_compiler_is_lower_than_target(
+        void verification_should_fail_when_java_compiler_is_lower_than_target(
                 GradleInvoker gradle, RootProject rootProject) {
 
             rootProject.buildGradle().append("""
