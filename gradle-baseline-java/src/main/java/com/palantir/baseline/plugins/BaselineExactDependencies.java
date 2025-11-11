@@ -74,6 +74,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
         });
     }
 
+    @SuppressWarnings("for-rollout:TaskDependsOn")
     private static void configureSourceSet(
             Project project,
             SourceSet sourceSet,
@@ -84,6 +85,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
         NamedDomainObjectProvider<Configuration> compileClasspath =
                 project.getConfigurations().named(sourceSet.getCompileClasspathConfigurationName());
 
+        @SuppressWarnings("for-rollout:TaskDependsOn")
         TaskProvider<CheckUnusedDependenciesTask> sourceSetUnusedDependencies = project.getTasks()
                 .register(
                         checkUnusedDependenciesNameForSourceSet(sourceSet), CheckUnusedDependenciesTask.class, task -> {
@@ -108,6 +110,7 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                             task.ignore(checkUnusedDependencies.flatMap(CheckUnusedDependenciesParentTask::getIgnore));
                         });
         checkUnusedDependencies.configure(task -> task.dependsOn(sourceSetUnusedDependencies));
+        @SuppressWarnings("for-rollout:TaskDependsOn")
         TaskProvider<CheckImplicitDependenciesTask> sourceSetCheckImplicitDependencies = project.getTasks()
                 .register(
                         "checkImplicitDependencies" + StringUtils.capitalize(sourceSet.getName()),
