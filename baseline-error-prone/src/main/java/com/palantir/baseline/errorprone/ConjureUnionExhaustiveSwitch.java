@@ -30,8 +30,6 @@ import com.sun.source.tree.SwitchTree;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.Type;
 import java.util.List;
-import javax.lang.model.element.ElementKind;
-import javax.lang.model.element.Modifier;
 
 /**
  * Detects usage of {@code default} clauses in switch statements over Conjure unions (sealed types).
@@ -58,17 +56,18 @@ public final class ConjureUnionExhaustiveSwitch extends BugChecker
 
     @Override
     public Description matchSwitch(SwitchTree tree, VisitorState _state) {
-        return checkSwitchForSealedType(tree.getExpression(), tree.getCases(), tree);
+        return checkSwitchForConjureUnion(tree.getExpression(), tree.getCases(), tree);
     }
 
     @Override
     public Description matchSwitchExpression(SwitchExpressionTree tree, VisitorState _state) {
-        return checkSwitchForSealedType(tree.getExpression(), tree.getCases(), tree);
+        return checkSwitchForConjureUnion(tree.getExpression(), tree.getCases(), tree);
     }
 
-    private Description checkSwitchForSealedType(ExpressionTree expression, List<? extends CaseTree> cases, Tree tree) {
+    private Description checkSwitchForConjureUnion(
+            ExpressionTree expression, List<? extends CaseTree> cases, Tree tree) {
         Type switchType = ASTHelpers.getType(expression);
-        if (switchType == null || !isConjureUnion(switchType)) {
+        if (switchType == null || !ConjureUtils.isConjureUnion(switchType)) {
             return Description.NO_MATCH;
         }
 
@@ -77,20 +76,5 @@ public final class ConjureUnionExhaustiveSwitch extends BugChecker
         }
 
         return buildDescription(tree).build();
-    }
-
-    private boolean isConjureUnion(Type type) {
-        if (type.asElement() == null
-                || type.asElement().getKind() != ElementKind.CLASS
-                || !type.asElement().getModifiers().contains(Modifier.SEALED)) {
-            return false;
-        }
-
-        // Check if it has a nested interface called "Known"
-        // Empty conjure unions won't have a Known interface, but they won't be used in switches either by definition
-        return ASTHelpers.getEnclosedElements(type.asElement()).stream()
-                .anyMatch(element -> element.getKind() == ElementKind.INTERFACE
-                        && element.getModifiers().contains(Modifier.SEALED)
-                        && "Known".equals(element.getSimpleName().toString()));
     }
 }
