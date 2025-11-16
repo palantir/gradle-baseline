@@ -16,41 +16,41 @@ com.diffplug.spotless:spotless-lib-extra:3.3.1 (1 constraints: 1713d42d)
 
 com.diffplug.spotless:spotless-plugin-gradle:7.2.1 (1 constraints: 0c051536)
 
-com.fasterxml.jackson.core:jackson-annotations:2.20 (11 constraints: b1b9cc6c)
+com.fasterxml.jackson.core:jackson-annotations:2.20 (11 constraints: 7fb8f5b6)
 
-com.fasterxml.jackson.core:jackson-core:2.20.0 (6 constraints: 837ed097)
+com.fasterxml.jackson.core:jackson-core:2.20.0 (6 constraints: 797eb797)
 
-com.fasterxml.jackson.core:jackson-databind:2.20.0 (13 constraints: 7e0db1a4)
+com.fasterxml.jackson.core:jackson-databind:2.20.0 (13 constraints: 6a0d9192)
 
 com.fasterxml.jackson.datatype:jackson-datatype-guava:2.20.0 (2 constraints: 73280293)
 
-com.github.ben-manes.caffeine:caffeine:3.2.2 (2 constraints: eb175357)
+com.github.ben-manes.caffeine:caffeine:3.2.3 (2 constraints: ec178857)
 
 com.github.kevinstern:software-and-algorithms:1.0 (1 constraints: 7e12fcf5)
 
-com.google.auto:auto-common:1.2.2 (3 constraints: a432fc93)
+com.google.auto:auto-common:1.2.2 (3 constraints: a532fd93)
 
 com.google.auto.service:auto-service:1.1.1 (1 constraints: 0505f435)
 
 com.google.auto.service:auto-service-annotations:1.1.1 (2 constraints: 8a20341c)
 
-com.google.auto.value:auto-value-annotations:1.10.4 (3 constraints: ac2df2f5)
+com.google.auto.value:auto-value-annotations:1.11.0 (4 constraints: ee3fa36e)
 
 com.google.code.findbugs:jsr305:3.0.2 (2 constraints: 9e14e59e)
 
-com.google.errorprone:error_prone_annotation:2.41.0 (3 constraints: c138f8ec)
+com.google.errorprone:error_prone_annotation:2.43.0 (3 constraints: c7384aee)
 
-com.google.errorprone:error_prone_annotations:2.41.0 (13 constraints: 68cdc626)
+com.google.errorprone:error_prone_annotations:2.43.0 (13 constraints: 6fcd0b35)
 
-com.google.errorprone:error_prone_check_api:2.41.0 (2 constraints: b025defe)
+com.google.errorprone:error_prone_check_api:2.43.0 (2 constraints: b4255aff)
 
-com.google.errorprone:error_prone_core:2.41.0 (1 constraints: 39053e3b)
+com.google.errorprone:error_prone_core:2.43.0 (1 constraints: 39053e3b)
 
 com.google.googlejavaformat:google-java-format:1.27.0 (2 constraints: b6258eff)
 
 com.google.guava:failureaccess:1.0.3 (2 constraints: f3154f13)
 
-com.google.guava:guava:33.5.0-jre (22 constraints: 8aa3934f)
+com.google.guava:guava:33.5.0-jre (22 constraints: f0a3afcb)
 
 com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava (1 constraints: bd17c918)
 
@@ -70,15 +70,15 @@ com.palantir.gradle.failure-reports:gradle-failure-reports-exceptions:1.9.0 (3 c
 
 com.palantir.gradle.idea-configuration:gradle-idea-configuration:0.4.0 (3 constraints: d229d01f)
 
-com.palantir.gradle.utils:environment-variables:0.19.0 (2 constraints: 3a22798e)
+com.palantir.gradle.utils:environment-variables:0.21.0 (2 constraints: 3322438c)
 
-com.palantir.gradle.utils:exec:0.19.0 (1 constraints: 350f7276)
+com.palantir.gradle.utils:exec:0.21.0 (1 constraints: 2e0f5e76)
 
-com.palantir.gradle.utils:lazily-configured-mapping:0.19.0 (2 constraints: ca142abe)
+com.palantir.gradle.utils:lazily-configured-mapping:0.21.0 (2 constraints: c314d4bc)
 
-com.palantir.gradle.utils:platform:0.19.0 (6 constraints: 3c71c6ce)
+com.palantir.gradle.utils:platform:0.21.0 (6 constraints: 3c71c6ce)
 
-com.palantir.gradle.utils:providers:0.19.0 (1 constraints: 750deb31)
+com.palantir.gradle.utils:providers:0.21.0 (1 constraints: 6e0dd731)
 
 com.palantir.javaformat:gradle-palantir-java-format:2.73.0 (1 constraints: 3e05503b)
 
@@ -94,7 +94,7 @@ com.squareup.okio:okio:3.6.0 (1 constraints: 530c38fd)
 
 com.squareup.okio:okio-jvm:3.6.0 (1 constraints: 500ad3b9)
 
-com.uber.nullaway:nullaway:0.12.10 (1 constraints: 66059040)
+com.uber.nullaway:nullaway:0.12.12 (1 constraints: 68059240)
 
 commons-codec:commons-codec:1.17.1 (2 constraints: 1b1ee786)
 
@@ -110,7 +110,7 @@ javax.inject:javax.inject:1 (9 constraints: 368518fe)
 
 net.ltgt.gradle:gradle-errorprone-plugin:4.3.0 (2 constraints: 0322b579)
 
-org.apache.commons:commons-lang3:3.19.0 (6 constraints: 9355ec72)
+org.apache.commons:commons-lang3:3.20.0 (6 constraints: 8d55f36c)
 
 org.apache.maven:maven-artifact:3.9.1 (3 constraints: 82293854)
 
@@ -146,7 +146,7 @@ org.apache.maven.shared:maven-dependency-analyzer:1.16.0 (1 constraints: 3a053b3
 
 org.apache.maven.shared:maven-shared-utils:3.3.4 (1 constraints: e60b61f3)
 
-org.checkerframework:checker-qual:3.49.2 (3 constraints: f62d7d4d)
+org.checkerframework:checker-qual:3.49.2 (1 constraints: 1911a6c8)
 
 org.checkerframework:dataflow-nullaway:3.49.2 (2 constraints: 7811bbf2)
 
@@ -170,7 +170,7 @@ org.eclipse.sisu:org.eclipse.sisu.inject:0.3.5 (3 constraints: 852caa93)
 
 org.eclipse.sisu:org.eclipse.sisu.plexus:0.3.5 (2 constraints: 141abc34)
 
-org.immutables:value:2.11.4 (3 constraints: 762609e1)
+org.immutables:value:2.11.6 (3 constraints: 7826cde1)
 
 org.inferred:freebuilder:1.14.6 (1 constraints: 3e053b3b)
 
@@ -184,9 +184,9 @@ org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.10 (1 constraints: e210ffd2)
 
 org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.10 (2 constraints: 8118c1c5)
 
-org.jspecify:jspecify:1.0.0 (8 constraints: 017e544f)
+org.jspecify:jspecify:1.0.0 (18 constraints: 42263487)
 
-org.ow2.asm:asm:9.8 (5 constraints: 684f29ac)
+org.ow2.asm:asm:9.9 (5 constraints: 6b4f62ae)
 
 org.pcollections:pcollections:4.0.1 (1 constraints: f21028b8)
 
@@ -208,19 +208,17 @@ com.fasterxml.jackson.module:jackson-module-afterburner:2.20.0 (1 constraints: 3
 
 com.github.stefanbirkner:system-rules:1.19.0 (1 constraints: 3d05443b)
 
-com.google.auto.value:auto-value:1.10 (1 constraints: e711f8e8)
-
-com.google.errorprone:error_prone_test_helpers:2.41.0 (1 constraints: 39053e3b)
+com.google.errorprone:error_prone_test_helpers:2.43.0 (1 constraints: 39053e3b)
 
 com.google.jimfs:jimfs:1.3.0 (1 constraints: 5a141061)
 
-com.google.testing.compile:compile-testing:0.21.0 (1 constraints: 89149575)
+com.google.testing.compile:compile-testing:0.23.0 (1 constraints: 8b149b75)
 
-com.google.truth:truth:1.4.0 (2 constraints: 72265a6a)
+com.google.truth:truth:1.4.5 (2 constraints: 7726656a)
 
 com.netflix.nebula:nebula-test:10.6.2 (2 constraints: d61de72d)
 
-com.palantir.conjure.java:conjure-lib:8.57.0 (1 constraints: 4605783b)
+com.palantir.conjure.java:conjure-lib:8.62.0 (1 constraints: 42056d3b)
 
 com.palantir.conjure.java.api:errors:2.65.0 (2 constraints: 7521acb1)
 
@@ -250,33 +248,33 @@ com.palantir.gradle.plugintesting:plugin-testing-core:0.32.0 (1 constraints: 370
 
 com.palantir.ri:resource-identifier:2.11.0 (2 constraints: 511589d9)
 
-com.palantir.safe-logging:logger:3.9.0 (4 constraints: 01325f76)
+com.palantir.safe-logging:logger:3.9.0 (4 constraints: 0832ab78)
 
 com.palantir.safe-logging:logger-slf4j:3.9.0 (1 constraints: 070e6e42)
 
 com.palantir.safe-logging:logger-spi:3.9.0 (2 constraints: 1d1e0c7c)
 
-com.palantir.safe-logging:preconditions:3.9.0 (12 constraints: e4c9b394)
+com.palantir.safe-logging:preconditions:3.9.0 (12 constraints: f1c9c79d)
 
 com.palantir.safe-logging:preconditions-assertj:3.9.0 (1 constraints: 0e051536)
 
-com.palantir.safe-logging:safe-logging:3.9.0 (10 constraints: 139876ee)
+com.palantir.safe-logging:safe-logging:3.9.0 (10 constraints: 1a98cdef)
 
-com.palantir.sls-packaging:gradle-recommended-product-dependencies:7.79.0 (1 constraints: f3133d70)
+com.palantir.sls-packaging:gradle-recommended-product-dependencies:7.85.0 (1 constraints: f0133570)
 
-com.palantir.sls-packaging:gradle-sls-packaging:7.79.0 (1 constraints: 4905803b)
+com.palantir.sls-packaging:gradle-sls-packaging:7.85.0 (1 constraints: 4605783b)
 
-com.palantir.sls-packaging:gradle-sls-packaging-api:7.79.0 (1 constraints: f3133d70)
+com.palantir.sls-packaging:gradle-sls-packaging-api:7.85.0 (1 constraints: f0133570)
 
-com.palantir.sls.versions:sls-versions:1.5.0 (1 constraints: 531bd145)
+com.palantir.sls.versions:sls-versions:1.8.0 (1 constraints: 561bda45)
 
-com.palantir.tokens:auth-tokens:3.19.0 (2 constraints: 63156cdb)
+com.palantir.tokens:auth-tokens:3.20.0 (2 constraints: 5315c6d9)
 
-com.palantir.tritium:tritium-ids:0.109.0 (1 constraints: f80f86a6)
+com.palantir.tritium:tritium-ids:0.114.0 (1 constraints: f80f86a6)
 
-com.palantir.tritium:tritium-registry:0.109.0 (1 constraints: 6c05a340)
+com.palantir.tritium:tritium-registry:0.114.0 (1 constraints: 68059840)
 
-commons-io:commons-io:2.20.0 (4 constraints: 453e941a)
+commons-io:commons-io:2.21.0 (4 constraints: 463e391b)
 
 commons-lang:commons-lang:2.6 (1 constraints: ac04232c)
 
@@ -314,27 +312,27 @@ org.hamcrest:hamcrest-core:3.0 (4 constraints: 2a2bcb9d)
 
 org.hamcrest:hamcrest-library:2.2 (1 constraints: fc138e38)
 
-org.immutables:serial:2.11.4 (1 constraints: 74113fef)
+org.immutables:serial:2.11.6 (1 constraints: 74113fef)
 
-org.jooq:jooq:3.20.7 (1 constraints: 3e05403b)
+org.jooq:jooq:3.20.9 (1 constraints: 4005423b)
 
-org.junit.jupiter:junit-jupiter:5.13.4 (1 constraints: 7e074077)
+org.junit.jupiter:junit-jupiter:6.0.1 (1 constraints: 48070970)
 
-org.junit.jupiter:junit-jupiter-api:5.13.4 (6 constraints: e675ef4e)
+org.junit.jupiter:junit-jupiter-api:6.0.1 (6 constraints: 0e75a5a5)
 
-org.junit.jupiter:junit-jupiter-engine:5.13.4 (1 constraints: 3a0e0a4a)
+org.junit.jupiter:junit-jupiter-engine:6.0.1 (1 constraints: 040ecb3b)
 
-org.junit.jupiter:junit-jupiter-migrationsupport:5.13.4 (1 constraints: 3f054e3b)
+org.junit.jupiter:junit-jupiter-migrationsupport:6.0.1 (1 constraints: 09050a36)
 
-org.junit.jupiter:junit-jupiter-params:5.13.4 (2 constraints: f82423fc)
+org.junit.jupiter:junit-jupiter-params:6.0.1 (2 constraints: c22426d7)
 
-org.junit.platform:junit-platform-commons:1.13.4 (2 constraints: 39219184)
+org.junit.platform:junit-platform-commons:6.0.1 (2 constraints: d520474a)
 
-org.junit.platform:junit-platform-engine:1.13.4 (4 constraints: 3441687d)
+org.junit.platform:junit-platform-engine:6.0.1 (4 constraints: 9e40c7e2)
 
-org.junit.platform:junit-platform-launcher:1.13.4 (1 constraints: 3b05363b)
+org.junit.platform:junit-platform-launcher:6.0.1 (1 constraints: 09050a36)
 
-org.junit.vintage:junit-vintage-engine:5.13.4 (1 constraints: 3f054e3b)
+org.junit.vintage:junit-vintage-engine:6.0.1 (1 constraints: 09050a36)
 
 org.mockito:mockito-core:5.20.0 (1 constraints: 5311c5e0)
 
