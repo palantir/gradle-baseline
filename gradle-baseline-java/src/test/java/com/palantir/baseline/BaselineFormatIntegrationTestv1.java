@@ -36,7 +36,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 @GradlePluginTests
-class BaselineFormatIntegrationTest {
+class BaselineFormatIntegrationTestv1 {
 
     private static final String VALID_JAVA_FILE = """
         package test;
