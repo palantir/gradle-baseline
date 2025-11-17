@@ -67,13 +67,13 @@ class BaselineFormatIntegrationTestv1 {
         """;
 
     @BeforeEach
-    void setup(RootProject rootProject) throws IOException {
+    void setup(RootProject project) throws IOException {
         FileUtils.copyDirectory(
                 new File("../gradle-baseline-java-config/resources"),
-                new File(rootProject.path().toFile(), ".baseline"));
+                new File(project.path().toFile(), ".baseline"));
 
         // Disable copyright by default so we can test it individually
-        rootProject.gradlePropertiesFile().append("""
+        project.gradlePropertiesFile().append("""
             com.palantir.baseline-format.copyright=false
             # Required for the eclipse formatter. Delete once it's removed.
             org.gradle.jvmargs = --add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED
@@ -81,10 +81,10 @@ class BaselineFormatIntegrationTestv1 {
     }
 
     @Test
-    void can_apply_plugin(GradleInvoker gradle, RootProject rootProject) {
-        rootProject.buildGradle().plugins().add("java");
-        rootProject.buildGradle().plugins().add("com.palantir.baseline-format");
-        rootProject.buildGradle().append("""
+    void can_apply_plugin(GradleInvoker gradle, RootProject project) {
+        project.buildGradle().plugins().add("java");
+        project.buildGradle().plugins().add("com.palantir.baseline-format");
+        project.buildGradle().append("""
             repositories {
                 // to resolve the `palantirJavaFormat` configuration
                 mavenCentral()
@@ -95,23 +95,23 @@ class BaselineFormatIntegrationTestv1 {
     }
 
     @Test
-    void eclipse_formatter_integration_test(GradleInvoker gradle, RootProject rootProject) throws IOException {
+    void eclipse_formatter_integration_test(GradleInvoker gradle, RootProject project) throws IOException {
         File inputDir = new File("src/test/resources/com/palantir/baseline/formatter-in");
         File expectedDir = new File("src/test/resources/com/palantir/baseline/eclipse-formatter-expected");
 
-        File testedDir = new File(rootProject.path().toFile(), "src/main/java");
+        File testedDir = new File(project.path().toFile(), "src/main/java");
         FileUtils.copyDirectory(inputDir, testedDir);
 
-        rootProject.buildGradle().plugins().add("java");
-        rootProject.buildGradle().plugins().add("com.palantir.baseline-format");
-        rootProject.buildGradle().append("""
+        project.buildGradle().plugins().add("java");
+        project.buildGradle().plugins().add("com.palantir.baseline-format");
+        project.buildGradle().append("""
             repositories {
                 // to resolve the `palantirJavaFormat` configuration
                 mavenCentral()
             }
             """);
 
-        rootProject.gradlePropertiesFile().append("com.palantir.baseline-format.eclipse=true\n");
+        project.gradlePropertiesFile().append("com.palantir.baseline-format.eclipse=true\n");
 
         InvocationResult result = gradle.withArgs(":format").buildsSuccessfully();
         assertThat(result).task(":format").succeeded();
@@ -121,24 +121,24 @@ class BaselineFormatIntegrationTestv1 {
     }
 
     @Test
-    void palantir_java_format_works(GradleInvoker gradle, RootProject rootProject) throws IOException {
+    void palantir_java_format_works(GradleInvoker gradle, RootProject project) throws IOException {
         File inputDir = new File("src/test/resources/com/palantir/baseline/formatter-in");
         File expectedDir = new File("src/test/resources/com/palantir/baseline/palantirjavaformat-expected");
 
-        File testedDir = new File(rootProject.path().toFile(), "src/main/java");
+        File testedDir = new File(project.path().toFile(), "src/main/java");
         FileUtils.copyDirectory(inputDir, testedDir);
 
-        rootProject.buildGradle().plugins().add("java");
-        rootProject.buildGradle().plugins().add("com.palantir.java-format");
-        rootProject.buildGradle().plugins().add("com.palantir.baseline-format");
-        rootProject.buildGradle().append("""
+        project.buildGradle().plugins().add("java");
+        project.buildGradle().plugins().add("com.palantir.java-format");
+        project.buildGradle().plugins().add("com.palantir.baseline-format");
+        project.buildGradle().append("""
             repositories {
                 // to resolve the `palantirJavaFormat` configuration
                 mavenCentral()
             }
             """);
 
-        rootProject.gradlePropertiesFile().append("com.palantir.baseline-format.palantir-java-format=true\n");
+        project.gradlePropertiesFile().append("com.palantir.baseline-format.palantir-java-format=true\n");
 
         InvocationResult result = gradle.withArgs(":format").buildsSuccessfully();
 
@@ -148,17 +148,17 @@ class BaselineFormatIntegrationTestv1 {
     }
 
     @Test
-    void can_run_format_task_when_java_plugin_is_missing(GradleInvoker gradle, RootProject rootProject) {
-        rootProject.buildGradle().plugins().add("com.palantir.baseline-format");
+    void can_run_format_task_when_java_plugin_is_missing(GradleInvoker gradle, RootProject project) {
+        project.buildGradle().plugins().add("com.palantir.baseline-format");
 
         gradle.withArgs("format", "--stacktrace").buildsSuccessfully();
     }
 
     @Test
-    void format_task_works_on_new_source_sets(GradleInvoker gradle, RootProject rootProject) throws IOException {
-        rootProject.buildGradle().plugins().add("java");
-        rootProject.buildGradle().plugins().add("com.palantir.baseline-format");
-        rootProject.buildGradle().append("""
+    void format_task_works_on_new_source_sets(GradleInvoker gradle, RootProject project) throws IOException {
+        project.buildGradle().plugins().add("java");
+        project.buildGradle().plugins().add("com.palantir.baseline-format");
+        project.buildGradle().append("""
             repositories {
                 // to resolve the `palantirJavaFormat` configuration
                 mavenCentral()
@@ -166,7 +166,7 @@ class BaselineFormatIntegrationTestv1 {
             sourceSets { foo }
             """);
 
-        Path testJavaFile = rootProject.path().resolve("src/foo/java/test/Test.java");
+        Path testJavaFile = project.path().resolve("src/foo/java/test/Test.java");
         Files.createDirectories(testJavaFile.getParent());
         Files.writeString(testJavaFile, INVALID_JAVA_FILE);
 
@@ -178,12 +178,12 @@ class BaselineFormatIntegrationTestv1 {
     }
 
     @Test
-    void format_task_works_on_other_language_java_sources(GradleInvoker gradle, RootProject rootProject)
+    void format_task_works_on_other_language_java_sources(GradleInvoker gradle, RootProject project)
             throws IOException {
-        rootProject.buildGradle().plugins().add("java");
-        rootProject.buildGradle().plugins().add("groovy");
-        rootProject.buildGradle().plugins().add("com.palantir.baseline-format");
-        rootProject.buildGradle().append("""
+        project.buildGradle().plugins().add("java");
+        project.buildGradle().plugins().add("groovy");
+        project.buildGradle().plugins().add("com.palantir.baseline-format");
+        project.buildGradle().append("""
             repositories {
                 // to resolve the `palantirJavaFormat` configuration
                 mavenCentral()
@@ -191,7 +191,7 @@ class BaselineFormatIntegrationTestv1 {
             sourceSets { foo }
             """);
 
-        Path testJavaFile = rootProject.path().resolve("src/foo/groovy/test/Test.java");
+        Path testJavaFile = project.path().resolve("src/foo/groovy/test/Test.java");
         Files.createDirectories(testJavaFile.getParent());
         Files.writeString(testJavaFile, INVALID_JAVA_FILE);
 
@@ -203,10 +203,10 @@ class BaselineFormatIntegrationTestv1 {
     }
 
     @Test
-    void format_ignores_generated_files(GradleInvoker gradle, RootProject rootProject) throws IOException {
-        rootProject.buildGradle().plugins().add("java");
-        rootProject.buildGradle().plugins().add("com.palantir.baseline-format");
-        rootProject.buildGradle().append("""
+    void format_ignores_generated_files(GradleInvoker gradle, RootProject project) throws IOException {
+        project.buildGradle().plugins().add("java");
+        project.buildGradle().plugins().add("com.palantir.baseline-format");
+        project.buildGradle().append("""
             repositories {
                 // to resolve the `palantirJavaFormat` configuration
                 mavenCentral()
@@ -227,7 +227,7 @@ class BaselineFormatIntegrationTestv1 {
             public class Test { Void test() {} }
             """;
 
-        Path testJavaFile = rootProject.path().resolve("src/generated/java/test/Test.java");
+        Path testJavaFile = project.path().resolve("src/generated/java/test/Test.java");
         Files.createDirectories(testJavaFile.getParent());
         Files.writeString(testJavaFile, javaFileContents);
 
@@ -236,22 +236,22 @@ class BaselineFormatIntegrationTestv1 {
     }
 
     @Test
-    void format_diff_updates_only_lines_changed_in_git_diff(GradleInvoker gradle, RootProject rootProject)
+    void format_diff_updates_only_lines_changed_in_git_diff(GradleInvoker gradle, RootProject project)
             throws IOException, InterruptedException {
-        rootProject.buildGradle().plugins().add("java");
-        rootProject.buildGradle().plugins().add("com.palantir.baseline-format");
-        rootProject.buildGradle().append("""
+        project.buildGradle().plugins().add("java");
+        project.buildGradle().plugins().add("com.palantir.baseline-format");
+        project.buildGradle().append("""
             repositories {
                 // to resolve the `palantirJavaFormat` configuration
                 mavenCentral()
             }
             """);
 
-        executeCommand("git", "init", rootProject);
-        executeCommand("git", "config", "user.name", "Foo", rootProject);
-        executeCommand("git", "config", "user.email", "foo@bar.com", rootProject);
+        executeCommand("git", "init", project);
+        executeCommand("git", "config", "user.name", "Foo", project);
+        executeCommand("git", "config", "user.email", "foo@bar.com", project);
 
-        Path mainJavaFile = rootProject.path().resolve("src/main/java/Main.java");
+        Path mainJavaFile = project.path().resolve("src/main/java/Main.java");
         Files.createDirectories(mainJavaFile.getParent());
         Files.writeString(mainJavaFile, """
             class Main {
@@ -261,8 +261,8 @@ class BaselineFormatIntegrationTestv1 {
             }
             """);
 
-        executeCommand("git", "add", ".", rootProject);
-        executeCommand("git", "commit", "-m", "Commit", rootProject);
+        executeCommand("git", "add", ".", project);
+        executeCommand("git", "commit", "-m", "Commit", project);
 
         Files.writeString(mainJavaFile, """
             class Main {
@@ -307,26 +307,26 @@ class BaselineFormatIntegrationTestv1 {
                 dir, new SuffixFileFilter(".java"), new NotFileFilter(new NameFileFilter(excludedDirectories)));
     }
 
-    private static void executeCommand(String command, String arg1, RootProject rootProject)
+    private static void executeCommand(String command, String arg1, RootProject project)
             throws IOException, InterruptedException {
         new ProcessBuilder(command, arg1)
-                .directory(rootProject.path().toFile())
+                .directory(project.path().toFile())
                 .start()
                 .waitFor();
     }
 
-    private static void executeCommand(String command, String arg1, String arg2, RootProject rootProject)
+    private static void executeCommand(String command, String arg1, String arg2, RootProject project)
             throws IOException, InterruptedException {
         new ProcessBuilder(command, arg1, arg2)
-                .directory(rootProject.path().toFile())
+                .directory(project.path().toFile())
                 .start()
                 .waitFor();
     }
 
-    private static void executeCommand(String command, String arg1, String arg2, String arg3, RootProject rootProject)
+    private static void executeCommand(String command, String arg1, String arg2, String arg3, RootProject project)
             throws IOException, InterruptedException {
         new ProcessBuilder(command, arg1, arg2, arg3)
-                .directory(rootProject.path().toFile())
+                .directory(project.path().toFile())
                 .start()
                 .waitFor();
     }
