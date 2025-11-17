@@ -73,11 +73,10 @@ class BaselineFormatIntegrationTest {
                 new File(project.path().toFile(), ".baseline"));
 
         // Disable copyright by default so we can test it individually
-        project.gradlePropertiesFile().append("""
-            com.palantir.baseline-format.copyright=false
-            # Required for the eclipse formatter. Delete once it's removed.
-            org.gradle.jvmargs = --add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED
-            """);
+        project.gradlePropertiesFile()
+                .appendProperty("com.palantir.baseline-format.copyright", "false")
+                // Required for the eclipse formatter. Delete once it's removed.
+                .appendProperty("org.gradle.jvmargs", "--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED");
     }
 
     @Test
@@ -111,7 +110,7 @@ class BaselineFormatIntegrationTest {
             }
             """);
 
-        project.gradlePropertiesFile().append("com.palantir.baseline-format.eclipse=true\n");
+        project.gradlePropertiesFile().appendProperty("com.palantir.baseline-format.eclipse", "true");
 
         InvocationResult result = gradle.withArgs(":format").buildsSuccessfully();
         assertThat(result).task(":format").succeeded();
@@ -138,7 +137,7 @@ class BaselineFormatIntegrationTest {
             }
             """);
 
-        project.gradlePropertiesFile().append("com.palantir.baseline-format.palantir-java-format=true\n");
+        project.gradlePropertiesFile().appendProperty("com.palantir.baseline-format.palantir-java-format", "true");
 
         InvocationResult result = gradle.withArgs(":format").buildsSuccessfully();
 

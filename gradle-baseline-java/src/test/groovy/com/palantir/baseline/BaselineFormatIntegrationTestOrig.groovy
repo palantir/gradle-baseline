@@ -32,7 +32,7 @@ import org.gradle.testkit.runner.TaskOutcome
 import static org.assertj.core.api.Assertions.assertThat
 
 @Unroll
-class BaselineFormatIntegrationTestG extends AbstractPluginTest {
+class BaselineFormatIntegrationTestOrig extends AbstractPluginTest {
 
     def setup() {
         FileUtils.copyDirectory(

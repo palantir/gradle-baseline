@@ -21,7 +21,7 @@ import org.gradle.testkit.runner.TaskOutcome
 /**
  * This test relies on running ./gradlew :gradle-baseline-java-config:publishToMavenLocal.
  */
-class BaselineConfigIntegrationTest extends AbstractPluginTest {
+class BaselineConfigIntegrationTestOrig extends AbstractPluginTest {
     def projectVersion = "git describe --tags --first-parent --dirty=.dirty --abbrev=7".execute().text.trim()
     def standardBuildFile = """
         plugins {
