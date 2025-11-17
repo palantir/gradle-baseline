@@ -155,7 +155,7 @@ class BaselineFormatIntegrationTest {
     }
 
     @Test
-    void format_task_works_on_new_source_sets(GradleInvoker gradle, RootProject project) throws IOException {
+    void format_task_works_on_new_source_sets(GradleInvoker gradle, RootProject project) {
         project.buildGradle().plugins().add("java");
         project.buildGradle().plugins().add("com.palantir.baseline-format");
         project.buildGradle().append("""
@@ -166,20 +166,17 @@ class BaselineFormatIntegrationTest {
             sourceSets { foo }
             """);
 
-        Path testJavaFile = project.path().resolve("src/foo/java/test/Test.java");
-        Files.createDirectories(testJavaFile.getParent());
-        Files.writeString(testJavaFile, INVALID_JAVA_FILE);
+        var testJavaFile = project.sourceSet("foo").java().writeClass(INVALID_JAVA_FILE);
 
         InvocationResult result = gradle.withArgs("format", "-Pcom.palantir.baseline-format.eclipse")
                 .buildsSuccessfully();
         assertThat(result).task(":format").succeeded();
         assertThat(result).task(":spotlessApply").succeeded();
-        assertThat(Files.readString(testJavaFile)).isEqualTo(VALID_JAVA_FILE);
+        assertThat(testJavaFile.text()).isEqualTo(VALID_JAVA_FILE);
     }
 
     @Test
-    void format_task_works_on_other_language_java_sources(GradleInvoker gradle, RootProject project)
-            throws IOException {
+    void format_task_works_on_other_language_java_sources(GradleInvoker gradle, RootProject project) {
         project.buildGradle().plugins().add("java");
         project.buildGradle().plugins().add("groovy");
         project.buildGradle().plugins().add("com.palantir.baseline-format");
@@ -191,19 +188,20 @@ class BaselineFormatIntegrationTest {
             sourceSets { foo }
             """);
 
-        Path testJavaFile = project.path().resolve("src/foo/groovy/test/Test.java");
-        Files.createDirectories(testJavaFile.getParent());
-        Files.writeString(testJavaFile, INVALID_JAVA_FILE);
+        var testJavaFile = project.sourceSet("foo")
+                .srcDir("groovy")
+                .file("test/Test.java")
+                .overwrite(INVALID_JAVA_FILE);
 
         InvocationResult result = gradle.withArgs("format", "-Pcom.palantir.baseline-format.eclipse")
                 .buildsSuccessfully();
         assertThat(result).task(":format").succeeded();
         assertThat(result).task(":spotlessApply").succeeded();
-        assertThat(Files.readString(testJavaFile)).isEqualTo(VALID_JAVA_FILE);
+        assertThat(testJavaFile.text()).isEqualTo(VALID_JAVA_FILE);
     }
 
     @Test
-    void format_ignores_generated_files(GradleInvoker gradle, RootProject project) throws IOException {
+    void format_ignores_generated_files(GradleInvoker gradle, RootProject project) {
         project.buildGradle().plugins().add("java");
         project.buildGradle().plugins().add("com.palantir.baseline-format");
         project.buildGradle().append("""
@@ -227,9 +225,7 @@ class BaselineFormatIntegrationTest {
             public class Test { Void test() {} }
             """;
 
-        Path testJavaFile = project.path().resolve("src/generated/java/test/Test.java");
-        Files.createDirectories(testJavaFile.getParent());
-        Files.writeString(testJavaFile, javaFileContents);
+        project.directory("src/generated/java/test").file("Test.java").overwrite(javaFileContents);
 
         InvocationResult result = gradle.withArgs("spotlessJavaCheck").buildsSuccessfully();
         assertThat(result).task(":spotlessJava").succeeded();
@@ -251,20 +247,20 @@ class BaselineFormatIntegrationTest {
         executeCommand("git", "config", "user.name", "Foo", project);
         executeCommand("git", "config", "user.email", "foo@bar.com", project);
 
-        Path mainJavaFile = project.path().resolve("src/main/java/Main.java");
-        Files.createDirectories(mainJavaFile.getParent());
-        Files.writeString(mainJavaFile, """
-            class Main {
-                public static void crazyExistingFormatting  (  String... args) {
+        var mainJavaFile = project.mainSourceSet()
+                .java()
+                .writeClass("""
+                    class Main {
+                        public static void crazyExistingFormatting  (  String... args) {
 
-                }
-            }
-            """);
+                        }
+                    }
+                    """);
 
         executeCommand("git", "add", ".", project);
         executeCommand("git", "commit", "-m", "Commit", project);
 
-        Files.writeString(mainJavaFile, """
+        mainJavaFile.overwrite("""
             class Main {
                 public static void crazyExistingFormatting  (  String... args) {
                                     System.out.println("Reformat me please");
@@ -275,7 +271,7 @@ class BaselineFormatIntegrationTest {
         gradle.withArgs("formatDiff", "-Pcom.palantir.baseline-format.palantir-java-format")
                 .buildsSuccessfully();
 
-        assertThat(Files.readString(mainJavaFile)).isEqualTo("""
+        assertThat(mainJavaFile.text()).isEqualTo("""
             class Main {
                 public static void crazyExistingFormatting  (  String... args) {
                     System.out.println("Reformat me please");
