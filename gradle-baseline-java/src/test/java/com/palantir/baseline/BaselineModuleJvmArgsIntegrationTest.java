@@ -43,13 +43,6 @@ class BaselineModuleJvmArgsIntegrationTest {
     @BeforeEach
     void beforeEach(RootProject rootProject) {
         rootProject.buildGradle().append("""
-            plugins {
-                id 'java-library'
-                id 'application'
-                id 'com.palantir.baseline-java-versions'
-                id 'com.palantir.baseline-module-jvm-args'
-            }
-
             application {
                 mainClass = 'com.Example'
             }
@@ -67,6 +60,13 @@ class BaselineModuleJvmArgsIntegrationTest {
                 }
             }
             """);
+        rootProject
+                .buildGradle()
+                .plugins()
+                .add("java-library")
+                .add("application")
+                .add("com.palantir.baseline-java-versions")
+                .add("com.palantir.baseline-module-jvm-args");
     }
 
     @Nested
@@ -161,11 +161,7 @@ class BaselineModuleJvmArgsIntegrationTest {
                 GradleInvoker gradle, RootProject rootProject, SubProject compilerPlugin) {
 
             compilerPlugin.buildGradle().append("""
-                    plugins {
-                        id 'java-library'
-                        id 'com.palantir.baseline-module-jvm-args'
-                    }
-                    dependencies {
+                dependencies {
                         annotationProcessor 'com.google.auto.service:auto-service:1.1.1'
                         compileOnly 'com.google.auto.service:auto-service:1.1.1'
                     }
@@ -173,6 +169,7 @@ class BaselineModuleJvmArgsIntegrationTest {
                         exports = ['jdk.compiler/com.sun.tools.javac.code']
                     }
                 """);
+            compilerPlugin.buildGradle().plugins().add("java-library").add("com.palantir.baseline-module-jvm-args");
 
             compilerPlugin.mainSourceSet().java().writeClass("""
                 package com;
@@ -330,11 +327,7 @@ class BaselineModuleJvmArgsIntegrationTest {
         void runs_with_locally_defined_exports_with_the_release_plugin_not_toolchains(
                 GradleInvoker gradle, RootProject rootProject) {
 
-            rootProject.buildGradle().prepend("""
-                plugins {
-                    id 'com.palantir.baseline-release-compatibility'
-                }
-                """);
+            rootProject.buildGradle().plugins().add("com.palantir.baseline-release-compatibility");
 
             rootProject.buildGradle().append("""
                 moduleJvmArgs {
