@@ -80,12 +80,6 @@ class BaselineJavaVersionIntegrationTest {
     @BeforeEach
     void beforeEach(RootProject rootProject) {
         rootProject.buildGradle().append("""
-            plugins {
-                id 'java'
-                id 'com.palantir.baseline-java-versions'
-                id 'com.palantir.jdks.latest'
-            }
-
             allprojects {
                 repositories {
                     mavenCentral()
@@ -97,6 +91,12 @@ class BaselineJavaVersionIntegrationTest {
                 classpath = sourceSets.main.runtimeClasspath
             }
             """);
+        rootProject
+                .buildGradle()
+                .plugins()
+                .add("java")
+                .add("com.palantir.baseline-java-versions")
+                .add("com.palantir.jdks.latest");
     }
 
     @Nested
