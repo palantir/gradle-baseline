@@ -103,7 +103,9 @@ class BaselineTestingIntegrationTest {
 
         gradle.withArgs("test").buildsSuccessfully();
 
-        assertThat(rootProject.path().resolve("build/reports/tests/test/classes/test.JUnit4Test.html"))
+        rootProject.buildDir()
+                .file("reports/tests/test/classes/test.JUnit4Test.html")
+                .assertThat()
                 .exists();
     }
 
@@ -115,7 +117,9 @@ class BaselineTestingIntegrationTest {
 
         gradle.withArgs("test").buildsSuccessfully();
 
-        assertThat(rootProject.path().resolve("build/reports/tests/test/classes/test.JUnit5Test.html"))
+        rootProject.buildDir()
+                .file("reports/tests/test/classes/test.JUnit5Test.html")
+                .assertThat()
                 .exists();
     }
 
@@ -137,9 +141,13 @@ class BaselineTestingIntegrationTest {
 
         gradle.withArgs("test").buildsSuccessfully();
 
-        assertThat(rootProject.path().resolve("build/reports/tests/test/classes/test.JUnit4Test.html"))
+        rootProject.buildDir()
+                .file("reports/tests/test/classes/test.JUnit4Test.html")
+                .assertThat()
                 .exists();
-        assertThat(rootProject.path().resolve("build/reports/tests/test/classes/test.JUnit5Test.html"))
+        rootProject.buildDir()
+                .file("reports/tests/test/classes/test.JUnit5Test.html")
+                .assertThat()
                 .exists();
     }
 
@@ -157,7 +165,9 @@ class BaselineTestingIntegrationTest {
 
         gradle.withArgs("test").buildsSuccessfully();
 
-        assertThat(rootProject.path().resolve("build/reports/tests/test/classes/test.JqwikTest.html"))
+        rootProject.buildDir()
+                .file("reports/tests/test/classes/test.JqwikTest.html")
+                .assertThat()
                 .exists();
     }
 
@@ -208,7 +218,9 @@ class BaselineTestingIntegrationTest {
 
         gradle.withArgs("integrationTest").buildsSuccessfully();
 
-        assertThat(rootProject.path().resolve("build/reports/tests/integrationTest/classes/test.JUnit5Test.html"))
+        rootProject.buildDir()
+                .file("reports/tests/integrationTest/classes/test.JUnit5Test.html")
+                .assertThat()
                 .exists();
     }
 
