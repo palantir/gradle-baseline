@@ -332,6 +332,34 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         '''.stripIndent()
     }
 
+    def 'compileJava by itself does not run annoying error-prones'() {
+        given: 'A java file which violates StrictUnusedVariable'
+        buildFile << standardBuildFile
+        file('src/main/java/foo/Foo.java') << '''
+            package foo;
+
+            public class Foo {
+                void foo() {
+                    int x = 5;
+                }
+            }
+        '''.stripIndent(true)
+
+        when: 'Running compileJava by itself'
+        BuildResult compileJavaResult = with('compileJava').build()
+
+        then: 'StrictUnusedVariable does not fire'
+        compileJavaResult.task(":compileJava").outcome == TaskOutcome.SUCCESS
+        !compileJavaResult.output.contains('error: [StrictUnusedVariable]')
+
+        when: 'Running compileJava via check'
+        BuildResult checkResult = with('check').buildAndFail()
+
+        then: 'StrictUnusedVariable fires'
+        checkResult.task(":compileJava").outcome == TaskOutcome.FAILED
+        checkResult.output.contains('error: [StrictUnusedVariable]')
+    }
+
     def 'compileJava applies patches when errorProneApply contains specific checks'() {
         when:
         buildFile << standardBuildFile

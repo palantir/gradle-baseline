@@ -27,6 +27,7 @@ import net.ltgt.gradle.errorprone.ErrorProneOptions;
 import net.ltgt.gradle.errorprone.ErrorPronePlugin;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.Task;
 import org.gradle.api.tasks.compile.JavaCompile;
 import org.gradle.process.CommandLineArgumentProvider;
 
@@ -47,6 +48,14 @@ public final class BaselineErrorProne implements Plugin<Project> {
 
         project.getExtensions()
                 .create(EXTENSION_NAME, BaselineErrorProneExtension.class, suppressibleErrorProneExtension);
+        project.getGradle().getTaskGraph().whenReady(taskGraph -> {
+            Task check = project.getTasks().named("check").get();
+            if (!taskGraph.hasTask(check)) {
+                suppressibleErrorProneExtension.configureEachErrorProneOptions(errorProneOptions -> {
+                    BaselineErrorProneExtension.ANNOYING_CHECKS.forEach(errorProneOptions::disable);
+                });
+            }
+        });
 
         String version = Optional.ofNullable((String) project.findProperty("baselineErrorProneVersion"))
                 .or(() -> Optional.ofNullable(

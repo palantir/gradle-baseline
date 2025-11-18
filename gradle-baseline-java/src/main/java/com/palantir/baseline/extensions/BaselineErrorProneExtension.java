@@ -22,6 +22,9 @@ import org.gradle.api.provider.SetProperty;
 
 public abstract class BaselineErrorProneExtension {
 
+    // Checks which only run with `check`, but not `compileJava`
+    public static final Set<String> ANNOYING_CHECKS = Set.of("StrictUnusedVariable");
+
     /*
      * Do not add SUGGESTION checks here. Instead either increase the severity to WARNING or do not apply them by
      * default.
