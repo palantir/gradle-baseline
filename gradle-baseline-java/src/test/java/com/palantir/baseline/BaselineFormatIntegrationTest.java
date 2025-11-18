@@ -21,6 +21,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.palantir.gradle.testing.execution.GradleInvoker;
 import com.palantir.gradle.testing.execution.InvocationResult;
+import com.palantir.gradle.testing.files.gradle.GradleFile;
 import com.palantir.gradle.testing.junit.GradlePluginTests;
 import com.palantir.gradle.testing.project.RootProject;
 import java.io.File;
@@ -76,19 +77,34 @@ class BaselineFormatIntegrationTest {
         project.gradlePropertiesFile()
                 .appendProperty("com.palantir.baseline-format.copyright", "false")
                 // Required for the eclipse formatter. Delete once it's removed.
-                .appendProperty("org.gradle.jvmargs", "--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED");
+                .appendProperty(
+                        "org.gradle.jvmargs",
+                        "--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED");
     }
 
-    @Test
-    void can_apply_plugin(GradleInvoker gradle, RootProject project) {
-        project.buildGradle().plugins().add("java");
-        project.buildGradle().plugins().add("com.palantir.baseline-format");
-        project.buildGradle().append("""
+    private static GradleFile setupStandardBuildFile(RootProject project) {
+        GradleFile buildFile = project.buildGradle();
+        buildFile.plugins().add("java").add("com.palantir.baseline-format");
+        buildFile.append("""
             repositories {
                 // to resolve the `palantirJavaFormat` configuration
                 mavenCentral()
             }
             """);
+
+        return buildFile;
+    }
+
+    private static GradleFile setupNoJavaBuildFile(RootProject project) {
+        GradleFile buildFile = project.buildGradle();
+        buildFile.plugins().add("com.palantir.baseline-format");
+
+        return buildFile;
+    }
+
+    @Test
+    void can_apply_plugin(GradleInvoker gradle, RootProject project) {
+        setupStandardBuildFile(project);
 
         gradle.withArgs("format", "--stacktrace").buildsSuccessfully();
     }
@@ -101,14 +117,7 @@ class BaselineFormatIntegrationTest {
         File testedDir = new File(project.path().toFile(), "src/main/java");
         FileUtils.copyDirectory(inputDir, testedDir);
 
-        project.buildGradle().plugins().add("java");
-        project.buildGradle().plugins().add("com.palantir.baseline-format");
-        project.buildGradle().append("""
-            repositories {
-                // to resolve the `palantirJavaFormat` configuration
-                mavenCentral()
-            }
-            """);
+        setupStandardBuildFile(project);
 
         project.gradlePropertiesFile().appendProperty("com.palantir.baseline-format.eclipse", "true");
 
@@ -127,9 +136,11 @@ class BaselineFormatIntegrationTest {
         File testedDir = new File(project.path().toFile(), "src/main/java");
         FileUtils.copyDirectory(inputDir, testedDir);
 
-        project.buildGradle().plugins().add("java");
-        project.buildGradle().plugins().add("com.palantir.java-format");
-        project.buildGradle().plugins().add("com.palantir.baseline-format");
+        project.buildGradle()
+                .plugins()
+                .add("java")
+                .add("com.palantir.java-format")
+                .add("com.palantir.baseline-format");
         project.buildGradle().append("""
             repositories {
                 // to resolve the `palantirJavaFormat` configuration
@@ -148,20 +159,14 @@ class BaselineFormatIntegrationTest {
 
     @Test
     void can_run_format_task_when_java_plugin_is_missing(GradleInvoker gradle, RootProject project) {
-        project.buildGradle().plugins().add("com.palantir.baseline-format");
+        setupNoJavaBuildFile(project);
 
         gradle.withArgs("format", "--stacktrace").buildsSuccessfully();
     }
 
     @Test
     void format_task_works_on_new_source_sets(GradleInvoker gradle, RootProject project) {
-        project.buildGradle().plugins().add("java");
-        project.buildGradle().plugins().add("com.palantir.baseline-format");
-        project.buildGradle().append("""
-            repositories {
-                // to resolve the `palantirJavaFormat` configuration
-                mavenCentral()
-            }
+        setupStandardBuildFile(project).append("""
             sourceSets { foo }
             """);
 
@@ -176,14 +181,9 @@ class BaselineFormatIntegrationTest {
 
     @Test
     void format_task_works_on_other_language_java_sources(GradleInvoker gradle, RootProject project) {
-        project.buildGradle().plugins().add("java");
-        project.buildGradle().plugins().add("groovy");
-        project.buildGradle().plugins().add("com.palantir.baseline-format");
-        project.buildGradle().append("""
-            repositories {
-                // to resolve the `palantirJavaFormat` configuration
-                mavenCentral()
-            }
+        GradleFile buildFile = setupStandardBuildFile(project);
+        buildFile.plugins().add("groovy");
+        buildFile.append("""
             sourceSets { foo }
             """);
 
@@ -201,13 +201,7 @@ class BaselineFormatIntegrationTest {
 
     @Test
     void format_ignores_generated_files(GradleInvoker gradle, RootProject project) {
-        project.buildGradle().plugins().add("java");
-        project.buildGradle().plugins().add("com.palantir.baseline-format");
-        project.buildGradle().append("""
-            repositories {
-                // to resolve the `palantirJavaFormat` configuration
-                mavenCentral()
-            }
+        setupStandardBuildFile(project).append("""
             sourceSets {
                 main {
                     java { srcDir 'src/generated/java' }
@@ -233,14 +227,7 @@ class BaselineFormatIntegrationTest {
     @Test
     void format_diff_updates_only_lines_changed_in_git_diff(GradleInvoker gradle, RootProject project)
             throws IOException, InterruptedException {
-        project.buildGradle().plugins().add("java");
-        project.buildGradle().plugins().add("com.palantir.baseline-format");
-        project.buildGradle().append("""
-            repositories {
-                // to resolve the `palantirJavaFormat` configuration
-                mavenCentral()
-            }
-            """);
+        setupStandardBuildFile(project);
 
         executeCommand("git", "init", project);
         executeCommand("git", "config", "user.name", "Foo", project);
