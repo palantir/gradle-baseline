@@ -79,7 +79,11 @@ class BaselineFormatIntegrationTest {
                 // Required for the eclipse formatter. Delete once it's removed.
                 .appendProperty(
                         "org.gradle.jvmargs",
-                        "--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED");
+                        "--add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED"
+                                + " --add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED"
+                                + " --add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED"
+                                + " --add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED"
+                                + " --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED");
     }
 
     private static GradleFile setupStandardBuildFile(RootProject project) {
@@ -187,10 +191,8 @@ class BaselineFormatIntegrationTest {
             sourceSets { foo }
             """);
 
-        var testJavaFile = project.sourceSet("foo")
-                .srcDir("groovy")
-                .file("test/Test.java")
-                .overwrite(INVALID_JAVA_FILE);
+        var testJavaFile =
+                project.sourceSet("foo").srcDir("groovy").file("test/Test.java").overwrite(INVALID_JAVA_FILE);
 
         InvocationResult result = gradle.withArgs("format", "-Pcom.palantir.baseline-format.eclipse")
                 .buildsSuccessfully();
@@ -233,15 +235,13 @@ class BaselineFormatIntegrationTest {
         executeCommand("git", "config", "user.name", "Foo", project);
         executeCommand("git", "config", "user.email", "foo@bar.com", project);
 
-        var mainJavaFile = project.mainSourceSet()
-                .java()
-                .writeClass("""
-                    class Main {
-                        public static void crazyExistingFormatting  (  String... args) {
+        var mainJavaFile = project.mainSourceSet().java().writeClass("""
+            class Main {
+                public static void crazyExistingFormatting  (  String... args) {
 
-                        }
-                    }
-                    """);
+                }
+            }
+            """);
 
         executeCommand("git", "add", ".", project);
         executeCommand("git", "commit", "-m", "Commit", project);

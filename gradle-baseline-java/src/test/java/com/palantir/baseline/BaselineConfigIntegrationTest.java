@@ -39,7 +39,8 @@ import org.junit.jupiter.api.Test;
 class BaselineConfigIntegrationTest {
 
     private static String getProjectVersion() throws IOException, InterruptedException {
-        Process process = new ProcessBuilder("git", "describe", "--tags", "--first-parent", "--dirty=.dirty", "--abbrev=7")
+        Process process = new ProcessBuilder(
+                        "git", "describe", "--tags", "--first-parent", "--dirty=.dirty", "--abbrev=7")
                 .start();
         process.waitFor();
         return new String(process.getInputStream().readAllBytes()).trim();
@@ -70,7 +71,10 @@ class BaselineConfigIntegrationTest {
             }
             """, projectVersion);
 
-        gradle.withArgs("--stacktrace", "--info", "baselineUpdateConfig",
+        gradle.withArgs(
+                        "--stacktrace",
+                        "--info",
+                        "baselineUpdateConfig",
                         "-Pcom.palantir.baseline-format.eclipse",
                         "-Pcom.palantir.baseline-format.palantir-java-format")
                 .buildsSuccessfully();
@@ -84,9 +88,8 @@ class BaselineConfigIntegrationTest {
         assertThat(actualDirs).isEqualTo(expectedDirs);
 
         Path projectDir = project.path().resolve("project");
-        List<Path> projectDirContents = Files.exists(projectDir)
-                ? Files.list(projectDir).collect(Collectors.toList())
-                : List.of();
+        List<Path> projectDirContents =
+                Files.exists(projectDir) ? Files.list(projectDir).collect(Collectors.toList()) : List.of();
         assertThat(projectDirContents).isEmpty();
     }
 
@@ -109,15 +112,14 @@ class BaselineConfigIntegrationTest {
         assertThat(baselineDirContents).isNotEmpty();
 
         Path projectDir = project.path().resolve("project");
-        List<Path> projectDirContents = Files.exists(projectDir)
-                ? Files.list(projectDir).collect(Collectors.toList())
-                : List.of();
+        List<Path> projectDirContents =
+                Files.exists(projectDir) ? Files.list(projectDir).collect(Collectors.toList()) : List.of();
         assertThat(projectDirContents).isEmpty();
     }
 
     @Test
-    void fails_if_too_many_configuration_dependencies_are_specified(
-            GradleInvoker gradle, RootProject project) throws IOException, InterruptedException {
+    void fails_if_too_many_configuration_dependencies_are_specified(GradleInvoker gradle, RootProject project)
+            throws IOException, InterruptedException {
         String projectVersion = getProjectVersion();
 
         setupStandardBuildFile(project).append("""
