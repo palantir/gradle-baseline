@@ -32,6 +32,40 @@ import org.junit.jupiter.api.Test;
 @GradlePluginTests
 class BaselineTestingIntegrationTest {
 
+    private static final String JUNIT4_TEST = """
+            package test;
+
+            import org.junit.Test;
+
+            public class JUnit4Test {
+                @Test
+                public void test() {}
+            }
+            """;
+
+    private static final String JUNIT5_TEST = """
+            package test;
+
+            import org.junit.jupiter.api.Test;
+
+            public class JUnit5Test {
+                @Test
+                public void test() {}
+            }
+            """;
+
+    private static final String JQWIK_TEST = """
+            package test;
+
+            import net.jqwik.api.Property;
+            import net.jqwik.api.ForAll;
+
+            class JqwikTest {
+                @Property
+                void test(@ForAll byte value) {}
+            }
+            """;
+
     private void applyStandardBuildFile(RootProject rootProject) {
         rootProject.buildGradle().plugins().add("java-library").add("com.palantir.baseline-testing");
 
@@ -65,16 +99,7 @@ class BaselineTestingIntegrationTest {
             }
             """);
 
-        rootProject.testSourceSet().java().writeClass("""
-            package test;
-
-            import org.junit.Test;
-
-            public class JUnit4Test {
-                @Test
-                public void test() {}
-            }
-            """);
+        rootProject.testSourceSet().java().writeClass(JUNIT4_TEST);
 
         gradle.withArgs("test").buildsSuccessfully();
 
@@ -86,16 +111,7 @@ class BaselineTestingIntegrationTest {
     void runs_junit5_tests(GradleInvoker gradle, RootProject rootProject) {
         applyStandardBuildFile(rootProject);
 
-        rootProject.testSourceSet().java().writeClass("""
-            package test;
-
-            import org.junit.jupiter.api.Test;
-
-            public class JUnit5Test {
-                @Test
-                public void test() {}
-            }
-            """);
+        rootProject.testSourceSet().java().writeClass(JUNIT5_TEST);
 
         gradle.withArgs("test").buildsSuccessfully();
 
@@ -115,27 +131,9 @@ class BaselineTestingIntegrationTest {
             }
             """);
 
-        rootProject.testSourceSet().java().writeClass("""
-            package test;
+        rootProject.testSourceSet().java().writeClass(JUNIT4_TEST);
 
-            import org.junit.Test;
-
-            public class JUnit4Test {
-                @Test
-                public void test() {}
-            }
-            """);
-
-        rootProject.testSourceSet().java().writeClass("""
-            package test;
-
-            import org.junit.jupiter.api.Test;
-
-            public class JUnit5Test {
-                @Test
-                public void test() {}
-            }
-            """);
+        rootProject.testSourceSet().java().writeClass(JUNIT5_TEST);
 
         gradle.withArgs("test").buildsSuccessfully();
 
@@ -155,17 +153,7 @@ class BaselineTestingIntegrationTest {
             }
             """);
 
-        rootProject.testSourceSet().java().writeClass("""
-            package test;
-
-            import net.jqwik.api.Property;
-            import net.jqwik.api.ForAll;
-
-            class JqwikTest {
-                @Property
-                void test(@ForAll byte value) {}
-            }
-            """);
+        rootProject.testSourceSet().java().writeClass(JQWIK_TEST);
 
         gradle.withArgs("test").buildsSuccessfully();
 
@@ -228,16 +216,7 @@ class BaselineTestingIntegrationTest {
     void check_junit_dependencies_junit4_without_junit_vintage_engine(GradleInvoker gradle, RootProject rootProject) {
         applyStandardBuildFile(rootProject);
 
-        rootProject.testSourceSet().java().writeClass("""
-            package test;
-
-            import org.junit.Test;
-
-            public class JUnit4Test {
-                @Test
-                public void test() {}
-            }
-            """);
+        rootProject.testSourceSet().java().writeClass(JUNIT4_TEST);
 
         InvocationResult result = gradle.withArgs("checkJUnitDependencies").buildsWithFailure();
 
@@ -258,16 +237,7 @@ class BaselineTestingIntegrationTest {
             }
             """);
 
-        rootProject.testSourceSet().java().writeClass("""
-            package test;
-
-            import org.junit.jupiter.api.Test;
-
-            public class JUnit5Test {
-                @Test
-                public void test() {}
-            }
-            """);
+        rootProject.testSourceSet().java().writeClass(JUNIT5_TEST);
 
         InvocationResult result = gradle.withArgs("checkJUnitDependencies").buildsWithFailure();
 
@@ -293,17 +263,7 @@ class BaselineTestingIntegrationTest {
             }
             """);
 
-        rootProject.testSourceSet().java().writeClass("""
-            package test;
-
-            import net.jqwik.api.Property;
-            import net.jqwik.api.ForAll;
-
-            class JqwikTest {
-                @Property
-                void test(@ForAll byte value) {}
-            }
-            """);
+        rootProject.testSourceSet().java().writeClass(JQWIK_TEST);
 
         InvocationResult result = gradle.withArgs("checkJUnitDependencies").buildsWithFailure();
 
@@ -337,16 +297,7 @@ class BaselineTestingIntegrationTest {
     void running_recreate_true_will_rerun_tests_even_if_no_code_changes(GradleInvoker gradle, RootProject rootProject) {
         applyStandardBuildFile(rootProject);
 
-        rootProject.testSourceSet().java().writeClass("""
-            package test;
-
-            import org.junit.jupiter.api.Test;
-
-            public class JUnit5Test {
-                @Test
-                public void test() {}
-            }
-            """);
+        rootProject.testSourceSet().java().writeClass(JUNIT5_TEST);
 
         InvocationResult result = gradle.withArgs("test").buildsSuccessfully();
         assertThat(result).task(":test").succeeded();
