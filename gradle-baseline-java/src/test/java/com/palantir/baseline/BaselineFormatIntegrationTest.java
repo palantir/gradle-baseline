@@ -231,9 +231,9 @@ class BaselineFormatIntegrationTest {
             throws IOException, InterruptedException {
         setupStandardBuildFile(project);
 
-        executeCommand("git", "init", project);
-        executeCommand("git", "config", "user.name", "Foo", project);
-        executeCommand("git", "config", "user.email", "foo@bar.com", project);
+        executeCommand(project, "git", "init");
+        executeCommand(project, "git", "config", "user.name", "Foo");
+        executeCommand(project, "git", "config", "user.email", "foo@bar.com");
 
         var mainJavaFile = project.mainSourceSet().java().writeClass("""
             class Main {
@@ -243,8 +243,8 @@ class BaselineFormatIntegrationTest {
             }
             """);
 
-        executeCommand("git", "add", ".", project);
-        executeCommand("git", "commit", "-m", "Commit", project);
+        executeCommand(project, "git", "add", ".");
+        executeCommand(project, "git", "commit", "-m", "Commit");
 
         mainJavaFile.overwrite("""
             class Main {
@@ -289,27 +289,8 @@ class BaselineFormatIntegrationTest {
                 dir, new SuffixFileFilter(".java"), new NotFileFilter(new NameFileFilter(excludedDirectories)));
     }
 
-    private static void executeCommand(String command, String arg1, RootProject project)
+    private static void executeCommand(RootProject project, String... command)
             throws IOException, InterruptedException {
-        new ProcessBuilder(command, arg1)
-                .directory(project.path().toFile())
-                .start()
-                .waitFor();
-    }
-
-    private static void executeCommand(String command, String arg1, String arg2, RootProject project)
-            throws IOException, InterruptedException {
-        new ProcessBuilder(command, arg1, arg2)
-                .directory(project.path().toFile())
-                .start()
-                .waitFor();
-    }
-
-    private static void executeCommand(String command, String arg1, String arg2, String arg3, RootProject project)
-            throws IOException, InterruptedException {
-        new ProcessBuilder(command, arg1, arg2, arg3)
-                .directory(project.path().toFile())
-                .start()
-                .waitFor();
+        new ProcessBuilder(command).directory(project.path().toFile()).start().waitFor();
     }
 }
