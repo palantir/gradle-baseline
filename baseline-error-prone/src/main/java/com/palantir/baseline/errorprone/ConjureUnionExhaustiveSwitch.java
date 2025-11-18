@@ -50,7 +50,7 @@ import javax.lang.model.element.Modifier;
 @BugPattern(
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
-        severity = SeverityLevel.WARNING,
+        severity = SeverityLevel.ERROR,
         summary = "Avoid using default clause in switch statements on Conjure unions. "
                 + "Use exhaustive switch statements instead to ensure all cases are handled explicitly.")
 public final class ConjureUnionExhaustiveSwitch extends BugChecker
