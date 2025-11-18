@@ -30,7 +30,7 @@ import java.io.OutputStream;
 import org.junit.jupiter.api.Test;
 
 @GradlePluginTests
-class BaselineTestingIntegrationTest {
+class btiv2Test {
 
     private static final String JUNIT4_TEST = """
         package test;
