@@ -237,7 +237,7 @@ class BaselineFormatIntegrationTest {
         executeCommand(project, "git", "config", "user.name", "Foo");
         executeCommand(project, "git", "config", "user.email", "foo@bar.com");
 
-        var mainJavaFile = project.mainSourceSet().java().writeClass("""
+        JavaFile mainJavaFile = project.mainSourceSet().java().writeClass("""
             class Main {
                 public static void crazyExistingFormatting  (  String... args) {
 
