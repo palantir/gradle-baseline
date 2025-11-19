@@ -23,7 +23,7 @@ import org.assertj.core.util.Throwables
 import spock.lang.Unroll
 
 @Unroll
-class BaselineTestingIntegrationTestOrig extends IntegrationSpec {
+class BaselineTestingIntegrationTest extends IntegrationSpec {
 
     // ***DELINEATOR FOR REVIEW: standardBuildFile
     def standardBuildFile = '''
