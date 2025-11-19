@@ -67,28 +67,25 @@ class BaselineTestingIntegrationTest {
 
     // ***DELINEATOR FOR REVIEW: standardBuildFile
     private GradleFile standardBuildFile(RootProject rootProject) {
-        rootProject.buildGradle()
-                .plugins()
-                .add("java-library")
-                .add("com.palantir.baseline-testing");
+        rootProject.buildGradle().plugins().add("java-library").add("com.palantir.baseline-testing");
 
         return rootProject.buildGradle().append("""
 
-                repositories {
-                    mavenCentral()
-                }
+            repositories {
+                mavenCentral()
+            }
 
-                configurations.all {
-                    resolutionStrategy {
-                        force 'com.netflix.nebula:nebula-test:10.2.0'
-                        force 'junit:junit:4.13.2'
-                        force 'net.jqwik:jqwik:1.9.2'
-                        force 'org.junit.jupiter:junit-jupiter:5.12.0'
-                        force 'org.junit.platform:junit-platform-launcher:1.12.0'
-                        force 'org.junit.vintage:junit-vintage-engine:5.12.0'
-                    }
+            configurations.all {
+                resolutionStrategy {
+                    force 'com.netflix.nebula:nebula-test:10.2.0'
+                    force 'junit:junit:4.13.2'
+                    force 'net.jqwik:jqwik:1.9.2'
+                    force 'org.junit.jupiter:junit-jupiter:5.12.0'
+                    force 'org.junit.platform:junit-platform-launcher:1.12.0'
+                    force 'org.junit.vintage:junit-vintage-engine:5.12.0'
                 }
-                """);
+            }
+            """);
     }
 
     // ***DELINEATOR FOR REVIEW: runs_JUnit4_tests
@@ -108,7 +105,8 @@ class BaselineTestingIntegrationTest {
         InvocationResult result = gradle.withArgs("test").buildsSuccessfully();
 
         // ***DELINEATOR FOR REVIEW: then
-        rootProject.buildDir()
+        rootProject
+                .buildDir()
                 .file("reports/tests/test/classes/test.JUnit4Test.html")
                 .assertThat()
                 .exists();
@@ -124,7 +122,8 @@ class BaselineTestingIntegrationTest {
         InvocationResult result = gradle.withArgs("test").buildsSuccessfully();
 
         // ***DELINEATOR FOR REVIEW: then
-        rootProject.buildDir()
+        rootProject
+                .buildDir()
                 .file("reports/tests/test/classes/test.JUnit5Test.html")
                 .assertThat()
                 .exists();
@@ -146,11 +145,13 @@ class BaselineTestingIntegrationTest {
 
         // ***DELINEATOR FOR REVIEW: then
         gradle.withArgs("test").buildsSuccessfully();
-        rootProject.buildDir()
+        rootProject
+                .buildDir()
                 .file("reports/tests/test/classes/test.JUnit4Test.html")
                 .assertThat()
                 .exists();
-        rootProject.buildDir()
+        rootProject
+                .buildDir()
                 .file("reports/tests/test/classes/test.JUnit5Test.html")
                 .assertThat()
                 .exists();
@@ -171,7 +172,8 @@ class BaselineTestingIntegrationTest {
         InvocationResult result = gradle.withArgs("test").buildsSuccessfully();
 
         // ***DELINEATOR FOR REVIEW: then
-        rootProject.buildDir()
+        rootProject
+                .buildDir()
                 .file("reports/tests/test/classes/test.JqwikTest.html")
                 .assertThat()
                 .exists();
@@ -189,11 +191,11 @@ class BaselineTestingIntegrationTest {
             """);
 
         rootProject.file("src/test/groovy/test/Test.groovy").overwrite("""
-                package test
-                class Test extends spock.lang.Specification {
-                    def test() {}
-                }
-                """);
+            package test
+            class Test extends spock.lang.Specification {
+                def test() {}
+            }
+            """);
 
         // ***DELINEATOR FOR REVIEW: then
         gradle.withArgs("test").buildsSuccessfully();
@@ -214,7 +216,8 @@ class BaselineTestingIntegrationTest {
 
         // ***DELINEATOR FOR REVIEW: then
         gradle.withArgs("integrationTest").buildsSuccessfully();
-        rootProject.buildDir()
+        rootProject
+                .buildDir()
                 .file("reports/tests/integrationTest/classes/test.JUnit5Test.html")
                 .assertThat()
                 .exists();
@@ -230,8 +233,9 @@ class BaselineTestingIntegrationTest {
         InvocationResult result = gradle.withArgs("checkJUnitDependencies").buildsWithFailure();
 
         // ***DELINEATOR FOR REVIEW: then
-        assertThat(result).output().contains(
-                "Some tests use JUnit4, but the 'test' task is not using the JUnit Vintage engine.");
+        assertThat(result)
+                .output()
+                .contains("Some tests use JUnit4, but the 'test' task is not using the JUnit Vintage engine.");
     }
 
     // ***DELINEATOR FOR REVIEW: checkJUnitDependencies_JUnit5_without_junit-jupiter
@@ -253,8 +257,9 @@ class BaselineTestingIntegrationTest {
         InvocationResult result = gradle.withArgs("checkJUnitDependencies").buildsWithFailure();
 
         // ***DELINEATOR FOR REVIEW: then
-        assertThat(result).output().contains(
-                "Some tests use JUnit5, but the 'test' task is not using the JUnit Jupiter engine.");
+        assertThat(result)
+                .output()
+                .contains("Some tests use JUnit5, but the 'test' task is not using the JUnit Jupiter engine.");
     }
 
     // ***DELINEATOR FOR REVIEW: checkJUnitDependencies_Jqwik_without_jqwik-engine
@@ -348,8 +353,7 @@ class BaselineTestingIntegrationTest {
 
         // Invalid unicode sequence identifier
         java.nio.file.Files.write(
-                rootProject.file("src/test/resources/some-binary").path(),
-                new byte[] {(byte) 0xA0, (byte) 0xA1});
+                rootProject.file("src/test/resources/some-binary").path(), new byte[] {(byte) 0xA0, (byte) 0xA1});
 
         // ***DELINEATOR FOR REVIEW: then
         gradle.withArgs("checkJUnitDependencies").buildsSuccessfully();
