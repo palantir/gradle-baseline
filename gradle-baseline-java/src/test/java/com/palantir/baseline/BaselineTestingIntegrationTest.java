@@ -20,55 +20,21 @@ import static com.palantir.gradle.testing.assertion.GradlePluginTestAssertions.a
 
 import com.palantir.gradle.testing.execution.GradleInvoker;
 import com.palantir.gradle.testing.execution.InvocationResult;
-import com.palantir.gradle.testing.files.ProjectFile;
+import com.palantir.gradle.testing.files.gradle.GradleFile;
 import com.palantir.gradle.testing.junit.GradlePluginTests;
 import com.palantir.gradle.testing.project.RootProject;
-import java.io.UncheckedIOException;
+import java.io.IOException;
+import java.io.OutputStream;
+import java.nio.file.Files;
 import org.junit.jupiter.api.Test;
 
 @GradlePluginTests
 class BaselineTestingIntegrationTest {
 
-    private static final String JUNIT4_TEST = """
-        package test;
+    private GradleFile standardBuildFile(RootProject project) {
+        project.buildGradle().plugins().add("java-library").add("com.palantir.baseline-testing");
 
-        import org.junit.Test;
-
-        public class JUnit4Test {
-            @Test
-            public void test() {}
-        }
-        """;
-
-    private static final String JUNIT5_TEST = """
-        package test;
-
-        import org.junit.jupiter.api.Test;
-
-        public class JUnit5Test {
-            @Test
-            public void test() {}
-        }
-        """;
-
-    private static final String JQWIK_TEST = """
-        package test;
-
-        import net.jqwik.api.Property;
-        import net.jqwik.api.ForAll;
-
-        class JqwikTest {
-            @Property
-            void test(@ForAll byte value) {}
-        }
-        """;
-
-    @SuppressWarnings("GradleTestPluginsBlock")
-    private ProjectFile<?> standardBuildFile(RootProject project) {
-        project.buildGradle().plugins().add("java-library");
         return project.buildGradle().append("""
-            apply plugin: 'com.palantir.baseline-testing'
-
             repositories {
                 mavenCentral()
             }
@@ -86,6 +52,40 @@ class BaselineTestingIntegrationTest {
             """);
     }
 
+    private static final String junit4Test = """
+        package test;
+
+        import org.junit.Test;
+
+        public class JUnit4Test {
+            @Test
+            public void test() {}
+        }
+        """;
+
+    private static final String junit5Test = """
+        package test;
+
+        import org.junit.jupiter.api.Test;
+
+        public class JUnit5Test {
+            @Test
+            public void test() {}
+        }
+        """;
+
+    private static final String jqwikTest = """
+        package test;
+
+        import net.jqwik.api.Property;
+        import net.jqwik.api.ForAll;
+
+        class JqwikTest {
+            @Property
+            void test(@ForAll byte value) {}
+        }
+        """;
+
     @Test
     void runs_JUnit4_tests(GradleInvoker gradle, RootProject project) {
         standardBuildFile(project).append("""
@@ -96,10 +96,11 @@ class BaselineTestingIntegrationTest {
             }
             """);
 
-        project.testSourceSet().java().writeClass(JUNIT4_TEST);
+        project.testSourceSet().java().writeClass(junit4Test);
 
         InvocationResult result = gradle.withArgs("test").buildsSuccessfully();
 
+        assertThat(result).task(":test").succeeded();
         project.buildDir()
                 .file("reports/tests/test/classes/test.JUnit4Test.html")
                 .assertThat()
@@ -109,10 +110,12 @@ class BaselineTestingIntegrationTest {
     @Test
     void runs_JUnit5_tests(GradleInvoker gradle, RootProject project) {
         standardBuildFile(project);
-        project.testSourceSet().java().writeClass(JUNIT5_TEST);
+
+        project.testSourceSet().java().writeClass(junit5Test);
 
         InvocationResult result = gradle.withArgs("test").buildsSuccessfully();
 
+        assertThat(result).task(":test").succeeded();
         project.buildDir()
                 .file("reports/tests/test/classes/test.JUnit5Test.html")
                 .assertThat()
@@ -129,10 +132,12 @@ class BaselineTestingIntegrationTest {
             }
             """);
 
-        project.testSourceSet().java().writeClass(JUNIT4_TEST);
-        project.testSourceSet().java().writeClass(JUNIT5_TEST);
+        project.testSourceSet().java().writeClass(junit4Test);
+        project.testSourceSet().java().writeClass(junit5Test);
 
-        gradle.withArgs("test").buildsSuccessfully();
+        InvocationResult result = gradle.withArgs("test").buildsSuccessfully();
+
+        assertThat(result).task(":test").succeeded();
         project.buildDir()
                 .file("reports/tests/test/classes/test.JUnit4Test.html")
                 .assertThat()
@@ -151,10 +156,11 @@ class BaselineTestingIntegrationTest {
             }
             """);
 
-        project.testSourceSet().java().writeClass(JQWIK_TEST);
+        project.testSourceSet().java().writeClass(jqwikTest);
 
         InvocationResult result = gradle.withArgs("test").buildsSuccessfully();
 
+        assertThat(result).task(":test").succeeded();
         project.buildDir()
                 .file("reports/tests/test/classes/test.JqwikTest.html")
                 .assertThat()
@@ -163,35 +169,47 @@ class BaselineTestingIntegrationTest {
 
     @Test
     void runs_Nebula_tests(GradleInvoker gradle, RootProject project) {
-        standardBuildFile(project).append("""
-            apply plugin: 'groovy'
+        standardBuildFile(project);
+
+        project.buildGradle().plugins().add("groovy");
+
+        project.buildGradle().append("""
             dependencies {
                 testImplementation 'com.netflix.nebula:nebula-test'
             }
             """);
 
-        project.file("src/test/groovy/test/Test.groovy").overwrite("""
+        project.directory("src/test/groovy/test").file("Test.groovy").overwrite("""
             package test
             class Test extends spock.lang.Specification {
                 def test() {}
             }
             """);
 
-        gradle.withArgs("test").buildsSuccessfully();
+        InvocationResult result = gradle.withArgs("test").buildsSuccessfully();
+
+        assertThat(result).task(":test").succeeded();
     }
 
     @Test
     void runs_test_sets_tests(GradleInvoker gradle, RootProject project) {
-        standardBuildFile(project).append("""
-            apply plugin: 'org.unbroken-dome.test-sets'
+        standardBuildFile(project);
+
+        project.buildGradle().plugins().add("org.unbroken-dome.test-sets");
+
+        project.buildGradle().append("""
             testSets {
                 integrationTest
             }
             """);
 
-        project.file("src/integrationTest/java/test/JUnit5Test.java").overwrite(JUNIT5_TEST);
+        project.directory("src/integrationTest/java/test")
+                .file("JUnit5Test.java")
+                .overwrite(junit5Test);
 
-        gradle.withArgs("integrationTest").buildsSuccessfully();
+        InvocationResult result = gradle.withArgs("integrationTest").buildsSuccessfully();
+
+        assertThat(result).task(":integrationTest").succeeded();
         project.buildDir()
                 .file("reports/tests/integrationTest/classes/test.JUnit5Test.html")
                 .assertThat()
@@ -201,7 +219,8 @@ class BaselineTestingIntegrationTest {
     @Test
     void checkJUnitDependencies_JUnit4_without_junit_vintage_engine(GradleInvoker gradle, RootProject project) {
         standardBuildFile(project);
-        project.testSourceSet().java().writeClass(JUNIT4_TEST);
+
+        project.testSourceSet().java().writeClass(junit4Test);
 
         InvocationResult result = gradle.withArgs("checkJUnitDependencies").buildsWithFailure();
 
@@ -212,16 +231,15 @@ class BaselineTestingIntegrationTest {
 
     @Test
     void checkJUnitDependencies_JUnit5_without_junit_jupiter(GradleInvoker gradle, RootProject project) {
-        standardBuildFile(project);
         // The junit-jupiter dependency is added automatically by the jvm-test-suite plugin, so it is practically
         // impossible for junit-jupiter to be absent. We manually exclude it here in order to test this case.
-        project.buildGradle().append("""
+        standardBuildFile(project).append("""
             configurations {
                 testRuntimeClasspath.exclude group: 'org.junit.jupiter', module: 'junit-jupiter'
             }
             """);
 
-        project.testSourceSet().java().writeClass(JUNIT5_TEST);
+        project.testSourceSet().java().writeClass(junit5Test);
 
         InvocationResult result = gradle.withArgs("checkJUnitDependencies").buildsWithFailure();
 
@@ -232,10 +250,9 @@ class BaselineTestingIntegrationTest {
 
     @Test
     void checkJUnitDependencies_Jqwik_without_jqwik_engine(GradleInvoker gradle, RootProject project) {
-        standardBuildFile(project);
         // jqwik depends on jqwik-engine, so it is practically impossible for jqwik-engine to be absent. We manually
         // exclude it here in order to test this case.
-        project.buildGradle().append("""
+        standardBuildFile(project).append("""
             dependencies {
                 testImplementation 'net.jqwik:jqwik'
             }
@@ -245,7 +262,7 @@ class BaselineTestingIntegrationTest {
             }
             """);
 
-        project.testSourceSet().java().writeClass(JQWIK_TEST);
+        project.testSourceSet().java().writeClass(jqwikTest);
 
         InvocationResult result = gradle.withArgs("checkJUnitDependencies").buildsWithFailure();
 
@@ -270,13 +287,14 @@ class BaselineTestingIntegrationTest {
             """);
 
         // Run a task that will attempt to resolve dependencies
-        gradle.withArgs("compileJava").buildsSuccessfully();
+        InvocationResult result = gradle.withArgs("compileJava").buildsSuccessfully();
     }
 
     @Test
     void running_Drecreate_true_will_re_run_tests_even_if_no_code_changes(GradleInvoker gradle, RootProject project) {
         standardBuildFile(project);
-        project.testSourceSet().java().writeClass(JUNIT5_TEST);
+
+        project.testSourceSet().java().writeClass(junit5Test);
 
         InvocationResult result = gradle.withArgs("test").buildsSuccessfully();
 
@@ -296,16 +314,19 @@ class BaselineTestingIntegrationTest {
     }
 
     @Test
-    void does_not_crash_with_non_utf8_resources(GradleInvoker gradle, RootProject project) {
+    void does_not_crash_with_non_utf8_resources(GradleInvoker gradle, RootProject project) throws IOException {
         standardBuildFile(project);
-        try {
-            // Invalid unicode sequence identifier
-            java.nio.file.Files.write(
-                    project.file("src/test/resources/some-binary").path(), new byte[] {(byte) 0xA0, (byte) 0xA1});
-        } catch (java.io.IOException e) {
-            throw new UncheckedIOException(e);
+
+        // Invalid unicode sequence identifier
+        try (OutputStream os = Files.newOutputStream(project.directory("src/test/resources")
+                .file("some-binary")
+                .createEmpty()
+                .path())) {
+            os.write(new byte[] {(byte) 0xA0, (byte) 0xA1});
         }
 
-        gradle.withArgs("checkJUnitDependencies").buildsSuccessfully();
+        InvocationResult result = gradle.withArgs("checkJUnitDependencies").buildsSuccessfully();
+
+        assertThat(result).task(":checkJUnitDependencies").succeeded();
     }
 }

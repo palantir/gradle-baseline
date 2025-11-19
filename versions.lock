@@ -294,11 +294,15 @@ junit:junit-dep:4.11 (1 constraints: ba1063b3)
 
 net.bytebuddy:byte-buddy:1.17.7 (2 constraints: 9f161b3f)
 
+net.jqwik:jqwik-api:1.9.2 (1 constraints: 420a75b8)
+
+net.jqwik:jqwik-engine:1.9.2 (1 constraints: 0e050d36)
+
 net.lingala.zip4j:zip4j:1.3.2 (1 constraints: 0805fb35)
 
 org.apache.commons:commons-compress:1.27.1 (1 constraints: 940f5492)
 
-org.apiguardian:apiguardian-api:1.1.2 (8 constraints: e08b1baf)
+org.apiguardian:apiguardian-api:1.1.2 (10 constraints: 169f417f)
 
 org.assertj:assertj-core:3.27.6 (4 constraints: d744198a)
 
@@ -328,9 +332,9 @@ org.junit.jupiter:junit-jupiter-migrationsupport:6.0.1 (1 constraints: 09050a36)
 
 org.junit.jupiter:junit-jupiter-params:6.0.1 (2 constraints: c22426d7)
 
-org.junit.platform:junit-platform-commons:6.0.1 (2 constraints: d520474a)
+org.junit.platform:junit-platform-commons:6.0.1 (4 constraints: 6f3433f0)
 
-org.junit.platform:junit-platform-engine:6.0.1 (4 constraints: 9e40c7e2)
+org.junit.platform:junit-platform-engine:6.0.1 (5 constraints: 094b9618)
 
 org.junit.platform:junit-platform-launcher:6.0.1 (1 constraints: 09050a36)
 
@@ -340,7 +344,7 @@ org.mockito:mockito-core:5.20.0 (1 constraints: 5311c5e0)
 
 org.objenesis:objenesis:3.3 (2 constraints: 9b17f557)
 
-org.opentest4j:opentest4j:1.3.0 (2 constraints: cf209249)
+org.opentest4j:opentest4j:1.3.0 (4 constraints: 053455a8)
 
 org.reactivestreams:reactive-streams:1.0.3 (1 constraints: ef07e77b)
 
