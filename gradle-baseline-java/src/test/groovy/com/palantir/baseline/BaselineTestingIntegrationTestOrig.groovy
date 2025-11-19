@@ -23,8 +23,9 @@ import org.assertj.core.util.Throwables
 import spock.lang.Unroll
 
 @Unroll
-class BaselineTestingIntegrationTest extends IntegrationSpec {
+class BaselineTestingIntegrationTestOrig extends IntegrationSpec {
 
+    // ***DELINEATOR FOR REVIEW: standardBuildFile
     def standardBuildFile = '''
         plugins {
             id 'java-library'
@@ -48,6 +49,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         }
     '''.stripIndent(true)
 
+    // ***DELINEATOR FOR REVIEW: junit4Test
     def junit4Test = '''
         package test;
         
@@ -59,6 +61,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         }
         '''.stripIndent(true)
 
+    // ***DELINEATOR FOR REVIEW: junit5Test
     def junit5Test = '''
         package test;
         
@@ -70,6 +73,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         }
         '''.stripIndent(true)
 
+    // ***DELINEATOR FOR REVIEW: jqwikTest
     def jqwikTest = '''
         package test;
         
@@ -82,6 +86,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         }
         '''.stripIndent(true)
 
+    // ***DELINEATOR FOR REVIEW: runs_JUnit4_tests
     def '#gradleVersionNumber: runs JUnit4 tests'() {
         gradleVersion = gradleVersionNumber
 
@@ -95,9 +100,11 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         '''.stripIndent(true)
         file('src/test/java/test/JUnit4Test.java') << junit4Test
 
+        // ***DELINEATOR FOR REVIEW: when
         when:
         runTasksSuccessfully('test')
 
+        // ***DELINEATOR FOR REVIEW: then
         then:
         fileExists("build/reports/tests/test/classes/test.JUnit4Test.html")
 
@@ -105,15 +112,18 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
+    // ***DELINEATOR FOR REVIEW: runs_JUnit5_tests
     def '#gradleVersionNumber: runs JUnit5 tests'() {
         gradleVersion = gradleVersionNumber
 
         buildFile << standardBuildFile
         file('src/test/java/test/JUnit5Test.java') << junit5Test
 
+        // ***DELINEATOR FOR REVIEW: when
         when:
         runTasksSuccessfully('test')
 
+        // ***DELINEATOR FOR REVIEW: then
         then:
         fileExists("build/reports/tests/test/classes/test.JUnit5Test.html")
 
@@ -121,6 +131,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
+    // ***DELINEATOR FOR REVIEW: runs_both_JUnit4_and_Junit5_tests
     def '#gradleVersionNumber: runs both JUnit4 and Junit5 tests'() {
         when:
         gradleVersion = gradleVersionNumber
@@ -136,6 +147,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         file('src/test/java/test/JUnit4Test.java') << junit4Test
         file('src/test/java/test/JUnit5Test.java') << junit5Test
 
+        // ***DELINEATOR FOR REVIEW: then
         then:
         runTasksSuccessfully('test')
         fileExists("build/reports/tests/test/classes/test.JUnit4Test.html")
@@ -145,6 +157,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
+    // ***DELINEATOR FOR REVIEW: runs_Jqwik_tests
     def '#gradleVersionNumber: runs Jqwik tests'() {
         gradleVersion = gradleVersionNumber
 
@@ -156,9 +169,11 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         '''.stripIndent(true)
         file('src/test/java/test/JqwikTest.java') << jqwikTest
 
+        // ***DELINEATOR FOR REVIEW: when
         when:
         runTasksSuccessfully('test')
 
+        // ***DELINEATOR FOR REVIEW: then
         then:
         fileExists("build/reports/tests/test/classes/test.JqwikTest.html")
 
@@ -166,6 +181,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
+    // ***DELINEATOR FOR REVIEW: runs_Nebula_tests
     def '#gradleVersionNumber: runs Nebula tests'() {
         when:
         gradleVersion = gradleVersionNumber
@@ -185,6 +201,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
             }
         '''.stripIndent(true)
 
+        // ***DELINEATOR FOR REVIEW: then
         then:
         runTasksSuccessfully('test')
 
@@ -192,6 +209,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
+    // ***DELINEATOR FOR REVIEW: runs_test-sets_tests
     def '#gradleVersionNumber: runs test-sets tests'() {
         when:
         gradleVersion = gradleVersionNumber
@@ -205,6 +223,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         '''.stripIndent(true)
         file('src/integrationTest/java/test/JUnit5Test.java') << junit5Test
 
+        // ***DELINEATOR FOR REVIEW: then
         then:
         runTasksSuccessfully('integrationTest')
         fileExists("build/reports/tests/integrationTest/classes/test.JUnit5Test.html")
@@ -213,15 +232,18 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
+    // ***DELINEATOR FOR REVIEW: checkJUnitDependencies_JUnit4_without_junit-vintage-engine
     def '#gradleVersionNumber: checkJUnitDependencies => JUnit4 without junit-vintage-engine'() {
         gradleVersion = gradleVersionNumber
 
         buildFile << standardBuildFile
         file('src/test/java/test/JUnit4Test.java') << junit4Test
 
+        // ***DELINEATOR FOR REVIEW: when
         when:
         String message = Throwables.getRootCause(runTasksWithFailure('checkJUnitDependencies').failure).message
 
+        // ***DELINEATOR FOR REVIEW: then
         then:
         message.contains 'Some tests use JUnit4, but the \'test\' task is not using the JUnit Vintage engine.'
 
@@ -229,6 +251,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
+    // ***DELINEATOR FOR REVIEW: checkJUnitDependencies_JUnit5_without_junit-jupiter
     def '#gradleVersionNumber: checkJUnitDependencies => JUnit5 without junit-jupiter'() {
         gradleVersion = gradleVersionNumber
 
@@ -242,9 +265,11 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         '''.stripIndent(true)
         file('src/test/java/test/JUnit5Test.java') << junit5Test
 
+        // ***DELINEATOR FOR REVIEW: when
         when:
         String message = Throwables.getRootCause(runTasksWithFailure('checkJUnitDependencies').failure).message
 
+        // ***DELINEATOR FOR REVIEW: then
         then:
         message.contains 'Some tests use JUnit5, but the \'test\' task is not using the JUnit Jupiter engine.'
 
@@ -252,6 +277,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
+    // ***DELINEATOR FOR REVIEW: checkJUnitDependencies_Jqwik_without_jqwik-engine
     def '#gradleVersionNumber: checkJUnitDependencies => Jqwik without jqwik-engine'() {
         gradleVersion = gradleVersionNumber
 
@@ -269,9 +295,11 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         '''.stripIndent(true)
         file('src/test/java/test/JqwikTest.java') << jqwikTest
 
+        // ***DELINEATOR FOR REVIEW: when
         when:
         String message = Throwables.getRootCause(runTasksWithFailure('checkJUnitDependencies').failure).message
 
+        // ***DELINEATOR FOR REVIEW: then
         then:
         message.contains 'Some tests use Jqwik, but the \'test\' task is not using the Jqwik engine.'
 
@@ -279,14 +307,17 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
+    // ***DELINEATOR FOR REVIEW: checkJUnitDependencies_run_as_part_of_check
     def '#gradleVersionNumber: checkJUnitDependencies => run as part of check'() {
         gradleVersion = gradleVersionNumber
 
         buildFile << standardBuildFile
 
+        // ***DELINEATOR FOR REVIEW: when
         when:
         ExecutionResult result = runTasksSuccessfully('check')
 
+        // ***DELINEATOR FOR REVIEW: then
         then:
         result.wasExecuted('checkJUnitDependencies')
 
@@ -294,6 +325,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
+    // ***DELINEATOR FOR REVIEW: test_task_without_source_set
     def '#gradleVersionNumber: test task without source set'() {
         when:
         gradleVersion = gradleVersionNumber
@@ -303,6 +335,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
             tasks.register('otherTest', Test.class)
         '''.stripIndent(true)
 
+        // ***DELINEATOR FOR REVIEW: then
         then:
         // Run a task that will attempt to resolve dependencies
         runTasksSuccessfully('compileJava')
@@ -311,35 +344,45 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
         gradleVersionNumber << GradleTestVersions.gradleVersionsForTests
     }
 
+    // ***DELINEATOR FOR REVIEW: running_Drecreate_true_will_re-run_tests_even_if_no_code_changes
     def 'running -Drecreate=true will re-run tests even if no code changes'() {
         buildFile << standardBuildFile
         file('src/test/java/test/JUnit5Test.java') << junit5Test
 
+        // ***DELINEATOR FOR REVIEW: when
         when:
         def result = runTasksSuccessfully('test')
 
+        // ***DELINEATOR FOR REVIEW: then
         then:
         result.wasExecuted(':test')
 
+        // ***DELINEATOR FOR REVIEW: when
         when:
         def result2 = runTasksSuccessfully('test')
 
+        // ***DELINEATOR FOR REVIEW: then
         then:
         result2.wasUpToDate(':test')
 
+        // ***DELINEATOR FOR REVIEW: when
         when:
         def result3 = runTasksSuccessfully('test', '-Drecreate=true')
 
+        // ***DELINEATOR FOR REVIEW: then
         then:
         result3.wasExecuted(':test')
 
+        // ***DELINEATOR FOR REVIEW: when
         when:
         def result4 = runTasksSuccessfully('test', '-Drecreate=true')
 
+        // ***DELINEATOR FOR REVIEW: then
         then:
         result4.wasExecuted(':test')
     }
 
+    // ***DELINEATOR FOR REVIEW: does_not_crash_with_non-utf8_resources
     def 'does not crash with non-utf8 resources'() {
         when:
         buildFile << standardBuildFile
@@ -348,6 +391,7 @@ class BaselineTestingIntegrationTest extends IntegrationSpec {
             it.write([0xA0, 0xA1] as byte[])
         }
 
+        // ***DELINEATOR FOR REVIEW: then
         then:
         runTasksSuccessfully('checkJUnitDependencies')
     }
