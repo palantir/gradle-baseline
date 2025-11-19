@@ -23,7 +23,7 @@ import org.assertj.core.util.Throwables
 import spock.lang.Unroll
 
 @Unroll
-class BaselineTestingIntegrationTest extends IntegrationSpec {
+class BaselineTestingIntegrationTestOrig extends IntegrationSpec {
 
     def standardBuildFile = '''
         plugins {
