@@ -69,6 +69,7 @@ public class JUnit5RuleUsageTest {
                         "import org.junit.Rule;",
                         "import org.junit.jupiter.api.Test;",
                         "import org.junit.jupiter.migrationsupport.rules.EnableRuleMigrationSupport;",
+                        "@SuppressWarnings(\"removal\")",
                         "@EnableRuleMigrationSupport",
                         "class TestCase {",
                         "@Rule public static int foo = 1;",

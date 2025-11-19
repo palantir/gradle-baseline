@@ -17,13 +17,10 @@
 package com.palantir.baseline.errorprone;
 
 import org.junit.jupiter.api.Test;
-import org.junit.jupiter.api.condition.EnabledForJreRange;
-import org.junit.jupiter.api.condition.JRE;
 
 class VarUsageTest {
 
     @Test
-    @EnabledForJreRange(min = JRE.JAVA_10)
     void testSimple() {
         fix().addInputLines(
                         "Test.java",
@@ -45,7 +42,6 @@ class VarUsageTest {
     }
 
     @Test
-    @EnabledForJreRange(min = JRE.JAVA_10)
     void testWithFinalModifier() {
         fix().addInputLines(
                         "Test.java",
