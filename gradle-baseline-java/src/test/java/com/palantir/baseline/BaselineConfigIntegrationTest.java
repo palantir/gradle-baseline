@@ -28,7 +28,6 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Set;
 import java.util.stream.Collectors;
 import org.junit.jupiter.api.Test;
 
@@ -79,18 +78,17 @@ class BaselineConfigIntegrationTest {
                         "-Pcom.palantir.baseline-format.palantir-java-format")
                 .buildsSuccessfully();
 
+        project.file("project").assertThat().isEmptyDirectory();
+
         Path baselineDir = project.path().resolve(".baseline");
-        Set<String> actualDirs = Files.list(baselineDir)
+        List<String> actualDirs = Files.list(baselineDir)
                 .map(Path::getFileName)
                 .map(Path::toString)
-                .collect(Collectors.toSet());
-        Set<String> expectedDirs = Set.of("checkstyle", "copyright", "eclipse", "idea", "spotless");
-        assertThat(actualDirs).isEqualTo(expectedDirs);
+                .sorted()
+                .collect(Collectors.toList());
+        assertThat(actualDirs).containsExactly("checkstyle", "copyright", "eclipse", "idea", "spotless");
 
-        Path projectDir = project.path().resolve("project");
-        List<Path> projectDirContents =
-                Files.exists(projectDir) ? Files.list(projectDir).collect(Collectors.toList()) : List.of();
-        assertThat(projectDirContents).isEmpty();
+        project.file("project").assertThat().isEmptyDirectory();
     }
 
     @Test
@@ -107,14 +105,8 @@ class BaselineConfigIntegrationTest {
 
         gradle.withArgs("--stacktrace", "--info", "baselineUpdateConfig").buildsSuccessfully();
 
-        Path baselineDir = project.path().resolve(".baseline");
-        List<Path> baselineDirContents = Files.list(baselineDir).collect(Collectors.toList());
-        assertThat(baselineDirContents).isNotEmpty();
-
-        Path projectDir = project.path().resolve("project");
-        List<Path> projectDirContents =
-                Files.exists(projectDir) ? Files.list(projectDir).collect(Collectors.toList()) : List.of();
-        assertThat(projectDirContents).isEmpty();
+        project.file(".baseline").assertThat().isNotEmptyDirectory();
+        project.file("project").assertThat().isEmptyDirectory();
     }
 
     @Test
@@ -175,11 +167,13 @@ class BaselineConfigIntegrationTest {
         gradle.withArgs("baselineUpdateConfig").buildsSuccessfully();
 
         Path checkstyleXml = project.path().resolve(".baseline/checkstyle/checkstyle.xml");
-        List<String> lines = Files.readAllLines(checkstyleXml);
 
-        assertThat(lines).noneMatch(line -> line.contains("<module name=\"Indentation\">"));
-        assertThat(lines).noneMatch(line -> line.contains("<module name=\"ParenPad\">"));
-        assertThat(lines).noneMatch(line -> line.contains("<module name=\"LeftCurly\">"));
-        assertThat(lines).noneMatch(line -> line.contains("<module name=\"WhitespaceAround\">"));
+        String checkstyleContent =
+                project.file(".baseline/checkstyle/checkstyle.xml").text();
+        assertThat(checkstyleContent)
+                .doesNotContain("<module name=\"Indentation\">")
+                .doesNotContain("<module name=\"ParenPad\">")
+                .doesNotContain("<module name=\"LeftCurly\">")
+                .doesNotContain("<module name=\"WhitespaceAround\">");
     }
 }

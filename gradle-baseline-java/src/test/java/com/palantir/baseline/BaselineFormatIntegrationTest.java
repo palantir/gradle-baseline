@@ -21,7 +21,9 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import com.palantir.gradle.testing.execution.GradleInvoker;
 import com.palantir.gradle.testing.execution.InvocationResult;
+import com.palantir.gradle.testing.files.arbitrary.ArbitraryFile;
 import com.palantir.gradle.testing.files.gradle.GradleFile;
+import com.palantir.gradle.testing.files.java.JavaFile;
 import com.palantir.gradle.testing.junit.GradlePluginTests;
 import com.palantir.gradle.testing.project.RootProject;
 import java.io.File;
@@ -174,7 +176,7 @@ class BaselineFormatIntegrationTest {
             sourceSets { foo }
             """);
 
-        var testJavaFile = project.sourceSet("foo").java().writeClass(INVALID_JAVA_FILE);
+        JavaFile testJavaFile = project.sourceSet("foo").java().writeClass(INVALID_JAVA_FILE);
 
         InvocationResult result = gradle.withArgs("format", "-Pcom.palantir.baseline-format.eclipse")
                 .buildsSuccessfully();
@@ -191,7 +193,7 @@ class BaselineFormatIntegrationTest {
             sourceSets { foo }
             """);
 
-        var testJavaFile =
+        ArbitraryFile testJavaFile =
                 project.sourceSet("foo").srcDir("groovy").file("test/Test.java").overwrite(INVALID_JAVA_FILE);
 
         InvocationResult result = gradle.withArgs("format", "-Pcom.palantir.baseline-format.eclipse")
