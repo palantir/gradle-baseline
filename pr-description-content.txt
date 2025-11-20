@@ -1,0 +1,29 @@
+A formatted diff between the old and new test can be viewed [here](https://htmlpreview.github.io/?https://raw.githubusercontent.com/palantir/gradle-baseline/develop/test-migration-notes/BaselineReproducibilityIntegrationTest.html)
+
+# Test Migration Errors and Changes
+
+## Initial Migration
+
+### Error 1: Incorrect error output assertion method
+**Problem:** Used `assertThat(output).errorOutput().contains()` but the method `errorOutput()` doesn't exist.
+
+**Fix:** Changed to `assertThat(output).output().contains()` - error messages appear in the standard output, not a separate error output stream in the new framework.
+
+**How I found it:** Compilation error indicated that `errorOutput()` method doesn't exist on `InvocationResultAssert` class. Searched for similar patterns in other migrated tests and found they all use `.output()` for both success and failure cases.
+
+## First Review Pass
+
+### Review findings:
+1. **Text blocks formatting:** All text blocks have proper newlines after them ✓
+2. **Helper method pattern:** Created `standardBuildFile()` helper method that returns `GradleFile` for fluid chaining ✓
+3. **Java file constant:** Created `HELLO_WORLD_JAVA` constant to replace `writeHelloWorld()` method from the old framework ✓
+4. **Test naming:** All tests use snake_case naming as required ✓
+5. **Plugin application:** Used `.plugins().add()` pattern correctly ✓
+6. **Assertions:** Used `assertThat(result).output().contains()` pattern consistently ✓
+7. **Comments preserved:** All delineator comments from Groovy test are preserved ✓
+
+No changes needed from the first review pass.
+
+## Second Review Pass
+
+No additional changes needed.
