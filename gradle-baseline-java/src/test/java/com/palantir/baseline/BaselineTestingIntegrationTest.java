@@ -315,11 +315,13 @@ public class BaselineTestingIntegrationTest {
     public void does_not_crash_with_non_utf8_resources(GradleInvoker gradle, RootProject rootProject)
             throws IOException {
         standardBuildFile(rootProject);
-        try (OutputStream os = Files.newOutputStream(rootProject.path().resolve("src/test/resources/some-binary"))) {
-            // Invalid unicode sequence identifier
+        try (OutputStream os = Files.newOutputStream(rootProject
+                .directory("src/test/resources")
+                .file("some-binary")
+                .createEmpty()
+                .path())) {
             os.write(new byte[] {(byte) 0xA0, (byte) 0xA1});
         }
-
         gradle.withArgs("checkJUnitDependencies").buildsSuccessfully();
     }
 }
