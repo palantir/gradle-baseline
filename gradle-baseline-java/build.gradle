@@ -45,9 +45,6 @@ dependencies {
     testRuntimeOnly 'org.junit.vintage:junit-vintage-engine', {
         because 'allows JUnit 3 and JUnit 4 tests to run'
     }
-    testRuntimeOnly 'net.jqwik:jqwik-engine', {
-        because 'checkJUnitDependencies detects jquik in an ete test even though it is not used directly'
-    }
     testRuntimeOnly 'com.palantir.sls-packaging:gradle-sls-packaging'
     gradlePluginForTesting 'com.palantir.sls-packaging:gradle-sls-packaging'
     testRuntimeOnly 'com.palantir.gradle.jdkslatest:gradle-jdks-latest'
@@ -77,6 +74,9 @@ tasks.test.dependsOn ':baseline-error-prone:publishToMavenLocal'
 tasks.test.dependsOn ':baseline-module-jvm-args-compiler-plugins:publishToMavenLocal'
 tasks.test.dependsOn ':baseline-null-away:publishToMavenLocal'
 tasks.test.dependsOn tasks.named('publishToMavenLocal')
+
+// Incorrectly identifies tests as jqwik usage
+tasks.checkJUnitDependencies.enabled = false
 
 test {
     environment 'CIRCLE_ARTIFACTS', "${buildDir}/artifacts"
