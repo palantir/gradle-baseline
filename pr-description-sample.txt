@@ -1,0 +1,104 @@
+# Migrate BaselineNullAwayIntegrationTest to Java/JUnit5
+
+This PR migrates the `BaselineNullAwayIntegrationTest` from the Groovy/Nebula testing framework to the new Java-based JUnit 5 framework using `@GradlePluginTests`.
+
+## Changes
+
+A formatted diff between the old and new test can be viewed [here](https://htmlpreview.github.io/?https://raw.githubusercontent.com/palantir/gradle-baseline/develop/test-migration-notes/BaselineNullAwayIntegrationTest.html)
+
+## Migration Details
+
+### Framework Migration
+- **Base class**: Changed from extending `IntegrationSpec` (Nebula) to using `@GradlePluginTests` annotation
+- **Test framework**: Migrated from Spock to JUnit 5
+- **Language**: Converted from Groovy to Java
+
+### Test Method Changes
+All test methods were renamed to follow snake_case naming convention:
+
+| Original Groovy | New Java |
+|----------------|----------|
+| `Can apply plugin` | `can_apply_plugin` |
+| `compileJava fails when null-away finds errors` | `compileJava_fails_when_null_away_finds_errors` |
+| `Test tasks are not impacted by null-away` | `test_tasks_are_not_impacted_by_null_away` |
+| `Integration test tasks are not impacted by null-away` | `integration_test_tasks_are_not_impacted_by_null_away` |
+| `compileJava succeeds when null-away finds no errors` | `compileJava_succeeds_when_null_away_finds_no_errors` |
+
+### File Manipulation Updates
+- Replaced `buildFile << content` with fluent API calls using `rootProject.buildGradle()`
+- Converted `apply plugin:` syntax to modern `plugins()` API where appropriate
+- Replaced `writeJavaSourceFile(content)` with `rootProject.mainSourceSet().java().writeClass(content)`
+- Replaced `writeJavaSourceFile(content, "src/test/java")` with `rootProject.testSourceSet().java().writeClass(content)`
+- Used `rootProject.sourceSet("integrationTest")` for custom source sets
+
+### Build File Construction
+- **Original**: `standardBuildFile` was a Groovy string variable using `stripIndent()`
+- **New**: Converted to a helper method `standardBuildFile(RootProject rootProject)` that returns `GradleFile`
+- This allows fluent chaining and maintains the same reusability
+- The method uses the new plugins DSL: `rootProject.buildGradle().plugins().add(...)`
+
+### Test Data
+- **Original**: `validJavaFile` and `invalidJavaFile` were Groovy string variables with `stripIndent()`
+- **New**: Converted to Java constants `VALID_JAVA_FILE` and `INVALID_JAVA_FILE` using text blocks
+- Text blocks provide cleaner multiline string literals in Java
+
+### Gradle Task Execution
+- Replaced `runTasksSuccessfully('task')` with `gradle.withArgs('task').buildsSuccessfully()`
+- Replaced `runTasksWithFailure('task')` with `gradle.withArgs('task').buildsWithFailure()`
+- Used parameter injection to get `GradleInvoker gradle` instance
+
+### Assertions
+- **Original**: Spock's implicit assertions with `result.standardError.contains(...)`
+- **New**: AssertJ-style fluent assertions using framework's custom assertion API
+- Example: `assertThat(result).output().contains("[NullAway] dereferenced expression...")`
+- Import from: `com.palantir.gradle.testing.assertion.GradlePluginTestAssertions.assertThat`
+
+### Parameter Injection
+All test methods now use parameter injection for:
+- `GradleInvoker gradle` - for executing Gradle builds
+- `RootProject rootProject` - for manipulating project files
+
+## Best Practices Followed
+
+### ✓ Text Blocks
+Used Java text blocks for multiline strings instead of string concatenation, improving readability.
+
+### ✓ Fluent API Usage
+Properly used the fluent API for file manipulation:
+- `buildGradle().plugins().add()` for plugin declarations
+- `buildGradle().append()` for additional build script content
+- `mainSourceSet().java().writeClass()` for Java source files
+- `testSourceSet().java().writeClass()` for test source files
+
+### ✓ Helper Method Pattern
+Converted the `standardBuildFile` variable to a helper method that returns `GradleFile`, allowing for fluent chaining while maintaining reusability.
+
+### ✓ Proper Assertions
+Used the framework's custom assertion utilities (`GradlePluginTestAssertions`) for fluent, readable assertions on build results.
+
+### ✓ Modern Gradle Syntax
+Where appropriate, converted from legacy `apply plugin:` to modern `plugins {}` block using the fluent API.
+
+## Second Pass Review
+
+After reviewing the testing guide and migration instructions:
+
+### Verification Checklist
+- ✓ Test compiles successfully (`./gradlew compileTestJava`)
+- ✓ Uses `@GradlePluginTests` annotation
+- ✓ All test methods use parameter injection
+- ✓ Test names follow snake_case convention
+- ✓ Uses fluent APIs for file manipulation
+- ✓ Uses proper assertion methods from the framework
+- ✓ Helper method for reusable build file content
+- ✓ Constants for reusable Java source code
+- ✓ Removed all DELINEATOR comments after diff generation
+- ✓ Generated HTML diff for review
+
+### No Additional Changes Needed
+The migration appears to have been done correctly and follows all the best practices outlined in the testing guide.
+
+## Files Generated
+- Migrated test: `gradle-baseline-java/src/test/java/com/palantir/baseline/BaselineNullAwayIntegrationTest.java`
+- HTML diff: `test-migration-notes/BaselineNullAwayIntegrationTest.html`
+- Migration notes: `test-migration-errors.md`
