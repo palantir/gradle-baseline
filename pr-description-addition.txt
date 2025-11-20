@@ -1,0 +1,65 @@
+A formatted diff between the old and new test can be viewed [here](https://htmlpreview.github.io/?https://raw.githubusercontent.com/palantir/gradle-baseline/develop/test-migration-notes/BaselineImmutablesTest.html)
+
+# Test Migration Errors and Fixes
+
+## Initial Migration Issues
+
+### Error 1: Plugin declarations in append() block
+**Error**: Compilation failed with error-prone check `[GradleTestPluginsBlock]`
+```
+error: [GradleTestPluginsBlock] Plugins must be added using .plugins().add() method.
+```
+
+**Solution**: Changed from using `apply plugin: 'plugin-name'` inside the `append()` block to using the fluent API:
+```java
+rootProject.buildGradle()
+    .plugins()
+    .add("plugin-name");
+```
+
+**Reference**: Error-prone checker enforces this pattern to ensure proper plugin block handling in the testing framework.
+
+---
+
+## Review Pass - Best Practices Check
+
+### Error 2: Using .formatted() instead of varargs overload
+**Error**: Compilation failed with error-prone check `[GradleTestStringFormatting]`
+```
+error: [GradleTestStringFormatting] Use the varargs overload of methods to get syntax highlighting, rather than manually formatting strings with .formatted() or String.format()
+```
+
+**Solution**: Changed from using `.formatted()` to passing the arguments directly as varargs:
+```java
+// Before
+rootProject.buildGradle().append("""
+    dependencies {
+        annotationProcessor '%s'
+    }
+    """.formatted(IMMUTABLES));
+
+// After
+rootProject.buildGradle().append("""
+    dependencies {
+        annotationProcessor '%s'
+    }
+    """, IMMUTABLES);
+```
+
+**Reference**: The testing framework's `append()` method has a varargs signature `append(String template, Object... args)` that provides syntax highlighting benefits.
+
+### Improvement 3: Added blank lines after text blocks
+**Change**: Added blank lines after text blocks for improved readability, as recommended in the migration guide.
+
+---
+
+## Second Review Pass
+
+No additional issues found. The test follows all best practices:
+- ✅ Uses `.plugins().add()` for plugin declarations
+- ✅ Uses varargs overload for `.append()` with placeholders
+- ✅ Uses fluent API properly for source set manipulation
+- ✅ Uses proper assertion patterns from GradlePluginTestAssertions
+- ✅ Text blocks have proper blank lines after them
+- ✅ Test names converted to snake_case
+- ✅ Comments preserved from original test
