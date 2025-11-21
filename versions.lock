@@ -40,7 +40,7 @@ com.google.code.findbugs:jsr305:3.0.2 (2 constraints: 9e14e59e)
 
 com.google.errorprone:error_prone_annotation:2.41.0 (3 constraints: c138f8ec)
 
-com.google.errorprone:error_prone_annotations:2.41.0 (13 constraints: 68cdc626)
+com.google.errorprone:error_prone_annotations:2.41.0 (13 constraints: 95cd53c5)
 
 com.google.errorprone:error_prone_check_api:2.41.0 (2 constraints: b025defe)
 
@@ -222,13 +222,13 @@ com.google.truth:truth:1.4.0 (2 constraints: 72265a6a)
 
 com.netflix.nebula:nebula-test:10.6.2 (2 constraints: d61de72d)
 
-com.palantir.conjure.java:conjure-lib:8.62.0 (1 constraints: 42056d3b)
+com.palantir.conjure.java:conjure-lib:8.64.0 (1 constraints: 4405733b)
 
 com.palantir.conjure.java.api:errors:2.65.0 (2 constraints: 7521acb1)
 
 com.palantir.conjure.java.api:test-utils:2.65.0 (1 constraints: 3f05523b)
 
-com.palantir.conjure.java.runtime:conjure-java-annotations:8.25.0 (1 constraints: 4105663b)
+com.palantir.conjure.java.runtime:conjure-java-annotations:8.27.0 (1 constraints: 43056c3b)
 
 com.palantir.gradle.jdks:gradle-jdks:0.69.0 (2 constraints: 1e1a7113)
 
