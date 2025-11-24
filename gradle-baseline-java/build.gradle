@@ -75,6 +75,9 @@ tasks.test.dependsOn ':baseline-module-jvm-args-compiler-plugins:publishToMavenL
 tasks.test.dependsOn ':baseline-null-away:publishToMavenLocal'
 tasks.test.dependsOn tasks.named('publishToMavenLocal')
 
+// Incorrectly identifies tests as jqwuik usage
+tasks.checkJUnitDependencies.enabled = false
+
 test {
     environment 'CIRCLE_ARTIFACTS', "${buildDir}/artifacts"
     environment 'CIRCLE_TEST_REPORTS', "${buildDir}/circle-reports"
