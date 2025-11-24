@@ -187,8 +187,7 @@ public class BaselineFormatIntegrationTest {
 
     @Test
     void format_task_works_on_new_source_sets(GradleInvoker gradle, RootProject rootProject) {
-        standardBuildFile(rootProject);
-        rootProject.buildGradle().append("""
+        standardBuildFile(rootProject).append("""
             sourceSets { foo }
             """);
 
@@ -222,8 +221,7 @@ public class BaselineFormatIntegrationTest {
 
     @Test
     void format_ignores_generated_files(GradleInvoker gradle, RootProject rootProject) {
-        standardBuildFile(rootProject);
-        rootProject.buildGradle().append("""
+        standardBuildFile(rootProject).append("""
             sourceSets {
                 main {
                     java { srcDir 'src/generated/java' }
