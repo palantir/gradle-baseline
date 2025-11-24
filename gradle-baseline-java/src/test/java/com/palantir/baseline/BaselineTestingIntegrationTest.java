@@ -178,7 +178,7 @@ public class BaselineTestingIntegrationTest {
             }
             """);
 
-        rootProject.directory("src/test/groovy/test").file("Test.groovy").append("""
+        rootProject.file("src/test/groovy/test/Test.groovy").append("""
             package test
             class Test extends spock.lang.Specification {
                 def test() {}
@@ -198,10 +198,7 @@ public class BaselineTestingIntegrationTest {
             }
             """);
 
-        rootProject
-                .directory("src/integrationTest/java/test")
-                .file("JUnit5Test.java")
-                .append(junit5Test);
+        rootProject.file("src/integrationTest/java/test/JUnit5Test.java").append(junit5Test);
 
         InvocationResult result = gradle.withArgs("integrationTest").buildsSuccessfully();
         rootProject
