@@ -126,19 +126,7 @@ public class BaselineFormatIntegrationTest {
         File testedDir = rootProject.directory("src/main/java").path().toFile();
         FileUtils.copyDirectory(inputDir, testedDir);
 
-        rootProject
-                .buildGradle()
-                .plugins()
-                .add("java")
-                .add("com.palantir.java-format")
-                .add("com.palantir.baseline-format");
-
-        rootProject.buildGradle().append("""
-            repositories {
-                // to resolve the `palantirJavaFormat` configuration
-                mavenCentral()
-            }
-            """);
+        standardBuildFile(rootProject).plugins().add("com.palantir.java-format");
 
         rootProject.gradlePropertiesFile().appendProperty("com.palantir.baseline-format.palantir-java-format", "true");
 
