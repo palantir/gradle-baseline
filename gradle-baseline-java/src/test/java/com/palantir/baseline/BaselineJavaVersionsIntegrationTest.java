@@ -59,12 +59,6 @@ class BaselineJavaVersionsIntegrationTest {
     @BeforeEach
     void beforeEach(RootProject rootProject, SubProject subProject) {
         rootProject.buildGradle().append("""
-            plugins {
-                id 'java'
-                id 'com.palantir.baseline-java-versions'
-                id 'com.palantir.jdks.latest'
-            }
-
             allprojects {
                 repositories {
                     mavenCentral()
@@ -76,12 +70,14 @@ class BaselineJavaVersionsIntegrationTest {
                 classpath = sourceSets.main.runtimeClasspath
             }
             """);
+        rootProject
+                .buildGradle()
+                .plugins()
+                .add("java")
+                .add("com.palantir.baseline-java-versions")
+                .add("com.palantir.jdks.latest");
 
         subProject.buildGradle().append("""
-            plugins {
-                id 'java'
-            }
-
             tasks.register('printJavaVersionExtension') {
                 def extension = project.extensions.javaVersion
                 inputs.property 'target', extension.target()
@@ -93,6 +89,7 @@ class BaselineJavaVersionsIntegrationTest {
                 }
             }
             """);
+        subProject.buildGradle().plugins().add("java");
     }
 
     @Nested
@@ -153,11 +150,7 @@ class BaselineJavaVersionsIntegrationTest {
                 }
                 """);
 
-            subProject.buildGradle().prepend("""
-                plugins {
-                    id 'com.palantir.sls-java-service-distribution'
-                }
-                """);
+            subProject.buildGradle().plugins().add("com.palantir.sls-java-service-distribution");
 
             InvocationResult result =
                     gradle.withArgs("printJavaVersionExtension").buildsSuccessfully();
@@ -214,8 +207,6 @@ class BaselineJavaVersionsIntegrationTest {
                 GradleInvoker gradle, RootProject rootProject) {
 
             rootProject.buildGradle().append("""
-                apply plugin: 'com.palantir.jdks.latest'
-
                 javaVersions {
                     javaCompiler = 11
                     libraryTarget = 11
@@ -234,6 +225,7 @@ class BaselineJavaVersionsIntegrationTest {
                     }
                 }
                 """);
+            rootProject.buildGradle().plugins().add("com.palantir.jdks.latest");
 
             rootProject.mainSourceSet().java().writeClass(JAVA_11_COMPATIBLE_CODE);
 
