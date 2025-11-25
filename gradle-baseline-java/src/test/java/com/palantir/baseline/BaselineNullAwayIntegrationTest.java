@@ -58,6 +58,7 @@ class BaselineNullAwayIntegrationTest {
                 mavenCentral()
             }
             javaVersions {
+                javaCompiler = 17
                 libraryTarget = 17
             }
             allprojects {
