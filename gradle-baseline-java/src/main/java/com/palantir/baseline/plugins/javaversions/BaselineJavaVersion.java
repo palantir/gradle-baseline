@@ -81,7 +81,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
 
             JavaToolchains baselineConfiguredJavaToolchains = new JavaToolchains(project, rootExtension);
 
-            // Compilation tasks (using compiler version for the compiler, but the targeting the target)
+            // Compilation tasks (using java compiler version for the java compiler, but the targeting the target)
             configureCompilationTasks(
                     project,
                     extension.javaCompiler(),
@@ -210,19 +210,19 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             BaselineJavaVersionsExtension rootExtension,
             JavaToolchains baselineConfiguredJavaToolchains,
             JavaToolchainService javaToolchainService,
-            Provider<JavaLanguageVersion> compilerVersion) {
+            Provider<JavaLanguageVersion> javaCompilerVersion) {
         if (rootExtension.getSetupJdkToolchains().get()) {
             log.debug("Using baselineConfiguredJavaToolchains to configure the javaCompileTask");
             javaCompileTask
                     .getJavaCompiler()
                     .set(baselineConfiguredJavaToolchains
-                            .forVersion(compilerVersion.map(ChosenJavaVersion::of))
+                            .forVersion(javaCompilerVersion.map(ChosenJavaVersion::of))
                             .flatMap(BaselineJavaToolchain::javaCompiler));
             return;
         }
         log.debug("Using detected javaToolchains to configure the javaCompileTask");
         javaCompileTask.getJavaCompiler().set(javaToolchainService.compilerFor(spec -> spec.getLanguageVersion()
-                .set(compilerVersion)));
+                .set(javaCompilerVersion)));
     }
 
     private static void setJavaDocTool(
