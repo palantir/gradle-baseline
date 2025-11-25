@@ -55,9 +55,8 @@ class BaselineModuleJvmArgsIntegrationTest {
             }
 
             javaVersions {
-                // Use the same version at the current test runtime so that we definitely have a JDK of this
-                // version available for Gradle's built in java toolchains
-                libraryTarget = Runtime.version().version().get(0)
+                javaCompiler = 21
+                libraryTarget = 17
             }
 
             allprojects {
@@ -225,8 +224,6 @@ class BaselineModuleJvmArgsIntegrationTest {
                    exports = ['jdk.compiler/com.sun.tools.javac.code']
                 }
                 tasks.named('compileJava', JavaCompile) {
-                    options.fork = true
-                    options.compilerArgumentProviders.add({ ['--release', '17'] } as CommandLineArgumentProvider)
                     doFirst {
                         println "Fork args: ${options.forkOptions.allJvmArgs}"
                         println "Compiler args: ${options.allCompilerArgs}"
@@ -329,12 +326,6 @@ class BaselineModuleJvmArgsIntegrationTest {
         @Test
         void runs_with_locally_defined_exports_with_the_release_plugin_not_toolchains(
                 GradleInvoker gradle, RootProject rootProject) {
-
-            rootProject.buildGradle().prepend("""
-                plugins {
-                    id 'com.palantir.baseline-release-compatibility'
-                }
-                """);
 
             rootProject.buildGradle().append("""
                 moduleJvmArgs {

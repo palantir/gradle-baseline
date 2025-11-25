@@ -31,6 +31,7 @@ class BaselineNullAwayIntegrationTest extends IntegrationSpec {
             mavenCentral()
         }
         javaVersions {
+            javaCompiler = 17
             libraryTarget = 17
         }
         allprojects {
