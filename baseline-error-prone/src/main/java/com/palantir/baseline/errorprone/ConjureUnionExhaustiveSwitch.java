@@ -28,31 +28,34 @@ import com.sun.source.tree.ExpressionTree;
 import com.sun.source.tree.SwitchExpressionTree;
 import com.sun.source.tree.SwitchTree;
 import com.sun.source.tree.Tree;
+import com.sun.tools.javac.code.Symbol.ClassSymbol;
 import com.sun.tools.javac.code.Type;
+import java.lang.reflect.Method;
+import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import javax.lang.model.element.ElementKind;
 import javax.lang.model.element.Modifier;
 
 /**
- * Detects usage of {@code default} clauses in switch statements over Conjure unions (sealed types).
+ * Detects unnecessary {@code default} clauses in already-exhaustive switch statements over Conjure unions
+ * (sealed types).
  * <p>
- * When a switch statement includes a {@code default} clause, the Java compiler will not break
- * when new union variants are added. This prevents the compiler from forcing code owners to
- * explicitly acknowledge and handle new types. By using exhaustive switches without {@code default}
- * clauses, the compiler ensures all consumers must consciously decide how to handle new variants
- * before their code compiles again.
+ * When a switch statement is already exhaustive (all variants are explicitly handled) but still includes
+ * a {@code default} clause, the Java compiler will not break when new union variants are added,
+ * preventing the compiler from forcing code owners to explicitly acknowledge and handle new types.
  * <p>
- * This warning can and should be suppressed via {@code @SuppressWarnings("ConjureUnionExhaustiveSwitch")}
- * in cases where the consumer explicitly doesn't care about new variants and has a well-defined
- * fallback behavior.
+ * By removing the {@code default} clause from exhaustive switches, the compiler helps ensure consumers to
+ * consciously decide how to handle new variants before their code compiles again.
  */
 @AutoService(BugChecker.class)
 @BugPattern(
         link = "https://github.com/palantir/gradle-baseline#baseline-error-prone-checks",
         linkType = BugPattern.LinkType.CUSTOM,
         severity = SeverityLevel.ERROR,
-        summary = "Avoid using default clause in switch statements on Conjure unions. "
-                + "Use exhaustive switch statements instead to ensure all cases are handled explicitly.")
+        summary = "Unnecessary default clause in exhaustive switch statement on Conjure union.")
 public final class ConjureUnionExhaustiveSwitch extends BugChecker
         implements BugChecker.SwitchTreeMatcher, BugChecker.SwitchExpressionTreeMatcher {
 
@@ -72,25 +75,111 @@ public final class ConjureUnionExhaustiveSwitch extends BugChecker
             return Description.NO_MATCH;
         }
 
-        if (cases.stream().noneMatch(ASTHelpers::isSwitchDefault)) {
+        if (cases.stream().anyMatch(this::hasGuard) || cases.stream().noneMatch(ASTHelpers::isSwitchDefault)) {
             return Description.NO_MATCH;
         }
 
-        return buildDescription(tree).build();
+        if (!(switchType.tsym instanceof ClassSymbol classSymbol)) {
+            return Description.NO_MATCH;
+        }
+
+        Optional<List<Type>> permittedSubtypes = Optional.ofNullable(classSymbol.getPermittedSubclasses());
+        if (permittedSubtypes.isEmpty()) {
+            return Description.NO_MATCH;
+        }
+        Set<Type> permittedTypeSet = new HashSet<>(permittedSubtypes.get());
+
+        Set<Type> handledTypes = new HashSet<>();
+        for (CaseTree caseTree : cases) {
+            if (ASTHelpers.isSwitchDefault(caseTree)) {
+                continue;
+            }
+
+            for (Tree label : getLabels(caseTree)) {
+                extractType(label).ifPresent(type -> addHandledType(type, handledTypes));
+            }
+        }
+
+        // If all permitted types are explicitly handled, the switch is exhaustive and the default is unnecessary
+        if (handledTypes.containsAll(permittedTypeSet)) {
+            return buildDescription(tree).build();
+        }
+
+        return Description.NO_MATCH;
+    }
+
+    private void addHandledType(Type type, Set<Type> handledTypes) {
+        if (type.tsym instanceof ClassSymbol classSymbol) {
+            Optional<List<Type>> permitted = Optional.ofNullable(classSymbol.getPermittedSubclasses());
+            if (permitted.isPresent()) {
+                // Handle matching on `Known` type
+                handledTypes.addAll(permitted.get());
+                return;
+            }
+        }
+
+        // Default case
+        handledTypes.add(type);
+    }
+
+    private boolean hasGuard(CaseTree caseTree) {
+        try {
+            Method getGuardMethod = CaseTree.class.getMethod("getGuard");
+            return getGuardMethod.invoke(caseTree) != null;
+        } catch (ReflectiveOperationException _e) {
+            return false;
+        }
+    }
+
+    @SuppressWarnings("unchecked")
+    private List<? extends Tree> getLabels(CaseTree caseTree) {
+        try {
+            // `getLabels` is a preview feature - annotation indicates we should use reflection to invoke
+            Method getLabelsMethod = CaseTree.class.getMethod("getLabels");
+            return (List<? extends Tree>) getLabelsMethod.invoke(caseTree);
+        } catch (ReflectiveOperationException _e) {
+            return Collections.emptyList();
+        }
+    }
+
+    private Optional<Type> extractType(Tree label) {
+        try {
+            // Always `CaseLabelTree` (preview type) for sealed type
+            Method getPatternMethod = label.getClass().getMethod("getPattern");
+            Tree pattern = (Tree) getPatternMethod.invoke(label);
+            if (pattern != null) {
+                return Optional.ofNullable(ASTHelpers.getType(pattern));
+            }
+        } catch (ReflectiveOperationException _e) {
+            // Ignore
+        }
+        return Optional.empty();
     }
 
     private boolean isConjureUnion(Type type) {
-        if (type.asElement() == null
-                || type.asElement().getKind() != ElementKind.CLASS
-                || !type.asElement().getModifiers().contains(Modifier.SEALED)) {
+        if (type.asElement() == null || !type.asElement().getModifiers().contains(Modifier.SEALED)) {
             return false;
         }
 
-        // Check if it has a nested interface called "Known"
-        // Empty conjure unions won't have a Known interface, but they won't be used in switches either by definition
-        return ASTHelpers.getEnclosedElements(type.asElement()).stream()
-                .anyMatch(element -> element.getKind() == ElementKind.INTERFACE
-                        && element.getModifiers().contains(Modifier.SEALED)
-                        && "Known".equals(element.getSimpleName().toString()));
+        return isUnionClass(type.asElement())
+                || (isKnownInterface(type.asElement()) && isEnclosedBySealedClass(type.asElement()));
+    }
+
+    private boolean isUnionClass(javax.lang.model.element.Element classElement) {
+        return classElement.getKind() == ElementKind.CLASS
+                && ASTHelpers.getEnclosedElements((com.sun.tools.javac.code.Symbol) classElement).stream()
+                        .anyMatch(this::isKnownInterface);
+    }
+
+    private boolean isKnownInterface(javax.lang.model.element.Element element) {
+        return element.getKind() == ElementKind.INTERFACE
+                && element.getModifiers().contains(Modifier.SEALED)
+                && "Known".equals(element.getSimpleName().toString());
+    }
+
+    private boolean isEnclosedBySealedClass(javax.lang.model.element.Element element) {
+        return element.getEnclosingElement() != null
+                && element.getEnclosingElement().getKind() == ElementKind.CLASS
+                && element.getEnclosingElement().getModifiers().contains(Modifier.SEALED);
     }
 }
