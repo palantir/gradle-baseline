@@ -65,12 +65,6 @@ public class BaselineFormatIntegrationTest {
             """);
     }
 
-    private GradleFile noJavaBuildFile(RootProject rootProject) {
-        rootProject.buildGradle().plugins().add("com.palantir.baseline-format");
-
-        return rootProject.buildGradle();
-    }
-
     private static final String validJavaFile = """
         package test;
 
@@ -180,7 +174,7 @@ public class BaselineFormatIntegrationTest {
 
     @Test
     void can_run_format_task_when_java_plugin_is_missing(GradleInvoker gradle, RootProject rootProject) {
-        noJavaBuildFile(rootProject);
+        rootProject.buildGradle().plugins().add("com.palantir.baseline-format");
 
         gradle.withArgs("format", "--stacktrace").buildsSuccessfully();
     }
