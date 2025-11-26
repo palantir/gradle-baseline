@@ -96,8 +96,6 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
         BaselineModuleJvmArgsExtension extension =
                 project.getExtensions().create(EXTENSION_NAME, BaselineModuleJvmArgsExtension.class, project);
 
-        addReleaseAndAddExportsArgsFixingCompilerPlugin(project);
-
         // Derive this plugin's `enablePreview` property from BaselineJavaVersion's extension
         project.getPlugins().withType(BaselineJavaVersion.class, _unused -> {
             BaselineJavaVersionExtension javaVersionsExtension =
@@ -153,45 +151,6 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
             });
 
             setTaskInputsFromExtension(jar, extension);
-        });
-    }
-
-    private void addReleaseAndAddExportsArgsFixingCompilerPlugin(Project project) {
-        // There is more info about the plugin in its implementation class.
-        // The gist is we change the compiler internals using reflection to allow the `--release`
-        // and `--add-exports` args to be used together without compiler errors.
-
-        // We always apply the plugin even if it's not necessary for two reasons:
-        //   1. There's no way to lazily add an arg based on the values of other args without forcing
-        //      the arg values, which might be too early.
-        //   2. I think it's better to always apply the plugin, so when it starts going wrong on a JDK
-        //      update, it fails very obviously everywhere and forces us to fix it rather than silently
-        //      failing on the low percentage of repos that add exports/opens.
-
-        String version = Optional.ofNullable(
-                        (String) project.findProperty("baselineModuleJvmArgsCompilerPluginsVersion"))
-                .or(() -> Optional.ofNullable(
-                        BaselineErrorProne.class.getPackage().getImplementationVersion()))
-                .orElseThrow(() -> new RuntimeException(
-                        "baseline-module-jvm-args-compiler-plugins implementation version not found"));
-
-        project.getExtensions().getByType(SourceSetContainer.class).configureEach(sourceSet -> {
-            project.getDependencies()
-                    .add(
-                            sourceSet.getAnnotationProcessorConfigurationName(),
-                            "com.palantir.baseline:baseline-module-jvm-args-compiler-plugins:" + version);
-
-            project.getTasks().named(sourceSet.getCompileJavaTaskName(), JavaCompile.class, javaCompile -> {
-                javaCompile.getOptions().getCompilerArgumentProviders().add(new CommandLineArgumentProvider() {
-                    private static final String COMPILER_PLUGIN_NAME =
-                            "AllowReleaseAndAddExportsToBeUsedTogetherByChangingCompilerInternalsUsingReflection";
-
-                    @Override
-                    public Iterable<String> asArguments() {
-                        return List.of("-Xplugin:" + COMPILER_PLUGIN_NAME);
-                    }
-                });
-            });
         });
     }
 
