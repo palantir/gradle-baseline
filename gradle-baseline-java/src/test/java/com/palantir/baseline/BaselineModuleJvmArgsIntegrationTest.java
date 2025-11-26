@@ -23,6 +23,7 @@ import com.palantir.gradle.testing.execution.InvocationResult;
 import com.palantir.gradle.testing.execution.TaskOutcome;
 import com.palantir.gradle.testing.junit.GradlePluginTests;
 import com.palantir.gradle.testing.project.RootProject;
+import com.palantir.gradle.testing.project.SubProject;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
@@ -156,38 +157,47 @@ class BaselineModuleJvmArgsIntegrationTest {
         }
 
         @Test
-        void compiling_using_the_release_and_add_exports_compiler_args_at_the_same_time_works(
-                GradleInvoker gradle, RootProject rootProject) {
+        void compiles_with_a_compiler_plugin_requiring_access_to_system_modules_at_the_same_time_as_the_release_args(
+                GradleInvoker gradle, RootProject rootProject, SubProject compilerPlugin) {
 
-            // By default, using the `--release` (added here in the test) and `--add-exports` (added by the
-            // plugin under test because we've added asked for a module export in moduleJvmArgs) arguments
-            // in compilerArgs will cause a compiler error as it stops you using them together for no real reason.
-            //
-            // The error we're trying to avoid is:
-            //     error: exporting a package from system module jdk.compiler is not allowed with --release
-            //
-            // This test is checking that we can use them together, with the application of some hackery.
+            compilerPlugin.buildGradle().append("""
+                dependencies {
+                        annotationProcessor 'com.google.auto.service:auto-service:1.1.1'
+                        compileOnly 'com.google.auto.service:auto-service:1.1.1'
+                    }
+                    moduleJvmArgs {
+                        exports = ['jdk.compiler/com.sun.tools.javac.code']
+                    }
+                """);
+            compilerPlugin.buildGradle().plugins().add("java-library").add("com.palantir.baseline-module-jvm-args");
 
-            rootProject.buildGradle().append("""
-                moduleJvmArgs {
-                   exports = ['jdk.compiler/com.sun.tools.javac.code']
-                }
-                tasks.named('compileJava', JavaCompile) {
-                    options.fork = true
-                    options.compilerArgumentProviders.add({ ['--release', '17'] } as CommandLineArgumentProvider)
-                    doFirst {
-                        println "Fork args: ${options.forkOptions.allJvmArgs}"
-                        println "Compiler args: ${options.allCompilerArgs}"
+            compilerPlugin.mainSourceSet().java().writeClass("""
+                package com;
+                import com.sun.source.util.JavacTask;
+                import com.sun.source.util.Plugin;
+                import com.google.auto.service.AutoService;
+                @AutoService(Plugin.class)
+                public final class SomePlugin implements Plugin {
+                    public String getName() {
+                        return "SomePlugin";
+                    }
+                    public void init(JavacTask task, String... args) {
+                        com.sun.tools.javac.code.Symbol.class.toString();
                     }
                 }
                 """);
 
-            rootProject.mainSourceSet().java().writeClass("""
-                package com;
-                public class Example {
-                    public static void main(String[] args) {
-                        com.sun.tools.javac.code.Symbol.class.toString();
-                    }
+            rootProject.buildGradle().append("""
+                dependencies {
+                    annotationProcessor project(':compilerPlugin')
+                }
+                tasks.named('compileJava', JavaCompile) {
+                    // The compiler plugin requires --add-exports to access types in the compiler module
+                    // Previously, this plugin incorrectly put --add-exports on the compilerArgs (rather than
+                    // the forkOptions that would apply to the compiler plugin in the compiler context).
+                    // --add-exports is by default incompatible with `--release`.
+                    options.compilerArgumentProviders.add({ ['--release', '11'] } as CommandLineArgumentProvider)
+                    options.compilerArgumentProviders.add({ ['-Xplugin:SomePlugin'] } as CommandLineArgumentProvider)
                 }
                 """);
 
