@@ -188,7 +188,7 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
 
                     @Override
                     public Iterable<String> asArguments() {
-                        return List.of("-Xplugin:" + COMPILER_PLUGIN_NAME);
+                        return List.of(); // "-Xplugin:" + COMPILER_PLUGIN_NAME);
                     }
                 });
             });

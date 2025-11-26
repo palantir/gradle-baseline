@@ -16,6 +16,8 @@
 
 package com.palantir.baseline.plugins.javaversions;
 
+import com.google.common.collect.Sets;
+import com.palantir.baseline.extensions.BaselineModuleJvmArgsExtension;
 import java.util.Collections;
 import javax.inject.Inject;
 import org.gradle.api.Action;
@@ -127,7 +129,37 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             setJavaCompiler(
                     javaCompileTask, rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, compiler);
             javaCompileTask.getOptions().getCompilerArgumentProviders().add(new EnablePreviewArgumentProvider(target));
-            javaCompileTask.getOptions().getRelease().set(target.map(ChosenJavaVersion::asMajorVersion));
+
+            javaCompileTask
+                    .getOptions()
+                    .getRelease()
+                    .set(target.map(ChosenJavaVersion::asMajorVersion).map(value -> {
+                        BaselineModuleJvmArgsExtension moduleJvmArgs =
+                                project.getExtensions().findByType(BaselineModuleJvmArgsExtension.class);
+
+                        if (moduleJvmArgs == null) {
+                            return value;
+                        }
+
+                        boolean anyExports = !Sets.union(
+                                        moduleJvmArgs.exports().get(),
+                                        moduleJvmArgs.opens().get())
+                                .isEmpty();
+
+                        if (anyExports) {
+                            return null;
+                        }
+
+                        return value;
+                    }));
+        });
+
+        project.afterEvaluate(_ignored -> {
+            project.getTasks().withType(JavaCompile.class).configureEach(javaCompileTask -> {
+                String targetString = target.get().toString();
+                javaCompileTask.setSourceCompatibility(targetString);
+                javaCompileTask.setTargetCompatibility(targetString);
+            });
         });
 
         project.getTasks().withType(Javadoc.class).configureEach(javadocTask -> {

@@ -42,6 +42,14 @@ class BaselineModuleJvmArgsIntegrationTest {
 
     @BeforeEach
     void beforeEach(RootProject rootProject) {
+        rootProject
+                .buildGradle()
+                .plugins()
+                .add("java-library")
+                .add("application")
+                .add("com.palantir.baseline-java-versions")
+                .add("com.palantir.baseline-module-jvm-args");
+
         rootProject.buildGradle().append("""
             application {
                 mainClass = 'com.Example'
@@ -59,17 +67,23 @@ class BaselineModuleJvmArgsIntegrationTest {
                 }
             }
             """);
-        rootProject
-                .buildGradle()
-                .plugins()
-                .add("java-library")
-                .add("application")
-                .add("com.palantir.baseline-java-versions")
-                .add("com.palantir.baseline-module-jvm-args");
     }
 
     @Nested
     class Compilation {
+        @BeforeEach
+        void beforeEach(RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                tasks.withType(JavaCompile).configureEach {
+                    doFirst {
+                        logger.lifecycle("forkArgs: {}", options.forkOptions.allJvmArgs)
+                        logger.lifecycle("compilerArgs: {}", options.allCompilerArgs)
+                        logger.lifecycle("release: {}", options.release.orElse(0).get())
+                    }
+                }
+                """);
+        }
+
         @Test
         void compiles_with_locally_defined_exports(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
@@ -161,20 +175,23 @@ class BaselineModuleJvmArgsIntegrationTest {
 
             compilerPlugin.buildGradle().append("""
                 dependencies {
-                        annotationProcessor 'com.google.auto.service:auto-service:1.1.1'
-                        compileOnly 'com.google.auto.service:auto-service:1.1.1'
-                    }
-                    moduleJvmArgs {
-                        exports = ['jdk.compiler/com.sun.tools.javac.code']
-                    }
+                    annotationProcessor 'com.google.auto.service:auto-service:1.1.1'
+                    compileOnly 'com.google.auto.service:auto-service:1.1.1'
+                }
+                moduleJvmArgs {
+                    exports = ['jdk.compiler/com.sun.tools.javac.code']
+                }
                 """);
-            compilerPlugin.buildGradle().plugins().add("java-library").add("com.palantir.baseline-module-jvm-args");
+
+            compilerPlugin.buildGradle().plugins().add("java-library");
+            compilerPlugin.buildGradle().plugins().add("com.palantir.baseline-module-jvm-args");
 
             compilerPlugin.mainSourceSet().java().writeClass("""
                 package com;
                 import com.sun.source.util.JavacTask;
                 import com.sun.source.util.Plugin;
                 import com.google.auto.service.AutoService;
+
                 @AutoService(Plugin.class)
                 public final class SomePlugin implements Plugin {
                     public String getName() {
@@ -195,7 +212,7 @@ class BaselineModuleJvmArgsIntegrationTest {
                     // Previously, this plugin incorrectly put --add-exports on the compilerArgs (rather than
                     // the forkOptions that would apply to the compiler plugin in the compiler context).
                     // --add-exports is by default incompatible with `--release`.
-                    options.compilerArgumentProviders.add({ ['--release', '11'] } as CommandLineArgumentProvider)
+                    options.compilerArgumentProviders.add({ ['--release', '17'] } as CommandLineArgumentProvider)
                     options.compilerArgumentProviders.add({ ['-Xplugin:SomePlugin'] } as CommandLineArgumentProvider)
                 }
                 """);

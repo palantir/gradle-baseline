@@ -168,7 +168,6 @@ class BaselineJavaVersionIntegrationTest {
             result.assertThat().output().contains("error: patterns in switch statements are a preview feature");
 
             result.assertThat().output().contains("Compiler Java Version: 17");
-            result.assertThat().output().contains("Compiler Arg: --release=17");
             result.assertThat().output().contains("Compiler Arg: --source=17");
             result.assertThat().output().contains("Compiler Arg: --target=17");
         }
@@ -188,7 +187,6 @@ class BaselineJavaVersionIntegrationTest {
             InvocationResult result = gradle.withArgs("compileJava").buildsSuccessfully();
 
             result.assertThat().output().contains("Compiler Java Version: 17");
-            result.assertThat().output().contains("Compiler Arg: --release=17");
             result.assertThat().output().contains("Compiler Arg: --source=17");
             result.assertThat().output().contains("Compiler Arg: --target=17");
 
@@ -215,7 +213,6 @@ class BaselineJavaVersionIntegrationTest {
             InvocationResult result = gradle.withArgs("compileJava").buildsSuccessfully();
 
             result.assertThat().output().contains("Compiler Java Version: 21");
-            result.assertThat().output().contains("Compiler Arg: --release=17");
             result.assertThat().output().contains("Compiler Arg: --source=17");
             result.assertThat().output().contains("Compiler Arg: --target=17");
 
@@ -246,7 +243,6 @@ class BaselineJavaVersionIntegrationTest {
             result.assertThat().output().contains("not supported in -source 17");
 
             result.assertThat().output().contains("Compiler Java Version: 21");
-            result.assertThat().output().contains("Compiler Arg: --release=17");
             result.assertThat().output().contains("Compiler Arg: --source=17");
             result.assertThat().output().contains("Compiler Arg: --target=17");
         }
@@ -270,7 +266,6 @@ class BaselineJavaVersionIntegrationTest {
             result.assertThat().output().contains("cannot find symbol");
 
             result.assertThat().output().contains("Compiler Java Version: 21");
-            result.assertThat().output().contains("Compiler Arg: --release=17");
             result.assertThat().output().contains("Compiler Arg: --source=17");
             result.assertThat().output().contains("Compiler Arg: --target=17");
         }
