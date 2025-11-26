@@ -94,7 +94,7 @@ com.squareup.okio:okio:3.6.0 (1 constraints: 530c38fd)
 
 com.squareup.okio:okio-jvm:3.6.0 (1 constraints: 500ad3b9)
 
-com.uber.nullaway:nullaway:0.12.10 (1 constraints: 66059040)
+com.uber.nullaway:nullaway:0.12.12 (1 constraints: 68059240)
 
 commons-codec:commons-codec:1.17.1 (2 constraints: 1b1ee786)
 
