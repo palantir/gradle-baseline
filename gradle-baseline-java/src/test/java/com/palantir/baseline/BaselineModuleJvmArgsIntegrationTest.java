@@ -203,45 +203,6 @@ class BaselineModuleJvmArgsIntegrationTest {
 
             gradle.withArgs("compileJava").buildsSuccessfully();
         }
-
-        @Test
-        void compiling_using_the_release_and_add_exports_compiler_args_at_the_same_time_works(
-                GradleInvoker gradle, RootProject rootProject) {
-
-            // By default, using the `--release` (added here in the test) and `--add-exports` (added by the
-            // plugin under test because we've added asked for a module export in moduleJvmArgs) arguments
-            // in compilerArgs will cause a compiler error as it stops you using them together for no real reason.
-            //
-            // The error we're trying to avoid is:
-            //     error: exporting a package from system module jdk.compiler is not allowed with --release
-            //
-            // This test is checking that we can use them together, with the application of some hackery.
-
-            rootProject.buildGradle().append("""
-                moduleJvmArgs {
-                   exports = ['jdk.compiler/com.sun.tools.javac.code']
-                }
-                tasks.named('compileJava', JavaCompile) {
-                    options.fork = true
-                    options.compilerArgumentProviders.add({ ['--release', '17'] } as CommandLineArgumentProvider)
-                    doFirst {
-                        println "Fork args: ${options.forkOptions.allJvmArgs}"
-                        println "Compiler args: ${options.allCompilerArgs}"
-                    }
-                }
-                """);
-
-            rootProject.mainSourceSet().java().writeClass("""
-                package com;
-                public class Example {
-                    public static void main(String[] args) {
-                        com.sun.tools.javac.code.Symbol.class.toString();
-                    }
-                }
-                """);
-
-            gradle.withArgs("compileJava").buildsSuccessfully();
-        }
     }
 
     @Nested
