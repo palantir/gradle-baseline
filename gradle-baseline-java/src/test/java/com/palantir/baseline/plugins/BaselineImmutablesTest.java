@@ -23,6 +23,7 @@ import com.palantir.gradle.testing.execution.InvocationResult;
 import com.palantir.gradle.testing.junit.GradlePluginTests;
 import com.palantir.gradle.testing.project.RootProject;
 import java.util.List;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -49,6 +50,7 @@ class BaselineImmutablesTest {
             }
 
             javaVersions {
+                javaCompiler = 21
                 libraryTarget = 17
             }
 
@@ -92,18 +94,16 @@ class BaselineImmutablesTest {
             }
             """, IMMUTABLES, IMMUTABLES, IMMUTABLES, IMMUTABLES_ANNOTATIONS);
 
-        List.of(
+        Stream.of(
                         "main",
                         "hasImmutables",
                         "doesNotHaveImmutables",
                         "hasImmutablesAddedInAfterEvaluate",
                         "onlyHasImmutablesAnnotations")
                 .forEach(sourceSet -> {
-                    rootProject
-                            .file(String.format("src/%s/java/Foo.java", sourceSet))
-                            .overwrite("""
-                                public class Foo {}
-                                """);
+                    rootProject.sourceSet(sourceSet).java().writeClass("""
+                        public class Foo {}
+                        """);
                 });
 
         InvocationResult result = gradle.withArgs("compileAll").buildsSuccessfully();
