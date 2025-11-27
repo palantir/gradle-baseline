@@ -238,6 +238,8 @@ com.palantir.gradle.jdks:gradle-jdks-enablement:0.69.0 (1 constraints: 980f6392)
 
 com.palantir.gradle.jdks:gradle-jdks-json:0.69.0 (1 constraints: 980f6392)
 
+com.palantir.gradle.jdks:gradle-jdks-settings:0.69.0 (1 constraints: 4105523b)
+
 com.palantir.gradle.jdks:gradle-jdks-setup:0.69.0 (1 constraints: 980f6392)
 
 com.palantir.gradle.jdks:gradle-jdks-setup-common:0.69.0 (3 constraints: 2c3be246)

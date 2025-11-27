@@ -35,6 +35,7 @@ public final class LogCompilerInfoPlugin implements Plugin {
     @SuppressWarnings("checkstyle:RegexpSinglelineJava")
     public void init(JavacTask task, String... _args) {
         System.out.println("Compiler Java Version: " + System.getProperty("java.specification.version"));
+        System.out.println("Compiler Java Home: " + System.getProperty("java.home"));
 
         ManagementFactory.getRuntimeMXBean().getInputArguments().forEach(inputArgument -> {
             System.out.println("Compiler Process Arg: " + inputArgument);
