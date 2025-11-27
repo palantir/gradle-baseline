@@ -96,8 +96,6 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
         BaselineModuleJvmArgsExtension extension =
                 project.getExtensions().create(EXTENSION_NAME, BaselineModuleJvmArgsExtension.class, project);
 
-        addReleaseAndAddExportsArgsFixingCompilerPlugin(project);
-
         // Derive this plugin's `enablePreview` property from BaselineJavaVersion's extension
         project.getPlugins().withType(BaselineJavaVersion.class, _unused -> {
             BaselineJavaVersionExtension javaVersionsExtension =
@@ -188,7 +186,7 @@ public abstract class BaselineModuleJvmArgs implements Plugin<Project> {
 
                     @Override
                     public Iterable<String> asArguments() {
-                        return List.of(); // "-Xplugin:" + COMPILER_PLUGIN_NAME);
+                        return List.of("-Xplugin:" + COMPILER_PLUGIN_NAME);
                     }
                 });
             });

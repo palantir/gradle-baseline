@@ -244,11 +244,13 @@ com.palantir.gradle.jdks:gradle-jdks-setup-common:0.69.0 (3 constraints: 2c3be24
 
 com.palantir.gradle.jdkslatest:gradle-jdks-latest:0.24.0 (1 constraints: 3805333b)
 
-com.palantir.gradle.plugintesting:configuration-cache-spec:0.39.0 (1 constraints: 3e05463b)
+com.palantir.gradle.plugintesting:configuration-cache-spec:0.40.0 (1 constraints: 36052f3b)
 
-com.palantir.gradle.plugintesting:gradle-plugin-testing-junit:0.39.0 (1 constraints: a4072b7e)
+com.palantir.gradle.plugintesting:discover-tests-cli:0.40.0 (1 constraints: 36052f3b)
 
-com.palantir.gradle.plugintesting:plugin-testing-core:0.39.0 (1 constraints: 3e05463b)
+com.palantir.gradle.plugintesting:gradle-plugin-testing-junit:0.40.0 (1 constraints: 9c070c7e)
+
+com.palantir.gradle.plugintesting:plugin-testing-core:0.40.0 (1 constraints: 36052f3b)
 
 com.palantir.ri:resource-identifier:2.11.0 (2 constraints: 511589d9)
 
@@ -281,6 +283,8 @@ com.palantir.tritium:tritium-registry:0.115.0 (1 constraints: 69059b40)
 commons-io:commons-io:2.21.0 (4 constraints: 463e391b)
 
 commons-lang:commons-lang:2.6 (1 constraints: ac04232c)
+
+info.picocli:picocli:4.7.7 (1 constraints: 2816dcdd)
 
 io.dropwizard.metrics:metrics-core:4.2.37 (1 constraints: ca1057b6)
 
@@ -332,7 +336,7 @@ org.junit.platform:junit-platform-commons:6.0.1 (2 constraints: d520474a)
 
 org.junit.platform:junit-platform-engine:6.0.1 (4 constraints: 9e40c7e2)
 
-org.junit.platform:junit-platform-launcher:6.0.1 (1 constraints: 09050a36)
+org.junit.platform:junit-platform-launcher:6.0.1 (2 constraints: 571b2362)
 
 org.junit.vintage:junit-vintage-engine:6.0.1 (1 constraints: 09050a36)
 
