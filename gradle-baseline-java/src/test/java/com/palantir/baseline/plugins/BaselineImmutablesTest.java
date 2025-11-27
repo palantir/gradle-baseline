@@ -92,18 +92,16 @@ class BaselineImmutablesTest {
             }
             """, IMMUTABLES, IMMUTABLES, IMMUTABLES, IMMUTABLES_ANNOTATIONS);
 
-        List.of(
+        Stream.of(
                         "main",
                         "hasImmutables",
                         "doesNotHaveImmutables",
                         "hasImmutablesAddedInAfterEvaluate",
                         "onlyHasImmutablesAnnotations")
                 .forEach(sourceSet -> {
-                    rootProject
-                            .file(String.format("src/%s/java/Foo.java", sourceSet))
-                            .overwrite("""
-                                public class Foo {}
-                                """);
+                    rootProject.sourceSet(sourceSet).java().writeClass("""
+                        public class Foo {}
+                        """);
                 });
 
         InvocationResult result = gradle.withArgs("compileAll").buildsSuccessfully();
