@@ -78,7 +78,7 @@ class BaselineModuleJvmArgsIntegrationTest {
                     doFirst {
                         logger.lifecycle("forkArgs: {}", options.forkOptions.allJvmArgs)
                         logger.lifecycle("compilerArgs: {}", options.allCompilerArgs)
-                        logger.lifecycle("release: {}", options.release.orElse(0).get())
+                        logger.lifecycle("release: {}", options.release.map { Integer.toString(it) }.getOrElse('unset'))
                     }
                 }
                 """);
