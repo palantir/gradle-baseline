@@ -18,6 +18,7 @@ package com.palantir.baseline;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.palantir.baseline.gradlejdks.InheritGradleJdks;
 import com.palantir.gradle.testing.execution.GradleInvoker;
 import com.palantir.gradle.testing.execution.InvocationResult;
 import com.palantir.gradle.testing.execution.TaskOutcome;
@@ -42,6 +43,8 @@ class BaselineModuleJvmArgsIntegrationTest {
 
     @BeforeEach
     void beforeEach(RootProject rootProject) {
+        InheritGradleJdks.beforeEach(rootProject);
+
         rootProject
                 .buildGradle()
                 .plugins()

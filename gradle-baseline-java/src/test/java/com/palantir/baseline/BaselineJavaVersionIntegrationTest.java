@@ -19,9 +19,9 @@ package com.palantir.baseline;
 import static com.palantir.gradle.testing.assertion.GradlePluginTestAssertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.palantir.baseline.gradlejdks.InheritGradleJdks;
 import com.palantir.gradle.testing.execution.GradleInvoker;
 import com.palantir.gradle.testing.execution.InvocationResult;
-import com.palantir.gradle.testing.files.Directory;
 import com.palantir.gradle.testing.junit.GradlePluginTests;
 import com.palantir.gradle.testing.project.RootProject;
 import java.io.DataInputStream;
@@ -30,8 +30,6 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -107,12 +105,8 @@ class BaselineJavaVersionIntegrationTest {
         """;
 
     @BeforeEach
-    void beforeEach(RootProject rootProject) throws IOException {
-        rootProject.gradlePropertiesFile().appendProperty("palantir.jdk.setup.enabled", "true");
-        rootProject.settingsGradle().plugins().add("com.palantir.jdks.settings");
-        rootProject.buildGradle().plugins().add("com.palantir.jdks");
-        Directory jdksDir = rootProject.directory("gradle").createDirectories().directory("jdks");
-        Files.createSymbolicLink(jdksDir.path(), Path.of("../gradle/jdks").toAbsolutePath());
+    void beforeEach(RootProject rootProject) {
+        InheritGradleJdks.beforeEach(rootProject);
 
         rootProject.buildGradle().plugins().add("java");
         rootProject.buildGradle().plugins().add("com.palantir.baseline-java-versions");
@@ -133,12 +127,6 @@ class BaselineJavaVersionIntegrationTest {
                 classpath = sourceSets.main.runtimeClasspath
             }
             """);
-        rootProject
-                .buildGradle()
-                .plugins()
-                .add("java")
-                .add("com.palantir.baseline-java-versions")
-                .add("com.palantir.jdks.latest");
     }
 
     @Nested
