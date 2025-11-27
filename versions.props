@@ -47,8 +47,8 @@ org.junit.vintage:* = 6.0.1
 org.junit.platform:* = 6.0.1
 org.mockito:* = 5.20.0
 com.palantir.sls-packaging:gradle-sls-packaging = 7.85.0
-com.palantir.gradle.jdks:gradle-jdks = 0.69.0
-com.palantir.gradle.jdkslatest:gradle-jdks-latest = 0.24.0
+com.palantir.gradle.jdks:* = 0.69.0
+com.palantir.gradle.jdkslatest:* = 0.24.0
 org.unbroken-dome.gradle-plugins:gradle-testsets-plugin = 4.1.0
 
 # dependency-upgrader:OFF
