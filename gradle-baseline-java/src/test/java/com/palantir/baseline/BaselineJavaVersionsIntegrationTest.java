@@ -19,6 +19,7 @@ package com.palantir.baseline;
 import static com.palantir.gradle.testing.assertion.GradlePluginTestAssertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.palantir.baseline.gradlejdks.InheritGradleJdks;
 import com.palantir.gradle.testing.execution.GradleInvoker;
 import com.palantir.gradle.testing.execution.InvocationResult;
 import com.palantir.gradle.testing.junit.GradlePluginTests;
@@ -58,6 +59,8 @@ class BaselineJavaVersionsIntegrationTest {
 
     @BeforeEach
     void beforeEach(RootProject rootProject, SubProject subProject) {
+        InheritGradleJdks.beforeEach(rootProject);
+
         rootProject.buildGradle().append("""
             allprojects {
                 repositories {
@@ -70,13 +73,11 @@ class BaselineJavaVersionsIntegrationTest {
                 classpath = sourceSets.main.runtimeClasspath
             }
             """);
-        rootProject
-                .buildGradle()
-                .plugins()
-                .add("java")
-                .add("com.palantir.baseline-java-versions")
-                .add("com.palantir.jdks.latest");
 
+        rootProject.buildGradle().plugins().add("java");
+        rootProject.buildGradle().plugins().add("com.palantir.baseline-java-versions");
+
+        subProject.buildGradle().plugins().add("java");
         subProject.buildGradle().append("""
             tasks.register('printJavaVersionExtension') {
                 def extension = project.extensions.javaVersion
@@ -89,7 +90,6 @@ class BaselineJavaVersionsIntegrationTest {
                 }
             }
             """);
-        subProject.buildGradle().plugins().add("java");
     }
 
     @Nested
