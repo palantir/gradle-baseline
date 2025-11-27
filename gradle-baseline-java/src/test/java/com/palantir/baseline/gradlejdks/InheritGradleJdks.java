@@ -25,12 +25,15 @@ import java.nio.file.Path;
 
 public final class InheritGradleJdks {
 
-    // Ideally this would be a Junit 5 extension (BeforeEachCallback) - but no way to get the RootProjet from the
-    // gradle-plugin-testing ParameterResolver :(
+    /// Sets up gradle-jdks to provide JDKs inside test Gradle invocations, which are discovered from the
+    /// JDK info in `gradle/jdks` of gradle-baseline itself.
+    /// Ideally this would be a Junit 5 extension (`BeforeEachCallback`) - but no way to get the RootProject from
+    /// the gradle-plugin-testing ParameterResolver :(
     public static void beforeEach(RootProject rootProject) {
         rootProject.gradlePropertiesFile().appendProperty("palantir.jdk.setup.enabled", "true");
         rootProject.settingsGradle().plugins().add("com.palantir.jdks.settings");
         rootProject.buildGradle().plugins().add("com.palantir.jdks");
+
         Directory jdksDir = rootProject.directory("gradle").createDirectories().directory("jdks");
 
         try {
