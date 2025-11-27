@@ -170,6 +170,7 @@ class BaselineJavaVersionIntegrationTest {
             result.assertThat().output().contains("error: patterns in switch statements are not supported");
 
             result.assertThat().output().contains("Compiler Java Version: 21");
+            result.assertThat().output().contains("Compiler Arg: --release=17");
             result.assertThat().output().contains("Compiler Arg: --source=17");
             result.assertThat().output().contains("Compiler Arg: --target=17");
         }
@@ -255,6 +256,8 @@ class BaselineJavaVersionIntegrationTest {
 
             result.assertThat().output().contains("Compiler Java Version: 21");
             result.assertThat().output().contains("Compiler Arg: --release=17");
+            result.assertThat().output().contains("Compiler Arg: --source=17");
+            result.assertThat().output().contains("Compiler Arg: --target=17");
 
             result.assertThat().output().doesNotContain("Compiler Arg: --add-exports");
         }
@@ -276,6 +279,7 @@ class BaselineJavaVersionIntegrationTest {
             InvocationResult result = gradle.withArgs("compileJava").buildsSuccessfully();
 
             result.assertThat().output().contains("Compiler Java Version: 17");
+            result.assertThat().output().contains("Compiler Arg: --release=17");
             result.assertThat().output().contains("Compiler Arg: --source=17");
             result.assertThat().output().contains("Compiler Arg: --target=17");
 
@@ -285,78 +289,6 @@ class BaselineJavaVersionIntegrationTest {
                     .resolve("classes/java/main/Main.class")
                     .toFile();
             assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
-        }
-
-        @Test
-        void can_use_a_higher_java_compiler_to_target_a_lower_language_level(
-                GradleInvoker gradle, RootProject rootProject) {
-            rootProject.buildGradle().append("""
-                javaVersion {
-                    javaCompiler = 21
-                    target = 17
-                }
-                """);
-
-            rootProject.mainSourceSet().java().writeClass(JAVA_17_COMPATIBLE_CODE);
-
-            InvocationResult result = gradle.withArgs("compileJava").buildsSuccessfully();
-
-            result.assertThat().output().contains("Compiler Java Version: 21");
-            result.assertThat().output().contains("Compiler Arg: --source=17");
-            result.assertThat().output().contains("Compiler Arg: --target=17");
-
-            File compiledClass = rootProject
-                    .buildDir()
-                    .path()
-                    .resolve("classes/java/main/Main.class")
-                    .toFile();
-            assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
-        }
-
-        @Test
-        void cannot_use_higher_version_source_features_than_the_target_even_if_the_java_compiler_is_that_higher_version(
-                GradleInvoker gradle, RootProject rootProject) {
-
-            rootProject.buildGradle().append("""
-                javaVersion {
-                    javaCompiler = 21
-                    target = 17
-                    runtime = 21
-                }
-                """);
-
-            rootProject.mainSourceSet().java().writeClass(JAVA_21_SOURCE_FEATURE_CODE);
-
-            InvocationResult result = gradle.withArgs("compileJava").buildsWithFailure();
-
-            result.assertThat().output().contains("not supported in -source 17");
-
-            result.assertThat().output().contains("Compiler Java Version: 21");
-            result.assertThat().output().contains("Compiler Arg: --source=17");
-            result.assertThat().output().contains("Compiler Arg: --target=17");
-        }
-
-        @Test
-        void cannot_use_higher_version_jdk_api_than_the_target_even_if_the_java_compiler_is_that_higher_version(
-                GradleInvoker gradle, RootProject rootProject) {
-
-            rootProject.buildGradle().append("""
-                javaVersion {
-                    javaCompiler = 21
-                    target = 17
-                    runtime = 21
-                }
-                """);
-
-            rootProject.mainSourceSet().java().writeClass(JAVA_21_API_USAGE);
-
-            InvocationResult result = gradle.withArgs("compileJava").buildsWithFailure();
-
-            result.assertThat().output().contains("cannot find symbol");
-
-            result.assertThat().output().contains("Compiler Java Version: 21");
-            result.assertThat().output().contains("Compiler Arg: --source=17");
-            result.assertThat().output().contains("Compiler Arg: --target=17");
         }
     }
 
