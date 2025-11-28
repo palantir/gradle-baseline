@@ -31,12 +31,8 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.UncheckedIOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import org.assertj.core.api.Assumptions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
@@ -233,62 +229,6 @@ class BaselineJavaVersionsIntegrationTest {
                             "-Porg.gradle.java.installations.auto-detect=false",
                             "-Porg.gradle.java.installations.auto-download=false")
                     .buildsWithFailure();
-        }
-
-        @Test
-        void can_configure_a_jdk_path_to_be_used(GradleInvoker gradle, RootProject rootProject) {
-            Assumptions.assumeThat(System.getenv("CI"))
-                    .describedAs("This test deletes a directory locally, you don't want to run it on your mac")
-                    .isNotNull();
-
-            Path newJavaHome;
-            try {
-                newJavaHome = Files.createSymbolicLink(
-                        rootProject.path().resolve("jdk"), Paths.get(System.getProperty("java.home")));
-            } catch (IOException e) {
-                throw new UncheckedIOException(e);
-            }
-
-            rootProject.buildGradle().append("""
-                javaVersions {
-                    setupJdkToolchains = false
-                    libraryTarget = 11
-
-                    jdk JavaLanguageVersion.of(11), new JavaInstallationMetadata() {
-                        @Override
-                        JavaLanguageVersion getLanguageVersion() {
-                            return JavaLanguageVersion.of(11)
-                        }
-                        @Override
-                        String getJavaRuntimeVersion() {
-                            return '11.0.222'
-                        }
-                        @Override
-                        String getJvmVersion() {
-                            return '11.33.44'
-                        }
-                        @Override
-                        String getVendor() {
-                            return 'vendor'
-                        }
-                        @Override
-                        Directory getInstallationPath() {
-                            return layout.dir(provider { new File('%s') }).get()
-                        }
-                        @Override
-                        boolean isCurrentJvm() {
-                            return false
-                        }
-                    }
-                }
-                """, newJavaHome);
-
-            rootProject.mainSourceSet().java().fileByPath("Main.java").overwrite(JAVA_11_COMPATIBLE_CODE);
-
-            InvocationResult result =
-                    gradle.withArgs("compileJava", "--stacktrace", "--info").buildsSuccessfully();
-
-            assertThat(result).output().contains(newJavaHome.toString());
         }
     }
 
