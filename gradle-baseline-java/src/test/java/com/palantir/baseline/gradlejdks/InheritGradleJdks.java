@@ -29,6 +29,9 @@ public final class InheritGradleJdks {
     /// JDK info in `gradle/jdks` of gradle-baseline itself.
     /// Ideally this would be a Junit 5 extension (`BeforeEachCallback`) - but no way to get the RootProject from
     /// the gradle-plugin-testing ParameterResolver :(
+    /// This approach has downsides - DO NOT COPY AND PASTE IT ELSEWHERE. See the info at
+    ///    https://github.com/palantir/gradle-baseline/pull/3379#:~:text=Possible%20downsides
+    /// about what we should eventually do instead.
     public static void beforeEach(RootProject rootProject) {
         rootProject.gradlePropertiesFile().appendProperty("palantir.jdk.setup.enabled", "true");
         rootProject.settingsGradle().plugins().add("com.palantir.jdks.settings");

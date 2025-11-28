@@ -75,10 +75,7 @@ public final class ImmutablesStyle extends BugChecker implements BugChecker.Clas
         if (ASTHelpers.enclosingClass(ASTHelpers.getSymbol(tree)) == null) {
             // Top level class, we cannot create new files with suggested fixes, nor should we create
             // additional top-level classes.
-            return buildDescription(tree)
-                    .addFix(SuggestedFixes.addSuppressWarnings(
-                            state, canonicalName(), "Automatically suppressed to unblock enforcement in new code"))
-                    .build();
+            return buildDescription(tree).build();
         }
         SuggestedFix.Builder fix = SuggestedFix.builder();
         String qualifiedTarget = SuggestedFixes.qualifyType(state, fix, Target.class.getName());

@@ -32,7 +32,7 @@ com.palantir.conjure.java.api:* = 2.65.0
 com.palantir.conjure.java.runtime:* = 8.27.0
 com.palantir.ri:* = 2.11.0
 com.palantir.tokens:auth-tokens = 3.20.0
-com.palantir.tritium:* = 0.115.0
+com.palantir.tritium:* = 0.116.0
 commons-io:* = 2.21.0
 commons-lang:* = 2.6
 junit:junit = 4.13.2
@@ -48,7 +48,6 @@ org.junit.platform:* = 6.0.1
 org.mockito:* = 5.20.0
 com.palantir.sls-packaging:gradle-sls-packaging = 7.85.0
 com.palantir.gradle.jdks:* = 0.69.0
-com.palantir.gradle.jdkslatest:* = 0.24.0
 org.unbroken-dome.gradle-plugins:gradle-testsets-plugin = 4.1.0
 
 # dependency-upgrader:OFF
