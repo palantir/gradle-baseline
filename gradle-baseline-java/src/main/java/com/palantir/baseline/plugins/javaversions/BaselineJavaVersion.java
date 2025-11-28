@@ -22,6 +22,7 @@ import java.util.Collections;
 import javax.inject.Inject;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.GradleException;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Task;
@@ -362,7 +363,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                             runtime);
 
             if (target.enablePreview() && !target.equals(runtime)) {
-                throw new RuntimeException(String.format(
+                throw new GradleException(String.format(
                         "Runtime Java version (%s) must be exactly the same as the compilation target (%s) in %s, "
                                 + "because --enable-preview is enabled. Otherwise Java will fail to start. See "
                                 + "https://openjdk.org/jeps/12.",
@@ -371,14 +372,14 @@ public final class BaselineJavaVersion implements Plugin<Project> {
 
             if (target.javaLanguageVersion().asInt()
                     > runtime.javaLanguageVersion().asInt()) {
-                throw new RuntimeException(String.format(
+                throw new GradleException(String.format(
                         "The requested compilation target Java version (%s) must not "
                                 + "exceed the requested runtime Java version (%s) in %s",
                         target, runtime, getProjectDisplayName().get()));
             }
 
             if (target.javaLanguageVersion().asInt() > javaCompiler.asInt()) {
-                throw new RuntimeException(String.format(
+                throw new GradleException(String.format(
                         "The requested compilation target Java version (%s) must not "
                                 + "exceed the javaCompiler Java version (%s) in %s",
                         target, javaCompiler, getProjectDisplayName().get()));
