@@ -251,6 +251,7 @@ class BaselineJavaVersionsIntegrationTest {
 
             rootProject.buildGradle().append("""
                 javaVersions {
+                    setupJdkToolchains = false
                     libraryTarget = 11
 
                     jdk JavaLanguageVersion.of(11), new JavaInstallationMetadata() {
