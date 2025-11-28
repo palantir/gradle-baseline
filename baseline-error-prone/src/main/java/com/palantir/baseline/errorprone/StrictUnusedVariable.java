@@ -298,6 +298,9 @@ public final class StrictUnusedVariable extends BugChecker implements BugChecker
 
     @Override
     public boolean isSuppressed(Tree tree, VisitorState state) {
+        if (state.errorProneOptions().isIgnoreSuppressionAnnotations()) {
+            return false;
+        }
         return super.isSuppressed(tree, state) || ALTERNATIVE_SUPPRESSED.matches(tree, state);
     }
 
