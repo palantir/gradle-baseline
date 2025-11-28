@@ -139,9 +139,11 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                         // error-prone checks or palantir-java-format) need to use `--add-exports`. But alas, there's no
                         // way to circumvent this (read more at https://github.com/palantir/gradle-baseline/pull/3376).
 
-                        // So we drop the `--release` flag if `--add-exports` is used.
+                        // So we drop the `--release` flag if `--add-exports` is used, by making the value of this
+                        // release property null, aka unset.
+
                         // The downside of not using `--release` is that if people use a JDK api that is newer than the
-                        // compilation target, the compilation will succeed rather than fail. The only upsides are:
+                        // compilation target, the compilation will succeed rather than fail. Mitigating factors are:
                         //   * IntelliJ still red-underlines the API usage, even if compilation succeeds
                         //   * Relatively few repos need `--add-exports` (<100 as of writing) and they are mainly
                         //     owned by the Java infrastructure teams rather than regular developers.
