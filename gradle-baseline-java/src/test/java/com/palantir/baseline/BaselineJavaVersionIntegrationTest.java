@@ -395,8 +395,8 @@ class BaselineJavaVersionIntegrationTest {
         void succeeds_when_all_runtimeClasspath_jars_are_compatible(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
-                    target = 8
-                    runtime = 8
+                    target = 11
+                    runtime = 11
                 }
 
                 dependencies {
@@ -411,8 +411,8 @@ class BaselineJavaVersionIntegrationTest {
         void handles_gradleApi(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
-                    target = 8
-                    runtime = 8
+                    target = 11
+                    runtime = 11
                 }
 
                 dependencies {
