@@ -105,4 +105,7 @@ javaVersions {
 
 jdks {
     daemonTarget = 21
+
+    // Tests need these JDK versions installed
+    jdkMajorVersionsToUse().addAll([11, 17, 21].collect { JavaLanguageVersion.of(it)})
 }

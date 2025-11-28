@@ -18,11 +18,13 @@ package com.palantir.baseline.plugins;
 
 import static com.palantir.gradle.testing.assertion.GradlePluginTestAssertions.assertThat;
 
+import com.palantir.baseline.gradlejdks.InheritGradleJdks;
 import com.palantir.gradle.testing.execution.GradleInvoker;
 import com.palantir.gradle.testing.execution.InvocationResult;
 import com.palantir.gradle.testing.junit.GradlePluginTests;
 import com.palantir.gradle.testing.project.RootProject;
 import java.util.List;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -35,12 +37,14 @@ class BaselineImmutablesTest {
 
     @BeforeEach
     void setup(RootProject rootProject) {
+        InheritGradleJdks.beforeEach(rootProject);
+
         rootProject
                 .buildGradle()
                 .plugins()
                 .add("org.unbroken-dome.test-sets")
                 .add("com.palantir.baseline-immutables")
-                .add("com.palantir.jdks.latest")
+                .add("com.palantir.baseline-java-versions")
                 .add("java-library");
 
         rootProject.buildGradle().append("""
@@ -92,18 +96,16 @@ class BaselineImmutablesTest {
             }
             """, IMMUTABLES, IMMUTABLES, IMMUTABLES, IMMUTABLES_ANNOTATIONS);
 
-        List.of(
+        Stream.of(
                         "main",
                         "hasImmutables",
                         "doesNotHaveImmutables",
                         "hasImmutablesAddedInAfterEvaluate",
                         "onlyHasImmutablesAnnotations")
                 .forEach(sourceSet -> {
-                    rootProject
-                            .file(String.format("src/%s/java/Foo.java", sourceSet))
-                            .overwrite("""
-                                public class Foo {}
-                                """);
+                    rootProject.sourceSet(sourceSet).java().writeClass("""
+                        public class Foo {}
+                        """);
                 });
 
         InvocationResult result = gradle.withArgs("compileAll").buildsSuccessfully();
@@ -121,8 +123,6 @@ class BaselineImmutablesTest {
     @MethodSource("javaVersions")
     void compatible_with_java(int javaVersion, GradleInvoker gradle, RootProject rootProject) {
         // Context: https://github.com/immutables/immutables/issues/1379#issuecomment-1254224741
-
-        rootProject.buildGradle().plugins().add("com.palantir.baseline-java-versions");
 
         rootProject.buildGradle().append("""
             tasks.withType(JavaCompile).configureEach({

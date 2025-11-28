@@ -19,6 +19,7 @@ package com.palantir.baseline;
 import static com.palantir.gradle.testing.assertion.GradlePluginTestAssertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.palantir.baseline.gradlejdks.InheritGradleJdks;
 import com.palantir.gradle.testing.execution.GradleInvoker;
 import com.palantir.gradle.testing.execution.InvocationResult;
 import com.palantir.gradle.testing.junit.GradlePluginTests;
@@ -79,6 +80,11 @@ class BaselineJavaVersionIntegrationTest {
 
     @BeforeEach
     void beforeEach(RootProject rootProject) {
+        InheritGradleJdks.beforeEach(rootProject);
+
+        rootProject.buildGradle().plugins().add("java");
+        rootProject.buildGradle().plugins().add("com.palantir.baseline-java-versions");
+
         rootProject.buildGradle().append("""
             allprojects {
                 repositories {
@@ -91,12 +97,6 @@ class BaselineJavaVersionIntegrationTest {
                 classpath = sourceSets.main.runtimeClasspath
             }
             """);
-        rootProject
-                .buildGradle()
-                .plugins()
-                .add("java")
-                .add("com.palantir.baseline-java-versions")
-                .add("com.palantir.jdks.latest");
     }
 
     @Nested
@@ -395,8 +395,8 @@ class BaselineJavaVersionIntegrationTest {
         void succeeds_when_all_runtimeClasspath_jars_are_compatible(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
-                    target = 8
-                    runtime = 8
+                    target = 11
+                    runtime = 11
                 }
 
                 dependencies {
@@ -411,8 +411,8 @@ class BaselineJavaVersionIntegrationTest {
         void handles_gradleApi(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
-                    target = 8
-                    runtime = 8
+                    target = 11
+                    runtime = 11
                 }
 
                 dependencies {

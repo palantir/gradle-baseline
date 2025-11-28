@@ -18,6 +18,7 @@ package com.palantir.baseline;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import com.palantir.baseline.gradlejdks.InheritGradleJdks;
 import com.palantir.gradle.testing.execution.GradleInvoker;
 import com.palantir.gradle.testing.execution.InvocationResult;
 import com.palantir.gradle.testing.execution.TaskOutcome;
@@ -42,6 +43,16 @@ class BaselineModuleJvmArgsIntegrationTest {
 
     @BeforeEach
     void beforeEach(RootProject rootProject) {
+        InheritGradleJdks.beforeEach(rootProject);
+
+        rootProject
+                .buildGradle()
+                .plugins()
+                .add("java-library")
+                .add("application")
+                .add("com.palantir.baseline-java-versions")
+                .add("com.palantir.baseline-module-jvm-args");
+
         rootProject.buildGradle().append("""
             application {
                 mainClass = 'com.Example'
@@ -60,13 +71,6 @@ class BaselineModuleJvmArgsIntegrationTest {
                 }
             }
             """);
-        rootProject
-                .buildGradle()
-                .plugins()
-                .add("java-library")
-                .add("application")
-                .add("com.palantir.baseline-java-versions")
-                .add("com.palantir.baseline-module-jvm-args");
     }
 
     @Nested
