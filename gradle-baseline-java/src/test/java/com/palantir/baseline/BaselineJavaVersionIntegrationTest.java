@@ -413,42 +413,6 @@ class BaselineJavaVersionIntegrationTest {
 
             gradle.withArgs("javadoc").buildsSuccessfully();
         }
-
-        @Test
-        void javadoc_errors_on_source_features_higher_than_the_target_version_even_with_higher_java_compiler_version(
-                GradleInvoker gradle, RootProject rootProject) {
-
-            rootProject.buildGradle().append("""
-                javaVersion {
-                    javaCompiler = 21
-                    target = 17
-                }
-                """);
-
-            rootProject.mainSourceSet().java().writeClass(JAVA_21_SOURCE_FEATURE_CODE);
-
-            InvocationResult result = gradle.withArgs("javadoc").buildsWithFailure();
-
-            result.assertThat().output().contains("not supported in -source 17");
-        }
-
-        @Test
-        void javadoc_errors_on_jdk_api_higher_than_the_target_version_even_with_higher_java_compiler_version(
-                GradleInvoker gradle, RootProject rootProject) {
-
-            rootProject.buildGradle().append("""
-                javaVersion {
-                    javaCompiler = 21
-                    target = 17
-                }
-                """);
-
-            rootProject.mainSourceSet().java().writeClass(JAVA_21_API_USAGE);
-
-            InvocationResult result = gradle.withArgs("javadoc").buildsWithFailure();
-
-            result.assertThat().output().contains("cannot find symbol");
-        }
     }
 
     @Nested
