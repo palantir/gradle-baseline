@@ -170,7 +170,7 @@ public abstract class CheckUnusedDependenciesTask extends DefaultTask {
         }));
     }
 
-    protected record ExplicitDependency(
+    public record ExplicitDependency(
             String group,
             String name,
             @Nullable String classifier,
