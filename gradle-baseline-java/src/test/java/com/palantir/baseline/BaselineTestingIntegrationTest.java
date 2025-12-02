@@ -20,6 +20,7 @@ import static com.palantir.gradle.testing.assertion.GradlePluginTestAssertions.a
 
 import com.palantir.gradle.testing.execution.GradleInvoker;
 import com.palantir.gradle.testing.execution.InvocationResult;
+import com.palantir.gradle.testing.junit.DisabledConfigurationCache;
 import com.palantir.gradle.testing.junit.GradlePluginTests;
 import com.palantir.gradle.testing.project.RootProject;
 import java.io.IOException;
@@ -28,6 +29,7 @@ import java.nio.file.Files;
 import org.junit.jupiter.api.Test;
 
 @GradlePluginTests
+@DisabledConfigurationCache
 public class BaselineTestingIntegrationTest {
 
     private void standardBuildFile(RootProject rootProject) {

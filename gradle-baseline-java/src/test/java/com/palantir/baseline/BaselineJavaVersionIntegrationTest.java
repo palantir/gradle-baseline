@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.palantir.baseline.gradlejdks.InheritGradleJdks;
 import com.palantir.gradle.testing.execution.GradleInvoker;
 import com.palantir.gradle.testing.execution.InvocationResult;
+import com.palantir.gradle.testing.junit.DisabledConfigurationCache;
 import com.palantir.gradle.testing.junit.GradlePluginTests;
 import com.palantir.gradle.testing.project.RootProject;
 import java.io.DataInputStream;
@@ -35,6 +36,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 @GradlePluginTests
+@DisabledConfigurationCache
 class BaselineJavaVersionIntegrationTest {
     private static final int JAVA_11_BYTECODE = 55;
     private static final int JAVA_17_BYTECODE = 61;
