@@ -191,6 +191,7 @@ class BaselineJavaVersionIntegrationTest {
             result.assertThat().output().contains("error: cannot find symbol");
 
             result.assertThat().output().contains("Compiler Java Version: 21");
+            result.assertThat().output().contains("Compiler Arg: --release=17");
             result.assertThat().output().contains("Compiler Arg: --source=17");
             result.assertThat().output().contains("Compiler Arg: --target=17");
         }
