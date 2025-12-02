@@ -111,7 +111,9 @@ public abstract class AbstractDeprecatedApiCheck extends BugChecker
             return Description.NO_MATCH;
         }
 
-        Optional<ClassSymbol> owningClass = Optional.ofNullable(ASTHelpers.enclosingClass(symbol));
+        // Note: Symbol#enclClass() returns the class itself if symbol is a class, rather than
+        //   the potentially enclosing class (for nested classes). This is what we want here.
+        Optional<ClassSymbol> owningClass = Optional.ofNullable(symbol.enclClass());
         Optional<URI> sourceFileUri = owningClass.map(c -> c.sourcefile).map(FileObject::toUri);
         if (sourceFileUri.isPresent() && isRegularFileOnSystem(sourceFileUri.get())) {
             // If the source file is a regular file on the local file system, this means we're calling a deprecated API
