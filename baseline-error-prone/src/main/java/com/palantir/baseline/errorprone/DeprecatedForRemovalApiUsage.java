@@ -18,12 +18,8 @@ package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
-import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
-import com.google.errorprone.matchers.Matcher;
-import com.google.errorprone.matchers.Matchers;
-import com.sun.source.tree.Tree;
-import java.util.Optional;
+import com.sun.tools.javac.code.Symbol;
 
 /**
  * This check is meant to replace usage of the `-Werror` and `-Xlint:removal` compiler flags (the latter being default),
@@ -52,19 +48,19 @@ public final class DeprecatedForRemovalApiUsage extends AbstractDeprecatedApiChe
                     + "the DeprecatedForRemovalApiUsage error-prone check, replacing the default-on java compiler flag "
                     + "'-Xlint:removal'. Use @SuppressWarnings(\"removal\") to suppress this error.";
 
-    private static final Matcher<Tree> DEPRECATED_FOR_REMOVAL_SYMBOL =
-            Matchers.symbolMatcher((symbol, state) -> symbol.isDeprecatedForRemoval());
-
     @Override
-    protected boolean isDeprecationWarning(Tree tree, VisitorState state) {
-        return DEPRECATED_FOR_REMOVAL_SYMBOL.matches(tree, state);
+    protected boolean isDeprecationWarning(Symbol symbol) {
+        return symbol.isDeprecatedForRemoval();
     }
 
     @Override
-    protected String getErrorDescription(Optional<String> qualifiedName) {
-        return qualifiedName
-                        .map(name -> String.format("%s is deprecated for removal", name))
-                        .orElse("Deprecated-for-removal API usage")
-                + MESSAGE_DETAILS;
+    protected boolean isEnclosingDeprecatedForSuppression(Symbol symbol) {
+        // Suppress this check if the enclosing context is deprecated for removal
+        return symbol.isDeprecatedForRemoval();
+    }
+
+    @Override
+    protected String getErrorDescription(String qualifiedName) {
+        return String.format("%s is deprecated for removal", qualifiedName) + MESSAGE_DETAILS;
     }
 }

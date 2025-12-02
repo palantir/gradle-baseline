@@ -20,11 +20,13 @@ import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
 import com.google.errorprone.matchers.Description;
 import com.google.errorprone.util.ASTHelpers;
+import com.sun.source.tree.ClassTree;
 import com.sun.source.tree.IdentifierTree;
 import com.sun.source.tree.ImportTree;
 import com.sun.source.tree.MemberReferenceTree;
 import com.sun.source.tree.MemberSelectTree;
 import com.sun.source.tree.MethodInvocationTree;
+import com.sun.source.tree.MethodTree;
 import com.sun.source.tree.Tree;
 import com.sun.tools.javac.code.Symbol;
 import com.sun.tools.javac.code.Symbol.ClassSymbol;
@@ -37,7 +39,6 @@ import java.nio.file.Paths;
 import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
-import javax.annotation.Nullable;
 import javax.tools.FileObject;
 
 /**
@@ -54,9 +55,20 @@ public abstract class AbstractDeprecatedApiCheck extends BugChecker
 
     private static final Logger log = Logger.getLogger(AbstractDeprecatedApiCheck.class.getName());
 
-    protected abstract boolean isDeprecationWarning(Tree tree, VisitorState state);
+    /**
+     * Returns true if the given symbol is deprecated in a way that should trigger this check.
+     */
+    protected abstract boolean isDeprecationWarning(Symbol symbol);
 
-    protected abstract String getErrorDescription(Optional<String> qualifiedName);
+    /**
+     * Returns true if the enclosing context should suppress this warning.
+     */
+    protected abstract boolean isEnclosingDeprecatedForSuppression(Symbol symbol);
+
+    /**
+     * Returns the error description to show in the diagnostic, using the qualified name of the deprecated symbol.
+     */
+    protected abstract String getErrorDescription(String qualifiedName);
 
     @Override
     public final Description matchMethodInvocation(MethodInvocationTree tree, VisitorState state) {
@@ -84,13 +96,22 @@ public abstract class AbstractDeprecatedApiCheck extends BugChecker
             return Description.NO_MATCH;
         }
 
-        if (!isDeprecationWarning(tree, state)) {
+        Symbol symbol = ASTHelpers.getSymbol(tree);
+
+        if (symbol == null) {
             return Description.NO_MATCH;
         }
 
-        Optional<Symbol> symbol = Optional.ofNullable(ASTHelpers.getSymbol(tree));
+        if (!isDeprecationWarning(symbol)) {
+            return Description.NO_MATCH;
+        }
 
-        Optional<ClassSymbol> owningClass = symbol.map(this::getOwningClass);
+        if (isEnclosingDeprecated(state)) {
+            // Suppress this warning if the enclosing method or class is deprecated.
+            return Description.NO_MATCH;
+        }
+
+        Optional<ClassSymbol> owningClass = Optional.ofNullable(ASTHelpers.enclosingClass(symbol));
         Optional<URI> sourceFileUri = owningClass.map(c -> c.sourcefile).map(FileObject::toUri);
         if (sourceFileUri.isPresent() && isRegularFileOnSystem(sourceFileUri.get())) {
             // If the source file is a regular file on the local file system, this means we're calling a deprecated API
@@ -115,8 +136,8 @@ public abstract class AbstractDeprecatedApiCheck extends BugChecker
             return Description.NO_MATCH;
         }
 
-        Optional<String> qualifiedName = symbol.map(
-                s -> s.owner.getQualifiedName() + "#" + s.getQualifiedName().toString());
+        String qualifiedName = symbol.owner.getQualifiedName() + "#"
+                + symbol.getQualifiedName().toString();
         String description = getErrorDescription(qualifiedName);
         return buildDescription(tree).setMessage(description).build();
     }
@@ -125,14 +146,25 @@ public abstract class AbstractDeprecatedApiCheck extends BugChecker
         return ASTHelpers.findEnclosingNode(state.getPath(), ImportTree.class) != null;
     }
 
-    @Nullable
-    private ClassSymbol getOwningClass(Symbol symbol) {
-        // The symbol itself may be a class symbol, in which case, there might not even be an owner.
-        Symbol owner = symbol;
-        while (owner != null && !(owner instanceof ClassSymbol)) {
-            owner = owner.owner;
+    /**
+     * Returns true if any of the enclosing nodes (methods/classes/etc) is deprecated
+     *   (in a way that should suppress this warning).
+     */
+    private boolean isEnclosingDeprecated(VisitorState state) {
+        for (Tree parent : state.getPath()) {
+            if (!(parent instanceof MethodTree || parent instanceof ClassTree)) {
+                // Only check for deprecation on methods and classes/interfaces/records/etc
+                continue;
+            }
+            Symbol symbol = ASTHelpers.getSymbol(parent);
+            if (symbol == null) {
+                continue;
+            }
+            if (isEnclosingDeprecatedForSuppression(symbol)) {
+                return true;
+            }
         }
-        return (ClassSymbol) owner;
+        return false;
     }
 
     /**

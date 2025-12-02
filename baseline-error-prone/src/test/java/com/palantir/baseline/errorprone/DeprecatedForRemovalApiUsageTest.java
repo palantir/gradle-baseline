@@ -313,6 +313,59 @@ public class DeprecatedForRemovalApiUsageTest {
                 .doTest();
     }
 
+    @Test
+    public void does_not_suppress_deprecated_for_removal_within_deprecated() {
+        helper().setArgs("-Xlint:-removal")
+                .addSourceLines(
+                        "Helper.java",
+                        // language=Java
+                        """
+                        class Helper {
+                          @Deprecated(forRemoval = true)
+                          public void deprecatedMethod() {}
+                        }
+                        """)
+                .addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        class Test {
+                          @Deprecated
+                          public void fun() {
+                            // BUG: Diagnostic contains: Helper#deprecatedMethod is deprecated for removal
+                            new Helper().deprecatedMethod();
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
+    public void suppresses_deprecated_for_removal_within_deprecated_for_removal() {
+        helper().setArgs("-Xlint:-removal")
+                .addSourceLines(
+                        "Helper.java",
+                        // language=Java
+                        """
+                        class Helper {
+                          @Deprecated(forRemoval = true)
+                          public void deprecatedMethod() {}
+                        }
+                        """)
+                .addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        class Test {
+                          @Deprecated(forRemoval = true)
+                          public void fun() {
+                            new Helper().deprecatedMethod();
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
     private CompilationTestHelper helper() {
         return CompilationTestHelper.newInstance(DeprecatedForRemovalApiUsage.class, getClass());
     }

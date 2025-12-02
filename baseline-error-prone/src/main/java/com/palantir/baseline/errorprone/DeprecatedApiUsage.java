@@ -18,12 +18,8 @@ package com.palantir.baseline.errorprone;
 
 import com.google.auto.service.AutoService;
 import com.google.errorprone.BugPattern;
-import com.google.errorprone.VisitorState;
 import com.google.errorprone.bugpatterns.BugChecker;
-import com.google.errorprone.matchers.Matcher;
-import com.google.errorprone.matchers.Matchers;
-import com.sun.source.tree.Tree;
-import java.util.Optional;
+import com.sun.tools.javac.code.Symbol;
 
 /**
  * This check is meant to replace usage of the `-Werror` and `-Xlint:deprecation` compiler flags, which cannot be
@@ -52,19 +48,21 @@ public final class DeprecatedApiUsage extends AbstractDeprecatedApiCheck {
                     + "the DeprecatedApiUsage error-prone check, replacing the java compiler flag '-Xlint:deprecation.'"
                     + " Use @SuppressWarnings(\"deprecation\") to suppress this error.";
 
-    private static final Matcher<Tree> DEPRECATED_SYMBOL =
-            Matchers.symbolMatcher((symbol, state) -> symbol.isDeprecated() && !symbol.isDeprecatedForRemoval());
-
     @Override
-    protected boolean isDeprecationWarning(Tree tree, VisitorState state) {
-        return DEPRECATED_SYMBOL.matches(tree, state);
+    protected boolean isDeprecationWarning(Symbol symbol) {
+        // Only trigger on deprecated symbols that are not deprecated for removal, to avoid conflicting with
+        //   DeprecatedForRemovalApiUsage.
+        return symbol.isDeprecated() && !symbol.isDeprecatedForRemoval();
     }
 
     @Override
-    protected String getErrorDescription(Optional<String> qualifiedName) {
-        return qualifiedName
-                        .map(name -> String.format("%s is deprecated", name))
-                        .orElse("Deprecated API usage")
-                + MESSAGE_DETAILS;
+    protected boolean isEnclosingDeprecatedForSuppression(Symbol symbol) {
+        // Suppress this check if the enclosing context is deprecated, whether for removal or not.
+        return symbol.isDeprecated() || symbol.isDeprecatedForRemoval();
+    }
+
+    @Override
+    protected String getErrorDescription(String qualifiedName) {
+        return String.format("%s is deprecated", qualifiedName) + MESSAGE_DETAILS;
     }
 }

@@ -17,6 +17,7 @@
 package com.palantir.baseline.errorprone;
 
 import com.google.errorprone.CompilationTestHelper;
+import com.google.errorprone.scanner.ScannerSupplier;
 import org.junit.jupiter.api.Test;
 
 public class DeprecatedApiUsageTest {
@@ -413,6 +414,137 @@ public class DeprecatedApiUsageTest {
                             Stream.of(new Helper.Nested())
                                 // BUG: Diagnostic contains: Helper.Nested is deprecated
                                 .forEach((Helper.Nested c) -> c.toString());
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
+    public void compiler_allows_deprecations_within_deprecated_methods() {
+        // Using a raw compilation helper here to verify the compiler behavior, rather than the error-prone check
+        CompilationTestHelper.newInstance(ScannerSupplier.fromBugCheckerClasses(), getClass())
+                .setArgs("-Xlint:deprecation", "-Werror")
+                .addSourceLines(
+                        "Helper.java",
+                        // language=Java
+                        """
+                        class Helper {
+                          @Deprecated
+                          public void deprecatedMethod() {}
+                        }
+                        """)
+                .addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        class Test {
+                          @Deprecated
+                          public void fun() {
+                            new Helper().deprecatedMethod();
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
+    public void error_prone_check_allows_deprecations_within_deprecated_methods() {
+        helper().addSourceLines(
+                        "Helper.java",
+                        // language=Java
+                        """
+                        class Helper {
+                          @Deprecated
+                          public void deprecatedMethod() {}
+                        }
+                        """)
+                .addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        class Test {
+                          @Deprecated
+                          public void fun() {
+                            new Helper().deprecatedMethod();
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
+    public void compiler_allows_deprecations_within_deprecated_classes() {
+        // Using a raw compilation helper here to verify the compiler behavior, rather than the error-prone check
+        CompilationTestHelper.newInstance(ScannerSupplier.fromBugCheckerClasses(), getClass())
+                .setArgs("-Xlint:deprecation", "-Werror")
+                .addSourceLines(
+                        "Helper.java",
+                        // language=Java
+                        """
+                        class Helper {
+                          @Deprecated
+                          public void deprecatedMethod() {}
+                        }
+                        """)
+                .addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        @Deprecated
+                        class Test {
+                          public void fun() {
+                            new Helper().deprecatedMethod();
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
+    public void error_prone_check_allows_deprecations_within_deprecated_classes() {
+        helper().addSourceLines(
+                        "Helper.java",
+                        // language=Java
+                        """
+                        class Helper {
+                          @Deprecated
+                          public void deprecatedMethod() {}
+                        }
+                        """)
+                .addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        @Deprecated
+                        class Test {
+                          public void fun() {
+                            new Helper().deprecatedMethod();
+                          }
+                        }
+                        """)
+                .doTest();
+    }
+
+    @Test
+    public void error_prone_check_allows_deprecations_within_deprecated_interfaces() {
+        helper().addSourceLines(
+                        "Helper.java",
+                        // language=Java
+                        """
+                        class Helper {
+                          @Deprecated
+                          public void deprecatedMethod() {}
+                        }
+                        """)
+                .addSourceLines(
+                        "Test.java",
+                        // language=Java
+                        """
+                        @Deprecated
+                        interface Test {
+                          default void fun() {
+                            new Helper().deprecatedMethod();
                           }
                         }
                         """)
