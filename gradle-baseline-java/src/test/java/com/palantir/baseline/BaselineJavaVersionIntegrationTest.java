@@ -528,7 +528,7 @@ class BaselineJavaVersionIntegrationTest {
         }
 
         @Test
-        void targeting_17_and_setting_java_compiler_to_21_does_let_you_use_21_jdk_apis(
+        void targeting_17_and_setting_java_compiler_to_21_does_not_let_you_use_21_jdk_apis(
                 GradleInvoker gradle, RootProject rootProject) {
 
             // The groovy compiler needs to run with the JDK it's targeting, not with
