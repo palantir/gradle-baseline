@@ -283,7 +283,10 @@ class BaselineJavaVersionsIntegrationTest {
 
             InvocationResult result = gradle.withArgs("compileJava").buildsWithFailure();
 
-            result.assertThat().output().contains("`javaCompiler` property inside `javaVersions`");
+            result.assertThat()
+                    .output()
+                    .contains("`javaCompiler` property inside `javaVersions` in the root project must be set with a"
+                            + " value");
         }
     }
 
