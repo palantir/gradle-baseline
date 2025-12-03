@@ -47,7 +47,7 @@ public class BaselineExactDependenciesTest {
     @Test
     public void both_tasks_vacuously_pass_with_no_dependencies(GradleInvoker gradle, RootProject rootProject) {
         applyStandardPlugins(rootProject);
-        rootProject.file("src/main/java/pkg/Foo.java").overwrite(minimalJavaFile());
+        rootProject.mainSourceSet().java().writeClass(minimalJavaFile());
 
         gradle.withArgs("checkUnusedDependencies", "checkImplicitDependencies", "--stacktrace")
                 .buildsSuccessfully();
@@ -56,7 +56,7 @@ public class BaselineExactDependenciesTest {
     @Test
     public void both_tasks_work_with_different_gradle_versions(GradleInvoker gradle, RootProject rootProject) {
         applyStandardPlugins(rootProject);
-        rootProject.file("src/main/java/pkg/Foo.java").overwrite(minimalJavaFile());
+        rootProject.mainSourceSet().java().writeClass(minimalJavaFile());
 
         gradle.withArgs("checkUnusedDependencies", "checkImplicitDependencies", "--stacktrace")
                 .buildsSuccessfully();
@@ -73,7 +73,7 @@ public class BaselineExactDependenciesTest {
                     mavenLocal() // for baseline-error-prone
                 }
             """);
-        rootProject.file("src/main/java/pkg/Foo.java").overwrite(minimalJavaFile());
+        rootProject.mainSourceSet().java().writeClass(minimalJavaFile());
 
         gradle.withArgs("checkUnusedDependencies", "checkImplicitDependencies", "--stacktrace")
                 .buildsSuccessfully();
@@ -82,7 +82,7 @@ public class BaselineExactDependenciesTest {
     @Test
     public void tasks_are_not_run_as_part_of_gradlew_check(GradleInvoker gradle, RootProject rootProject) {
         applyStandardPlugins(rootProject);
-        rootProject.file("src/main/java/pkg/Foo.java").overwrite(minimalJavaFile());
+        rootProject.mainSourceSet().java().writeClass(minimalJavaFile());
 
         InvocationResult result = gradle.withArgs("check").buildsSuccessfully();
         assertThat(result).task(":checkUnusedDependencies").notOnTaskGraph();
@@ -101,7 +101,7 @@ public class BaselineExactDependenciesTest {
                 implementation 'com.google.guava:guava:27.0.1-jre'
             }
             """);
-        rootProject.file("src/main/java/pkg/Foo.java").overwrite(minimalJavaFile());
+        rootProject.mainSourceSet().java().writeClass(minimalJavaFile());
 
         InvocationResult result =
                 gradle.withArgs("checkUnusedDependencies", "--stacktrace").buildsWithFailure();
@@ -123,7 +123,7 @@ public class BaselineExactDependenciesTest {
                 compileOnly 'org.immutables:value:2.7.5:annotations'
             }
             """);
-        rootProject.file("src/main/java/pkg/Foo.java").overwrite(minimalJavaFile());
+        rootProject.mainSourceSet().java().writeClass(minimalJavaFile());
 
         InvocationResult result =
                 gradle.withArgs("checkUnusedDependencies", "--stacktrace").buildsSuccessfully();
@@ -145,11 +145,11 @@ public class BaselineExactDependenciesTest {
 
         needsBuildingFirst.buildGradle().plugins().add("java-library");
 
-        needsBuildingFirst.file("src/main/java/pkg/Bar.java").overwrite("""
+        needsBuildingFirst.mainSourceSet().java().writeClass("""
             package pkg;
             public class Bar {}
             """);
-        rootProject.file("src/main/java/pkg/Foo.java").overwrite("""
+        rootProject.mainSourceSet().java().writeClass("""
             package pkg;
             class Foo {
                 // Just reference something from the other project
@@ -174,11 +174,11 @@ public class BaselineExactDependenciesTest {
         needsBuildingFirst.buildGradle().plugins().add("java-library");
         needsBuildingFirst.buildGradle().plugins().add("scala");
 
-        needsBuildingFirst.file("src/main/java/pkg/Bar.java").overwrite("""
+        needsBuildingFirst.mainSourceSet().java().writeClass("""
             package pkg;
             public class Bar {}
             """);
-        rootProject.file("src/main/java/pkg/Foo.java").overwrite("""
+        rootProject.mainSourceSet().java().writeClass("""
             package pkg;
             class Foo {
                 // Just reference something from the other project
@@ -203,7 +203,7 @@ public class BaselineExactDependenciesTest {
                 implementation 'com.google.guava:guava:28.0-jre'
             }
             """);
-        rootProject.file("src/main/java/pkg/Foo.java").overwrite("""
+        rootProject.mainSourceSet().java().writeClass("""
             package pkg;
             public class Foo {
                 void foo() {
@@ -240,7 +240,7 @@ public class BaselineExactDependenciesTest {
                 implementation 'com.fasterxml.jackson.datatype:jackson-datatype-guava:2.9.8' // pulls in guava transitively
             }
             """);
-        rootProject.file("src/main/java/pkg/Foo.java").overwrite("""
+        rootProject.mainSourceSet().java().writeClass("""
             package pkg;
             public class Foo {
                 void foo() {
@@ -377,7 +377,7 @@ public class BaselineExactDependenciesTest {
             com.palantir.tokens:* = 3.18.0
             """);
 
-        rootProject.file("src/main/java/com/p1/TestClassNoDeps.java").overwrite("""
+        rootProject.mainSourceSet().java().writeClass("""
             package com.p1;
 
             import java.util.Set;
@@ -429,17 +429,13 @@ public class BaselineExactDependenciesTest {
             """);
 
         // sub-project-no-deps has no dependencies
-        subProjectNoDeps
-                .file("src/main/java/com/p1/TestClassNoDeps.java")
-                .overwrite("package com.p1; public class TestClassNoDeps {}");
+        subProjectNoDeps.mainSourceSet().java().writeClass("package com.p1; public class TestClassNoDeps {}");
 
         // write a second class to be referenced in a different place
-        subProjectNoDeps
-                .file("src/main/java/com/p1/TestClassNoDeps2.java")
-                .overwrite("package com.p1; public class TestClassNoDeps2 {}");
+        subProjectNoDeps.mainSourceSet().java().writeClass("package com.p1; public class TestClassNoDeps2 {}");
 
         // write class in sub-project-with-deps that uses TestClassNoDeps
-        subProjectWithDeps.file("src/main/java/com/p2/TestClassWithDeps.java").overwrite("""
+        subProjectWithDeps.mainSourceSet().java().writeClass("""
             package com.p2;
             import com.p1.TestClassNoDeps;
             public class TestClassWithDeps {
@@ -450,7 +446,7 @@ public class BaselineExactDependenciesTest {
             """);
 
         // Create source file in root project that uses TestClassNoDeps2
-        rootProject.file("src/main/java/com/p0/RootTestClassWithDeps.java").overwrite("""
+        rootProject.mainSourceSet().java().writeClass("""
             package com.p2;
             import com.p1.TestClassNoDeps2;
             public class RootTestClassWithDeps {
