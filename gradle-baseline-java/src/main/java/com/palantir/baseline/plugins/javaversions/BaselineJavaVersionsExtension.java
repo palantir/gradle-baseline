@@ -37,11 +37,16 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion;
 public abstract class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtensionSetters {
     private final Project rootProject;
     private final Property<JavaLanguageVersion> libraryTarget;
-    private final Property<ChosenJavaVersion> distributionTarget;
     private final Property<ChosenJavaVersion> runtime;
     private final LazilyConfiguredMapping<JavaLanguageVersion, AtomicReference<JavaInstallationMetadata>, Project>
             jdks = new LazilyConfiguredMapping<>(AtomicReference::new);
     private final Property<Boolean> setupJdkToolchains;
+
+    /**
+     * Target {@link ChosenJavaVersion} for compilation of code used within distributions,
+     * but not published externally.
+     */
+    public abstract Property<ChosenJavaVersion> getDistributionTarget();
 
     @Inject
     protected abstract ObjectFactory getObjectFactory();
@@ -50,18 +55,17 @@ public abstract class BaselineJavaVersionsExtension implements BaselineJavaVersi
     public BaselineJavaVersionsExtension(Project rootProject) {
         this.rootProject = rootProject;
         this.libraryTarget = getObjectFactory().property(JavaLanguageVersion.class);
-        this.distributionTarget = getObjectFactory().property(ChosenJavaVersion.class);
         this.runtime = getObjectFactory().property(ChosenJavaVersion.class);
         this.setupJdkToolchains = getObjectFactory().property(Boolean.class);
         this.setupJdkToolchains.convention(true);
 
         // distribution defaults to the library value
-        distributionTarget.convention(libraryTarget.map(ChosenJavaVersion::of));
+        getDistributionTarget().convention(libraryTarget.map(ChosenJavaVersion::of));
         // runtime defaults to the distribution value
-        runtime.convention(distributionTarget);
+        runtime.convention(getDistributionTarget());
 
         libraryTarget.finalizeValueOnRead();
-        distributionTarget.finalizeValueOnRead();
+        getDistributionTarget().finalizeValueOnRead();
         runtime.finalizeValueOnRead();
     }
 
@@ -86,23 +90,15 @@ public abstract class BaselineJavaVersionsExtension implements BaselineJavaVersi
         libraryTarget.set(version.javaLanguageVersion());
     }
 
-    /**
-     * Target {@link ChosenJavaVersion} for compilation of code used within distributions,
-     * but not published externally.
-     */
-    public final Property<ChosenJavaVersion> distributionTarget() {
-        return distributionTarget;
-    }
-
     @Override
     public final void setDistributionTarget(int value) {
-        distributionTarget.set(ChosenJavaVersion.of(value));
+        getDistributionTarget().set(ChosenJavaVersion.of(value));
     }
 
     /** Accepts inputs such as '17_PREVIEW'. */
     @Override
     public final void setDistributionTarget(String value) {
-        distributionTarget.set(ChosenJavaVersion.fromString(value));
+        getDistributionTarget().set(ChosenJavaVersion.fromString(value));
     }
 
     /** Runtime {@link ChosenJavaVersion} for testing and packaging distributions. */
@@ -151,7 +147,7 @@ public abstract class BaselineJavaVersionsExtension implements BaselineJavaVersi
                 getObjectFactory().setProperty(JavaLanguageVersion.class);
 
         allJavaVersionsUsed.add(libraryTarget);
-        allJavaVersionsUsed.add(distributionTarget.map(ChosenJavaVersion::javaLanguageVersion));
+        allJavaVersionsUsed.add(getDistributionTarget().map(ChosenJavaVersion::javaLanguageVersion));
         allJavaVersionsUsed.add(runtime.map(ChosenJavaVersion::javaLanguageVersion));
 
         rootProject.allprojects(proj -> {

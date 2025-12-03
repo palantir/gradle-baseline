@@ -75,7 +75,7 @@ public final class BaselineJavaVersions implements Plugin<Project> {
             log.info("{} is {}", project.getDisplayName(), isLibraryWithReason);
             return isLibraryWithReason.isLibrary()
                     ? ChosenJavaVersion.of(rootExtension.libraryTarget().get())
-                    : rootExtension.distributionTarget().get();
+                    : rootExtension.getDistributionTarget().get();
         });
 
         Property<ChosenJavaVersion> suggestedRuntime = rootExtension.runtime();
