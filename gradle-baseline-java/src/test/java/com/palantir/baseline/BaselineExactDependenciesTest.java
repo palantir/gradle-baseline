@@ -302,7 +302,7 @@ public class BaselineExactDependenciesTest {
     }
 
     @Test
-    public void plugin_does_not_cause_GCV_checkUnusedConstraints_to_fail(
+    public void plugin_does_not_cause_gcv_checkUnusedConstraints_to_fail(
             GradleInvoker gradle, RootProject rootProject, SubProject subProjectNoDeps, SubProject subProjectWithDeps) {
         setupMultiProject(rootProject, subProjectNoDeps, subProjectWithDeps);
         rootProject.buildGradle().plugins().add("com.palantir.consistent-versions");
@@ -329,7 +329,7 @@ public class BaselineExactDependenciesTest {
     }
 
     @Test
-    public void ensure_checkUnusedDependencies_works_with_GCV_when_project_is_excluded_from_GCV_locks(
+    public void ensure_checkUnusedDependencies_works_with_gcv_when_project_is_excluded_from_gcv_locks(
             GradleInvoker gradle, RootProject rootProject) {
         // we set up a build file where GCV is disabled for that project but the plugin is still applied
         applyStandardPlugins(rootProject);
@@ -385,8 +385,8 @@ public class BaselineExactDependenciesTest {
     }
 
     /**
-     * Sets up a multi-module project with 2 sub projects. The root project has a transitive dependency on sub-project-no-deps
-     * and so checkImplicitDependencies should fail on it.
+     * Sets up a multi-module project with 2 subprojects. The root project has a transitive dependency
+     * on subProjectNoDeps and so checkImplicitDependencies should fail on it.
      */
     private void setupMultiProject(
             RootProject rootProject, SubProject subProjectNoDeps, SubProject subProjectWithDeps) {
@@ -415,13 +415,13 @@ public class BaselineExactDependenciesTest {
             }
             """);
 
-        // sub-project-no-deps has no dependencies
+        // subProjectNoDeps has no dependencies
         subProjectNoDeps.mainSourceSet().java().writeClass("package com.p1; public class TestClassNoDeps {}");
 
         // write a second class to be referenced in a different place
         subProjectNoDeps.mainSourceSet().java().writeClass("package com.p1; public class TestClassNoDeps2 {}");
 
-        // write class in sub-project-with-deps that uses TestClassNoDeps
+        // write class in subProjectWithDeps that uses TestClassNoDeps
         subProjectWithDeps.mainSourceSet().java().writeClass("""
             package com.p2;
             import com.p1.TestClassNoDeps;
