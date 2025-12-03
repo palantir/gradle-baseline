@@ -224,9 +224,9 @@ com.netflix.nebula:nebula-test:10.6.2 (2 constraints: d61de72d)
 
 com.palantir.conjure.java:conjure-lib:8.65.0 (1 constraints: 4505763b)
 
-com.palantir.conjure.java.api:errors:2.66.0 (2 constraints: 7621afb1)
+com.palantir.conjure.java.api:errors:2.67.0 (2 constraints: 7721b2b1)
 
-com.palantir.conjure.java.api:test-utils:2.66.0 (1 constraints: 4005553b)
+com.palantir.conjure.java.api:test-utils:2.67.0 (1 constraints: 4105583b)
 
 com.palantir.conjure.java.runtime:conjure-java-annotations:8.27.0 (1 constraints: 43056c3b)
 
