@@ -49,8 +49,7 @@ public class BaselineExactDependenciesTest {
         applyStandardPlugins(rootProject);
         rootProject.mainSourceSet().java().writeClass(minimalJavaFile());
 
-        gradle.withArgs("checkUnusedDependencies", "checkImplicitDependencies", "--stacktrace")
-                .buildsSuccessfully();
+        gradle.withArgs("checkUnusedDependencies", "checkImplicitDependencies").buildsSuccessfully();
     }
 
     @Test
@@ -58,8 +57,7 @@ public class BaselineExactDependenciesTest {
         applyStandardPlugins(rootProject);
         rootProject.mainSourceSet().java().writeClass(minimalJavaFile());
 
-        gradle.withArgs("checkUnusedDependencies", "checkImplicitDependencies", "--stacktrace")
-                .buildsSuccessfully();
+        gradle.withArgs("checkUnusedDependencies", "checkImplicitDependencies").buildsSuccessfully();
     }
 
     @Test
@@ -75,8 +73,7 @@ public class BaselineExactDependenciesTest {
             """);
         rootProject.mainSourceSet().java().writeClass(minimalJavaFile());
 
-        gradle.withArgs("checkUnusedDependencies", "checkImplicitDependencies", "--stacktrace")
-                .buildsSuccessfully();
+        gradle.withArgs("checkUnusedDependencies", "checkImplicitDependencies").buildsSuccessfully();
     }
 
     @Test
@@ -103,8 +100,7 @@ public class BaselineExactDependenciesTest {
             """);
         rootProject.mainSourceSet().java().writeClass(minimalJavaFile());
 
-        InvocationResult result =
-                gradle.withArgs("checkUnusedDependencies", "--stacktrace").buildsWithFailure();
+        InvocationResult result = gradle.withArgs("checkUnusedDependencies").buildsWithFailure();
         assertThat(result).task(":classes").succeeded();
         assertThat(result).task(":checkUnusedDependenciesMain").failed();
         assertThat(result).output().contains("Found 1 dependencies unused during compilation");
@@ -125,8 +121,7 @@ public class BaselineExactDependenciesTest {
             """);
         rootProject.mainSourceSet().java().writeClass(minimalJavaFile());
 
-        InvocationResult result =
-                gradle.withArgs("checkUnusedDependencies", "--stacktrace").buildsSuccessfully();
+        InvocationResult result = gradle.withArgs("checkUnusedDependencies").buildsSuccessfully();
         assertThat(result).task(":classes").succeeded();
         assertThat(result).task(":checkUnusedDependencies").succeeded();
         assertThat(result).task(":checkUnusedDependenciesMain").succeeded();
@@ -157,7 +152,7 @@ public class BaselineExactDependenciesTest {
             }
             """);
 
-        InvocationResult result = gradle.withArgs(":" + task, "--stacktrace").buildsSuccessfully();
+        InvocationResult result = gradle.withArgs(":" + task).buildsSuccessfully();
         assertThat(result).task(":needsBuildingFirst:compileJava").succeeded();
     }
 
@@ -186,8 +181,7 @@ public class BaselineExactDependenciesTest {
             }
             """);
 
-        InvocationResult result =
-                gradle.withArgs("checkUnusedDependencies", "--stacktrace").buildsSuccessfully();
+        InvocationResult result = gradle.withArgs("checkUnusedDependencies").buildsSuccessfully();
         assertThat(result).task(":checkUnusedDependenciesMain").succeeded();
     }
 
@@ -212,8 +206,7 @@ public class BaselineExactDependenciesTest {
             }
             """);
 
-        InvocationResult result =
-                gradle.withArgs("checkUnusedDependencies", "--stacktrace").buildsSuccessfully();
+        InvocationResult result = gradle.withArgs("checkUnusedDependencies").buildsSuccessfully();
         assertThat(result).task(":checkUnusedDependenciesTest").succeeded();
     }
 
@@ -223,8 +216,7 @@ public class BaselineExactDependenciesTest {
         applyStandardPlugins(rootProject);
         rootProject.buildGradle().plugins().add("java-test-fixtures");
 
-        InvocationResult result =
-                gradle.withArgs("checkUnusedDependencies", "--stacktrace").buildsSuccessfully();
+        InvocationResult result = gradle.withArgs("checkUnusedDependencies").buildsSuccessfully();
         assertThat(result).task(":checkUnusedDependenciesTest").succeeded();
     }
 
@@ -249,8 +241,7 @@ public class BaselineExactDependenciesTest {
             }
             """);
 
-        InvocationResult result =
-                gradle.withArgs("checkImplicitDependencies", "--stacktrace").buildsWithFailure();
+        InvocationResult result = gradle.withArgs("checkImplicitDependencies").buildsWithFailure();
         assertThat(result).task(":classes").succeeded();
         assertThat(result).task(":checkImplicitDependenciesMain").failed();
         assertThat(result).output().contains("Found 1 implicit dependencies");
@@ -261,8 +252,8 @@ public class BaselineExactDependenciesTest {
             GradleInvoker gradle, RootProject rootProject, SubProject subProjectNoDeps, SubProject subProjectWithDeps) {
         setupMultiProject(rootProject, subProjectNoDeps, subProjectWithDeps);
 
-        InvocationResult result = gradle.withArgs(":subProjectWithDeps:checkImplicitDependencies", "--stacktrace")
-                .buildsSuccessfully();
+        InvocationResult result =
+                gradle.withArgs(":subProjectWithDeps:checkImplicitDependencies").buildsSuccessfully();
         assertThat(result).task(":subProjectWithDeps:classes").succeeded();
         assertThat(result).task(":subProjectWithDeps:checkImplicitDependencies").succeeded();
     }
@@ -272,8 +263,7 @@ public class BaselineExactDependenciesTest {
             GradleInvoker gradle, RootProject rootProject, SubProject subProjectNoDeps, SubProject subProjectWithDeps) {
         setupMultiProject(rootProject, subProjectNoDeps, subProjectWithDeps);
 
-        InvocationResult result =
-                gradle.withArgs("checkImplicitDependencies", "--stacktrace").buildsWithFailure();
+        InvocationResult result = gradle.withArgs("checkImplicitDependencies").buildsWithFailure();
         assertThat(result).task(":classes").succeeded();
         assertThat(result).task(":checkImplicitDependenciesMain").failed();
         assertThat(result).output().contains("Found 1 implicit dependencies");
@@ -286,9 +276,7 @@ public class BaselineExactDependenciesTest {
         setupMultiProject(rootProject, subProjectNoDeps, subProjectWithDeps);
 
         InvocationResult result = gradle.withArgs(
-                        ":subProjectWithDeps:checkImplicitDependencies",
-                        ":subProjectNoDeps:checkImplicitDependencies",
-                        "--stacktrace")
+                        ":subProjectWithDeps:checkImplicitDependencies", ":subProjectNoDeps:checkImplicitDependencies")
                 .buildsSuccessfully();
         assertThat(result).task(":subProjectNoDeps:checkImplicitDependencies").succeeded();
     }
@@ -309,8 +297,7 @@ public class BaselineExactDependenciesTest {
             GradleInvoker gradle, RootProject rootProject, SubProject subProjectNoDeps, SubProject subProjectWithDeps) {
         setupMultiProject(rootProject, subProjectNoDeps, subProjectWithDeps);
 
-        InvocationResult result =
-                gradle.withArgs("checkUnusedDependencies", "--stacktrace").buildsWithFailure();
+        InvocationResult result = gradle.withArgs("checkUnusedDependencies").buildsWithFailure();
         assertThat(result).output().contains("project(':subProjectWithDeps') <-- main");
     }
 
@@ -321,8 +308,7 @@ public class BaselineExactDependenciesTest {
         rootProject.buildGradle().plugins().add("com.palantir.consistent-versions");
         rootProject.file("versions.props").overwrite("");
 
-        gradle.withArgs("checkUnusedConstraints", "--stacktrace", "--write-locks")
-                .buildsSuccessfully();
+        gradle.withArgs("checkUnusedConstraints", "--write-locks").buildsSuccessfully();
     }
 
     @Test
@@ -339,12 +325,13 @@ public class BaselineExactDependenciesTest {
             }
             """);
 
-        gradle.withArgs("tasks", "--stacktrace").buildsSuccessfully();
+        gradle.withArgs("tasks").buildsSuccessfully();
     }
 
     @Test
     public void ensure_checkUnusedDependencies_works_with_GCV_when_project_is_excluded_from_GCV_locks(
             GradleInvoker gradle, RootProject rootProject) {
+        // we set up a build file where GCV is disabled for that project but the plugin is still applied
         applyStandardPlugins(rootProject);
         rootProject.buildGradle().plugins().add("com.palantir.consistent-versions");
         rootProject.buildGradle().plugins().add("java");
@@ -394,7 +381,7 @@ public class BaselineExactDependenciesTest {
 
         gradle.withArgs("writeVersionsLock").buildsSuccessfully();
 
-        gradle.withArgs("checkUnusedDependencies", "--stacktrace", "--debug").buildsSuccessfully();
+        gradle.withArgs("checkUnusedDependencies", "--debug").buildsSuccessfully();
     }
 
     /**
