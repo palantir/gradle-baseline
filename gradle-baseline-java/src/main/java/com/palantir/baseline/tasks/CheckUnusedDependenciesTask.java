@@ -170,7 +170,8 @@ public abstract class CheckUnusedDependenciesTask extends DefaultTask {
         }));
     }
 
-    protected record ExplicitDependency(
+    // public because it needs to be able to be accessed by Gradle when Configuration Cache is enabled.
+    public record ExplicitDependency(
             String group,
             String name,
             @Nullable String classifier,
