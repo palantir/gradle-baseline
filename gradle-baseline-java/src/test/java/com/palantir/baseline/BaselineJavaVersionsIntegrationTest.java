@@ -267,6 +267,101 @@ class BaselineJavaVersionsIntegrationTest {
         }
     }
 
+    @Nested
+    class AllJavaVersionsUsed {
+        @BeforeEach
+        void beforeEach(RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                tasks.register('printAllJavaVersionsUsed') {
+                    inputs.property('allJavaVersionsUsed', project.extensions.javaVersions.allJavaVersionsUsed())
+                    doLast {
+                        println "allJavaVersionsUsed: ${inputs.properties.allJavaVersionsUsed.stream().sorted().toList()}"
+                    }
+                }
+                """);
+        }
+
+        @Test
+        void gathers_values_from_top_level_javaVersions_extension(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    libraryTarget = 11
+                    distributionTarget = 17
+                    runtime = 21
+                }
+                """);
+
+            InvocationResult result =
+                    gradle.withArgs("printAllJavaVersionsUsed").buildsSuccessfully();
+
+            result.assertThat().output().contains("allJavaVersionsUsed: [11, 17, 21]");
+        }
+
+        @Test
+        void gathers_values_from_javaVersion_extensions_in_all_projects_as_well(
+                GradleInvoker gradle, RootProject rootProject, SubProject subProject) {
+
+            rootProject.buildGradle().append("""
+                javaVersions {
+                    libraryTarget = 11
+                    distributionTarget = 17
+                    runtime = 21
+                }
+                """);
+
+            subProject.buildGradle().append("""
+                javaVersion {
+                    target = 23
+                    runtime = 24
+                }
+                """);
+
+            InvocationResult result =
+                    gradle.withArgs("printAllJavaVersionsUsed").buildsSuccessfully();
+
+            result.assertThat().output().contains("allJavaVersionsUsed: [11, 17, 21, 23, 24]");
+        }
+
+        @Test
+        void propagates_task_dependencies(GradleInvoker gradle, RootProject rootProject, SubProject subProject) {
+            rootProject.buildGradle().append("""
+                import com.palantir.baseline.plugins.javaversions.ChosenJavaVersion
+
+                def generateLibraryTarget = tasks.register('generateLibraryTarget')
+                def generateDistributionTarget = tasks.register('generateDistributionTarget')
+                def generateRuntime = tasks.register('generateRuntime')
+
+                javaVersions {
+                    libraryTarget().set(generateLibraryTarget.map { JavaLanguageVersion.of(11) })
+                    distributionTarget().set(generateDistributionTarget.map { ChosenJavaVersion.of(17) })
+                    runtime().set(generateRuntime.map { ChosenJavaVersion.of(21) })
+                }
+                """);
+
+            subProject.buildGradle().append("""
+                    import com.palantir.baseline.plugins.javaversions.ChosenJavaVersion
+
+                    def generateTarget = tasks.register('generateTarget')
+                    def generateRuntime = tasks.register('generateRuntime')
+
+                    javaVersion {
+                        target().set(generateTarget.map { ChosenJavaVersion.of(23) })
+                        runtime().set(generateRuntime.map { ChosenJavaVersion.of(24) })
+                    }
+                """);
+
+            InvocationResult result =
+                    gradle.withArgs("printAllJavaVersionsUsed").buildsSuccessfully();
+
+            result.assertThat().output().contains("allJavaVersionsUsed: [11, 17, 21, 23, 24]");
+            result.assertThat().task(":generateLibraryTarget").upToDate();
+            result.assertThat().task(":generateDistributionTarget").upToDate();
+            result.assertThat().task(":generateRuntime").upToDate();
+            result.assertThat().task(":subProject:generateTarget").upToDate();
+            result.assertThat().task(":subProject:generateRuntime").upToDate();
+        }
+    }
+
     private static final int BYTECODE_IDENTIFIER = 0xCAFEBABE;
 
     // See http://illegalargumentexception.blogspot.com/2009/07/java-finding-class-versions.html
