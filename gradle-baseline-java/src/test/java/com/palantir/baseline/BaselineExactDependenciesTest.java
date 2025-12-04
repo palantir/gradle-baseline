@@ -24,6 +24,7 @@ import com.palantir.gradle.testing.junit.DisabledConfigurationCache;
 import com.palantir.gradle.testing.junit.GradlePluginTests;
 import com.palantir.gradle.testing.project.RootProject;
 import com.palantir.gradle.testing.project.SubProject;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
@@ -32,11 +33,6 @@ import org.junit.jupiter.params.provider.ValueSource;
 @DisabledConfigurationCache
 public class BaselineExactDependenciesTest {
 
-    private void applyStandardPlugins(RootProject rootProject) {
-        rootProject.buildGradle().plugins().add("java");
-        rootProject.buildGradle().plugins().add("com.palantir.baseline-exact-dependencies");
-    }
-
     private String minimalJavaFile() {
         return """
             package pkg;
@@ -44,9 +40,14 @@ public class BaselineExactDependenciesTest {
             """;
     }
 
+    @BeforeEach
+    void beforeEach(RootProject rootProject) {
+        rootProject.buildGradle().plugins().add("java");
+        rootProject.buildGradle().plugins().add("com.palantir.baseline-exact-dependencies");
+    }
+
     @Test
     public void both_tasks_vacuously_pass_with_no_dependencies(GradleInvoker gradle, RootProject rootProject) {
-        applyStandardPlugins(rootProject);
         rootProject.mainSourceSet().java().writeClass(minimalJavaFile());
 
         gradle.withArgs("checkUnusedDependencies", "checkImplicitDependencies").buildsSuccessfully();
@@ -54,7 +55,6 @@ public class BaselineExactDependenciesTest {
 
     @Test
     public void both_tasks_work_with_different_gradle_versions(GradleInvoker gradle, RootProject rootProject) {
-        applyStandardPlugins(rootProject);
         rootProject.mainSourceSet().java().writeClass(minimalJavaFile());
 
         gradle.withArgs("checkUnusedDependencies", "checkImplicitDependencies").buildsSuccessfully();
@@ -63,13 +63,12 @@ public class BaselineExactDependenciesTest {
     @Test
     public void both_tasks_vacuously_pass_with_no_dependencies_when_entire_baseline_is_applied(
             GradleInvoker gradle, RootProject rootProject) {
-        applyStandardPlugins(rootProject);
         rootProject.buildGradle().plugins().add("com.palantir.baseline");
         rootProject.buildGradle().append("""
-                repositories {
-                    mavenCentral()
-                    mavenLocal() // for baseline-error-prone
-                }
+            repositories {
+                mavenCentral()
+                mavenLocal() // for baseline-error-prone
+            }
             """);
         rootProject.mainSourceSet().java().writeClass(minimalJavaFile());
 
@@ -78,7 +77,6 @@ public class BaselineExactDependenciesTest {
 
     @Test
     public void tasks_are_not_run_as_part_of_gradlew_check(GradleInvoker gradle, RootProject rootProject) {
-        applyStandardPlugins(rootProject);
         rootProject.mainSourceSet().java().writeClass(minimalJavaFile());
 
         InvocationResult result = gradle.withArgs("check").buildsSuccessfully();
@@ -89,7 +87,6 @@ public class BaselineExactDependenciesTest {
     @Test
     public void checkUnusedDependencies_fails_when_no_classes_are_referenced(
             GradleInvoker gradle, RootProject rootProject) {
-        applyStandardPlugins(rootProject);
         rootProject.buildGradle().append("""
             repositories {
                 mavenCentral()
@@ -109,7 +106,6 @@ public class BaselineExactDependenciesTest {
     @Test
     public void checkUnusedDependencies_passes_when_annotationProcessor_or_compileOnly_classes_are_not_referenced(
             GradleInvoker gradle, RootProject rootProject) {
-        applyStandardPlugins(rootProject);
         rootProject.buildGradle().append("""
             repositories {
                 mavenCentral()
@@ -131,7 +127,6 @@ public class BaselineExactDependenciesTest {
     @ValueSource(strings = {"checkUnusedDependencies", "checkImplicitDependencies"})
     public void task_correctly_picks_up_project_dependency_on_java_library(
             String task, GradleInvoker gradle, RootProject rootProject, SubProject needsBuildingFirst) {
-        applyStandardPlugins(rootProject);
         rootProject.buildGradle().append("""
             dependencies {
                 implementation project(':needsBuildingFirst')
@@ -159,7 +154,6 @@ public class BaselineExactDependenciesTest {
     @Test
     public void checkUnusedDependencies_is_successful_for_multi_source_project_dep(
             GradleInvoker gradle, RootProject rootProject, SubProject needsBuildingFirst) {
-        applyStandardPlugins(rootProject);
         rootProject.buildGradle().append("""
             dependencies {
                 implementation project(':needsBuildingFirst')
@@ -188,7 +182,6 @@ public class BaselineExactDependenciesTest {
     @Test
     public void checkUnusedDependenciesTest_passes_if_main_source_set_is_not_referenced_in_test(
             GradleInvoker gradle, RootProject rootProject) {
-        applyStandardPlugins(rootProject);
         rootProject.buildGradle().append("""
             repositories {
                 mavenCentral()
@@ -213,7 +206,6 @@ public class BaselineExactDependenciesTest {
     @Test
     public void checkUnusedDependenciesTest_passes_if_test_fixture_source_set_is_not_referenced_in_test(
             GradleInvoker gradle, RootProject rootProject) {
-        applyStandardPlugins(rootProject);
         rootProject.buildGradle().plugins().add("java-test-fixtures");
 
         InvocationResult result = gradle.withArgs("checkUnusedDependencies").buildsSuccessfully();
@@ -223,7 +215,6 @@ public class BaselineExactDependenciesTest {
     @Test
     public void checkImplicitDependencies_fails_when_a_class_is_imported_without_being_declared_as_a_dependency(
             GradleInvoker gradle, RootProject rootProject) {
-        applyStandardPlugins(rootProject);
         rootProject.buildGradle().append("""
             repositories {
                 mavenCentral()
@@ -314,7 +305,6 @@ public class BaselineExactDependenciesTest {
     @Test
     public void in_Gradle_8_3_and_later_you_can_set_the_toolchain_language_version_without_it_being_finalised(
             GradleInvoker gradle, RootProject rootProject) {
-        applyStandardPlugins(rootProject);
         rootProject.buildGradle().append("""
             pluginManager.withPlugin('java') {
                 java {
@@ -332,7 +322,6 @@ public class BaselineExactDependenciesTest {
     public void ensure_checkUnusedDependencies_works_with_gcv_when_project_is_excluded_from_gcv_locks(
             GradleInvoker gradle, RootProject rootProject) {
         // we set up a build file where GCV is disabled for that project but the plugin is still applied
-        applyStandardPlugins(rootProject);
         rootProject.buildGradle().plugins().add("com.palantir.consistent-versions");
         rootProject.buildGradle().plugins().add("java");
         rootProject.buildGradle().plugins().add("com.palantir.baseline-exact-dependencies");
@@ -390,7 +379,6 @@ public class BaselineExactDependenciesTest {
      */
     private void setupMultiProject(
             RootProject rootProject, SubProject subProjectNoDeps, SubProject subProjectWithDeps) {
-        applyStandardPlugins(rootProject);
         // Apply plugins to all projects individually
         rootProject.buildGradle().plugins().add("java");
         rootProject.buildGradle().plugins().add("com.palantir.baseline-exact-dependencies");
