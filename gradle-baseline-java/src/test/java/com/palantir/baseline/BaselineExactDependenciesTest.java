@@ -24,6 +24,7 @@ import com.palantir.gradle.testing.junit.DisabledConfigurationCache;
 import com.palantir.gradle.testing.junit.GradlePluginTests;
 import com.palantir.gradle.testing.project.RootProject;
 import com.palantir.gradle.testing.project.SubProject;
+import java.util.stream.Stream;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -380,12 +381,10 @@ public class BaselineExactDependenciesTest {
     private void setupMultiProject(
             RootProject rootProject, SubProject subProjectNoDeps, SubProject subProjectWithDeps) {
         // Apply plugins to all projects individually
-        rootProject.buildGradle().plugins().add("java");
-        rootProject.buildGradle().plugins().add("com.palantir.baseline-exact-dependencies");
-        subProjectNoDeps.buildGradle().plugins().add("java");
-        subProjectNoDeps.buildGradle().plugins().add("com.palantir.baseline-exact-dependencies");
-        subProjectWithDeps.buildGradle().plugins().add("java");
-        subProjectWithDeps.buildGradle().plugins().add("com.palantir.baseline-exact-dependencies");
+        Stream.of(rootProject, subProjectNoDeps, subProjectWithDeps).forEach(project -> {
+            project.buildGradle().plugins().add("java");
+            project.buildGradle().plugins().add("com.palantir.baseline-exact-dependencies");
+        });
 
         rootProject.buildGradle().append("""
             dependencies {
