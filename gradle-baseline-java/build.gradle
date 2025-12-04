@@ -51,6 +51,7 @@ dependencies {
     gradlePluginForTesting 'com.palantir.gradle.jdks:gradle-jdks-settings'
     testRuntimeOnly 'org.unbroken-dome.gradle-plugins:gradle-testsets-plugin'
     gradlePluginForTesting 'org.unbroken-dome.gradle-plugins:gradle-testsets-plugin'
+    gradlePluginForTesting 'com.palantir.gradle.consistentversions:gradle-consistent-versions'
 
     // necessary because of https://github.com/gradle/gradle/issues/16774
     def toolingApiBuildersJar = (project as ProjectInternal).services.get(ModuleRegistry.class)
