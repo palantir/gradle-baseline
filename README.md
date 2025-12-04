@@ -22,7 +22,6 @@ _Baseline is a family of Gradle plugins for configuring Java projects with sensi
 | `com.palantir.baseline-reproducibility`            | Sensible defaults to ensure Jar, Tar and Zip tasks can be reproduced
 | `com.palantir.baseline-exact-dependencies`         | Ensures projects explicitly declare all the dependencies they rely on, no more and no less
 | `com.palantir.baseline-encoding`                   | Ensures projects use the UTF-8 encoding in compile tasks.
-| `com.palantir.baseline-release-compatibility`      | Ensures projects targeting older JREs only compile against classes and methods available in those JREs.
 | `com.palantir.baseline-testing`                    | Configures test tasks to dump heap dumps (hprof files) for convenient debugging
 | `com.palantir.baseline-test-heap`                  | Increases the default Test task heap from 512m to 2g.
 | `com.palantir.baseline-java-compiler-diagnostics`  | Applies the `-Xmaxwarns` and `-Xmaxwarns` compiler options with a very large limit to avoid truncating failure info.

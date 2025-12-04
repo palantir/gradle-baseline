@@ -157,13 +157,6 @@ gradlePlugin {
             description = 'Baseline Java is a collection of Gradle plugins for configuring code quality tools in builds.'
             tags.set(['java', 'checkstyle', 'code quality'])
         }
-        baselineReleaseCompatibility {
-            id = 'com.palantir.baseline-release-compatibility'
-            displayName = 'Palantir Baseline Release Compatibility Plugin'
-            implementationClass = 'com.palantir.baseline.plugins.BaselineReleaseCompatibility'
-            description = 'Baseline Java is a collection of Gradle plugins for configuring code quality tools in builds.'
-            tags.set(['java', 'checkstyle', 'code quality'])
-        }
         baselinePreferProjectModules {
             id = 'com.palantir.baseline-prefer-project-modules'
             displayName = 'Palantir Baseline Prefer Project Modules Plugin'
