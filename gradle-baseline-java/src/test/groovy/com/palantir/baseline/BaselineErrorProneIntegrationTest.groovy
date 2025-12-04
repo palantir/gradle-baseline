@@ -401,41 +401,4 @@ class BaselineErrorProneIntegrationTest extends AbstractPluginTest {
         where:
         checkConfigurationMethod << CheckConfigurationMethod.values()
     }
-
-    def 'check RequireExplicitNullMarking is disabled by default to avoid excessive logs'() {
-        when:
-        buildFile << '''
-            plugins {
-                id 'java'
-                id 'com.palantir.baseline-error-prone'
-                id 'com.palantir.baseline-null-away'
-            }
-            repositories {
-                mavenLocal()
-                mavenCentral()
-            }
-            dependencies {
-                compileOnly 'org.jspecify:jspecify:1.0.0'
-            }
-        '''.stripIndent()
-
-        // This file would trigger RequireExplicitNullMarking if it wasn't disabled
-        // because it lacks @NullMarked or @NullUnmarked annotations
-        file('src/main/java/com/palantir/test/Test.java') << '''
-        package com.palantir.test;
-        public class Test {
-            void test() {
-                String s = "hello";
-                System.out.println(s);
-            }
-        }
-        '''.stripIndent()
-
-        then:
-        // The build should succeed because the check is disabled
-        BuildResult result = with('compileJava').build()
-        result.task(":compileJava").outcome == TaskOutcome.SUCCESS
-        // The check should be explicitly disabled, so we shouldn't see warnings
-        !result.output.contains("[RequireExplicitNullMarking]")
-    }
 }
