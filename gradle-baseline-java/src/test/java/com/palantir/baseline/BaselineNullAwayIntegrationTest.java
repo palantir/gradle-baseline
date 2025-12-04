@@ -130,12 +130,6 @@ class BaselineNullAwayIntegrationTest {
             GradleInvoker gradle, RootProject rootProject) {
         standardBuildFile(rootProject);
 
-        rootProject.buildGradle().append("""
-            dependencies {
-                compileOnly 'org.jspecify:jspecify:1.0.0'
-            }
-            """);
-
         // This file would trigger RequireExplicitNullMarking if it wasn't disabled
         // because it lacks @NullMarked or @NullUnmarked annotations
         // See https://github.com/uber/NullAway/issues/1363
