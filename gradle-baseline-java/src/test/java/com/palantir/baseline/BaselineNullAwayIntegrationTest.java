@@ -124,4 +124,28 @@ class BaselineNullAwayIntegrationTest {
 
         gradle.withArgs("compileJava").buildsSuccessfully();
     }
+
+    @Test
+    void requireExplicitNullMarking_is_disabled_by_default_to_avoid_excessive_logs(
+            GradleInvoker gradle, RootProject rootProject) {
+        standardBuildFile(rootProject);
+
+        // This file would trigger RequireExplicitNullMarking if it wasn't disabled
+        // because it lacks @NullMarked or @NullUnmarked annotations
+        // See https://github.com/uber/NullAway/issues/1363
+        rootProject.mainSourceSet().java().writeClass("""
+            package com.palantir.test;
+            public class Test {
+                void test() {
+                    String s = "hello";
+                    System.out.println(s);
+                }
+            }
+            """);
+
+        InvocationResult result = gradle.withArgs("compileJava").buildsSuccessfully();
+
+        // The check should be explicitly disabled, so we shouldn't see warnings
+        assertThat(result).output().doesNotContain("[RequireExplicitNullMarking]");
+    }
 }

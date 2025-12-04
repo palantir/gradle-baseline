@@ -70,6 +70,9 @@ public final class BaselineNullAway implements Plugin<Project> {
             @Override
             public void execute(ErrorProneOptions options) {
                 options.option("NullAway:AnnotatedPackages", String.join(",", DEFAULT_ANNOTATED_PACKAGES));
+                // 2025-12-04: Disabled to avoid excessive logs
+                // See https://github.com/uber/NullAway/issues/1363
+                options.disable("RequireExplicitNullMarking");
                 // Relax some checks for test code
                 if (options.getCompilingTestOnlyCode().get()) {
                     // NullAway has some poor interactions with mockito and
