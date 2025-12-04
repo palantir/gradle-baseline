@@ -16,15 +16,19 @@
 
 package com.palantir.baseline.plugins.javaversions;
 
+import java.util.Set;
 import javax.inject.Inject;
-import org.gradle.api.Project;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
+import org.gradle.api.provider.SetProperty;
+import org.gradle.jvm.toolchain.JavaLanguageVersion;
 
 /**
  * Extension named {@code javaVersion} used to set the
  * target and runtime java versions used for a single project.
  */
-public class BaselineJavaVersionExtension {
+public abstract class BaselineJavaVersionExtension {
 
     private final Property<ChosenJavaVersion> target;
     private final Property<ChosenJavaVersion> runtime;
@@ -32,10 +36,13 @@ public class BaselineJavaVersionExtension {
     private final Property<Boolean> overrideLibraryAutoDetection;
 
     @Inject
-    public BaselineJavaVersionExtension(Project project) {
-        target = project.getObjects().property(ChosenJavaVersion.class);
-        runtime = project.getObjects().property(ChosenJavaVersion.class);
-        overrideLibraryAutoDetection = project.getObjects().property(Boolean.class);
+    protected abstract ObjectFactory getObjectFactory();
+
+    @Inject
+    public BaselineJavaVersionExtension() {
+        target = getObjectFactory().property(ChosenJavaVersion.class);
+        runtime = getObjectFactory().property(ChosenJavaVersion.class);
+        overrideLibraryAutoDetection = getObjectFactory().property(Boolean.class);
 
         target.finalizeValueOnRead();
         runtime.finalizeValueOnRead();
@@ -84,5 +91,15 @@ public class BaselineJavaVersionExtension {
 
     public final void library() {
         overrideLibraryAutoDetection.set(true);
+    }
+
+    public final Provider<Set<JavaLanguageVersion>> allJavaVersionsUsed() {
+        SetProperty<JavaLanguageVersion> allJavaVersionsUsed =
+                getObjectFactory().setProperty(JavaLanguageVersion.class);
+
+        allJavaVersionsUsed.add(target.map(ChosenJavaVersion::javaLanguageVersion));
+        allJavaVersionsUsed.add(runtime.map(ChosenJavaVersion::javaLanguageVersion));
+
+        return allJavaVersionsUsed;
     }
 }

@@ -443,6 +443,58 @@ class BaselineJavaVersionIntegrationTest {
         }
     }
 
+    @Nested
+    class AllJavaVersionsUsed {
+        @BeforeEach
+        void beforeEach(RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                tasks.register('printAllJavaVersionsUsed') {
+                    inputs.property('allJavaVersionsUsed', project.extensions.javaVersion.allJavaVersionsUsed())
+                    doLast {
+                        println "allJavaVersionsUsed: ${inputs.properties.allJavaVersionsUsed.stream().sorted().toList()}"
+                    }
+                }
+                """);
+        }
+
+        @Test
+        void gathers_target_and_runtime_values(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                javaVersion {
+                    target = 17
+                    runtime = 21
+                }
+                """);
+
+            InvocationResult result =
+                    gradle.withArgs("printAllJavaVersionsUsed").buildsSuccessfully();
+
+            result.assertThat().output().contains("allJavaVersionsUsed: [17, 21]");
+        }
+
+        @Test
+        void propagates_task_dependencies(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                    import com.palantir.baseline.plugins.javaversions.ChosenJavaVersion
+
+                    def generateTarget = tasks.register('generateTarget')
+                    def generateRuntime = tasks.register('generateRuntime')
+
+                    javaVersion {
+                        target().set(generateTarget.map { ChosenJavaVersion.of(17) })
+                        runtime().set(generateRuntime.map { ChosenJavaVersion.of(21) })
+                    }
+                """);
+
+            InvocationResult result =
+                    gradle.withArgs("printAllJavaVersionsUsed").buildsSuccessfully();
+
+            result.assertThat().output().contains("allJavaVersionsUsed: [17, 21]");
+            result.assertThat().task(":generateTarget").upToDate();
+            result.assertThat().task(":generateRuntime").upToDate();
+        }
+    }
+
     private static final int BYTECODE_IDENTIFIER = 0xCAFEBABE;
 
     // See http://illegalargumentexception.blogspot.com/2009/07/java-finding-class-versions.html

@@ -18,11 +18,15 @@ package com.palantir.baseline.plugins.javaversions;
 
 import com.palantir.gradle.utils.lazilyconfiguredmapping.LazilyConfiguredMapping;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
 import javax.inject.Inject;
 import org.gradle.api.GradleException;
 import org.gradle.api.Project;
+import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Property;
+import org.gradle.api.provider.Provider;
+import org.gradle.api.provider.SetProperty;
 import org.gradle.jvm.toolchain.JavaInstallationMetadata;
 import org.gradle.jvm.toolchain.JavaLanguageVersion;
 
@@ -30,7 +34,8 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion;
  * Extension named {@code javaVersions} on the root project used to configure all java modules
  * with consistent java toolchains.
  */
-public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtensionSetters {
+public abstract class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtensionSetters {
+    private final Project rootProject;
     private final Property<JavaLanguageVersion> libraryTarget;
     private final Property<ChosenJavaVersion> distributionTarget;
     private final Property<ChosenJavaVersion> runtime;
@@ -39,11 +44,15 @@ public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtens
     private final Property<Boolean> setupJdkToolchains;
 
     @Inject
-    public BaselineJavaVersionsExtension(Project project) {
-        this.libraryTarget = project.getObjects().property(JavaLanguageVersion.class);
-        this.distributionTarget = project.getObjects().property(ChosenJavaVersion.class);
-        this.runtime = project.getObjects().property(ChosenJavaVersion.class);
-        this.setupJdkToolchains = project.getObjects().property(Boolean.class);
+    protected abstract ObjectFactory getObjectFactory();
+
+    @Inject
+    public BaselineJavaVersionsExtension(Project rootProject) {
+        this.rootProject = rootProject;
+        this.libraryTarget = getObjectFactory().property(JavaLanguageVersion.class);
+        this.distributionTarget = getObjectFactory().property(ChosenJavaVersion.class);
+        this.runtime = getObjectFactory().property(ChosenJavaVersion.class);
+        this.setupJdkToolchains = getObjectFactory().property(Boolean.class);
         this.setupJdkToolchains.convention(true);
 
         // distribution defaults to the library value
@@ -135,5 +144,24 @@ public class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtens
      */
     public final Property<Boolean> getSetupJdkToolchains() {
         return setupJdkToolchains;
+    }
+
+    public final Provider<Set<JavaLanguageVersion>> allJavaVersionsUsed() {
+        SetProperty<JavaLanguageVersion> allJavaVersionsUsed =
+                getObjectFactory().setProperty(JavaLanguageVersion.class);
+
+        allJavaVersionsUsed.add(libraryTarget);
+        allJavaVersionsUsed.add(distributionTarget.map(ChosenJavaVersion::javaLanguageVersion));
+        allJavaVersionsUsed.add(runtime.map(ChosenJavaVersion::javaLanguageVersion));
+
+        rootProject.allprojects(proj -> {
+            proj.getPluginManager().withPlugin("com.palantir.baseline-java-version", unused -> {
+                BaselineJavaVersionExtension projectVersions =
+                        proj.getExtensions().getByType(BaselineJavaVersionExtension.class);
+                allJavaVersionsUsed.addAll(projectVersions.allJavaVersionsUsed());
+            });
+        });
+
+        return allJavaVersionsUsed;
     }
 }
