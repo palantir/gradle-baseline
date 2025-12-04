@@ -64,6 +64,10 @@ dependencies {
     compileOnly 'org.immutables:value::annotations'
 }
 
+// Used in BaselineConfigIntegrationTest
+tasks.test.dependsOn ':gradle-baseline-java-config:publishToMavenLocal'
+tasks.test.dependsOn tasks.named('publishToMavenLocal')
+
 // Incorrectly identifies tests as jqwuik usage
 tasks.checkJUnitDependencies.enabled = false
 
