@@ -22,6 +22,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import com.palantir.baseline.gradlejdks.InheritGradleJdks;
 import com.palantir.gradle.testing.execution.GradleInvoker;
 import com.palantir.gradle.testing.execution.InvocationResult;
+import com.palantir.gradle.testing.junit.DisabledConfigurationCache;
 import com.palantir.gradle.testing.junit.GradlePluginTests;
 import com.palantir.gradle.testing.project.RootProject;
 import java.io.DataInputStream;
@@ -35,6 +36,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 @GradlePluginTests
+@DisabledConfigurationCache
 class BaselineJavaVersionIntegrationTest {
     private static final int JAVA_11_BYTECODE = 55;
     private static final int JAVA_17_BYTECODE = 61;
@@ -782,6 +784,58 @@ class BaselineJavaVersionIntegrationTest {
             InvocationResult result = gradle.withArgs("check", "--dry-run").buildsSuccessfully();
 
             assertThat(result).output().contains(":checkRuntimeClasspathCompatible");
+        }
+    }
+
+    @Nested
+    class AllJavaVersionsUsed {
+        @BeforeEach
+        void beforeEach(RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                tasks.register('printAllJavaVersionsUsed') {
+                    inputs.property('allJavaVersionsUsed', project.extensions.javaVersion.allJavaVersionsUsed())
+                    doLast {
+                        println "allJavaVersionsUsed: ${inputs.properties.allJavaVersionsUsed.stream().sorted().toList()}"
+                    }
+                }
+                """);
+        }
+
+        @Test
+        void gathers_target_and_runtime_values(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                javaVersion {
+                    target = 17
+                    runtime = 21
+                }
+                """);
+
+            InvocationResult result =
+                    gradle.withArgs("printAllJavaVersionsUsed").buildsSuccessfully();
+
+            result.assertThat().output().contains("allJavaVersionsUsed: [17, 21]");
+        }
+
+        @Test
+        void propagates_task_dependencies(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                    import com.palantir.baseline.plugins.javaversions.ChosenJavaVersion
+
+                    def generateTarget = tasks.register('generateTarget')
+                    def generateRuntime = tasks.register('generateRuntime')
+
+                    javaVersion {
+                        target().set(generateTarget.map { ChosenJavaVersion.of(17) })
+                        runtime().set(generateRuntime.map { ChosenJavaVersion.of(21) })
+                    }
+                """);
+
+            InvocationResult result =
+                    gradle.withArgs("printAllJavaVersionsUsed").buildsSuccessfully();
+
+            result.assertThat().output().contains("allJavaVersionsUsed: [17, 21]");
+            result.assertThat().task(":generateTarget").upToDate();
+            result.assertThat().task(":generateRuntime").upToDate();
         }
     }
 

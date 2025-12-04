@@ -222,4 +222,5 @@ if (gradle.startParameter.isWriteDependencyLocks()) {
 
 gradleTestUtils {
     gradleVersions = ['8.14.3']
+    configurationCacheEnabled = true
 }
