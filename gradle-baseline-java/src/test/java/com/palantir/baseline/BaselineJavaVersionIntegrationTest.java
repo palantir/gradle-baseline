@@ -805,6 +805,7 @@ class BaselineJavaVersionIntegrationTest {
         void gathers_target_and_runtime_values(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
+                    javaCompiler = 25
                     target = 17
                     runtime = 21
                 }
@@ -813,7 +814,7 @@ class BaselineJavaVersionIntegrationTest {
             InvocationResult result =
                     gradle.withArgs("printAllJavaVersionsUsed").buildsSuccessfully();
 
-            result.assertThat().output().contains("allJavaVersionsUsed: [17, 21]");
+            result.assertThat().output().contains("allJavaVersionsUsed: [17, 21, 25]");
         }
 
         @Test
@@ -821,10 +822,12 @@ class BaselineJavaVersionIntegrationTest {
             rootProject.buildGradle().append("""
                     import com.palantir.baseline.plugins.javaversions.ChosenJavaVersion
 
+                    def generateJavaCompiler = tasks.register('generateJavaCompiler')
                     def generateTarget = tasks.register('generateTarget')
                     def generateRuntime = tasks.register('generateRuntime')
 
                     javaVersion {
+                        javaCompiler().set(generateJavaCompiler.map { JavaLanguageVersion.of(25) })
                         target().set(generateTarget.map { ChosenJavaVersion.of(17) })
                         runtime().set(generateRuntime.map { ChosenJavaVersion.of(21) })
                     }
@@ -833,7 +836,8 @@ class BaselineJavaVersionIntegrationTest {
             InvocationResult result =
                     gradle.withArgs("printAllJavaVersionsUsed").buildsSuccessfully();
 
-            result.assertThat().output().contains("allJavaVersionsUsed: [17, 21]");
+            result.assertThat().output().contains("allJavaVersionsUsed: [17, 21, 25]");
+            result.assertThat().task(":generateJavaCompiler").upToDate();
             result.assertThat().task(":generateTarget").upToDate();
             result.assertThat().task(":generateRuntime").upToDate();
         }

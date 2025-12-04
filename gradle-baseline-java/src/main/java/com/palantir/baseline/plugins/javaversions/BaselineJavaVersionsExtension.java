@@ -177,6 +177,7 @@ public abstract class BaselineJavaVersionsExtension implements BaselineJavaVersi
         SetProperty<JavaLanguageVersion> allJavaVersionsUsed =
                 getObjectFactory().setProperty(JavaLanguageVersion.class);
 
+        allJavaVersionsUsed.add(javaCompiler);
         allJavaVersionsUsed.add(libraryTarget);
         allJavaVersionsUsed.add(distributionTarget.map(ChosenJavaVersion::javaLanguageVersion));
         allJavaVersionsUsed.add(runtime.map(ChosenJavaVersion::javaLanguageVersion));
