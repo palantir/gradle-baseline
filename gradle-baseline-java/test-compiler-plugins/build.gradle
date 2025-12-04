@@ -28,3 +28,9 @@ publishing {
         }
     }
 }
+
+// We only want maven local publishing, which has type `PublishToMavenLocal`.
+// Disable all other remote maven publishes.
+tasks.withType(PublishToMavenRepository).configureEach {
+    enabled = false
+}
