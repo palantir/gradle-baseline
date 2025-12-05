@@ -72,25 +72,6 @@ allprojects {
         }
     }
 
-    pluginManager.withPlugin('net.ltgt.errorprone') {
-        dependencies {
-            // This forces all errorprone configurations to use the same versions of dependencies used in the baseline-error-prone
-            // repo at the time the baseline-error-prone was published (notably, the same version of error-prone itself). This
-            // only works as GCV includes all the constraints from the `versions.props` in the `<dependencyManagement>` section
-            // of the pom (like a bom would). We need this as when there are error-prone breaks, if the version of
-            // error-prone is forced to be the same between the error-prone running this build and the error-prone being
-            // used for compilation, we can't move past the breaks as our baseline-error-prones in this build are broken by
-            // the new version of error-prone. So we force error-prone in this build back to the version that
-            // baseline-error-prone expects while still using the new error-prone for compilation.
-            // This trick could conceivable be used for suppressible-error-prone consumers in the gradle-suppressible-error-prone
-            // plugin, but this would stop the version of error_prone_core etc lining up with error_prone_annotation(s) that
-            // is being used by dependencies, which is less than ideal.
-            // If baseline-error-prone was ever moved out of the gradle-baseline repo, this would not be needed in
-            // gradle-baseline anymore.
-            errorprone enforcedPlatform('com.palantir.baseline:baseline-error-prone')
-        }
-    }
-
     apply plugin: 'com.palantir.java-format'
     apply plugin: 'com.palantir.jakarta-package-alignment'
 

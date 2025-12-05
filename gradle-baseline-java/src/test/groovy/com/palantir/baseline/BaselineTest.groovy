@@ -45,6 +45,7 @@ class BaselineTest extends Specification {
     void hasAllPlugins(Project p) {
         assert p.pluginManager.hasPlugin('com.palantir.baseline-checkstyle')
         assert p.pluginManager.hasPlugin('com.palantir.baseline-eclipse')
+        // TEMPHACK(okelvin): remove this to decouple baseline-error-prone
         assert p.pluginManager.hasPlugin('com.palantir.baseline-error-prone')
         assert p.pluginManager.hasPlugin('com.palantir.baseline-idea')
         assert p.pluginManager.hasPlugin('com.palantir.baseline-class-uniqueness')

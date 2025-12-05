@@ -10,8 +10,6 @@ buildscript {
 apply plugin: 'com.palantir.jdks.settings'
 rootProject.name = "gradle-baseline"
 
-include "baseline-error-prone"
-include "baseline-null-away"
 include "gradle-baseline-java"
 include "gradle-baseline-java:test-compiler-plugins"
 include "gradle-baseline-java-config"

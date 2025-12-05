@@ -11,12 +11,10 @@ import org.gradle.api.internal.project.ProjectInternal
 dependencies {
     implementation gradleApi()
     implementation 'com.palantir.gradle.idea-configuration:gradle-idea-configuration'
-    implementation 'com.palantir.suppressible-error-prone:gradle-suppressible-error-prone'
     implementation 'org.apache.commons:commons-lang3'
     implementation 'com.diffplug.spotless:spotless-plugin-gradle'
     implementation 'com.github.ben-manes.caffeine:caffeine'
     implementation 'com.google.guava:guava'
-    implementation 'net.ltgt.gradle:gradle-errorprone-plugin'
     implementation 'org.apache.maven.shared:maven-dependency-analyzer', {
         // Use maven-core rather than the legacy maven-project component
         exclude group: 'org.apache.maven', module: 'maven-project'
@@ -31,6 +29,11 @@ dependencies {
     implementation 'com.palantir.gradle.utils:environment-variables'
     implementation 'com.palantir.gradle.failure-reports:gradle-failure-reports-exceptions'
 
+    // TEMPHACK(okelvin): remove this to decouple baseline-error-prone
+    api 'com.palantir.baseline-error-prone:gradle-baseline-error-prone'
+    testImplementation 'com.palantir.baseline-error-prone:gradle-baseline-error-prone'
+    gradlePluginForTesting 'com.palantir.baseline-error-prone:gradle-baseline-error-prone'
+
     runtimeOnly 'com.palantir.javaformat:gradle-palantir-java-format'
 
     testImplementation gradleTestKit()
@@ -41,7 +44,6 @@ dependencies {
     testImplementation 'net.lingala.zip4j:zip4j'
     testImplementation 'org.assertj:assertj-core'
     testImplementation 'org.junit.jupiter:junit-jupiter'
-    testImplementation project(':baseline-error-prone')
     testRuntimeOnly 'org.junit.vintage:junit-vintage-engine', {
         because 'allows JUnit 3 and JUnit 4 tests to run'
     }
@@ -67,12 +69,10 @@ dependencies {
     compileOnly 'org.immutables:value::annotations'
 }
 
-// Baseline errorprone needs to give jars to the compilation process to enable testing, so we publish to maven
-// local first then they are available to the test process.
+// Used in BaselineJavaVersionIntegrationTest
 tasks.test.dependsOn ':gradle-baseline-java:test-compiler-plugins:publishToMavenLocal'
+// Used in BaselineConfigIntegrationTest
 tasks.test.dependsOn ':gradle-baseline-java-config:publishToMavenLocal'
-tasks.test.dependsOn ':baseline-error-prone:publishToMavenLocal'
-tasks.test.dependsOn ':baseline-null-away:publishToMavenLocal'
 tasks.test.dependsOn tasks.named('publishToMavenLocal')
 
 // Incorrectly identifies tests as jqwuik usage
@@ -82,10 +82,9 @@ test {
     environment 'CIRCLE_ARTIFACTS', "${buildDir}/artifacts"
     environment 'CIRCLE_TEST_REPORTS', "${buildDir}/circle-reports"
 
-    // This sets the baselineErrorProneGradle property so that the tests know which version of baseline-error-prone
-    // to request from mavenLocal()
-    environment 'ORG_GRADLE_PROJECT_baselineErrorProneVersion', project.version
     environment 'ORG_GRADLE_PROJECT_baselineTestCompilerPluginsVersion', project.version
+    // TEMPHACK(okelvin): remove this to decouple baseline-error-prone
+    environment 'ORG_GRADLE_PROJECT_baselineErrorProneVersion', "0.2.0"
 
     systemProperty 'ignoreDeprecations', 'true'
 }
@@ -113,13 +112,6 @@ gradlePlugin {
             id = 'com.palantir.baseline-config'
             displayName = 'Palantir Baseline Configuration Plugin'
             implementationClass = 'com.palantir.baseline.plugins.BaselineConfig'
-            description = 'Baseline Java is a collection of Gradle plugins for configuring code quality tools in builds.'
-            tags.set(['java', 'checkstyle', 'code quality'])
-        }
-        baselineErrorPronePlugin {
-            id = 'com.palantir.baseline-error-prone'
-            displayName = 'Palantir Baseline Error Prone Plugin'
-            implementationClass = 'com.palantir.baseline.plugins.BaselineErrorProne'
             description = 'Baseline Java is a collection of Gradle plugins for configuring code quality tools in builds.'
             tags.set(['java', 'checkstyle', 'code quality'])
         }
