@@ -56,7 +56,7 @@ com.google.googlejavaformat:google-java-format:1.27.0 (2 constraints: b6258eff)
 
 com.google.guava:failureaccess:1.0.3 (2 constraints: f3154f13)
 
-com.google.guava:guava:33.5.0-jre (23 constraints: 58c36f33)
+com.google.guava:guava:33.5.0-jre (23 constraints: 59c39d33)
 
 com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava (1 constraints: bd17c918)
 
@@ -100,7 +100,7 @@ com.squareup.okio:okio:3.6.0 (1 constraints: 530c38fd)
 
 com.squareup.okio:okio-jvm:3.6.0 (1 constraints: 500ad3b9)
 
-com.uber.nullaway:nullaway:0.12.13 (1 constraints: 69059340)
+com.uber.nullaway:nullaway:0.12.14 (1 constraints: 6a059440)
 
 commons-codec:commons-codec:1.17.1 (2 constraints: 1b1ee786)
 
@@ -284,9 +284,9 @@ com.palantir.sls.versions:sls-versions:1.8.0 (1 constraints: 561bda45)
 
 com.palantir.tokens:auth-tokens:3.20.0 (2 constraints: 5315c6d9)
 
-com.palantir.tritium:tritium-ids:0.117.0 (1 constraints: fc0f93a6)
+com.palantir.tritium:tritium-ids:0.120.0 (1 constraints: fc0f93a6)
 
-com.palantir.tritium:tritium-registry:0.117.0 (1 constraints: 6b05a140)
+com.palantir.tritium:tritium-registry:0.120.0 (1 constraints: 65059040)
 
 commons-io:commons-io:2.21.0 (4 constraints: 463e391b)
 
