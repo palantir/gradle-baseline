@@ -371,12 +371,23 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                             target,
                             runtime);
 
-            if (target.enablePreview() && !target.equals(runtime)) {
-                throw new GradleException(String.format(
-                        "Runtime Java version (%s) must be exactly the same as the compilation target (%s) in %s, "
-                                + "because --enable-preview is enabled. Otherwise Java will fail to start. See "
-                                + "https://openjdk.org/jeps/12.",
-                        runtime, target, getProjectDisplayName().get()));
+            if (target.enablePreview()) {
+                if (!target.equals(runtime)) {
+                    throw new GradleException(String.format(
+                            "Runtime Java version (%s) must be exactly the same as the compilation target (%s) in %s, "
+                                    + "because --enable-preview is enabled. Otherwise Java will fail to start. See "
+                                    + "https://openjdk.org/jeps/12.",
+                            runtime, target, getProjectDisplayName().get()));
+                }
+
+                if (!target.javaLanguageVersion().equals(javaCompiler)) {
+                    throw new GradleException(String.format(
+                            "The version of the Java Compiler (%s) must be exactly the same as the compilation target"
+                                    + " (%s) in %s, because --enable-preview is enabled. Otherwise the preview feature"
+                                    + " will not necessarily be available in the compiler."
+                                    + " See https://openjdk.org/jeps/12.",
+                            javaCompiler, target, getProjectDisplayName().get()));
+                }
             }
 
             if (target.javaLanguageVersion().asInt()

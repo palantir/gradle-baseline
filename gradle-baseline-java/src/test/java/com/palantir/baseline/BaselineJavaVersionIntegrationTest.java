@@ -815,6 +815,41 @@ class BaselineJavaVersionIntegrationTest {
         }
 
         @Test
+        void verification_should_fail_when_preview_target_is_not_the_same_version_as_javaCompiler(
+                GradleInvoker gradle, RootProject rootProject) {
+
+            rootProject.buildGradle().append("""
+                javaVersion {
+                    javaCompiler = 21
+                    target = '17_PREVIEW'
+                    runtime = '17_PREVIEW'
+                }
+                """);
+
+            InvocationResult result = gradle.withArgs("checkJavaVersions").buildsWithFailure();
+
+            result.assertThat()
+                    .output()
+                    .contains("The version of the Java Compiler (21) must be exactly the same as the compilation target"
+                            + " (17_PREVIEW) in root project 'root', because --enable-preview is enabled.");
+        }
+
+        @Test
+        void verification_should_succeed_when_preview_target_is_the_same_version_as_javaCompiler_and_runtime(
+                GradleInvoker gradle, RootProject rootProject) {
+
+            rootProject.buildGradle().append("""
+                javaVersion {
+                    javaCompiler = 17
+                    target = '17_PREVIEW'
+                    runtime = '17_PREVIEW'
+                }
+                """);
+
+            gradle.withArgs("checkJavaVersions").buildsSuccessfully();
+        }
+
+        @Test
         void verification_should_succeed_when_target_and_runtime_versions_match(
                 GradleInvoker gradle, RootProject rootProject) {
 
