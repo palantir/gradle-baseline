@@ -70,6 +70,8 @@ public final class BaselineJavaVersions implements Plugin<Project> {
         BaselineJavaVersionExtension projectVersions =
                 project.getExtensions().getByType(BaselineJavaVersionExtension.class);
 
+        projectVersions.javaCompiler().convention(rootExtension.javaCompiler());
+
         Provider<ChosenJavaVersion> suggestedTarget = project.provider(() -> {
             IsLibraryWithReason isLibraryWithReason = isLibrary(project, projectVersions);
             log.info("{} is {}", project.getDisplayName(), isLibraryWithReason);

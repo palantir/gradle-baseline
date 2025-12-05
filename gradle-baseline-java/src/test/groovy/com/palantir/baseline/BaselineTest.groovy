@@ -48,7 +48,6 @@ class BaselineTest extends Specification {
         // TEMPHACK(okelvin): remove this to decouple baseline-error-prone
         assert p.pluginManager.hasPlugin('com.palantir.baseline-error-prone')
         assert p.pluginManager.hasPlugin('com.palantir.baseline-idea')
-        assert p.pluginManager.hasPlugin('com.palantir.baseline-release-compatibility')
         assert p.pluginManager.hasPlugin('com.palantir.baseline-class-uniqueness')
     }
 

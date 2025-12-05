@@ -57,7 +57,6 @@ public final class Baseline implements Plugin<Project> {
             proj.getPluginManager().apply(BaselineReproducibility.class);
             proj.getPluginManager().apply(BaselineClassUniquenessPlugin.class);
             proj.getPluginManager().apply(BaselineExactDependencies.class);
-            proj.getPluginManager().apply(BaselineReleaseCompatibility.class);
             proj.getPluginManager().apply(BaselineTesting.class);
             proj.getPluginManager().apply(BaselineTestHeap.class);
             proj.getPluginManager().apply(BaselineJavaCompilerDiagnostics.class);

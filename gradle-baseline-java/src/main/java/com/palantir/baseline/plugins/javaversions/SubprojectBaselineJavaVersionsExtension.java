@@ -29,36 +29,41 @@ public class SubprojectBaselineJavaVersionsExtension implements BaselineJavaVers
     }
 
     @Override
+    public final void setJavaCompiler(int value) {
+        throwCannotSetFromSubproject();
+    }
+
+    @Override
     public final void setLibraryTarget(int _value) {
-        throw throwCannotSetFromSubproject();
+        throwCannotSetFromSubproject();
     }
 
     @Override
     public final void setLibraryTarget(String value) {
-        throw throwCannotSetFromSubproject();
+        throwCannotSetFromSubproject();
     }
 
     @Override
     public final void setDistributionTarget(int _value) {
-        throw throwCannotSetFromSubproject();
+        throwCannotSetFromSubproject();
     }
 
     @Override
     public final void setDistributionTarget(String _value) {
-        throw throwCannotSetFromSubproject();
+        throwCannotSetFromSubproject();
     }
 
     @Override
     public final void setRuntime(int _value) {
-        throw throwCannotSetFromSubproject();
+        throwCannotSetFromSubproject();
     }
 
     @Override
     public final void setRuntime(String _value) {
-        throw throwCannotSetFromSubproject();
+        throwCannotSetFromSubproject();
     }
 
-    private RuntimeException throwCannotSetFromSubproject() {
+    private void throwCannotSetFromSubproject() {
         throw new GradleException("The javaVersions extension can only be used from the root project."
                 + " Did you mean javaVersion, which can be used to override on a project-by-project basis?"
                 + " You used it from "

@@ -80,6 +80,32 @@ class BaselineJavaVersionIntegrationTest {
         }
         """;
 
+    private static final String JAVA_21_SOURCE_FEATURE_CODE = """
+        public class Main {
+            sealed interface MyUnion {
+                record Foo(int number) implements MyUnion {}
+            }
+
+            public static void main(String[] args) {
+                MyUnion myUnion = new MyUnion.Foo(1234);
+                int ignored = switch (myUnion) {
+                    case MyUnion.Foo foo -> foo.number;
+                };
+                System.out.println("jdk21 features on runtime " + System.getProperty("java.specification.version"));
+            }
+        }
+        """;
+
+    private static final String JAVA_21_API_USAGE = """
+        import java.lang.Thread;
+        public class Main {
+            public static void main(String[] args) {
+                // Introduced in JDK 21
+                Thread.currentThread().isVirtual();
+            }
+        }
+        """;
+
     @BeforeEach
     void beforeEach(RootProject rootProject) {
         InheritGradleJdks.beforeEach(rootProject);
@@ -88,13 +114,17 @@ class BaselineJavaVersionIntegrationTest {
         rootProject.buildGradle().plugins().add("com.palantir.baseline-java-versions");
 
         rootProject.buildGradle().append("""
-            allprojects {
-                repositories {
-                    mavenCentral()
-                }
+            repositories {
+                mavenCentral()
             }
 
-            task runMainClass(type: JavaExec) {
+            tasks.withType(JavaCompile).configureEach {
+                // baseline-module-jvm-args forces all compiler processes to fork, do the same here
+                // for representative testing
+                options.fork = true
+            }
+
+            tasks.register('runMainClass', JavaExec) {
                 mainClass = 'Main'
                 classpath = sourceSets.main.runtimeClasspath
             }
@@ -103,39 +133,305 @@ class BaselineJavaVersionIntegrationTest {
 
     @Nested
     class JavaCompilation {
-        @Test
-        void java_17_compilation_fails_targeting_java_11(GradleInvoker gradle, RootProject rootProject) {
+        @BeforeEach
+        void beforeEach(RootProject rootProject) {
             rootProject.buildGradle().append("""
-                javaVersion {
-                    target = 11
-                    runtime = 17
+                repositories {
+                    mavenLocal()
+                }
+
+                dependencies {
+                    annotationProcessor "com.palantir.baseline:test-compiler-plugins:${baselineTestCompilerPluginsVersion}"
+                }
+
+                tasks.named('compileJava', JavaCompile) {
+                    options.compilerArgumentProviders.add({ ['-Xplugin:LogCompilerInfo'] } as CommandLineArgumentProvider)
                 }
                 """);
-
-            rootProject.mainSourceSet().java().writeClass(JAVA_17_COMPATIBLE_CODE);
-
-            gradle.withArgs("compileJava").buildsWithFailure();
         }
 
-        @Test
-        void java_17_compilation_succeeds_targeting_java_17(GradleInvoker gradle, RootProject rootProject) {
-            rootProject.buildGradle().append("""
-                javaVersion {
-                    target = '17'
-                    runtime = '17'
-                }
-                """);
+        @Nested
+        class WithExplicitJavaCompiler {
+            @Test
+            void java_21_source_feature_fails_targeting_java_17_using_java_21_compiler(
+                    GradleInvoker gradle, RootProject rootProject) {
 
-            rootProject.mainSourceSet().java().writeClass(JAVA_17_COMPATIBLE_CODE);
+                rootProject.buildGradle().append("""
+                    javaVersion {
+                        javaCompiler = 21
+                        target = 17
+                        runtime = 21
+                    }
+                    """);
 
-            gradle.withArgs("compileJava").buildsSuccessfully();
+                rootProject.mainSourceSet().java().writeClass(JAVA_21_SOURCE_FEATURE_CODE);
 
-            File compiledClass = rootProject
-                    .buildDir()
-                    .path()
-                    .resolve("classes/java/main/Main.class")
-                    .toFile();
-            assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
+                InvocationResult result = gradle.withArgs("compileJava").buildsWithFailure();
+
+                result.assertThat().output().contains("error: patterns in switch statements are not supported");
+
+                result.assertThat().output().contains("Compiler Java Version: 21");
+                result.assertThat().output().contains("Compiler Arg: --release=17");
+                result.assertThat().output().contains("Compiler Arg: --source=17");
+                result.assertThat().output().contains("Compiler Arg: --target=17");
+            }
+
+            @Test
+            void java_21_api_usage_fails_targeting_java_17_using_java_21_compiler(
+                    GradleInvoker gradle, RootProject rootProject) {
+
+                rootProject.buildGradle().append("""
+                    javaVersion {
+                        javaCompiler = 21
+                        target = 17
+                        runtime = 21
+                    }
+                    """);
+
+                rootProject.mainSourceSet().java().writeClass(JAVA_21_API_USAGE);
+
+                InvocationResult result = gradle.withArgs("compileJava").buildsWithFailure();
+
+                result.assertThat().output().contains("error: cannot find symbol");
+
+                result.assertThat().output().contains("Compiler Java Version: 21");
+                result.assertThat().output().contains("Compiler Arg: --release=17");
+                result.assertThat().output().contains("Compiler Arg: --source=17");
+                result.assertThat().output().contains("Compiler Arg: --target=17");
+            }
+
+            @Test
+            void java_21_api_usage_annoyingly_succeeds_targeting_java_17_with_exports_using_a_java_21_compiler(
+                    GradleInvoker gradle, RootProject rootProject) {
+
+                // This test merely shows the behaviour that actually happens - this is not a behaviour we actually
+                // want, just something we forced to accept. If you can fix it, you should and instead make this
+                // the opposite test.
+                // We can't use `--release` with `--add-exports`, which means users can use higher versioned APIs
+                // than are available than their target versions, meaning compilation succeeds even when you
+                // would not expect it to.
+
+                rootProject.buildGradle().plugins().add("com.palantir.baseline-module-jvm-args");
+
+                rootProject.buildGradle().append("""
+                    javaVersion {
+                        javaCompiler = 21
+                        target = 17
+                        runtime = 21
+                    }
+
+                    moduleJvmArgs {
+                        exports = ['jdk.compiler/com.sun.tools.javac.util']
+                    }
+                    """);
+
+                rootProject.mainSourceSet().java().writeClass(JAVA_21_API_USAGE);
+
+                InvocationResult result = gradle.withArgs("compileJava").buildsSuccessfully();
+
+                result.assertThat().output().contains("Compiler Java Version: 21");
+                result.assertThat().output().contains("Compiler Arg: --source=17");
+                result.assertThat().output().contains("Compiler Arg: --target=17");
+                result.assertThat().output().doesNotContain("Compiler Arg: --release=");
+                result.assertThat()
+                        .output()
+                        .contains("Compiler Arg: --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED");
+            }
+
+            @Test
+            void java_21_api_usage_fails_targeting_java_17_without_exports_but_module_jvm_args_plugin_21_compiler(
+                    GradleInvoker gradle, RootProject rootProject) {
+
+                rootProject.buildGradle().plugins().add("com.palantir.baseline-module-jvm-args");
+
+                rootProject.buildGradle().append("""
+                    javaVersion {
+                        javaCompiler = 21
+                        target = 17
+                        runtime = 21
+                    }
+                    """);
+
+                rootProject.mainSourceSet().java().writeClass(JAVA_21_API_USAGE);
+
+                InvocationResult result = gradle.withArgs("compileJava").buildsWithFailure();
+
+                result.assertThat().output().contains("Compiler Java Version: 21");
+                result.assertThat().output().contains("Compiler Arg: --release=17");
+                result.assertThat().output().contains("Compiler Arg: --source=17");
+                result.assertThat().output().contains("Compiler Arg: --target=17");
+
+                result.assertThat().output().doesNotContain("Compiler Arg: --add-exports");
+            }
+
+            @Test
+            void java_17_compilation_succeeds_targeting_java_17_using_java_17_compiler(
+                    GradleInvoker gradle, RootProject rootProject) {
+
+                rootProject.buildGradle().append("""
+                    javaVersion {
+                        javaCompiler = 17
+                        target = '17'
+                        runtime = '17'
+                    }
+                    """);
+
+                rootProject.mainSourceSet().java().writeClass(JAVA_17_COMPATIBLE_CODE);
+
+                InvocationResult result = gradle.withArgs("compileJava").buildsSuccessfully();
+
+                result.assertThat().output().contains("Compiler Java Version: 17");
+                result.assertThat().output().contains("Compiler Arg: --release=17");
+                result.assertThat().output().contains("Compiler Arg: --source=17");
+                result.assertThat().output().contains("Compiler Arg: --target=17");
+
+                File compiledClass = rootProject
+                        .buildDir()
+                        .path()
+                        .resolve("classes/java/main/Main.class")
+                        .toFile();
+                assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
+            }
+        }
+
+        /// These tests are mainly to maintain the old behaviour when javaCompiler is not set
+        @Nested
+        class WithoutExplicitJavaCompiler {
+            @Test
+            void java_21_source_feature_fails_targeting_java_17(GradleInvoker gradle, RootProject rootProject) {
+
+                rootProject.buildGradle().append("""
+                    javaVersion {
+                        target = 17
+                        runtime = 21
+                    }
+                    """);
+
+                rootProject.mainSourceSet().java().writeClass(JAVA_21_SOURCE_FEATURE_CODE);
+
+                InvocationResult result = gradle.withArgs("compileJava").buildsWithFailure();
+
+                result.assertThat()
+                        .output()
+                        .contains("error: patterns in switch statements are a preview feature and are disabled");
+
+                result.assertThat().output().contains("Compiler Java Version: 17");
+                result.assertThat().output().contains("Compiler Arg: --source=17");
+                result.assertThat().output().contains("Compiler Arg: --target=17");
+                result.assertThat().output().doesNotContain("Compiler Arg: --release");
+            }
+
+            @Test
+            void java_21_api_usage_fails_targeting_java_17(GradleInvoker gradle, RootProject rootProject) {
+
+                rootProject.buildGradle().append("""
+                    javaVersion {
+                        target = 17
+                        runtime = 21
+                    }
+                    """);
+
+                rootProject.mainSourceSet().java().writeClass(JAVA_21_API_USAGE);
+
+                InvocationResult result = gradle.withArgs("compileJava").buildsWithFailure();
+
+                result.assertThat().output().contains("error: cannot find symbol");
+
+                result.assertThat().output().contains("Compiler Java Version: 17");
+                result.assertThat().output().contains("Compiler Arg: --source=17");
+                result.assertThat().output().contains("Compiler Arg: --target=17");
+                result.assertThat().output().doesNotContain("Compiler Arg: --release");
+            }
+
+            @Test
+            void java_21_api_usage_fails_targeting_java_17_with_exports(GradleInvoker gradle, RootProject rootProject) {
+                // When we add an explicit `javaCompiler`, we need to use `--release` to prevent higher api
+                // usage from working, but `--release` is not compatible with `--add-exports`, so we can't use it.
+                // Hence, people can use higher APIs with exports and the explicit `javaCompiler`.
+                // This test is just recording the old behaviour without explicit `javaCompiler` that stopped
+                // higher API usage.
+
+                rootProject.buildGradle().plugins().add("com.palantir.baseline-module-jvm-args");
+
+                rootProject.buildGradle().append("""
+                    javaVersion {
+                        target = 17
+                        runtime = 21
+                    }
+
+                    moduleJvmArgs {
+                        exports = ['jdk.compiler/com.sun.tools.javac.util']
+                    }
+                    """);
+
+                rootProject.mainSourceSet().java().writeClass(JAVA_21_API_USAGE);
+
+                InvocationResult result = gradle.withArgs("compileJava").buildsWithFailure();
+
+                result.assertThat().output().contains("error: cannot find symbol");
+
+                result.assertThat().output().contains("Compiler Java Version: 17");
+                result.assertThat().output().contains("Compiler Arg: --source=17");
+                result.assertThat().output().contains("Compiler Arg: --target=17");
+                result.assertThat().output().doesNotContain("Compiler Arg: --release=");
+                result.assertThat()
+                        .output()
+                        .contains("Compiler Arg: --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED");
+            }
+
+            @Test
+            void java_21_api_usage_fails_targeting_java_17_without_exports_but_module_jvm_args_plugin(
+                    GradleInvoker gradle, RootProject rootProject) {
+
+                rootProject.buildGradle().plugins().add("com.palantir.baseline-module-jvm-args");
+
+                rootProject.buildGradle().append("""
+                    javaVersion {
+                        target = 17
+                        runtime = 21
+                    }
+                    """);
+
+                rootProject.mainSourceSet().java().writeClass(JAVA_21_API_USAGE);
+
+                InvocationResult result = gradle.withArgs("compileJava").buildsWithFailure();
+
+                result.assertThat().output().contains("error: cannot find symbol");
+
+                result.assertThat().output().contains("Compiler Java Version: 17");
+                result.assertThat().output().contains("Compiler Arg: --source=17");
+                result.assertThat().output().contains("Compiler Arg: --target=17");
+
+                result.assertThat().output().doesNotContain("Compiler Arg: --release");
+                result.assertThat().output().doesNotContain("Compiler Arg: --add-exports");
+            }
+
+            @Test
+            void java_17_compilation_succeeds_targeting_java_17(GradleInvoker gradle, RootProject rootProject) {
+
+                rootProject.buildGradle().append("""
+                    javaVersion {
+                        target = '17'
+                        runtime = '17'
+                    }
+                    """);
+
+                rootProject.mainSourceSet().java().writeClass(JAVA_17_COMPATIBLE_CODE);
+
+                InvocationResult result = gradle.withArgs("compileJava").buildsSuccessfully();
+
+                result.assertThat().output().contains("Compiler Java Version: 17");
+                result.assertThat().output().contains("Compiler Arg: --source=17");
+                result.assertThat().output().contains("Compiler Arg: --target=17");
+                result.assertThat().output().doesNotContain("Compiler Arg: --release");
+
+                File compiledClass = rootProject
+                        .buildDir()
+                        .path()
+                        .resolve("classes/java/main/Main.class")
+                        .toFile();
+                assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
+            }
         }
     }
 
@@ -145,6 +441,7 @@ class BaselineJavaVersionIntegrationTest {
         void java_11_execution_succeeds_on_java_11(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
+                    javaCompiler = 11
                     target = 11
                     runtime = 11
                 }
@@ -168,6 +465,7 @@ class BaselineJavaVersionIntegrationTest {
         void java_11_execution_succeeds_on_java_17(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
+                    javaCompiler = 11
                     target = 11
                     runtime = 17
                 }
@@ -191,6 +489,7 @@ class BaselineJavaVersionIntegrationTest {
         void java_17_execution_succeeds_on_java_17(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
+                    javaCompiler = 17
                     target = 17
                     runtime = 17
                 }
@@ -207,6 +506,7 @@ class BaselineJavaVersionIntegrationTest {
         void java_17_execution_succeeds_on_java_21(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
+                    javaCompiler = 17
                     target = 17
                     runtime = 21
                 }
@@ -228,6 +528,147 @@ class BaselineJavaVersionIntegrationTest {
     }
 
     @Nested
+    class Javadoc {
+        @Test
+        void javadoc_works_when_java_compiler_is_same_version_as_target(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                javaVersion {
+                    javaCompiler = 21
+                    target = 21
+                }
+                """);
+
+            rootProject.mainSourceSet().java().writeClass(JAVA_21_SOURCE_FEATURE_CODE);
+
+            gradle.withArgs("javadoc").buildsSuccessfully();
+        }
+
+        @Test
+        void javadoc_works_when_java_compiler_is_a_higher_version_than_the_target(
+                GradleInvoker gradle, RootProject rootProject) {
+
+            rootProject.buildGradle().append("""
+                javaVersion {
+                    javaCompiler = 21
+                    target = 17
+                }
+                """);
+
+            rootProject.mainSourceSet().java().writeClass(JAVA_17_COMPATIBLE_CODE);
+
+            gradle.withArgs("javadoc").buildsSuccessfully();
+        }
+    }
+
+    @Nested
+    class GroovyCompile {
+        @BeforeEach
+        void beforeEach(RootProject rootProject) {
+            rootProject.buildGradle().plugins().add("groovy");
+
+            rootProject.buildGradle().append("""
+                javaVersion {
+                    javaCompiler = 17
+                    target = 17
+                }
+
+                dependencies {
+                    implementation localGroovy()
+                }
+                """);
+        }
+
+        @Test
+        void targeting_17_and_setting_java_compiler_to_17_jdk_outputs_17_bytecode(
+                GradleInvoker gradle, RootProject rootProject) {
+
+            // The groovy compiler needs to run with the JDK it's targeting, not with
+            // whatever we're setting for `javaCompiler` (a Java concept).
+
+            rootProject.buildGradle().append("""
+                javaVersion {
+                    javaCompiler = 17
+                    target = 17
+                }
+                """);
+
+            rootProject.mainSourceSet().srcDir("groovy").file("app/Main.groovy").append("""
+                println 'hi'
+                """);
+
+            gradle.withArgs("compileGroovy").buildsSuccessfully();
+
+            File compiledClass = rootProject
+                    .buildDir()
+                    .path()
+                    .resolve("classes/groovy/main/Main.class")
+                    .toFile();
+
+            assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
+        }
+
+        @Test
+        void targeting_17_and_setting_java_compiler_to_21_outputs_17_bytecode(
+                GradleInvoker gradle, RootProject rootProject) {
+
+            // The groovy compiler needs to run with the JDK it's targeting, not with
+            // whatever we're setting for `javaCompiler` (a Java concept).
+
+            rootProject.buildGradle().append("""
+                javaVersion {
+                    javaCompiler = 21
+                    target = 17
+                }
+                """);
+
+            rootProject.mainSourceSet().srcDir("groovy").file("app/Main.groovy").append("""
+                println 'hi'
+                """);
+
+            gradle.withArgs("compileGroovy").buildsSuccessfully();
+
+            File compiledClass = rootProject
+                    .buildDir()
+                    .path()
+                    .resolve("classes/groovy/main/Main.class")
+                    .toFile();
+
+            assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
+        }
+
+        @Test
+        void targeting_17_and_setting_java_compiler_to_21_does_not_let_you_use_21_jdk_apis(
+                GradleInvoker gradle, RootProject rootProject) {
+
+            // The groovy compiler needs to run with the JDK it's targeting, not with
+            // whatever we're setting for `javaCompiler` (a Java concept).
+
+            rootProject.buildGradle().append("""
+                javaVersion {
+                    javaCompiler = 21
+                    target = 17
+                }
+                """);
+
+            rootProject.mainSourceSet().srcDir("groovy").file("app/Main.groovy").overwrite("""
+                import groovy.transform.CompileStatic
+                import java.lang.Thread
+
+                @CompileStatic
+                class Main {
+                    void main() {
+                        Thread.currentThread().isVirtual();
+                    }
+                }
+                """);
+
+            InvocationResult result = gradle.withArgs("compileGroovy").buildsWithFailure();
+
+            result.assertThat().output().contains("Cannot find matching method java.lang.Thread#isVirtual()");
+        }
+    }
+
+    @Nested
     class GradleJavaConfigurationSetup {
         @Test
         void javaPluginConvention_getTargetCompatibility_produces_the_runtime_java_version(
@@ -235,6 +676,7 @@ class BaselineJavaVersionIntegrationTest {
 
             rootProject.buildGradle().append("""
                 javaVersion {
+                    javaCompiler = 11
                     target = 11
                     runtime = 17
                 }
@@ -260,6 +702,7 @@ class BaselineJavaVersionIntegrationTest {
         void java_17_preview_compilation_works(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
+                    javaCompiler = 17
                     target = '17_PREVIEW'
                     runtime = '17_PREVIEW'
                 }
@@ -281,13 +724,14 @@ class BaselineJavaVersionIntegrationTest {
         void java_17_preview_javadoc_works(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
+                    javaCompiler = 17
                     target = '17_PREVIEW'
                 }
                 """);
 
             rootProject.mainSourceSet().java().writeClass(JAVA_17_PREVIEW_CODE);
 
-            gradle.withArgs("javadoc", "-i").buildsSuccessfully();
+            gradle.withArgs("javadoc").buildsSuccessfully();
         }
     }
 
@@ -299,6 +743,7 @@ class BaselineJavaVersionIntegrationTest {
 
             rootProject.buildGradle().append("""
                 javaVersion {
+                    javaCompiler = 17
                     target = 17
                     runtime = 11
                 }
@@ -315,6 +760,7 @@ class BaselineJavaVersionIntegrationTest {
 
             rootProject.buildGradle().append("""
                 javaVersion {
+                    javaCompiler = 11
                     target = '11_PREVIEW'
                     runtime = '15_PREVIEW'
                 }
@@ -325,15 +771,16 @@ class BaselineJavaVersionIntegrationTest {
             assertThat(result)
                     .output()
                     .contains("Runtime Java version (15_PREVIEW) must be exactly the same as the compilation target"
-                            + " (11_PREVIEW)");
+                            + " (11_PREVIEW) in root project");
         }
 
         @Test
-        void verification_should_fail_when_runtime_does_not_use_enable_preview_but_compilation_does(
+        void verification_should_fail_when_runtime_does_not_use_enable_preview_but_target_does(
                 GradleInvoker gradle, RootProject rootProject) {
 
             rootProject.buildGradle().append("""
                 javaVersion {
+                    javaCompiler = 17
                     target = '17_PREVIEW'
                     runtime = '17'
                 }
@@ -344,7 +791,62 @@ class BaselineJavaVersionIntegrationTest {
             assertThat(result)
                     .output()
                     .contains("Runtime Java version (17) must be exactly the same as the compilation target"
-                            + " (17_PREVIEW)");
+                            + " (17_PREVIEW) in root project");
+        }
+
+        @Test
+        void verification_should_fail_when_java_compiler_is_lower_than_target(
+                GradleInvoker gradle, RootProject rootProject) {
+
+            rootProject.buildGradle().append("""
+                javaVersion {
+                    javaCompiler = 17
+                    target = 21
+                    runtime = 21
+                }
+                """);
+
+            InvocationResult result = gradle.withArgs("checkJavaVersions").buildsWithFailure();
+
+            result.assertThat()
+                    .output()
+                    .contains("The requested compilation target Java version (21) must not exceed the javaCompiler Java"
+                            + " version (17) in root project");
+        }
+
+        @Test
+        void verification_should_fail_when_preview_target_is_not_the_same_version_as_javaCompiler(
+                GradleInvoker gradle, RootProject rootProject) {
+
+            rootProject.buildGradle().append("""
+                javaVersion {
+                    javaCompiler = 21
+                    target = '17_PREVIEW'
+                    runtime = '17_PREVIEW'
+                }
+                """);
+
+            InvocationResult result = gradle.withArgs("checkJavaVersions").buildsWithFailure();
+
+            result.assertThat()
+                    .output()
+                    .contains("The version of the Java Compiler (21) must be exactly the same as the compilation target"
+                            + " (17_PREVIEW) in root project 'root', because --enable-preview is enabled.");
+        }
+
+        @Test
+        void verification_should_succeed_when_preview_target_is_the_same_version_as_javaCompiler_and_runtime(
+                GradleInvoker gradle, RootProject rootProject) {
+
+            rootProject.buildGradle().append("""
+                javaVersion {
+                    javaCompiler = 17
+                    target = '17_PREVIEW'
+                    runtime = '17_PREVIEW'
+                }
+                """);
+
+            gradle.withArgs("checkJavaVersions").buildsSuccessfully();
         }
 
         @Test
@@ -353,6 +855,22 @@ class BaselineJavaVersionIntegrationTest {
 
             rootProject.buildGradle().append("""
                 javaVersion {
+                    javaCompiler = 17
+                    target = 17
+                    runtime = 17
+                }
+                """);
+
+            gradle.withArgs("checkJavaVersions").buildsSuccessfully();
+        }
+
+        @Test
+        void verification_should_succeed_when_compilation_is_higher_than_target(
+                GradleInvoker gradle, RootProject rootProject) {
+
+            rootProject.buildGradle().append("""
+                javaVersion {
+                    javaCompiler = 21
                     target = 17
                     runtime = 17
                 }
@@ -370,6 +888,7 @@ class BaselineJavaVersionIntegrationTest {
 
             rootProject.buildGradle().append("""
                 javaVersion {
+                    javaCompiler = 11
                     target = 11
                     runtime = 11
                 }
@@ -397,6 +916,7 @@ class BaselineJavaVersionIntegrationTest {
         void succeeds_when_all_runtimeClasspath_jars_are_compatible(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
+                    javaCompiler = 11
                     target = 11
                     runtime = 11
                 }
@@ -413,6 +933,7 @@ class BaselineJavaVersionIntegrationTest {
         void handles_gradleApi(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
+                    javaCompiler = 11
                     target = 11
                     runtime = 11
                 }
@@ -432,6 +953,7 @@ class BaselineJavaVersionIntegrationTest {
         void is_a_dependency_of_check(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
+                    javaCompiler = 11
                     target = 11
                     runtime = 11
                 }
@@ -461,6 +983,7 @@ class BaselineJavaVersionIntegrationTest {
         void gathers_target_and_runtime_values(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersion {
+                    javaCompiler = 25
                     target = 17
                     runtime = 21
                 }
@@ -469,7 +992,7 @@ class BaselineJavaVersionIntegrationTest {
             InvocationResult result =
                     gradle.withArgs("printAllJavaVersionsUsed").buildsSuccessfully();
 
-            result.assertThat().output().contains("allJavaVersionsUsed: [17, 21]");
+            result.assertThat().output().contains("allJavaVersionsUsed: [17, 21, 25]");
         }
 
         @Test
@@ -477,10 +1000,12 @@ class BaselineJavaVersionIntegrationTest {
             rootProject.buildGradle().append("""
                     import com.palantir.baseline.plugins.javaversions.ChosenJavaVersion
 
+                    def generateJavaCompiler = tasks.register('generateJavaCompiler')
                     def generateTarget = tasks.register('generateTarget')
                     def generateRuntime = tasks.register('generateRuntime')
 
                     javaVersion {
+                        javaCompiler().set(generateJavaCompiler.map { JavaLanguageVersion.of(25) })
                         target().set(generateTarget.map { ChosenJavaVersion.of(17) })
                         runtime().set(generateRuntime.map { ChosenJavaVersion.of(21) })
                     }
@@ -489,7 +1014,8 @@ class BaselineJavaVersionIntegrationTest {
             InvocationResult result =
                     gradle.withArgs("printAllJavaVersionsUsed").buildsSuccessfully();
 
-            result.assertThat().output().contains("allJavaVersionsUsed: [17, 21]");
+            result.assertThat().output().contains("allJavaVersionsUsed: [17, 21, 25]");
+            result.assertThat().task(":generateJavaCompiler").upToDate();
             result.assertThat().task(":generateTarget").upToDate();
             result.assertThat().task(":generateRuntime").upToDate();
         }

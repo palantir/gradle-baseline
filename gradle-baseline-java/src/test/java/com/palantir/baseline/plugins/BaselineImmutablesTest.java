@@ -55,6 +55,7 @@ class BaselineImmutablesTest {
             }
 
             javaVersions {
+                javaCompiler = 21
                 libraryTarget = 17
             }
 
