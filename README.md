@@ -34,6 +34,9 @@ _Baseline is a family of Gradle plugins for configuring Java projects with sensi
 
 See also the [Baseline Java Style Guide and Best Practices](./docs).
 
+> [!NOTE]
+> baseline-error-prone and baseline-null-away now live in their [own repository](https://github.com/palantir/baseline-error-prone)
+
 
 ## Usage
 The baseline set of plugins requires at least Gradle 6.1.
