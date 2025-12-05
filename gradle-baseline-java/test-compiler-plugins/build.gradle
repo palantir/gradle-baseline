@@ -1,0 +1,36 @@
+apply plugin: 'java-library'
+
+dependencies {
+    annotationProcessor 'com.google.auto.service:auto-service'
+    compileOnly 'com.google.auto.service:auto-service'
+}
+
+javaVersion {
+    // A BaselineJavaVersionIntegrationTest runs LogCompilerInfoPlugin in a 17 JDK
+    target = 17
+}
+
+moduleJvmArgs {
+    exports = [
+        'jdk.compiler/com.sun.source.util',
+        'jdk.compiler/com.sun.tools.javac.api',
+        'jdk.compiler/com.sun.tools.javac.util'
+    ]
+}
+
+// Solely for publishing to maven local
+apply plugin: 'maven-publish'
+
+publishing {
+    publications {
+        maven(MavenPublication) {
+            from components.java
+        }
+    }
+}
+
+// We only want maven local publishing, which has type `PublishToMavenLocal`.
+// Disable all other remote maven publishes.
+tasks.withType(PublishToMavenRepository).configureEach {
+    enabled = false
+}

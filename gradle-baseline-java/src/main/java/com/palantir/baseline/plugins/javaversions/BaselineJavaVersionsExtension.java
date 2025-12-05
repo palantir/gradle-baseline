@@ -36,6 +36,7 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion;
  */
 public abstract class BaselineJavaVersionsExtension implements BaselineJavaVersionsExtensionSetters {
     private final Project rootProject;
+    private final Property<JavaLanguageVersion> javaCompiler;
     private final Property<JavaLanguageVersion> libraryTarget;
     private final Property<ChosenJavaVersion> distributionTarget;
     private final Property<ChosenJavaVersion> runtime;
@@ -49,6 +50,8 @@ public abstract class BaselineJavaVersionsExtension implements BaselineJavaVersi
     @Inject
     public BaselineJavaVersionsExtension(Project rootProject) {
         this.rootProject = rootProject;
+
+        this.javaCompiler = rootProject.getObjects().property(JavaLanguageVersion.class);
         this.libraryTarget = getObjectFactory().property(JavaLanguageVersion.class);
         this.distributionTarget = getObjectFactory().property(ChosenJavaVersion.class);
         this.runtime = getObjectFactory().property(ChosenJavaVersion.class);
@@ -63,6 +66,14 @@ public abstract class BaselineJavaVersionsExtension implements BaselineJavaVersi
         libraryTarget.finalizeValueOnRead();
         distributionTarget.finalizeValueOnRead();
         runtime.finalizeValueOnRead();
+    }
+
+    public final Property<JavaLanguageVersion> javaCompiler() {
+        return javaCompiler;
+    }
+
+    public final void setJavaCompiler(int value) {
+        javaCompiler.set(JavaLanguageVersion.of(value));
     }
 
     /** Target {@link JavaLanguageVersion} for compilation of libraries that are published. */
@@ -150,6 +161,7 @@ public abstract class BaselineJavaVersionsExtension implements BaselineJavaVersi
         SetProperty<JavaLanguageVersion> allJavaVersionsUsed =
                 getObjectFactory().setProperty(JavaLanguageVersion.class);
 
+        allJavaVersionsUsed.add(javaCompiler);
         allJavaVersionsUsed.add(libraryTarget);
         allJavaVersionsUsed.add(distributionTarget.map(ChosenJavaVersion::javaLanguageVersion));
         allJavaVersionsUsed.add(runtime.map(ChosenJavaVersion::javaLanguageVersion));

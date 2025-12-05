@@ -30,6 +30,7 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion;
  */
 public abstract class BaselineJavaVersionExtension {
 
+    private final Property<JavaLanguageVersion> javaCompiler;
     private final Property<ChosenJavaVersion> target;
     private final Property<ChosenJavaVersion> runtime;
 
@@ -40,13 +41,23 @@ public abstract class BaselineJavaVersionExtension {
 
     @Inject
     public BaselineJavaVersionExtension() {
+        javaCompiler = getObjectFactory().property(JavaLanguageVersion.class);
         target = getObjectFactory().property(ChosenJavaVersion.class);
         runtime = getObjectFactory().property(ChosenJavaVersion.class);
         overrideLibraryAutoDetection = getObjectFactory().property(Boolean.class);
 
+        javaCompiler.finalizeValueOnRead();
         target.finalizeValueOnRead();
         runtime.finalizeValueOnRead();
         overrideLibraryAutoDetection.finalizeValueOnRead();
+    }
+
+    public final Property<JavaLanguageVersion> javaCompiler() {
+        return javaCompiler;
+    }
+
+    public final void setJavaCompiler(int value) {
+        javaCompiler.set(JavaLanguageVersion.of(value));
     }
 
     /**
@@ -97,6 +108,7 @@ public abstract class BaselineJavaVersionExtension {
         SetProperty<JavaLanguageVersion> allJavaVersionsUsed =
                 getObjectFactory().setProperty(JavaLanguageVersion.class);
 
+        allJavaVersionsUsed.add(javaCompiler);
         allJavaVersionsUsed.add(target.map(ChosenJavaVersion::javaLanguageVersion));
         allJavaVersionsUsed.add(runtime.map(ChosenJavaVersion::javaLanguageVersion));
 

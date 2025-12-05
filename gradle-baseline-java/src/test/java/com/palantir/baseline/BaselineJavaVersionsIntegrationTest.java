@@ -166,6 +166,7 @@ class BaselineJavaVersionsIntegrationTest {
 
             rootProject.buildGradle().append("""
                 javaVersions {
+                    javaCompiler = 11
                     libraryTarget = 11
                     runtime = 21
                 }
@@ -205,6 +206,7 @@ class BaselineJavaVersionsIntegrationTest {
 
             rootProject.buildGradle().append("""
                 javaVersions {
+                    javaCompiler = 11
                     libraryTarget = 11
                     runtime = 21
                     setupJdkToolchains = false
@@ -240,6 +242,7 @@ class BaselineJavaVersionsIntegrationTest {
         void explainJavaVersions_prints_the_java_version_used(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersions {
+                    javaCompiler = 11
                     libraryTarget = 11
                     runtime = 17
                 }
@@ -287,6 +290,7 @@ class BaselineJavaVersionsIntegrationTest {
         void gathers_values_from_top_level_javaVersions_extension(GradleInvoker gradle, RootProject rootProject) {
             rootProject.buildGradle().append("""
                 javaVersions {
+                    javaCompiler = 25
                     libraryTarget = 11
                     distributionTarget = 17
                     runtime = 21
@@ -296,7 +300,7 @@ class BaselineJavaVersionsIntegrationTest {
             InvocationResult result =
                     gradle.withArgs("printAllJavaVersionsUsed").buildsSuccessfully();
 
-            result.assertThat().output().contains("allJavaVersionsUsed: [11, 17, 21]");
+            result.assertThat().output().contains("allJavaVersionsUsed: [11, 17, 21, 25]");
         }
 
         @Test
@@ -305,6 +309,7 @@ class BaselineJavaVersionsIntegrationTest {
 
             rootProject.buildGradle().append("""
                 javaVersions {
+                    javaCompiler = 25
                     libraryTarget = 11
                     distributionTarget = 17
                     runtime = 21
@@ -313,6 +318,7 @@ class BaselineJavaVersionsIntegrationTest {
 
             subProject.buildGradle().append("""
                 javaVersion {
+                    javaCompiler = 22
                     target = 23
                     runtime = 24
                 }
@@ -321,7 +327,7 @@ class BaselineJavaVersionsIntegrationTest {
             InvocationResult result =
                     gradle.withArgs("printAllJavaVersionsUsed").buildsSuccessfully();
 
-            result.assertThat().output().contains("allJavaVersionsUsed: [11, 17, 21, 23, 24]");
+            result.assertThat().output().contains("allJavaVersionsUsed: [11, 17, 21, 22, 23, 24, 25]");
         }
 
         @Test
@@ -329,11 +335,13 @@ class BaselineJavaVersionsIntegrationTest {
             rootProject.buildGradle().append("""
                 import com.palantir.baseline.plugins.javaversions.ChosenJavaVersion
 
+                def generateJavaCompiler = tasks.register('generateJavaCompiler')
                 def generateLibraryTarget = tasks.register('generateLibraryTarget')
                 def generateDistributionTarget = tasks.register('generateDistributionTarget')
                 def generateRuntime = tasks.register('generateRuntime')
 
                 javaVersions {
+                    javaCompiler().set(generateJavaCompiler.map { JavaLanguageVersion.of(25) })
                     libraryTarget().set(generateLibraryTarget.map { JavaLanguageVersion.of(11) })
                     distributionTarget().set(generateDistributionTarget.map { ChosenJavaVersion.of(17) })
                     runtime().set(generateRuntime.map { ChosenJavaVersion.of(21) })
@@ -343,10 +351,12 @@ class BaselineJavaVersionsIntegrationTest {
             subProject.buildGradle().append("""
                     import com.palantir.baseline.plugins.javaversions.ChosenJavaVersion
 
+                    def generateJavaCompiler = tasks.register('generateJavaCompiler')
                     def generateTarget = tasks.register('generateTarget')
                     def generateRuntime = tasks.register('generateRuntime')
 
                     javaVersion {
+                        javaCompiler().set(generateJavaCompiler.map { JavaLanguageVersion.of(22) })
                         target().set(generateTarget.map { ChosenJavaVersion.of(23) })
                         runtime().set(generateRuntime.map { ChosenJavaVersion.of(24) })
                     }
@@ -355,10 +365,12 @@ class BaselineJavaVersionsIntegrationTest {
             InvocationResult result =
                     gradle.withArgs("printAllJavaVersionsUsed").buildsSuccessfully();
 
-            result.assertThat().output().contains("allJavaVersionsUsed: [11, 17, 21, 23, 24]");
+            result.assertThat().output().contains("allJavaVersionsUsed: [11, 17, 21, 22, 23, 24, 25]");
+            result.assertThat().task(":generateJavaCompiler").upToDate();
             result.assertThat().task(":generateLibraryTarget").upToDate();
             result.assertThat().task(":generateDistributionTarget").upToDate();
             result.assertThat().task(":generateRuntime").upToDate();
+            result.assertThat().task(":subProject:generateJavaCompiler").upToDate();
             result.assertThat().task(":subProject:generateTarget").upToDate();
             result.assertThat().task(":subProject:generateRuntime").upToDate();
         }

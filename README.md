@@ -21,7 +21,6 @@ _Baseline is a family of Gradle plugins for configuring Java projects with sensi
 | `com.palantir.baseline-reproducibility`            | Sensible defaults to ensure Jar, Tar and Zip tasks can be reproduced
 | `com.palantir.baseline-exact-dependencies`         | Ensures projects explicitly declare all the dependencies they rely on, no more and no less
 | `com.palantir.baseline-encoding`                   | Ensures projects use the UTF-8 encoding in compile tasks.
-| `com.palantir.baseline-release-compatibility`      | Ensures projects targeting older JREs only compile against classes and methods available in those JREs.
 | `com.palantir.baseline-testing`                    | Configures test tasks to dump heap dumps (hprof files) for convenient debugging
 | `com.palantir.baseline-test-heap`                  | Increases the default Test task heap from 512m to 2g.
 | `com.palantir.baseline-java-compiler-diagnostics`  | Applies the `-Xmaxwarns` and `-Xmaxwarns` compiler options with a very large limit to avoid truncating failure info.
@@ -242,12 +241,6 @@ checkImplicitDependencies {
 
 This plugin sets the encoding for JavaCompile tasks to `UTF-8`.
 
-## com.palantir.baseline-release-compatibility
-
-This plugin adds the `--release <number>` flag to JavaCompile tasks (when the compiler [supports it](https://openjdk.java.net/jeps/247)), so that published jars will only use methods available in the target JRE.  Relying on `sourceCompatibility = 1.8` and `targetCompatibility = 1.8` is insufficient because you run the risk of using method that have been added in newer JREs, e.g. `Optional#isEmpty`.
-
-This plugin may become redundant if this functionality is implemented upstream [in Gradle](https://github.com/gradle/gradle/issues/2510).
-
 ## com.palantir.baseline-testing
 
 Configures some sensible defaults:
@@ -289,6 +282,7 @@ The plugin is currently used on an opt-in basis. To use it, apply the plugin and
 apply plugin: 'com.palantir.baseline-java-versions'
 
 javaVersions {
+    javaCompiler = 25
     libraryTarget = 11
     distributionTarget = 17
     runtime = 21
@@ -296,8 +290,9 @@ javaVersions {
 ```
 
 The configurable fields of the `javaVersions` extension are:
-* `libraryTarget`: (required) The Java version used for compilation of libraries that are published.
-* `distributionTarget`: (optional) The Java version used for compilation of code used within distributions, but not published externally. Defaults to the `libraryTarget` version.
+* `javaCompiler`: (optional) The version of the Java compiler used. If not set, the appropriate `target` will be used. The `--release`, `--target` and `--source` compiler args are used to enable compiling code at a lower target than the compiler used. However, if `baseline-module-jvm-args`/`moduleJvmArgs` are used, `--release` will not be set as it is not compatible with exporting/opening system modules, meaning compilation will not fail if JDK APIs are used which are higher than the requested target.
+* `libraryTarget`: (required) The Java version targeted for compilation of libraries that are published.
+* `distributionTarget`: (optional) The Java version targeted for compilation of code used within distributions, but not published externally. Defaults to the `libraryTarget` version.
 * `runtime`: (optional) Runtime Java version for testing and packaging distributions. Defaults to the `distributionTarget` version.
 
 The configured Java versions are used as defaults for all projects.
@@ -326,12 +321,14 @@ A sub-project can also explicitly override the default Java versions, but doing 
 ```gradle
 // In a sub-project's build.gradle
 javaVersion {
+    javaCompiler = 17
     target = 11
     runtime = 11
 }
 ```
 
 The optionally configurable fields of the `javaVersion` extension are:
+* `javaCompiler`: The version of the Java compiler used. If not set, `target` will be used. See note in above `javaVersions` extension regarding `javaCompiler`.
 * `target`: The target version used for compilation.
 * `runtime`: The runtime version used for testing and distributions.
 

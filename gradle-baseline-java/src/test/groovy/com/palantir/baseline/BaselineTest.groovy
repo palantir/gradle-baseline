@@ -46,7 +46,6 @@ class BaselineTest extends Specification {
         assert p.pluginManager.hasPlugin('com.palantir.baseline-checkstyle')
         assert p.pluginManager.hasPlugin('com.palantir.baseline-eclipse')
         assert p.pluginManager.hasPlugin('com.palantir.baseline-idea')
-        assert p.pluginManager.hasPlugin('com.palantir.baseline-release-compatibility')
         assert p.pluginManager.hasPlugin('com.palantir.baseline-class-uniqueness')
     }
 

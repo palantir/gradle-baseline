@@ -64,6 +64,8 @@ dependencies {
     compileOnly 'org.immutables:value::annotations'
 }
 
+// Used in BaselineJavaVersionIntegrationTest
+tasks.test.dependsOn ':gradle-baseline-java:test-compiler-plugins:publishToMavenLocal'
 // Used in BaselineConfigIntegrationTest
 tasks.test.dependsOn ':gradle-baseline-java-config:publishToMavenLocal'
 tasks.test.dependsOn tasks.named('publishToMavenLocal')
@@ -74,6 +76,8 @@ tasks.checkJUnitDependencies.enabled = false
 test {
     environment 'CIRCLE_ARTIFACTS', "${buildDir}/artifacts"
     environment 'CIRCLE_TEST_REPORTS', "${buildDir}/circle-reports"
+
+    environment 'ORG_GRADLE_PROJECT_baselineTestCompilerPluginsVersion', project.version
 
     systemProperty 'ignoreDeprecations', 'true'
 }
@@ -136,13 +140,6 @@ gradlePlugin {
             id = 'com.palantir.baseline-circleci'
             displayName = 'Palantir Baseline CircleCi Plugin'
             implementationClass = 'com.palantir.baseline.plugins.BaselineCircleCi'
-            description = 'Baseline Java is a collection of Gradle plugins for configuring code quality tools in builds.'
-            tags.set(['java', 'checkstyle', 'code quality'])
-        }
-        baselineReleaseCompatibility {
-            id = 'com.palantir.baseline-release-compatibility'
-            displayName = 'Palantir Baseline Release Compatibility Plugin'
-            implementationClass = 'com.palantir.baseline.plugins.BaselineReleaseCompatibility'
             description = 'Baseline Java is a collection of Gradle plugins for configuring code quality tools in builds.'
             tags.set(['java', 'checkstyle', 'code quality'])
         }
