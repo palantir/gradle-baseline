@@ -30,7 +30,7 @@ dependencies {
     implementation 'com.palantir.gradle.failure-reports:gradle-failure-reports-exceptions'
 
     // TEMPHACK(okelvin): remove this to decouple baseline-error-prone
-    implementation 'com.palantir.baseline-error-prone:gradle-baseline-error-prone'
+    api 'com.palantir.baseline-error-prone:gradle-baseline-error-prone'
     testImplementation 'com.palantir.baseline-error-prone:gradle-baseline-error-prone'
     gradlePluginForTesting 'com.palantir.baseline-error-prone:gradle-baseline-error-prone'
 
