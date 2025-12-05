@@ -1414,6 +1414,40 @@ class IllegalSafeLoggingArgumentTest {
     }
 
     @Test
+    public void collectToMapDiscrepancy() {
+        helper().addSourceLines(
+                        "Test.java",
+                        "import java.util.*;",
+                        "import java.util.function.*;",
+                        "import java.util.stream.Collector;",
+                        "import java.util.stream.Collectors;",
+                        "import com.palantir.logsafe.*;",
+                        "class Test {",
+                        "  void testDroppingCollector_unsafeArgs() {",
+                        "    List<SomethingYouShouldntLog> unsafe =",
+                        "        List.of(new SomethingYouShouldntLog(1, 2));",
+                        "",
+                        "    // BUG: Diagnostic contains:  Dangerous argument value: arg is 'DO_NOT_LOG' but the"
+                                + " parameter requires 'UNSAFE'.",
+                        "    testUnsafe(unsafe.stream().collect(toMap(SomethingYouShouldntLog::b,"
+                                + " SomethingYouShouldntLog::b)));",
+                        "  }",
+                        "",
+                        "  public static <T, K, U> Collector<T, ?, Map<K, U>> toMap(",
+                        "      Function<? super T, ? extends K> keyMapper, Function<? super T, ? extends U>"
+                                + " valueMapper) {",
+                        "    return Collectors.toMap(keyMapper, valueMapper);",
+                        "  }",
+                        "",
+                        "  private void testUnsafe(@Unsafe Map<Integer, Integer> val) {}",
+                        "",
+                        "  @DoNotLog",
+                        "  private record SomethingYouShouldntLog(@DoNotLog Integer a, @Unsafe Integer b) {}",
+                        "}")
+                .doTest();
+    }
+
+    @Test
     public void testOptionalUnwrapping() {
         helper().addSourceLines(
                         "Test.java",
