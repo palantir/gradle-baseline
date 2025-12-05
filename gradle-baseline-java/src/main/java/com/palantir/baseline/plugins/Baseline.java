@@ -16,7 +16,7 @@
 
 package com.palantir.baseline.plugins;
 
-import com.palantir.baseline.BaselineErrorProne;
+import com.palantir.gradle.baselineerrorprone.BaselineErrorProne;
 import org.gradle.api.GradleException;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
