@@ -133,7 +133,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                     baselineConfiguredJavaToolchains,
                     javaToolchainService,
                     // If `javaCompiler` is explicitly set, we use that version for the compiler, else we fall
-                    // back to the old behaviour of
+                    // back to the old behaviour of using the target version to run the compiler.
                     javaCompiler.orElse(target.map(ChosenJavaVersion::javaLanguageVersion)));
 
             javaCompileTask.getOptions().getCompilerArgumentProviders().add(new EnablePreviewArgumentProvider(target));
