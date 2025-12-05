@@ -51,23 +51,7 @@ public abstract class BaselineJavaVersionsExtension implements BaselineJavaVersi
     public BaselineJavaVersionsExtension(Project rootProject) {
         this.rootProject = rootProject;
 
-        this.javaCompiler = rootProject
-                .getObjects()
-                .property(JavaLanguageVersion.class)
-                .convention(rootProject.provider(() -> {
-                    // This effectively makes the `javaCompiler` property required. If it isn't required, the empty
-                    // properties are propagated to setting the --release on JavaCompiles, which then use the
-                    // version of Gradle daemon for the compiler rather than something explicit (spooky). I
-                    // really don't want daemon upgrades or downgrades affecting Java compilation, they should
-                    // be entirely separate. The downside is that projects that don't have Java compilation
-                    // (eg Groovy or Scala only) will still need to set this java only property. But
-                    // (at Palantir at least) these projects are very few and far between. I'd rather prevent
-                    // the spooky Gradle daemon up/downgrade issue.
-                    throw new RuntimeException(
-                            "The `javaCompiler` property inside `javaVersions` in the root project must be set with a"
-                                    + " value");
-                }));
-
+        this.javaCompiler = rootProject.getObjects().property(JavaLanguageVersion.class);
         this.libraryTarget = getObjectFactory().property(JavaLanguageVersion.class);
         this.distributionTarget = getObjectFactory().property(ChosenJavaVersion.class);
         this.runtime = getObjectFactory().property(ChosenJavaVersion.class);

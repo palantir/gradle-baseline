@@ -290,7 +290,7 @@ javaVersions {
 ```
 
 The configurable fields of the `javaVersions` extension are:
-* `javaCompiler`: (required) The version of the Java compiler used. The `--release`, `--target` and `--source` compiler args are used to enable compiling code at a lower target than the compiler used. However, if `baseline-module-jvm-args`/`moduleJvmArgs` are used, `--release` will not be set as it is not compatible with exporting/opening system modules, meaning compilation will not fail if JDK APIs are used which are higher than the requested target.
+* `javaCompiler`: (optional) The version of the Java compiler used. If not set, the appropriate `target` will be used. The `--release`, `--target` and `--source` compiler args are used to enable compiling code at a lower target than the compiler used. However, if `baseline-module-jvm-args`/`moduleJvmArgs` are used, `--release` will not be set as it is not compatible with exporting/opening system modules, meaning compilation will not fail if JDK APIs are used which are higher than the requested target.
 * `libraryTarget`: (required) The Java version targeted for compilation of libraries that are published.
 * `distributionTarget`: (optional) The Java version targeted for compilation of code used within distributions, but not published externally. Defaults to the `libraryTarget` version.
 * `runtime`: (optional) Runtime Java version for testing and packaging distributions. Defaults to the `distributionTarget` version.
@@ -328,7 +328,7 @@ javaVersion {
 ```
 
 The optionally configurable fields of the `javaVersion` extension are:
-* `javaCompiler`: The version of the Java compiler used. See note in above `javaVersions` extension regarding `javaCompiler`.
+* `javaCompiler`: The version of the Java compiler used. If not set, `target` will be used. See note in above `javaVersions` extension regarding `javaCompiler`.
 * `target`: The target version used for compilation.
 * `runtime`: The runtime version used for testing and distributions.
 

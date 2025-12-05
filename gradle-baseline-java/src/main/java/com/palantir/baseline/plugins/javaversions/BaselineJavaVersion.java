@@ -120,7 +120,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
 
     private static void configureCompilationTasks(
             Project project,
-            Provider<JavaLanguageVersion> compiler,
+            Provider<JavaLanguageVersion> javaCompiler,
             Property<ChosenJavaVersion> target,
             JavaToolchains baselineConfiguredJavaToolchains,
             BaselineJavaVersionsExtension rootExtension,
@@ -128,13 +128,22 @@ public final class BaselineJavaVersion implements Plugin<Project> {
 
         project.getTasks().withType(JavaCompile.class).configureEach(javaCompileTask -> {
             setJavaCompiler(
-                    javaCompileTask, rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, compiler);
+                    javaCompileTask,
+                    rootExtension,
+                    baselineConfiguredJavaToolchains,
+                    javaToolchainService,
+                    // If `javaCompiler` is explicitly set, we use that version for the compiler, else we fall
+                    // back to the old behaviour of
+                    javaCompiler.orElse(target.map(ChosenJavaVersion::javaLanguageVersion)));
+
             javaCompileTask.getOptions().getCompilerArgumentProviders().add(new EnablePreviewArgumentProvider(target));
 
             javaCompileTask
                     .getOptions()
                     .getRelease()
-                    .set(target.map(ChosenJavaVersion::asMajorVersion).map(value -> {
+                    // The `.zip(javaCompiler` here ensures that release will be set if and only if javaCompiler
+                    // property was set. If it was not set, we use the old behaviour of not setting release.
+                    .set(target.map(ChosenJavaVersion::asMajorVersion).zip(javaCompiler, (targetValue, _ignored) -> {
                         // Javac does not allow `--add-exports` and `--release` to be used together. This is
                         // problematic, as quite a lot of code we write (especially compiler plugins like
                         // error-prone checks or palantir-java-format) need to use `--add-exports`. But alas, there's no
@@ -169,7 +178,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                                 project.getExtensions().findByType(BaselineModuleJvmArgsExtension.class);
 
                         if (moduleJvmArgs == null) {
-                            return value;
+                            return targetValue;
                         }
 
                         boolean anyExports = !Sets.union(
@@ -181,7 +190,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                             return null;
                         }
 
-                        return value;
+                        return targetValue;
                     }));
         });
 

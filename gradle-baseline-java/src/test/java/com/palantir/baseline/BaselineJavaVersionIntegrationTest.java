@@ -150,145 +150,288 @@ class BaselineJavaVersionIntegrationTest {
                 """);
         }
 
-        @Test
-        void java_21_source_feature_fails_targeting_java_17_using_java_21_compiler(
-                GradleInvoker gradle, RootProject rootProject) {
+        @Nested
+        class WithExplicitJavaCompiler {
+            @Test
+            void java_21_source_feature_fails_targeting_java_17_using_java_21_compiler(
+                    GradleInvoker gradle, RootProject rootProject) {
 
-            rootProject.buildGradle().append("""
-                javaVersion {
-                    javaCompiler = 21
-                    target = 17
-                    runtime = 21
-                }
-                """);
+                rootProject.buildGradle().append("""
+                    javaVersion {
+                        javaCompiler = 21
+                        target = 17
+                        runtime = 21
+                    }
+                    """);
 
-            rootProject.mainSourceSet().java().writeClass(JAVA_21_SOURCE_FEATURE_CODE);
+                rootProject.mainSourceSet().java().writeClass(JAVA_21_SOURCE_FEATURE_CODE);
 
-            InvocationResult result = gradle.withArgs("compileJava").buildsWithFailure();
+                InvocationResult result = gradle.withArgs("compileJava").buildsWithFailure();
 
-            result.assertThat().output().contains("error: patterns in switch statements are not supported");
+                result.assertThat().output().contains("error: patterns in switch statements are not supported");
 
-            result.assertThat().output().contains("Compiler Java Version: 21");
-            result.assertThat().output().contains("Compiler Arg: --release=17");
-            result.assertThat().output().contains("Compiler Arg: --source=17");
-            result.assertThat().output().contains("Compiler Arg: --target=17");
+                result.assertThat().output().contains("Compiler Java Version: 21");
+                result.assertThat().output().contains("Compiler Arg: --release=17");
+                result.assertThat().output().contains("Compiler Arg: --source=17");
+                result.assertThat().output().contains("Compiler Arg: --target=17");
+            }
+
+            @Test
+            void java_21_api_usage_fails_targeting_java_17_using_java_21_compiler(
+                    GradleInvoker gradle, RootProject rootProject) {
+
+                rootProject.buildGradle().append("""
+                    javaVersion {
+                        javaCompiler = 21
+                        target = 17
+                        runtime = 21
+                    }
+                    """);
+
+                rootProject.mainSourceSet().java().writeClass(JAVA_21_API_USAGE);
+
+                InvocationResult result = gradle.withArgs("compileJava").buildsWithFailure();
+
+                result.assertThat().output().contains("error: cannot find symbol");
+
+                result.assertThat().output().contains("Compiler Java Version: 21");
+                result.assertThat().output().contains("Compiler Arg: --release=17");
+                result.assertThat().output().contains("Compiler Arg: --source=17");
+                result.assertThat().output().contains("Compiler Arg: --target=17");
+            }
+
+            @Test
+            void java_21_api_usage_annoyingly_succeeds_targeting_java_17_with_exports_using_a_java_21_compiler(
+                    GradleInvoker gradle, RootProject rootProject) {
+
+                // This test merely shows the behaviour that actually happens - this is not a behaviour we actually
+                // want, just something we forced to accept. If you can fix it, you should and instead make this
+                // the opposite test.
+                // We can't use `--release` with `--add-exports`, which means users can use higher versioned APIs
+                // than are available than their target versions, meaning compilation succeeds even when you
+                // would not expect it to.
+
+                rootProject.buildGradle().plugins().add("com.palantir.baseline-module-jvm-args");
+
+                rootProject.buildGradle().append("""
+                    javaVersion {
+                        javaCompiler = 21
+                        target = 17
+                        runtime = 21
+                    }
+
+                    moduleJvmArgs {
+                        exports = ['jdk.compiler/com.sun.tools.javac.util']
+                    }
+                    """);
+
+                rootProject.mainSourceSet().java().writeClass(JAVA_21_API_USAGE);
+
+                InvocationResult result = gradle.withArgs("compileJava").buildsSuccessfully();
+
+                result.assertThat().output().contains("Compiler Java Version: 21");
+                result.assertThat().output().contains("Compiler Arg: --source=17");
+                result.assertThat().output().contains("Compiler Arg: --target=17");
+                result.assertThat().output().doesNotContain("Compiler Arg: --release=");
+                result.assertThat()
+                        .output()
+                        .contains("Compiler Arg: --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED");
+            }
+
+            @Test
+            void java_21_api_usage_fails_targeting_java_17_without_exports_but_module_jvm_args_plugin_21_compiler(
+                    GradleInvoker gradle, RootProject rootProject) {
+
+                rootProject.buildGradle().plugins().add("com.palantir.baseline-module-jvm-args");
+
+                rootProject.buildGradle().append("""
+                    javaVersion {
+                        javaCompiler = 21
+                        target = 17
+                        runtime = 21
+                    }
+                    """);
+
+                rootProject.mainSourceSet().java().writeClass(JAVA_21_API_USAGE);
+
+                InvocationResult result = gradle.withArgs("compileJava").buildsWithFailure();
+
+                result.assertThat().output().contains("Compiler Java Version: 21");
+                result.assertThat().output().contains("Compiler Arg: --release=17");
+                result.assertThat().output().contains("Compiler Arg: --source=17");
+                result.assertThat().output().contains("Compiler Arg: --target=17");
+
+                result.assertThat().output().doesNotContain("Compiler Arg: --add-exports");
+            }
+
+            @Test
+            void java_17_compilation_succeeds_targeting_java_17_using_java_17_compiler(
+                    GradleInvoker gradle, RootProject rootProject) {
+
+                rootProject.buildGradle().append("""
+                    javaVersion {
+                        javaCompiler = 17
+                        target = '17'
+                        runtime = '17'
+                    }
+                    """);
+
+                rootProject.mainSourceSet().java().writeClass(JAVA_17_COMPATIBLE_CODE);
+
+                InvocationResult result = gradle.withArgs("compileJava").buildsSuccessfully();
+
+                result.assertThat().output().contains("Compiler Java Version: 17");
+                result.assertThat().output().contains("Compiler Arg: --release=17");
+                result.assertThat().output().contains("Compiler Arg: --source=17");
+                result.assertThat().output().contains("Compiler Arg: --target=17");
+
+                File compiledClass = rootProject
+                        .buildDir()
+                        .path()
+                        .resolve("classes/java/main/Main.class")
+                        .toFile();
+                assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
+            }
         }
 
-        @Test
-        void java_21_api_usage_fails_targeting_java_17_using_java_21_compiler(
-                GradleInvoker gradle, RootProject rootProject) {
+        /// These tests are mainly to maintain the old behaviour when javaCompiler is not set
+        @Nested
+        class WithoutExplicitJavaCompiler {
+            @Test
+            void java_21_source_feature_fails_targeting_java_17(GradleInvoker gradle, RootProject rootProject) {
 
-            rootProject.buildGradle().append("""
-                javaVersion {
-                    javaCompiler = 21
-                    target = 17
-                    runtime = 21
-                }
-                """);
+                rootProject.buildGradle().append("""
+                    javaVersion {
+                        target = 17
+                        runtime = 21
+                    }
+                    """);
 
-            rootProject.mainSourceSet().java().writeClass(JAVA_21_API_USAGE);
+                rootProject.mainSourceSet().java().writeClass(JAVA_21_SOURCE_FEATURE_CODE);
 
-            InvocationResult result = gradle.withArgs("compileJava").buildsWithFailure();
+                InvocationResult result = gradle.withArgs("compileJava").buildsWithFailure();
 
-            result.assertThat().output().contains("error: cannot find symbol");
+                result.assertThat()
+                        .output()
+                        .contains("error: patterns in switch statements are a preview feature and are disabled");
 
-            result.assertThat().output().contains("Compiler Java Version: 21");
-            result.assertThat().output().contains("Compiler Arg: --release=17");
-            result.assertThat().output().contains("Compiler Arg: --source=17");
-            result.assertThat().output().contains("Compiler Arg: --target=17");
-        }
+                result.assertThat().output().contains("Compiler Java Version: 17");
+                result.assertThat().output().contains("Compiler Arg: --source=17");
+                result.assertThat().output().contains("Compiler Arg: --target=17");
+                result.assertThat().output().doesNotContain("Compiler Arg: --release");
+            }
 
-        @Test
-        void java_21_api_usage_annoyingly_succeeds_targeting_java_17_with_exports_using_a_java_21_compiler(
-                GradleInvoker gradle, RootProject rootProject) {
+            @Test
+            void java_21_api_usage_fails_targeting_java_17(GradleInvoker gradle, RootProject rootProject) {
 
-            // This test merely shows the behaviour that actually happens - this is not a behaviour we actually
-            // want, just something we forced to accept. If you can fix it, you should and instead make this
-            // the opposite test.
-            // We can't use `--release` with `--add-exports`, which means users can use higher versioned APIs
-            // than are available than their target versions, meaning compilation succeeds even when you
-            // would not expect it to.
+                rootProject.buildGradle().append("""
+                    javaVersion {
+                        target = 17
+                        runtime = 21
+                    }
+                    """);
 
-            rootProject.buildGradle().plugins().add("com.palantir.baseline-module-jvm-args");
+                rootProject.mainSourceSet().java().writeClass(JAVA_21_API_USAGE);
 
-            rootProject.buildGradle().append("""
-                javaVersion {
-                    javaCompiler = 21
-                    target = 17
-                    runtime = 21
-                }
+                InvocationResult result = gradle.withArgs("compileJava").buildsWithFailure();
 
-                moduleJvmArgs {
-                    exports = ['jdk.compiler/com.sun.tools.javac.util']
-                }
-                """);
+                result.assertThat().output().contains("error: cannot find symbol");
 
-            rootProject.mainSourceSet().java().writeClass(JAVA_21_API_USAGE);
+                result.assertThat().output().contains("Compiler Java Version: 17");
+                result.assertThat().output().contains("Compiler Arg: --source=17");
+                result.assertThat().output().contains("Compiler Arg: --target=17");
+                result.assertThat().output().doesNotContain("Compiler Arg: --release");
+            }
 
-            InvocationResult result = gradle.withArgs("compileJava").buildsSuccessfully();
+            @Test
+            void java_21_api_usage_fails_targeting_java_17_with_exports(GradleInvoker gradle, RootProject rootProject) {
+                // When we add an explicit `javaCompiler`, we need to use `--release` to prevent higher api
+                // usage from working, but `--release` is not compatible with `--add-exports`, so we can't use it.
+                // Hence, people can use higher APIs with exports and the explicit `javaCompiler`.
+                // This test is just recording the old behaviour without explicit `javaCompiler` that stopped
+                // higher API usage.
 
-            result.assertThat().output().contains("Compiler Java Version: 21");
-            result.assertThat().output().contains("Compiler Arg: --source=17");
-            result.assertThat().output().contains("Compiler Arg: --target=17");
-            result.assertThat().output().doesNotContain("Compiler Arg: --release=");
-            result.assertThat()
-                    .output()
-                    .contains("Compiler Arg: --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED");
-        }
+                rootProject.buildGradle().plugins().add("com.palantir.baseline-module-jvm-args");
 
-        @Test
-        void java_21_api_usage_fails_targeting_java_17_without_exports_but_module_jvm_args_plugin_applied_21_compiler(
-                GradleInvoker gradle, RootProject rootProject) {
+                rootProject.buildGradle().append("""
+                    javaVersion {
+                        target = 17
+                        runtime = 21
+                    }
 
-            rootProject.buildGradle().plugins().add("com.palantir.baseline-module-jvm-args");
+                    moduleJvmArgs {
+                        exports = ['jdk.compiler/com.sun.tools.javac.util']
+                    }
+                    """);
 
-            rootProject.buildGradle().append("""
-                javaVersion {
-                    javaCompiler = 21
-                    target = 17
-                    runtime = 21
-                }
-                """);
+                rootProject.mainSourceSet().java().writeClass(JAVA_21_API_USAGE);
 
-            rootProject.mainSourceSet().java().writeClass(JAVA_21_API_USAGE);
+                InvocationResult result = gradle.withArgs("compileJava").buildsWithFailure();
 
-            InvocationResult result = gradle.withArgs("compileJava").buildsWithFailure();
+                result.assertThat().output().contains("error: cannot find symbol");
 
-            result.assertThat().output().contains("Compiler Java Version: 21");
-            result.assertThat().output().contains("Compiler Arg: --release=17");
-            result.assertThat().output().contains("Compiler Arg: --source=17");
-            result.assertThat().output().contains("Compiler Arg: --target=17");
+                result.assertThat().output().contains("Compiler Java Version: 17");
+                result.assertThat().output().contains("Compiler Arg: --source=17");
+                result.assertThat().output().contains("Compiler Arg: --target=17");
+                result.assertThat().output().doesNotContain("Compiler Arg: --release=");
+                result.assertThat()
+                        .output()
+                        .contains("Compiler Arg: --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED");
+            }
 
-            result.assertThat().output().doesNotContain("Compiler Arg: --add-exports");
-        }
+            @Test
+            void java_21_api_usage_fails_targeting_java_17_without_exports_but_module_jvm_args_plugin(
+                    GradleInvoker gradle, RootProject rootProject) {
 
-        @Test
-        void java_17_compilation_succeeds_targeting_java_17_using_java_17_compiler(
-                GradleInvoker gradle, RootProject rootProject) {
+                rootProject.buildGradle().plugins().add("com.palantir.baseline-module-jvm-args");
 
-            rootProject.buildGradle().append("""
-                javaVersion {
-                    javaCompiler = 17
-                    target = '17'
-                    runtime = '17'
-                }
-                """);
+                rootProject.buildGradle().append("""
+                    javaVersion {
+                        target = 17
+                        runtime = 21
+                    }
+                    """);
 
-            rootProject.mainSourceSet().java().writeClass(JAVA_17_COMPATIBLE_CODE);
+                rootProject.mainSourceSet().java().writeClass(JAVA_21_API_USAGE);
 
-            InvocationResult result = gradle.withArgs("compileJava").buildsSuccessfully();
+                InvocationResult result = gradle.withArgs("compileJava").buildsWithFailure();
 
-            result.assertThat().output().contains("Compiler Java Version: 17");
-            result.assertThat().output().contains("Compiler Arg: --release=17");
-            result.assertThat().output().contains("Compiler Arg: --source=17");
-            result.assertThat().output().contains("Compiler Arg: --target=17");
+                result.assertThat().output().contains("error: cannot find symbol");
 
-            File compiledClass = rootProject
-                    .buildDir()
-                    .path()
-                    .resolve("classes/java/main/Main.class")
-                    .toFile();
-            assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
+                result.assertThat().output().contains("Compiler Java Version: 17");
+                result.assertThat().output().contains("Compiler Arg: --source=17");
+                result.assertThat().output().contains("Compiler Arg: --target=17");
+
+                result.assertThat().output().doesNotContain("Compiler Arg: --release");
+                result.assertThat().output().doesNotContain("Compiler Arg: --add-exports");
+            }
+
+            @Test
+            void java_17_compilation_succeeds_targeting_java_17(GradleInvoker gradle, RootProject rootProject) {
+
+                rootProject.buildGradle().append("""
+                    javaVersion {
+                        target = '17'
+                        runtime = '17'
+                    }
+                    """);
+
+                rootProject.mainSourceSet().java().writeClass(JAVA_17_COMPATIBLE_CODE);
+
+                InvocationResult result = gradle.withArgs("compileJava").buildsSuccessfully();
+
+                result.assertThat().output().contains("Compiler Java Version: 17");
+                result.assertThat().output().contains("Compiler Arg: --source=17");
+                result.assertThat().output().contains("Compiler Arg: --target=17");
+                result.assertThat().output().doesNotContain("Compiler Arg: --release");
+
+                File compiledClass = rootProject
+                        .buildDir()
+                        .path()
+                        .resolve("classes/java/main/Main.class")
+                        .toFile();
+                assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
+            }
         }
     }
 
