@@ -16,7 +16,6 @@
 
 package com.palantir.baseline.plugins;
 
-import com.palantir.gradle.baselineerrorprone.BaselineErrorProne;
 import org.gradle.api.GradleException;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
@@ -50,8 +49,6 @@ public final class Baseline implements Plugin<Project> {
             // these are groovy-based classes so java has trouble with cross compiler
             proj.getPluginManager().apply("com.palantir.baseline-eclipse");
             proj.getPluginManager().apply("com.palantir.baseline-idea");
-            // TEMPHACK(okelvin): remove this to decouple baseline-error-prone
-            proj.getPluginManager().apply(BaselineErrorProne.class);
             proj.getPluginManager().apply(BaselineFormat.class);
             proj.getPluginManager().apply(BaselineEncoding.class);
             proj.getPluginManager().apply(BaselineReproducibility.class);
