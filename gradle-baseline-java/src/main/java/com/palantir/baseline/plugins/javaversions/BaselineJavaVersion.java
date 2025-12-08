@@ -19,6 +19,7 @@ package com.palantir.baseline.plugins.javaversions;
 import com.google.common.collect.Sets;
 import com.palantir.baseline.extensions.BaselineModuleJvmArgsExtension;
 import java.util.Collections;
+import java.util.Optional;
 import javax.inject.Inject;
 import org.gradle.api.Action;
 import org.gradle.api.DefaultTask;
@@ -345,6 +346,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
         }
 
         @Input
+        @org.gradle.api.tasks.Optional
         public abstract Property<JavaLanguageVersion> getJavaCompilerVersion();
 
         @Input
@@ -358,7 +360,8 @@ public final class BaselineJavaVersion implements Plugin<Project> {
 
         @TaskAction
         public final void checkJavaVersions() {
-            JavaLanguageVersion javaCompiler = getJavaCompilerVersion().get();
+            Optional<JavaLanguageVersion> possibleJavaCompiler =
+                    Optional.ofNullable(getJavaCompilerVersion().getOrNull());
             ChosenJavaVersion target = getTargetVersion().get();
             ChosenJavaVersion runtime = getRuntimeVersion().get();
 
@@ -367,7 +370,7 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                             "BaselineJavaVersion configured {} with javaCompiler version {}, target version {} and"
                                     + " runtime version {}",
                             getProjectDisplayName().get(),
-                            javaCompiler,
+                            possibleJavaCompiler,
                             target,
                             runtime);
 
@@ -380,14 +383,16 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                             runtime, target, getProjectDisplayName().get()));
                 }
 
-                if (!target.javaLanguageVersion().equals(javaCompiler)) {
-                    throw new GradleException(String.format(
-                            "The version of the Java Compiler (%s) must be exactly the same as the compilation target"
-                                    + " (%s) in %s, because --enable-preview is enabled. Otherwise the preview feature"
-                                    + " will not necessarily be available in the compiler."
-                                    + " See https://openjdk.org/jeps/12.",
-                            javaCompiler, target, getProjectDisplayName().get()));
-                }
+                possibleJavaCompiler.ifPresent(javaCompiler -> {
+                    if (!target.javaLanguageVersion().equals(javaCompiler)) {
+                        throw new GradleException(String.format(
+                                "The version of the Java Compiler (%s) must be exactly the same as the compilation"
+                                    + " target (%s) in %s, because --enable-preview is enabled. Otherwise the preview"
+                                    + " feature will not necessarily be available in the compiler. See"
+                                    + " https://openjdk.org/jeps/12.",
+                                javaCompiler, target, getProjectDisplayName().get()));
+                    }
+                });
             }
 
             if (target.javaLanguageVersion().asInt()
@@ -398,12 +403,14 @@ public final class BaselineJavaVersion implements Plugin<Project> {
                         target, runtime, getProjectDisplayName().get()));
             }
 
-            if (target.javaLanguageVersion().asInt() > javaCompiler.asInt()) {
-                throw new GradleException(String.format(
-                        "The requested compilation target Java version (%s) must not "
-                                + "exceed the javaCompiler Java version (%s) in %s",
-                        target, javaCompiler, getProjectDisplayName().get()));
-            }
+            possibleJavaCompiler.ifPresent(javaCompiler -> {
+                if (target.javaLanguageVersion().asInt() > javaCompiler.asInt()) {
+                    throw new GradleException(String.format(
+                            "The requested compilation target Java version (%s) must not "
+                                    + "exceed the javaCompiler Java version (%s) in %s",
+                            target, javaCompiler, getProjectDisplayName().get()));
+                }
+            });
         }
     }
 
