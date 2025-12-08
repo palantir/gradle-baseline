@@ -16,6 +16,7 @@
 
 package com.palantir.baseline.plugins.javaversions;
 
+import java.util.Collections;
 import java.util.Set;
 import javax.inject.Inject;
 import org.gradle.api.model.ObjectFactory;
@@ -108,7 +109,7 @@ public abstract class BaselineJavaVersionExtension {
         SetProperty<JavaLanguageVersion> allJavaVersionsUsed =
                 getObjectFactory().setProperty(JavaLanguageVersion.class);
 
-        allJavaVersionsUsed.add(javaCompiler);
+        allJavaVersionsUsed.addAll(javaCompiler.map(Collections::singleton).orElse(Set.of()));
         allJavaVersionsUsed.add(target.map(ChosenJavaVersion::javaLanguageVersion));
         allJavaVersionsUsed.add(runtime.map(ChosenJavaVersion::javaLanguageVersion));
 
