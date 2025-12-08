@@ -878,6 +878,18 @@ class BaselineJavaVersionIntegrationTest {
 
             gradle.withArgs("checkJavaVersions").buildsSuccessfully();
         }
+
+        @Test
+        void verification_should_succeed_when_compilation_not_set(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                javaVersion {
+                    target = 17
+                    runtime = 17
+                }
+                """);
+
+            gradle.withArgs("checkJavaVersions").buildsSuccessfully();
+        }
     }
 
     @Nested
