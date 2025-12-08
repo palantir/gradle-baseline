@@ -17,6 +17,7 @@
 package com.palantir.baseline.plugins.javaversions;
 
 import com.palantir.gradle.utils.lazilyconfiguredmapping.LazilyConfiguredMapping;
+import java.util.Collections;
 import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.atomic.AtomicReference;
@@ -161,7 +162,7 @@ public abstract class BaselineJavaVersionsExtension implements BaselineJavaVersi
         SetProperty<JavaLanguageVersion> allJavaVersionsUsed =
                 getObjectFactory().setProperty(JavaLanguageVersion.class);
 
-        allJavaVersionsUsed.add(javaCompiler);
+        allJavaVersionsUsed.addAll(javaCompiler.map(Collections::singleton).orElse(Set.of()));
         allJavaVersionsUsed.add(libraryTarget);
         allJavaVersionsUsed.add(distributionTarget.map(ChosenJavaVersion::javaLanguageVersion));
         allJavaVersionsUsed.add(runtime.map(ChosenJavaVersion::javaLanguageVersion));
