@@ -51,7 +51,9 @@ public final class Baseline implements Plugin<Project> {
             proj.getPluginManager().apply("com.palantir.baseline-eclipse");
             proj.getPluginManager().apply("com.palantir.baseline-idea");
             // TEMPHACK(okelvin): remove this to decouple baseline-error-prone
-            proj.getPluginManager().apply(BaselineErrorProne.class);
+            if (!proj.getPluginManager().hasPlugin("com.palantir.baseline-error-prone")) {
+                proj.getPluginManager().apply(BaselineErrorProne.class);
+            }
             proj.getPluginManager().apply(BaselineFormat.class);
             proj.getPluginManager().apply(BaselineEncoding.class);
             proj.getPluginManager().apply(BaselineReproducibility.class);
