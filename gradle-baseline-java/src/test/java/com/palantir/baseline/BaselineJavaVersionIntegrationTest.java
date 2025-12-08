@@ -1031,6 +1031,21 @@ class BaselineJavaVersionIntegrationTest {
             result.assertThat().task(":generateTarget").upToDate();
             result.assertThat().task(":generateRuntime").upToDate();
         }
+
+        @Test
+        void has_a_value_when_javaCompiler_is_not_set(GradleInvoker gradle, RootProject rootProject) {
+            rootProject.buildGradle().append("""
+                javaVersion {
+                    target = 17
+                    runtime = 21
+                }
+                """);
+
+            InvocationResult result =
+                    gradle.withArgs("printAllJavaVersionsUsed").buildsSuccessfully();
+
+            result.assertThat().output().contains("allJavaVersionsUsed: [17, 21]");
+        }
     }
 
     private static final int BYTECODE_IDENTIFIER = 0xCAFEBABE;
