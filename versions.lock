@@ -156,7 +156,7 @@ org.eclipse.sisu:org.eclipse.sisu.inject:0.3.5 (3 constraints: 852caa93)
 
 org.eclipse.sisu:org.eclipse.sisu.plexus:0.3.5 (2 constraints: 141abc34)
 
-org.immutables:value:2.11.7 (2 constraints: b0168a35)
+org.immutables:value:2.12.0 (2 constraints: aa165434)
 
 org.inferred:freebuilder:1.14.6 (1 constraints: 3e053b3b)
 
@@ -256,7 +256,7 @@ org.hamcrest:hamcrest:3.0 (2 constraints: 42185076)
 
 org.hamcrest:hamcrest-core:3.0 (2 constraints: 720acabf)
 
-org.immutables:serial:2.11.7 (1 constraints: 74113fef)
+org.immutables:serial:2.12.0 (1 constraints: 74113fef)
 
 org.junit.jupiter:junit-jupiter:6.0.1 (1 constraints: 48070970)
 
