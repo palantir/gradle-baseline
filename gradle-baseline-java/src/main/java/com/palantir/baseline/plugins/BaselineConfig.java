@@ -22,6 +22,7 @@ import java.io.FileWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Optional;
+import javax.xml.XMLConstants;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
 import javax.xml.transform.OutputKeys;
@@ -110,6 +111,8 @@ class BaselineConfig extends AbstractBaselinePlugin {
 
                 try {
                     DocumentBuilderFactory builderFactory = DocumentBuilderFactory.newInstance();
+                    builderFactory.setFeature(XMLConstants.FEATURE_SECURE_PROCESSING, true);
+                    builderFactory.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false);
                     DocumentBuilder builder = builderFactory.newDocumentBuilder();
 
                     InputSource inputSource = new InputSource(new FileReader(checkstyleXml.toFile()));
