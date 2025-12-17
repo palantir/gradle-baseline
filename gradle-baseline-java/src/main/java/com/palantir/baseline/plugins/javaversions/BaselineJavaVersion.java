@@ -225,13 +225,17 @@ public final class BaselineJavaVersion implements Plugin<Project> {
         });
         // checkstyle.getJavaLauncher() was added in Gradle 7.5
         if (GradleVersion.current().compareTo(GradleVersion.version("7.5")) >= 0) {
+            // Checkstyle requires at least Java 17 to run, so we use the javaCompiler version, which is usually
+            // set high compared to the target version.
+            Provider<ChosenJavaVersion> checkstyleJavaVersion =
+                    javaCompiler.map(ChosenJavaVersion::of).orElse(target);
             project.getTasks().withType(Checkstyle.class).configureEach(checkstyle -> checkstyle
                     .getJavaLauncher()
                     .set(getJavaLauncher(
                             rootExtension,
                             baselineConfiguredJavaToolchains,
                             javaToolchainService,
-                            javaCompiler.map(ChosenJavaVersion::of).orElse(target))));
+                            checkstyleJavaVersion)));
         }
 
         project.getTasks().withType(GroovyCompile.class).configureEach(groovyCompileTask -> {
