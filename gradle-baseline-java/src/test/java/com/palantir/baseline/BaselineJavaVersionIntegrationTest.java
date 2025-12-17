@@ -106,6 +106,23 @@ class BaselineJavaVersionIntegrationTest {
         }
         """;
 
+    // language=XML
+    private static final String CHECKSTYLE_XML = """
+        <?xml version="1.0"?>
+        <!DOCTYPE module PUBLIC
+                "-//Checkstyle//DTD Checkstyle Configuration 1.3//EN"
+                "https://checkstyle.org/dtds/configuration_1_3.dtd">
+
+        <module name="Checker">
+            <property name="charset" value="UTF-8"/>
+            <property name="severity" value="error"/>
+
+            <module name="TreeWalker">
+                <module name="ConstantName"/>
+            </module>
+        </module>
+        """;
+
     @BeforeEach
     void beforeEach(RootProject rootProject) {
         InheritGradleJdks.beforeEach(rootProject);
@@ -292,6 +309,22 @@ class BaselineJavaVersionIntegrationTest {
                         .toFile();
                 assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
             }
+
+            @Test
+            void checkstyle_runs_with_javaCompiler(GradleInvoker gradle, RootProject rootProject) {
+                rootProject.file("config/checkstyle/checkstyle.xml").append(CHECKSTYLE_XML);
+                rootProject.buildGradle().plugins().add("checkstyle");
+
+                rootProject.buildGradle().append("""
+                    javaVersion {
+                        javaCompiler = 21
+                        target = 11
+                    }
+                    """);
+
+                rootProject.mainSourceSet().java().writeClass(JAVA_11_COMPATIBLE_CODE);
+                gradle.withArgs("checkstyleMain").buildsSuccessfully();
+            }
         }
 
         /// These tests are mainly to maintain the old behaviour when javaCompiler is not set
@@ -431,6 +464,25 @@ class BaselineJavaVersionIntegrationTest {
                         .resolve("classes/java/main/Main.class")
                         .toFile();
                 assertBytecodeVersion(compiledClass, JAVA_17_BYTECODE, NOT_ENABLE_PREVIEW_BYTECODE);
+            }
+
+            @Test
+            void checkstyle_runs_with_target_version(GradleInvoker gradle, RootProject rootProject) {
+                rootProject.file("config/checkstyle/checkstyle.xml").append(CHECKSTYLE_XML);
+                rootProject.buildGradle().plugins().add("checkstyle");
+
+                rootProject.buildGradle().append("""
+                    javaVersion {
+                        runtime = 17
+                        target = 11
+                    }
+                    """);
+
+                rootProject.mainSourceSet().java().writeClass(JAVA_11_COMPATIBLE_CODE);
+                InvocationResult result = gradle.withArgs("checkstyleMain").buildsWithFailure();
+                result.assertThat()
+                        .output()
+                        .contains("this version of the Java Runtime only recognizes class file versions up to 55.0");
             }
         }
     }
