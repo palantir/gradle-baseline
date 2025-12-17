@@ -228,7 +228,10 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             project.getTasks().withType(Checkstyle.class).configureEach(checkstyle -> checkstyle
                     .getJavaLauncher()
                     .set(getJavaLauncher(
-                            rootExtension, baselineConfiguredJavaToolchains, javaToolchainService, target)));
+                            rootExtension,
+                            baselineConfiguredJavaToolchains,
+                            javaToolchainService,
+                            javaCompiler.map(ChosenJavaVersion::of).orElse(target))));
         }
 
         project.getTasks().withType(GroovyCompile.class).configureEach(groovyCompileTask -> {
