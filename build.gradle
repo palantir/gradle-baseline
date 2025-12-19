@@ -76,7 +76,7 @@ allprojects {
     apply plugin: 'com.palantir.jakarta-package-alignment'
 
     group = 'com.palantir.baseline'
-    version System.env.CIRCLE_TAG ?: gitVersion()
+    version '7.0.0'
     description = 'A Gradle plugin for applying Baseline-recommended build and IDE settings'
 }
 

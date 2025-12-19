@@ -19,6 +19,7 @@ package com.palantir.baseline.tasks;
 import com.google.common.collect.Streams;
 import com.palantir.baseline.plugins.BaselineExactDependencies;
 import com.palantir.gradle.failurereports.exceptions.ExceptionWithSuggestion;
+import java.io.File;
 import java.io.Serializable;
 import java.nio.file.Path;
 import java.util.Comparator;
@@ -39,6 +40,7 @@ import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedConfiguration;
 import org.gradle.api.attributes.Usage;
 import org.gradle.api.file.ConfigurableFileCollection;
+import org.gradle.api.internal.file.CompositeFileCollection;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Provider;
@@ -77,6 +79,18 @@ public abstract class CheckUnusedDependenciesTask extends DefaultTask {
 
     @TaskAction
     public final void checkUnusedDependencies() {
+        List<?> configurations = getDependenciesConfigurations().get();
+        getLogger().lifecycle(" ZZZZZ: " + configurations.size());
+
+        for (Object configuration : configurations) {
+            getLogger().lifecycle("  ZZZZZ: " + configuration.getClass().getCanonicalName());
+            if (configuration instanceof CompositeFileCollection fileCollection) {
+                getLogger().lifecycle("  ZZZZZ: " + fileCollection.getDisplayName());
+                for (File file : fileCollection.getFiles()) {
+                    getLogger().lifecycle("   ZZZZZ: " + file.toPath());
+                }
+            }
+        }
         Set<ResolvedConfiguration> resolvedConfigurations = getDependenciesConfigurations().get().stream()
                 .map(Configuration::getResolvedConfiguration)
                 .collect(Collectors.toSet());
@@ -146,6 +160,8 @@ public abstract class CheckUnusedDependenciesTask extends DefaultTask {
     }
 
     public final void dependenciesConfiguration(Configuration dependenciesConfiguration) {
+        getLogger().lifecycle("CCCC: " + dependenciesConfiguration.getClass().getCanonicalName());
+        getLogger().lifecycle("DDDD: " + dependenciesConfiguration);
         getDependenciesConfigurations().add(Objects.requireNonNull(dependenciesConfiguration));
     }
 
