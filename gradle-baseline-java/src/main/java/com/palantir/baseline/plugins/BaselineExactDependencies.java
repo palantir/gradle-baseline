@@ -24,7 +24,9 @@ import com.palantir.baseline.tasks.CheckUnusedDependenciesTask;
 import java.io.File;
 import java.io.IOException;
 import java.io.UncheckedIOException;
+import java.util.Collection;
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.stream.Stream;
@@ -38,11 +40,11 @@ import org.gradle.api.NamedDomainObjectProvider;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.artifacts.Configuration;
-import org.gradle.api.artifacts.ModuleVersionIdentifier;
-import org.gradle.api.artifacts.ResolvedArtifact;
-import org.gradle.api.artifacts.ResolvedConfiguration;
 import org.gradle.api.artifacts.component.ComponentIdentifier;
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
+import org.gradle.api.artifacts.result.ArtifactResult;
+import org.gradle.api.artifacts.result.ResolvedArtifactResult;
 import org.gradle.api.plugins.JavaPluginExtension;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.TaskProvider;
@@ -92,7 +94,9 @@ public final class BaselineExactDependencies implements Plugin<Project> {
                             task.dependsOn(sourceSet.getClassesTaskName());
                             task.getSourceClasses()
                                     .setFrom(sourceSet.getOutput().getClassesDirs());
-                            task.getDependenciesConfigurations().add(compileClasspath);
+                            task.getDependenciesConfigurations()
+                                    .add(compileClasspath.flatMap(config ->
+                                            config.getIncoming().getArtifacts().getResolvedArtifacts()));
                             task.withDeclaredDependenciesFrom(implementation);
 
                             // ignore intra-project dependencies, which are typically added automatically for things
@@ -145,51 +149,38 @@ public final class BaselineExactDependencies implements Plugin<Project> {
         }
     }
 
-    public static String asString(ResolvedArtifact artifact) {
-        ModuleVersionIdentifier moduleVersionId = artifact.getModuleVersion().getId();
-        StringBuilder builder = new StringBuilder()
-                .append(moduleVersionId.getGroup())
-                .append(":")
-                .append(moduleVersionId.getName());
-        if (artifact.getClassifier() != null) {
-            builder.append("::").append(artifact.getClassifier());
-        }
-        return builder.toString();
-    }
-
-    public static String asDependencyStringWithName(ResolvedArtifact artifact) {
+    public static Optional<String> asString(ArtifactResult artifact) {
         ComponentIdentifier componentId = artifact.getId().getComponentIdentifier();
         if (componentId instanceof ProjectComponentIdentifier projectComponentId) {
-            return "project('%s') <-- %s".formatted(projectComponentId.getProjectPath(), artifact.getName());
+            return Optional.of(String.format("project('%s')", projectComponentId.getProjectPath()));
+        } else if (componentId instanceof ModuleComponentIdentifier moduleComponentId) {
+            return Optional.of(String.format("'%s:%s'", moduleComponentId.getModuleIdentifier().getGroup(), moduleComponentId.getModuleIdentifier().getName()));
+        } else {
+            return Optional.empty();
         }
-
-        return asString(artifact);
     }
 
     @ThreadSafe
     public static final class Indexes {
-        private final Map<String, Set<ResolvedArtifact>> classToArtifacts = new ConcurrentHashMap<>();
+        private final Map<String, Set<ArtifactResult>> classToArtifacts = new ConcurrentHashMap<>();
 
-        public void populateIndexes(Set<ResolvedConfiguration> configurations) {
-            configurations.stream()
-                    .flatMap(configuration -> configuration.getResolvedArtifacts().stream())
-                    .filter(artifact -> VALID_ARTIFACT_EXTENSIONS.contains(artifact.getExtension()))
-                    .forEach(artifact -> {
-                        try {
-                            File jar = artifact.getFile();
-                            Set<String> classesInArtifact =
-                                    JAR_ANALYZER.analyze(jar.toURI().toURL());
-                            classesInArtifact.forEach(clazz -> classToArtifacts
-                                    .computeIfAbsent(clazz, _ignored -> ConcurrentHashMap.newKeySet())
-                                    .add(artifact));
-                        } catch (IOException e) {
-                            throw new UncheckedIOException("Unable to analyze artifact", e);
-                        }
-                    });
+        public void populateIndexes(Collection<ResolvedArtifactResult> artifactResults) {
+            artifactResults.forEach(artifact -> {
+                try {
+                    File jar = artifact.getFile();
+                    Set<String> classesInArtifact =
+                            JAR_ANALYZER.analyze(jar.toURI().toURL());
+                    classesInArtifact.forEach(clazz -> classToArtifacts
+                            .computeIfAbsent(clazz, _ignored -> ConcurrentHashMap.newKeySet())
+                            .add(artifact));
+                } catch (IOException e) {
+                    throw new UncheckedIOException("Unable to analyze artifact", e);
+                }
+            });
         }
 
         /** Given a class, what dependency brought it in. */
-        public Stream<ResolvedArtifact> classToArtifacts(String clazz) {
+        public Stream<ArtifactResult> classToArtifacts(String clazz) {
             return classToArtifacts.getOrDefault(clazz, ImmutableSet.of()).stream();
         }
     }

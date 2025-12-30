@@ -16,6 +16,7 @@
 
 package com.palantir.baseline.tasks;
 
+import com.google.common.collect.Comparators;
 import com.google.common.collect.Streams;
 import com.palantir.baseline.plugins.BaselineExactDependencies;
 import com.palantir.gradle.failurereports.exceptions.ExceptionWithSuggestion;
@@ -25,6 +26,7 @@ import java.util.Comparator;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.Set;
 import java.util.function.Predicate;
 import java.util.stream.Collectors;
@@ -37,6 +39,7 @@ import org.gradle.api.artifacts.ModuleDependency;
 import org.gradle.api.artifacts.ModuleVersionIdentifier;
 import org.gradle.api.artifacts.ResolvedArtifact;
 import org.gradle.api.artifacts.ResolvedConfiguration;
+import org.gradle.api.artifacts.result.ResolvedComponentResult;
 import org.gradle.api.attributes.Usage;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.model.ObjectFactory;
@@ -55,7 +58,7 @@ public abstract class CheckUnusedDependenciesTask extends DefaultTask {
     public abstract SetProperty<String> getIgnored();
 
     @Classpath
-    public abstract ListProperty<Configuration> getDependenciesConfigurations();
+    public abstract ListProperty<ResolvedComponentResult> getDependenciesConfigurations();
 
     @Input
     protected abstract SetProperty<ExplicitDependency> getExplicitDependencies();
@@ -78,7 +81,8 @@ public abstract class CheckUnusedDependenciesTask extends DefaultTask {
     @TaskAction
     public final void checkUnusedDependencies() {
         Set<ResolvedConfiguration> resolvedConfigurations = getDependenciesConfigurations().get().stream()
-                .map(Configuration::getResolvedConfiguration)
+                .flatMap(result -> result.getDependencies().stream())
+                .map(result -> result.)
                 .collect(Collectors.toSet());
         BaselineExactDependencies.INDEXES.populateIndexes(resolvedConfigurations);
 
@@ -109,11 +113,14 @@ public abstract class CheckUnusedDependenciesTask extends DefaultTask {
                 .debug(
                         "Possibly unused dependencies: {}",
                         possiblyUnusedArtifacts.stream()
-                                .map(BaselineExactDependencies::asString)
+                                .flatMap(BaselineExactDependencies::asString)
+                                .mapMulti(Optional::ifPresent)
                                 .sorted()
                                 .collect(Collectors.toList()));
         List<ResolvedArtifact> unusedArtifacts = possiblyUnusedArtifacts.stream()
                 .filter(artifact -> !shouldIgnore(artifact))
+                .map(BaselineExactDependencies::asString)
+                .
                 .sorted(Comparator.comparing(BaselineExactDependencies::asString))
                 .toList();
         if (!unusedArtifacts.isEmpty()) {

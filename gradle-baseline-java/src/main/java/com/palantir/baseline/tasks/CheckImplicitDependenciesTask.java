@@ -30,8 +30,12 @@ import java.util.stream.Collectors;
 import org.gradle.api.DefaultTask;
 import org.gradle.api.artifacts.Configuration;
 import org.gradle.api.artifacts.ResolvedArtifact;
-import org.gradle.api.artifacts.ResolvedConfiguration;
+import org.gradle.api.artifacts.component.ComponentIdentifier;
+import org.gradle.api.artifacts.component.ModuleComponentIdentifier;
 import org.gradle.api.artifacts.component.ProjectComponentIdentifier;
+import org.gradle.api.artifacts.result.ArtifactResult;
+import org.gradle.api.artifacts.result.ResolvedArtifactResult;
+import org.gradle.api.artifacts.result.ResolvedComponentResult;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
@@ -43,11 +47,11 @@ import org.gradle.api.tasks.TaskAction;
 
 public abstract class CheckImplicitDependenciesTask extends DefaultTask {
 
-    private static final Comparator<ResolvedArtifact> ARTIFACT_COMPARATOR =
+    private static final Comparator<ArtifactResult> ARTIFACT_COMPARATOR =
             Comparator.comparing(artifact -> artifact.getId().getDisplayName());
 
     @SuppressWarnings("for-rollout:GradleTypesAsFields")
-    private final ListProperty<Configuration> dependenciesConfigurations;
+    private final ListProperty<ResolvedComponentResult> dependenciesConfigurations;
 
     @SuppressWarnings("for-rollout:GradleTypesAsFields")
     private final Property<FileCollection> sourceClasses;
@@ -61,7 +65,7 @@ public abstract class CheckImplicitDependenciesTask extends DefaultTask {
     public CheckImplicitDependenciesTask() {
         setGroup("Verification");
         setDescription("Ensures all dependencies are explicitly declared, not just transitively provided");
-        dependenciesConfigurations = getProject().getObjects().listProperty(Configuration.class);
+        dependenciesConfigurations = getProject().getObjects().listProperty(ResolvedComponentResult.class);
         dependenciesConfigurations.set(Collections.emptyList());
         sourceClasses = getProject().getObjects().property(FileCollection.class);
         ignore = getProject().getObjects().setProperty(String.class);
@@ -71,10 +75,10 @@ public abstract class CheckImplicitDependenciesTask extends DefaultTask {
 
     @TaskAction
     public final void checkImplicitDependencies() {
-        Set<ResolvedConfiguration> resolvedConfigurations = dependenciesConfigurations.get().stream()
-                .map(Configuration::getResolvedConfiguration)
-                .collect(Collectors.toSet());
-        BaselineExactDependencies.INDEXES.populateIndexes(resolvedConfigurations);
+        dependenciesConfigurations.get().stream()
+                        .flatMap(result -> result.getDependencies().stream())
+                                .map(result -> result.getRequested())
+        dependenciesConfigurations.BaselineExactDependencies.INDEXES.populateIndexes(dependenciesConfigurations.get());
 
         Set<ResolvedArtifact> declaredArtifacts = resolvedConfigurations.stream()
                 .flatMap(resolved -> resolved.getFirstLevelModuleDependencies().stream())
@@ -83,11 +87,11 @@ public abstract class CheckImplicitDependenciesTask extends DefaultTask {
                         BaselineExactDependencies.VALID_ARTIFACT_EXTENSIONS.contains(dependency.getExtension()))
                 .collect(Collectors.toSet());
 
-        Set<List<ResolvedArtifact>> necessaryArtifacts = referencedClasses().stream()
-                .map(c -> BaselineExactDependencies.INDEXES.classToArtifacts(c).collect(Collectors.toList()))
+        Set<List<ArtifactResult>> necessaryArtifacts = referencedClasses().stream()
+                .map(c -> BaselineExactDependencies.INDEXES.classToArtifacts(c).toList())
                 .collect(Collectors.toSet());
 
-        List<ResolvedArtifact> usedButUndeclared = necessaryArtifacts.stream()
+        List<ArtifactResult> usedButUndeclared = necessaryArtifacts.stream()
                 .filter(artifacts -> artifacts.stream().noneMatch(this::isArtifactFromCurrentProject))
                 .filter(artifacts -> artifacts.stream().noneMatch(this::shouldIgnore))
                 .filter(artifacts -> artifacts.stream().noneMatch(declaredArtifacts::contains))
@@ -95,10 +99,11 @@ public abstract class CheckImplicitDependenciesTask extends DefaultTask {
                 .map(artifacts -> artifacts.stream().min(ARTIFACT_COMPARATOR))
                 .<ResolvedArtifact>mapMulti(Optional::ifPresent)
                 .sorted(ARTIFACT_COMPARATOR)
-                .collect(Collectors.toList());
+                .toList();
         if (!usedButUndeclared.isEmpty()) {
             String suggestion = usedButUndeclared.stream()
                     .map(this::getSuggestionString)
+                    .mapMulti(Optional::ifPresent)
                     .sorted()
                     .collect(Collectors.joining("\n", "    dependencies {\n", "\n    }"));
             throw new ExceptionWithSuggestion(
@@ -110,35 +115,28 @@ public abstract class CheckImplicitDependenciesTask extends DefaultTask {
         }
     }
 
-    private String getSuggestionString(ResolvedArtifact artifact) {
-        String artifactNameString = isProjectArtifact(artifact)
-                ? String.format(
-                        "project('%s')",
-                        ((ProjectComponentIdentifier) artifact.getId().getComponentIdentifier()).getProjectPath())
-                : String.format(
-                        "'%s:%s'",
-                        artifact.getModuleVersion().getId().getGroup(),
-                        artifact.getModuleVersion().getId().getName());
-        return String.format("        %s %s", suggestionConfigurationName.get(), artifactNameString);
+    private Optional<String> getSuggestionString(ArtifactResult artifact) {
+        ComponentIdentifier componentId = artifact.getId().getComponentIdentifier();
+        if (componentId instanceof ProjectComponentIdentifier projectComponentId) {
+            return Optional.of(String.format("project('%s')", projectComponentId.getProjectPath()));
+        } else if (componentId instanceof ModuleComponentIdentifier moduleComponentId) {
+            return Optional.of(String.format("'%s:%s'", moduleComponentId.getModuleIdentifier().getGroup(), moduleComponentId.getModuleIdentifier().getName()));
+        } else {
+            return Optional.empty();
+        }
     }
 
     /**
      * Return true if the resolved artifact is derived from a project in the current build rather than an external jar.
      */
-    private boolean isProjectArtifact(ResolvedArtifact artifact) {
-        return artifact.getId().getComponentIdentifier() instanceof ProjectComponentIdentifier;
-    }
+    private boolean isArtifactFromCurrentProject(ArtifactResult artifact) {
+        ComponentIdentifier componentId = artifact.getId().getComponentIdentifier();
 
-    /**
-     * Return true if the resolved artifact is derived from a project in the current build rather than an external jar.
-     */
-    private boolean isArtifactFromCurrentProject(ResolvedArtifact artifact) {
-        if (!isProjectArtifact(artifact)) {
+        if (componentId instanceof ProjectComponentIdentifier projectId) {
+            return projectId.getProjectPath().equals(getProject().getPath());
+        } else {
             return false;
         }
-        return ((ProjectComponentIdentifier) artifact.getId().getComponentIdentifier())
-                .getProjectPath()
-                .equals(getProject().getPath());
     }
 
     /** All classes which are mentioned in this project's source code. */
@@ -161,12 +159,16 @@ public abstract class CheckImplicitDependenciesTask extends DefaultTask {
     }
 
     @Classpath
-    public final ListProperty<Configuration> getDependenciesConfigurations() {
+    public final ListProperty<ResolvedArtifactResult> getDependenciesConfigurations() {
         return dependenciesConfigurations;
     }
 
     public final void dependenciesConfiguration(Configuration dependenciesConfiguration) {
-        this.dependenciesConfigurations.add(Objects.requireNonNull(dependenciesConfiguration));
+        this.dependenciesConfigurations.add(Objects.requireNonNull(dependenciesConfiguration
+                .getDependencies()
+                .getFirstLevelModuleDependencies()
+                .getArtifacts()
+                .get));
     }
 
     @Classpath

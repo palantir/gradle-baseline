@@ -26,6 +26,7 @@ dependencies {
     implementation 'org.ow2.asm:asm'
     implementation 'com.googlecode.java-diff-utils:diffutils'
     implementation 'com.palantir.gradle.utils:lazily-configured-mapping'
+    implementation 'com.palantir.gradle.utils:dependency-graph-utils'
     implementation 'com.palantir.gradle.utils:environment-variables'
     implementation 'com.palantir.gradle.failure-reports:gradle-failure-reports-exceptions'
 
