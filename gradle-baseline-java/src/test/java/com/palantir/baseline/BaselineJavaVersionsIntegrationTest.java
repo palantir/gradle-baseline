@@ -18,12 +18,13 @@ package com.palantir.baseline;
 
 import static com.palantir.gradle.testing.assertion.GradlePluginTestAssertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.palantir.baseline.gradlejdks.InheritGradleJdks;
 import com.palantir.gradle.testing.execution.GradleInvoker;
 import com.palantir.gradle.testing.execution.InvocationResult;
 import com.palantir.gradle.testing.junit.DisabledConfigurationCache;
 import com.palantir.gradle.testing.junit.GradlePluginTests;
+import com.palantir.gradle.testing.junit.WithJdkAutomanagement;
 import com.palantir.gradle.testing.project.RootProject;
 import com.palantir.gradle.testing.project.SubProject;
 import java.io.DataInputStream;
@@ -39,6 +40,7 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 @GradlePluginTests
+@WithJdkAutomanagement
 @DisabledConfigurationCache
 class BaselineJavaVersionsIntegrationTest {
     private static final int JAVA_11_BYTECODE = 55;
@@ -57,8 +59,6 @@ class BaselineJavaVersionsIntegrationTest {
 
     @BeforeEach
     void beforeEach(RootProject rootProject, SubProject subProject) {
-        InheritGradleJdks.beforeEach(rootProject);
-
         rootProject.buildGradle().append("""
             allprojects {
                 repositories {
@@ -70,10 +70,18 @@ class BaselineJavaVersionsIntegrationTest {
                 mainClass = 'Main'
                 classpath = sourceSets.main.runtimeClasspath
             }
+
+            jdks {
+                daemonTarget = 21
+            }
             """);
 
-        rootProject.buildGradle().plugins().add("java");
-        rootProject.buildGradle().plugins().add("com.palantir.baseline-java-versions");
+        rootProject
+                .buildGradle()
+                .plugins()
+                .add("java")
+                .add("com.palantir.baseline-java-versions")
+                .add("com.palantir.jdks.latest");
 
         subProject.buildGradle().plugins().add("java");
         subProject.buildGradle().append("""
@@ -266,9 +274,8 @@ class BaselineJavaVersionsIntegrationTest {
                 }
                 """);
 
-            InvocationResult result = gradle.withArgs("compileJava").buildsWithFailure();
-
-            assertThat(result).output().contains("cannot be run on newer JVMs");
+            assertThatThrownBy(() -> gradle.withArgs("compileJava").buildsWithFailure())
+                    .hasMessageContaining("cannot be run on newer JVMs");
         }
     }
 

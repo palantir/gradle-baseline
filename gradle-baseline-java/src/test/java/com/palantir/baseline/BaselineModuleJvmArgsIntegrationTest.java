@@ -17,13 +17,14 @@
 package com.palantir.baseline;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
-import com.palantir.baseline.gradlejdks.InheritGradleJdks;
 import com.palantir.gradle.testing.execution.GradleInvoker;
 import com.palantir.gradle.testing.execution.InvocationResult;
 import com.palantir.gradle.testing.execution.TaskOutcome;
 import com.palantir.gradle.testing.junit.DisabledConfigurationCache;
 import com.palantir.gradle.testing.junit.GradlePluginTests;
+import com.palantir.gradle.testing.junit.WithJdkAutomanagement;
 import com.palantir.gradle.testing.project.RootProject;
 import com.palantir.gradle.testing.project.SubProject;
 import java.io.File;
@@ -40,20 +41,26 @@ import org.junit.jupiter.api.Nested;
 import org.junit.jupiter.api.Test;
 
 @GradlePluginTests
+@WithJdkAutomanagement
 @DisabledConfigurationCache
 class BaselineModuleJvmArgsIntegrationTest {
 
     @BeforeEach
     void beforeEach(RootProject rootProject) {
-        InheritGradleJdks.beforeEach(rootProject);
-
         rootProject
                 .buildGradle()
                 .plugins()
                 .add("java-library")
                 .add("application")
                 .add("com.palantir.baseline-java-versions")
-                .add("com.palantir.baseline-module-jvm-args");
+                .add("com.palantir.baseline-module-jvm-args")
+                .add("com.palantir.jdks.latest");
+
+        rootProject.buildGradle().append("""
+            jdks {
+                daemonTarget = 21
+            }
+            """);
 
         rootProject.buildGradle().append("""
             application {
@@ -542,8 +549,8 @@ class BaselineModuleJvmArgsIntegrationTest {
             }
             """);
 
-        InvocationResult result = gradle.withArgs("jar").buildsWithFailure();
-        assertThat(result.output()).contains("separated by a single slash");
+        assertThatThrownBy(() -> gradle.withArgs("jar").buildsWithFailure())
+                .hasMessageContaining("separated by a single slash");
     }
 
     @Test

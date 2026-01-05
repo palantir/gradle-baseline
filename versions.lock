@@ -20,7 +20,7 @@ com.fasterxml.jackson.core:jackson-annotations:2.20 (9 constraints: c3a187f5)
 
 com.fasterxml.jackson.core:jackson-core:2.20.1 (5 constraints: 4e6e7ac6)
 
-com.fasterxml.jackson.core:jackson-databind:2.20.1 (9 constraints: 82cac952)
+com.fasterxml.jackson.core:jackson-databind:2.20.1 (10 constraints: 55dfb074)
 
 com.fasterxml.jackson.dataformat:jackson-dataformat-xml:2.20.1 (2 constraints: 8c36d494)
 
@@ -68,7 +68,7 @@ com.palantir.gradle.utils:exec:0.21.0 (1 constraints: 2e0f5e76)
 
 com.palantir.gradle.utils:lazily-configured-mapping:0.21.0 (2 constraints: c314d4bc)
 
-com.palantir.gradle.utils:platform:0.21.0 (5 constraints: 675c30e5)
+com.palantir.gradle.utils:platform:0.21.0 (6 constraints: 3c71c6ce)
 
 com.palantir.gradle.utils:providers:0.21.0 (1 constraints: 6e0dd731)
 
@@ -192,7 +192,7 @@ com.netflix.nebula:nebula-test:10.6.2 (2 constraints: d61de72d)
 
 com.palantir.gradle.consistentversions:gradle-consistent-versions:3.7.0 (1 constraints: 0c050f36)
 
-com.palantir.gradle.jdks:gradle-jdks:0.71.0 (1 constraints: 3a053e3b)
+com.palantir.gradle.jdks:gradle-jdks:0.71.0 (2 constraints: 171ac011)
 
 com.palantir.gradle.jdks:gradle-jdks-distributions:0.71.0 (2 constraints: 0821889b)
 
@@ -206,13 +206,15 @@ com.palantir.gradle.jdks:gradle-jdks-setup:0.71.0 (1 constraints: 910f4f92)
 
 com.palantir.gradle.jdks:gradle-jdks-setup-common:0.71.0 (3 constraints: 173b3f42)
 
-com.palantir.gradle.plugintesting:configuration-cache-spec:0.46.0 (1 constraints: 3c05413b)
+com.palantir.gradle.jdkslatest:gradle-jdks-latest:0.24.0 (1 constraints: 3805333b)
 
-com.palantir.gradle.plugintesting:discover-tests-cli:0.46.0 (1 constraints: 3c05413b)
+com.palantir.gradle.plugintesting:configuration-cache-spec:1.1.1 (1 constraints: 0505f435)
 
-com.palantir.gradle.plugintesting:gradle-plugin-testing-junit:0.46.0 (1 constraints: a307327e)
+com.palantir.gradle.plugintesting:discover-tests-cli:1.1.1 (1 constraints: 0505f435)
 
-com.palantir.gradle.plugintesting:plugin-testing-core:0.46.0 (1 constraints: 3c05413b)
+com.palantir.gradle.plugintesting:gradle-plugin-testing-junit:1.1.1 (1 constraints: 0505f435)
+
+com.palantir.gradle.plugintesting:plugin-testing-core:1.1.1 (1 constraints: 0505f435)
 
 com.palantir.safe-logging:logger:3.9.0 (1 constraints: c51092b2)
 
