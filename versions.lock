@@ -68,7 +68,7 @@ com.palantir.gradle.utils:exec:0.21.0 (1 constraints: 2e0f5e76)
 
 com.palantir.gradle.utils:lazily-configured-mapping:0.21.0 (2 constraints: c314d4bc)
 
-com.palantir.gradle.utils:platform:0.21.0 (6 constraints: 3c71c6ce)
+com.palantir.gradle.utils:platform:0.21.0 (7 constraints: 0d8b243e)
 
 com.palantir.gradle.utils:providers:0.21.0 (1 constraints: 6e0dd731)
 
@@ -212,7 +212,7 @@ com.palantir.gradle.plugintesting:configuration-cache-spec:1.1.1 (1 constraints:
 
 com.palantir.gradle.plugintesting:discover-tests-cli:1.1.1 (1 constraints: 0505f435)
 
-com.palantir.gradle.plugintesting:gradle-plugin-testing-junit:1.1.1 (1 constraints: 0505f435)
+com.palantir.gradle.plugintesting:gradle-plugin-testing-junit:1.1.4 (1 constraints: 3b076b6f)
 
 com.palantir.gradle.plugintesting:plugin-testing-core:1.1.1 (1 constraints: 0505f435)
 

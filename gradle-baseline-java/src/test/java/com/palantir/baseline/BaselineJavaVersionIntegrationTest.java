@@ -131,10 +131,13 @@ class BaselineJavaVersionIntegrationTest {
                 .plugins()
                 .add("java")
                 .add("com.palantir.baseline-java-versions")
-                .add("com.palantir.baseline-java-version")
                 .add("com.palantir.jdks.latest");
 
         rootProject.buildGradle().append("""
+            repositories {
+                mavenCentral()
+            }
+
             tasks.withType(JavaCompile).configureEach {
                 // baseline-module-jvm-args forces all compiler processes to fork, do the same here
                 // for representative testing
@@ -148,7 +151,10 @@ class BaselineJavaVersionIntegrationTest {
 
             jdks {
                 daemonTarget = 21
-                jdkMajorVersionsToUse = ["17", "21"]
+            }
+
+            javaVersions {
+                libraryTarget = 11
             }
 
             """);
