@@ -29,11 +29,6 @@ dependencies {
     implementation 'com.palantir.gradle.utils:environment-variables'
     implementation 'com.palantir.gradle.failure-reports:gradle-failure-reports-exceptions'
 
-    // TEMPHACK(okelvin): remove this to decouple baseline-error-prone
-    api 'com.palantir.baseline-error-prone:gradle-baseline-error-prone'
-    testImplementation 'com.palantir.baseline-error-prone:gradle-baseline-error-prone'
-    gradlePluginForTesting 'com.palantir.baseline-error-prone:gradle-baseline-error-prone'
-
     runtimeOnly 'com.palantir.javaformat:gradle-palantir-java-format'
 
     testImplementation gradleTestKit()
@@ -83,8 +78,6 @@ test {
     environment 'CIRCLE_TEST_REPORTS', "${buildDir}/circle-reports"
 
     environment 'ORG_GRADLE_PROJECT_baselineTestCompilerPluginsVersion', project.version
-    // TEMPHACK(okelvin): remove this to decouple baseline-error-prone
-    environment 'ORG_GRADLE_PROJECT_baselineErrorProneVersion', "0.2.0"
 
     systemProperty 'ignoreDeprecations', 'true'
 }
