@@ -21,16 +21,16 @@ import java.util.Objects;
 import org.gradle.api.GradleException;
 import org.gradle.api.Plugin;
 import org.gradle.api.Project;
+import org.gradle.api.logging.Logger;
+import org.gradle.api.logging.Logging;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.publish.PublishingExtension;
 import org.gradle.util.GradleVersion;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 public final class BaselineJavaVersions implements Plugin<Project> {
 
-    private static final Logger log = LoggerFactory.getLogger(BaselineJavaVersions.class);
+    private static final Logger log = Logging.getLogger(BaselineJavaVersions.class);
     public static final String EXTENSION_NAME = "javaVersions";
 
     public static final GradleVersion MIN_GRADLE_VERSION = GradleVersion.version("7.0");
