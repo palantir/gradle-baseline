@@ -18,7 +18,7 @@ buildscript {
         classpath 'com.palantir.gradle.plugintesting:gradle-plugin-testing:0.48.0'
         classpath 'com.gradle.publish:plugin-publish-plugin:2.0.0'
         classpath 'com.palantir.baseline-error-prone:gradle-baseline-error-prone:0.7.0'
-        classpath 'com.palantir.baseline:gradle-baseline-java:6.88.0'
+        classpath 'com.palantir.baseline:gradle-baseline-java:6.89.0'
         classpath 'com.palantir.javaformat:gradle-palantir-java-format:2.83.0'
         classpath 'com.palantir.suppressible-error-prone:gradle-suppressible-error-prone:2.26.0'
     }
