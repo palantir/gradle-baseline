@@ -109,6 +109,7 @@ class BaselineIdea extends AbstractBaselinePlugin {
             setRootJavaVersions(node)
             addCopyright(node)
             addCheckstyle(node, extension)
+            addEclipseFormat(node, extension)
             addGit(node)
             addInspectionProjectProfile(node)
             addJavacSettings(node)
@@ -329,6 +330,42 @@ class BaselineIdea extends AbstractBaselinePlugin {
         GroovyXmlUtils.matchOrCreateChild(copyrightNode, "option", ["name": "allowReplaceKeyword"], ["value": ""])
         GroovyXmlUtils.matchOrCreateChild(copyrightNode, "option", ["name": "myName"], ["value": fileName])
         GroovyXmlUtils.matchOrCreateChild(copyrightNode, "option", ["name": "myLocal"], ["value": true])
+    }
+
+    private void addEclipseFormat(node, IdeaConfigurationExtension extension) {
+        def baselineFormat = project.plugins.findPlugin(BaselineFormat)
+        if (baselineFormat == null) {
+            project.logger.debug "Baseline: Skipping IDEA eclipse format configuration since baseline-format not applied"
+            return
+        }
+
+        if (!BaselineFormat.eclipseFormattingEnabled(project)) {
+            project.logger.debug "Baseline: Not configuring EclipseCodeFormatter because com.palantir.baseline-format.eclipse is not enabled in gradle.properties"
+            return;
+        }
+
+        Path formatterConfig = BaselineFormat.eclipseConfigFile(project)
+        if (!Files.exists(formatterConfig)) {
+            project.logger.warn "Please run ./gradlew baselineUpdateConfig to create eclipse formatter config: " +
+                    formatterConfig
+            return
+        }
+
+        project.logger.debug "Baseline: Configuring EclipseCodeFormatter plugin for Idea"
+        // language=xml
+        node.append(new XmlParser().parseText("""
+             <component name="EclipseCodeFormatterProjectSettings">
+                <option name="projectSpecificProfile">
+                  <ProjectSpecificProfile>
+                    <option name="formatter" value="ECLIPSE" />
+                    <option name="importOrder" value="" />
+                    <option name="pathToConfigFileJava" value="\$PROJECT_DIR\$/.baseline/spotless/eclipse.xml" />
+                    <option name="selectedJavaProfile" value="PalantirStyle" />
+                  </ProjectSpecificProfile>
+                </option>
+              </component>
+            """))
+        extension.getExternalDependencies().maybeCreate("EclipseCodeFormatter");
     }
 
     private void addCheckstyle(Node node, IdeaConfigurationExtension extension) {
