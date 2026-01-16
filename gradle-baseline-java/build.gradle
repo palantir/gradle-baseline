@@ -98,8 +98,8 @@ gradlePlugin {
             id = 'com.palantir.baseline'
             displayName = 'Palantir Baseline Plugins'
             implementationClass = 'com.palantir.baseline.plugins.Baseline'
-            description = 'Baseline Java is a collection of Gradle plugins for configuring code quality tools in builds and generated Eclipse/IntelliJ projects.'
-            tags.set(['java', 'checkstyle', 'code quality', 'eclipse', 'idea'])
+            description = 'Baseline Java is a collection of Gradle plugins for configuring code quality tools in builds and generated IntelliJ projects.'
+            tags.set(['java', 'checkstyle', 'code quality', 'idea'])
         }
         baselineCheckstylePlugin {
             id = 'com.palantir.baseline-checkstyle'
@@ -121,13 +121,6 @@ gradlePlugin {
             implementationClass = 'com.palantir.baseline.plugins.BaselineExactDependencies'
             description = 'Baseline Java is a collection of Gradle plugins for configuring code quality tools in builds.'
             tags.set(['java', 'checkstyle', 'code quality'])
-        }
-        baselineEclipsePlugin {
-            id = 'com.palantir.baseline-eclipse'
-            displayName = 'Palantir Baseline Eclipse Plugin'
-            implementationClass = 'com.palantir.baseline.plugins.BaselineEclipse'
-            description = 'Baseline Java is a collection of Gradle plugins for configuring code quality tools in builds.'
-            tags.set(['java', 'checkstyle', 'code quality', 'eclipse'])
         }
         baselineIdeaPlugin {
             id = 'com.palantir.baseline-idea'
