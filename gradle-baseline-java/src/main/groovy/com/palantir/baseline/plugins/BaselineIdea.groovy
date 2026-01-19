@@ -26,6 +26,7 @@ import com.palantir.gradle.ideaconfiguration.IdeaConfigurationExtension
 import com.palantir.gradle.ideaconfiguration.IdeaConfigurationPlugin
 import groovy.transform.CompileStatic
 import groovy.xml.XmlUtil
+import groovy.xml.XmlParser
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
