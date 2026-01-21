@@ -6,12 +6,11 @@
 [![CircleCI Build Status](https://circleci.com/gh/palantir/gradle-baseline/tree/develop.svg?style=shield)](https://circleci.com/gh/palantir/gradle-baseline)
 [![Gradle Plugin Portal](https://img.shields.io/maven-metadata/v/https/plugins.gradle.org/m2/com/palantir/baseline/com.palantir.baseline.gradle.plugin/maven-metadata.xml.svg?label=plugin&logo=gradle)](https://plugins.gradle.org/plugin/com.palantir.baseline)
 
-_Baseline is a family of Gradle plugins for configuring Java projects with sensible defaults for code-style, static analysis, dependency versioning, CircleCI and IntelliJ IDEA/Eclipse integration._
+_Baseline is a family of Gradle plugins for configuring Java projects with sensible defaults for code-style, static analysis, dependency versioning, CircleCI and IntelliJ IDEA integration._
 
 | Plugin                                             | Description            |
 |----------------------------------------------------|------------------------|
 | `com.palantir.baseline-idea`                       | Configures [Intellij IDEA](https://www.jetbrains.com/idea/) with code style and copyright headers
-| `com.palantir.baseline-eclipse`                    | Configures [Eclipse](https://www.eclipse.org/downloads/) with code style and copyright headers
 | `com.palantir.baseline-checkstyle`                 | Enforces consistent Java formatting using [checkstyle](http://checkstyle.sourceforge.io/)
 | `com.palantir.baseline-format`                     | Formats your java files to comply with checkstyle
 | `com.palantir.baseline-scala`                      | Enforces formatting using [scalastyle](https://github.com/scalastyle/scalastyle)
@@ -94,19 +93,6 @@ The `com.palantir.baseline-idea` plugin automatically applies the `idea` plugin.
 Generated IntelliJ projects have default per-project code formatting rules as well as Checkstyle configuration. The JDK
 and Java language level settings are picked up from the Gradle `sourceCompatibility` property on a per-module basis.
 
-
-## com.palantir.baseline-eclipse
-Run `./gradlew eclipse` to repopulate projects from the templates in `.baseline`.
-
-The `com.palantir.baseline-eclipse` plugin automatically applies the `eclipse` plugin, but not the `java` plugin. The
-`com.palantir.baseline-eclipse` plugin has no effects if the `java` plugin is not applied.
-
-If set, `sourceCompatibility` is used to configure the Eclipse project settings and the Eclipse JDK version. Note
-that `targetCompatibility` is also honored and defaults to `sourceCompatibility`.
-
-Generated Eclipse projects have default per-project code formatting rules as well as Checkstyle configuration.
-
-The Eclipse plugin is compatible with the following versions: Checkstyle 7.5+, JDK 1.7, 1.8
 
 ### Copyright Checks
 
@@ -253,7 +239,7 @@ Configures some sensible defaults:
     }
     ```
 
-    This ensures that if one of your tests fails with an OutOfMemoryError (OOM), you'll get a large hprof file in the relevant subdirectory which can be analyzed with Eclipse Memory Analyzer Tool, Yourkit profiler, jvisualvm etc.
+    This ensures that if one of your tests fails with an OutOfMemoryError (OOM), you'll get a large hprof file in the relevant subdirectory which can be analyzed with heap analysis tools like Yourkit profiler, jvisualvm etc.
 
 2. If Gradle detects you use JUnit 5 (i.e. you have a `testImplementation 'org:junit.jupiter:junit-jupiter'` dependency), it will automatically configure your `Test` tasks to run with `useJUnitPlatform()`, and configure all `@Test` methods to run in parallel by default.  Many other languages take this stance by default - if some tests rely on static state then you can mark them as non-parallel.
 

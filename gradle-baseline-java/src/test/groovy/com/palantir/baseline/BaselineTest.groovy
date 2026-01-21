@@ -36,15 +36,12 @@ class BaselineTest extends Specification {
         expect:
         assert project.pluginManager.hasPlugin('com.palantir.baseline-circleci')
         assert project.pluginManager.hasPlugin('com.palantir.baseline-config')
-        // eclipse plugin not applied to root project because it is not a java project
-        assert !project.pluginManager.hasPlugin('eclipse')
         hasAllPlugins(project)
         hasAllPlugins(subProject)
     }
 
     void hasAllPlugins(Project p) {
         assert p.pluginManager.hasPlugin('com.palantir.baseline-checkstyle')
-        assert p.pluginManager.hasPlugin('com.palantir.baseline-eclipse')
         // TEMPHACK(okelvin): remove this to decouple baseline-error-prone
         assert p.pluginManager.hasPlugin('com.palantir.baseline-error-prone')
         assert p.pluginManager.hasPlugin('com.palantir.baseline-idea')

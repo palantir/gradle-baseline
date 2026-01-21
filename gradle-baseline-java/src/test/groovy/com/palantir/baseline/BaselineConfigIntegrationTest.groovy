@@ -49,7 +49,7 @@ class BaselineConfigIntegrationTest extends AbstractPluginTest {
                 '-Pcom.palantir.baseline-format.eclipse',
                 '-Pcom.palantir.baseline-format.palantir-java-format').build()
         directory('.baseline').list().toList().toSet() == [
-                'checkstyle', 'copyright', 'eclipse', 'idea', 'spotless'
+                'checkstyle', 'copyright', 'idea', 'spotless'
         ].toSet()
         directory('project').list().toList().isEmpty()
     }
