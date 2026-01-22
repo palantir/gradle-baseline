@@ -100,6 +100,6 @@ class BaselineScalaTest {
 
         InvocationResult result = gradle.withArgs("ideaProject").buildsSuccessfully();
 
-        assertThat(result).output().contains("\"value\":\"Mixed\"");
+        assertThat(result).output().contains("value=\"Mixed\"");
     }
 }
