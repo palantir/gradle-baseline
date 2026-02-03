@@ -1,4 +1,4 @@
-com.fasterxml.jackson.core:jackson-annotations = 2.20
+com.fasterxml.jackson.core:jackson-annotations = 2.21
 com.github.ben-manes.caffeine:caffeine = 3.2.2
 com.google.guava:guava = 33.5.0-jre
 com.google.auto.service:* = 1.1.1
@@ -21,7 +21,7 @@ com.palantir.gradle.idea-configuration:gradle-idea-configuration = 0.4.0
 
 
 # test deps
-com.fasterxml.jackson.*:* = 2.20.1
+com.fasterxml.jackson.*:* = 2.21.0
 com.github.stefanbirkner:system-rules = 1.19.0
 com.netflix.nebula:nebula-test = 10.6.2
 commons-io:* = 2.21.0
