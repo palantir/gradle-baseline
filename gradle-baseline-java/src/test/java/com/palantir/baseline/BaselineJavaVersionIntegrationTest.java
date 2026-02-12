@@ -111,7 +111,7 @@ class BaselineJavaVersionIntegrationTest {
         import java.util.List;
 
         public class Main {
-            /** Returns a sequenced view. */
+            /** SequencedCollection is a Java 21 API. */
             public SequencedCollection<String> getItems() {
                 return List.of("a", "b", "c");
             }

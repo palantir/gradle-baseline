@@ -207,15 +207,13 @@ public final class BaselineJavaVersion implements Plugin<Project> {
             });
         });
 
-        Provider<ChosenJavaVersion> javadocJavaVersion =
-                javaCompiler.map(ChosenJavaVersion::of).orElse(target);
         project.getTasks().withType(Javadoc.class).configureEach(javadocTask -> {
             setJavaDocTool(
                     javadocTask,
                     rootExtension,
                     baselineConfiguredJavaToolchains,
                     javaToolchainService,
-                    javadocJavaVersion);
+                    javaCompiler.map(ChosenJavaVersion::of).orElse(target));
 
             // javadocTask doesn't allow us to add a CommandLineArgumentProvider, so we do it just in time
             javadocTask.doFirst(new Action<Task>() {
