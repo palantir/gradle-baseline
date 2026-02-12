@@ -152,6 +152,7 @@ public class BaselineConfigIntegrationTest {
         assertThat(secondResult).task(":baselineUpdateConfig").upToDate();
     }
 
+    @SuppressWarnings("for-rollout:deprecation")
     @Test
     public void started_pjf_conversion_disables_checkstyle_indentation_module(
             GradleInvoker gradle, RootProject rootProject) {

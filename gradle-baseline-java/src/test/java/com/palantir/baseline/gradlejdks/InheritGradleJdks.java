@@ -32,6 +32,7 @@ public final class InheritGradleJdks {
     /// This approach has downsides - DO NOT COPY AND PASTE IT ELSEWHERE. See the info at
     ///    https://github.com/palantir/gradle-baseline/pull/3379#:~:text=Possible%20downsides
     /// about what we should eventually do instead.
+    @SuppressWarnings("for-rollout:deprecation")
     public static void beforeEach(RootProject rootProject) {
         rootProject.gradlePropertiesFile().appendProperty("palantir.jdk.setup.enabled", "true");
         rootProject.settingsGradle().plugins().add("com.palantir.jdks.settings");

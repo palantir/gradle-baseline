@@ -41,6 +41,7 @@ import org.junit.jupiter.api.Test;
 @DisabledConfigurationCache
 public class BaselineFormatIntegrationTest {
 
+    @SuppressWarnings("for-rollout:deprecation")
     @BeforeEach
     void setup(RootProject rootProject) throws IOException {
         FileUtils.copyDirectory(
@@ -102,6 +103,7 @@ public class BaselineFormatIntegrationTest {
         gradle.withArgs("format", "--stacktrace").buildsSuccessfully();
     }
 
+    @SuppressWarnings("for-rollout:deprecation")
     @Test
     void eclipse_formatter_integration_test(GradleInvoker gradle, RootProject rootProject) throws IOException {
         File inputDir = new File("src/test/resources/com/palantir/baseline/formatter-in");
@@ -120,6 +122,7 @@ public class BaselineFormatIntegrationTest {
         assertThatFilesAreTheSame(testedDir, expectedDir);
     }
 
+    @SuppressWarnings("for-rollout:deprecation")
     @Test
     void palantir_java_format_works(GradleInvoker gradle, RootProject rootProject) throws IOException {
         File inputDir = new File("src/test/resources/com/palantir/baseline/formatter-in");
