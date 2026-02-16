@@ -18,11 +18,11 @@ package com.palantir.baseline.plugins;
 
 import static com.palantir.gradle.testing.assertion.GradlePluginTestAssertions.assertThat;
 
+import com.palantir.gradle.jdks.testing.WithJdkAutomanagement;
 import com.palantir.gradle.testing.execution.GradleInvoker;
 import com.palantir.gradle.testing.execution.InvocationResult;
 import com.palantir.gradle.testing.junit.DisabledConfigurationCache;
 import com.palantir.gradle.testing.junit.GradlePluginTests;
-import com.palantir.gradle.testing.junit.WithJdkAutomanagement;
 import com.palantir.gradle.testing.project.RootProject;
 import java.util.List;
 import java.util.stream.Stream;

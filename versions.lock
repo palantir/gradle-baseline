@@ -42,7 +42,7 @@ com.google.errorprone:error_prone_annotations:2.41.0 (6 constraints: d2590cfa)
 
 com.google.guava:failureaccess:1.0.3 (2 constraints: f3154f13)
 
-com.google.guava:guava:33.5.0-jre (15 constraints: 2945ea3c)
+com.google.guava:guava:33.5.0-jre (16 constraints: 55599023)
 
 com.google.guava:listenablefuture:9999.0-empty-to-avoid-conflict-with-guava (1 constraints: bd17c918)
 
@@ -68,7 +68,7 @@ com.palantir.gradle.utils:exec:0.23.0 (2 constraints: bd1e0eb5)
 
 com.palantir.gradle.utils:lazily-configured-mapping:0.23.0 (2 constraints: c214d2bc)
 
-com.palantir.gradle.utils:platform:0.23.0 (6 constraints: 3871a3cb)
+com.palantir.gradle.utils:platform:0.23.0 (7 constraints: f0838ead)
 
 com.palantir.gradle.utils:providers:0.23.0 (1 constraints: 700ddd31)
 
@@ -174,7 +174,7 @@ org.jspecify:jspecify:1.0.0 (9 constraints: bf90aa32)
 
 org.ow2.asm:asm:9.9.1 (4 constraints: 6345f650)
 
-org.slf4j:slf4j-api:2.0.17 (6 constraints: 465e1561)
+org.slf4j:slf4j-api:2.0.17 (7 constraints: 02717fc2)
 
 org.tukaani:xz:1.9 (1 constraints: 6b09e995)
 
@@ -204,7 +204,9 @@ com.palantir.gradle.jdks:gradle-jdks-settings:0.74.0 (1 constraints: 3d05473b)
 
 com.palantir.gradle.jdks:gradle-jdks-setup:0.74.0 (1 constraints: 940f5892)
 
-com.palantir.gradle.jdks:gradle-jdks-setup-common:0.74.0 (3 constraints: 203b3d44)
+com.palantir.gradle.jdks:gradle-jdks-setup-common:0.74.0 (4 constraints: de4d1feb)
+
+com.palantir.gradle.jdks:gradle-jdks-testing:0.74.0 (1 constraints: 3d05473b)
 
 com.palantir.gradle.jdkslatest:gradle-jdks-latest:0.24.0 (1 constraints: 3805333b)
 
@@ -212,7 +214,7 @@ com.palantir.gradle.plugintesting:configuration-cache-spec:0.56.0 (1 constraints
 
 com.palantir.gradle.plugintesting:discover-tests-cli:0.56.0 (1 constraints: 3d05453b)
 
-com.palantir.gradle.plugintesting:gradle-plugin-testing-junit:0.56.0 (1 constraints: 3d05453b)
+com.palantir.gradle.plugintesting:gradle-plugin-testing-junit:0.56.0 (2 constraints: fa179b83)
 
 com.palantir.gradle.plugintesting:plugin-testing-core:0.56.0 (1 constraints: 3d05453b)
 
@@ -234,7 +236,7 @@ com.palantir.sls-packaging:gradle-sls-packaging-api:7.86.0 (1 constraints: f1133
 
 com.palantir.sls.versions:sls-versions:1.8.0 (1 constraints: 561bda45)
 
-commons-io:commons-io:2.21.0 (4 constraints: 473eb01b)
+commons-io:commons-io:2.21.0 (5 constraints: 0651422b)
 
 info.picocli:picocli:4.7.7 (1 constraints: 2816dcdd)
 

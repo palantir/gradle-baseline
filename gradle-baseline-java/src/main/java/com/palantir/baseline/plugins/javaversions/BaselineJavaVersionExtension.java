@@ -19,8 +19,6 @@ package com.palantir.baseline.plugins.javaversions;
 import java.util.Collections;
 import java.util.Set;
 import javax.inject.Inject;
-import org.gradle.api.logging.Logger;
-import org.gradle.api.logging.Logging;
 import org.gradle.api.model.ObjectFactory;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
@@ -33,7 +31,6 @@ import org.gradle.jvm.toolchain.JavaLanguageVersion;
  */
 public abstract class BaselineJavaVersionExtension {
 
-    private static Logger logger = Logging.getLogger(BaselineJavaVersionExtension.class);
     private final Property<JavaLanguageVersion> javaCompiler;
     private final Property<ChosenJavaVersion> target;
     private final Property<ChosenJavaVersion> runtime;
@@ -116,7 +113,6 @@ public abstract class BaselineJavaVersionExtension {
         allJavaVersionsUsed.add(target.map(ChosenJavaVersion::javaLanguageVersion));
         allJavaVersionsUsed.add(runtime.map(ChosenJavaVersion::javaLanguageVersion));
 
-        logger.lifecycle("Found {}", allJavaVersionsUsed);
         return allJavaVersionsUsed;
     }
 }
