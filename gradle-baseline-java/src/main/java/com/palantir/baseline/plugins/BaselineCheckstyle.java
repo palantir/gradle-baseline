@@ -29,8 +29,6 @@ import org.gradle.api.plugins.quality.CheckstyleExtension;
 import org.gradle.api.plugins.quality.CheckstylePlugin;
 import org.gradle.api.tasks.javadoc.Javadoc;
 import org.gradle.external.javadoc.StandardJavadocDocletOptions;
-import org.gradle.plugins.ide.eclipse.model.EclipseModel;
-import org.gradle.plugins.ide.eclipse.model.EclipseProject;
 
 /** Configures the Gradle "checkstyle" task with Baseline settings. */
 public final class BaselineCheckstyle extends AbstractBaselinePlugin {
@@ -63,11 +61,6 @@ public final class BaselineCheckstyle extends AbstractBaselinePlugin {
                 .getByType(CheckstyleExtension.class)
                 .getConfigDirectory()
                 .set(this.project.file(Paths.get(getConfigDir(), "checkstyle").toString()));
-        project.getPluginManager().withPlugin("eclipse", plugin -> {
-            EclipseProject eclipseProject =
-                    project.getExtensions().getByType(EclipseModel.class).getProject();
-            eclipseProject.buildCommand("net.sf.eclipsecs.core.CheckstyleBuilder");
-        });
 
         // See https://github.com/gradle/gradle/issues/27035
         project.getConfigurations().getByName("checkstyle", configuration -> {

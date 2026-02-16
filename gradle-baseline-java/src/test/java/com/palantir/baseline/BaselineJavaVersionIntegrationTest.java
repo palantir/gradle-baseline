@@ -107,6 +107,18 @@ class BaselineJavaVersionIntegrationTest {
         }
         """;
 
+    private static final String JAVA_21_API_IN_PUBLIC_SIGNATURE = """
+        import java.util.SequencedCollection;
+        import java.util.List;
+
+        public class Main {
+            /** SequencedCollection is a Java 21 API. */
+            public SequencedCollection<String> getItems() {
+                return List.of("a", "b", "c");
+            }
+        }
+        """;
+
     // language=XML
     private static final String CHECKSTYLE_XML = """
         <?xml version="1.0"?>
@@ -619,6 +631,26 @@ class BaselineJavaVersionIntegrationTest {
                 """);
 
             rootProject.mainSourceSet().java().writeClass(JAVA_17_COMPATIBLE_CODE);
+
+            gradle.withArgs("javadoc").buildsSuccessfully();
+        }
+
+        @Test
+        void javadoc_succeeds_with_jdk21_api_in_signature_when_java_compiler_is_21_and_target_is_17(
+                GradleInvoker gradle, RootProject rootProject) {
+
+            rootProject.buildGradle().append("""
+                javaVersion {
+                    javaCompiler = 21
+                    target = 17
+                }
+
+                tasks.withType(JavaCompile).configureEach {
+                    options.release.unset()
+                }
+                """);
+
+            rootProject.mainSourceSet().java().writeClass(JAVA_21_API_IN_PUBLIC_SIGNATURE);
 
             gradle.withArgs("javadoc").buildsSuccessfully();
         }

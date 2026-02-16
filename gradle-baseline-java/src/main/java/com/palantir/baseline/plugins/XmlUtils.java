@@ -19,8 +19,8 @@ package com.palantir.baseline.plugins;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.io.Files;
 import groovy.util.Node;
-import groovy.util.XmlNodePrinter;
-import groovy.util.XmlParser;
+import groovy.xml.XmlNodePrinter;
+import groovy.xml.XmlParser;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
@@ -48,7 +48,6 @@ final class XmlUtils {
                 configurationFile, configure, () -> new Node(null, "project", ImmutableMap.of("version", "4")));
     }
 
-    @SuppressWarnings("for-rollout:deprecation")
     static void createOrUpdateXmlFile(
             File configurationFile, Consumer<Node> configure, Supplier<Node> defaultRootNode) {
         Node rootNode;
@@ -68,7 +67,6 @@ final class XmlUtils {
 
         try (BufferedWriter writer = Files.newWriter(configurationFile, StandardCharsets.UTF_8);
                 PrintWriter printWriter = new PrintWriter(writer)) {
-            @SuppressWarnings("for-rollout:deprecation")
             XmlNodePrinter nodePrinter = new XmlNodePrinter(printWriter);
             nodePrinter.setPreserveWhitespace(true);
             nodePrinter.print(rootNode);

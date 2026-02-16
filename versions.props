@@ -1,13 +1,12 @@
-com.fasterxml.jackson.core:jackson-annotations = 2.20
+com.fasterxml.jackson.core:jackson-annotations = 2.21
 com.github.ben-manes.caffeine:caffeine = 3.2.2
 com.google.guava:guava = 33.5.0-jre
 com.google.auto.service:* = 1.1.1
-com.palantir.gradle.plugintesting:gradle-plugin-testing-junit = 1.1.4
 com.palantir.safe-logging:* = 3.9.0
 org.apache.maven.shared:maven-dependency-analyzer = 1.16.0
 org.apache.maven:maven-core = 3.9.1
 org.inferred:freebuilder = 1.14.6
-com.palantir.baseline-error-prone:* = 0.5.0
+com.palantir.baseline-error-prone:* = 0.7.0
 com.palantir.gradle.consistentversions:* = 3.7.0
 org.slf4j:* = 2.0.17
 org.immutables:* = 2.12.0
@@ -22,7 +21,7 @@ com.palantir.gradle.jdkslatest:gradle-jdks-latest = 0.24.0
 
 
 # test deps
-com.fasterxml.jackson.*:* = 2.20.1
+com.fasterxml.jackson.*:* = 2.21.0
 com.github.stefanbirkner:system-rules = 1.19.0
 com.netflix.nebula:nebula-test = 10.6.2
 commons-io:* = 2.21.0
@@ -36,7 +35,7 @@ org.junit.jupiter:* = 6.0.1
 org.junit.vintage:* = 6.0.1
 org.junit.platform:* = 6.0.1
 com.palantir.sls-packaging:gradle-sls-packaging = 7.86.0
-com.palantir.gradle.jdks:* = 0.71.0
+com.palantir.gradle.jdks:* = 0.74.0
 org.unbroken-dome.gradle-plugins:gradle-testsets-plugin = 4.1.0
 
 # dependency-upgrader:OFF
