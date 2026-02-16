@@ -156,9 +156,7 @@ public class BaselineConfigIntegrationTest {
     @Test
     public void started_pjf_conversion_disables_checkstyle_indentation_module(
             GradleInvoker gradle, RootProject rootProject) {
-        rootProject
-                .gradlePropertiesFile()
-                .appendProperty("com.palantir.baseline-format.palantir-java-format", "started");
+        rootProject.gradlePropertiesFile().setProperty("com.palantir.baseline-format.palantir-java-format", "started");
 
         standardBuildFile(rootProject).append("""
             repositories {

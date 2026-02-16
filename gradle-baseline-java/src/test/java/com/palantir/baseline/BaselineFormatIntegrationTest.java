@@ -50,7 +50,7 @@ public class BaselineFormatIntegrationTest {
         // Disable copyright by default so we can test it individually
         rootProject
                 .gradlePropertiesFile()
-                .appendProperty("com.palantir.baseline-format.copyright", "false")
+                .setProperty("com.palantir.baseline-format.copyright", "false")
                 .append("""
                     # Required for the eclipse formatter. Delete once it's removed.
                     org.gradle.jvmargs = --add-exports=jdk.compiler/com.sun.tools.javac.api=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.file=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.parser=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.tree=ALL-UNNAMED --add-exports=jdk.compiler/com.sun.tools.javac.util=ALL-UNNAMED
