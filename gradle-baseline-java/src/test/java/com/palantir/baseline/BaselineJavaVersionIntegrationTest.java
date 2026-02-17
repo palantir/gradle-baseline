@@ -118,6 +118,15 @@ class BaselineJavaVersionIntegrationTest {
         }
         """;
 
+    private static final String USE_API_NOTE_TAG = """
+        public class Main {
+            /** @apiNote This is an API note. */
+            public String get() {
+                return "a";
+            }
+        }
+        """;
+
     // language=XML
     private static final String CHECKSTYLE_XML = """
         <?xml version="1.0"?>
@@ -639,6 +648,21 @@ class BaselineJavaVersionIntegrationTest {
                 """);
 
             rootProject.mainSourceSet().java().writeClass(JAVA_21_API_IN_PUBLIC_SIGNATURE);
+
+            gradle.withArgs("javadoc").buildsSuccessfully();
+        }
+
+        @Test
+        void javadoc_succeeds_with_api_note_tag(GradleInvoker gradle, RootProject rootProject) {
+
+            rootProject.buildGradle().append("""
+                javaVersion {
+                    javaCompiler = 21
+                    target = 17
+                }
+                """);
+
+            rootProject.mainSourceSet().java().writeClass(USE_API_NOTE_TAG);
 
             gradle.withArgs("javadoc").buildsSuccessfully();
         }
