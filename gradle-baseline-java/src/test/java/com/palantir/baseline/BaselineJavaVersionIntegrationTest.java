@@ -118,9 +118,13 @@ class BaselineJavaVersionIntegrationTest {
         }
         """;
 
-    private static final String USE_API_NOTE_TAG = """
+    private static final String USE_UNOFFICIAL_JDK_TAG = """
         public class Main {
-            /** @apiNote This is an API note. */
+            /**
+             * @apiNote This is an API note.
+             * @implNote This is an implementation note.
+             * @implSpec This is an implementation spec annotation.
+             */
             public String get() {
                 return "a";
             }
@@ -653,16 +657,16 @@ class BaselineJavaVersionIntegrationTest {
         }
 
         @Test
-        void javadoc_succeeds_with_api_note_tag(GradleInvoker gradle, RootProject rootProject) {
+        void javadoc_succeeds_with_unofficial_jdk_tags(GradleInvoker gradle, RootProject rootProject) {
 
             rootProject.buildGradle().append("""
                 javaVersion {
-                    javaCompiler = 21
+                    javaCompiler = 25
                     target = 17
                 }
                 """);
 
-            rootProject.mainSourceSet().java().writeClass(USE_API_NOTE_TAG);
+            rootProject.mainSourceSet().java().writeClass(USE_UNOFFICIAL_JDK_TAG);
 
             gradle.withArgs("javadoc").buildsSuccessfully();
         }
