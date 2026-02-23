@@ -21,7 +21,7 @@ com.palantir.gradle.idea-configuration:gradle-idea-configuration = 0.4.0
 
 
 # test deps
-com.fasterxml.jackson.*:* = 2.21.0
+com.fasterxml.jackson.*:* = 2.21.1
 com.github.stefanbirkner:system-rules = 1.19.0
 com.netflix.nebula:nebula-test = 10.6.2
 commons-io:* = 2.21.0
